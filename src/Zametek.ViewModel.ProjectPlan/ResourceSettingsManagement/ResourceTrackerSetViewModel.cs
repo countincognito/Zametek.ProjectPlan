@@ -154,16 +154,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SetTrackerIndexCommand { get; }
 
-        public string SearchSymbol
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return TrackerSearchHelper.GetSearchSymbol(LastTrackerIndex, TrackerIndex);
-                }
-            }
-        }
+        // Lock-free: both operands are themselves lock-free reads
+        // (m_LastResourceActivitySelector is only ever replaced under
+        // m_Lock, and TrackerIndex is a core passthrough). Getters that
+        // participate in change notification must never take m_Lock
+        // (ReactiveUI re-reads them under its own sink gate - see the
+        // deadlock note in GanttActivitySelectorViewModel).
+        public string SearchSymbol => TrackerSearchHelper.GetSearchSymbol(LastTrackerIndex, TrackerIndex);
 
         public int? GetLastTrackerIndex(int activityId)
         {

@@ -82,36 +82,19 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableUniqueCollection<ISelectableWorkStreamViewModel> m_SelectedTargetWorkStreams;
         public ObservableCollection<ISelectableWorkStreamViewModel> SelectedTargetWorkStreams => m_SelectedTargetWorkStreams;
 
-        public string TargetWorkStreamsString
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return string.Join(
-                        DependenciesStringValidationRule.Separator,
-                        SelectedTargetWorkStreams
-                            .Where(x => (!m_PhaseOnly)
-                                    || (m_PhaseOnly && x.IsPhase))
-                            .Select(x => x.DisplayName));
-                }
-            }
-        }
+        // Lock-free snapshots of the values derived from the selection,
+        // recomputed under m_Lock by RefreshDerivedProperties whenever the
+        // selection changes. Getters that participate in change notification
+        // must never take m_Lock (ReactiveUI re-reads them under its own sink
+        // gate - see the deadlock note in GanttActivitySelectorViewModel).
+        // The id snapshot is an array so accidental mutation by a caller
+        // fails fast.
+        private string m_TargetWorkStreamsString = string.Empty;
+        private int[] m_SelectedWorkStreamIds = [];
 
-        public IList<int> SelectedWorkStreamIds
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return SelectedTargetWorkStreams
-                        .Where(x => (!m_PhaseOnly)
-                                || (m_PhaseOnly && x.IsPhase))
-                        .Select(x => x.Id)
-                        .ToList();
-                }
-            }
-        }
+        public string TargetWorkStreamsString => m_TargetWorkStreamsString;
+
+        public IList<int> SelectedWorkStreamIds => m_SelectedWorkStreamIds;
 
         #endregion
 
@@ -122,6 +105,23 @@ namespace Zametek.ViewModel.ProjectPlan
             NotifyCollectionChangedEventArgs e)
         {
             RaiseTargetWorkStreamsPropertiesChanged();
+        }
+
+        private void RefreshDerivedProperties()
+        {
+            lock (m_Lock)
+            {
+                m_TargetWorkStreamsString = string.Join(
+                    DependenciesStringValidationRule.Separator,
+                    SelectedTargetWorkStreams
+                        .Where(x => (!m_PhaseOnly)
+                                || (m_PhaseOnly && x.IsPhase))
+                        .Select(x => x.DisplayName));
+                m_SelectedWorkStreamIds = [.. SelectedTargetWorkStreams
+                    .Where(x => (!m_PhaseOnly)
+                            || (m_PhaseOnly && x.IsPhase))
+                    .Select(x => x.Id)];
+            }
         }
 
         #endregion
@@ -225,6 +225,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void RaiseTargetWorkStreamsPropertiesChanged()
         {
+            RefreshDerivedProperties();
             this.RaisePropertyChanged(nameof(TargetWorkStreams));
             this.RaisePropertyChanged(nameof(TargetWorkStreamsString));
         }

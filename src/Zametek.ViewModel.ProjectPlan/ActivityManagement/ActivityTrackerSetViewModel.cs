@@ -148,35 +148,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public int ActivityId { get; }
 
-        public int? LastTrackerIndex
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    if (m_LastTracker is null)
-                    {
-                        return null;
-                    }
-                    return m_LastTracker.Time;
-                }
-            }
-        }
+        // m_LastTracker is only ever REPLACED under m_Lock (the tracker
+        // models are immutable records), so these getters read it lock-free
+        // via an atomic reference read. Getters that participate in change
+        // notification must never take m_Lock (ReactiveUI re-reads them under
+        // its own sink gate - see the deadlock note in
+        // GanttActivitySelectorViewModel).
+        public int? LastTrackerIndex => m_LastTracker?.Time;
 
-        public int? LastTrackerValue
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    if (m_LastTracker is null)
-                    {
-                        return null;
-                    }
-                    return m_LastTracker.PercentageComplete;
-                }
-            }
-        }
+        public int? LastTrackerValue => m_LastTracker?.PercentageComplete;
 
         public ICommand SetTrackerIndexCommand { get; }
 
@@ -184,24 +164,21 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                lock (m_Lock)
+                int? lastTrackerIndex = LastTrackerIndex;
+                int trackerIndex = TrackerIndex;
+                if (lastTrackerIndex is null)
                 {
-                    int? lastTrackerIndex = LastTrackerIndex;
-                    int trackerIndex = TrackerIndex;
-                    if (lastTrackerIndex is null)
-                    {
-                        return Resource.ProjectPlan.Symbols.Symbol_Nowhere;
-                    }
-                    if (lastTrackerIndex > trackerIndex)
-                    {
-                        return Resource.ProjectPlan.Symbols.Symbol_Forwards;
-                    }
-                    if (lastTrackerIndex < trackerIndex)
-                    {
-                        return Resource.ProjectPlan.Symbols.Symbol_Backwards;
-                    }
-                    return Resource.ProjectPlan.Symbols.Symbol_InPlace;
+                    return Resource.ProjectPlan.Symbols.Symbol_Nowhere;
                 }
+                if (lastTrackerIndex > trackerIndex)
+                {
+                    return Resource.ProjectPlan.Symbols.Symbol_Forwards;
+                }
+                if (lastTrackerIndex < trackerIndex)
+                {
+                    return Resource.ProjectPlan.Symbols.Symbol_Backwards;
+                }
+                return Resource.ProjectPlan.Symbols.Symbol_InPlace;
             }
         }
 

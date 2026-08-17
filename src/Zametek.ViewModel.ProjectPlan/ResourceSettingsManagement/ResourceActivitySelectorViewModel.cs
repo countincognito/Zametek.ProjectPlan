@@ -104,6 +104,14 @@ namespace Zametek.ViewModel.ProjectPlan
             RaiseTargetResourceActivitiesPropertiesChanged();
         }
 
+        private void RefreshDerivedProperties()
+        {
+            lock (m_Lock)
+            {
+                m_SelectedResourceActivityIds = [.. SelectedTargetResourceActivities.Select(x => x.Id)];
+            }
+        }
+
         private void ReviseTrackers(IList<ResourceActivityTrackerModel> resourceActivityTrackers)
         {
             lock (m_Lock)
@@ -174,16 +182,17 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_SelectedTargetResourceActivities;
         public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities => m_SelectedTargetResourceActivities;
 
-        public IList<int> SelectedResourceActivityIds
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return [.. SelectedTargetResourceActivities.Select(x => x.Id)];
-                }
-            }
-        }
+        // Lock-free snapshot of the selected ids, recomputed under m_Lock by
+        // RefreshDerivedProperties whenever the selection changes. Getters
+        // that participate in change notification must never take m_Lock
+        // (ReactiveUI re-reads them under its own sink gate - see the
+        // deadlock note in GanttActivitySelectorViewModel); this one is also
+        // read inside ResourceTrackerSetViewModel's locked regions, so the
+        // snapshot removes a nested cross-object lock as well. The snapshot
+        // is an array so accidental mutation by a caller fails fast.
+        private int[] m_SelectedResourceActivityIds = [];
+
+        public IList<int> SelectedResourceActivityIds => m_SelectedResourceActivityIds;
 
         #endregion
 
@@ -261,6 +270,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void RaiseTargetResourceActivitiesPropertiesChanged()
         {
+            RefreshDerivedProperties();
             this.RaisePropertyChanged(nameof(TargetResourceActivities));
         }
 

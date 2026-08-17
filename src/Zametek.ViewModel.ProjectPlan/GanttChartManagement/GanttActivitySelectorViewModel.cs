@@ -136,29 +136,22 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableUniqueCollection<ISelectableActivityViewModel> m_SelectedTargetActivities;
         public ObservableCollection<ISelectableActivityViewModel> SelectedTargetActivities => m_SelectedTargetActivities;
 
-        public string TargetActivitiesString
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return string.Join(
-                        DependenciesStringValidationRule.Separator,
-                        SelectedTargetActivities.Select(x => x.DisplayName));
-                }
-            }
-        }
+        // Lock-free snapshots of the values derived from the selection,
+        // recomputed under m_Lock by RefreshDerivedProperties whenever the
+        // selection changes. Getters that participate in change notification
+        // must never take m_Lock: ReactiveUI re-reads them while holding its
+        // own sink gate, so a locked getter here - combined with a raise made
+        // while m_Lock was held on another thread - deadlocked the app
+        // against the GanttChartManagerViewModel WhenAnyValue chain (caught
+        // live in a dump, 2026-08-17). The id snapshot is an array so any
+        // caller that tried to mutate it would fail fast instead of
+        // corrupting shared state.
+        private string m_TargetActivitiesString = string.Empty;
+        private int[] m_SelectedActivityIds = [];
 
-        public IList<int> SelectedActivityIds
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return [.. SelectedTargetActivities.Select(x => x.Id)];
-                }
-            }
-        }
+        public string TargetActivitiesString => m_TargetActivitiesString;
+
+        public IList<int> SelectedActivityIds => m_SelectedActivityIds;
 
         #endregion
 
@@ -168,6 +161,11 @@ namespace Zametek.ViewModel.ProjectPlan
             object? sender,
             NotifyCollectionChangedEventArgs e)
         {
+            // This handler IS the notification that the selection just
+            // changed, and the write-through below reads the id snapshot -
+            // so refresh the snapshots first.
+            RefreshDerivedProperties();
+
             // Write the selection through to the display settings so the
             // connections filter persists with the project scenario - but only
             // for genuine user edits. While revising (settings-driven refreshes
@@ -199,6 +197,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 SetTargetActivities(
                     newActivities,
                     [.. SelectedActivityIds]);
+            }
+        }
+
+        private void RefreshDerivedProperties()
+        {
+            lock (m_Lock)
+            {
+                m_TargetActivitiesString = string.Join(
+                    DependenciesStringValidationRule.Separator,
+                    SelectedTargetActivities.Select(x => x.DisplayName));
+                m_SelectedActivityIds = [.. SelectedTargetActivities.Select(x => x.Id)];
             }
         }
 
@@ -304,6 +313,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void RaiseTargetActivitiesPropertiesChanged()
         {
+            RefreshDerivedProperties();
             this.RaisePropertyChanged(nameof(TargetActivities));
             this.RaisePropertyChanged(nameof(TargetActivitiesString));
         }

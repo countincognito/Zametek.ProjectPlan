@@ -75,29 +75,20 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableUniqueCollection<ISelectableResourceViewModel> m_SelectedTargetResources;
         public ObservableCollection<ISelectableResourceViewModel> SelectedTargetResources => m_SelectedTargetResources;
 
-        public string TargetResourcesString
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return string.Join(
-                        DependenciesStringValidationRule.Separator,
-                        SelectedTargetResources.Select(x => x.DisplayName));
-                }
-            }
-        }
+        // Lock-free snapshots of the values derived from the selection,
+        // recomputed under m_Lock by RefreshDerivedProperties whenever the
+        // selection changes. Getters that participate in change notification
+        // must never take m_Lock (ReactiveUI re-reads them under its own sink
+        // gate - see the deadlock note in GanttActivitySelectorViewModel);
+        // the EarnedValueChartManagerViewModel WhenAnyValue chains read both
+        // of these. The id snapshot is an array so accidental mutation by a
+        // caller fails fast.
+        private string m_TargetResourcesString = string.Empty;
+        private int[] m_SelectedResourceIds = [];
 
-        public IList<int> SelectedResourceIds
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    return [.. SelectedTargetResources.Select(x => x.Id)];
-                }
-            }
-        }
+        public string TargetResourcesString => m_TargetResourcesString;
+
+        public IList<int> SelectedResourceIds => m_SelectedResourceIds;
 
         #endregion
 
@@ -108,6 +99,17 @@ namespace Zametek.ViewModel.ProjectPlan
             NotifyCollectionChangedEventArgs e)
         {
             RaiseTargetResourcesPropertiesChanged();
+        }
+
+        private void RefreshDerivedProperties()
+        {
+            lock (m_Lock)
+            {
+                m_TargetResourcesString = string.Join(
+                    DependenciesStringValidationRule.Separator,
+                    SelectedTargetResources.Select(x => x.DisplayName));
+                m_SelectedResourceIds = [.. SelectedTargetResources.Select(x => x.Id)];
+            }
         }
 
         #endregion
@@ -212,6 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void RaiseTargetResourcesPropertiesChanged()
         {
+            RefreshDerivedProperties();
             this.RaisePropertyChanged(nameof(TargetResources));
             this.RaisePropertyChanged(nameof(TargetResourcesString));
         }
