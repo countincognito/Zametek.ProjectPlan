@@ -1,5 +1,8 @@
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Specialized;
 using System.Diagnostics;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -24,13 +27,46 @@ namespace Zametek.ViewModel.ProjectPlan
     ///
     ///   dotnet build -p:DefineConstants="DEBUG%3BTRACE%3BCASCADE_DIAGNOSTICS"
     ///
-    /// Output goes to Debug.WriteLine (itself compiled away outside Debug builds),
-    /// so use a Debug build and watch the debugger output window.
+    /// Output goes to Debug.WriteLine (itself compiled away outside Debug builds)
+    /// and is mirrored to zametek-cascade-diagnostics.log in the user's temp
+    /// directory, so a Debug build can be run normally - no debugger attached -
+    /// and the trace collected from the file afterwards. The file is appended
+    /// across runs, with a process banner separating each run.
     /// </summary>
     internal static class CascadeDiagnostics
     {
         private static readonly ConcurrentDictionary<string, int> s_Counts = new();
         private static int s_Sequence;
+
+        // The file mirror. Created lazily on the first record call, so a build
+        // without the symbol never touches the file system; deliberately never
+        // disposed, because it must live for the whole process (AutoFlush lands
+        // each line as it is written). If the file cannot be opened - e.g. a
+        // second app instance already holds it - the mirror silently drops out
+        // and output continues through Debug.WriteLine alone.
+        private static readonly Lazy<TextWriter?> s_LogWriter = new(() =>
+        {
+            try
+            {
+                string path = Path.Combine(Path.GetTempPath(), "zametek-cascade-diagnostics.log");
+                var writer = new StreamWriter(path, append: true)
+                {
+                    AutoFlush = true,
+                };
+                writer.WriteLine($"===== process {Environment.ProcessId} started {DateTime.Now:yyyy-MM-dd HH:mm:ss} =====");
+                return TextWriter.Synchronized(writer);
+            }
+            catch
+            {
+                return null;
+            }
+        });
+
+        private static void WriteLine(string line)
+        {
+            Debug.WriteLine(line);
+            s_LogWriter.Value?.WriteLine(line);
+        }
 
         /// <summary>
         /// Builds the line prefix: a global sequence number and the managed
@@ -52,7 +88,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public static void RecordBuild(string name)
         {
             int count = s_Counts.AddOrUpdate(name, 1, (_, current) => current + 1);
-            Debug.WriteLine($"{Stamp()} {name} call #{count}");
+            WriteLine($"{Stamp()} {name} call #{count}");
         }
 
         /// <summary>
@@ -65,7 +101,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [Conditional("CASCADE_DIAGNOSTICS")]
         public static void RecordMarker(string message)
         {
-            Debug.WriteLine($"{Stamp()} ===== {message} =====");
+            WriteLine($"{Stamp()} ===== {message} =====");
         }
 
         /// <summary>
@@ -77,8 +113,29 @@ namespace Zametek.ViewModel.ProjectPlan
         [Conditional("CASCADE_DIAGNOSTICS")]
         public static void RecordEvent(string message)
         {
-            Debug.WriteLine($"{Stamp()} {message}");
+            WriteLine($"{Stamp()} {message}");
         }
+
+        /// <summary>
+        /// Records a CollectionChanged notification raised by a bound view
+        /// collection, together with the collection's resulting order: exactly
+        /// what a bound control was told (action and indices) and what the
+        /// data layer holds afterwards. A display that disagrees with the
+        /// logged order convicts the control, not the data pipeline.
+        /// </summary>
+        [Conditional("CASCADE_DIAGNOSTICS")]
+        public static void RecordCollectionChange(
+            string tag,
+            NotifyCollectionChangedEventArgs args,
+            IEnumerable<string> resultingOrder)
+        {
+            WriteLine($"{Stamp()} {tag} {args.Action} newIndex={args.NewStartingIndex} oldIndex={args.OldStartingIndex} new=[{FormatNames(args.NewItems)}] old=[{FormatNames(args.OldItems)}] order=[{string.Join(", ", resultingOrder)}]");
+        }
+
+        private static string FormatNames(IList? items) =>
+            items is null
+                ? string.Empty
+                : string.Join(", ", items.Cast<object?>().Select(x => x is IManagedNodeViewModel node ? node.Name : x?.ToString() ?? "<null>"));
 
         /// <summary>
         /// Records a message together with the full stack trace of the
@@ -89,7 +146,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [Conditional("CASCADE_DIAGNOSTICS")]
         public static void RecordStackTrace(string message)
         {
-            Debug.WriteLine($"{Stamp()} {message}{Environment.NewLine}{Environment.StackTrace}");
+            WriteLine($"{Stamp()} {message}{Environment.NewLine}{Environment.StackTrace}");
         }
     }
 }

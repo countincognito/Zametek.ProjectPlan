@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <!-- Enable the dormant cascade diagnostics (see CascadeDiagnostics.cs) in Debug
-       builds only; their output goes through Debug.WriteLine, so they are useless
-       in Release builds and would only add overhead there. -->
+       builds only; their output goes through Debug.WriteLine and is mirrored to a
+       log file under %TEMP% (see the class doc for the exact path). -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <!--<DefineConstants>$(DefineConstants);CASCADE_DIAGNOSTICS</DefineConstants>-->
   </PropertyGroup>

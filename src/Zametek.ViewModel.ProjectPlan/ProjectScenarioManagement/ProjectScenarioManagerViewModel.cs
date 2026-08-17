@@ -6,6 +6,8 @@ using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -65,7 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_NodeSortComparer = new(SortExpressionComparer<IManagedNodeViewModel>.Ascending(x => x.CreatedOn));
+            m_NodeSortComparer = new(ProjectScenarioNodeHelper.BuildSortComparer(SortMode.CreatedOn, SortDirection.Ascending));
             Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
             m_FlattenedNodes = new();
@@ -242,6 +244,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 //.AutoRefresh(node => node.IsTracked) // Re-evaluates when this property changes.
                 .Bind(out m_ReadOnlyFlattenedNodes)
                 .Subscribe();
+
+            AttachSortDiagnostics();
 
             ResetRootNode();
 
@@ -793,6 +797,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             forFlattenedList.Add(projectScenarioViewModel);
                             SetTagLabels(projectScenarioViewModel);
                             m_ManagedNodeLookup[projectScenarioViewModel.Id] = projectScenarioViewModel;
+
+                            CascadeDiagnostics.RecordEvent($@"AddManagedNodes: '{projectScenarioNode.Name}' created={projectScenarioNode.CreatedOn:yyyy-MM-dd HH:mm:ss.fffffff} modified={projectScenarioNode.ModifiedOn:yyyy-MM-dd HH:mm:ss.fffffff}");
                         }
                     }
 
@@ -1507,6 +1513,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     NodeAction action = m_NodeAction.Action;
 
+                    CascadeDiagnostics.RecordMarker($@"PASTE begin: action={action} sources=[{string.Join(", ", sourceIds.Select(id => GetNode(id)?.Name ?? id.ToString()))}] destination='{GetNode(destinationParentId)?.Name ?? Root.Name}'");
+
                     // Pasting cut nodes into themselves or their own subtrees
                     // would remove the freshly pasted clones along with the
                     // originals, so block it outright (the error surfaces via
@@ -1542,6 +1550,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         Guid.NewGuid,
                         localNow,
                         preserveCreatedOn: action == NodeAction.Cut);
+
+                    CascadeDiagnostics.RecordEvent($@"PASTE clones: {string.Join("; ", cloneResult.Nodes.Select(n => $@"'{n.Name}' created={n.CreatedOn:yyyy-MM-dd HH:mm:ss.fffffff} modified={n.ModifiedOn:yyyy-MM-dd HH:mm:ss.fffffff}"))}");
 
                     // The clones carry their own copies of the source nodes'
                     // tags; the tag lookup must be populated before the nodes
@@ -1581,13 +1591,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                 }
 
-                // DynamicData places the pasted nodes at their sorted positions
-                // (pinned by NodeSortPipelineTests), but the tree view does not
-                // reliably present mid-list insertions until a reorder pass -
-                // so finish the paste with the same re-sort the sort menu
-                // triggers. Invoked outside the lock so the UI thread can never
-                // deadlock against it.
-                Dispatcher.UIThread.Invoke(ChangeSortInternal);
+                // The clones in one paste batch share a single timestamp, so
+                // under the timestamp sort modes they tie with one another
+                // (and, for a cut, with their sources' batch-mates); the
+                // comparers break such ties deterministically (see
+                // ProjectScenarioNodeHelper.BuildSortComparer), and finishing
+                // with a reload lets the whole destination level settle into
+                // that order in one fully-ordered emission - which also heals
+                // a level whose arrangement predates the tie-breaker.
+                ReloadSiblings(destinationParentId);
+
+                CascadeDiagnostics.RecordMarker(@"PASTE end");
             }
             finally
             {
@@ -1739,6 +1753,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                CascadeDiagnostics.RecordEvent($@"ChangeSortModeAsync: {sortMode} (was {ProjectScenarioSortMode})");
                 ProjectScenarioSortMode = sortMode;
             }
             catch (Exception ex)
@@ -1754,6 +1769,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                CascadeDiagnostics.RecordEvent($@"ChangeSortDirectionAsync: {sortDirection} (was {ProjectScenarioSortDirection})");
                 ProjectScenarioSortDirection = sortDirection;
             }
             catch (Exception ex)
@@ -1787,29 +1803,56 @@ namespace Zametek.ViewModel.ProjectPlan
                 SortMode sortMode = ProjectScenarioSortMode;
                 SortDirection sortDirection = ProjectScenarioSortDirection;
 
-                Func<IManagedNodeViewModel, IComparable> newSortMode =
-                    (x) => x.Name;
-                Func<Func<IManagedNodeViewModel, IComparable>, SortExpressionComparer<IManagedNodeViewModel>> newSortDirection =
-                    SortExpressionComparer<IManagedNodeViewModel>.Ascending;
-
-                newSortMode = sortMode switch
-                {
-                    SortMode.Name => (x) => x.Name,
-                    SortMode.CreatedOn => (x) => x.CreatedOn,
-                    SortMode.ModifiedOn => (x) => x.ModifiedOn,
-                    _ => throw new ArgumentOutOfRangeException(nameof(sortMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownSortMode} {sortMode}"),
-                };
-
-                newSortDirection = sortDirection switch
-                {
-                    SortDirection.Ascending => SortExpressionComparer<IManagedNodeViewModel>.Ascending,
-                    SortDirection.Descending => SortExpressionComparer<IManagedNodeViewModel>.Descending,
-                    _ => throw new ArgumentOutOfRangeException(nameof(sortMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownSortDirection} {sortDirection}"),
-                };
-
-                IComparer<IManagedNodeViewModel> nodeSortComparer = newSortDirection(newSortMode);
+                IComparer<IManagedNodeViewModel> nodeSortComparer =
+                    ProjectScenarioNodeHelper.BuildSortComparer(sortMode, sortDirection);
+                CascadeDiagnostics.RecordEvent($@"ChangeSortInternal: pushing comparer mode={sortMode} direction={sortDirection}");
                 m_NodeSortComparer.OnNext(nodeSortComparer);
             }
+        }
+
+        /// <summary>
+        /// Re-emits the sibling list beneath the given parent (the top-level
+        /// source list when the parent is the root) as a single
+        /// clear-and-add-again edit of the same instances, so the whole level
+        /// settles from one fresh, fully-ordered emission of the sorted
+        /// pipeline. Used to finish a paste: batch clones share timestamps,
+        /// and the reload guarantees every tie lands in the comparer's
+        /// deterministic order regardless of how the level was arranged
+        /// before.
+        /// </summary>
+        private void ReloadSiblings(Guid parentId)
+        {
+            lock (m_Lock)
+            {
+                CascadeDiagnostics.RecordEvent($@"ReloadSiblings: parent='{GetNode(parentId)?.Name ?? Root.Name}'");
+
+                if (parentId == Root.Id)
+                {
+                    m_Nodes.Edit(nodes =>
+                    {
+                        List<IManagedNodeViewModel> reloaded = [.. nodes];
+                        nodes.Clear();
+                        nodes.AddRange(reloaded);
+                    });
+                }
+                else if (m_ManagedNodeLookup.TryGetValue(parentId, out IManagedNodeViewModel? parentNode))
+                {
+                    parentNode.ReloadChildren();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Diagnostic-build only: mirrors every CollectionChanged notification
+        /// raised by the bound top-level node view - i.e. exactly what the
+        /// scenario tree view is told about that level - into the cascade
+        /// diagnostics log, together with the resulting order.
+        /// </summary>
+        [Conditional("CASCADE_DIAGNOSTICS")]
+        private void AttachSortDiagnostics()
+        {
+            ((INotifyCollectionChanged)m_ReadOnlyNodes).CollectionChanged += (_, args) =>
+                CascadeDiagnostics.RecordCollectionChange(@"Nodes(top-level)", args, m_ReadOnlyNodes.Select(x => x.Name));
         }
 
         // Public because headless hosts (the CLI) kill the reactive subscriptions

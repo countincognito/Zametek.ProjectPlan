@@ -2,7 +2,9 @@ using DynamicData;
 using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Zametek.Common.ProjectPlan;
@@ -137,7 +139,29 @@ namespace Zametek.ViewModel.ProjectPlan
                         return $@"{(isUpdated ? "*" : string.Empty)}{displayName} {label}";
                     })
                 .ToProperty(this, x => x.DisplayName);
+
+            AttachSortDiagnostics();
         }
+
+        /// <summary>
+        /// Diagnostic-build only: mirrors every CollectionChanged notification
+        /// raised by the bound children view - i.e. exactly what a bound tree
+        /// view is told about this node's level - into the cascade diagnostics
+        /// log, together with the resulting order. The tag carries a per-VM
+        /// instance number because names repeat across instances: a project
+        /// reopen rebuilds the tree with fresh view models under the same
+        /// names, and without the number their pipelines are indistinguishable
+        /// in the trace.
+        /// </summary>
+        [Conditional("CASCADE_DIAGNOSTICS")]
+        private void AttachSortDiagnostics()
+        {
+            int instanceId = Interlocked.Increment(ref s_DiagnosticInstanceCounter);
+            ((INotifyCollectionChanged)m_ReadOnlyChildren).CollectionChanged += (_, args) =>
+                CascadeDiagnostics.RecordCollectionChange($@"Children('{Name}'#{instanceId})", args, m_ReadOnlyChildren.Select(x => x.Name));
+        }
+
+        private static int s_DiagnosticInstanceCounter;
 
         #endregion
 
@@ -355,6 +379,28 @@ namespace Zametek.ViewModel.ProjectPlan
                         node.Dispose();
                     }
                     children.Clear();
+                });
+            }
+        }
+
+        /// <summary>
+        /// Re-emits the current children as a single clear-and-add-again edit
+        /// of the same instances - nothing is disposed or replaced. The sorted
+        /// pipeline downstream turns the reload into a fresh, fully-ordered
+        /// emission, letting the whole level settle into the comparer's
+        /// deterministic order in one pass (used after pastes, whose batch
+        /// clones share a timestamp and therefore tie on the timestamp sort
+        /// keys).
+        /// </summary>
+        public void ReloadChildren()
+        {
+            lock (m_Lock)
+            {
+                m_Children.Edit(children =>
+                {
+                    List<IManagedNodeViewModel> reloaded = [.. children];
+                    children.Clear();
+                    children.AddRange(reloaded);
                 });
             }
         }

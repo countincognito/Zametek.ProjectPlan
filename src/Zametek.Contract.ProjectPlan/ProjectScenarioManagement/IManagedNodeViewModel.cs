@@ -50,5 +50,7 @@ namespace Zametek.Contract.ProjectPlan
         void RemoveChildren(IEnumerable<Guid> managedNodeIds);
 
         void ClearChildren();
+
+        void ReloadChildren();
     }
 }

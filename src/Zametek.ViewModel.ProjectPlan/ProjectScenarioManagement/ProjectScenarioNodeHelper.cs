@@ -1,5 +1,8 @@
+using DynamicData.Binding;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
+using SortDirection = Zametek.Common.ProjectPlan.SortDirection;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -21,14 +24,54 @@ namespace Zametek.ViewModel.ProjectPlan
     }
 
     /// <summary>
-    /// Pure helper logic for the project scenario browser's node clipboard:
-    /// sibling name suggestion, subtree traversal, top-most selection
-    /// filtering, the cut-into-own-subtree guard, and recursive cloning of
-    /// folders and scenarios (with their tags) for cut/copy/paste. Kept free
-    /// of view-model state so the behaviour can be unit tested directly.
+    /// Pure helper logic for the project scenario browser: the node sort
+    /// comparers (with their deterministic tie-breakers), sibling name
+    /// suggestion, subtree traversal, top-most selection filtering, the
+    /// cut-into-own-subtree guard, and recursive cloning of folders and
+    /// scenarios (with their tags) for cut/copy/paste. Kept free of
+    /// view-model state so the behaviour can be unit tested directly.
     /// </summary>
     public static class ProjectScenarioNodeHelper
     {
+        /// <summary>
+        /// Builds the comparer for a node sort mode and direction, always
+        /// with a deterministic tie-breaker. The tie-breaker matters because
+        /// the timestamp keys are not unique: a batch operation (multi-select
+        /// paste, a recursive folder clone) mints one timestamp for every
+        /// node it creates, and a comparer without a secondary key leaves the
+        /// relative order of such ties unspecified - inserts append ties in
+        /// arrival order while re-sorts shuffle them stably - so the tree
+        /// appeared unsorted whenever timestamps collided. Timestamp modes
+        /// break ties by name; name mode (unique within a sibling set anyway)
+        /// breaks ties by creation time. The secondary key follows the
+        /// primary direction, so a descending sort reads fully reversed.
+        /// </summary>
+        public static SortExpressionComparer<IManagedNodeViewModel> BuildSortComparer(
+            SortMode sortMode,
+            SortDirection sortDirection)
+        {
+            Func<IManagedNodeViewModel, IComparable> primary = sortMode switch
+            {
+                SortMode.Name => (x) => x.Name,
+                SortMode.CreatedOn => (x) => x.CreatedOn,
+                SortMode.ModifiedOn => (x) => x.ModifiedOn,
+                _ => throw new ArgumentOutOfRangeException(nameof(sortMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownSortMode} {sortMode}"),
+            };
+
+            Func<IManagedNodeViewModel, IComparable> tieBreaker = sortMode switch
+            {
+                SortMode.Name => (x) => x.CreatedOn,
+                _ => (x) => x.Name,
+            };
+
+            return sortDirection switch
+            {
+                SortDirection.Ascending => SortExpressionComparer<IManagedNodeViewModel>.Ascending(primary).ThenByAscending(tieBreaker),
+                SortDirection.Descending => SortExpressionComparer<IManagedNodeViewModel>.Descending(primary).ThenByDescending(tieBreaker),
+                _ => throw new ArgumentOutOfRangeException(nameof(sortDirection), @$"{Resource.ProjectPlan.Messages.Message_UnknownSortDirection} {sortDirection}"),
+            };
+        }
+
         /// <summary>
         /// Suggests a unique node name within a sibling set by suffixing
         /// -1, -2, ... until the name is free.
