@@ -21,8 +21,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // Distinguishes machine-driven selection changes (settings-driven
         // refreshes and seeding from the persisted filter) from genuine
-        // user edits.
-        private bool m_IsRevising;
+        // user edits. Ref-counted like the Gantt selector's guard so that
+        // overlapping revisions can never clear one another mid-flight
+        // (today every reviser here runs on the UI thread, but the shape is
+        // kept uniform with the dump-proven Gantt fix of 2026-08-17).
+        private int m_RevisingCount;
 
         private readonly IDisposable? m_ResourceSettingsSub;
         private readonly IDisposable? m_ShowResourcesSub;
@@ -35,7 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             m_CoreViewModel = coreViewModel;
-            m_IsRevising = false;
+            m_RevisingCount = 0;
 
             // Initial set up.
             ReviseResources();
@@ -75,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // writing back the transient selection state would clobber it
             // (e.g. wiping a freshly remapped filter during a resource
             // renumber, where the selector may briefly empty out).
-            if (!m_IsRevising)
+            if (m_RevisingCount == 0)
             {
                 m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
                 m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(SelectedResourceIds);
@@ -90,7 +93,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // Guard the revision so the resulting selection changes are
                 // not mistaken for user edits: they must not overwrite the
                 // persisted filter, nor mark the project scenario as updated.
-                m_IsRevising = true;
+                Interlocked.Increment(ref m_RevisingCount);
 
                 var selectedTargetResources = new HashSet<int>(
                     m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources);
@@ -108,7 +111,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                m_IsRevising = false;
+                Interlocked.Decrement(ref m_RevisingCount);
             }
         }
 

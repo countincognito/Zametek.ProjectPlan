@@ -14,7 +14,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
-        private bool m_IsRevising;
+        private int m_RevisingCount;
         private readonly ICoreViewModel m_CoreViewModel;
 
         private static readonly EqualityComparer<ISelectableActivityViewModel> s_EqualityComparer =
@@ -64,7 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             m_Lock = new();
-            m_IsRevising = false;
+            m_RevisingCount = 0;
             m_CoreViewModel = coreViewModel;
             m_TargetActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetActivities = new(m_TargetActivities);
@@ -88,13 +88,19 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             // Guard the revision so any resulting selection changes
                             // are not mistaken for user edits and do not mark the
-                            // project scenario as updated.
-                            m_IsRevising = true;
+                            // project scenario as updated. The guard is a ref-count
+                            // because revisions overlap across threads (this one
+                            // runs on the scenario-load worker, the connections one
+                            // on the UI thread): a shared bool let one reviser's
+                            // finally clear the other's guard mid-revision, leaking
+                            // a machine-driven change out as a user edit
+                            // (dump-proven 2026-08-17).
+                            Interlocked.Increment(ref m_RevisingCount);
                             ReviseActivities();
                         }
                         finally
                         {
-                            m_IsRevising = false;
+                            Interlocked.Decrement(ref m_RevisingCount);
                         }
                     }
                 });
@@ -109,7 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         try
                         {
-                            m_IsRevising = true;
+                            Interlocked.Increment(ref m_RevisingCount);
                             ReviseActivities();
                             SetSelectedTargetActivities(
                                 [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
@@ -117,7 +123,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                         finally
                         {
-                            m_IsRevising = false;
+                            Interlocked.Decrement(ref m_RevisingCount);
                         }
                     }
                 });
@@ -173,7 +179,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // the transient selection state would clobber it (e.g. wiping a
             // freshly remapped filter during an activity renumber, where the
             // selector briefly empties out).
-            if (!m_IsRevising)
+            if (m_RevisingCount == 0)
             {
                 m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
                 m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);

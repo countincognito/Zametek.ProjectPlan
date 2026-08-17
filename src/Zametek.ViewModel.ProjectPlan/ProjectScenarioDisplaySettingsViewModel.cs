@@ -38,26 +38,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Members
 
+        // These only invoke the readonly core callbacks, so they are
+        // deliberately lock-free - and every caller must invoke them OUTSIDE
+        // its own lock (m_Lock) block. Holding m_Lock across the callback
+        // creates a DS -> Core lock-order edge that deadlocked against
+        // ProcessProjectScenario, which holds CoreViewModel's lock while
+        // calling back into this class (SetValues) - dump-proven 2026-08-17.
         private void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated, bool trackStaleOutputs)
         {
-            lock (m_Lock)
-            {
-                if (m_SetIsProjectScenarioUpdated is not null)
-                {
-                    m_SetIsProjectScenarioUpdated(isProjectScenarioUpdated, trackStaleOutputs);
-                }
-            }
+            m_SetIsProjectScenarioUpdated?.Invoke(isProjectScenarioUpdated, trackStaleOutputs);
         }
 
         private void IsReadyToCompile()
         {
-            lock (m_Lock)
-            {
-                if (m_IsReadyToCompile is not null)
-                {
-                    m_IsReadyToCompile();
-                }
-            }
+            m_IsReadyToCompile?.Invoke();
         }
 
         #endregion
@@ -72,9 +66,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ShowDates, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -95,9 +89,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
                     }
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -111,10 +105,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_NonWorkingDayMode = value;
                     m_DateTimeCalculator.NonWorkingDayMode = m_NonWorkingDayMode;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: true);
                     this.RaisePropertyChanged();
-                    IsReadyToCompile();
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: true);
+                IsReadyToCompile();
             }
         }
 
@@ -156,9 +150,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ArrowGraphShowNames, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -172,9 +166,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_VertexGraphShowNames, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -188,9 +182,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ArrowGraphEdgeRoutingMode, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -204,9 +198,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_VertexGraphEdgeRoutingMode, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -220,9 +214,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartGroupByMode, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -234,9 +228,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartAnnotationStyle, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -248,9 +242,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowGroupLabels, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -262,9 +256,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowProjectFinish, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -276,9 +270,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowTracking, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -290,9 +284,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowToday, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -304,9 +298,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowMilestones, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -318,9 +312,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowSlack, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -332,9 +326,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_GanttChartShowNonWorkingDays, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -364,9 +358,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ResourceChartAllocationMode, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -378,9 +372,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ResourceChartScheduleMode, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -392,9 +386,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ResourceChartDisplayStyle, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -406,9 +400,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ResourceChartShowToday, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -420,9 +414,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_ResourceChartShowMilestones, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -436,9 +430,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueShowProjections, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -450,9 +444,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueShowToday, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -464,9 +458,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueShowMilestones, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -478,9 +472,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueCombineResources, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -492,9 +486,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueScaleToOwnPlan, value);
                 }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
         }
 
@@ -517,10 +511,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated)
         {
-            lock (m_Lock)
-            {
-                SetIsProjectScenarioUpdated(isProjectScenarioUpdated, trackStaleOutputs: false);
-            }
+            SetIsProjectScenarioUpdated(isProjectScenarioUpdated, trackStaleOutputs: false);
         }
 
         public void SetValues(ProjectScenarioDisplaySettingsModel model)
