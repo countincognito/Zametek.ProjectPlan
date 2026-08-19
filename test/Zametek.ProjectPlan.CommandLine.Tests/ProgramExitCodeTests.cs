@@ -6,9 +6,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
     /// End-to-end tests that invoke Program.Main in-process and pin the CLI's
-    /// exit-code contract: 0 success, 1 runtime failure, 2 bad usage, and 3
-    /// compilation errors. Scripts and CI gates branch on these values, so a
-    /// change here is a breaking change to the CLI. The tests all live in one
+    /// exit-code contract: 0 success, 1 runtime failure, 2 bad usage, 3
+    /// compilation errors, and 4 a compilation cancelled by --compile-timeout.
+    /// Scripts and CI gates branch on these values, so a change here is a
+    /// breaking change to the CLI. The tests all live in one
     /// class so xunit runs them sequentially - Main swaps process-global state
     /// (the console streams and the static Serilog logger) while it runs.
     /// </summary>
@@ -121,6 +122,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             int exitCode = await Program.Main([@"-m", AssetPath(@"two-scenarios.zpp"), @"-s", @"Beta"]);
 
             exitCode.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task Main_Given_NegativeCompileTimeout_Then_ExitUsageError()
+        {
+            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"-1"]);
+
+            exitCode.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task Main_Given_CompileTimeoutZero_Then_ExitSuccess()
+        {
+            // Zero switches the watchdog off for the whole run, so the compile and
+            // every output build have to complete without one. Exit code 4 - the
+            // watchdog firing - has no test here: the smallest budget the timer can
+            // reliably signal is coarser than the time this asset takes to compile,
+            // so any attempt to provoke it would be a race.
+            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"0"]);
+
+            exitCode.ShouldBe(0);
         }
 
         [Fact]

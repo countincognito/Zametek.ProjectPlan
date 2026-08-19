@@ -251,13 +251,25 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(isReady =>
                 {
                     CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: isReady={isReady} IsBusy={IsBusy}");
-                    lock (m_Lock)
+                    try
                     {
-                        if (isReady == ReadyToCompile.Yes
-                            && !IsBusy)
+                        lock (m_Lock)
                         {
-                            RunAutoCompile();
+                            if (isReady == ReadyToCompile.Yes
+                                && !IsBusy)
+                            {
+                                RunAutoCompile();
+                            }
                         }
+                    }
+                    catch (GraphCompilationTimeoutException)
+                    {
+                        // Swallowed deliberately. RunCompile has already logged the
+                        // timeout and applied AbandonCompilation, and letting this
+                        // escape would tear down this subscription along with every
+                        // later compile it would have started. There is no dialog
+                        // service here to report it either - see the note on
+                        // AbandonCompilation.
                     }
                 });
 
@@ -274,7 +286,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(core => core.GraphCompilation)
                 .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RunBuildCascade());
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        RunBuildCascade();
+                    }
+                    catch (GraphCompilationTimeoutException)
+                    {
+                        // Swallowed for the same reason as the compile subscription
+                        // above: RunBuildCascade has already logged and applied the
+                        // state, and an escaping exception would end the cascade
+                        // subscription for the rest of the session.
+                    }
+                });
 
             // Risk metrics are the one output with a non-compile trigger: the
             // activity-severity settings feed them directly, so a settings
@@ -389,18 +414,100 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         private void RunBuildCascade()
         {
-            lock (m_Lock)
+            try
             {
-                BuildArrowGraph();
-                BuildVertexGraph();
-                BuildResourceSeriesSet();
-                BuildTrackingSeriesSet();
-                BuildNetworkMetrics();
-                BuildRiskMetrics();
-                BuildFinancialMetrics();
-                CompilationOutputRevision =
-                    (CompilationOutputRevision + 1) % c_CompilationOutputRevisionWrap;
+                lock (m_Lock)
+                {
+                    BuildArrowGraph();
+                    BuildVertexGraph();
+                    BuildResourceSeriesSet();
+                    BuildTrackingSeriesSet();
+                    BuildNetworkMetrics();
+                    BuildRiskMetrics();
+                    BuildFinancialMetrics();
+                    CompilationOutputRevision =
+                        (CompilationOutputRevision + 1) % c_CompilationOutputRevisionWrap;
+                }
             }
+            catch (GraphCompilationTimeoutException ex)
+            {
+                // The arrow and vertex display graphs are built by compiling the
+                // plan again, so they carry the same watchdog and can abandon the
+                // cascade part way through. Whatever was built before the timeout
+                // stays as it is; the revision pulse is deliberately not bumped, so
+                // subscribers waiting on a settled set of outputs do not act on a
+                // half-built one.
+                AbandonCompilation(ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Runs the compiler under the watchdog, turning a watchdog cancellation into
+        /// a <see cref="GraphCompilationTimeoutException"/> so that callers can tell
+        /// it apart from any other cancellation. The budget starts here, immediately
+        /// around the compile, so time spent waiting for m_Lock is not charged to it.
+        /// </summary>
+        private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(
+            List<IResource<int, int>> availableResources,
+            List<IWorkStream<int>> workStreams,
+            int timeoutMilliseconds)
+        {
+            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
+
+            try
+            {
+                return m_VertexGraphCompiler.Compile(
+                    availableResources,
+                    workStreams,
+                    CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+            }
+            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+            {
+                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+            }
+        }
+
+        /// <summary>
+        /// The infinite resource overload - the pure critical path schedule - used by
+        /// the transitive reduction.
+        /// </summary>
+        private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(int timeoutMilliseconds)
+        {
+            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
+
+            try
+            {
+                return m_VertexGraphCompiler.Compile(CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+            }
+            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+            {
+                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+            }
+        }
+
+        /// <summary>
+        /// Applies the state that follows a compilation the watchdog cut short. The
+        /// last good compilation output is left alone and stays on display, but it no
+        /// longer matches the plan, so the outputs are flagged stale. Automatic
+        /// compilation is switched off as well, so that the next edit does not walk
+        /// straight back into the same hang and put the same error up again; the user
+        /// re-enables it, or compiles by hand, once they have changed something.
+        /// </summary>
+        /// <remarks>
+        /// Always invoked after the busy signal has been released, so the UI is idle
+        /// by the time the exception reaches whichever view model reports it.
+        /// </remarks>
+        private void AbandonCompilation(GraphCompilationTimeoutException ex)
+        {
+            m_Logger.LogError(
+                ex,
+                "Compilation was cancelled after {TimeoutMilliseconds}ms",
+                ex.Timeout.TotalMilliseconds);
+
+            HasStaleOutputs = true;
+            IsReadyToCompile = ReadyToCompile.No;
+            AutoCompile = false;
         }
 
         #endregion
@@ -1929,39 +2036,52 @@ namespace Zametek.ViewModel.ProjectPlan
             bool compilationErrorsAppeared = false;
             int compilationErrorCount = 0;
 
+            int timeoutMilliseconds = m_SettingService.CompilationTimeoutMilliseconds;
+
             try
             {
-                lock (m_Lock)
+                try
                 {
-                    BeginBusy();
-
-                    UpdateActivityDisplayOrders();
-
-                    var availableResources = new List<IResource<int, int>>();
-                    if (!ResourceSettings.AreDisabled)
+                    lock (m_Lock)
                     {
-                        availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+                        BeginBusy();
+
+                        UpdateActivityDisplayOrders();
+
+                        var availableResources = new List<IResource<int, int>>();
+                        if (!ResourceSettings.AreDisabled)
+                        {
+                            availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+                        }
+
+                        var workStreams = new List<IWorkStream<int>>();
+                        workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
+
+                        IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = CompileWithTimeout(availableResources, workStreams, timeoutMilliseconds);
+                        bool hadCompilationErrors = HasCompilationErrors;
+                        HasCompilationErrors = graphCompilation.CompilationErrors.Any();
+                        compilationErrorsAppeared = HasCompilationErrors && !hadCompilationErrors;
+                        compilationErrorCount = graphCompilation.CompilationErrors.Count();
+                        GraphCompilation = graphCompilation;
+
+                        IsProjectScenarioUpdated = true;
+                        HasStaleOutputs = false;
+                        IsReadyToReviseTrackers = ReadyToRevise.No;
+                        IsReadyToCompile = ReadyToCompile.No;
                     }
-
-                    var workStreams = new List<IWorkStream<int>>();
-                    workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
-
-                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
-                    bool hadCompilationErrors = HasCompilationErrors;
-                    HasCompilationErrors = graphCompilation.CompilationErrors.Any();
-                    compilationErrorsAppeared = HasCompilationErrors && !hadCompilationErrors;
-                    compilationErrorCount = graphCompilation.CompilationErrors.Count();
-                    GraphCompilation = graphCompilation;
-
-                    IsProjectScenarioUpdated = true;
-                    HasStaleOutputs = false;
-                    IsReadyToReviseTrackers = ReadyToRevise.No;
-                    IsReadyToCompile = ReadyToCompile.No;
+                }
+                finally
+                {
+                    EndBusy();
                 }
             }
-            finally
+            catch (GraphCompilationTimeoutException ex)
             {
-                EndBusy();
+                // Nothing above assigned GraphCompilation, so the previous results
+                // are still in place and stay on display; the outputs are simply
+                // flagged as no longer matching the plan.
+                AbandonCompilation(ex);
+                throw;
             }
 
             // Only the transition into a failing state is recorded. A plan is usually
@@ -1995,19 +2115,32 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void RunTransitiveReduction()
         {
+            int timeoutMilliseconds = m_SettingService.CompilationTimeoutMilliseconds;
+
             try
             {
-                lock (m_Lock)
+                try
                 {
-                    BeginBusy();
-                    m_VertexGraphCompiler.Compile();
-                    m_VertexGraphCompiler.TransitiveReduction();
-                    RunCompile();
+                    lock (m_Lock)
+                    {
+                        BeginBusy();
+                        CompileWithTimeout(timeoutMilliseconds);
+                        m_VertexGraphCompiler.TransitiveReduction();
+                        RunCompile();
+                    }
+                }
+                finally
+                {
+                    EndBusy();
                 }
             }
-            finally
+            catch (GraphCompilationTimeoutException ex)
             {
-                EndBusy();
+                // Only reached when the compile above timed out; a timeout inside the
+                // nested RunCompile has already been dealt with by RunCompile itself,
+                // and repeating the state changes here would be harmless anyway.
+                AbandonCompilation(ex);
+                throw;
             }
         }
 

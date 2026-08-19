@@ -23,13 +23,16 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         // Exit codes are part of the CLI contract: scripts and CI gates branch on
         // them. 0 = success, 1 = runtime failure (bad paths, unreadable files,
-        // unexpected errors), 2 = bad usage (invalid options or combinations), and
+        // unexpected errors), 2 = bad usage (invalid options or combinations),
         // 3 = the project compiled with errors - kept distinct from 1 so a
-        // pipeline can tell a broken plan from a broken invocation.
+        // pipeline can tell a broken plan from a broken invocation - and 4 = a
+        // compilation ran past --compile-timeout and was cancelled, which says
+        // nothing about whether the plan is valid, only that it did not finish.
         private const int c_ExitSuccess = 0;
         private const int c_ExitFailure = 1;
         private const int c_ExitUsageError = 2;
         private const int c_ExitCompilationErrors = 3;
+        private const int c_ExitCompilationTimeout = 4;
 
         public static async Task<int> Main(string[] args)
         {
@@ -68,6 +71,11 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 await Console.Error.WriteLineAsync(ex.Message);
                 return c_ExitUsageError;
+            }
+            catch (GraphCompilationTimeoutException ex)
+            {
+                await Console.Error.WriteLineAsync(ex.Message);
+                return c_ExitCompilationTimeout;
             }
             catch (Exception ex)
             {
@@ -170,6 +178,10 @@ namespace Zametek.ProjectPlan.CommandLine
             IOutputManagerViewModel outputs = ResolveMuted<IOutputManagerViewModel>(services);
 
             ISettingService settingService = services.GetRequiredService<ISettingService>();
+
+            // Applied before anything is loaded, because opening a project compiles
+            // the scenario it lands on.
+            settingService.CompilationTimeoutMilliseconds = options.CompileTimeoutMilliseconds;
 
             core.AutoCompile = false;
 
@@ -526,6 +538,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 && options.ListScenarios)
             {
                 throw new UsageException($@"Specify either {scenario} or {listScenarios}, but not both.");
+            }
+
+            // Zero switches the limit off; a negative value is meaningless rather
+            // than a second way of saying that, so it is rejected outright.
+            if (options.CompileTimeoutMilliseconds < 0)
+            {
+                throw new UsageException($@"{OptionLongName(nameof(Options.CompileTimeoutMilliseconds))} cannot be negative (use 0 for no limit).");
             }
 
             RequireSize(

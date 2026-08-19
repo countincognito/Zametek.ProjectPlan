@@ -320,5 +320,28 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     GanttSize = [800, 600],
                 }));
         }
+
+        [Fact]
+        public void ValidateOptions_Given_NegativeCompileTimeout_Then_UsageException()
+        {
+            Should.Throw<Program.UsageException>(
+                () => Program.ValidateOptions(new Options
+                {
+                    InputFilename = @"a.zpp",
+                    CompileTimeoutMilliseconds = -1,
+                }));
+        }
+
+        [Fact]
+        public void ValidateOptions_Given_ZeroCompileTimeout_Then_DoesNotThrow()
+        {
+            // Zero means no limit, which is a legitimate choice for a batch run.
+            Should.NotThrow(
+                () => Program.ValidateOptions(new Options
+                {
+                    InputFilename = @"a.zpp",
+                    CompileTimeoutMilliseconds = 0,
+                }));
+        }
     }
 }

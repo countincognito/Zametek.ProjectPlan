@@ -148,6 +148,8 @@ zpp -m plan.mpp -o plan.zpp
 
 Run `zpp --help` for the full option list. Chart and graph exports honour the display settings saved in the project file (the theme excepted - pass `--base-theme Dark` for dark output). Diagnostic logging goes to stderr, never stdout: warnings and errors always show, and `--verbose` adds informational lifecycle output.
 
+Every compilation runs under a watchdog: `--compile-timeout` gives it a budget in milliseconds (5000 by default), and a compilation that runs past it is cancelled and exits with code 4. Large plans can legitimately need longer, so raise it - or pass `--compile-timeout 0` to switch the limit off entirely - for a batch run that must not be interrupted. The desktop application applies the same budget, read from `CompilationTimeoutMilliseconds` in its settings file.
+
 ### Exit codes
 
 The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.ProjectPlan.CommandLine.Tests` suite:
@@ -158,6 +160,7 @@ The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.P
 | 1 | Runtime failure (bad paths, unreadable files, unexpected errors) |
 | 2 | Bad usage (invalid options or combinations) |
 | 3 | The project compiled with errors |
+| 4 | A compilation ran past `--compile-timeout` and was cancelled |
 
 ## Attributions
 

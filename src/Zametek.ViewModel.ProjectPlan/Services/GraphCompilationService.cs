@@ -10,15 +10,20 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly ProjectPlanMapper m_Mapper;
+        private readonly ISettingService m_SettingService;
 
         #endregion
 
         #region Ctors
 
-        public GraphCompilationService(ProjectPlanMapper mapper)
+        public GraphCompilationService(
+            ProjectPlanMapper mapper,
+            ISettingService settingService)
         {
             ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(settingService);
             m_Mapper = mapper;
+            m_SettingService = settingService;
         }
 
         #endregion
@@ -46,7 +51,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 arrowGraphCompiler.AddActivity(dependentActivity);
             }
 
-            arrowGraphCompiler.Compile();
+            // These display graphs are built from an already compiled plan, but the
+            // build runs its own compilation, so it gets the same watchdog as the
+            // main compile - see CompilationTimeoutHelper.
+            int timeoutMilliseconds = m_SettingService.CompilationTimeoutMilliseconds;
+            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
+            {
+                try
+                {
+                    arrowGraphCompiler.Compile(CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                }
+                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+                {
+                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+                }
+            }
+
             Graph<int, IDependentActivity, IEvent<int>>? arrowGraph =
                 arrowGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
             return m_Mapper.ToArrowGraphModel(arrowGraph);
@@ -88,7 +108,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             vertexGraphCompiler.TransitiveReduction();
-            vertexGraphCompiler.Compile(availableResources, workStreamList);
+
+            int timeoutMilliseconds = m_SettingService.CompilationTimeoutMilliseconds;
+            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
+            {
+                try
+                {
+                    vertexGraphCompiler.Compile(availableResources, workStreamList, CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                }
+                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+                {
+                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+                }
+            }
 
             Graph<int, IEvent<int>, IDependentActivity>? vertexGraph =
                 vertexGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);

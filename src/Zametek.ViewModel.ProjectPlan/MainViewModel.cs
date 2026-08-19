@@ -575,20 +575,52 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task ForceCompileAsync() => await Task.Run(async () =>
+        // The two command entry points below report their own failures, because
+        // nothing else will: a compilation that runs past its time budget is
+        // abandoned and raises a GraphCompilationTimeoutException, and these are the
+        // only compile paths not already wrapped by a caller that shows a dialog.
+        private async Task ForceCompileAsync()
         {
-            // We set this flag to force revision of trackers in case there
-            // changes to activities or resources have occurred since the last compile.
-            m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    // We set this flag to force revision of trackers in case there
+                    // changes to activities or resources have occurred since the last compile.
+                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
 
-            await RunCompileAsync(); // Need to force a compilation here.
-        });
+                    await RunCompileAsync(); // Need to force a compilation here.
+                });
+            }
+            catch (Exception ex)
+            {
+                m_Logger.LogError(ex, "Failed to compile");
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
 
         private async Task RunCompileAsync() => await Task.Run(m_CoreViewModel.RunCompile);
 
         private async Task RunAutoCompileAsync() => await Task.Run(m_CoreViewModel.RunAutoCompile);
 
-        private async Task RunTransitiveReductionAsync() => await Task.Run(m_CoreViewModel.RunTransitiveReduction);
+        private async Task RunTransitiveReductionAsync()
+        {
+            try
+            {
+                await Task.Run(m_CoreViewModel.RunTransitiveReduction);
+            }
+            catch (Exception ex)
+            {
+                m_Logger.LogError(ex, "Failed to run transitive reduction");
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
 
         private void ResetProject()
         {

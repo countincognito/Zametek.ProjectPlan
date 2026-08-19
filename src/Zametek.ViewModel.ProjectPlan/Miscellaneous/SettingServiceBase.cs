@@ -173,6 +173,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract int MaxRecentProjectFilePaths { get; }
 
+        public abstract int CompilationTimeoutMilliseconds { get; set; }
+
         public abstract IReadOnlyList<string> RecentProjectFilePaths { get; }
 
         public abstract void RecordRecentProjectFilePath(string filename);

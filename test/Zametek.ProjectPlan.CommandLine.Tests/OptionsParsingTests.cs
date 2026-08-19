@@ -2,6 +2,7 @@ using CommandLine;
 using Shouldly;
 using System.Reflection;
 using Xunit;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -73,6 +74,25 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             options.GanttFormat.ShouldBe(PlotExport.Jpeg);
             options.Verbose.ShouldBeFalse();
             options.ListScenarios.ShouldBeFalse();
+            options.CompileTimeoutMilliseconds.ShouldBe(AppSettingsModel.DefaultCompilationTimeoutMilliseconds);
+        }
+
+        [Fact]
+        public void Parse_Given_CompileTimeout_Then_Parses()
+        {
+            Options options = ParsedValue(@"-i", @"a.zpp", @"--compile-timeout", @"30000");
+
+            options.CompileTimeoutMilliseconds.ShouldBe(30_000);
+        }
+
+        [Fact]
+        public void Parse_Given_CompileTimeoutZero_Then_Parses()
+        {
+            // Zero is the documented way to switch the limit off, so it must survive
+            // parsing rather than fall back to the default.
+            Options options = ParsedValue(@"-i", @"a.zpp", @"--compile-timeout", @"0");
+
+            options.CompileTimeoutMilliseconds.ShouldBe(0);
         }
 
         [Fact]

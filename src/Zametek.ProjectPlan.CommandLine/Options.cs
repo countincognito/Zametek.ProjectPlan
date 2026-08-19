@@ -21,6 +21,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_BaseThemeLongName = "base-theme";
         private const string c_VerboseLongName = "verbose";
         private const string c_MetricsFormatLongName = "metrics-format";
+        private const string c_CompileTimeoutLongName = "compile-timeout";
         private const string c_GanttDirectoryLongName = "gantt-directory";
         private const string c_GanttFormatLongName = "gantt-format";
         private const string c_GanttSizeLongName = "gantt-size";
@@ -70,6 +71,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_MetricsFormatLongName, Default = MetricsExport.Markdown, HelpText = "Metrics output format (Markdown|Table|Json)")]
         public MetricsExport MetricsFormat { get; set; } = default;
+
+        [Option(c_CompileTimeoutLongName, Default = AppSettingsModel.DefaultCompilationTimeoutMilliseconds, HelpText = "Milliseconds a compilation may run before it is cancelled - 0 for no limit (a run cancelled this way exits with code 4)")]
+        public int CompileTimeoutMilliseconds { get; set; } = AppSettingsModel.DefaultCompilationTimeoutMilliseconds;
 
 
 

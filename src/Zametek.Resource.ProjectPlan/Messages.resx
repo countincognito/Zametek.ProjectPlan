@@ -363,4 +363,7 @@
   <data name="Message_ClearRecentlyOpened" xml:space="preserve">
     <value>The list of recently opened files will be cleared. This action is irreversible! Do you wish to continue?</value>
   </data>
+  <data name="Message_CompilationTimedOut" xml:space="preserve">
+    <value>The compilation did not complete within the time limit of {0} ms and was cancelled. Raise the compilation timeout to allow longer.</value>
+  </data>
 </root>

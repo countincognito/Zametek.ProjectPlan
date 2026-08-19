@@ -1,4 +1,3 @@
-using NPOI.SS.Formula.Functions;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -70,9 +69,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
     }
-
-
-
 
     public class DummyActivityGenerator
         : IActivityGenerator<int, int, int, IDependentActivity>

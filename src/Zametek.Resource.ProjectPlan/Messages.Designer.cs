@@ -187,6 +187,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The compilation did not complete within the time limit of {0} ms and was cancelled. Raise the compilation timeout to allow longer..
+        /// </summary>
+        public static string Message_CompilationTimedOut {
+            get {
+                return ResourceManager.GetString("Message_CompilationTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Converted from previous version.
         /// </summary>
         public static string Message_ConvertedFromPreviousVersion {

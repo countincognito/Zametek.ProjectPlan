@@ -40,6 +40,11 @@ namespace Zametek.Contract.ProjectPlan
 
         int MaxRecentProjectFilePaths { get; }
 
+        // The time budget for a single graph compilation, in milliseconds. Zero or
+        // less means no limit. Exceeding it cancels the compilation and raises a
+        // GraphCompilationTimeoutException.
+        int CompilationTimeoutMilliseconds { get; set; }
+
         IReadOnlyList<string> RecentProjectFilePaths { get; }
 
         void RecordRecentProjectFilePath(string filename);

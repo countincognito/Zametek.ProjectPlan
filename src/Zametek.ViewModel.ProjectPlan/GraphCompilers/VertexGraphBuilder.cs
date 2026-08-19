@@ -1,4 +1,3 @@
-using NPOI.SS.Formula.Functions;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 

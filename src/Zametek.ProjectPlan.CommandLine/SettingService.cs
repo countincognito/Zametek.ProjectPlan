@@ -16,6 +16,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private bool m_DefaultHideCost;
         private bool m_DefaultHideBilling;
         private string m_SelectedTheme;
+        private int m_CompilationTimeoutMilliseconds;
 
         #endregion
 
@@ -27,6 +28,10 @@ namespace Zametek.ProjectPlan.CommandLine
             m_Lock = new();
             m_ProjectDirectory = string.Empty;
             m_SelectedTheme = string.Empty;
+
+            // This host never reads the desktop settings file, so the default comes
+            // from the model rather than from disk. --compile-timeout overwrites it.
+            m_CompilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds;
         }
 
         #endregion
@@ -160,6 +165,21 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_SelectedTheme = value;
+                }
+            }
+        }
+
+        public override int CompilationTimeoutMilliseconds
+        {
+            get
+            {
+                return m_CompilationTimeoutMilliseconds;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CompilationTimeoutMilliseconds = value;
                 }
             }
         }

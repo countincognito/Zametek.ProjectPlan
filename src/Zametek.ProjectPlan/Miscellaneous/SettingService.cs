@@ -270,6 +270,22 @@ namespace Zametek.ProjectPlan
             }
         }
 
+        public override int CompilationTimeoutMilliseconds
+        {
+            get
+            {
+                return m_AppSettingsModel.CompilationTimeoutMilliseconds;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { CompilationTimeoutMilliseconds = value };
+                    SaveSettings();
+                }
+            }
+        }
+
         public override IReadOnlyList<string> RecentProjectFilePaths
         {
             get
