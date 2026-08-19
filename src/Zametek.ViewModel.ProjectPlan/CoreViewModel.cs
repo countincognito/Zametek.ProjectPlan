@@ -24,6 +24,20 @@ namespace Zametek.ViewModel.ProjectPlan
         private const int c_CompilationOutputRevisionWrap = 1_000_000;
 
         private readonly Lock m_Lock;
+
+        /// <summary>
+        /// The leaf lock shared by every activity view model, guarding the activity state
+        /// a compilation reads and writes. Held only around the snapshot and publish steps
+        /// here, and around the individual writes inside the activities themselves.
+        /// </summary>
+        /// <remarks>
+        /// Strictly inside <see cref="m_Lock"/> in the lock order, and the only lock the
+        /// activities take, so it cannot form a cycle. Never hold it while raising a
+        /// change notification or calling out to anything else - see ARCHITECTURE
+        /// section 7 rules 6 and 11.
+        /// </remarks>
+        private readonly Lock m_ActivityDataLock;
+
         private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
         private int m_BulkUpdateNestingLevel;
@@ -77,6 +91,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(logger);
             m_Logger = logger;
             m_Lock = new();
+            m_ActivityDataLock = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
             m_VertexGraphCompiler = new VertexGraphCompiler();
@@ -443,29 +458,120 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Runs the compiler under the watchdog, turning a watchdog cancellation into
-        /// a <see cref="GraphCompilationTimeoutException"/> so that callers can tell
-        /// it apart from any other cancellation. The budget starts here, immediately
-        /// around the compile, so time spent waiting for m_Lock is not charged to it.
+        /// Builds a compiler holding an independent copy of the plan - the input half of
+        /// the snapshot/compile/publish sequence that <see cref="CompileWithTimeout"/>
+        /// runs.
         /// </summary>
+        /// <remarks>
+        /// The copies are taken in one pass while <see cref="m_ActivityDataLock"/> is held,
+        /// so no activity can be edited part way through being copied, and the copy of the
+        /// plan as a whole is of a single moment rather than of several.
+        /// <para>
+        /// The activities are copied in the order the live graph holds them, because the
+        /// scheduling priority list resolves a tie between two activities in favour of
+        /// whichever it meets first; copying them in any other order would schedule ties
+        /// differently from a compilation of the live graph.
+        /// </para>
+        /// </remarks>
+        private VertexGraphCompiler SnapshotCompiler()
+        {
+            List<IDependentActivity> activityCopies = [];
+
+            lock (m_ActivityDataLock)
+            {
+                Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
+
+                foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
+                {
+                    if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
+                    {
+                        activityCopies.Add((IDependentActivity)activity.CloneObject());
+                    }
+                }
+            }
+
+            var compiler = new VertexGraphCompiler();
+
+            foreach (IDependentActivity activityCopy in activityCopies)
+            {
+                compiler.AddActivity(activityCopy);
+            }
+
+            return compiler;
+        }
+
+        /// <summary>
+        /// Applies a compilation's results to the live activities - the output half of the
+        /// sequence. Each activity absorbs its own results, so what a compilation produces
+        /// is applied in one place, next to the values it writes.
+        /// </summary>
+        /// <remarks>
+        /// Deliberately not under <see cref="m_ActivityDataLock"/>. Applying results
+        /// announces them - that is how they reach the view - and nothing may be announced
+        /// while that lock is held; each activity takes it for its own writes and announces
+        /// after releasing it. So results arrive one activity at a time, exactly as they did
+        /// when the compiler wrote into the live activities as it calculated.
+        /// <para>
+        /// This also keeps the live compiler's own derived values right: it reports the
+        /// project start and finish times by reading them from the activities it holds,
+        /// which are these ones.
+        /// </para>
+        /// </remarks>
+        private void PublishCompilation(IGraphCompilation<int, int, int, IDependentActivity> graphCompilation)
+        {
+            Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
+
+            foreach (IDependentActivity compiledActivity in graphCompilation.DependentActivities)
+            {
+                if (activityLookup.TryGetValue(compiledActivity.Id, out IManagedActivityViewModel? activity))
+                {
+                    activity.SetCompiledValues(compiledActivity);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Compiles a copy of the plan under the watchdog and applies the results, turning
+        /// a watchdog cancellation into a <see cref="GraphCompilationTimeoutException"/> so
+        /// that callers can tell it apart from any other cancellation.
+        /// </summary>
+        /// <remarks>
+        /// The compiler works on copies rather than on the live activities, so an edit made
+        /// while it runs cannot corrupt what it is compiling, and it cannot be seen writing
+        /// its results one activity at a time. A compilation that is abandoned - because it
+        /// timed out, or because it failed - therefore publishes nothing at all, and the
+        /// previous results stay in place whole.
+        /// <para>
+        /// The budget starts immediately around the compile, so neither the wait for
+        /// m_Lock nor the copying is charged to it.
+        /// </para>
+        /// </remarks>
         private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(
             List<IResource<int, int>> availableResources,
             List<IWorkStream<int>> workStreams,
             int timeoutMilliseconds)
         {
-            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
+            VertexGraphCompiler compiler = SnapshotCompiler();
 
-            try
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
+
+            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
             {
-                return m_VertexGraphCompiler.Compile(
-                    availableResources,
-                    workStreams,
-                    CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                try
+                {
+                    graphCompilation = compiler.Compile(
+                        availableResources,
+                        workStreams,
+                        CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                }
+                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+                {
+                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+                }
             }
-            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-            {
-                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-            }
+
+            PublishCompilation(graphCompilation);
+            return graphCompilation;
         }
 
         /// <summary>
@@ -474,16 +580,24 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(int timeoutMilliseconds)
         {
-            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
+            VertexGraphCompiler compiler = SnapshotCompiler();
 
-            try
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
+
+            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
             {
-                return m_VertexGraphCompiler.Compile(CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                try
+                {
+                    graphCompilation = compiler.Compile(CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                }
+                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+                {
+                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+                }
             }
-            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-            {
-                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-            }
+
+            PublishCompilation(graphCompilation);
+            return graphCompilation;
         }
 
         /// <summary>
@@ -1698,6 +1812,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 m_Mapper.ToDependentActivity(dependentActivity),
                                 m_DateTimeCalculator,
                                 m_VertexGraphCompiler,
+                                m_ActivityDataLock,
                                 ProjectStart,
                                 dependentActivity.Activity.Trackers,
                                 dependentActivity.Activity.MinimumEarliestStartDateTime,

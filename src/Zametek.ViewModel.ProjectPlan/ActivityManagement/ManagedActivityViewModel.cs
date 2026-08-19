@@ -19,6 +19,21 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
+        /// <summary>
+        /// The leaf lock that makes writes to <see cref="DependentActivity"/> exclusive
+        /// with the snapshot and publish steps of a compilation. Shared with every other
+        /// activity and owned by the core view model, so one acquisition covers a whole
+        /// snapshot or publish pass.
+        /// </summary>
+        /// <remarks>
+        /// The rules that keep this lock safe (ARCHITECTURE section 7 rule 11): it is
+        /// only ever held around writes to the activity's own state, never while raising
+        /// a change notification, never while calling anything outside this class, and
+        /// never while taking or holding another lock. Nothing it guards is reachable
+        /// from a property getter, so it cannot appear in a lock cycle.
+        /// </remarks>
+        private readonly Lock m_DataLock;
+
         private readonly IDisposable? m_ProjectStartSub;
         private readonly IDisposable? m_DateTimeCalculatorCalculatorModeSub;
         private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
@@ -33,6 +48,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDependentActivity dependentActivity,
             IDateTimeCalculator dateTimeCalculator,
             VertexGraphCompiler vertexGraphCompiler,
+            Lock dataLock,
             DateTimeOffset projectStart,
             IEnumerable<ActivityTrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
@@ -43,6 +59,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dependentActivity);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(vertexGraphCompiler);
+
+            // Checked directly rather than through ArgumentNullException.ThrowIfNull,
+            // which takes an object and so would convert the Lock (CS9216).
+            if (dataLock is null)
+            {
+                throw new ArgumentNullException(nameof(dataLock));
+            }
+
             m_CoreViewModel = coreViewModel;
             DependentActivity = dependentActivity;
             m_DateTimeCalculator = dateTimeCalculator;
@@ -51,6 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MinimumEarliestStartDateTime = minimumEarliestStartDateTime;
             m_MaximumLatestFinishDateTime = maximumLatestFinishDateTime;
             m_VertexGraphCompiler = vertexGraphCompiler;
+            m_DataLock = dataLock;
 
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
@@ -175,7 +200,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ValidateMinimumEarliestStartTime(intValue);
 
             // Set integer and DateTimeOffset values.
-            DependentActivity.MinimumEarliestStartTime = intValue;
+            lock (m_DataLock)
+            {
+                DependentActivity.MinimumEarliestStartTime = intValue;
+            }
             this.RaisePropertyChanged(nameof(MinimumEarliestStartTime));
             this.RaiseAndSetIfChanged(ref m_MinimumEarliestStartDateTime, dateTimeOffsetValue, nameof(MinimumEarliestStartDateTime));
             RefreshStartAndFinishValues();
@@ -192,7 +220,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Set integer and DateTimeOffset values.
-            DependentActivity.MinimumEarliestStartTime = intValue;
+            lock (m_DataLock)
+            {
+                DependentActivity.MinimumEarliestStartTime = intValue;
+            }
             this.RaisePropertyChanged(nameof(MinimumEarliestStartTime));
             this.RaiseAndSetIfChanged(ref m_MinimumEarliestStartDateTime, dateTimeOffsetValue, nameof(MinimumEarliestStartDateTime));
             RefreshStartAndFinishValues();
@@ -206,7 +237,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ValidateMaximumLatestFinishTime(intValue);
 
             // Set integer and DateTimeOffset values.
-            DependentActivity.MaximumLatestFinishTime = intValue;
+            lock (m_DataLock)
+            {
+                DependentActivity.MaximumLatestFinishTime = intValue;
+            }
             this.RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             this.RaiseAndSetIfChanged(ref m_MaximumLatestFinishDateTime, dateTimeOffsetValue, nameof(MaximumLatestFinishDateTime));
             RefreshStartAndFinishValues();
@@ -223,7 +257,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Set integer and DateTimeOffset values.
-            DependentActivity.MaximumLatestFinishTime = intValue;
+            lock (m_DataLock)
+            {
+                DependentActivity.MaximumLatestFinishTime = intValue;
+            }
             this.RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             this.RaiseAndSetIfChanged(ref m_MaximumLatestFinishDateTime, dateTimeOffsetValue, nameof(MaximumLatestFinishDateTime));
             RefreshStartAndFinishValues();
@@ -289,8 +326,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void UpdateActivityTargetResources()
         {
-            DependentActivity.TargetResources.Clear();
-            DependentActivity.TargetResources.UnionWith(ResourceSelector.SelectedResourceIds);
+            // The set is cleared and refilled, so a compilation snapshotting it at the
+            // wrong moment would clone a half-built set; the lock is what stops that.
+            lock (m_DataLock)
+            {
+                DependentActivity.TargetResources.Clear();
+                DependentActivity.TargetResources.UnionWith(ResourceSelector.SelectedResourceIds);
+            }
             this.RaisePropertyChanged(nameof(TargetResources));
             this.RaisePropertyChanged(nameof(ResourceSelector));
             this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
@@ -320,8 +362,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void UpdateActivityTargetWorkStreams()
         {
-            DependentActivity.TargetWorkStreams.Clear();
-            DependentActivity.TargetWorkStreams.UnionWith(WorkStreamSelector.SelectedWorkStreamIds);
+            lock (m_DataLock)
+            {
+                DependentActivity.TargetWorkStreams.Clear();
+                DependentActivity.TargetWorkStreams.UnionWith(WorkStreamSelector.SelectedWorkStreamIds);
+            }
             this.RaisePropertyChanged(nameof(TargetWorkStreams));
             this.RaisePropertyChanged(nameof(WorkStreamSelector));
         }
@@ -447,7 +492,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (updatedDependencies is not null)
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], PlanningDependencies);
+                    // This rewrites the activity's own dependency sets as well as the
+                    // graph edges, so it is a write to the data a compilation snapshots.
+                    lock (m_DataLock)
+                    {
+                        m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], PlanningDependencies);
+                    }
                 }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(Dependencies));
@@ -468,7 +518,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (updatedPlanningDependencies is not null)
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
+                    lock (m_DataLock)
+                    {
+                        m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
+                    }
                 }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(PlanningDependencies));
@@ -488,7 +541,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => DependentActivity.Name;
             set
             {
-                DependentActivity.Name = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.Name = value;
+                }
                 this.RaisePropertyChanged();
             }
         }
@@ -498,7 +554,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => DependentActivity.Notes;
             set
             {
-                DependentActivity.Notes = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.Notes = value;
+                }
                 this.RaisePropertyChanged();
             }
         }
@@ -512,7 +571,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => DependentActivity.TargetResourceOperator;
             set
             {
-                DependentActivity.TargetResourceOperator = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.TargetResourceOperator = value;
+                }
                 this.RaisePropertyChanged();
             }
         }
@@ -546,7 +608,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (DependentActivity.HasNoCost != value)
                 {
                     BeginEdit();
-                    DependentActivity.HasNoCost = value;
+                    lock (m_DataLock)
+                    {
+                        DependentActivity.HasNoCost = value;
+                    }
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -561,7 +626,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (DependentActivity.HasNoBilling != value)
                 {
                     BeginEdit();
-                    DependentActivity.HasNoBilling = value;
+                    lock (m_DataLock)
+                    {
+                        DependentActivity.HasNoBilling = value;
+                    }
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -576,7 +644,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (DependentActivity.HasNoEffort != value)
                 {
                     BeginEdit();
-                    DependentActivity.HasNoEffort = value;
+                    lock (m_DataLock)
+                    {
+                        DependentActivity.HasNoEffort = value;
+                    }
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -591,7 +662,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (DependentActivity.HasNoRisk != value)
                 {
                     BeginEdit();
-                    DependentActivity.HasNoRisk = value;
+                    lock (m_DataLock)
+                    {
+                        DependentActivity.HasNoRisk = value;
+                    }
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -610,7 +684,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 ValidateDuration(value);
 
-                DependentActivity.Duration = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.Duration = value;
+                }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(IsDummy));
                 this.RaisePropertyChanged(nameof(IsCritical));
@@ -630,7 +707,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => DependentActivity.FreeSlack;
             set
             {
-                DependentActivity.FreeSlack = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.FreeSlack = value;
+                }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
@@ -649,7 +729,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => DependentActivity.EarliestStartTime;
             set
             {
-                DependentActivity.EarliestStartTime = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.EarliestStartTime = value;
+                }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(EarliestStartDateTimeOffset));
                 this.RaisePropertyChanged(nameof(EarliestFinishTime));
@@ -734,7 +817,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => DependentActivity.LatestFinishTime;
             set
             {
-                DependentActivity.LatestFinishTime = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.LatestFinishTime = value;
+                }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(LatestFinishDateTimeOffset));
                 this.RaisePropertyChanged(nameof(LatestStartTime));
@@ -778,7 +864,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 ValidateMinimumFreeSlack(value);
 
-                DependentActivity.MinimumFreeSlack = value;
+                lock (m_DataLock)
+                {
+                    DependentActivity.MinimumFreeSlack = value;
+                }
                 this.RaisePropertyChanged();
             }
         }
@@ -851,7 +940,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (DependentActivity.OverrideColor != value)
                 {
                     BeginEdit();
-                    DependentActivity.OverrideColor = value;
+                    lock (m_DataLock)
+                    {
+                        DependentActivity.OverrideColor = value;
+                    }
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -866,7 +958,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (DependentActivity.ColorFormat != value)
                 {
                     BeginEdit();
-                    DependentActivity.ColorFormat = value;
+                    lock (m_DataLock)
+                    {
+                        DependentActivity.ColorFormat = value;
+                    }
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -887,12 +982,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void SetAsReadOnly()
         {
-            DependentActivity.SetAsReadOnly();
+            lock (m_DataLock)
+            {
+                DependentActivity.SetAsReadOnly();
+            }
         }
 
         public void SetAsRemovable()
         {
-            DependentActivity.SetAsRemovable();
+            lock (m_DataLock)
+            {
+                DependentActivity.SetAsRemovable();
+            }
         }
 
         /// <summary>
@@ -965,12 +1066,91 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
+        /// <summary>
+        /// Takes an independent copy of the underlying activity. This is the input half
+        /// of a compilation: the compiler is given these copies rather than the live
+        /// activities, so nothing it does can be disturbed by an edit made while it runs,
+        /// and no edit can observe the half-written state it would otherwise leave behind.
+        /// <see cref="SetCompiledValues"/> is the output half.
+        /// </summary>
+        /// <remarks>
+        /// The trackers are read from the tracker set rather than the underlying activity,
+        /// because the tracker set is where they are actually maintained. That read is
+        /// outside the lock, as the tracker set guards its own state; trackers are
+        /// immutable records, so the copy is coherent whatever else is happening.
+        /// </remarks>
         public object CloneObject()
         {
-            var activity = (IDependentActivity)DependentActivity.CloneObject();
+            IDependentActivity activity;
+
+            lock (m_DataLock)
+            {
+                activity = (IDependentActivity)DependentActivity.CloneObject();
+            }
+
             activity.Trackers.Clear();
             activity.Trackers.AddRange(Trackers);
             return activity;
+        }
+
+        /// <summary>
+        /// Absorbs the results of a compilation from the compiled copy of this activity.
+        /// The output half of the pair described on <see cref="CloneObject"/>.
+        /// </summary>
+        /// <remarks>
+        /// Every value a compilation produces is applied here, and nothing else is: the
+        /// times and slack it calculates, the resources it allocated the activity to, the
+        /// dependencies that allocation implies, and the successors it derived. The
+        /// activity's own inputs - duration, targets, constraints, the dependencies the
+        /// user set - are not touched, because a compilation never changes them, and
+        /// writing them back would overwrite any edit made while it ran.
+        /// <para>
+        /// The times go through this view model's own setters rather than straight into
+        /// the underlying activity, because those setters are how a compilation's results
+        /// have always reached the view: the compiler held the view models themselves as
+        /// its graph, so calculating a time called the setter, which announced it along
+        /// with everything derived from it. Compiling a copy of the plan must not lose
+        /// that, or the grid keeps showing the values from the compilation before.
+        /// </para>
+        /// <para>
+        /// The collections are written first, because the setters that follow announce the
+        /// properties derived from them. They are the only part written directly, as they
+        /// have no setter of their own; the announcements the times make cover them.
+        /// </para>
+        /// <para>
+        /// None of this arms another compilation. That happens only when an activity is
+        /// marked uncompiled, which is a consequence of an edit being committed
+        /// (IEditableObject.EndEdit), never of a value being announced.
+        /// </para>
+        /// </remarks>
+        public void SetCompiledValues(IDependentActivity compiledActivity)
+        {
+            ArgumentNullException.ThrowIfNull(compiledActivity);
+
+            if (compiledActivity.Id != Id)
+            {
+                throw new ArgumentException(
+                    $@"The compiled activity must be the compiled copy of this activity, but its ID is {compiledActivity.Id} and this activity's ID is {Id}.",
+                    nameof(compiledActivity));
+            }
+
+            lock (m_DataLock)
+            {
+                DependentActivity.AllocatedToResources.Clear();
+                DependentActivity.AllocatedToResources.UnionWith(compiledActivity.AllocatedToResources);
+
+                DependentActivity.ResourceDependencies.Clear();
+                DependentActivity.ResourceDependencies.UnionWith(compiledActivity.ResourceDependencies);
+
+                DependentActivity.Successors.Clear();
+                DependentActivity.Successors.UnionWith(compiledActivity.Successors);
+            }
+
+            // Outside the lock: these announce, and nothing may be announced while the
+            // lock is held (ARCHITECTURE section 7 rules 6 and 11).
+            EarliestStartTime = compiledActivity.EarliestStartTime;
+            LatestFinishTime = compiledActivity.LatestFinishTime;
+            FreeSlack = compiledActivity.FreeSlack;
         }
 
         #endregion

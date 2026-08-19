@@ -16,8 +16,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
 
-        private readonly IDisposable? m_WorkStreamSettingsSub;
-
         #endregion
 
         #region Ctors
@@ -62,12 +60,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     (interActivityAllocationType) => interActivityAllocationType == InterActivityAllocationType.Indirect)
                 .ToProperty(this, x => x.InterActivityAllocationIsIndirect);
 
-            m_WorkStreamSettingsSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
-                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(x => WorkStreamSettings = x);
-
+            // Work stream settings are not observed here. The settings manager pushes them
+            // in synchronously through SetWorkStreamSettings when they change, in the same
+            // way the core view model pushes them into the activities: a callback deferred
+            // to another thread would rewrite this resource's target phases at a moment of
+            // the scheduler's choosing, which is the shape of mutation that corrupted a
+            // compilation's input (ARCHITECTURE section 7 rule 10). Nothing here reaches a
+            // compiler, but the rule is worth keeping uniform, and the push also settles
+            // the phases before the recompilation the change triggers.
             m_HasPhases = this
                 .WhenAnyValue(x => x.m_CoreViewModel.HasPhases)
                 .ToProperty(this, x => x.HasPhases);
@@ -81,15 +81,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool InterActivityAllocationIsIndirect => m_InterActivityAllocationIsIndirect.Value;
 
         private WorkStreamSettingsModel m_WorkStreamSettings;
-        private WorkStreamSettingsModel WorkStreamSettings
-        {
-            get => m_WorkStreamSettings;
-            set
-            {
-                m_WorkStreamSettings = value;
-                SetNewTargetWorkStreams();
-            }
-        }
 
         #endregion
 
@@ -114,7 +105,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var selectedTargetWorkStreams = new HashSet<int>(m_TargetWorkStreams);
 
-            IEnumerable<TargetWorkStreamModel> targetWorkStreams = WorkStreamSettings
+            IEnumerable<TargetWorkStreamModel> targetWorkStreams = m_WorkStreamSettings
                 .WorkStreams.Select(
                     x => new TargetWorkStreamModel
                     {
@@ -290,6 +281,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool IsEditing => m_isDirty;
 
+        /// <summary>
+        /// Absorbs new work stream settings: stores them, rebuilds the work stream
+        /// selector, and reconciles this resource's target phases against the work streams
+        /// that now exist. Invoked synchronously by the settings manager when the settings
+        /// change - see the note in the constructor for why it is not observed instead.
+        /// </summary>
+        public void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings)
+        {
+            ArgumentNullException.ThrowIfNull(workStreamSettings);
+            m_WorkStreamSettings = workStreamSettings;
+            SetNewTargetWorkStreams();
+        }
+
         public ResourceModel DeepCopy()
         {
             return new()
@@ -364,7 +368,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_WorkStreamSettingsSub?.Dispose();
         }
 
         #endregion

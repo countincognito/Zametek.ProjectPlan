@@ -45,6 +45,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsEditing { get; }
 
+        // Invoked synchronously by the settings manager when the work stream settings
+        // change - never deferred per resource, mirroring the activities.
+        void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
+
         ResourceModel DeepCopy();
     }
 }

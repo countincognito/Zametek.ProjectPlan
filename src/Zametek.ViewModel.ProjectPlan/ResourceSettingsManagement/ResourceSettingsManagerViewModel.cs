@@ -28,6 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_ReadOnlyResourcesSub;
         private readonly IDisposable? m_OrderableResourcesSub;
         private readonly IDisposable? m_ProcessResourceSettingsSub;
+        private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
         private readonly IDisposable? m_UpdateResourceSettingsSub;
 
         #endregion
@@ -127,6 +128,24 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (m_Current != rs)
                     {
                         ProcessSettings(rs);
+                    }
+                });
+
+            // One subscription here, fanning out synchronously to the resources, rather
+            // than one subscription inside each resource: the resources absorb the change
+            // together, in a single pass, on the thread that delivers it. See the note in
+            // the ManagedResourceViewModel constructor.
+            m_ProcessWorkStreamSettingsSub = this
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.WorkStreamSettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(wss =>
+                {
+                    lock (m_Lock)
+                    {
+                        foreach (IManagedResourceViewModel resource in RawResources)
+                        {
+                            resource.SetWorkStreamSettings(wss);
+                        }
                     }
                 });
 
@@ -716,6 +735,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ReadOnlyResourcesSub?.Dispose();
                 m_OrderableResourcesSub?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
+                m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
                 ClearManagedResources();
                 m_Resources?.Dispose();

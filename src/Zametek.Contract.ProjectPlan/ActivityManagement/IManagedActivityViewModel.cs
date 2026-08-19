@@ -53,6 +53,11 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
 
+        // The two halves of a compilation: CloneObject (from IHaveCloneableObject) hands
+        // the compiler an independent copy of this activity, and this applies the results
+        // back once it has finished, so the compiler never works on live state.
+        void SetCompiledValues(IDependentActivity compiledActivity);
+
         DependentActivityModel DeepCopy();
     }
 }
