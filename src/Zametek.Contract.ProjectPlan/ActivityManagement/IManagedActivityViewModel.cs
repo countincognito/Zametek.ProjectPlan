@@ -46,6 +46,13 @@ namespace Zametek.Contract.ProjectPlan
 
         IActivityTrackerSetViewModel TrackerSet { get; }
 
+        // Invoked synchronously by the core view model, under its lock, when the
+        // corresponding settings change - never deferred to another thread, so the
+        // activity's live target sets cannot be mutated while a compile clones them.
+        void SetResourceSettings(ResourceSettingsModel resourceSettings);
+
+        void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
+
         DependentActivityModel DeepCopy();
     }
 }

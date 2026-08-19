@@ -20,8 +20,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
         private readonly IDisposable? m_ProjectStartSub;
-        private readonly IDisposable? m_ResourceSettingsSub;
-        private readonly IDisposable? m_WorkStreamSettingsSub;
         private readonly IDisposable? m_DateTimeCalculatorCalculatorModeSub;
         private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
         private readonly IDisposable? m_CompilationSub;
@@ -62,6 +60,16 @@ namespace Zametek.ViewModel.ProjectPlan
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();
 
+            // Write the seeded selections straight back into the underlying activity.
+            // The selectors only keep target ids that exist in the current settings, so
+            // this prunes ids referring to since-removed resources or work streams the
+            // moment the activity is built, keeping the activity's target sets and its
+            // selectors identical from birth. This write-back used to happen through
+            // the deferred settings subscriptions (removed - see below), which left a
+            // window where the compiler saw the unpruned sets.
+            UpdateActivityTargetResources();
+            UpdateActivityTargetWorkStreams();
+
             if (MinimumEarliestStartDateTime.HasValue)
             {
                 SetMinimumEarliestStartTimes(MinimumEarliestStartDateTime, skipValidation: true);
@@ -83,9 +91,19 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackerSet = new ActivityTrackerSetViewModel(
                 m_CoreViewModel, DependentActivity.Id, trackers ?? []);
 
-            // We use Scheduler.CurrentThread here to ensure that wide sweeping changes,
-            // such as settings changes, are performed in the same thread from the CoreViewModel.
-            // That way they must complete before the CoreViewModel can proceed to compilation.
+            // The subscriptions below observe on Scheduler.CurrentThread so that their
+            // callbacks run inline on whichever thread raises the change, and are
+            // therefore complete before the CoreViewModel can proceed to compilation.
+            //
+            // Resource and work stream settings are deliberately NOT observed here:
+            // the CoreViewModel pushes them in synchronously, under its own lock, via
+            // SetResourceSettings/SetWorkStreamSettings. They used to arrive through
+            // subscriptions deferred to the UI thread, which could clear and rebuild
+            // this activity's live target sets while a compile on another thread was
+            // cloning them - the torn-HashSet corruption diagnosed from the
+            // zametek-deadlock-2 dump. Nothing that mutates the underlying activity
+            // may be deferred like that; it must run synchronously wherever the
+            // change is made, so it is ordered against the compile by m_Lock.
 
             m_ShowDates = this
                 .WhenAnyValue(x => x.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
@@ -103,18 +121,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(x => ProjectStart = x);
-
-            m_ResourceSettingsSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.ResourceSettings)
-                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(x => ResourceSettings = x);
-
-            m_WorkStreamSettingsSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
-                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(x => WorkStreamSettings = x);
 
             m_DateTimeCalculatorCalculatorModeSub = this
                 .WhenAnyValue(
@@ -152,26 +158,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Properties
 
         private ResourceSettingsModel m_ResourceSettings;
-        private ResourceSettingsModel ResourceSettings
-        {
-            get => m_ResourceSettings;
-            set
-            {
-                m_ResourceSettings = value;
-                SetNewTargetResources();
-            }
-        }
 
         private WorkStreamSettingsModel m_WorkStreamSettings;
-        private WorkStreamSettingsModel WorkStreamSettings
-        {
-            get => m_WorkStreamSettings;
-            set
-            {
-                m_WorkStreamSettings = value;
-                SetNewTargetWorkStreams();
-            }
-        }
 
         public IDependentActivity DependentActivity { get; }
 
@@ -319,7 +307,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var selectedTargetResources = new HashSet<int>(DependentActivity.TargetResources);
 
-            IEnumerable<TargetResourceModel> targetResources = ResourceSettings
+            IEnumerable<TargetResourceModel> targetResources = m_ResourceSettings
                 .Resources.Select(
                     x => new TargetResourceModel
                     {
@@ -349,7 +337,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var selectedTargetWorkStreams = new HashSet<int>(DependentActivity.TargetWorkStreams);
 
-            IEnumerable<TargetWorkStreamModel> targetWorkStreams = WorkStreamSettings
+            IEnumerable<TargetWorkStreamModel> targetWorkStreams = m_WorkStreamSettings
                 .WorkStreams.Select(
                     x => new TargetWorkStreamModel
                     {
@@ -907,6 +895,32 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity.SetAsRemovable();
         }
 
+        /// <summary>
+        /// Absorbs new resource settings: stores them, rebuilds the resource selector,
+        /// and reconciles the activity's target resources against the resources that
+        /// now exist. The CoreViewModel invokes this synchronously, under its lock,
+        /// whenever its resource settings change - always before a compile can start
+        /// against the new settings. It must never be deferred to another thread: the
+        /// target sets belong to the live activity that the compiler clones, and a
+        /// deferred mutation can tear those clones mid-copy.
+        /// </summary>
+        public void SetResourceSettings(ResourceSettingsModel resourceSettings)
+        {
+            ArgumentNullException.ThrowIfNull(resourceSettings);
+            m_ResourceSettings = resourceSettings;
+            SetNewTargetResources();
+        }
+
+        /// <summary>
+        /// The work stream counterpart to <see cref="SetResourceSettings"/>.
+        /// </summary>
+        public void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings)
+        {
+            ArgumentNullException.ThrowIfNull(workStreamSettings);
+            m_WorkStreamSettings = workStreamSettings;
+            SetNewTargetWorkStreams();
+        }
+
         public DependentActivityModel DeepCopy()
         {
             var activityModel = new ActivityModel
@@ -1013,8 +1027,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_ProjectStartSub?.Dispose();
-            m_ResourceSettingsSub?.Dispose();
-            m_WorkStreamSettingsSub?.Dispose();
             m_DateTimeCalculatorCalculatorModeSub?.Dispose();
             m_DateTimeCalculatorDisplayModeSub?.Dispose();
             m_CompilationSub?.Dispose();

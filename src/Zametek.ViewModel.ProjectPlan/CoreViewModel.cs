@@ -796,6 +796,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ResourceSettings = value;
+
+                    // Push the new settings into every activity synchronously, so
+                    // their target resource sets are reconciled before the compile
+                    // armed below can observe them. This used to happen through a
+                    // per-activity subscription deferred to the UI thread, which
+                    // could clear and rebuild the live target sets while a compile
+                    // on another thread was cloning them - the torn-HashSet
+                    // corruption diagnosed from the zametek-deadlock-2 dump. During
+                    // a load this loop is empty: the settings are always assigned
+                    // before the activities are added, and each activity seeds
+                    // itself from the current settings in its constructor.
+                    foreach (IManagedActivityViewModel activity in RawActivities)
+                    {
+                        activity.SetResourceSettings(value);
+                    }
+
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
@@ -812,6 +828,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_WorkStreamSettings = value;
+
+                    // Synchronous for the same reason as ResourceSettings above.
+                    foreach (IManagedActivityViewModel activity in RawActivities)
+                    {
+                        activity.SetWorkStreamSettings(value);
+                    }
+
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
