@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI.Builder;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,6 +70,23 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             coreViewModel.KillSubscriptions();
             coreViewModel.AutoCompile = false;
             return coreViewModel;
+        }
+
+        /// <summary>
+        /// Reads the current scenario out of a project file in TestFiles, through the same
+        /// reader the application uses. A real plan carries the shape a hand-built one does
+        /// not - dozens of activities, a deep dependency chain, a mixture of activities that
+        /// target specific resources and activities that take whatever is free - which is
+        /// what makes a scheduling result worth comparing against another.
+        /// </summary>
+        public static async Task<ProjectScenarioModel> LoadProjectScenarioAsync(string testFileName)
+        {
+            var projectFileOpen = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
+
+            ProjectModel projectModel = await projectFileOpen.OpenProjectFileAsync(
+                Path.Combine(@"TestFiles", testFileName));
+
+            return projectModel.Files.Single(x => x.NodeId == projectModel.Current).Scenario;
         }
 
         /// <summary>
