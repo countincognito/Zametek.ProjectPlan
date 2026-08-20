@@ -3,6 +3,7 @@ using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Plottables;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
@@ -87,6 +88,16 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_AnnotatedEllipseRadius = 5.0;
 
         private static readonly char[] s_PolynomialSuperscripts = ['⁰', '¹', '²', '³', '⁴'];
+
+        // The two ways a formula's numbers can be rounded. Either may be changed on its
+        // own; FormatFormulaValue picks whichever of them suits the value in hand.
+        private const int c_FormulaValueSignificantFigures = 5;
+
+        private const int c_FormulaValueDecimalPlaces = 5;
+
+        private static readonly string s_FormulaValueFixedFormat = $"F{c_FormulaValueDecimalPlaces}";
+
+        private static readonly string s_FormulaValueGeneralFormat = $"G{c_FormulaValueSignificantFigures}";
 
         // The raw scenario xs can be sparse, so fitted curves and their
         // derivatives are sampled over at least this many evenly spaced
@@ -265,6 +276,47 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Formats a number for the fitted curve and derivative formulae shown on the
+        /// chart, keeping either a fixed number of decimal places or a fixed number of
+        /// significant figures - whichever of the two says more about the value in hand.
+        /// </summary>
+        /// <remarks>
+        /// A fixed number of decimal places keeps digits down to a fixed size, however
+        /// large or small the value is, while significant figures keep them down to a size
+        /// that follows the value. So the significant figures are worth having exactly when
+        /// they reach further than the decimal places do, which is what the comparison
+        /// below asks: a coefficient of 0.000012345 is worth more as five figures than as
+        /// five decimal places (which would leave 0.00001), while 620564.12345 is worth
+        /// more the other way round (five figures would leave 620560). A value too small to
+        /// read as a decimal comes out in scientific notation, which is the general
+        /// format's own doing.
+        /// <para>
+        /// This is also the one place the formulae are formatted, because a format cannot
+        /// be given as an interpolation specifier - everything after the colon there is
+        /// literal text, so it could not name these constants. The culture is stated rather
+        /// than left implicit, but it is the current one, so the formulae read in the
+        /// user's own conventions.
+        /// </para>
+        /// </remarks>
+        private static string FormatFormulaValue(double value)
+        {
+            // Zero has no exponent to reason about, and neither do the non-finite values.
+            if (value == 0.0
+                || double.IsNaN(value)
+                || double.IsInfinity(value))
+            {
+                return value.ToString(s_FormulaValueFixedFormat, CultureInfo.CurrentCulture);
+            }
+
+            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(value)));
+            int significantFigureDecimals = c_FormulaValueSignificantFigures - 1 - exponent;
+
+            return significantFigureDecimals > c_FormulaValueDecimalPlaces
+                ? value.ToString(s_FormulaValueGeneralFormat, CultureInfo.CurrentCulture)
+                : value.ToString(s_FormulaValueFixedFormat, CultureInfo.CurrentCulture);
+        }
 
         private async Task BuildScenarioChartPlotModelAsync()
         {
@@ -498,7 +550,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
-                            string expression = $"{b:F4}x + {a:F4}";
+                            string expression = $"{FormatFormulaValue(b)}x + {FormatFormulaValue(a)}";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] fx = [.. sampleXs.Select(x => a + b * x)];
 
@@ -508,7 +560,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y = {expression} (r²={r2:F4})";
+                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
@@ -519,7 +571,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
-                            string expression = $"{a:F4}e^{r:F4}x";
+                            string expression = $"{FormatFormulaValue(a)}e^{FormatFormulaValue(r)}x";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] fx = [.. sampleXs.Select(x => a * Math.Exp(r * x))];
 
@@ -529,7 +581,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y = {expression} (r²={r2:F4})";
+                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
@@ -540,7 +592,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
-                            string expression = $"{b:F4}ln(x) + {a:F4}";
+                            string expression = $"{FormatFormulaValue(b)}ln(x) + {FormatFormulaValue(a)}";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] fx = [.. sampleXs.Select(x => a + b * Math.Log(x))];
 
@@ -550,7 +602,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y = {expression} (r²={r2:F4})";
+                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
@@ -562,7 +614,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
                             double f(double x) => a * Math.Pow(x, b);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => f(x)));
-                            string expression = $"{a:F4}x^{b:F4}";
+                            string expression = $"{FormatFormulaValue(a)}x^{FormatFormulaValue(b)}";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] fx = [.. sampleXs.Select(x => f(x))];
 
@@ -572,7 +624,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y = {expression} (r²={r2:F4})";
+                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
@@ -628,7 +680,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // y = bx + a differentiates to the constant y′ = b.
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
-                            string expression = $"{b:F4}";
+                            string expression = $"{FormatFormulaValue(b)}";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(_ => b)];
 
@@ -638,7 +690,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
@@ -650,7 +702,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // y = ae^rx differentiates to y′ = are^rx.
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
-                            string expression = $"{a * r:F4}e^{r:F4}x";
+                            string expression = $"{FormatFormulaValue(a * r)}e^{FormatFormulaValue(r)}x";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(x => a * r * Math.Exp(r * x))];
 
@@ -660,7 +712,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
@@ -672,7 +724,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // y = b·ln(x) + a differentiates to y′ = b/x.
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
-                            string expression = $"{b:F4}/x";
+                            string expression = $"{FormatFormulaValue(b)}/x";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(x => b / x)];
 
@@ -682,7 +734,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
@@ -694,7 +746,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // y = ax^b differentiates to y′ = abx^(b−1).
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Pow(x, b)));
-                            string expression = $"{a * b:F4}x^{b - 1.0:F4}";
+                            string expression = $"{FormatFormulaValue(a * b)}x^{FormatFormulaValue(b - 1.0)}";
                             double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(x => a * b * Math.Pow(x, b - 1.0))];
 
@@ -704,7 +756,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 expression = $"|{expression}|";
                             }
 
-                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
                             AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
@@ -797,7 +849,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // Plot the regression curve.
             AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
 
-            return $"y = {expression} (r²={r2:F4})";
+            return $"y = {expression} (r²={FormatFormulaValue(r2)})";
         }
 
         private static string BuildPolynomialCurveFitDerivative(
@@ -848,7 +900,7 @@ namespace Zametek.ViewModel.ProjectPlan
             AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
 
             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients)));
-            return $"y′ = {expression} (r²={r2:F4})";
+            return $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
         }
 
         private static void AppendPolynomialTerms(
@@ -875,11 +927,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (i > 0)
                 {
-                    formula.Append($"{Math.Abs(coefficients[i]):F4}x{s_PolynomialSuperscripts[i]}");
+                    formula.Append($"{FormatFormulaValue(Math.Abs(coefficients[i]))}x{s_PolynomialSuperscripts[i]}");
                 }
                 else
                 {
-                    formula.Append($"{Math.Abs(coefficients[i]):F4}");
+                    formula.Append($"{FormatFormulaValue(Math.Abs(coefficients[i]))}");
                 }
             }
         }
