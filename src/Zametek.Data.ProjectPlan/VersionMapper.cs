@@ -3,7 +3,13 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan
 {
-    [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
+    // Deep cloning is on because a property whose type is the same on both sides of a
+    // version - a List of activity ids, of edge ids, of file paths - is otherwise
+    // assigned across rather than copied, and the converted model turns out to be
+    // holding the very lists the version it was converted from is holding. Nothing
+    // depends on that today only because the intermediate versions in a conversion
+    // chain are thrown away immediately; it is not a property worth relying on.
+    [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None, UseDeepCloning = true)]
     public partial class VersionMapper
     {
         public static string FromNullableToDefault(string? src)

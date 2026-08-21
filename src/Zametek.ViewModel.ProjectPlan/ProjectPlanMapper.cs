@@ -5,7 +5,13 @@ using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
+    // Deep cloning is on because this mapper works across the boundary between the
+    // live plan and the models the application passes around and persists. Without
+    // it, a property whose type is the same on both sides - a List of trackers, a
+    // colour - is assigned across rather than copied, so the model shares it with
+    // the activity it came from and an edit to either is an edit to both. That is
+    // not theoretical: it emptied an activity's trackers once already.
+    [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None, UseDeepCloning = true)]
     public partial class ProjectPlanMapper
     {
         public static string FromNullableToDefault(string? src)
@@ -70,8 +76,14 @@ namespace Zametek.ViewModel.ProjectPlan
         // Activity
         // --------------------------------------------------------------------
 
-        // Auto: Activity<int,int,int> -> ActivityModel
-        public partial ActivityModel ToActivityModel(Activity<int, int, int> src);
+        // There is deliberately no mapping from the library's Activity<int,int,int>.
+        // Every activity in this application is a DependentActivity, which adds
+        // HasNoRisk, DisplayOrder, OverrideColor, ColorFormat and Trackers on top of
+        // it. A mapping from the base type could not see any of those and would
+        // return them at their defaults, which is exactly what happened when a call
+        // site upcast an activity on its way in: HasNoRisk arrived false and every
+        // activity marked as carrying no risk was counted in the risk metrics anyway.
+        // Without the overload, that upcast no longer compiles.
 
         // Manual: ActivityModel -> Activity<int,int,int>
         public static Activity<int, int, int> ToActivity(ActivityModel src)
@@ -139,16 +151,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var model = new DependentActivityModel
             {
-                Activity = ToActivityModel((Activity<int, int, int>)src)
+                Activity = ToActivityModel(src)
             };
 
             model.Dependencies.AddRange(src.Dependencies);
             model.PlanningDependencies.AddRange(src.PlanningDependencies);
             model.ResourceDependencies.AddRange(src.ResourceDependencies);
             model.Successors.AddRange(src.Successors);
-
-            model.Activity.Trackers.Clear();
-            model.Activity.Trackers.AddRange(src.Trackers);
 
             return model;
         }
@@ -157,16 +166,10 @@ namespace Zametek.ViewModel.ProjectPlan
         // ManagedActivityViewModel
         // --------------------------------------------------------------------
 
-        // Auto: ManagedActivityViewModel -> ActivityModel except Trackers
-        public partial ActivityModel ToActivityModelCore(ManagedActivityViewModel src);
-
-        public ActivityModel ToActivityModel(ManagedActivityViewModel src)
-        {
-            var dest = ToActivityModelCore(src);
-            dest.Trackers.Clear();
-            dest.Trackers.AddRange(src.TrackerSet.Trackers);
-            return dest;
-        }
+        // The view model's Trackers are its tracker set's, ordered by time, and are
+        // copied across like any other collection. This used to be done by hand
+        // afterwards, back when the mapping could not carry them at all.
+        public partial ActivityModel ToActivityModel(ManagedActivityViewModel src);
 
         public DependentActivityModel ToDependentActivityModel(ManagedActivityViewModel src)
         {
