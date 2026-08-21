@@ -165,30 +165,79 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         /// <summary>
-        /// The failure mode itself, pinned. This is not behaviour to rely on - it is
-        /// the reason the call site must pass the activity as it is rather than
-        /// upcasting it. If this test ever fails because the mapping became lossless,
-        /// delete it; if it fails because the overload was removed, delete it too.
+        /// The upcast that caused all this is now a compile error rather than a silent
+        /// loss, because the mapper no longer offers a mapping from the library's base
+        /// activity type. This test asserts that absence, so that re-declaring the
+        /// overload - which would make the trap available again - has to be a deliberate
+        /// decision taken against a failing test rather than an easy way to make some
+        /// other call site compile.
         /// </summary>
         [Fact]
-        public void ToActivityModel_Given_ActivityUpcastToTheLibraryType_Then_TheApplicationsOwnPropertiesAreLost()
+        public void ToActivityModel_Given_TheLibrarysBaseActivityType_Then_ThereIsNoMappingAtAll()
+        {
+            IEnumerable<MethodInfo> baseActivityMappings = typeof(ProjectPlanMapper)
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+                .Where(x => x.GetParameters().Length == 1
+                    && x.GetParameters()[0].ParameterType == typeof(Activity<int, int, int>));
+
+            baseActivityMappings.ShouldBeEmpty(
+                @"a mapping from Activity<int, int, int> cannot see HasNoRisk, DisplayOrder, OverrideColor, ColorFormat or Trackers, and would return them at their defaults");
+
+            // The mapping that does exist takes the activity this application actually
+            // uses, so nothing has to be upcast to reach it.
+            typeof(ProjectPlanMapper)
+                .GetMethod(nameof(ProjectPlanMapper.ToActivityModel), [typeof(DependentActivity)])
+                .ShouldNotBeNull();
+        }
+
+        #endregion
+
+        #region Independence of the mapped result
+
+        // The mapper deep clones, so nothing it returns may share a mutable collection
+        // with what it was given. These are the sites where the two sides have the same
+        // property type, which is where an assignment would otherwise be substituted for
+        // a copy.
+
+        [Fact]
+        public void ToActivityModel_Given_DependentActivity_Then_TheModelSharesNothingWithIt()
         {
             var mapper = new ProjectPlanMapper();
             DependentActivity activity = MakeFullyPopulatedActivity();
 
-            ActivityModel model = mapper.ToActivityModel((Activity<int, int, int>)activity);
+            ActivityModel model = mapper.ToActivityModel(activity);
 
-            model.HasNoRisk.ShouldBeFalse();
-            model.DisplayOrder.ShouldBe(0);
-            model.OverrideColor.ShouldBeFalse();
-            model.Trackers.ShouldBeEmpty();
+            model.Trackers.ShouldNotBeSameAs(activity.Trackers);
+            model.ColorFormat.ShouldNotBeSameAs(activity.ColorFormat);
 
-            // The library's own properties still arrive, which is what makes the
-            // upcast so quiet: the model looks populated.
-            model.Id.ShouldBe(42);
-            model.HasNoCost.ShouldBeTrue();
-            model.HasNoBilling.ShouldBeTrue();
-            model.HasNoEffort.ShouldBeTrue();
+            model.Trackers.Clear();
+            activity.Trackers.ShouldHaveSingleItem();
+        }
+
+        [Fact]
+        public void ToDependentActivity_Given_ActivityModel_Then_TheActivitySharesNothingWithIt()
+        {
+            var mapper = new ProjectPlanMapper();
+            var model = new ActivityModel
+            {
+                Id = 1,
+                Duration = 3,
+                TargetResources = [1, 2],
+                Trackers = [new ActivityTrackerModel { Time = 0, ActivityId = 1, PercentageComplete = 10 }],
+                ColorFormat = new ColorFormatModel { A = 1, R = 2, G = 3, B = 4 },
+            };
+
+            DependentActivity activity = mapper.ToDependentActivity(model);
+
+            activity.Trackers.ShouldNotBeSameAs(model.Trackers);
+            activity.ColorFormat.ShouldNotBeSameAs(model.ColorFormat);
+
+            // A DependentActivity is a live, mutable object; a model it was built from
+            // must not move when it does.
+            activity.Trackers.Clear();
+            activity.TargetResources.Clear();
+            model.Trackers.ShouldHaveSingleItem();
+            model.TargetResources.ShouldBe([1, 2], ignoreOrder: true);
         }
 
         #endregion

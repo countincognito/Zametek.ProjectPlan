@@ -1714,7 +1714,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     BeginBusy();
-                    var graphCompilation = m_Mapper.ToGraphCompilationModel(GraphCompilation);
 
                     // Default display mode is required for all file opening and closing.
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
