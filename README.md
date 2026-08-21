@@ -104,6 +104,30 @@ To build the installer from Visual Studio, first install the [WiX Toolset Visual
 
 The resulting installer (for example `projectplandotnet.0.9.3.installer.x64.msi`) is written to the project's output folder. Note that the MSI is not produced by CI - the release workflow ships only the portable zip / tar.gz archives - so the installer must be built locally.
 
+### Building the MSIX packages (Windows)
+
+MSIX packages are produced by the two Windows Application Packaging projects under `pkg/` - `Zametek.ProjectPlan.Desktop.WapPackager` for the desktop app and `Zametek.ProjectPlan.CommandLine.WapPackager` for the CLI - driven by the `build-msix.ps1` script in the repository root. The script exists because these projects cannot be built by the .NET CLI: `.wapproj` needs the Windows App Packaging SDK and therefore full MSBuild, which the script locates through `vswhere`, so Visual Studio 2022 or newer must be installed. It also sets the `RuntimeIdentifiers` environment variable for the duration of the build, because the packaging project publishes its entry point once per architecture in the bundle and NuGet restore has to have populated every one of those targets in a single pass or the build fails with `NETSDK1047`.
+
+Run it from the repository root:
+
+```
+.\build-msix.ps1
+```
+
+That builds both packages in `Release` for `x86|x64|arm64`, unsigned, and prints the path of each resulting `.msixbundle`. The parameters:
+
+| Parameter | Default | Effect |
+| --------- | ------- | ------ |
+| `-Target` | `Both` | Which package to build: `Desktop`, `CommandLine`, or `Both` |
+| `-Configuration` | `Release` | `Debug` or `Release` |
+| `-BundlePlatforms` | `x86\|x64\|arm64` | The architectures to include in the bundle |
+| `-Platform` | derived | The build platform, which must be one of the bundle platforms or `APPX3104` fires; picks `x64` if it is in the bundle, else `x86`, else whichever is listed first |
+| `-BuildMode` | `SideloadOnly` | `SideloadOnly` for local installation, `StoreUpload` for submission |
+| `-Sign` | off | Sign the package with the certificate configured in the packaging project |
+| `-Clean` | off | Delete `bin` and `obj` for the packaging project and its entry point first |
+
+Each bundle is written to the packaging project's own `AppPackages` folder. As with the MSI, CI does not produce these - they must be built locally.
+
 ### Running on Linux or WSL
 
 When running on Ubuntu or WSL, you will likely need to install the following packages for the compiled binary to run:

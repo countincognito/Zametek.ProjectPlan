@@ -13,7 +13,7 @@
       <Platform Solution="*|Any CPU" Project="x64" />
       <Build Project="false" />
     </Project>
-    <Project Path="pkg/Zametek.ProjectPlan.WapPackager/Zametek.ProjectPlan.WapPackager.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+    <Project Path="pkg/Zametek.ProjectPlan.Desktop.WapPackager/Zametek.ProjectPlan.Desktop.WapPackager.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
       <Deploy />
     </Project>
   </Folder>

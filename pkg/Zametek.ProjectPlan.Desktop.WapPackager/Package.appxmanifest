@@ -58,7 +58,7 @@
 
 		<uap3:Extension Category="windows.appExecutionAlias"
 				  EntryPoint="Windows.FullTrustApplication"
-				  Executable="Zametek.ProjectPlan\projectplandotnet.exe">
+				  Executable="Zametek.ProjectPlan.Desktop\projectplandotnet.exe">
 			<uap3:AppExecutionAlias>
 				<desktop:ExecutionAlias Alias="projectplandotnet.exe" />
 			</uap3:AppExecutionAlias>

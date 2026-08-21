@@ -1,7 +1,7 @@
 #requires -Version 5.1
 [CmdletBinding()]
 param(
-    [ValidateSet('App', 'CommandLine', 'Both')]
+    [ValidateSet('Desktop', 'CommandLine', 'Both')]
     [string]$Target = 'Both',
 
     [ValidateSet('Debug', 'Release')]
@@ -33,13 +33,14 @@ if (-not $Platform) {
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+# This script lives in the repository root, alongside the makefile, so the root is simply where it sits.
+$repoRoot = $PSScriptRoot
 $wapprojs = @{
-    'App'         = Join-Path $repoRoot 'pkg\Zametek.ProjectPlan.WapPackager\Zametek.ProjectPlan.WapPackager.wapproj'
+    'Desktop'     = Join-Path $repoRoot 'pkg\Zametek.ProjectPlan.Desktop.WapPackager\Zametek.ProjectPlan.Desktop.WapPackager.wapproj'
     'CommandLine' = Join-Path $repoRoot 'pkg\Zametek.ProjectPlan.CommandLine.WapPackager\Zametek.ProjectPlan.CommandLine.WapPackager.wapproj'
 }
 
-$selected = if ($Target -eq 'Both') { @('App', 'CommandLine') } else { @($Target) }
+$selected = if ($Target -eq 'Both') { @('Desktop', 'CommandLine') } else { @($Target) }
 
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 if (-not (Test-Path $vswhere)) {

@@ -163,7 +163,7 @@
     <Content Include="Images\Wide310x150Logo.scale-150.png" />
     <Content Include="Images\Wide310x150Logo.scale-200.png" />
     <Content Include="Images\Wide310x150Logo.scale-400.png" />
-    <None Include="Zametek.ProjectPlan.WapPackager_TemporaryKey.pfx" />
+    <None Include="Zametek.ProjectPlan.Desktop.WapPackager_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.txt" />
