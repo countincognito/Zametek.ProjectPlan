@@ -4,7 +4,7 @@ using System.Windows.Input;
 using Zametek.ViewModel.ProjectPlan;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
-namespace Zametek.ProjectPlan
+namespace Zametek.ProjectPlan.Desktop
 {
     public class SplashViewModel
         : ViewModelBase

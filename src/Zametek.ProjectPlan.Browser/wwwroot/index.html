@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<title>Project Plan</title>
+	<link rel="modulepreload" href="./main.js" />
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			overflow: hidden;
+			font-family: sans-serif;
+		}
+
+		#out {
+			height: 100%;
+		}
+
+		#loading {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #555;
+		}
+	</style>
+</head>
+<body>
+	<div id="out"></div>
+	<div id="loading">Loading Project Plan...</div>
+	<script type="module" src="./main.js"></script>
+</body>
+</html>

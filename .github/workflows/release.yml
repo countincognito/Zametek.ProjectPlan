@@ -33,7 +33,7 @@ jobs:
 
       - name: Publish Desktop
         run: |
-          dotnet publish -p:PublishSingleFile=true --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/win-${{ matrix.arch }}
+          dotnet publish -p:PublishSingleFile=true --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj --output artifacts/desktop/win-${{ matrix.arch }}
         env:
           HUSKY: 0
 
@@ -85,7 +85,7 @@ jobs:
 
       - name: Publish Desktop
         run: |
-          dotnet publish -p:PublishSingleFile=true --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/linux-${{ matrix.arch }}
+          dotnet publish -p:PublishSingleFile=true --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj --output artifacts/desktop/linux-${{ matrix.arch }}
         env:
           HUSKY: 0
 
@@ -135,7 +135,7 @@ jobs:
 
       - name: Publish Desktop
         run: |
-          dotnet publish -p:PublishSingleFile=true --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/osx-${{ matrix.arch }}
+          dotnet publish -p:PublishSingleFile=true --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj --output artifacts/desktop/osx-${{ matrix.arch }}
         env:
           HUSKY: 0
 

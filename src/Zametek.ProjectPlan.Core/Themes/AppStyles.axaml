@@ -1,0 +1,60 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:semi="https://irihi.tech/semi"
+        xmlns:u-semi="https://irihi.tech/ursa/themes/semi"
+        xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+        xmlns:mbc="clr-namespace:MsBox.Avalonia.Controls;assembly=MsBox.Avalonia">
+
+	<!-- Every head includes this file from its own Application.Styles, so the whole application shares one
+	     set of styles regardless of which platform is hosting it. Order matters exactly as much as it did
+	     when this lived in the desktop App.axaml: the Semi themes must follow SimpleTheme in order to
+	     override it, and the DataValidationErrors style at the bottom depends on a resource the Semi theme
+	     brings in. -->
+
+	<!--Move this after the Semi theme to override it-->
+	<SimpleTheme />
+
+	<semi:SemiTheme Locale="en-US" />
+	<semi:UrsaSemiTheme Locale="en-US"/>
+
+	<DockSimpleTheme CacheDocumentTabContent="True" />
+	<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>
+
+	<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
+	<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
+
+	<StyleInclude Source="avares://Xaml.Behaviors.Interactions.DragAndDrop.DataGrid/Styles.axaml" />
+
+	<Style Selector="TextBox">
+		<Setter Property="FontSize" Value="12"/>
+	</Style>
+
+	<Style Selector="MenuItem">
+		<Setter Property="FontSize" Value="12"/>
+	</Style>
+
+	<Style Selector="ComboBox">
+		<Setter Property="VerticalAlignment" Value="Center"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="HorizontalAlignment" Value="Stretch"/>
+		<Setter Property="HorizontalContentAlignment" Value="Left"/>
+	</Style>
+
+	<Style Selector="idc|RootDockControl">
+		<Setter Property="Margin" Value="0,0,0,7"/>
+	</Style>
+
+	<!--For some reason this isn't working at expected on Windows-->
+	<Style Selector="mbc|MsBoxStandardView Button">
+		<Setter Property="FontWeight" Value="{DynamicResource ButtonDefaultFontWeight}" />
+	</Style>
+
+	<!--This is for the header in the About window-->
+	<Style Selector="mbc|MsBoxStandardView TextBox.header">
+		<Setter Property="FontSize" Value="20" />
+	</Style>
+
+	<Style Selector="DataValidationErrors">
+		<Setter Property="Theme" Value="{StaticResource TooltipDataValidationErrors}" />
+	</Style>
+</Styles>

@@ -12,7 +12,7 @@ using Zametek.Graphs.Avalonia;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
-namespace Zametek.ProjectPlan
+namespace Zametek.ProjectPlan.Core
 {
     public static class CompositionRoot
     {
@@ -26,12 +26,28 @@ namespace Zametek.ProjectPlan
         // its plugins (ICreatesObservableForProperty, binders, etc.) - otherwise those
         // registrations land in the default ModernDependencyResolver and are lost when
         // we later swap in the Autofac one.
-        public static void Configure()
+        //
+        // Everything registered below is common to every head. The three services that
+        // cannot be - because they either touch a file system, own a window, or need a
+        // JVM - arrive through platformModule instead, which each head supplies:
+        //
+        //   ISettingService                 where settings, dock layout and grid layouts persist
+        //   IDialogService                  how message boxes and file pickers are presented
+        //   IMicrosoftProjectFileImporter   MPXJ on desktop; unavailable in the browser, where
+        //                                   IKVM has no WebAssembly runtime image to load
+        //
+        // A head that forgets one of them does not fail here: Autofac reports the missing
+        // service on first resolve, naming the interface and the type that wanted it.
+        public static void Configure(Module platformModule)
         {
+            ArgumentNullException.ThrowIfNull(platformModule);
+
             s_Builder = new ContainerBuilder();
 
             s_Resolver = s_Builder.UseAutofacDependencyResolver();
             s_Resolver.InitializeSplat();
+
+            s_Builder.RegisterModule(platformModule);
 
             s_Builder.Register(c => new AutofacServiceProvider(c.Resolve<ILifetimeScope>()))
                 .As<IServiceProvider>()
@@ -53,16 +69,6 @@ namespace Zametek.ProjectPlan
                 .As(typeof(ILogger<>))
                 .SingleInstance();
 
-            // File settings.
-            string settingsFilename = SettingFileHelper.DefaultUserSettingsFileLocation();
-            string dockLayoutFilename = SettingFileHelper.DefaultDockLayoutFileLocation();
-            string dataGridLayoutFilename = SettingFileHelper.DefaultDataGridLayoutFileLocation();
-            var settingService = new SettingService(settingsFilename, dockLayoutFilename, dataGridLayoutFilename);
-
-            s_Builder.RegisterInstance(settingService)
-                .As<ISettingService>()
-                .As<SettingService>();
-
             // Services and ViewModels.
             s_Builder.RegisterInstance(TimeProvider.System);
             s_Builder.RegisterType<DateTimeCalculator>()
@@ -72,10 +78,6 @@ namespace Zametek.ProjectPlan
             s_Builder.RegisterType<MsaglGraphLayoutEngine>()
                 .As<IGraphLayoutEngine>()
                 .As<MsaglGraphLayoutEngine>()
-                .SingleInstance();
-            s_Builder.RegisterType<MicrosoftProjectFileImporter>()
-                .As<IMicrosoftProjectFileImporter>()
-                .As<MicrosoftProjectFileImporter>()
                 .SingleInstance();
             s_Builder.RegisterType<XlsxScenarioFileImporter>()
                 .As<IXlsxScenarioFileImporter>()
@@ -104,10 +106,6 @@ namespace Zametek.ProjectPlan
             s_Builder.RegisterType<ProjectFileSave>()
                 .As<IProjectFileSave>()
                 .As<ProjectFileSave>()
-                .SingleInstance();
-            s_Builder.RegisterType<DialogService>()
-                .As<IDialogService>()
-                .As<DialogService>()
                 .SingleInstance();
             s_Builder.RegisterType<GraphCompilationService>()
                 .As<IGraphCompilationService>()

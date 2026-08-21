@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Zametek.ProjectPlan
+namespace Zametek.ProjectPlan.Desktop
 {
     public class SettingFileHelper
     {

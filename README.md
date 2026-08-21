@@ -29,8 +29,19 @@ Every project in the solution targets `net10.0`, so you need the [.NET 10 SDK](h
 ```
 dotnet restore
 dotnet build
-dotnet run --project src/Zametek.ProjectPlan
+dotnet run --project src/Zametek.ProjectPlan.Desktop
 ```
+
+The application is split into a shared project and one project per host, so that the same view models, views and composition serve every platform:
+
+| Project | Role |
+| ------- | ---- |
+| `Zametek.ProjectPlan.Core` | The shared application: composition root, dock factory, and the styles and resources every host presents |
+| `Zametek.ProjectPlan.Desktop` | The desktop host (`projectplandotnet`), on Windows, Linux and macOS |
+| `Zametek.ProjectPlan.Browser` | The web host, an Avalonia WebAssembly application (see below) |
+| `Zametek.ProjectPlan.CommandLine` | The headless host, `zpp` (see below) |
+
+Each host supplies the three services that cannot be shared - where settings persist, how dialogs and file pickers are presented, and whether MS Project import is available - as an Autofac module handed to `CompositionRoot.Configure`. Everything else is registered once, in `Core`.
 
 ### Git hooks (Husky.Net)
 
@@ -51,6 +62,35 @@ On every commit, the hook (`.husky/pre-commit`) runs the following checks agains
 If the style or analyzer check fails, run `dotnet format style` or `dotnet format analyzers` to fix the issues automatically, then re-stage and commit.
 
 To skip hook installation (for example in CI), set the `HUSKY` environment variable to `0`. To bypass the hook for a single commit, use `git commit --no-verify`.
+
+### WebAssembly toolchain (browser head)
+
+The browser head (`Zametek.ProjectPlan.Browser`) targets `net10.0-browser` and therefore needs the `wasm-tools` workload on top of the .NET 10 SDK. Like the Husky hooks, it is provisioned automatically: `Directory.Build.targets` runs `dotnet workload restore` before restoring any project whose target framework is a browser one, so a normal `dotnet build` of the browser head sets the toolchain up for you. Desktop and CLI builds skip that step entirely, so they are unaffected. To install it manually, run:
+
+```
+dotnet workload install wasm-tools
+```
+
+Installing a workload writes into the SDK directory, so on a machine-wide SDK install it needs an elevated shell. The automatic step is best-effort and never fails the build; if it could not install the workload, the SDK stops the build itself with `NETSDK1147`, naming the missing workload and the command that installs it. To skip the automatic step (for example in CI, or when workloads are provisioned separately), set the `WASM_WORKLOAD` environment variable to `0`.
+
+### Running the web app
+
+With the toolchain installed, serve it locally with `make run-browser`, or:
+
+```
+dotnet run --project src/Zametek.ProjectPlan.Browser
+```
+
+`dotnet publish` writes a self-contained static site to `src/Zametek.ProjectPlan.Browser/bin/<configuration>/net10.0-browser/AppBundle`, which any static web host can serve. Two hosting notes:
+
+- Serve it over HTTPS or from `localhost`. Several browser APIs the app relies on, including the file pickers, require a secure context.
+- Send a `Service-Worker-Allowed: /` header for `_framework/sw.js`, or serve that script from the site root. Avalonia registers its service worker at the root scope, and without it registration fails - which costs Firefox and Safari the save-file fallback they use in place of the File System Access API. Chrome and Edge have the native API and are unaffected.
+
+The web app is still being brought up, and does not yet match the desktop application. Known gaps:
+
+- **MS Project import is not available and cannot be.** The importer is MPXJ, the Java library cross-compiled by IKVM, which needs a native OpenJDK runtime image on disk; those images are published for Windows, Linux and macOS only, and a browser has no disk to put one on.
+- **Opening and saving files is not wired up.** A browser hands back an opaque file handle rather than a path, so this needs the file layer to work in streams rather than file names.
+- **Settings do not survive a page reload.** They are held for the lifetime of the page, pending a store backed by the browser.
 
 ### Building the MSI installer (Windows)
 
@@ -90,10 +130,13 @@ The targets:
 
 | Target | Effect |
 | ------ | ------ |
-| `build` | Compile the desktop app and the CLI as self-contained binaries (`build-desktop` / `build-cli` for one at a time) |
-| `publish` | Produce self-contained, single-file distribution builds of both (`publish-desktop` / `publish-cli` individually) |
+| `build` | Compile the desktop app, the CLI and the web app (`build-desktop` / `build-cli` / `build-browser` for one at a time) |
+| `publish` | Produce self-contained, single-file distribution builds of the desktop app and CLI (`publish-desktop` / `publish-cli` individually) |
+| `publish-browser` | Produce the web app's static site bundle |
+| `run-browser` | Serve the web app locally on `http://localhost:5210` |
 | `clean` | Clean the solution |
 | `hooks` | Install the pre-commit hooks manually (see the Git hooks section above) |
+| `workloads` | Install the WebAssembly build toolchain manually (see the WebAssembly toolchain section above) |
 | `format` | Apply code style fixes to the solution filter |
 | `format-check` | Verify code style without modifying files |
 | `lint` | Release build of the solution filter, as a compilation check |

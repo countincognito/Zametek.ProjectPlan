@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-browser</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <!-- Required by the .NET source generator that produces the JS interop bindings Avalonia.Browser uses. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- SkiaSharp's WebAssembly native assets reference symbols that are only resolved when Emscripten links
+         the final module, so the intermediate link step must be allowed to leave them undefined. -->
+    <WasmAllowUndefinedSymbols>true</WasmAllowUndefinedSymbols>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The shared application composition, styles and theme packages come through
+         Zametek.ProjectPlan.Core. What remains here is what only a browser head needs. -->
+    <PackageReference Include="Autofac" Version="9.3.2" />
+    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Browser" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <!-- The browser console is the only sink available: there is no file system to roll a log file onto,
+         which is what the desktop head uses. Everything written here shows up in the developer tools. -->
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <!-- Must track the SkiaSharp version Avalonia.Skia and ScottPlot resolve to, or the managed bindings and
+         the native module disagree at runtime. A full clean is required whenever this changes: the build does
+         not notice native asset swaps. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zametek.ProjectPlan.Core\Zametek.ProjectPlan.Core.csproj" />
+    <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
+  </ItemGroup>
+
+</Project>

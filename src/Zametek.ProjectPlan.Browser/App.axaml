@@ -1,0 +1,26 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="using:Zametek.View.ProjectPlan"
+             x:Class="Zametek.ProjectPlan.Browser.App"
+             xmlns:resources="using:Zametek.Resource.ProjectPlan"
+             Name="{x:Static resources:Titles.Title_ProjectPlan}"
+             RequestedThemeVariant="Light">
+	<Application.DataTemplates>
+		<v:ViewLocator />
+	</Application.DataTemplates>
+
+	<!-- The styles and resources themselves live in Zametek.ProjectPlan.Core so that every head - desktop,
+	     browser - presents the same application. Anything genuinely browser-only would be added here, after
+	     the include, so that it overrides the shared set. -->
+	<Application.Styles>
+		<StyleInclude Source="avares://Zametek.ProjectPlan.Core/Themes/AppStyles.axaml" />
+	</Application.Styles>
+
+	<Application.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceInclude Source="avares://Zametek.ProjectPlan.Core/Themes/AppResources.axaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Application.Resources>
+</Application>

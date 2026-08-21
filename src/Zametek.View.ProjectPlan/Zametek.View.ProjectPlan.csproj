@@ -10,7 +10,9 @@
     <PackageReference Include="Avalonia" Version="12.1.1" />
     <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.1" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+    <!-- Avalonia.Desktop is deliberately absent: it is the desktop windowing backends (Win32, X11, macOS),
+         which a view library has no business pulling in - nothing here references it, and carrying it would
+         drag all three backends into the browser head's WebAssembly bundle. The desktop head references it. -->
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
     <PackageReference Include="Dock.Avalonia" Version="12.1.0" />
     <PackageReference Include="Irihi.Ursa" Version="2.2.0" />

@@ -18,6 +18,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Zametek.ProjectPlan.CommandLine\Zametek.ProjectPlan.CommandLine.csproj" />
-    <ProjectReference Include="..\..\src\Zametek.ProjectPlan\Zametek.ProjectPlan.csproj" />
+    <ProjectReference Include="..\..\src\Zametek.ProjectPlan.Desktop\Zametek.ProjectPlan.Desktop.csproj" />
   </ItemGroup>
 </Project>

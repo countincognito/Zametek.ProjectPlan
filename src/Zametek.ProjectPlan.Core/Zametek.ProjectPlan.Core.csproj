@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Platforms>AnyCPU;ARM64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Everything here must be able to run on every head, so nothing platform-specific belongs in this
+         project: no Avalonia.Desktop (that is the desktop backends), no file-system logging sinks, and no
+         window types beyond what Avalonia.Controls itself provides. The theme packages are listed because
+         Themes/AppStyles.axaml resolves them by avares:// URI, which needs a real assembly reference. -->
+    <PackageReference Include="Autofac" Version="9.3.2" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
+    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.1" />
+    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.1.0" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.2.0" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
+    <!-- Bridges the ILogger<T> abstraction the view models depend on to whichever Serilog logger the head
+         has configured. SerilogLoggerFactory with no logger reads the static Log.Logger afresh on each
+         write, so this project never needs to know how (or whether) a head configured its sinks. -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Splat.Autofac" Version="20.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
+    <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.View.ProjectPlan\Zametek.View.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
+  </ItemGroup>
+
+</Project>

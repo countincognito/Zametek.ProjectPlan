@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	<OutputType>WinExe</OutputType>
 	<TargetFramework>net10.0</TargetFramework>
@@ -6,9 +6,11 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<ApplicationIcon>Assets\zpp.ico</ApplicationIcon>
+	<!-- Deliberately not renamed alongside the project: this is the shipped executable name, and every
+	     installer, release archive and shortcut refers to it. -->
 	<AssemblyName>projectplandotnet</AssemblyName>
 	<Platforms>AnyCPU;x86;x64;ARM64</Platforms>
-	<StartupObject>Zametek.ProjectPlan.Program</StartupObject>
+	<StartupObject>Zametek.ProjectPlan.Desktop.Program</StartupObject>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<!-- MPXJ.Net is the Java MPXJ library cross-compiled by IKVM; its OpenJDK runtime image (native
 	     jvm.dll etc. plus data files, emitted under runtimes/<rid>/native) must sit on disk, and IKVM
@@ -31,27 +33,22 @@
     <Content Include="Assets\zpp.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="9.3.2" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
+    <!-- The shared application composition, styles and theme packages come through
+         Zametek.ProjectPlan.Core. What remains here is what only a desktop head needs: the desktop
+         windowing backends, the developer tools, and a rolling file sink for the log. -->
     <PackageReference Include="Avalonia" Version="12.1.1" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.1" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.1.0" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.2.0" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
     <PackageReference Include="Serilog" Version="4.4.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Splat.Autofac" Version="20.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
-    <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.ProjectPlan.Core\Zametek.ProjectPlan.Core.csproj" />
     <ProjectReference Include="..\Zametek.View.ProjectPlan\Zametek.View.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>

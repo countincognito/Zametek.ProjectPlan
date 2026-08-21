@@ -5,14 +5,60 @@
     Set HUSKY=0 in CI environments to skip installation.
     ContinueOnError prevents a missing tool from blocking the build.
   -->
+  <!--
+    WorkingDirectory is set to the repository root because an Exec otherwise runs in the directory of
+    whichever project triggered the restore. 'dotnet husky install' looks for .git in the current
+    directory and does not search upwards, so from a project folder it reported ".git can't be found",
+    failed, and raised MSB3073 on every single restore - meaning the automatic installation described in
+    the README never actually installed anything, and only 'make hooks' (run from the root) ever did.
+  -->
   <Target Name="HuskyInstall" BeforeTargets="Restore" Condition="'$(HUSKY)' != '0'">
     <Exec Command="dotnet tool restore"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
           StandardOutputImportance="Low"
           StandardErrorImportance="Low"
           ContinueOnError="true" />
     <Exec Command="dotnet husky install"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
           StandardOutputImportance="Low"
           StandardErrorImportance="Low"
           ContinueOnError="true" />
+  </Target>
+
+  <!--
+    Provision the WebAssembly build toolchain for the browser head, so that a fresh clone can build it
+    with a plain 'dotnet build' the same way the Husky hooks install themselves above.
+
+    'dotnet workload restore' derives the required workload set from the project's own target framework
+    rather than naming wasm-tools explicitly, so a future head that needs a different workload is covered
+    without editing this target.
+
+    Scoped to browser target frameworks: a workload restore takes seconds even when everything is already
+    installed, and neither the desktop app, the CLI, nor any test project should pay that on every restore.
+
+    WASM_WORKLOAD=0 is passed to the child process because 'dotnet workload restore' evaluates the project
+    to work out what it needs, which would otherwise re-enter this target and recurse. The same variable is
+    the opt-out for CI and for anyone who provisions workloads separately (see the ci.yml workload step).
+
+    IgnoreExitCode because installing a workload writes into the SDK directory and therefore needs
+    elevation on a machine-wide SDK install. Failing here must not block the build, and must not even warn:
+    when the workload is genuinely missing the SDK stops the build itself with NETSDK1147, which names both
+    the missing workload and the command that installs it - a better error than anything this target could
+    raise. Without IgnoreExitCode a failed restore raises MSB3077 on every subsequent build, which is pure
+    noise on a machine where the workload is already present and the restore merely could not re-verify it.
+  -->
+  <Target Name="WasmWorkloadRestore" BeforeTargets="Restore"
+          Condition="'$(WASM_WORKLOAD)' != '0' AND $(TargetFramework.Contains('-browser'))">
+    <Exec Command="dotnet workload restore &quot;$(MSBuildProjectFullPath)&quot;"
+          EnvironmentVariables="WASM_WORKLOAD=0"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low"
+          IgnoreExitCode="true"
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="WasmWorkloadRestoreExitCode" />
+    </Exec>
+    <Message Condition="'$(WasmWorkloadRestoreExitCode)' != '0'"
+             Importance="Normal"
+             Text="The WebAssembly workload could not be restored automatically. If the build then fails with NETSDK1147, run 'dotnet workload install wasm-tools' from an elevated shell (or 'make workloads')." />
   </Target>
 </Project>

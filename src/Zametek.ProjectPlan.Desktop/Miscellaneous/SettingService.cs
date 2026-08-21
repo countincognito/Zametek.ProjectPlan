@@ -8,7 +8,7 @@ using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
-namespace Zametek.ProjectPlan
+namespace Zametek.ProjectPlan.Desktop
 {
     public class SettingService
         : SettingServiceBase

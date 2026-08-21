@@ -10,8 +10,8 @@
 		Background="Transparent"
 		TransparencyLevelHint="Transparent"
 		TransparencyBackgroundFallback="Transparent"
-		xmlns:local="using:Zametek.ProjectPlan"
-        x:Class="Zametek.ProjectPlan.SplashView"
+		xmlns:local="using:Zametek.ProjectPlan.Desktop"
+        x:Class="Zametek.ProjectPlan.Desktop.SplashView"
 		x:DataType="local:SplashViewModel"
         Title="Splash">
 	<Border Background="#FFF" BorderBrush="#000" BorderThickness="1"

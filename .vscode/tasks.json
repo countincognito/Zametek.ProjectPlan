@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj",
+                "${workspaceFolder}/src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj",
+                "${workspaceFolder}/src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj"
+                "${workspaceFolder}/src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

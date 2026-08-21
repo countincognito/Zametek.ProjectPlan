@@ -23,8 +23,17 @@ jobs:
         with:
           dotnet-version: '10.x'
 
+      # Zametek.ProjectPlan.Browser targets net10.0-browser and is part of the solution filter, so the
+      # WebAssembly toolchain has to be present before restore. Installed explicitly rather than left to
+      # the automatic step in Directory.Build.targets so that a toolchain failure fails the job loudly
+      # here, instead of surfacing later as a confusing NETSDK1147 during the build.
+      - name: Install WebAssembly workload
+        run: dotnet workload install wasm-tools
+
       - name: Restore dependencies
         run: dotnet restore
+        env:
+          WASM_WORKLOAD: 0
 
       - name: Check code style
         # Uses 'style' subcommand to skip OS-specific line-ending enforcement.

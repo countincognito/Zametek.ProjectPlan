@@ -1,4 +1,4 @@
-.PHONY: help clean build-desktop build-cli build publish-desktop publish-cli publish hooks format format-check lint test
+.PHONY: help clean build-desktop build-cli build-browser build publish-desktop publish-cli publish-browser run-browser publish hooks workloads format format-check lint test
 .DEFAULT_GOAL := help
 
 ARCH := x64
@@ -19,20 +19,29 @@ clean: ## Clean the solution
 
 
 build-desktop: ## Compile all projects for projectplan.net
-	dotnet build -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) --self-contained=true src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
+	dotnet build -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) --self-contained=true src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj
 
 build-cli: ## Compile all projects for projectplan.net cli
 	dotnet build -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) --self-contained=true src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj
 
-build: build-desktop build-cli ## Compile all projects
+build-browser: ## Compile the web app (requires the wasm-tools workload - see the workloads target)
+	dotnet build -c $(CONFIGURATION) src/Zametek.ProjectPlan.Browser/Zametek.ProjectPlan.Browser.csproj
+
+build: build-desktop build-cli build-browser ## Compile all projects
 
 
 
 publish-desktop: build-desktop ## publish projectplan.net
-	dotnet publish -p:publishsinglefile=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output src/Zametek.ProjectPlan/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
+	dotnet publish -p:publishsinglefile=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj --output src/Zametek.ProjectPlan.Desktop/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
 
 publish-cli: build-cli ## publish projectplan.net cli
 	dotnet publish -p:publishsinglefile=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output src/Zametek.ProjectPlan.CommandLine/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
+
+publish-browser: build-browser ## publish the web app as a static site (AppBundle)
+	dotnet publish -c $(CONFIGURATION) src/Zametek.ProjectPlan.Browser/Zametek.ProjectPlan.Browser.csproj
+
+run-browser: ## Serve the web app locally on http://localhost:5210
+	dotnet run --project src/Zametek.ProjectPlan.Browser/Zametek.ProjectPlan.Browser.csproj
 
 publish: publish-desktop publish-cli ## publish projectplan.net and projectplan.net cli
 
@@ -40,6 +49,9 @@ publish: publish-desktop publish-cli ## publish projectplan.net and projectplan.
 hooks: ## Install pre-commit hooks (run once after cloning)
 	dotnet tool restore
 	dotnet husky install
+
+workloads: ## Install the WebAssembly build toolchain for the browser head (run once after cloning)
+	dotnet workload install wasm-tools
 
 format: ## Apply code formatting (style rules only)
 	dotnet format style Zametek.ProjectPlan.slnf

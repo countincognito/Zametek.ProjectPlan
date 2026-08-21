@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Zametek.ProjectPlan;
+namespace Zametek.ProjectPlan.Desktop;
 
 public partial class SplashView : Window
 {
