@@ -73,6 +73,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         /// <summary>
+        /// The graph settings the application starts with, which every scenario needs:
+        /// a plan whose settings carry no activity severities cannot have its risk
+        /// metrics built at all.
+        /// </summary>
+        public static GraphSettingsModel DefaultGraphSettings => new TestSettingService().DefaultGraphSettings;
+
+        /// <summary>
         /// Reads the current scenario out of a project file in TestFiles, through the same
         /// reader the application uses. A real plan carries the shape a hand-built one does
         /// not - dozens of activities, a deep dependency chain, a mixture of activities that

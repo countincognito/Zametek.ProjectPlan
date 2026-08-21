@@ -139,16 +139,16 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var model = new DependentActivityModel
             {
-                Activity = ToActivityModel((Activity<int, int, int>)src)
+                // Same-typed collections are assigned across rather than copied, so
+                // the model would otherwise carry the activity's own tracker list and
+                // any edit to one would be an edit to the other.
+                Activity = ToActivityModel(src) with { Trackers = [.. src.Trackers] }
             };
 
             model.Dependencies.AddRange(src.Dependencies);
             model.PlanningDependencies.AddRange(src.PlanningDependencies);
             model.ResourceDependencies.AddRange(src.ResourceDependencies);
             model.Successors.AddRange(src.Successors);
-
-            model.Activity.Trackers.Clear();
-            model.Activity.Trackers.AddRange(src.Trackers);
 
             return model;
         }

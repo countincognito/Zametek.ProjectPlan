@@ -124,7 +124,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IEnumerable<ActivityModel> activities = dependentActivities
                         .Where(x => !x.IsDummy)
-                        .Cast<DependentActivity<int, int, int>>()
+                        .Cast<DependentActivity>()
                         .Select(m_Mapper.ToActivityModel);
 
                     risksModel = MetricsHelper.CalculateProjectRisks(activities, activitySeverities);
