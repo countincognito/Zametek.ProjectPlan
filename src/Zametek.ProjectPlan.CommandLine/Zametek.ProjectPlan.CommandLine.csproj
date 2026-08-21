@@ -18,7 +18,9 @@
 	<!-- SelfContained and PublishSingleFile are passed explicitly on the publish/build command line (see
 	     makefile), not set here - shipping-critical flags kept explicit and loud. See
 	     Zametek.ProjectPlan.csproj for the rationale. -->
-	<PlatformTarget>AnyCPU</PlatformTarget>
+	<!-- PlatformTarget is deliberately NOT set; see Zametek.ProjectPlan.Desktop.csproj for the full
+	     explanation. In short: pinning it to AnyCPU stamped this assembly MSIL while its references followed
+	     the RID, which raised MSB3270 against every reference on every architecture. -->
   </PropertyGroup>
 
   <ItemGroup>

@@ -25,7 +25,13 @@
 	     fail silently (a mis-resolved self-contained yields a framework-dependent build that only breaks on
 	     a machine without the matching runtime). Keeping them on the command line makes them explicit and
 	     fail loudly if the RID is missing. -->
-	<PlatformTarget>AnyCPU</PlatformTarget>
+	<!-- PlatformTarget is deliberately NOT set. It used to be pinned to AnyCPU (added in 6d9ef42e, when the
+	     MSI and MSIX builds were first made to work across x64 and x86), which left this assembly stamped
+	     MSIL while every project it references took its architecture from the RID - so ResolveAssemblyReference
+	     reported MSB3270 against every reference, on every architecture, roughly thirty warnings a build.
+	     Letting the RID decide here too makes both sides agree and the warnings disappear. Verified by
+	     building the full MSIX bundle both ways from the same state: the only files that differ are this
+	     assembly and its symbols; all 2,970 others, including the IKVM native image, are identical. -->
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />

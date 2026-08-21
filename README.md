@@ -124,7 +124,7 @@ That builds both packages in `Release` for `x86|x64|arm64`, unsigned, and prints
 | `-Platform` | derived | The build platform, which must be one of the bundle platforms or `APPX3104` fires; picks `x64` if it is in the bundle, else `x86`, else whichever is listed first |
 | `-BuildMode` | `SideloadOnly` | `SideloadOnly` for local installation, `StoreUpload` for submission |
 | `-Sign` | off | Sign the package with the certificate configured in the packaging project |
-| `-Clean` | off | Delete `bin` and `obj` for the packaging project and its entry point first |
+| `-Clean` | off | Delete `bin` for the selected packaging projects and for every project in `src` first. `obj` is left in place deliberately - see the comment in the script |
 
 Each bundle is written to the packaging project's own `AppPackages` folder. As with the MSI, CI does not produce these - they must be built locally.
 
