@@ -1,4 +1,8 @@
-<Window xmlns="https://github.com/avaloniaui"
+<!-- The whole application surface, as a UserControl so that every host can present it: the desktop head
+     wraps it in a Window (which is what supplies the title and icon, neither of which a UserControl has),
+     and the browser head hands it straight to ISingleViewApplicationLifetime.MainView. Nothing here may
+     assume a Window exists - see ExitRequested in the code-behind for the one place that used to. -->
+<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,10 +15,8 @@
 		xmlns:local="using:Zametek.View.ProjectPlan"
 		xmlns:common="using:Zametek.Common.ProjectPlan"
 		x:DataType="vm:MainViewModel"
-        Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
-		xmlns:u="https://irihi.tech/ursa"
-        Title="{Binding Path=ProjectTitle, Mode=OneWay}">
-	<Window.KeyBindings>
+		xmlns:u="https://irihi.tech/ursa">
+	<UserControl.KeyBindings>
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
 					Gesture="Ctrl+O" />
@@ -36,16 +38,16 @@
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=SaveLayoutCommand, Mode=OneWay}"
 					Gesture="Ctrl+L" />
-	</Window.KeyBindings>
+	</UserControl.KeyBindings>
 
-	<Window.Styles>
+	<UserControl.Styles>
 		<Style Selector="Border.ok">
 			<Setter Property="BorderBrush" Value="Transparent"/>
 		</Style>
 		<Style Selector="Border.error">
 			<Setter Property="BorderBrush" Value="Red"/>
 		</Style>
-	</Window.Styles>
+	</UserControl.Styles>
 
 	<u:LoadingContainer IsLoading="{Binding Path=IsBusy, Mode=OneWay}"
 						LoadingMessage="{x:Static resources:Labels.Label_PleaseWait}"
@@ -104,8 +106,9 @@
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
 								  Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_Exit}"
+						<Separator Name="ExitSeparator" />
+						<MenuItem Name="ExitMenuItem"
+								  Header="{x:Static resources:Menus.Menu_Exit}"
 								  Click="Exit_Click"/>
 					</MenuItem>
 
@@ -372,4 +375,4 @@
 			</DockPanel>
 		</Border>
 	</u:LoadingContainer>
-</Window>
+</UserControl>

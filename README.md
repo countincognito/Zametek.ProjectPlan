@@ -86,7 +86,7 @@ dotnet run --project src/Zametek.ProjectPlan.Browser
 - Serve it over HTTPS or from `localhost`. Several browser APIs the app relies on, including the file pickers, require a secure context.
 - Send a `Service-Worker-Allowed: /` header for `_framework/sw.js`, or serve that script from the site root. Avalonia registers its service worker at the root scope, and without it registration fails - which costs Firefox and Safari the save-file fallback they use in place of the File System Access API. Chrome and Edge have the native API and are unaffected.
 
-The web app is still being brought up, and does not yet match the desktop application. Known gaps:
+The web app presents the whole application - the dock layout, the data grids, the interactive graphs and the charts all render - but it is still being brought up, and does not yet match the desktop application. Known gaps:
 
 - **MS Project import is not available and cannot be.** The importer is MPXJ, the Java library cross-compiled by IKVM, which needs a native OpenJDK runtime image on disk; those images are published for Windows, Linux and macOS only, and a browser has no disk to put one on.
 - **Opening and saving files is not wired up.** A browser hands back an opaque file handle rather than a path, so this needs the file layer to work in streams rather than file names.

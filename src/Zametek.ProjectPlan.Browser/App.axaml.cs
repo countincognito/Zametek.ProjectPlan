@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
 using Zametek.ProjectPlan.Core;
+using Zametek.View.ProjectPlan;
 
 namespace Zametek.ProjectPlan.Browser
 {
@@ -72,30 +73,33 @@ namespace Zametek.ProjectPlan.Browser
             base.OnFrameworkInitializationCompleted();
         }
 
-        // The application shell is not wired up yet: MainView is a Window, which a browser cannot
-        // host, so splitting it into a UserControl shell plus a thin desktop window is still to come.
-        // Until then this builds the full view-model graph and reports the outcome, which is the
-        // thing actually worth knowing - it exercises every registration in the shared composition
-        // root, the whole view-model layer, and the initial compile, on the browser's single thread.
         private static Control BuildRootView()
         {
             try
             {
                 CompositionRoot.Build();
 
+                ISettingService settingService = GetRequiredService<ISettingService>();
                 IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
 
-                Log.Information(
-                    "View model graph resolved and compiled (project title {ProjectTitle})",
-                    mainViewModel.ProjectTitle);
-
-                return new TextBlock
+                var mainView = new MainView
                 {
-                    Text = $"Project Plan{Environment.NewLine}The view model graph resolved and compiled. Project title: '{mainViewModel.ProjectTitle}'.",
-                    TextAlignment = TextAlignment.Center,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
+                    DataContext = mainViewModel,
+                    InitialTheme = settingService.SelectedTheme,
+
+                    // A browser tab is closed by the browser, not by the page inside it, so File | Exit
+                    // is hidden rather than left to do nothing.
+                    CanExit = false,
                 };
+
+                // The shell is the root of the visual tree here, so it is what popups hang from - the
+                // browser's stand-in for the window the desktop head parents its dialogs to.
+                IDialogService dialogService = GetRequiredService<IDialogService>();
+                dialogService.Parent = mainView;
+
+                Log.Information("Application shell created (project title {ProjectTitle})", mainViewModel.ProjectTitle);
+
+                return mainView;
             }
             catch (Exception ex)
             {

@@ -116,14 +116,14 @@ namespace Zametek.ProjectPlan.Desktop
                             Log.CloseAndFlush();
                         };
 
-                        MainView mainView = new()
+                        MainWindow mainWindow = new()
                         {
                             DataContext = mainViewModel,
                             InitialTheme = selectedTheme
                         };
 
                         IDialogService dialogService = GetRequiredService<IDialogService>();
-                        dialogService.Parent = mainView;
+                        dialogService.Parent = mainWindow;
 
                         // Cancelling the window closing does not work when using an async handler,
                         // and trying to force Wait on the return dialog freezes the UI thread.
@@ -142,7 +142,7 @@ namespace Zametek.ProjectPlan.Desktop
 
                         async void CheckClose(object? sender, CancelEventArgs args)
                         {
-                            mainView.Closing -= CancelClose;
+                            mainWindow.Closing -= CancelClose;
 
                             if (mainViewModel.ProjectHasChanges)
                             {
@@ -155,24 +155,24 @@ namespace Zametek.ProjectPlan.Desktop
                                 {
                                     // Clearing the rest of the handlers and then adding
                                     // them back in the correct order.
-                                    mainView.Closing -= CheckClose;
-                                    mainView.Closing += CancelClose;
-                                    mainView.Closing += CheckClose;
+                                    mainWindow.Closing -= CheckClose;
+                                    mainWindow.Closing += CancelClose;
+                                    mainWindow.Closing += CheckClose;
                                     return;
                                 }
                             }
 
-                            mainView.Closing -= CheckClose;
+                            mainWindow.Closing -= CheckClose;
                             mainViewModel.CloseLayout();
-                            mainView.Close();
+                            mainWindow.Close();
                         }
 
-                        mainView.Closing += CancelClose;
-                        mainView.Closing += CheckClose;
+                        mainWindow.Closing += CancelClose;
+                        mainWindow.Closing += CheckClose;
 
-                        desktopLifetime.MainWindow = mainView;
+                        desktopLifetime.MainWindow = mainWindow;
 
-                        mainView.Show();
+                        mainWindow.Show();
 
                         if (input is not null)
                         {
