@@ -13,7 +13,7 @@
                      project reference preprocessor variables -->
 				<File Id="DesktopExe"
 					  Name="projectplandotnet.exe"
-					  Source="$(var.Zametek.ProjectPlan.Desktop.TargetDir)publish\projectplandotnet.exe"
+					  Source="$(var.Zametek.ProjectPlan.Desktop.TargetDir)win-x64\publish\projectplandotnet.exe"
 					  KeyPath="true"
 					  Checksum="yes" />
 

@@ -18,10 +18,10 @@ clean: ## Clean the solution
 
 
 
-build-desktop: ## Compile all projects for projectplan.net
+build-desktop: ## Compile projectplan.net
 	dotnet build -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) --self-contained=true src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj
 
-build-cli: ## Compile all projects for projectplan.net cli
+build-cli: ## Compile projectplan.net cli
 	dotnet build -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) --self-contained=true src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj
 
 build-browser: ## Compile the web app (requires the wasm-tools workload - see the workloads target)
@@ -31,19 +31,19 @@ build: build-desktop build-cli build-browser ## Compile all projects
 
 
 
-publish-desktop: build-desktop ## publish projectplan.net
+publish-desktop: build-desktop ## Publish projectplan.net
 	dotnet publish -p:publishsinglefile=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj --output src/Zametek.ProjectPlan.Desktop/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
 
-publish-cli: build-cli ## publish projectplan.net cli
+publish-cli: build-cli ## Publish projectplan.net cli
 	dotnet publish -p:publishsinglefile=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output src/Zametek.ProjectPlan.CommandLine/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
 
-publish-browser: build-browser ## publish the web app as a static site (AppBundle)
+publish-browser: build-browser ## Publish the web app as a static site (AppBundle)
 	dotnet publish -c $(CONFIGURATION) src/Zametek.ProjectPlan.Browser/Zametek.ProjectPlan.Browser.csproj
 
 run-browser: ## Serve the web app locally on http://localhost:5210
 	dotnet run --project src/Zametek.ProjectPlan.Browser/Zametek.ProjectPlan.Browser.csproj
 
-publish: publish-desktop publish-cli ## publish projectplan.net and projectplan.net cli
+publish: publish-desktop publish-cli ## Publish all projects
 
 
 hooks: ## Install pre-commit hooks (run once after cloning)

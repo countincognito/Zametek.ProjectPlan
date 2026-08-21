@@ -9,7 +9,7 @@
     <!-- SkiaSharp's WebAssembly native assets reference symbols that are only resolved when Emscripten links
          the final module, so the intermediate link step must be allowed to leave them undefined. -->
     <WasmAllowUndefinedSymbols>true</WasmAllowUndefinedSymbols>
-    <Platforms>AnyCPU</Platforms>
+    <Platforms>AnyCPU;x86;x64;ARM64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
