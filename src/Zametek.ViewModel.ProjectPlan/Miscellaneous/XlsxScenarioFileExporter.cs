@@ -114,6 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan
             [
                 nameof(HolidayModel.Id),
                 nameof(HolidayModel.Name),
+                nameof(HolidayModel.StartDateTime),
                 nameof(HolidayModel.RecurrencePattern),
                 nameof(HolidayModel.Notes)
             ];
