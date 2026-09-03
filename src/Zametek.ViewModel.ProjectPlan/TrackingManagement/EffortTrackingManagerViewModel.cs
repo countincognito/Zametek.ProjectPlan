@@ -101,7 +101,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this,
                     resource,
                     TrackingHelper.DayCount,
-                    !m_ExpandedLookup.TryGetValue(resource.Id, out bool isExpanded) || isExpanded,
+                    m_ExpandedLookup.TryGetValue(resource.Id, out bool isExpanded) && isExpanded, // Default to collapsed if the resource is new.
                     (resourceId, expanded) => m_ExpandedLookup[resourceId] = expanded))];
                 this.RaisePropertyChanged(nameof(TimesheetSections));
             }
