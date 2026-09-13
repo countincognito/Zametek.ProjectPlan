@@ -263,14 +263,22 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(core => core.IsReadyToCompile)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(isReady =>
+                .Subscribe(_ =>
                 {
-                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: isReady={isReady} IsBusy={IsBusy}");
+                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: IsReadyToCompile={IsReadyToCompile} IsBusy={IsBusy}");
                     try
                     {
                         lock (m_Lock)
                         {
-                            if (isReady == ReadyToCompile.Yes
+                            // Re-read rather than trust the delivered value (rule 7).
+                            // Every completed compile clears this flag, so two edits in
+                            // quick succession arm it twice and the second delivery
+                            // arrives after the first compile has already absorbed both
+                            // - and a redundant compile marks the project scenario as
+                            // updated, exactly as the uncompiled-activities handler
+                            // above explains. The getter is lock-free (rule 9), so
+                            // reading it here costs nothing.
+                            if (IsReadyToCompile == ReadyToCompile.Yes
                                 && !IsBusy)
                             {
                                 RunAutoCompile();

@@ -122,11 +122,19 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProcessResourceSettingsSub = this
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.ResourceSettings)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(rs =>
+                .Subscribe(_ =>
                 {
-                    if (m_Current != rs)
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard still earns its keep: UpdateResourceSettingsToCore assigns
+                    // one instance to both m_Current and the core property, so its own
+                    // echo compares reference-equal here and this manager does not
+                    // rebuild its grid - discarding selection and in-progress edits -
+                    // in response to an edit it made itself.
+                    ResourceSettingsModel resourceSettings = m_CoreViewModel.ResourceSettings;
+
+                    if (m_Current != resourceSettings)
                     {
-                        ProcessSettings(rs);
+                        ProcessSettings(resourceSettings);
                     }
                 });
 
@@ -145,9 +153,15 @@ namespace Zametek.ViewModel.ProjectPlan
             m_UpdateResourceSettingsSub = this
                 .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(areUpdated =>
+                .Subscribe(_ =>
                 {
-                    if (areUpdated)
+                    // Re-read rather than trust the delivered flag (rule 7). Both
+                    // ProcessSettings and UpdateResourceSettingsToCore clear it, so a
+                    // queued true routinely outlives its own clearing: arm an edit,
+                    // then open a project, and the stale true arrives after the load
+                    // has rebuilt these view models, pushing them straight back to the
+                    // core and marking a freshly opened project as modified.
+                    if (AreSettingsUpdated)
                     {
                         UpdateResourceSettingsToCore();
                     }

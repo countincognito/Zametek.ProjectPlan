@@ -82,20 +82,31 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProcessHolidaySettingsSub = this
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.HolidaySettings)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(rs =>
+                .Subscribe(_ =>
                 {
-                    if (m_Current != rs)
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard is kept because UpdateHolidaySettingsToCore assigns one
+                    // instance to both m_Current and the core property, so its own echo
+                    // compares reference-equal here and this manager does not rebuild
+                    // its grid in response to an edit it made itself.
+                    HolidaySettingsModel holidaySettings = m_CoreViewModel.HolidaySettings;
+
+                    if (m_Current != holidaySettings)
                     {
-                        ProcessSettings(rs);
+                        ProcessSettings(holidaySettings);
                     }
                 });
 
             m_UpdateHolidaySettingsSub = this
                 .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(areUpdated =>
+                .Subscribe(_ =>
                 {
-                    if (areUpdated)
+                    // Re-read rather than trust the delivered flag (rule 7): both
+                    // ProcessSettings and UpdateHolidaySettingsToCore clear it, so a
+                    // queued true can outlive its own clearing and push stale settings
+                    // back into the core after a load has replaced them.
+                    if (AreSettingsUpdated)
                     {
                         UpdateHolidaySettingsToCore();
                     }

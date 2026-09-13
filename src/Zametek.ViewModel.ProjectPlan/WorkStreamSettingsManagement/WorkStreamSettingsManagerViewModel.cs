@@ -92,20 +92,31 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProcessWorkStreamSettingsSub = this
                 .WhenAnyValue(wssm => wssm.m_CoreViewModel.WorkStreamSettings)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(rs =>
+                .Subscribe(_ =>
                 {
-                    if (m_Current != rs)
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard is kept because UpdateWorkStreamSettingsToCore assigns one
+                    // instance to both m_Current and the core property, so its own echo
+                    // compares reference-equal here and this manager does not rebuild
+                    // its grid in response to an edit it made itself.
+                    WorkStreamSettingsModel workStreamSettings = m_CoreViewModel.WorkStreamSettings;
+
+                    if (m_Current != workStreamSettings)
                     {
-                        ProcessSettings(rs);
+                        ProcessSettings(workStreamSettings);
                     }
                 });
 
             m_UpdateWorkStreamSettingsSub = this
                 .WhenAnyValue(wssm => wssm.AreSettingsUpdated)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(areUpdated =>
+                .Subscribe(_ =>
                 {
-                    if (areUpdated)
+                    // Re-read rather than trust the delivered flag (rule 7): both
+                    // ProcessSettings and UpdateWorkStreamSettingsToCore clear it, so a
+                    // queued true can outlive its own clearing and push stale settings
+                    // back into the core after a load has replaced them.
+                    if (AreSettingsUpdated)
                     {
                         UpdateWorkStreamSettingsToCore();
                     }

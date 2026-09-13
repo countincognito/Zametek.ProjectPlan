@@ -80,20 +80,31 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProcessGraphSettingsSub = this
                 .WhenAnyValue(agsm => agsm.m_CoreViewModel.GraphSettings)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(rs =>
+                .Subscribe(_ =>
                 {
-                    if (m_Current != rs)
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard is kept because UpdateGraphSettingsToCore assigns one
+                    // instance to both m_Current and the core property, so its own echo
+                    // compares reference-equal here and this manager does not rebuild
+                    // its grid in response to an edit it made itself.
+                    GraphSettingsModel graphSettings = m_CoreViewModel.GraphSettings;
+
+                    if (m_Current != graphSettings)
                     {
-                        ProcessSettings(rs);
+                        ProcessSettings(graphSettings);
                     }
                 });
 
             m_UpdateGraphSettingsSub = this
                 .WhenAnyValue(agsm => agsm.AreSettingsUpdated)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(areUpdated =>
+                .Subscribe(_ =>
                 {
-                    if (areUpdated)
+                    // Re-read rather than trust the delivered flag (rule 7): both
+                    // ProcessSettings and UpdateGraphSettingsToCore clear it, so a
+                    // queued true can outlive its own clearing and push stale settings
+                    // back into the core after a load has replaced them.
+                    if (AreSettingsUpdated)
                     {
                         UpdateGraphSettingsToCore();
                     }
