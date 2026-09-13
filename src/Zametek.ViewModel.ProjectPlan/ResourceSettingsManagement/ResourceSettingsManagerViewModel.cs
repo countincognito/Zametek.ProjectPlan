@@ -28,7 +28,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_ReadOnlyResourcesSub;
         private readonly IDisposable? m_OrderableResourcesSub;
         private readonly IDisposable? m_ProcessResourceSettingsSub;
-        private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
         private readonly IDisposable? m_UpdateResourceSettingsSub;
 
         #endregion
@@ -131,24 +130,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
-            // One subscription here, fanning out synchronously to the resources, rather
-            // than one subscription inside each resource: the resources absorb the change
-            // together, in a single pass, on the thread that delivers it. See the note in
-            // the ManagedResourceViewModel constructor.
-            m_ProcessWorkStreamSettingsSub = this
-                .WhenAnyValue(rsm => rsm.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(wss =>
-                {
-                    lock (m_Lock)
-                    {
-                        foreach (IManagedResourceViewModel resource in RawResources)
-                        {
-                            resource.SetWorkStreamSettings(wss);
-                        }
-                    }
-                });
-
+            // Work stream settings are deliberately NOT observed here; the work stream
+            // settings manager calls SetWorkStreamSettings directly. An observed value
+            // arrives as a snapshot captured when it was raised, and the scheduler
+            // decides when to deliver it: during a load the worker thread writes the
+            // settings four times (reset clears both, then the scenario supplies both)
+            // before the UI thread drains either queue, and because the resource
+            // settings queue is scheduled first it drains in full - rebuilding every
+            // resource correctly from live state - before the work stream queue
+            // delivers its first, now stale, empty snapshot. That snapshot reconciled
+            // each resource's phases against no work streams and emptied them, and the
+            // real value arriving behind it could not restore a selection that had
+            // already been destroyed. See ARCHITECTURE section 7 rules 7 and 10.
             m_UpdateResourceSettingsSub = this
                 .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
@@ -703,6 +696,39 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand RenumberResourcesCommand { get; }
 
+        /// <summary>
+        /// Fans new work stream settings out to every resource, so each reconciles its
+        /// inter-activity phases against the work streams that now exist. Called
+        /// synchronously by the work stream settings manager on the thread that made the
+        /// change, rather than observed - see the note in the constructor.
+        /// </summary>
+        /// <remarks>
+        /// Only the work stream settings manager needs to call this. Every other route
+        /// that changes the work streams (a reset, opening a project, switching or
+        /// importing a scenario, renumbering) goes on to assign the resource settings as
+        /// well, which rebuilds these view models from scratch, and each one seeds itself
+        /// from the live work stream settings in its constructor.
+        /// </remarks>
+        public void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings)
+        {
+            ArgumentNullException.ThrowIfNull(workStreamSettings);
+            IReadOnlyList<IManagedResourceViewModel> resources;
+
+            lock (m_Lock)
+            {
+                resources = [.. RawResources];
+            }
+
+            // Outside the lock: absorbing the settings raises change notifications, and
+            // an announcement made while holding one of our own locks is the shape that
+            // deadlocked against ReactiveUI's sink gate before (ARCHITECTURE section 7
+            // rules 9 and 11).
+            foreach (IManagedResourceViewModel resource in resources)
+            {
+                resource.SetWorkStreamSettings(workStreamSettings);
+            }
+        }
+
         public Task ReportErrorAsync(string message)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(message);
@@ -735,7 +761,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ReadOnlyResourcesSub?.Dispose();
                 m_OrderableResourcesSub?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
-                m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
                 ClearManagedResources();
                 m_Resources?.Dispose();

@@ -392,6 +392,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void UpdateWorkStreamSettingsToCore()
         {
+            WorkStreamSettingsModel? updatedWorkStreamSettings = null;
+
             lock (m_Lock)
             {
                 UpdateDisplayOrders();
@@ -411,10 +413,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (m_Current != workStreamSettings)
                 {
                     m_Current = workStreamSettings;
-                    m_CoreViewModel.WorkStreamSettings = m_Current;
-                    m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true; // This cascades the call to update settings to core for resource settings.
+                    updatedWorkStreamSettings = m_Current;
                 }
             }
+
+            // Published outside the lock, because each of these runs arbitrary work in
+            // other view models and raises change notifications as it goes.
+            if (updatedWorkStreamSettings is not null)
+            {
+                m_CoreViewModel.WorkStreamSettings = updatedWorkStreamSettings;
+
+                // Pushed straight into the resources rather than left to a subscription
+                // there, so they have absorbed the new work streams before anything
+                // downstream reads them back - in particular the resource settings
+                // update armed on the next line, which rebuilds the resource settings
+                // from these view models and would otherwise publish phases reconciled
+                // against the previous work streams. This is the work stream counterpart
+                // of the push CoreViewModel makes into the activities.
+                m_ResourceSettingsManagerViewModel.SetWorkStreamSettings(updatedWorkStreamSettings);
+                m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true; // This cascades the call to update settings to core for resource settings.
+            }
+
             AreSettingsUpdated = false;
         }
 
