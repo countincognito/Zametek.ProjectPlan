@@ -53,6 +53,15 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
 
+        // Likewise for the date-derived compiler inputs. The minimum earliest start time
+        // and maximum latest finish time the compiler reads are integers measured from
+        // the project start along the working calendar, so a change to either invalidates
+        // them; these two recalculate them where the change is made, before the same
+        // caller arms a compile.
+        void SetProjectStart(DateTimeOffset projectStart);
+
+        void UpdateEarliestStartAndLatestFinishDateTimes();
+
         // The two halves of a compilation: CloneObject (from IHaveCloneableObject) hands
         // the compiler an independent copy of this activity, and this applies the results
         // back once it has finished, so the compiler never works on live state.

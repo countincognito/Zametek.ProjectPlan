@@ -102,7 +102,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DisplaySettingsViewModel = new ProjectScenarioDisplaySettingsViewModel(
                 m_DateTimeCalculator,
                 SetIsProjectScenarioUpdated,
-                () => IsReadyToCompile = ReadyToCompile.Yes);
+                () => IsReadyToCompile = ReadyToCompile.Yes,
+                RefreshActivityDateTimes);
             m_Mapper = mapper;
             m_GraphCompilationService = graphCompilationService;
             m_ResourceSchedulingService = resourceSchedulingService;
@@ -337,6 +338,31 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Recounts every activity's date-derived compiler inputs against the current
+        /// working calendar. Invoked wherever that calendar changes - the holiday
+        /// settings here, and the non-working day mode from the display settings, which
+        /// owns it - so the recount is complete before the same caller arms a compile.
+        /// </summary>
+        /// <remarks>
+        /// Deliberately lock-free. The display settings view model calls this from a
+        /// setter that may still be inside its own lock (SetValues holds it across the
+        /// whole batch), and taking m_Lock there would add a display-settings to core
+        /// lock-order edge of exactly the kind that deadlocked against
+        /// ProcessProjectScenario, which holds m_Lock while calling into that class.
+        /// Nothing here needs the lock: reading the activities takes a snapshot of the
+        /// source list, and each activity's recount takes only the leaf activity data
+        /// lock. An activity added concurrently is not missed either, since it counts
+        /// its own times from the current calendar as it is built.
+        /// </remarks>
+        private void RefreshActivityDateTimes()
+        {
+            foreach (IManagedActivityViewModel activity in RawActivities)
+            {
+                activity.UpdateEarliestStartAndLatestFinishDateTimes();
+            }
+        }
 
         private void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated, bool trackStaleOutputs)
         {
@@ -740,6 +766,21 @@ namespace Zametek.ViewModel.ProjectPlan
                     // if the input is provided as just a datetime from XAML.
                     m_DateTimeCalculator.ProjectStart = value;
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, m_DateTimeCalculator.ProjectStart);
+
+                    // Push the new start into every activity synchronously, so their
+                    // minimum earliest start times and maximum latest finish times are
+                    // measured from it before the compile armed below can read them.
+                    // This used to happen through a per-activity subscription observing
+                    // on the current thread's trampoline, which deferred the work
+                    // whenever the write itself was made from inside another scheduled
+                    // delivery. During a load this loop is empty: the start is always
+                    // assigned before the activities are added, and each activity is
+                    // built with the current start.
+                    foreach (IManagedActivityViewModel activity in RawActivities)
+                    {
+                        activity.SetProjectStart(m_ProjectStart);
+                    }
+
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
@@ -985,6 +1026,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     m_HolidaySettings = value;
                     m_DateTimeCalculator.SetNonWorkingDayCalendarEvents(m_HolidaySettings.Holidays);
+
+                    // Synchronous for the same reason as ProjectStart above: the holidays
+                    // are the calendar those times are counted along, so changing them
+                    // makes every activity's stored count wrong until it is redone.
+                    RefreshActivityDateTimes();
+
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;

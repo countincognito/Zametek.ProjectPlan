@@ -13,6 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private Action<bool, bool>? m_SetIsProjectScenarioUpdated;
         private Action? m_IsReadyToCompile;
+        private Action? m_RefreshActivityDateTimes;
 
         #endregion
 
@@ -21,15 +22,18 @@ namespace Zametek.ViewModel.ProjectPlan
         public ProjectScenarioDisplaySettingsViewModel(
             IDateTimeCalculator dateTimeCalculator,
             Action<bool, bool> setIsProjectScenarioUpdated,
-            Action isReadyToCompile)
+            Action isReadyToCompile,
+            Action refreshActivityDateTimes)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(setIsProjectScenarioUpdated);
             ArgumentNullException.ThrowIfNull(isReadyToCompile);
+            ArgumentNullException.ThrowIfNull(refreshActivityDateTimes);
             m_Lock = new();
             m_DateTimeCalculator = dateTimeCalculator;
             m_SetIsProjectScenarioUpdated = setIsProjectScenarioUpdated;
             m_IsReadyToCompile = isReadyToCompile;
+            m_RefreshActivityDateTimes = refreshActivityDateTimes;
             m_GanttChartShowConnections = [];
             m_EarnedValueShowResources = [];
         }
@@ -52,6 +56,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private void IsReadyToCompile()
         {
             m_IsReadyToCompile?.Invoke();
+        }
+
+        private void RefreshActivityDateTimes()
+        {
+            m_RefreshActivityDateTimes?.Invoke();
         }
 
         #endregion
@@ -107,6 +116,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator.NonWorkingDayMode = m_NonWorkingDayMode;
                     this.RaisePropertyChanged();
                 }
+
+                // This is the one display setting that is not merely displayed: it
+                // decides which days the calculator counts, so every activity's minimum
+                // earliest start time and maximum latest finish time - both compiler
+                // inputs - have to be recounted against it, and recounted before the
+                // compile armed below. The activities used to pick the change up through
+                // a deferred subscription, which could leave a compile reading counts
+                // taken along the previous calendar.
+                RefreshActivityDateTimes();
+
                 SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: true);
                 IsReadyToCompile();
             }
@@ -717,6 +736,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_SetIsProjectScenarioUpdated = null;
                 m_IsReadyToCompile = null;
+                m_RefreshActivityDateTimes = null;
             }
 
             m_Disposed = true;

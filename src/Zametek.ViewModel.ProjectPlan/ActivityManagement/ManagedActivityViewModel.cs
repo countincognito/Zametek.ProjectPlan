@@ -34,8 +34,6 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private readonly Lock m_DataLock;
 
-        private readonly IDisposable? m_ProjectStartSub;
-        private readonly IDisposable? m_DateTimeCalculatorCalculatorModeSub;
         private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
         private readonly IDisposable? m_CompilationSub;
 
@@ -116,19 +114,27 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackerSet = new ActivityTrackerSetViewModel(
                 m_CoreViewModel, DependentActivity.Id, trackers ?? []);
 
-            // The subscriptions below observe on Scheduler.CurrentThread so that their
-            // callbacks run inline on whichever thread raises the change, and are
-            // therefore complete before the CoreViewModel can proceed to compilation.
+            // Nothing that mutates the underlying activity is observed here. The
+            // CoreViewModel pushes every such change in synchronously, under its own
+            // lock, so that it is ordered against a compile by m_Lock: resource and
+            // work stream settings through SetResourceSettings/SetWorkStreamSettings,
+            // and the project start and working calendar through SetProjectStart and
+            // UpdateEarliestStartAndLatestFinishDateTimes.
             //
-            // Resource and work stream settings are deliberately NOT observed here:
-            // the CoreViewModel pushes them in synchronously, under its own lock, via
-            // SetResourceSettings/SetWorkStreamSettings. They used to arrive through
-            // subscriptions deferred to the UI thread, which could clear and rebuild
-            // this activity's live target sets while a compile on another thread was
-            // cloning them - the torn-HashSet corruption diagnosed from the
-            // zametek-deadlock-2 dump. Nothing that mutates the underlying activity
-            // may be deferred like that; it must run synchronously wherever the
-            // change is made, so it is ordered against the compile by m_Lock.
+            // The settings pair used to arrive through subscriptions deferred to the UI
+            // thread, which could clear and rebuild this activity's live target sets
+            // while a compile on another thread was cloning them - the torn-HashSet
+            // corruption diagnosed from the zametek-deadlock-2 dump. The project start
+            // and calendar pair used to arrive through subscriptions observing on
+            // Scheduler.CurrentThread, which runs inline only while nothing else holds
+            // the thread's trampoline; a write made from inside another scheduled
+            // delivery queued them behind it instead, so the compile the same setter
+            // armed could start against a minimum earliest start time and maximum
+            // latest finish time still measured along the previous calendar.
+            //
+            // What is left below touches none of it: the property helpers project values
+            // for the view, and the one remaining date subscription only re-raises the
+            // display properties when the way a date is rendered changes.
 
             m_ShowDates = this
                 .WhenAnyValue(x => x.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
@@ -141,19 +147,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasWorkStreams = this
                 .WhenAnyValue(x => x.m_CoreViewModel.HasWorkStreams)
                 .ToProperty(this, x => x.HasWorkStreams);
-
-            m_ProjectStartSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
-                .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(x => ProjectStart = x);
-
-            m_DateTimeCalculatorCalculatorModeSub = this
-                .WhenAnyValue(
-                    x => x.m_DateTimeCalculator.NonWorkingDayMode,
-                    x => x.m_CoreViewModel.HolidaySettings)
-                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(_ => UpdateEarliestStartAndLatestFinishDateTimes());
 
             m_DateTimeCalculatorDisplayModeSub = this
                 .WhenAnyValue(x => x.m_DateTimeCalculator.DisplayMode)
@@ -394,13 +387,6 @@ namespace Zametek.ViewModel.ProjectPlan
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
 
-        private void UpdateEarliestStartAndLatestFinishDateTimes()
-        {
-            RefreshStartAndFinishValues();
-            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
-            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
-        }
-
         private void RefreshStartAndFinishValues()
         {
             this.RaisePropertyChanged(nameof(EarliestStartTime));
@@ -462,10 +448,14 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool HasWorkStreams => m_HasWorkStreams.Value;
 
         private DateTimeOffset m_ProjectStart;
+        /// <summary>
+        /// The project start this activity's dates are measured from. Written only by
+        /// <see cref="SetProjectStart"/>, which the core view model calls synchronously.
+        /// </summary>
         public DateTimeOffset ProjectStart
         {
             get => m_ProjectStart;
-            set
+            private set
             {
                 this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                 RefreshStartAndFinishValues();
@@ -1022,6 +1012,35 @@ namespace Zametek.ViewModel.ProjectPlan
             SetNewTargetWorkStreams();
         }
 
+        /// <summary>
+        /// Absorbs a new project start: the date every one of this activity's times is
+        /// measured from, so moving it changes the minimum earliest start time and
+        /// maximum latest finish time the compiler reads. Synchronous for the same
+        /// reason as <see cref="SetResourceSettings"/> - those two are live compiler
+        /// inputs, and the caller arms a compile immediately afterwards.
+        /// </summary>
+        public void SetProjectStart(DateTimeOffset projectStart)
+        {
+            ProjectStart = projectStart;
+        }
+
+        /// <summary>
+        /// Recalculates the times derived from the stored dates, for when the working
+        /// calendar changes underneath them rather than the dates themselves: a holiday
+        /// added or removed, or a switch of non-working day mode. The stored dates are
+        /// what the plan holds, and the integers the compiler reads are counted along
+        /// the calendar between them and the project start, so a calendar change alone
+        /// makes those integers wrong. Validation is skipped: nothing the user typed has
+        /// changed, so a recount must not start reporting errors against values that
+        /// were accepted when they were entered.
+        /// </summary>
+        public void UpdateEarliestStartAndLatestFinishDateTimes()
+        {
+            RefreshStartAndFinishValues();
+            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
+            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
+        }
+
         public DependentActivityModel DeepCopy()
         {
             var activityModel = new ActivityModel
@@ -1206,8 +1225,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_ProjectStartSub?.Dispose();
-            m_DateTimeCalculatorCalculatorModeSub?.Dispose();
             m_DateTimeCalculatorDisplayModeSub?.Dispose();
             m_CompilationSub?.Dispose();
         }
