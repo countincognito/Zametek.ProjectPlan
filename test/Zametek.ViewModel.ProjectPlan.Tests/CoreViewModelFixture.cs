@@ -46,6 +46,61 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static CoreViewModel Create(
             int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
         {
+            (CoreViewModel coreViewModel, _) = Build(compilationTimeoutMilliseconds);
+
+            coreViewModel.KillSubscriptions();
+            coreViewModel.AutoCompile = false;
+            return coreViewModel;
+        }
+
+        /// <summary>
+        /// Builds the core and the settings managers that sit on top of it with their
+        /// reactive subscriptions <em>intact</em>, for the tests that are about when the
+        /// pipeline delivers rather than what the core computes.
+        /// </summary>
+        /// <remarks>
+        /// The opposite of <see cref="Create"/>, and deliberately so. Killing the
+        /// subscriptions makes a test independent of the scheduler, which is what nearly
+        /// every test here wants; but a whole class of defect lives in the deferral
+        /// itself, and none of it is reachable once the subscriptions are gone. Pair this
+        /// with a <c>MainThreadSequencerScope</c> so the deferred deliveries queue up and
+        /// the test says when they run.
+        /// <para>
+        /// Auto compilation is left off so a test is not racing background compiles it
+        /// did not ask for; a scenario load still compiles, because
+        /// <c>ProcessProjectScenario</c> runs one explicitly.
+        /// </para>
+        /// </remarks>
+        public static SubscribedHarness CreateWithSubscriptions(
+            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
+        {
+            (CoreViewModel coreViewModel, ISettingService settingService) = Build(compilationTimeoutMilliseconds);
+
+            coreViewModel.AutoCompile = false;
+
+            var dialogService = new TestDialogService();
+
+            var resourceSettingsManagerViewModel = new ResourceSettingsManagerViewModel(
+                coreViewModel,
+                settingService,
+                dialogService);
+
+            var workStreamSettingsManagerViewModel = new WorkStreamSettingsManagerViewModel(
+                coreViewModel,
+                resourceSettingsManagerViewModel,
+                settingService,
+                dialogService);
+
+            return new SubscribedHarness(
+                coreViewModel,
+                settingService,
+                resourceSettingsManagerViewModel,
+                workStreamSettingsManagerViewModel);
+        }
+
+        private static (CoreViewModel CoreViewModel, ISettingService SettingService) Build(
+            int compilationTimeoutMilliseconds)
+        {
             EnsureReactiveUIInitialized();
 
             var mapper = new ProjectPlanMapper();
@@ -67,9 +122,43 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 new TestDataGridScrollManager(),
                 NullLogger<CoreViewModel>.Instance);
 
-            coreViewModel.KillSubscriptions();
-            coreViewModel.AutoCompile = false;
-            return coreViewModel;
+            return (coreViewModel, settingService);
+        }
+
+        /// <summary>
+        /// The core plus the settings managers built over it, all with live
+        /// subscriptions. Disposing it tears them down in the order the application
+        /// would.
+        /// </summary>
+        public sealed class SubscribedHarness
+            : IDisposable
+        {
+            public SubscribedHarness(
+                CoreViewModel coreViewModel,
+                ISettingService settingService,
+                ResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
+                WorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
+            {
+                Core = coreViewModel;
+                SettingService = settingService;
+                ResourceSettingsManager = resourceSettingsManagerViewModel;
+                WorkStreamSettingsManager = workStreamSettingsManagerViewModel;
+            }
+
+            public CoreViewModel Core { get; }
+
+            public ISettingService SettingService { get; }
+
+            public ResourceSettingsManagerViewModel ResourceSettingsManager { get; }
+
+            public WorkStreamSettingsManagerViewModel WorkStreamSettingsManager { get; }
+
+            public void Dispose()
+            {
+                WorkStreamSettingsManager.Dispose();
+                ResourceSettingsManager.Dispose();
+                Core.Dispose();
+            }
         }
 
         /// <summary>
@@ -232,6 +321,46 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 throw new NotSupportedException();
 
             public void ExportProjectScenarioXlsxFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
+                throw new NotSupportedException();
+        }
+
+        /// <summary>
+        /// Never reached: a test that provokes a dialog has gone wrong, and throwing
+        /// says so rather than letting the run continue past it.
+        /// </summary>
+        private sealed class TestDialogService
+            : IDialogService
+        {
+            public object Parent { set { } }
+
+            public Task ShowNotificationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowErrorAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowWarningAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowInfoAsync(string title, string header, string message, bool showMainPageLink = false) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowInfoAsync(string title, string header, string message, double height, double width, bool showMainPageLink = false) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowContextAsync(string title, string header, string message, object context) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowContextAsync(string title, string header, string message, object context, double height, double width) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowConfirmationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) =>
+                throw new NotSupportedException();
+
+            public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters) =>
                 throw new NotSupportedException();
         }
 
