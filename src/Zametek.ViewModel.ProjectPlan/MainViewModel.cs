@@ -308,6 +308,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, main => main.BaseTheme);
 
+            // IsReadyToReviseTitle is an edge trigger, not a level: its setter raises
+            // unconditionally (see the enum-instead-of-bool note on its declaration), so
+            // every arm site fires this chain whether or not the value changed, and the
+            // flag is deliberately never cleared - exactly as IsReadyToReviseTrackedMetrics
+            // behaves in the same class. It used to be cleared from inside the selector
+            // below, which made a projection mutate one of its own two inputs and so
+            // re-enter the chain it belongs to; it terminated only by virtue of
+            // ReactiveUI collapsing the second, same-valued raise, which is the very
+            // behaviour these enums exist to work around. Nothing else reads the flag,
+            // so dropping the write removes the re-entrancy outright. The condition
+            // below is consequently always true once anything has armed it, which is
+            // correct: the title is recomputed from live setting-service state every
+            // time either input is raised, and can never go stale.
             m_ProjectTitleUpdateSub = this
                 .WhenAnyValue(
                     main => main.ProjectHasChanges,
@@ -330,12 +343,19 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {scenario} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
-                            m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.No;
                         }
 
                         return newTitle;
                     })
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                // The title is a bound window property, so the assignment belongs on the
+                // UI thread. This used to run on the taskpool, which raised
+                // PropertyChanged for a binding to Window.Title from a background
+                // thread; it survived on Win32 because SetWindowText posts rather than
+                // blocks, but nothing guaranteed it, and the browser head has no
+                // taskpool thread to run it on. The title itself is still computed at
+                // emission time by the selector above, so nothing moved onto the UI
+                // thread except the assignment.
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(projectTitle =>
                 {
                     ProjectTitle = projectTitle;

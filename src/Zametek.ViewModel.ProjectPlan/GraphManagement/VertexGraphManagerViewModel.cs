@@ -95,9 +95,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable m_ResetViewSub;
 
         // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
-        // load. m_SuppressNextSeed lets the seed ignore the manager's own push echo (see the ctor).
+        // load. m_PushedLayout holds the exact instance this manager last pushed, so the seed can
+        // recognise its own echo by identity (see the ctor).
         private readonly IDisposable m_LayoutSeedSub;
-        private bool m_SuppressNextSeed;
+        private Common.ProjectPlan.GraphLayoutModel? m_PushedLayout;
 
         #endregion
 
@@ -191,13 +192,25 @@ namespace Zametek.ViewModel.ProjectPlan
             m_LayoutSeedSub = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraphLayout)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(layout =>
+                .Subscribe(_ =>
                 {
-                    if (m_SuppressNextSeed)
+                    // Read the Core's current layout rather than the delivered snapshot (section 7
+                    // rule 7), and recognise this manager's own echo by identity rather than with a
+                    // one-shot flag. A bare bool was consumed by whichever delivery arrived next,
+                    // which is not necessarily the echo it was set for: a drag landing while a
+                    // load's layout change was still queued ate the flag on the load's delivery and
+                    // skipped seeding the arrangement that had just been opened. Comparing against
+                    // the instance actually pushed says exactly which delivery is ours - the same
+                    // idiom the settings managers use to avoid rebuilding their grids from their
+                    // own edits.
+                    Common.ProjectPlan.GraphLayoutModel layout = m_CoreViewModel.VertexGraphLayout;
+
+                    if (ReferenceEquals(layout, m_PushedLayout))
                     {
-                        m_SuppressNextSeed = false;
                         return;
                     }
+
+                    m_PushedLayout = null;
                     m_Interactive.SeedNodeLayout(layout.ToNodePositions());
                 });
 
@@ -302,12 +315,13 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario
-        // modified) whenever the user changes it. m_SuppressNextSeed flags the resulting Core-layout
-        // change as self-induced so the seed subscription ignores it rather than re-seeding.
+        // modified) whenever the user changes it. Recording the pushed instance in m_PushedLayout lets
+        // the seed subscription identify the resulting Core-layout change as self-induced and ignore
+        // it rather than re-seeding.
         private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
         {
             Common.ProjectPlan.GraphLayoutModel pushed = ToGraphLayoutModel(m_Interactive.GetNodeLayout());
-            m_SuppressNextSeed = true;
+            m_PushedLayout = pushed;
             m_CoreViewModel.VertexGraphLayout = pushed;
         }
 
