@@ -913,8 +913,9 @@ namespace Zametek.Graphs.Avalonia
                 return;
             }
 
-            // Rasterise the SVG into a picture for the PNG/JPEG/PDF formats.
-            using var svg = new SKSvg();
+            // Rasterise the SVG into a picture for the PNG/JPEG/PDF formats, with the labels drawn from the
+            // bundled font files rather than whatever the machine has installed.
+            using SKSvg svg = GraphFonts.CreateSvg();
             using var svgStream = new MemoryStream(svgData);
             svg.Load(svgStream);
             if (svg.Picture is not null)

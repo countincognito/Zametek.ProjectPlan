@@ -14,6 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The graph label font (SIL Open Font License, Assets/Fonts/OFL.txt); see GraphFonts. -->
+    <AvaloniaResource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Avalonia" Version="12.1.1" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />

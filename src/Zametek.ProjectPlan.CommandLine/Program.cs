@@ -57,6 +57,10 @@ namespace Zametek.ProjectPlan.CommandLine
                     {
                         ConfigureSerilog(options.Verbose);
 
+                        // Before any view-model exists, because each chart takes its
+                        // font as its plot is built.
+                        ChartFonts.Register();
+
                         // The host is built only once the options parse, so help
                         // and usage errors never pay for the container. It is
                         // deliberately never disposed: its singletons are view

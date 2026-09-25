@@ -46,6 +46,20 @@ namespace Zametek.Graphs.Avalonia
 
         #endregion
 
+        #region Label Sizing
+
+        // The label sizes the layout reserves come from the configuration's font correction factors rather
+        // than from measuring text, so the layout is the same on every machine. A node label's point size is
+        // whatever fits its text into NodeLabelWidth; an edge label's box is as wide as its text at
+        // EdgeLabelFontSize. Internal so that the tests can hold both to the bundled font's metrics.
+        internal static double NodeLabelFontSize(string labelText, GraphConfiguration config) =>
+            config.LabelWidthCorrectionFactor * config.NodeLabelWidth * c_PtPerInch / (labelText.Length * c_PxPerInch);
+
+        internal static double EdgeLabelWidth(string labelText, GraphConfiguration config) =>
+            labelText.Length * config.EdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / config.LabelWidthCorrectionFactor;
+
+        #endregion
+
         #region Private Types
 
         // A laid-out MSAGL drawing graph, with its nodes and edges in the diagram's own order. Everything
@@ -120,8 +134,8 @@ namespace Zametek.Graphs.Avalonia
                 drawingGraphNode.LabelText = diagramNode.Text ?? string.Empty;
 
                 // Calculate the correct label font size (Pts) and the label height (Pxs)
-                // based off of the pt->px conversion, with Consolas correction factors.
-                double nodeLabelFontSize = config.LabelWidthCorrectionFactor * config.NodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
+                // based off of the pt->px conversion, with the font's correction factors.
+                double nodeLabelFontSize = NodeLabelFontSize(drawingGraphNode.LabelText, config);
                 double nodeLabelHeight = config.LabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
                 double nodeHeight = config.NodeHeight;
 
@@ -148,7 +162,7 @@ namespace Zametek.Graphs.Avalonia
             // Initialise geometry labels as well.
             foreach (Microsoft.Msagl.Drawing.Edge drawingGraphEdge in drawingEdges)
             {
-                double edgeLabelWidth = drawingGraphEdge.LabelText.Length * config.EdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / config.LabelWidthCorrectionFactor;
+                double edgeLabelWidth = EdgeLabelWidth(drawingGraphEdge.LabelText, config);
 
                 drawingGraphEdge.Label.FontName = config.FontName;
                 drawingGraphEdge.Label.FontSize = config.EdgeLabelFontSize;

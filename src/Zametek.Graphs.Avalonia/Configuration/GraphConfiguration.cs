@@ -29,7 +29,8 @@ namespace Zametek.Graphs.Avalonia
 
         // The node label box width, the label font and weight, and the font-metric correction factors
         // (worked out by trial and error for the chosen monospace font). These size the MSAGL labels,
-        // which reserve layout space and so also nudge the interactive positions.
+        // which reserve layout space and so also nudge the interactive positions. FontName is written
+        // into the SVG as its font-family, so it may be a list of fallbacks.
         public double NodeLabelWidth { get; init; }
 
         public string FontName { get; init; } = string.Empty;

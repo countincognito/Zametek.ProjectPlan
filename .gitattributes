@@ -9,3 +9,4 @@
 *.dll binary
 *.exe binary
 *.zip binary
+*.ttf binary

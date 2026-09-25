@@ -278,13 +278,21 @@ var interactive = new InteractiveGraphViewModel(
     GraphConfigurations.Vertex, appearance);
 ```
 
-`GraphAppearance` members (all `init`, defaults reproduce the original look):
+`GraphAppearance` members (all `init`, defaults give the library's standard look):
 
 | Group | Members |
 |---|---|
 | Selection | `SelectionBrush`, `HighlightStrokeThickness` |
 | Nodes | `NodeFillFallbackBrush`, `NodeBorderFallbackBrush`, `NodeCornerRadius`, `DefaultNodeBorderThickness`, `NodeDimmedOpacity`, `NodeLabelFontFamily`, `NodeLabelFontSize`, `NodeLabelBrush` |
 | Edges | `EdgeDefaultBrush`, `DefaultEdgeStrokeThickness`, `EdgeDimmedOpacity`, `EdgeLightLabelBrush`, `EdgeDarkLabelBrush`, `EdgeLabelFontFamily`, `EdgeLabelFontSize`, `ArrowLength`, `ArrowHalfWidth`, `DashPattern` |
+
+> **The label font is bundled.** Both label font families default to **Cascadia Mono**, which the
+> library ships as an Avalonia resource (SIL Open Font License, `Assets/Fonts/OFL.txt`) rather than
+> looking it up on the machine, so labels look the same everywhere: the on‑screen labels, the canvas
+> export and the rasterised fixed layout all draw from the bundled files, even where no Cascadia Mono
+> is installed. The fixed‑layout SVG names `Cascadia Mono, Consolas, monospace`, for viewers that
+> cannot see the bundled copy. Any other family you set is looked up on the system as usual. The
+> presets' label factors are tuned to Cascadia Mono's metrics, so a different font may need its own.
 
 > ⚠️ **Font‑family properties must be typed `Avalonia.Media.FontFamily`, not `string`.** With compiled
 > bindings, binding a `string` to `FontFamily` throws at runtime (and silently falls back to the

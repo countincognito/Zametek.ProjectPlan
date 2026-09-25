@@ -287,6 +287,10 @@ namespace Zametek.ProjectPlan.Core
 
         public static void Build()
         {
+            // Before any view-model exists: the chart view-models build their plots as they are
+            // constructed below, and each plot takes its font as it is built.
+            ChartFonts.Register();
+
             Container = s_Builder!.Build();
             s_Resolver!.SetLifetimeScope(Container);
 

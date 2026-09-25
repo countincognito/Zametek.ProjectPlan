@@ -3,6 +3,7 @@ using Shouldly;
 using System.IO.Compression;
 using Xunit;
 using Zametek.Utility;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -219,6 +220,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             int exitCode = await Program.Main([@"-i", AssetPath(@"broken-dependency.zpp")]);
 
             exitCode.ShouldBe(3);
+        }
+
+        [Fact]
+        public async Task Main_Given_ValidFile_Then_ChartsUseTheBundledFont()
+        {
+            (int exitCode, _) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"));
+
+            exitCode.ShouldBe(0);
+
+            // ScottPlot's default font is process-wide, and only Main sets it in this test run.
+            ScottPlot.Fonts.Default.ShouldBe(ChartFonts.FamilyName);
         }
 
         [Fact]

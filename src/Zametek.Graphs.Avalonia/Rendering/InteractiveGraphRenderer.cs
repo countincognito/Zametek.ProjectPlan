@@ -27,18 +27,22 @@ namespace Zametek.Graphs.Avalonia
         // labels smooth (text rendering no longer reads SKPaint.IsAntialias).
         private static readonly Dictionary<(string Family, float Size, int Weight), SKFont> s_FontCache = [];
 
-        private static SKFont GetLabelFont(FontFamily fontFamily, double fontSize, FontWeight fontWeight)
+        // Internal so that the tests can check which typeface a label gets.
+        internal static SKFont GetLabelFont(FontFamily fontFamily, double fontSize, FontWeight fontWeight)
         {
             (string, float, int) key = (fontFamily.Name, (float)fontSize, (int)fontWeight);
             if (!s_FontCache.TryGetValue(key, out SKFont? font))
             {
-                // Avalonia FontWeight values are the numeric weights (Normal = 400, Bold = 700), which map
-                // straight onto SKFontStyleWeight so a bold label resolves to a bold typeface.
-                SKTypeface typeface = SKTypeface.FromFamilyName(
-                    key.Item1,
-                    (SKFontStyleWeight)key.Item3,
-                    SKFontStyleWidth.Normal,
-                    SKFontStyleSlant.Upright);
+                // The bundled label font comes from the library's own files, the same ones the on-screen
+                // labels use; any other family is looked up on the system. Avalonia FontWeight values are the
+                // numeric weights (Normal = 400, Bold = 700), which map straight onto SKFontStyleWeight so a
+                // bold label resolves to a bold typeface.
+                SKTypeface typeface = GraphFonts.TryGetLabelTypeface(key.Item1, key.Item3)
+                    ?? SKTypeface.FromFamilyName(
+                        key.Item1,
+                        (SKFontStyleWeight)key.Item3,
+                        SKFontStyleWidth.Normal,
+                        SKFontStyleSlant.Upright);
                 font = new SKFont(typeface, key.Item2)
                 {
                     Edging = SKFontEdging.Antialias,
