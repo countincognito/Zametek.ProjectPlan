@@ -33,22 +33,35 @@ namespace Zametek.Graphs.Avalonia
         public GraphLayoutModel BuildLayout(DiagramGraphModel diagramGraph, GraphConfiguration configuration, GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(configuration);
-            Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, configuration, theme);
-            return ExtractLayout(drawingGraph, diagramGraph, configuration.InteractiveLayoutScalingFactor);
+            LaidOutDrawingGraph laidOut = BuildAndLayoutDrawingGraph(diagramGraph, configuration, theme);
+            return ExtractLayout(laidOut, diagramGraph, configuration.InteractiveLayoutScalingFactor);
         }
 
         public byte[] RenderSvg(DiagramGraphModel diagramGraph, GraphConfiguration configuration, GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(configuration);
-            Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, configuration, theme);
-            return MsaglSvgRenderer.RenderToSvg(drawingGraph, theme);
+            LaidOutDrawingGraph laidOut = BuildAndLayoutDrawingGraph(diagramGraph, configuration, theme);
+            return MsaglSvgRenderer.RenderToSvg(laidOut.Graph, laidOut.Nodes, laidOut.Edges, theme);
         }
+
+        #endregion
+
+        #region Private Types
+
+        // A laid-out MSAGL drawing graph, with its nodes and edges in the diagram's own order. Everything
+        // downstream of the layout reads these lists rather than Graph.Nodes/Graph.Edges: the drawing graph
+        // keeps its nodes in a Hashtable keyed by the id string, and .NET randomises string hashing per
+        // process, so MSAGL's own enumeration order changes from one run of the application to the next.
+        private sealed record LaidOutDrawingGraph(
+            Microsoft.Msagl.Drawing.Graph Graph,
+            IReadOnlyList<Microsoft.Msagl.Drawing.Node> Nodes,
+            IReadOnlyList<Microsoft.Msagl.Drawing.Edge> Edges);
 
         #endregion
 
         #region Private Methods
 
-        private static Microsoft.Msagl.Drawing.Graph BuildAndLayoutDrawingGraph(
+        private static LaidOutDrawingGraph BuildAndLayoutDrawingGraph(
             DiagramGraphModel diagramGraph,
             GraphConfiguration config,
             GraphTheme theme)
@@ -64,6 +77,8 @@ namespace Zametek.Graphs.Avalonia
             }
 
             Dictionary<string, Microsoft.Msagl.Drawing.Node> drawingNodeLookup = drawingGraph.Nodes.ToDictionary(x => x.Id);
+            List<Microsoft.Msagl.Drawing.Node> drawingNodes = [.. diagramGraph.Nodes.Select(x => drawingNodeLookup[$@"{x.Id}"])];
+            var drawingEdges = new List<Microsoft.Msagl.Drawing.Edge>(diagramGraph.Edges.Count);
 
             foreach (DiagramEdgeModel diagramEdge in diagramGraph.Edges)
             {
@@ -81,6 +96,7 @@ namespace Zametek.Graphs.Avalonia
                 edge.Label.FontColor = EdgeFontColor(theme);
 
                 drawingGraph.AddPrecalculatedEdge(edge);
+                drawingEdges.Add(edge);
             }
 
             drawingGraph.LayoutAlgorithmSettings = drawingGraph.CreateLayoutSettings();
@@ -96,7 +112,7 @@ namespace Zametek.Graphs.Avalonia
             Dictionary<string, DiagramNodeModel> diagramNodeLookup = diagramGraph.Nodes.ToDictionary(x => $@"{x.Id}");
 
             // Fill the nodes.
-            foreach (Microsoft.Msagl.Drawing.Node drawingGraphNode in drawingGraph.Nodes)
+            foreach (Microsoft.Msagl.Drawing.Node drawingGraphNode in drawingNodes)
             {
                 DiagramNodeModel diagramNode = diagramNodeLookup[drawingGraphNode.Id];
 
@@ -130,7 +146,7 @@ namespace Zametek.Graphs.Avalonia
             }
 
             // Initialise geometry labels as well.
-            foreach (Microsoft.Msagl.Drawing.Edge drawingGraphEdge in drawingGraph.Edges)
+            foreach (Microsoft.Msagl.Drawing.Edge drawingGraphEdge in drawingEdges)
             {
                 double edgeLabelWidth = drawingGraphEdge.LabelText.Length * config.EdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / config.LabelWidthCorrectionFactor;
 
@@ -142,17 +158,46 @@ namespace Zametek.Graphs.Avalonia
                 drawingGraphEdge.Label.GeometryLabel.PlacementResult = Microsoft.Msagl.Core.Layout.LabelPlacementResult.OverlapsNothing;
             }
 
+            PutGeometryInDiagramOrder(drawingGraph.GeometryGraph, drawingNodes, drawingEdges);
+
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
-            return drawingGraph;
+            return new LaidOutDrawingGraph(drawingGraph, drawingNodes, drawingEdges);
+        }
+
+        // CreateGeometryGraph hands the geometry graph its nodes and edges in the drawing graph's Hashtable
+        // order, which changes from one process to the next, and the layered layout breaks its ties by input
+        // order - so the same diagram came out differently each time the application started (while staying
+        // stable within one run, which is why it went unnoticed). Rebuilding both collections in the
+        // diagram's order makes the layout a function of the diagram alone. Clear/Add leave each edge
+        // registered exactly once with its source and target. One case this cannot reach: MSAGL's Spline
+        // routing (the vertex preset) lays out parallel edges - two edges joining the same pair of nodes -
+        // slightly differently on every call, even within one process. The application's graphs never
+        // contain parallel edges.
+        private static void PutGeometryInDiagramOrder(
+            Microsoft.Msagl.Core.Layout.GeometryGraph geometryGraph,
+            IReadOnlyList<Microsoft.Msagl.Drawing.Node> drawingNodes,
+            IReadOnlyList<Microsoft.Msagl.Drawing.Edge> drawingEdges)
+        {
+            geometryGraph.Nodes.Clear();
+            foreach (Microsoft.Msagl.Drawing.Node drawingNode in drawingNodes)
+            {
+                geometryGraph.Nodes.Add(drawingNode.GeometryNode);
+            }
+
+            geometryGraph.Edges.Clear();
+            foreach (Microsoft.Msagl.Drawing.Edge drawingEdge in drawingEdges)
+            {
+                geometryGraph.Edges.Add(drawingEdge.GeometryEdge);
+            }
         }
 
         private static GraphLayoutModel ExtractLayout(
-            Microsoft.Msagl.Drawing.Graph drawingGraph,
+            LaidOutDrawingGraph laidOut,
             DiagramGraphModel diagramGraph,
             double interactiveLayoutScalingFactor)
         {
-            Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = drawingGraph.GeometryGraph.BoundingBox;
+            Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = laidOut.Graph.GeometryGraph.BoundingBox;
             double graphLeft = boundingBox.Left;
             double graphTop = boundingBox.Top; // Largest Y in MSAGL's Y-up space.
 
@@ -160,7 +205,9 @@ namespace Zametek.Graphs.Avalonia
 
             var nodes = new List<GraphNodeLayoutModel>();
 
-            foreach (Microsoft.Msagl.Drawing.Node drawingNode in drawingGraph.Nodes)
+            // In the diagram's order, which the interactive graph's node collection - and so its edge
+            // routing requests and the arrangement it persists - inherits.
+            foreach (Microsoft.Msagl.Drawing.Node drawingNode in laidOut.Nodes)
             {
                 if (!int.TryParse(drawingNode.Id, out int id)
                     || !diagramNodeLookup.TryGetValue(id, out DiagramNodeModel? diagramNode))
