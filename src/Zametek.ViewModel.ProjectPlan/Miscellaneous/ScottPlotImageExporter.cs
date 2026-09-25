@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (isPdf)
                     {
-                        using FileStream stream = File.OpenWrite(filename);
+                        using FileStream stream = File.Create(filename);
                         using SKDocument pdfDocument = SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata { RasterDpi = 300 });
                         using (SKCanvas pdfCanvas = pdfDocument.BeginPage(width, height))
                         {

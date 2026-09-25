@@ -98,22 +98,22 @@ namespace Zametek.Graphs.Avalonia
                 fileExtension.ValueSwitchOn()
                     .Case($".{GraphFileExtensions.Jpeg}", _ =>
                     {
-                        using var stream = File.OpenWrite(filename);
+                        using var stream = File.Create(filename);
                         WriteJpeg(picture, stream, scaleX, scaleY);
                     })
                     .Case($".{GraphFileExtensions.Png}", _ =>
                     {
-                        using var stream = File.OpenWrite(filename);
+                        using var stream = File.Create(filename);
                         WritePng(picture, stream, scaleX, scaleY);
                     })
                     .Case($".{GraphFileExtensions.Pdf}", _ =>
                     {
-                        using var stream = File.OpenWrite(filename);
+                        using var stream = File.Create(filename);
                         WritePdf(picture, stream, scaleX, scaleY);
                     })
                     .Case($".{GraphFileExtensions.Svg}", _ =>
                     {
-                        using var stream = File.OpenWrite(filename);
+                        using var stream = File.Create(filename);
                         WriteSvg(picture, stream, scaleX, scaleY);
                     })
                     .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));

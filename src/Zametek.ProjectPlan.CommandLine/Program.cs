@@ -23,11 +23,12 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         // Exit codes are part of the CLI contract: scripts and CI gates branch on
         // them. 0 = success, 1 = runtime failure (bad paths, unreadable files,
-        // unexpected errors), 2 = bad usage (invalid options or combinations),
-        // 3 = the project compiled with errors - kept distinct from 1 so a
-        // pipeline can tell a broken plan from a broken invocation - and 4 = a
-        // compilation ran past --compile-timeout and was cancelled, which says
-        // nothing about whether the plan is valid, only that it did not finish.
+        // outputs that could not be written, unexpected errors), 2 = bad usage
+        // (invalid options or combinations), 3 = the project compiled with
+        // errors - kept distinct from 1 so a pipeline can tell a broken plan from
+        // a broken invocation - and 4 = a compilation ran past --compile-timeout
+        // and was cancelled, which says nothing about whether the plan is valid,
+        // only that it did not finish.
         private const int c_ExitSuccess = 0;
         private const int c_ExitFailure = 1;
         private const int c_ExitUsageError = 2;
@@ -129,7 +130,11 @@ namespace Zametek.ProjectPlan.CommandLine
                     services.AddSingleton<IProjectScenarioManagerViewModel, ProjectScenarioManagerViewModel>();
                     services.AddSingleton<ICoreViewModel, CoreViewModel>();
                     services.AddSingleton<ISettingService, SettingService>();
-                    services.AddSingleton<IDialogService, DialogService>();
+
+                    // Registered as itself too, so that RunAsync can ask it
+                    // whether an error was shown during the run.
+                    services.AddSingleton<DialogService>();
+                    services.AddSingleton<IDialogService>(x => x.GetRequiredService<DialogService>());
 
                     services.AddSingleton<IGraphCompilationService, GraphCompilationService>();
                     services.AddSingleton<IResourceSchedulingService, ResourceSchedulingService>();
@@ -178,6 +183,7 @@ namespace Zametek.ProjectPlan.CommandLine
             IOutputManagerViewModel outputs = ResolveMuted<IOutputManagerViewModel>(services);
 
             ISettingService settingService = services.GetRequiredService<ISettingService>();
+            DialogService dialogService = services.GetRequiredService<DialogService>();
 
             // Applied before anything is loaded, because opening a project compiles
             // the scenario it lands on.
@@ -400,7 +406,11 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
             }
 
-            return c_ExitSuccess;
+            // A chart or graph export that fails does not throw: its view model
+            // catches the failure and reports it through the dialog service, which
+            // is what the desktop needs. The remaining outputs have still been
+            // produced and the metrics printed, but the run as a whole has failed.
+            return dialogService.HasShownErrors ? c_ExitFailure : c_ExitSuccess;
         }
 
         private static ConsoleTable BuildMetricsTable(IMetricManagerViewModel metrics)

@@ -224,10 +224,12 @@ The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.P
 | Code | Meaning |
 | ---- | ------- |
 | 0 | Success |
-| 1 | Runtime failure (bad paths, unreadable files, unexpected errors) |
+| 1 | Runtime failure (bad paths, unreadable files, an output that could not be written, unexpected errors) |
 | 2 | Bad usage (invalid options or combinations) |
 | 3 | The project compiled with errors |
 | 4 | A compilation ran past `--compile-timeout` and was cancelled |
+
+A chart or graph that cannot be written - because the file is open in another program, say - does not stop the run: the error goes to stderr, the remaining outputs are still produced and the metrics still printed, and the run then exits with code 1.
 
 ## Attributions
 

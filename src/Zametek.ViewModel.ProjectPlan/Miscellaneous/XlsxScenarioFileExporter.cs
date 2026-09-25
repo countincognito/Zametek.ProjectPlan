@@ -1102,7 +1102,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
-            using var stream = File.OpenWrite(filename);
+            using var stream = File.Create(filename);
             workbook.Write(stream, leaveOpen: false);
         }
 

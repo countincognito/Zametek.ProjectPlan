@@ -7,11 +7,24 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         #region Fields
 
+        private int m_ErrorCount;
+
         #endregion
 
         public DialogService()
         {
         }
+
+        #region Properties
+
+        // Whether an error has been shown during the run. The chart and graph
+        // view models catch a failed export and report it here rather than let
+        // it escape - the desktop shows it in a dialog and carries on - so this
+        // is the only trace such a failure leaves, and Program checks it to
+        // fail the run.
+        public bool HasShownErrors => Volatile.Read(ref m_ErrorCount) > 0;
+
+        #endregion
 
         #region IDialogService Members
 
@@ -30,6 +43,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string header,
             string message)
         {
+            Interlocked.Increment(ref m_ErrorCount);
             await Console.Error.WriteLineAsync($@"{title}: {message}");
         }
 

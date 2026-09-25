@@ -278,7 +278,7 @@ namespace Zametek.Graphs.Avalonia
 
                 if (data is not null)
                 {
-                    using var stream = File.OpenWrite(filename);
+                    using var stream = File.Create(filename);
                     await stream.WriteAsync(data);
                 }
             }
@@ -908,7 +908,7 @@ namespace Zametek.Graphs.Avalonia
             if (string.Equals(fileExtension, $".{GraphFileExtensions.Svg}", StringComparison.OrdinalIgnoreCase))
             {
                 // Write the MSAGL SVG verbatim so its text stays crisp (no rasterisation).
-                using var stream = File.OpenWrite(filename);
+                using var stream = File.Create(filename);
                 await stream.WriteAsync(svgData);
                 return;
             }
