@@ -228,6 +228,8 @@ namespace Zametek.ViewModel.ProjectPlan
             return (isVisible, labelText.ToString());
         }
 
+        // The lines break on '\n' rather than AppendLine's platform line end, as the vertex labels do, because the GraphML
+        // and Dot exports carry these labels and must come out the same on every platform.
         private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel, bool isDummy, bool isCritical, bool viewNames)
         {
             var labelText = new StringBuilder();
@@ -244,7 +246,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     if (!isCritical)
                     {
-                        labelText.AppendLine();
+                        labelText.Append('\n');
                         labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
                     }
                     isVisible = true;
@@ -268,7 +270,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 labelText.AppendFormat($@" ({activityModel.Duration})");
                 if (!isCritical)
                 {
-                    labelText.AppendLine();
+                    labelText.Append('\n');
                     labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
                 }
                 isVisible = true;

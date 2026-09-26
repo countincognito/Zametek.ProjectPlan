@@ -398,7 +398,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     case MetricsExport.Json:
                         // Machine output: undecorated, no colours, no leading
                         // blank line, so it can be piped straight into a parser.
-                        Console.Out.WriteLine(BuildMetricsJson(metrics));
+                        StandardOutput.WriteLine(BuildMetricsJson(metrics));
                         break;
                     case MetricsExport.Table:
                         Display(BuildMetricsTable(metrics).ToString());
@@ -509,7 +509,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 metrics.TotalMarginAbsolute,
             };
 
-            return JsonConvert.SerializeObject(output, Formatting.Indented);
+            // Json.NET indents with the platform's line end; zpp's are "\n" everywhere. JSON escapes the line breaks in
+            // its strings, so every one left in the text is indentation.
+            return JsonConvert.SerializeObject(output, Formatting.Indented).Replace("\r\n", "\n", StringComparison.Ordinal);
         }
 
         // Constructing a view model wires up its reactive subscriptions; in this
@@ -812,8 +814,8 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 Console.ForegroundColor = ConsoleColor.Green;
             }
-            Console.Out.WriteLine();
-            Console.Out.WriteLine(content);
+            StandardOutput.WriteLine();
+            StandardOutput.WriteLine(content);
             Console.ResetColor();
         }
 

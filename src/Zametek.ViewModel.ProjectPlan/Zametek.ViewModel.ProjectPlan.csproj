@@ -51,4 +51,8 @@
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Zametek.ViewModel.ProjectPlan.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -35,7 +35,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string header,
             string message)
         {
-            await Console.Out.WriteLineAsync($@"{title}: {message}");
+            await StandardOutput.WriteLineAsync($@"{title}: {message}");
         }
 
         public async Task ShowErrorAsync(
@@ -61,7 +61,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             bool showMainPageLink = false)
         {
-            await Console.Out.WriteLineAsync($@"{title}: {message}");
+            await StandardOutput.WriteLineAsync($@"{title}: {message}");
         }
 
         public async Task ShowInfoAsync(
@@ -72,7 +72,7 @@ namespace Zametek.ProjectPlan.CommandLine
             double width,
             bool showMainPageLink = false)
         {
-            await Console.Out.WriteLineAsync($@"{title}: {message}");
+            await StandardOutput.WriteLineAsync($@"{title}: {message}");
         }
 
         public Task<bool> ShowConfirmationAsync(

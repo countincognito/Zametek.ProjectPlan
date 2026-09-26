@@ -198,6 +198,21 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task SavedFile_EndsLinesWithLf()
+        {
+            // On every platform, so that the same plan saves to the same bytes on Windows and on Linux. Windows' own
+            // line end is "\r\n", which is where this test has teeth.
+            string path = GetTempFile();
+            ProjectModel model = BuildMinimalProjectModel();
+
+            await m_Saver.SaveProjectFileAsync(model, path);
+
+            string content = await File.ReadAllTextAsync(path);
+            content.ShouldContain("\n");
+            content.ShouldNotContain("\r");
+        }
+
+        [Fact]
         public async Task RoundTrip_Minimal_Preserves_Version()
         {
             string path = GetTempFile();

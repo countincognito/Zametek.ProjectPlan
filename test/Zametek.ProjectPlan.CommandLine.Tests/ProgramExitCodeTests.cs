@@ -376,6 +376,70 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             metrics[@"TotalCost"].ShouldNotBeNull();
         }
 
+        // zpp ends the lines it writes with "\n" on every platform, so that a run produces the same bytes on Windows as
+        // on Linux. Windows' own line end is "\r\n", which is where these tests have teeth. The help text is the one
+        // exception on stdout, because CommandLineParser writes it.
+        [Theory]
+        [InlineData(@"json")]
+        [InlineData(@"table")]
+        [InlineData(@"markdown")]
+        public async Task Main_Given_MetricsFormat_Then_StdoutLinesEndWithLf(string metricsFormat)
+        {
+            (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"--metrics-format", metricsFormat);
+
+            exitCode.ShouldBe(0);
+            output.ShouldContain("\n");
+            output.ShouldNotContain("\r");
+        }
+
+        [Fact]
+        public async Task Main_Given_ListScenarios_Then_StdoutLinesEndWithLf()
+        {
+            (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"--list-scenarios");
+
+            exitCode.ShouldBe(0);
+            output.ShouldContain("\n");
+            output.ShouldNotContain("\r");
+        }
+
+        [Fact]
+        public async Task Main_Given_BrokenDependencies_Then_StdoutLinesEndWithLf()
+        {
+            (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"broken-dependency.zpp"));
+
+            exitCode.ShouldBe(3);
+            output.ShouldContain("\n");
+            output.ShouldNotContain("\r");
+        }
+
+        [Fact]
+        public async Task Main_Given_OutputFile_Then_ProjectFileLinesEndWithLf()
+        {
+            string outputFile = Path.Combine(m_TempDirectory, @"two-scenarios.zpp");
+
+            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-o", outputFile]);
+
+            exitCode.ShouldBe(0);
+            string content = File.ReadAllText(outputFile);
+            content.ShouldContain("\n");
+            content.ShouldNotContain("\r");
+        }
+
+        [Theory]
+        [InlineData(@"arrow", GraphExport.GraphML)]
+        [InlineData(@"arrow", GraphExport.Dot)]
+        [InlineData(@"vertex", GraphExport.GraphML)]
+        [InlineData(@"vertex", GraphExport.Dot)]
+        public async Task Main_Given_GraphDataExport_Then_FileLinesEndWithLf(string graph, GraphExport format)
+        {
+            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), $@"--{graph}-directory", m_TempDirectory, $@"--{graph}-format", format.ToString()]);
+
+            exitCode.ShouldBe(0);
+            string content = File.ReadAllText(Directory.GetFiles(m_TempDirectory).ShouldHaveSingleItem());
+            content.ShouldContain("\n");
+            content.ShouldNotContain("\r");
+        }
+
         public void Dispose()
         {
             try
