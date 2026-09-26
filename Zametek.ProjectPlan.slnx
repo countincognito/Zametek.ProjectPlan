@@ -44,6 +44,9 @@
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
     </Project>
+    <Project Path="src/Zametek.ProjectPlan.Engine/Zametek.ProjectPlan.Engine.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="src/Zametek.Resource.ProjectPlan/Zametek.Resource.ProjectPlan.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
@@ -67,6 +70,9 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="test/Zametek.ProjectPlan.CommandLine.Tests/Zametek.ProjectPlan.CommandLine.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="test/Zametek.ProjectPlan.Engine.Tests/Zametek.ProjectPlan.Engine.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj">

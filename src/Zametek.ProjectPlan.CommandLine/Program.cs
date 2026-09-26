@@ -2,15 +2,12 @@ using CommandLine;
 using CommandLine.Text;
 using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
-using ReactiveUI.Builder;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
 using Zametek.Common.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
-using Zametek.Graphs.Avalonia;
+using Zametek.ProjectPlan.Engine;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -39,8 +36,6 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             try
             {
-                InitializeReactiveUI();
-
                 using var parser = new Parser(with =>
                 {
                     with.CaseInsensitiveEnumValues = true;
@@ -53,22 +48,20 @@ namespace Zametek.ProjectPlan.CommandLine
                 ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
 
                 return await parserResult.MapResult(
-                    options =>
+                    async options =>
                     {
                         ConfigureSerilog(options.Verbose);
 
-                        // Before any view-model exists, because each chart takes its
-                        // font as its plot is built.
-                        ChartFonts.Register();
+                        // Before the container exists, because the view models the
+                        // engine runs depend on it.
+                        ProjectPlanEngine.Initialize();
 
-                        // The host is built only once the options parse, so help
-                        // and usage errors never pay for the container. It is
-                        // deliberately never disposed: its singletons are view
-                        // models wired for desktop lifetimes, and the process is
-                        // about to exit anyway.
-                        IHost host = BuildHost(args);
+                        // The container is built only once the options parse, so
+                        // help and usage errors never pay for it. The run is one
+                        // job, which the engine gives a scope of its own.
+                        await using ServiceProvider services = BuildServices();
 
-                        return RunAsync(options, host.Services);
+                        return await RunAsync(options, services.GetRequiredService<JobRunner>());
                     },
                     errs => Task.FromResult(OnParseErrors(parserResult, errs)));
             }
@@ -76,6 +69,11 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 await Console.Error.WriteLineAsync(ex.Message);
                 return c_ExitUsageError;
+            }
+            catch (ScenarioSelectionException ex)
+            {
+                await Console.Error.WriteLineAsync(BuildScenarioSelectionMessage(ex));
+                return c_ExitFailure;
             }
             catch (GraphCompilationTimeoutException ex)
             {
@@ -93,29 +91,12 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        private static int s_ReactiveUIInitialized;
-
-        private static void InitializeReactiveUI()
-        {
-            // ReactiveUI 23 requires explicit initialization before any WhenAnyValue is used.
-            // The desktop app does this via Avalonia's .UseReactiveUI(); this headless CLI has no
-            // UI platform, so initialize the core (non-UI) ReactiveUI services directly. The
-            // initialization is process-global and Main is invoked repeatedly in-process by the
-            // test suite, so it must run exactly once.
-            if (Interlocked.Exchange(ref s_ReactiveUIInitialized, 1) == 0)
-            {
-                RxAppBuilder.CreateReactiveUIBuilder()
-                    .WithCoreServices()
-                    .BuildApp();
-            }
-        }
-
         private static void ConfigureSerilog(bool verbose)
         {
             // Everything goes to stderr so stdout stays clean for parseable output
             // (the metrics table or JSON). Warnings and errors always show - this
             // is where the view models' ILogger<T> output surfaces, via the
-            // UseSerilog registration in BuildHost - and --verbose lowers the
+            // AddSerilog registration in BuildServices - and --verbose lowers the
             // threshold to their informational lifecycle logging.
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(verbose ? LogEventLevel.Information : LogEventLevel.Warning)
@@ -125,304 +106,77 @@ namespace Zametek.ProjectPlan.CommandLine
                 .CreateLogger();
         }
 
-        private static IHost BuildHost(string[] args)
+        private static ServiceProvider BuildServices()
         {
-            return Host.CreateDefaultBuilder(args)
-                .ConfigureServices((context, services) =>
-                {
-                    services.AddSingleton(TimeProvider.System);
-                    services.AddSingleton<IProjectScenarioManagerViewModel, ProjectScenarioManagerViewModel>();
-                    services.AddSingleton<ICoreViewModel, CoreViewModel>();
-                    services.AddSingleton<ISettingService, SettingService>();
-
-                    // Registered as itself too, so that RunAsync can ask it
-                    // whether an error was shown during the run.
-                    services.AddSingleton<DialogService>();
-                    services.AddSingleton<IDialogService>(x => x.GetRequiredService<DialogService>());
-
-                    services.AddSingleton<IGraphCompilationService, GraphCompilationService>();
-                    services.AddSingleton<IResourceSchedulingService, ResourceSchedulingService>();
-                    services.AddSingleton<IMetricCalculationService, MetricCalculationService>();
-
-                    services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
-                    services.AddSingleton<IGraphLayoutEngine, MsaglGraphLayoutEngine>();
-
-                    services.AddSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
-                    services.AddSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
-                    services.AddSingleton<IVertexGraphManagerViewModel, VertexGraphManagerViewModel>();
-                    services.AddSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
-                    services.AddSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
-                    services.AddSingleton<IScenarioChartManagerViewModel, ScenarioChartManagerViewModel>();
-                    services.AddSingleton<IMetricManagerViewModel, MetricManagerViewModel>();
-                    services.AddSingleton<IOutputManagerViewModel, OutputManagerViewModel>();
-
-                    services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
-                    services.AddSingleton<IMicrosoftProjectFileImporter, MicrosoftProjectFileImporter>();
-                    services.AddSingleton<IXlsxScenarioFileImporter, XlsxScenarioFileImporter>();
-                    services.AddSingleton<IProjectScenarioFileImport, ProjectScenarioFileImport>();
-                    services.AddSingleton<IProjectFileSave, ProjectFileSave>();
-                    services.AddSingleton<IScottPlotImageExporter, ScottPlotImageExporter>();
-                    services.AddSingleton<IXlsxScenarioFileExporter, XlsxScenarioFileExporter>();
-                    services.AddSingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
-
-                    services.AddSingleton(new Data.ProjectPlan.VersionMapper());
-                    services.AddSingleton(new ProjectPlanMapper());
-
-                    services.AddSingleton<IDataGridLayoutManager, DataGridLayoutManager>();
-                    services.AddSingleton<IDataGridScrollManager, DataGridScrollManager>();
-                })
-                .UseSerilog()
-                .Build();
+            return new ServiceCollection()
+                .AddProjectPlanEngine()
+                .AddSerilog()
+                .BuildServiceProvider();
         }
 
         private static async Task<int> RunAsync(
             Options options,
-            IServiceProvider services)
+            JobRunner jobRunner)
         {
             ValidateOptions(options);
 
-            IProjectScenarioManagerViewModel project = ResolveMuted<IProjectScenarioManagerViewModel>(services);
-            ICoreViewModel core = ResolveMuted<ICoreViewModel>(services);
-            IMetricManagerViewModel metrics = ResolveMuted<IMetricManagerViewModel>(services);
-            IOutputManagerViewModel outputs = ResolveMuted<IOutputManagerViewModel>(services);
+            // File in: a project file, or a file to import. The parser's file-in
+            // group requires one of the two, and ValidateOptions rejects both.
+            string inputFilename = options.InputFilename ?? options.ImportFilename!;
+            ProjectScenarioImportFormat? importFormat = options.ImportFilename is null
+                ? null
+                : FileFormatHelper.GetProjectScenarioImportFormat(inputFilename);
 
-            ISettingService settingService = services.GetRequiredService<ISettingService>();
-            DialogService dialogService = services.GetRequiredService<DialogService>();
+            await using FileStream input = importFormat is ProjectScenarioImportFormat format
+                ? FileStreamHelper.OpenImportFile(inputFilename, format)
+                : File.OpenRead(inputFilename);
 
-            // Applied before anything is loaded, because opening a project compiles
-            // the scenario it lands on.
-            settingService.CompilationTimeoutMilliseconds = options.CompileTimeoutMilliseconds;
-
-            core.AutoCompile = false;
-
-            // File in.
+            if (options.ListScenarios)
             {
-                string? inputFilename = options.InputFilename;
-                string? importFilename = options.ImportFilename;
-
-                if (inputFilename is not null)
-                {
-                    IProjectFileOpen projectFileOpen = services.GetRequiredService<IProjectFileOpen>();
-                    ProjectModel projectModel;
-
-                    await using (FileStream stream = File.OpenRead(inputFilename))
-                    {
-                        projectModel = await projectFileOpen.OpenProjectFileAsync(stream);
-                    }
-
-                    if (options.ListScenarios)
-                    {
-                        DisplayScenarios(projectModel);
-                        return c_ExitSuccess;
-                    }
-
-                    if (options.Scenario is not null)
-                    {
-                        // Re-point the project's current-scenario marker before any
-                        // processing: ProcessProject loads whichever scenario Current
-                        // names, so this is the entire mechanism of --scenario.
-                        projectModel = projectModel with { Current = ResolveScenarioId(projectModel, options.Scenario) };
-                    }
-
-                    // First process the project.
-                    project.ProcessProject(projectModel);
-                    settingService.SetProjectFilePath(inputFilename, bindTitleToFilename: true);
-                }
-                else if (importFilename is not null)
-                {
-                    // An import lands in the current scenario of the open project.
-                    // The desktop always has one - every new project starts with a
-                    // Base scenario - so start the project the same way here.
-                    // Without it the import would reach the core but not the
-                    // project, and a saved project would hold no scenario at all.
-                    project.ResetProject();
-
-                    // Read after the reset, which gives the Base scenario a new id.
-                    IProjectScenarioFileImport projectFileImport = services.GetRequiredService<IProjectScenarioFileImport>();
-                    Guid projectScenarioId = settingService.ScenarioId;
-                    string projectScenarioTitle = settingService.ScenarioTitle;
-                    ProjectScenarioImportFormat importFormat = FileFormatHelper.GetProjectScenarioImportFormat(importFilename);
-                    ProjectScenarioImportModel projectImport;
-
-                    using (FileStream stream = FileStreamHelper.OpenImportFile(importFilename, importFormat))
-                    {
-                        projectImport = projectFileImport.ImportProjectScenarioFile(stream, importFormat);
-                    }
-
-                    core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
-                    settingService.SetProjectFilePath(importFilename, bindTitleToFilename: true);
-                }
+                DisplayScenarios(await jobRunner.ListScenariosAsync(input));
+                return c_ExitSuccess;
             }
 
-            // Pin the export title now: the file-out block below rebinds the title
-            // to each file it writes (matching the desktop's save-as behaviour), and
-            // chart images must be named after the project that was processed, not
-            // after wherever its results were saved.
-            string projectTitle = settingService.ProjectTitle;
+            // An export's format comes from its file's extension. Like the export
+            // directories, it is checked before the plan is processed, so that a
+            // bad name fails the run before any file has been written.
+            ProjectScenarioExportFormat? exportFormat = options.ExportFilename is null
+                ? null
+                : FileFormatHelper.GetProjectScenarioExportFormat(options.ExportFilename);
 
-            // Base theme.
+            var request = new JobRequest
             {
-                core.BaseTheme = options.BaseTheme;
+                Input = input,
+                ImportFormat = importFormat,
+                Scenario = options.Scenario,
+                BaseTheme = options.BaseTheme,
+                CompileTimeoutMilliseconds = options.CompileTimeoutMilliseconds,
+                SaveProject = options.OutputFilename is not null,
+                ExportFormat = exportFormat,
+                GanttChart = ToChartOutputRequest(options.GanttDirectory, options.GanttFormat, options.GanttSize),
+                ArrowGraph = ToGraphOutputRequest(options.ArrowGraphDirectory, options.ArrowGraphFormat),
+                VertexGraph = ToGraphOutputRequest(options.VertexGraphDirectory, options.VertexGraphFormat),
+                ResourceChart = ToChartOutputRequest(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
+                EarnedValueChart = ToChartOutputRequest(options.EVDirectory, options.EVFormat, options.EVSize),
+                ScenarioChart = ToChartOutputRequest(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
+            };
+
+            // Chart and graph files are named after the file the plan came from,
+            // not after wherever its results are saved.
+            string projectTitle = SettingServiceBase.GetProjectTitle(inputFilename);
+
+            JobResult result = await jobRunner.RunAsync(request, new FileJobSink(BuildOutputFilenames(options, projectTitle)));
+
+            if (result.Status == JobStatus.CompilationErrors)
+            {
+                Display(result.CompilationOutput, hasErrors: true);
+                return c_ExitCompilationErrors;
             }
 
-            // Compile.
+            // Metrics. A plan that compiled always has them.
             {
-                // We do not need to set IsReadyToReviseTrackers since this is a one step
-                // process (i.e. we are not changing any tracker UI elements).
+                JobMetrics metrics = result.Metrics ?? throw new InvalidOperationException();
 
-                core.RunCompile();
-                outputs.BuildCompilationOutput();
-
-                if (core.HasCompilationErrors)
-                {
-                    Display(outputs.CompilationOutput, core.HasCompilationErrors);
-                    return c_ExitCompilationErrors;
-                }
-
-                // Mirrors the order of CoreViewModel.RunBuildCascade, which is what
-                // builds these outputs in the desktop app after each compile.
-                core.BuildArrowGraph();
-                core.BuildVertexGraph();
-                core.BuildResourceSeriesSet();
-                core.BuildTrackingSeriesSet();
-                core.BuildNetworkMetrics();
-                core.BuildRiskMetrics();
-                core.BuildFinancialMetrics();
-            }
-
-            // File out.
-            {
-                string? outputFilename = options.OutputFilename;
-                string? exportFilename = options.ExportFilename;
-
-                if (outputFilename is not null)
-                {
-                    IProjectFileSave projectFileSave = services.GetRequiredService<IProjectFileSave>();
-                    ProjectModel projectModel = project.BuildProject();
-                    await FileStreamHelper.SaveAsync(outputFilename, stream => projectFileSave.SaveProjectFileAsync(projectModel, stream));
-                    settingService.SetProjectFilePath(outputFilename, bindTitleToFilename: true);
-                }
-                if (exportFilename is not null)
-                {
-                    IProjectScenarioFileExport projectFileExport = services.GetRequiredService<IProjectScenarioFileExport>();
-                    ProjectScenarioExportFormat exportFormat = FileFormatHelper.GetProjectScenarioExportFormat(exportFilename);
-                    ProjectScenarioModel projectScenarioModel = core.BuildProjectScenario();
-                    FileStreamHelper.Save(
-                        exportFilename,
-                        stream => projectFileExport.ExportProjectScenarioFile(
-                            projectScenarioModel,
-                            core.ResourceSeriesSet,
-                            core.TrackingSeriesSet,
-                            core.DisplaySettingsViewModel.ShowDates,
-                            stream,
-                            exportFormat));
-                    settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: true);
-                }
-            }
-
-            // Chart and graph exports. Each manager view model is resolved only
-            // when its export was requested - construction is not free, and a
-            // typical run wants at most one or two of them.
-
-            // Gantt chart export.
-            if (options.GanttDirectory is not null)
-            {
-                IGanttChartManagerViewModel gantt = ResolveMuted<IGanttChartManagerViewModel>(services);
-
-                await ExportPlotAsync(
-                    dialogService,
-                    options.GanttDirectory,
-                    options.GanttSize,
-                    options.GanttFormat,
-                    projectTitle,
-                    Resource.ProjectPlan.Suffixes.Suffix_GanttChart,
-                    gantt.BuildGanttChartPlotModel,
-                    gantt.WriteGanttChartImageAsync);
-            }
-
-            // Arrow graph export.
-            if (options.ArrowGraphDirectory is not null)
-            {
-                IArrowGraphManagerViewModel arrow = ResolveMuted<IArrowGraphManagerViewModel>(services);
-
-                await ExportGraphAsync(
-                    dialogService,
-                    options.ArrowGraphDirectory,
-                    options.ArrowGraphFormat,
-                    projectTitle,
-                    Resource.ProjectPlan.Suffixes.Suffix_ArrowChart,
-                    arrow.WriteFixedLayoutArrowGraphImageAsync);
-            }
-
-            // Vertex graph export.
-            if (options.VertexGraphDirectory is not null)
-            {
-                IVertexGraphManagerViewModel vertex = ResolveMuted<IVertexGraphManagerViewModel>(services);
-
-                await ExportGraphAsync(
-                    dialogService,
-                    options.VertexGraphDirectory,
-                    options.VertexGraphFormat,
-                    projectTitle,
-                    Resource.ProjectPlan.Suffixes.Suffix_VertexChart,
-                    vertex.WriteFixedLayoutVertexGraphImageAsync);
-            }
-
-            // Resource chart export.
-            if (options.ResourceDirectory is not null)
-            {
-                IResourceChartManagerViewModel resources = ResolveMuted<IResourceChartManagerViewModel>(services);
-
-                await ExportPlotAsync(
-                    dialogService,
-                    options.ResourceDirectory,
-                    options.ResourceSize,
-                    options.ResourceFormat,
-                    projectTitle,
-                    Resource.ProjectPlan.Suffixes.Suffix_ResourceChart,
-                    resources.BuildResourceChartPlotModel,
-                    resources.WriteResourceChartImageAsync);
-            }
-
-            // EV chart export.
-            if (options.EVDirectory is not null)
-            {
-                IEarnedValueChartManagerViewModel ev = ResolveMuted<IEarnedValueChartManagerViewModel>(services);
-
-                await ExportPlotAsync(
-                    dialogService,
-                    options.EVDirectory,
-                    options.EVSize,
-                    options.EVFormat,
-                    projectTitle,
-                    Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart,
-                    ev.BuildEarnedValueChartPlotModel,
-                    ev.WriteEarnedValueChartImageAsync);
-            }
-
-            // Scenario chart export.
-            if (options.ScenarioChartDirectory is not null)
-            {
-                IScenarioChartManagerViewModel scenarioChart = ResolveMuted<IScenarioChartManagerViewModel>(services);
-
-                // The tracked-metrics set the chart plots is normally assembled by
-                // a reactive pipeline that this headless host mutes, so build it
-                // explicitly first.
-                project.BuildTrackedMetrics();
-
-                await ExportPlotAsync(
-                    dialogService,
-                    options.ScenarioChartDirectory,
-                    options.ScenarioChartSize,
-                    options.ScenarioChartFormat,
-                    projectTitle,
-                    Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart,
-                    scenarioChart.BuildScenarioChartPlotModel,
-                    scenarioChart.WriteScenarioChartImageAsync);
-            }
-
-            // Metrics.
-            {
                 switch (options.MetricsFormat)
                 {
                     case MetricsExport.Json:
@@ -440,14 +194,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
             }
 
-            // A chart or graph export that fails does not throw: SaveExportAsync
-            // reports the failure through the dialog service, as the desktop does.
+            // A chart or graph export that fails does not throw: the job reports
+            // the failure through its sink, as the desktop reports it in a dialog.
             // The remaining outputs have still been produced and the metrics
             // printed, but the run as a whole has failed.
-            return dialogService.HasShownErrors ? c_ExitFailure : c_ExitSuccess;
+            return result.Status == JobStatus.CompletedWithErrors ? c_ExitFailure : c_ExitSuccess;
         }
 
-        private static ConsoleTable BuildMetricsTable(IMetricManagerViewModel metrics)
+        private static ConsoleTable BuildMetricsTable(JobMetrics metrics)
         {
             var table = new ConsoleTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
 
@@ -495,7 +249,7 @@ namespace Zametek.ProjectPlan.CommandLine
             return table;
         }
 
-        private static string BuildMetricsJson(IMetricManagerViewModel metrics)
+        private static string BuildMetricsJson(JobMetrics metrics)
         {
             // Raw values rather than display strings wherever the contract offers
             // them: JSON numbers are culture-invariant by construction, and the
@@ -542,17 +296,6 @@ namespace Zametek.ProjectPlan.CommandLine
             // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
             // left in the text is indentation.
             return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
-        }
-
-        // Constructing a view model wires up its reactive subscriptions; in this
-        // headless host every build step is invoked explicitly, so those
-        // subscriptions are killed the moment each view model is resolved.
-        private static T ResolveMuted<T>(IServiceProvider services)
-            where T : notnull, IKillSubscriptions
-        {
-            T viewModel = services.GetRequiredService<T>();
-            viewModel.KillSubscriptions();
-            return viewModel;
         }
 
         // Error messages name options by their long form, resolved via
@@ -664,59 +407,72 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        private static async Task ExportPlotAsync(
-            IDialogService dialogService,
-            string directory,
-            IEnumerable<int> size,
+        // A chart the options ask for, when they give its directory. ValidateOptions
+        // has checked that its size comes with the directory, and the parser that
+        // the size has exactly two values.
+        private static ChartOutputRequest? ToChartOutputRequest(
+            string? directory,
             PlotExport format,
-            string projectTitle,
-            string suffix,
-            Action buildPlotModel,
-            Func<Stream, ChartImageFormat, int, int, Task> writePlotImageAsync)
+            IEnumerable<int> size)
         {
-            IList<int> sizeList = [.. size];
-            int width = sizeList[0];
-            int height = sizeList[1];
-
-            buildPlotModel();
-
-            await SaveExportAsync(
-                dialogService,
-                BuildExportFilePath(directory, projectTitle, suffix, format.GetDescription()),
-                stream => writePlotImageAsync(stream, ToChartImageFormat(format), width, height));
-        }
-
-        private static async Task ExportGraphAsync(
-            IDialogService dialogService,
-            string directory,
-            GraphExport format,
-            string projectTitle,
-            string suffix,
-            Func<Stream, GraphExportFormat, Task> writeGraphImageAsync)
-        {
-            await SaveExportAsync(
-                dialogService,
-                BuildExportFilePath(directory, projectTitle, suffix, format.GetDescription()),
-                stream => writeGraphImageAsync(stream, ToGraphExportFormat(format)));
-        }
-
-        // A chart or graph export that fails is reported rather than thrown, as the desktop reports it in a dialog and
-        // carries on, so that the remaining exports still run and the metrics are still printed. Main then fails the run.
-        private static async Task SaveExportAsync(
-            IDialogService dialogService,
-            string filename,
-            Func<Stream, Task> write)
-        {
-            try
+            if (directory is null)
             {
-                await FileStreamHelper.SaveAsync(filename, write);
+                return null;
             }
-            catch (Exception ex)
+
+            IList<int> sizeList = [.. size];
+            return new ChartOutputRequest(ToChartImageFormat(format), sizeList[0], sizeList[1]);
+        }
+
+        // A graph the options ask for, when they give its directory.
+        private static GraphOutputRequest? ToGraphOutputRequest(
+            string? directory,
+            GraphExport format)
+        {
+            return directory is null
+                ? null
+                : new GraphOutputRequest(ToGraphExportFormat(format));
+        }
+
+        // The file each output the options ask for is written to: the project and
+        // the export where the options name them, and each chart and graph in its
+        // directory, named after the project.
+        private static Dictionary<JobOutput, string> BuildOutputFilenames(
+            Options options,
+            string projectTitle)
+        {
+            var filenames = new Dictionary<JobOutput, string>();
+
+            if (options.OutputFilename is not null)
             {
-                await dialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
+                filenames.Add(JobOutput.Project, options.OutputFilename);
+            }
+            if (options.ExportFilename is not null)
+            {
+                filenames.Add(JobOutput.ScenarioExport, options.ExportFilename);
+            }
+
+            AddExportFilePath(filenames, JobOutput.GanttChart, options.GanttDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_GanttChart, options.GanttFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.ArrowGraph, options.ArrowGraphDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ArrowChart, options.ArrowGraphFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.VertexGraph, options.VertexGraphDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_VertexChart, options.VertexGraphFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.ResourceChart, options.ResourceDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, options.ResourceFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.EarnedValueChart, options.EVDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, options.EVFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.ScenarioChart, options.ScenarioChartDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, options.ScenarioChartFormat.GetDescription());
+
+            return filenames;
+        }
+
+        private static void AddExportFilePath(
+            Dictionary<JobOutput, string> filenames,
+            JobOutput output,
+            string? directory,
+            string projectTitle,
+            string suffix,
+            string formatDescription)
+        {
+            if (directory is not null)
+            {
+                filenames.Add(output, BuildExportFilePath(directory, projectTitle, suffix, formatDescription));
             }
         }
 
@@ -759,95 +515,36 @@ namespace Zametek.ProjectPlan.CommandLine
             return Path.Combine(directory, $@"{projectTitle}{suffix}.{formatDescription.ToLowerInvariant()}");
         }
 
-        internal static Guid ResolveScenarioId(
-            ProjectModel projectModel,
-            string selector)
+        // The engine says why it could not select the scenario; zpp says it in
+        // its own words, which point at the option that lists the scenarios.
+        internal static string BuildScenarioSelectionMessage(ScenarioSelectionException ex)
         {
-            List<ProjectScenarioNodeModel> scenarios = [.. projectModel.Nodes.Where(x => x.NodeType == ProjectScenarioNodeType.File)];
+            string listScenarios = OptionLongName(nameof(Options.ListScenarios));
 
-            List<ProjectScenarioNodeModel> matches;
-
-            if (Guid.TryParse(selector, out Guid id))
+            return ex.Failure switch
             {
-                matches = [.. scenarios.Where(x => x.Id == id)];
-            }
-            else
-            {
-                // Exact (case-insensitive) name matches win over id prefixes, the
-                // same way git resolves a ref before an abbreviated object id.
-                matches = [.. scenarios.Where(x => string.Equals(x.Name, selector, StringComparison.OrdinalIgnoreCase))];
-
-                if (matches.Count == 0)
-                {
-                    matches = [.. MatchScenarioIdPrefix(scenarios, selector)];
-                }
-            }
-
-            if (matches.Count == 0)
-            {
-                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, selector, OptionLongName(nameof(Options.ListScenarios))));
-            }
-            if (matches.Count > 1)
-            {
-                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_SeveralScenariosMatch, selector, matches.Count, OptionLongName(nameof(Options.ListScenarios))));
-            }
-
-            Guid scenarioId = matches[0].Id;
-
-            if (!projectModel.Files.Any(x => x.NodeId == scenarioId))
-            {
-                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_ScenarioHasNoScenarioData, selector));
-            }
-
-            return scenarioId;
+                ScenarioSelectionFailure.NoMatch => string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, ex.Selector, listScenarios),
+                ScenarioSelectionFailure.SeveralMatches => string.Format(Resource.ProjectPlan.Messages.Message_SeveralScenariosMatch, ex.Selector, ex.MatchCount, listScenarios),
+                ScenarioSelectionFailure.NoScenarioData => string.Format(Resource.ProjectPlan.Messages.Message_ScenarioHasNoScenarioData, ex.Selector),
+                _ => ex.Message,
+            };
         }
 
-        // Git's abbreviation floor: an id prefix shorter than this is never
-        // treated as an id, it just falls through to the not-found error.
-        private const int c_MinimumScenarioIdPrefixLength = 4;
-
-        // An id prefix is matched against the id's 32 hex digits, without the
-        // hyphens that separate their groups in the listing.
-        private const string c_ScenarioIdDigitsFormat = @"N";
-        private const string c_ScenarioIdGroupSeparator = @"-";
-
-        private static IEnumerable<ProjectScenarioNodeModel> MatchScenarioIdPrefix(
-            IEnumerable<ProjectScenarioNodeModel> scenarios,
-            string selector)
+        private static void DisplayScenarios(IEnumerable<ScenarioSummary> scenarios)
         {
-            // Git-style abbreviation: hyphens are ignored and hex digits are
-            // matched case-insensitively against the start of the id, so any
-            // portion copied out of --list-scenarios works. The caller treats
-            // multiple matches as ambiguous, so a prefix resolves only when it is
-            // long enough to be unique.
-            string prefix = selector.Replace(c_ScenarioIdGroupSeparator, string.Empty).ToLowerInvariant();
-
-            if (prefix.Length < c_MinimumScenarioIdPrefixLength
-                || !prefix.All(char.IsAsciiHexDigit))
-            {
-                return [];
-            }
-
-            return scenarios.Where(x => x.Id.ToString(c_ScenarioIdDigitsFormat).StartsWith(prefix, StringComparison.Ordinal));
-        }
-
-        private static void DisplayScenarios(ProjectModel projectModel)
-        {
-            Dictionary<Guid, ProjectScenarioNodeModel> nodeLookup = projectModel.Nodes.ToDictionary(x => x.Id);
-
             var table = new ConsoleTable(
                 Resource.ProjectPlan.Titles.Title_Scenario,
                 Resource.ProjectPlan.Titles.Title_Id,
                 Resource.ProjectPlan.Titles.Title_Tracked,
                 Resource.ProjectPlan.Titles.Title_Current);
 
-            foreach (ProjectScenarioNodeModel node in projectModel.Nodes.Where(x => x.NodeType == ProjectScenarioNodeType.File))
+            foreach (ScenarioSummary scenario in scenarios)
             {
                 table.AddRow(
-                    BuildNodePath(projectModel, nodeLookup, node),
-                    node.Id,
-                    node.IsTracked ? Resource.ProjectPlan.Labels.Label_Yes : string.Empty,
-                    node.Id == projectModel.Current ? Resource.ProjectPlan.Symbols.Symbol_Current : string.Empty);
+                    scenario.Path,
+                    scenario.Id,
+                    scenario.IsTracked ? Resource.ProjectPlan.Labels.Label_Yes : string.Empty,
+                    scenario.IsCurrent ? Resource.ProjectPlan.Symbols.Symbol_Current : string.Empty);
             }
 
             table.Configure(x =>
@@ -857,29 +554,6 @@ namespace Zametek.ProjectPlan.CommandLine
             });
 
             Display(table.ToMarkDownString());
-        }
-
-        internal static string BuildNodePath(
-            ProjectModel projectModel,
-            IReadOnlyDictionary<Guid, ProjectScenarioNodeModel> nodeLookup,
-            ProjectScenarioNodeModel node)
-        {
-            // Folder names are prefixed so that scenarios with the same name in
-            // different folders stay distinguishable in the listing. The visited
-            // set guards against a malformed file with a parent cycle.
-            var names = new List<string> { node.Name };
-            var visited = new HashSet<Guid> { node.Id };
-            Guid parentId = node.ParentId;
-
-            while (parentId != projectModel.Root
-                && visited.Add(parentId)
-                && nodeLookup.TryGetValue(parentId, out ProjectScenarioNodeModel? parent))
-            {
-                names.Insert(0, parent.Name);
-                parentId = parent.ParentId;
-            }
-
-            return string.Join(Resource.ProjectPlan.Symbols.Symbol_PathSeparator, names);
         }
 
         private static int OnParseErrors<T>(

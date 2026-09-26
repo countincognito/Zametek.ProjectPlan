@@ -206,9 +206,9 @@ The reason display-only surfaces must not borrow the input-surface technique is 
 
 The rule of thumb: **if a surface renders the live settings objects, mirror the `Orderable*` collections; if it renders compiled output, bake the order into the output at build time.**
 
-## 11. The headless CLI: the pattern at its extreme
+## 11. The headless engine: the pattern at its extreme
 
-The `zpp` command-line tool ([`Program`](src/Zametek.ProjectPlan.CommandLine/Program.cs)) is the bulk update idea taken to its logical end. It resolves each view model and immediately calls `KillSubscriptions()` (so no reactive pipeline exists at all), sets `core.AutoCompile = false`, and then drives everything explicitly: `RunCompile()` followed by the Build\* calls in the same dependency order as `RunBuildCascade`. Seams that only the reactive pipeline used to reach must be public for this to work - e.g. `IProjectScenarioManagerViewModel.BuildTrackedMetrics()`, which the GUI invokes via a subscription but the CLI must call directly before building the scenario chart.
+The headless engine ([`JobRunner`](src/Zametek.ProjectPlan.Engine/JobRunner.cs)), which the `zpp` command-line tool runs on, is the bulk update idea taken to its logical end. Each job runs in a DI scope of its own, disposed when the job ends. Within it, the engine resolves each view model and immediately calls `KillSubscriptions()` (so no reactive pipeline exists at all), sets `core.AutoCompile = false`, and then drives everything explicitly: `RunCompile()` followed by the Build\* calls in the same dependency order as `RunBuildCascade`. Seams that only the reactive pipeline used to reach must be public for this to work - e.g. `IProjectScenarioManagerViewModel.BuildTrackedMetrics()`, which the GUI invokes via a subscription but the engine must call directly before building the scenario chart.
 
 ## 12. Diagnostics
 

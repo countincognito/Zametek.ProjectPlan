@@ -393,4 +393,10 @@
   <data name="Message_UnknownProjectFileVersion" xml:space="preserve">
     <value>Unable to open file: unknown version '{0}'</value>
   </data>
+  <data name="Message_NoScenarioMatchesSelector" xml:space="preserve">
+    <value>No scenario matches '{0}'</value>
+  </data>
+  <data name="Message_SeveralScenariosMatchSelector" xml:space="preserve">
+    <value>'{0}' matches {1} scenarios</value>
+  </data>
 </root>

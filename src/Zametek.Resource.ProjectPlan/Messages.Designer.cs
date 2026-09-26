@@ -520,6 +520,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No scenario matches &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_NoScenarioMatchesSelector {
+            get {
+                return ResourceManager.GetString("Message_NoScenarioMatchesSelector", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No Window icon available.
         /// </summary>
         public static string Message_NoWindowIconAvailable {
@@ -606,6 +615,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_SeveralScenariosMatch {
             get {
                 return ResourceManager.GetString("Message_SeveralScenariosMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; matches {1} scenarios.
+        /// </summary>
+        public static string Message_SeveralScenariosMatchSelector {
+            get {
+                return ResourceManager.GetString("Message_SeveralScenariosMatchSelector", resourceCulture);
             }
         }
         

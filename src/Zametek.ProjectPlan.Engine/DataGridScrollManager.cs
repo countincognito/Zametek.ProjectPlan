@@ -1,8 +1,9 @@
 using Zametek.Contract.ProjectPlan;
 
-namespace Zametek.ProjectPlan.CommandLine
+namespace Zametek.ProjectPlan.Engine
 {
-    public class DataGridScrollManager
+    // A job shows no data grids, so there are no scroll positions to keep or restore.
+    internal class DataGridScrollManager
         : IDataGridScrollManager
     {
         #region IDataGridScrollManager Members

@@ -1,9 +1,10 @@
 ﻿using Zametek.Common.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
-namespace Zametek.ProjectPlan.CommandLine
+namespace Zametek.ProjectPlan.Engine
 {
-    public class SettingService
+    // A job's settings: held in memory for the length of the job, and never read from or written to disk.
+    internal class SettingService
         : SettingServiceBase
     {
         #region Fields
@@ -29,8 +30,8 @@ namespace Zametek.ProjectPlan.CommandLine
             m_ProjectDirectory = string.Empty;
             m_SelectedTheme = string.Empty;
 
-            // This host never reads the desktop settings file, so the default comes
-            // from the model rather than from disk. --compile-timeout overwrites it.
+            // A job never reads the desktop settings file, so the default comes from
+            // the model rather than from disk. The job's request overwrites it.
             m_CompilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds;
         }
 
@@ -67,8 +68,8 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The command line tool has no data grids, so layout persistence is
-        // inert: nothing is stored and recording is a no-op.
+        // A job has no data grids, so layout persistence is inert: nothing is
+        // stored and recording is a no-op.
 
         public override IList<DataGridModel> GetDataGridLayout()
         {
@@ -184,8 +185,8 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The command line tool has no recently opened file menu, so the recents
-        // are inert: nothing is stored and recording is a no-op.
+        // A job has no recently opened file menu, so the recents are inert:
+        // nothing is stored and recording is a no-op.
 
         public override int MaxRecentProjectFilePaths => 0;
 

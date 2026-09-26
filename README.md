@@ -40,8 +40,9 @@ The application is split into a shared project and one project per host, so that
 | `Zametek.ProjectPlan.Desktop` | The desktop host (`projectplandotnet`), on Windows, Linux and macOS |
 | `Zametek.ProjectPlan.Browser` | The web host, an Avalonia WebAssembly application (see below) |
 | `Zametek.ProjectPlan.CommandLine` | The headless host, `zpp` (see below) |
+| `Zametek.ProjectPlan.Engine` | The headless engine `zpp` runs on: it takes a plan's bytes to its outputs, each job in a DI scope of its own |
 
-Each host supplies the three services that cannot be shared - where settings persist, how dialogs and file pickers are presented, and whether MS Project import is available - as an Autofac module handed to `CompositionRoot.Configure`. Everything else is registered once, in `Core`.
+Each host supplies the three services that cannot be shared - where settings persist, how dialogs and file pickers are presented, and whether MS Project import is available - as an Autofac module handed to `CompositionRoot.Configure`. Everything else is registered once, in `Core`. `zpp` is the exception: it has no views, and runs on the engine, which registers everything a job needs itself.
 
 ### Git hooks (Husky.Net)
 

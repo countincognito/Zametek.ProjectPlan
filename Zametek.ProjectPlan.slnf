@@ -10,6 +10,7 @@
       "src\\Zametek.ProjectPlan.Browser\\Zametek.ProjectPlan.Browser.csproj",
       "src\\Zametek.ProjectPlan.Core\\Zametek.ProjectPlan.Core.csproj",
       "src\\Zametek.ProjectPlan.Desktop\\Zametek.ProjectPlan.Desktop.csproj",
+      "src\\Zametek.ProjectPlan.Engine\\Zametek.ProjectPlan.Engine.csproj",
       "src\\Zametek.Resource.ProjectPlan\\Zametek.Resource.ProjectPlan.csproj",
       "src\\Zametek.View.ProjectPlan\\Zametek.View.ProjectPlan.csproj",
       "src\\Zametek.ViewModel.ProjectPlan\\Zametek.ViewModel.ProjectPlan.csproj",
@@ -17,6 +18,7 @@
       "test\\Zametek.Graphs.Avalonia.TestApp\\Zametek.Graphs.Avalonia.TestApp.csproj",
       "test\\Zametek.Graphs.Avalonia.Tests\\Zametek.Graphs.Avalonia.Tests.csproj",
       "test\\Zametek.ProjectPlan.CommandLine.Tests\\Zametek.ProjectPlan.CommandLine.Tests.csproj",
+      "test\\Zametek.ProjectPlan.Engine.Tests\\Zametek.ProjectPlan.Engine.Tests.csproj",
       "test\\Zametek.ViewModel.ProjectPlan.Tests\\Zametek.ViewModel.ProjectPlan.Tests.csproj"
     ]
   }

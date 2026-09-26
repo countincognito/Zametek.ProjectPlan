@@ -198,7 +198,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void SetProjectTitle(string filename)
         {
-            ProjectTitle = Path.GetFileNameWithoutExtension(filename).Trim();
+            ProjectTitle = GetProjectTitle(filename);
+        }
+
+        // The title a project takes from the name of the file it came from.
+        public static string GetProjectTitle(string filename)
+        {
+            return Path.GetFileNameWithoutExtension(filename).Trim();
         }
 
         public void SetProjectId(Guid projectId)
