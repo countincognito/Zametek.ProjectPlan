@@ -62,9 +62,11 @@ jobs:
           dotnet build --no-restore --configuration Release Zametek.ProjectPlan.slnf
 
       - name: Run tests
+        # No --results-directory: each test project then writes its results file into its own TestResults folder.
+        # With one shared folder the projects overwrote each other's file, and only the last to finish was uploaded.
         run: |
           dotnet test --no-build --configuration Release --verbosity normal \
-            --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults \
+            --logger "trx;LogFileName=test-results.trx" \
             Zametek.ProjectPlan.slnf
 
       - name: Upload test results
@@ -72,4 +74,4 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: ./TestResults/test-results.trx
+          path: test/*/TestResults/test-results.trx
