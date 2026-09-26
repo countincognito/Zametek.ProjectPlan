@@ -230,6 +230,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
                 else if (importFilename is not null)
                 {
+                    // An import lands in the current scenario of the open project.
+                    // The desktop always has one - every new project starts with a
+                    // Base scenario - so start the project the same way here.
+                    // Without it the import would reach the core but not the
+                    // project, and a saved project would hold no scenario at all.
+                    project.ResetProject();
+
+                    // Read after the reset, which gives the Base scenario a new id.
                     IProjectScenarioFileImport projectFileImport = services.GetRequiredService<IProjectScenarioFileImport>();
                     Guid projectScenarioId = settingService.ScenarioId;
                     string projectScenarioTitle = settingService.ScenarioTitle;

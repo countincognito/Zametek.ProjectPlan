@@ -159,6 +159,37 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_ImportAndOutput_Then_SavedProjectHoldsTheImportedScenario()
+        {
+            // An import lands in the current scenario of the open project, which on
+            // the desktop is the Base scenario every new project starts with. zpp
+            // starts its project the same way, so the plan it imports is the plan
+            // it saves, not an empty project.
+            JObject asset = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            string assetCurrentId = asset[@"Current"]!.ToString();
+            List<(int, string)> expectedActivities = [.. asset[@"Files"]!
+                .First(x => string.Equals((string?)x[@"NodeId"], assetCurrentId, StringComparison.Ordinal))[@"Scenario"]![@"DependentActivities"]!
+                .Select(x => ((int)x[@"Activity"]![@"Id"]!, (string)x[@"Activity"]![@"Name"]!))];
+
+            string workbook = Path.Combine(m_TempDirectory, @"plan.xlsx");
+            string outputFile = Path.Combine(m_TempDirectory, @"imported.zpp");
+            (await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-x", workbook])).ShouldBe(0);
+
+            int exitCode = await Program.Main([@"-m", workbook, @"-o", outputFile]);
+
+            exitCode.ShouldBe(0);
+            JObject saved = JObject.Parse(File.ReadAllText(outputFile));
+            JToken node = saved[@"Nodes"]!.ShouldHaveSingleItem();
+            node[@"Name"]!.ToString().ShouldBe(Resource.ProjectPlan.Labels.Label_BaseNode);
+            saved[@"Current"]!.ToString().ShouldBe(node[@"Id"]!.ToString());
+            JToken file = saved[@"Files"]!.ShouldHaveSingleItem();
+            file[@"NodeId"]!.ToString().ShouldBe(node[@"Id"]!.ToString());
+            file[@"Scenario"]![@"DependentActivities"]!
+                .Select(x => ((int)x[@"Activity"]![@"Id"]!, (string)x[@"Activity"]![@"Name"]!))
+                .ShouldBe(expectedActivities);
+        }
+
+        [Fact]
         public async Task Main_Given_UnknownScenario_Then_ExitFailure()
         {
             int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", @"No Such Scenario"]);
