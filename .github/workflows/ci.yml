@@ -13,6 +13,11 @@ jobs:
   build-and-test:
     name: Build, Lint, Format & Test
     runs-on: ubuntu-latest
+    env:
+      # ConverterTests.Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0 passes only where the offset in January
+      # is zero (UTC, Europe/London), because the v0.2.1 upgrade reads dates that carry no zone in the machine's
+      # own zone. Set here rather than left to the runner's default; see TODO.md.
+      TZ: Etc/UTC
 
     steps:
       - name: Checkout
@@ -54,9 +59,6 @@ jobs:
           dotnet build --no-restore --configuration Release Zametek.ProjectPlan.slnf
 
       - name: Run tests
-        # NOTE: 1 test (Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0) has a pre-existing
-        # timezone-sensitive failure. continue-on-error keeps CI green while showing the failure.
-        continue-on-error: true
         run: |
           dotnet test --no-build --configuration Release --verbosity normal \
             --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults \
