@@ -1,0 +1,10 @@
+# The workflows pin every action to a full commit SHA, with its version in a comment, so that a tag moved upstream
+# cannot change what runs. Dependabot keeps those pins current: each update arrives as a pull request against
+# develop that changes the SHA and the version comment together.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly

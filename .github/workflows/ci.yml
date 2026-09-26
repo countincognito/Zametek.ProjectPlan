@@ -12,7 +12,8 @@ permissions:
 jobs:
   build-and-test:
     name: Build, Lint, Format & Test
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest, so that the image changes only when this line does.
+    runs-on: ubuntu-24.04
     env:
       # ConverterTests.Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0 passes only where the offset in January
       # is zero (UTC, Europe/London), because the v0.2.1 upgrade reads dates that carry no zone in the machine's
@@ -21,12 +22,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: '10.x'
+          # Pinned rather than '10.x', so that a new SDK's analyzers cannot fail the format checks below without a
+          # change to the code. Bump it deliberately, and in release.yml too.
+          dotnet-version: '10.0.401'
 
       # Zametek.ProjectPlan.Browser targets net10.0-browser and is part of the solution filter, so the
       # WebAssembly toolchain has to be present before restore. Installed explicitly rather than left to
@@ -65,7 +68,7 @@ jobs:
             Zametek.ProjectPlan.slnf
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: test-results
