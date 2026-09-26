@@ -169,6 +169,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static GraphSettingsModel DefaultGraphSettings => new TestSettingService().DefaultGraphSettings;
 
         /// <summary>
+        /// The settings the application starts with, for a test that needs a setting
+        /// service but no core.
+        /// </summary>
+        public static ISettingService CreateSettingService() => new TestSettingService();
+
+        /// <summary>
         /// Reads the current scenario out of a project file in TestFiles, through the same
         /// reader the application uses. A real plan carries the shape a hand-built one does
         /// not - dozens of activities, a deep dependency chain, a mixture of activities that
@@ -178,9 +184,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static async Task<ProjectScenarioModel> LoadProjectScenarioAsync(string testFileName)
         {
             var projectFileOpen = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
+            ProjectModel projectModel;
 
-            ProjectModel projectModel = await projectFileOpen.OpenProjectFileAsync(
-                Path.Combine(@"TestFiles", testFileName));
+            await using (FileStream stream = File.OpenRead(Path.Combine(@"TestFiles", testFileName)))
+            {
+                projectModel = await projectFileOpen.OpenProjectFileAsync(stream);
+            }
 
             return projectModel.Files.Single(x => x.NodeId == projectModel.Current).Scenario;
         }
@@ -298,29 +307,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private sealed class TestProjectScenarioFileImport
             : IProjectScenarioFileImport
         {
-            public ProjectScenarioImportModel ImportProjectScenarioFile(string filename) =>
-                throw new NotSupportedException();
-
-            public Task<ProjectScenarioImportModel> ImportProjectScenarioFileAsync(string filename) =>
-                throw new NotSupportedException();
-
-            public ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename) =>
-                throw new NotSupportedException();
-
-            public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename) =>
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) =>
                 throw new NotSupportedException();
         }
 
         private sealed class TestProjectScenarioFileExport
             : IProjectScenarioFileExport
         {
-            public void ExportProjectScenarioFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
-                throw new NotSupportedException();
-
-            public Task ExportProjectScenarioFileAsync(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
-                throw new NotSupportedException();
-
-            public void ExportProjectScenarioXlsxFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
+            public void ExportProjectScenarioFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, Stream stream, ProjectScenarioExportFormat format) =>
                 throw new NotSupportedException();
         }
 

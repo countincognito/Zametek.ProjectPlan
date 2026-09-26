@@ -18,9 +18,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
         }
 
-        public async Task<ProjectModel> OpenProjectFileAsync(string filename)
+        public async Task<ProjectModel> OpenProjectFileAsync(Stream stream)
         {
-            using StreamReader reader = File.OpenText(filename);
+            ArgumentNullException.ThrowIfNull(stream);
+
+            // The caller owns the stream, so the reader leaves it open.
+            using var reader = new StreamReader(stream, leaveOpen: true);
             string content = await reader.ReadToEndAsync();
             JObject json = JObject.Parse(content);
             string version =
@@ -28,10 +31,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 ?? string.Empty;
             string jsonString = json?.ToString() ?? string.Empty;
 
+            // A stream has no name to report, so the message names the version that was not recognised instead.
             Func<string, ProjectModel> func =
-                jString => throw new ArgumentOutOfRangeException(
-                    nameof(filename),
-                    @$"{Resource.ProjectPlan.Messages.Message_UnableToOpenFile} {filename}");
+                jString => throw new InvalidDataException(
+                    string.Format(Resource.ProjectPlan.Messages.Message_UnknownProjectFileVersion, version));
 
             DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 

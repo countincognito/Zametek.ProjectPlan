@@ -546,11 +546,19 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger.LogInformation("Importing scenario from {ImportFile}", filename);
             long startTimestamp = Stopwatch.GetTimestamp();
 
+            ProjectScenarioImportFormat format = FileFormatHelper.GetProjectScenarioImportFormat(filename);
+
             lock (m_Lock)
             {
                 Guid projectScenarioId = m_SettingService.ScenarioId;
                 string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                ProjectScenarioImportModel importModel = m_CoreViewModel.ImportProjectScenarioFile(filename);
+                ProjectScenarioImportModel importModel;
+
+                using (FileStream stream = FileStreamHelper.OpenImportFile(filename, format))
+                {
+                    importModel = m_CoreViewModel.ImportProjectScenarioFile(stream, format);
+                }
+
                 m_CoreViewModel.ProcessProjectScenarioImport(importModel, projectScenarioId, projectScenarioTitle);
             }
 
@@ -568,15 +576,20 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger.LogInformation("Exporting scenario to {ExportFile}", filename);
             long startTimestamp = Stopwatch.GetTimestamp();
 
+            ProjectScenarioExportFormat format = FileFormatHelper.GetProjectScenarioExportFormat(filename);
+
             lock (m_Lock)
             {
                 ProjectScenarioModel projectScenarioModel = m_CoreViewModel.BuildProjectScenario();
-                m_CoreViewModel.ExportProjectScenarioFile(
-                    projectScenarioModel,
-                    m_CoreViewModel.ResourceSeriesSet,
-                    m_CoreViewModel.TrackingSeriesSet,
-                    ShowDates,
-                    filename);
+                FileStreamHelper.Save(
+                    filename,
+                    stream => m_CoreViewModel.ExportProjectScenarioFile(
+                        projectScenarioModel,
+                        m_CoreViewModel.ResourceSeriesSet,
+                        m_CoreViewModel.TrackingSeriesSet,
+                        ShowDates,
+                        stream,
+                        format));
             }
 
             m_Logger.LogInformation(
@@ -688,7 +701,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Logger.LogInformation("Opening project {ProjectFile}", filename);
                 long startTimestamp = Stopwatch.GetTimestamp();
 
-                ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
+                ProjectModel projectModel;
+
+                await using (FileStream stream = File.OpenRead(filename))
+                {
+                    projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(stream);
+                }
 
                 // First process the project. The load cascade (reset, scenario
                 // processing, compile, output builds) must not run on the UI
@@ -723,7 +741,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 long startTimestamp = Stopwatch.GetTimestamp();
 
                 ProjectModel projectModel = await BuildProjectAsync();
-                await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
+                await FileStreamHelper.SaveAsync(filename, stream => m_ProjectFileSave.SaveProjectFileAsync(projectModel, stream));
                 // Clear the node markers BEFORE the scenario flag: the nodes'
                 // IsUpdated latch subscriptions observe the flag, so clearing
                 // the flag first would interleave their (async) delivery with

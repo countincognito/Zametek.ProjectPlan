@@ -473,19 +473,23 @@ await graphView.CopyImageAsync(GraphExportMode.Raster);  // or omit the arg to u
         CommandParameter="{x:Static g:GraphExportMode.Vector}"/>
 ```
 
-**Headless / known path** - save without any on‑screen control (e.g. a CLI). The fixed‑layout source
-builds straight from the diagram, so no interactive surface is needed:
+**Headless / to a stream** - write without any on‑screen control (e.g. a CLI or a service). The
+fixed‑layout source builds straight from the diagram, so no interactive surface is needed:
 
 ```csharp
-await interactive.SaveImageAsync(
-    "graph.svg",
+await using FileStream stream = File.Create("graph.svg");
+await interactive.WriteImageAsync(
+    stream,
+    GraphFileFormat.Svg,
     GraphImageSource.FixedLayout,
     FixedLayoutGraphType.Arrow);   // or .Vertex
 ```
 
-`SaveImageAsync` chooses the writer from the file extension: `.png` / `.jpeg` / `.pdf` / `.svg` produce
-images; `.graphml` / `.dot` produce data. `GraphImageSource.InteractiveCanvas` exports the current
-dragged arrangement; `GraphImageSource.FixedLayout` exports the default MSAGL layout.
+`WriteImageAsync` writes the `GraphFileFormat` it is given: `Png` / `Jpeg` / `Pdf` / `Svg` produce images;
+`GraphML` / `GraphViz` (Dot) produce data. The caller owns the stream, which is left open, and a failure is
+thrown to the caller rather than reported through `IGraphHost.ReportErrorAsync`.
+`GraphImageSource.InteractiveCanvas` exports the current dragged arrangement; `GraphImageSource.FixedLayout`
+exports the default MSAGL layout.
 
 > Under the hood the control implements `IGraphImageProvider` and registers itself on the view‑model, so
 > the view‑model's Save path can render through your templates/mode - but **only a SkiaSharp picture

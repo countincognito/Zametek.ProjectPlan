@@ -808,6 +808,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to open file: unknown version &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_UnknownProjectFileVersion {
+            get {
+                return ResourceManager.GetString("Message_UnknownProjectFileVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown ScheduleMode value:.
         /// </summary>
         public static string Message_UnknownScheduleMode {

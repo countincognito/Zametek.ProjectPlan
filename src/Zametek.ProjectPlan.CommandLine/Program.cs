@@ -203,7 +203,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 if (inputFilename is not null)
                 {
                     IProjectFileOpen projectFileOpen = services.GetRequiredService<IProjectFileOpen>();
-                    ProjectModel projectModel = await projectFileOpen.OpenProjectFileAsync(inputFilename);
+                    ProjectModel projectModel;
+
+                    await using (FileStream stream = File.OpenRead(inputFilename))
+                    {
+                        projectModel = await projectFileOpen.OpenProjectFileAsync(stream);
+                    }
 
                     if (options.ListScenarios)
                     {
@@ -228,7 +233,14 @@ namespace Zametek.ProjectPlan.CommandLine
                     IProjectScenarioFileImport projectFileImport = services.GetRequiredService<IProjectScenarioFileImport>();
                     Guid projectScenarioId = settingService.ScenarioId;
                     string projectScenarioTitle = settingService.ScenarioTitle;
-                    ProjectScenarioImportModel projectImport = projectFileImport.ImportProjectScenarioFile(importFilename);
+                    ProjectScenarioImportFormat importFormat = FileFormatHelper.GetProjectScenarioImportFormat(importFilename);
+                    ProjectScenarioImportModel projectImport;
+
+                    using (FileStream stream = FileStreamHelper.OpenImportFile(importFilename, importFormat))
+                    {
+                        projectImport = projectFileImport.ImportProjectScenarioFile(stream, importFormat);
+                    }
+
                     core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
                     settingService.SetProjectFilePath(importFilename, bindTitleToFilename: true);
                 }
@@ -279,19 +291,23 @@ namespace Zametek.ProjectPlan.CommandLine
                 {
                     IProjectFileSave projectFileSave = services.GetRequiredService<IProjectFileSave>();
                     ProjectModel projectModel = project.BuildProject();
-                    await projectFileSave.SaveProjectFileAsync(projectModel, outputFilename);
+                    await FileStreamHelper.SaveAsync(outputFilename, stream => projectFileSave.SaveProjectFileAsync(projectModel, stream));
                     settingService.SetProjectFilePath(outputFilename, bindTitleToFilename: true);
                 }
                 if (exportFilename is not null)
                 {
                     IProjectScenarioFileExport projectFileExport = services.GetRequiredService<IProjectScenarioFileExport>();
+                    ProjectScenarioExportFormat exportFormat = FileFormatHelper.GetProjectScenarioExportFormat(exportFilename);
                     ProjectScenarioModel projectScenarioModel = core.BuildProjectScenario();
-                    projectFileExport.ExportProjectScenarioFile(
-                        projectScenarioModel,
-                        core.ResourceSeriesSet,
-                        core.TrackingSeriesSet,
-                        core.DisplaySettingsViewModel.ShowDates,
-                        exportFilename);
+                    FileStreamHelper.Save(
+                        exportFilename,
+                        stream => projectFileExport.ExportProjectScenarioFile(
+                            projectScenarioModel,
+                            core.ResourceSeriesSet,
+                            core.TrackingSeriesSet,
+                            core.DisplaySettingsViewModel.ShowDates,
+                            stream,
+                            exportFormat));
                     settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: true);
                 }
             }
@@ -306,13 +322,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 IGanttChartManagerViewModel gantt = ResolveMuted<IGanttChartManagerViewModel>(services);
 
                 await ExportPlotAsync(
+                    dialogService,
                     options.GanttDirectory,
                     options.GanttSize,
                     options.GanttFormat,
                     projectTitle,
                     Resource.ProjectPlan.Suffixes.Suffix_GanttChart,
                     gantt.BuildGanttChartPlotModel,
-                    gantt.SaveGanttChartImageFileAsync);
+                    gantt.WriteGanttChartImageAsync);
             }
 
             // Arrow graph export.
@@ -321,11 +338,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 IArrowGraphManagerViewModel arrow = ResolveMuted<IArrowGraphManagerViewModel>(services);
 
                 await ExportGraphAsync(
+                    dialogService,
                     options.ArrowGraphDirectory,
                     options.ArrowGraphFormat,
                     projectTitle,
                     Resource.ProjectPlan.Suffixes.Suffix_ArrowChart,
-                    arrow.SaveFixedLayoutArrowGraphImageFileAsync);
+                    arrow.WriteFixedLayoutArrowGraphImageAsync);
             }
 
             // Vertex graph export.
@@ -334,11 +352,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 IVertexGraphManagerViewModel vertex = ResolveMuted<IVertexGraphManagerViewModel>(services);
 
                 await ExportGraphAsync(
+                    dialogService,
                     options.VertexGraphDirectory,
                     options.VertexGraphFormat,
                     projectTitle,
                     Resource.ProjectPlan.Suffixes.Suffix_VertexChart,
-                    vertex.SaveFixedLayoutVertexGraphImageFileAsync);
+                    vertex.WriteFixedLayoutVertexGraphImageAsync);
             }
 
             // Resource chart export.
@@ -347,13 +366,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 IResourceChartManagerViewModel resources = ResolveMuted<IResourceChartManagerViewModel>(services);
 
                 await ExportPlotAsync(
+                    dialogService,
                     options.ResourceDirectory,
                     options.ResourceSize,
                     options.ResourceFormat,
                     projectTitle,
                     Resource.ProjectPlan.Suffixes.Suffix_ResourceChart,
                     resources.BuildResourceChartPlotModel,
-                    resources.SaveResourceChartImageFileAsync);
+                    resources.WriteResourceChartImageAsync);
             }
 
             // EV chart export.
@@ -362,13 +382,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 IEarnedValueChartManagerViewModel ev = ResolveMuted<IEarnedValueChartManagerViewModel>(services);
 
                 await ExportPlotAsync(
+                    dialogService,
                     options.EVDirectory,
                     options.EVSize,
                     options.EVFormat,
                     projectTitle,
                     Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart,
                     ev.BuildEarnedValueChartPlotModel,
-                    ev.SaveEarnedValueChartImageFileAsync);
+                    ev.WriteEarnedValueChartImageAsync);
             }
 
             // Scenario chart export.
@@ -382,13 +403,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 project.BuildTrackedMetrics();
 
                 await ExportPlotAsync(
+                    dialogService,
                     options.ScenarioChartDirectory,
                     options.ScenarioChartSize,
                     options.ScenarioChartFormat,
                     projectTitle,
                     Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart,
                     scenarioChart.BuildScenarioChartPlotModel,
-                    scenarioChart.SaveScenarioChartImageFileAsync);
+                    scenarioChart.WriteScenarioChartImageAsync);
             }
 
             // Metrics.
@@ -410,10 +432,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
             }
 
-            // A chart or graph export that fails does not throw: its view model
-            // catches the failure and reports it through the dialog service, which
-            // is what the desktop needs. The remaining outputs have still been
-            // produced and the metrics printed, but the run as a whole has failed.
+            // A chart or graph export that fails does not throw: SaveExportAsync
+            // reports the failure through the dialog service, as the desktop does.
+            // The remaining outputs have still been produced and the metrics
+            // printed, but the run as a whole has failed.
             return dialogService.HasShownErrors ? c_ExitFailure : c_ExitSuccess;
         }
 
@@ -635,13 +657,14 @@ namespace Zametek.ProjectPlan.CommandLine
         }
 
         private static async Task ExportPlotAsync(
+            IDialogService dialogService,
             string directory,
             IEnumerable<int> size,
             PlotExport format,
             string projectTitle,
             string suffix,
             Action buildPlotModel,
-            Func<string, int, int, Task> savePlotImageAsync)
+            Func<Stream, ChartImageFormat, int, int, Task> writePlotImageAsync)
         {
             IList<int> sizeList = [.. size];
             int width = sizeList[0];
@@ -649,21 +672,74 @@ namespace Zametek.ProjectPlan.CommandLine
 
             buildPlotModel();
 
-            await savePlotImageAsync(
+            await SaveExportAsync(
+                dialogService,
                 BuildExportFilePath(directory, projectTitle, suffix, format.GetDescription()),
-                width,
-                height);
+                stream => writePlotImageAsync(stream, ToChartImageFormat(format), width, height));
         }
 
         private static async Task ExportGraphAsync(
+            IDialogService dialogService,
             string directory,
             GraphExport format,
             string projectTitle,
             string suffix,
-            Func<string, Task> saveGraphImageAsync)
+            Func<Stream, GraphExportFormat, Task> writeGraphImageAsync)
         {
-            await saveGraphImageAsync(
-                BuildExportFilePath(directory, projectTitle, suffix, format.GetDescription()));
+            await SaveExportAsync(
+                dialogService,
+                BuildExportFilePath(directory, projectTitle, suffix, format.GetDescription()),
+                stream => writeGraphImageAsync(stream, ToGraphExportFormat(format)));
+        }
+
+        // A chart or graph export that fails is reported rather than thrown, as the desktop reports it in a dialog and
+        // carries on, so that the remaining exports still run and the metrics are still printed. Main then fails the run.
+        private static async Task SaveExportAsync(
+            IDialogService dialogService,
+            string filename,
+            Func<Stream, Task> write)
+        {
+            try
+            {
+                await FileStreamHelper.SaveAsync(filename, write);
+            }
+            catch (Exception ex)
+            {
+                await dialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        // The chart formats zpp offers, as the file layer names them. PDF, which the desktop's Save-As also writes, is not
+        // among zpp's chart formats.
+        internal static ChartImageFormat ToChartImageFormat(PlotExport format)
+        {
+            return format switch
+            {
+                PlotExport.Jpeg => ChartImageFormat.Jpeg,
+                PlotExport.Png => ChartImageFormat.Png,
+                PlotExport.Bmp => ChartImageFormat.Bmp,
+                PlotExport.Webp => ChartImageFormat.Webp,
+                PlotExport.Svg => ChartImageFormat.Svg,
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
+            };
+        }
+
+        // The graph formats zpp offers, as the file layer names them.
+        internal static GraphExportFormat ToGraphExportFormat(GraphExport format)
+        {
+            return format switch
+            {
+                GraphExport.Jpeg => GraphExportFormat.Jpeg,
+                GraphExport.Png => GraphExportFormat.Png,
+                GraphExport.Pdf => GraphExportFormat.Pdf,
+                GraphExport.Svg => GraphExportFormat.Svg,
+                GraphExport.GraphML => GraphExportFormat.GraphML,
+                GraphExport.Dot => GraphExportFormat.GraphViz,
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
+            };
         }
 
         internal static string BuildExportFilePath(

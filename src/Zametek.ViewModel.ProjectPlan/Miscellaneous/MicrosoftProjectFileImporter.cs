@@ -115,10 +115,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IMicrosoftProjectFileImporter Members
 
-        public ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename)
+        public ProjectScenarioImportModel ImportMicrosoftProjectFile(Stream stream)
         {
+            ArgumentNullException.ThrowIfNull(stream);
+
+            // MPXJ closes the stream it reads a plan from, and this one belongs to the caller, so the plan is read from a
+            // copy.
+            using var copy = new MemoryStream();
+            stream.CopyTo(copy);
+            copy.Position = 0;
+
             var reader = new UniversalProjectReader();
-            ProjectFile mpxjProjectFile = reader.Read(filename);
+            ProjectFile mpxjProjectFile = reader.Read(copy);
             ProjectProperties? props = mpxjProjectFile.ProjectProperties;
             DateTimeOffset projectStart = props?.StartDate ?? DateTimeOffset.Now;
             TimeSpan projectStartOffset = projectStart.Offset;

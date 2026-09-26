@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -22,7 +23,7 @@ namespace Zametek.ProjectPlan.Browser
     public class UnavailableMicrosoftProjectFileImporter
         : IMicrosoftProjectFileImporter
     {
-        public ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename) =>
+        public ProjectScenarioImportModel ImportMicrosoftProjectFile(Stream stream) =>
             throw new PlatformNotSupportedException(
                 @"Importing Microsoft Project files is not available in the browser. The importer depends on a Java runtime image that has no WebAssembly build. Please use the desktop application for this.");
     }

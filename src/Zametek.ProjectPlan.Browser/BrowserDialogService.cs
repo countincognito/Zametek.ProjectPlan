@@ -18,8 +18,9 @@ namespace Zametek.ProjectPlan.Browser
     /// <remarks>
     /// The file dialogs are deliberately unimplemented. They are declared to return a local file
     /// system path, and a browser has none to return - it hands back an opaque handle that must be
-    /// streamed. Making them work is the stream-based file layer, and until that lands these throw
-    /// rather than return null, because null here means "the user cancelled" and quietly reporting a
+    /// streamed. The file layer beneath them already reads and writes streams; what remains is for the
+    /// dialog contract to hand back handles instead of paths, and until it does these throw rather
+    /// than return null, because null here means "the user cancelled" and quietly reporting a
     /// cancellation the user never made would hide the gap instead of showing it.
     /// </remarks>
     public class BrowserDialogService
@@ -49,7 +50,7 @@ namespace Zametek.ProjectPlan.Browser
 
         private static Task<string?> UnsupportedFileDialogAsync(string operation) =>
             throw new NotSupportedException(
-                $@"{operation} is not available in the browser: the dialog contract returns a file system path, which a browser cannot provide. This needs the stream-based file layer.");
+                $@"{operation} is not available in the browser: the dialog contract returns a file system path, which a browser cannot provide. This needs the dialogs to return file handles.");
 
         #endregion
 

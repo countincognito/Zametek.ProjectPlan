@@ -343,5 +343,35 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     CompileTimeoutMilliseconds = 0,
                 }));
         }
+
+        [Fact]
+        public void ToChartImageFormat_Given_EveryPlotExport_Then_MapsToTheFormatOfTheSameName()
+        {
+            foreach (PlotExport format in Enum.GetValues<PlotExport>())
+            {
+                Program.ToChartImageFormat(format).ToString().ShouldBe(format.ToString());
+            }
+        }
+
+        [Theory]
+        [InlineData(GraphExport.Jpeg, GraphExportFormat.Jpeg)]
+        [InlineData(GraphExport.Png, GraphExportFormat.Png)]
+        [InlineData(GraphExport.Pdf, GraphExportFormat.Pdf)]
+        [InlineData(GraphExport.Svg, GraphExportFormat.Svg)]
+        [InlineData(GraphExport.GraphML, GraphExportFormat.GraphML)]
+        [InlineData(GraphExport.Dot, GraphExportFormat.GraphViz)]
+        public void ToGraphExportFormat_Given_GraphExport_Then_MapsToItsFormat(GraphExport format, GraphExportFormat expected)
+        {
+            Program.ToGraphExportFormat(format).ShouldBe(expected);
+        }
+
+        [Fact]
+        public void ToGraphExportFormat_Given_EveryGraphExport_Then_Maps()
+        {
+            foreach (GraphExport format in Enum.GetValues<GraphExport>())
+            {
+                Should.NotThrow(() => Program.ToGraphExportFormat(format));
+            }
+        }
     }
 }

@@ -1,6 +1,5 @@
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -30,39 +29,19 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
-            string filename)
+            Stream stream,
+            ProjectScenarioExportFormat format)
         {
-            string fileExtension = Path.GetExtension(filename);
+            ArgumentNullException.ThrowIfNull(stream);
 
-            Action<ProjectScenarioModel, ResourceSeriesSetModel, TrackingSeriesSetModel, bool, string> action =
-                (projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename) => throw new ArgumentOutOfRangeException(
-                    nameof(filename),
-                    @$"{Resource.ProjectPlan.Messages.Message_UnableToExportFile} {filename}");
-
-            fileExtension.ValueSwitchOn()
-                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => action = ExportProjectScenarioXlsxFile);
-
-            action(projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename);
-        }
-
-        public async Task ExportProjectScenarioFileAsync(
-            ProjectScenarioModel projectScenario,
-            ResourceSeriesSetModel resourceSeriesSet,
-            TrackingSeriesSetModel trackingSeriesSet,
-            bool showDates,
-            string filename)
-        {
-            await Task.Run(() => ExportProjectScenarioFile(projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename));
-        }
-
-        public void ExportProjectScenarioXlsxFile(
-            ProjectScenarioModel projectScenario,
-            ResourceSeriesSetModel resourceSeriesSet,
-            TrackingSeriesSetModel trackingSeriesSet,
-            bool showDates,
-            string filename)
-        {
-            m_XlsxScenarioExporter.ExportProjectScenarioXlsxFile(projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename);
+            switch (format)
+            {
+                case ProjectScenarioExportFormat.Xlsx:
+                    m_XlsxScenarioExporter.ExportProjectScenarioXlsxFile(projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, stream);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
+            }
         }
 
         #endregion

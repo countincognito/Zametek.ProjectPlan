@@ -1,6 +1,5 @@
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -30,36 +29,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IProjectScenarioFileImport Members
 
-        public ProjectScenarioImportModel ImportProjectScenarioFile(string filename)
+        public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format)
         {
-            string fileExtension = Path.GetExtension(filename);
+            ArgumentNullException.ThrowIfNull(stream);
 
-            Func<string, ProjectScenarioImportModel> func =
-                filename => throw new ArgumentOutOfRangeException(
-                    nameof(filename),
-                    @$"{Resource.ProjectPlan.Messages.Message_UnableToImportFile} {filename}");
-
-            fileExtension.ValueSwitchOn()
-                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => func = ImportMicrosoftProjectFile)
-                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => func = ImportMicrosoftProjectFile)
-                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => func = ImportProjectScenarioXlsxFile);
-
-            return func(filename);
-        }
-
-        public async Task<ProjectScenarioImportModel> ImportProjectScenarioFileAsync(string filename)
-        {
-            return await Task.Run(() => ImportProjectScenarioFile(filename));
-        }
-
-        public ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename)
-        {
-            return m_MicrosoftProjectFileImporter.ImportMicrosoftProjectFile(filename);
-        }
-
-        public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename)
-        {
-            return m_XlsxFileImporter.ImportProjectScenarioXlsxFile(filename);
+            return format switch
+            {
+                ProjectScenarioImportFormat.MicrosoftProject => m_MicrosoftProjectFileImporter.ImportMicrosoftProjectFile(stream),
+                ProjectScenarioImportFormat.Xlsx => m_XlsxFileImporter.ImportProjectScenarioXlsxFile(stream),
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
+            };
         }
 
         #endregion

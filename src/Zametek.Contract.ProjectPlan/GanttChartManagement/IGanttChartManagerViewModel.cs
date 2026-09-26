@@ -44,7 +44,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeAnnotationStyleCommand { get; }
 
-        Task SaveGanttChartImageFileAsync(string? filename, int width, int height);
+        // Writes the chart to the stream at the given width, and at the given height or taller: the chart grows to give
+        // every bar a readable height. The caller owns the stream, which is left open.
+        Task WriteGanttChartImageAsync(Stream stream, ChartImageFormat format, int width, int height);
 
         void SetActivityDuration(int activityId, int newDuration);
 

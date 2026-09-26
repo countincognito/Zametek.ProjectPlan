@@ -4,6 +4,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -13,11 +14,9 @@ using Zametek.ViewModel.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
     public class SerializationRoundTripTests
-        : IDisposable
     {
         #region Fields
 
-        private readonly List<string> m_TempFiles = [];
         private readonly DateTimeCalculator m_Calculator;
         private readonly ProjectFileSave m_Saver;
         private readonly ProjectFileOpen m_Opener;
@@ -35,29 +34,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region IDisposable
-
-        public void Dispose()
-        {
-            foreach (string path in m_TempFiles)
-            {
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-            }
-        }
-
-        #endregion
-
         #region Helpers
 
-        private string GetTempFile()
+        // Saves the project into a stream of its own, rewound so that it can be read straight back.
+        private async Task<MemoryStream> SaveToStreamAsync(ProjectModel model)
         {
-            string path = Path.GetTempFileName() + ".zpp";
-            m_TempFiles.Add(path);
-            return path;
+            var stream = new MemoryStream();
+            await m_Saver.SaveProjectFileAsync(model, stream);
+            stream.Position = 0;
+            return stream;
         }
+
+        private async Task<ProjectModel> RoundTripAsync(ProjectModel model)
+        {
+            using MemoryStream stream = await SaveToStreamAsync(model);
+            return await m_Opener.OpenProjectFileAsync(stream);
+        }
+
+        private static string ReadAllText(MemoryStream stream) => Encoding.UTF8.GetString(stream.ToArray());
 
         /// <summary>
         /// Builds the simplest possible v0.6.0 ProjectModel to use as a fixture.
@@ -175,25 +169,22 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task SaveProject_Writes_CorrectVersionField()
         {
-            string path = GetTempFile();
             ProjectModel model = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(model, path);
+            using MemoryStream stream = await SaveToStreamAsync(model);
 
-            string content = await File.ReadAllTextAsync(path);
-            JObject json = JObject.Parse(content);
+            JObject json = JObject.Parse(ReadAllText(stream));
             json["Version"]!.ToString().ShouldBe(Versions.v0_6_1);
         }
 
         [Fact]
         public async Task SavedFile_IsValidJson()
         {
-            string path = GetTempFile();
             ProjectModel model = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(model, path);
+            using MemoryStream stream = await SaveToStreamAsync(model);
 
-            string content = await File.ReadAllTextAsync(path);
+            string content = ReadAllText(stream);
             Should.NotThrow(() => JObject.Parse(content));
         }
 
@@ -202,24 +193,54 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             // On every platform, so that the same plan saves to the same bytes on Windows and on Linux. Windows' own
             // line end is "\r\n", which is where this test has teeth.
-            string path = GetTempFile();
             ProjectModel model = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(model, path);
+            using MemoryStream stream = await SaveToStreamAsync(model);
 
-            string content = await File.ReadAllTextAsync(path);
+            string content = ReadAllText(stream);
             content.ShouldContain(NewLineHelper.NewLine);
             content.ShouldNotContain(NewLineHelper.CarriageReturn);
         }
 
         [Fact]
+        public async Task SaveProject_LeavesTheStreamOpen()
+        {
+            // The caller owns the stream: a file to close, a buffer to read back, a response body to send.
+            using var stream = new MemoryStream();
+
+            await m_Saver.SaveProjectFileAsync(BuildMinimalProjectModel(), stream);
+
+            stream.CanWrite.ShouldBeTrue();
+            stream.Length.ShouldBeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task OpenProject_LeavesTheStreamOpen()
+        {
+            using MemoryStream stream = await SaveToStreamAsync(BuildMinimalProjectModel());
+
+            await m_Opener.OpenProjectFileAsync(stream);
+
+            stream.CanRead.ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task OpenProject_Given_UnknownVersion_Then_TheVersionIsNamed()
+        {
+            // A stream has no file name to report, so the message names what could not be read instead.
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"{ ""Version"": ""v9.9.9"" }"));
+
+            InvalidDataException exception = await Should.ThrowAsync<InvalidDataException>(() => m_Opener.OpenProjectFileAsync(stream));
+
+            exception.Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_UnknownProjectFileVersion, @"v9.9.9"));
+        }
+
+        [Fact]
         public async Task RoundTrip_Minimal_Preserves_Version()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             loaded.Version.ShouldBe(Versions.v0_6_1);
         }
@@ -227,11 +248,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Minimal_Preserves_NodeCount()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             loaded.Nodes.Count.ShouldBe(original.Nodes.Count);
         }
@@ -239,11 +258,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Minimal_Preserves_FileCount()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             loaded.Files.Count.ShouldBe(original.Files.Count);
         }
@@ -251,12 +268,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Minimal_Preserves_ProjectStart()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
             DateTimeOffset expectedStart = original.Files[0].Scenario.ProjectStart;
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             loaded.Files[0].Scenario.ProjectStart.ShouldBe(expectedStart);
         }
@@ -264,12 +279,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Minimal_Preserves_NodeNames()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
             string expectedName = original.Nodes[0].Name;
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             loaded.Nodes[0].Name.ShouldBe(expectedName);
         }
@@ -277,11 +290,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Preserves_EdgeRoutingModes()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildProjectModelWithGraphLayout();
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             ProjectScenarioModel scenario = loaded.Files[0].Scenario;
             scenario.DisplaySettings.ArrowGraphEdgeRoutingMode.ShouldBe(EdgeRoutingMode.Rectilinear);
@@ -291,11 +302,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Preserves_ArrowGraphLayout()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildProjectModelWithGraphLayout();
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             List<NodeLayoutModel> nodes = loaded.Files[0].Scenario.ArrowGraphLayout.Nodes;
             nodes.Count.ShouldBe(2);
@@ -310,11 +319,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RoundTrip_Preserves_VertexGraphLayout()
         {
-            string path = GetTempFile();
             ProjectModel original = BuildProjectModelWithGraphLayout();
 
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
+            ProjectModel loaded = await RoundTripAsync(original);
 
             List<NodeLayoutModel> nodes = loaded.Files[0].Scenario.VertexGraphLayout.Nodes;
             nodes.Count.ShouldBe(1);
@@ -330,15 +337,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task DoubleRoundTrip_Produces_Same_Version()
         {
-            string path1 = GetTempFile();
-            string path2 = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(original, path1);
-            ProjectModel loaded1 = await m_Opener.OpenProjectFileAsync(path1);
-
-            await m_Saver.SaveProjectFileAsync(loaded1, path2);
-            ProjectModel loaded2 = await m_Opener.OpenProjectFileAsync(path2);
+            ProjectModel loaded1 = await RoundTripAsync(original);
+            ProjectModel loaded2 = await RoundTripAsync(loaded1);
 
             loaded2.Version.ShouldBe(Versions.v0_6_1);
         }
@@ -346,15 +348,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task DoubleRoundTrip_Preserves_NodeCount()
         {
-            string path1 = GetTempFile();
-            string path2 = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
-            await m_Saver.SaveProjectFileAsync(original, path1);
-            ProjectModel loaded1 = await m_Opener.OpenProjectFileAsync(path1);
-
-            await m_Saver.SaveProjectFileAsync(loaded1, path2);
-            ProjectModel loaded2 = await m_Opener.OpenProjectFileAsync(path2);
+            ProjectModel loaded1 = await RoundTripAsync(original);
+            ProjectModel loaded2 = await RoundTripAsync(loaded1);
 
             loaded2.Nodes.Count.ShouldBe(original.Nodes.Count);
         }

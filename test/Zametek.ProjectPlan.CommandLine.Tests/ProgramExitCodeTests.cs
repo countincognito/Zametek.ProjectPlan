@@ -339,9 +339,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_PlotExportFails_Then_ExitFailure()
         {
-            // The chart view models catch a failed save and report it rather than
-            // let it escape, so without a check of its own the run would exit 0
-            // with the chart stale or missing.
+            // A failed chart save is reported rather than thrown, so that the run
+            // carries on to its other outputs; without a check of its own the run
+            // would exit 0 with the chart stale or missing.
             string ganttFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_GanttChart, PlotExport.Png.GetDescription());
 
             (int exitCode, _) = await RunCapturedWithFileLockedAsync(
@@ -354,7 +354,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_GraphExportFails_Then_ExitFailure()
         {
-            // The graph view models report a failed save the same way.
+            // A failed graph save is reported the same way.
             string vertexFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_VertexChart, GraphExport.Svg.GetDescription());
 
             (int exitCode, _) = await RunCapturedWithFileLockedAsync(

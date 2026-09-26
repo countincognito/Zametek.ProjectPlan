@@ -961,8 +961,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
-            string filename)
+            Stream stream)
         {
+            ArgumentNullException.ThrowIfNull(stream);
+
             var workbook = new XSSFWorkbook();
             IFont titleFont = workbook.CreateFont();
 
@@ -1102,8 +1104,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
-            using var stream = File.Create(filename);
-            workbook.Write(stream, leaveOpen: false);
+            // The caller owns the stream, so the workbook leaves it open.
+            workbook.Write(stream, leaveOpen: true);
         }
 
         #endregion

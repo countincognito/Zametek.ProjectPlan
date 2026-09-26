@@ -6,7 +6,6 @@ using Svg.Skia;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using Zametek.Utility;
 
 namespace Zametek.Graphs.Avalonia
 {
@@ -230,61 +229,35 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        // Interface entry point: save at the default export mode (the attached view's ExportMode, or Vector
+        // Interface entry point: write at the default export mode (the attached view's ExportMode, or Vector
         // when headless).
-        public Task SaveImageAsync(
-            string? filename,
+        public Task WriteImageAsync(
+            Stream stream,
+            GraphFileFormat format,
             GraphImageSource source,
             FixedLayoutGraphType imageType) =>
-            SaveImageAsync(filename, source, imageType, DefaultExportMode);
+            WriteImageAsync(stream, format, source, imageType, DefaultExportMode);
 
-        private async Task SaveImageAsync(
-            string? filename,
+        private async Task WriteImageAsync(
+            Stream stream,
+            GraphFileFormat format,
             GraphImageSource source,
             FixedLayoutGraphType imageType,
             GraphExportMode mode)
         {
-            if (string.IsNullOrWhiteSpace(filename))
+            ArgumentNullException.ThrowIfNull(stream);
+
+            switch (format)
             {
-                await m_Host.ReportErrorAsync(Graphs_Messages.Message_EmptyFilename);
-                return;
-            }
-
-            try
-            {
-                string fileExtension = Path.GetExtension(filename);
-                byte[]? data = null;
-                bool isImageFormat = false;
-
-                fileExtension.ValueSwitchOn()
-                    .Case($".{GraphFileExtensions.Jpeg}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.Png}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.Pdf}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.Svg}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.GraphML}", _ =>
-                    {
-                        data = m_Serializer.BuildGraphMLData(m_Host.BuildDiagram(multiLineEdgeLabels: true));
-                    })
-                    .Case($".{GraphFileExtensions.GraphViz}", _ =>
-                    {
-                        data = m_Serializer.BuildGraphVizData(m_Host.BuildDiagram(multiLineEdgeLabels: true));
-                    })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));
-
-                if (isImageFormat)
-                {
-                    await SaveImageFormatAsync(filename, fileExtension, source, imageType, mode);
-                }
-
-                if (data is not null)
-                {
-                    using var stream = File.Create(filename);
-                    await stream.WriteAsync(data);
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_Host.ReportErrorAsync(ex.Message);
+                case GraphFileFormat.GraphML:
+                    await stream.WriteAsync(m_Serializer.BuildGraphMLData(m_Host.BuildDiagram(multiLineEdgeLabels: true)));
+                    break;
+                case GraphFileFormat.GraphViz:
+                    await stream.WriteAsync(m_Serializer.BuildGraphVizData(m_Host.BuildDiagram(multiLineEdgeLabels: true)));
+                    break;
+                default:
+                    await WriteImageFormatAsync(stream, format, source, imageType, mode);
+                    break;
             }
         }
 
@@ -811,7 +784,10 @@ namespace Zametek.Graphs.Avalonia
                 string? filename = await m_Host.PickSaveFileAsync();
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await SaveImageAsync(filename, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None, mode);
+                    GraphFileFormat format = GraphFileExtensions.GetFileFormat(filename);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteImageAsync(stream, format, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None, mode));
                 }
             }
             catch (Exception ex)
@@ -820,44 +796,44 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        private async Task SaveImageFormatAsync(
-            string filename,
-            string fileExtension,
+        private async Task WriteImageFormatAsync(
+            Stream stream,
+            GraphFileFormat format,
             GraphImageSource source,
             FixedLayoutGraphType imageType,
             GraphExportMode mode)
         {
             if (source == GraphImageSource.InteractiveCanvas)
             {
-                await SaveInteractiveCanvasImageFormatAsync(filename, mode);
+                await WriteInteractiveCanvasImageFormatAsync(stream, format, mode);
                 return;
             }
             else if (source == GraphImageSource.FixedLayout)
             {
                 if (imageType == FixedLayoutGraphType.Arrow)
                 {
-                    await SaveFixedLayoutImageFormatAsync(
+                    await WriteFixedLayoutImageFormatAsync(
                         m_Host,
                         m_LayoutEngine,
                         GraphConfigurations.Arrow,
-                        filename,
-                        fileExtension);
+                        stream,
+                        format);
                     return;
                 }
                 else if (imageType == FixedLayoutGraphType.Vertex)
                 {
-                    await SaveFixedLayoutImageFormatAsync(
+                    await WriteFixedLayoutImageFormatAsync(
                         m_Host,
                         m_LayoutEngine,
                         GraphConfigurations.Vertex,
-                        filename,
-                        fileExtension);
+                        stream,
+                        format);
                     return;
                 }
             }
         }
 
-        private async Task SaveInteractiveCanvasImageFormatAsync(string filename, GraphExportMode mode)
+        private async Task WriteInteractiveCanvasImageFormatAsync(Stream stream, GraphFileFormat format, GraphExportMode mode)
         {
             // Render the current interactive arrangement (the user's dragged layout) in the requested mode:
             // Vector produces a crisp vector picture; Raster (from a live control's provider) rasterises the
@@ -878,17 +854,17 @@ namespace Zametek.Graphs.Avalonia
                     // A raster picture already carries its pixel scale (export 1:1); a vector picture is
                     // supersampled on export so PNG/JPEG stay crisp.
                     int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
-                    await ImageExporter.SaveImageAsync(picture, filename, scaleX: scale, scaleY: scale);
+                    await ImageExporter.WriteImageAsync(picture, stream, format, scaleX: scale, scaleY: scale);
                 }
             }
         }
 
-        private static async Task SaveFixedLayoutImageFormatAsync(
+        private static async Task WriteFixedLayoutImageFormatAsync(
             IGraphHost graphHost,
             IGraphLayoutEngine layoutEngine,
             GraphConfiguration graphConfiguration,
-            string filename,
-            string fileExtension)
+            Stream stream,
+            GraphFileFormat format)
         {
             ArgumentNullException.ThrowIfNull(graphHost);
             ArgumentNullException.ThrowIfNull(layoutEngine);
@@ -905,10 +881,9 @@ namespace Zametek.Graphs.Avalonia
                 graphConfiguration,
                 graphHost.Theme);
 
-            if (string.Equals(fileExtension, $".{GraphFileExtensions.Svg}", StringComparison.OrdinalIgnoreCase))
+            if (format == GraphFileFormat.Svg)
             {
                 // Write the MSAGL SVG verbatim so its text stays crisp (no rasterisation).
-                using var stream = File.Create(filename);
                 await stream.WriteAsync(svgData);
                 return;
             }
@@ -920,7 +895,7 @@ namespace Zametek.Graphs.Avalonia
             svg.Load(svgStream);
             if (svg.Picture is not null)
             {
-                await ImageExporter.SaveImageAsync(svg.Picture, filename, scaleX: 2, scaleY: 2);
+                await ImageExporter.WriteImageAsync(svg.Picture, stream, format, scaleX: 2, scaleY: 2);
             }
         }
 

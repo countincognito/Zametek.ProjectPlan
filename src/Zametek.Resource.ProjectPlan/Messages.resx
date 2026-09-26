@@ -390,4 +390,7 @@
   <data name="Message_ScenarioHasNoScenarioData" xml:space="preserve">
     <value>Scenario '{0}' has no scenario data in the project file</value>
   </data>
+  <data name="Message_UnknownProjectFileVersion" xml:space="preserve">
+    <value>Unable to open file: unknown version '{0}'</value>
+  </data>
 </root>

@@ -595,8 +595,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+                    ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);
 
-                    await SaveResourceChartImageFileAsync(filename, boundedWidth, boundedHeight);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteResourceChartImageAsync(stream, format, boundedWidth, boundedHeight));
                 }
             }
             catch (Exception ex)
@@ -681,32 +684,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeDisplayStyleCommand { get; }
 
-        public async Task SaveResourceChartImageFileAsync(
-            string? filename,
+        public async Task WriteResourceChartImageAsync(
+            Stream stream,
+            ChartImageFormat format,
             int width,
             int height)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(ResourceChartPlotModel, filename, width, height);
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            await m_ScottPlotImageExporter.WritePlotImageAsync(ResourceChartPlotModel, stream, format, width, height);
         }
 
         public void BuildResourceChartPlotModel()

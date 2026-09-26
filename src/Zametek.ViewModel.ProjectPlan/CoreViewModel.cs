@@ -1480,14 +1480,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ProjectScenarioImportModel ImportProjectScenarioFile(string filename)
+        public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format)
         {
             try
             {
                 lock (m_Lock)
                 {
                     BeginBusy();
-                    return m_ProjectScenarioFileImport.ImportProjectScenarioFile(filename);
+                    return m_ProjectScenarioFileImport.ImportProjectScenarioFile(stream, format);
                 }
             }
             finally
@@ -1501,7 +1501,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSetModel,
             TrackingSeriesSetModel trackingSeriesSetModel,
             bool showDates,
-            string filename)
+            Stream stream,
+            ProjectScenarioExportFormat format)
         {
             try
             {
@@ -1513,7 +1514,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         resourceSeriesSetModel,
                         trackingSeriesSetModel,
                         showDates,
-                        filename);
+                        stream,
+                        format);
                 }
             }
             finally

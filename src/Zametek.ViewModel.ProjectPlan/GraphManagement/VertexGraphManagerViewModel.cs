@@ -307,11 +307,11 @@ namespace Zametek.ViewModel.ProjectPlan
         // Delegates to the interactive viewer's Save-As (which prompts and renders the live canvas).
         public ICommand SaveVertexGraphImageFileCommand => m_Interactive.SaveGraphImageFileCommand;
 
-        // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
+        // Export to a stream. Used by the headless CLI, so it exports the fixed MSAGL layout
         // (which needs no populated interactive surface) rather than the on-screen canvas.
-        public Task SaveFixedLayoutVertexGraphImageFileAsync(string? filename)
+        public Task WriteFixedLayoutVertexGraphImageAsync(Stream stream, GraphExportFormat format)
         {
-            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex);
+            return m_Interactive.WriteImageAsync(stream, format.ToGraphFileFormat(), GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex);
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario

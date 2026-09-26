@@ -979,11 +979,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IXlsxFileImporter Members
 
-        public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename)
+        public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(Stream stream)
         {
-            using FileStream file = new(filename, FileMode.Open, FileAccess.Read);
+            ArgumentNullException.ThrowIfNull(stream);
 
-            var workbook = new XSSFWorkbook(file);
+            // NPOI closes the stream it reads a workbook from, and this one belongs to the caller, so the workbook is
+            // read from a copy.
+            using var copy = new MemoryStream();
+            stream.CopyTo(copy);
+            copy.Position = 0;
+
+            var workbook = new XSSFWorkbook(copy);
             DateTimeOffset projectStart = new(DateTime.Today);
             DateTimeOffset today = new(DateTime.Today);
 

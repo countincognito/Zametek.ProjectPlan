@@ -8,9 +8,12 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ProjectFileSave
         : IProjectFileSave
     {
-        public async Task SaveProjectFileAsync(ProjectModel project, string filename)
+        public async Task SaveProjectFileAsync(ProjectModel project, Stream stream)
         {
-            using StreamWriter writer = File.CreateText(filename);
+            ArgumentNullException.ThrowIfNull(stream);
+
+            // The caller owns the stream, so the writer leaves it open.
+            using var writer = new StreamWriter(stream, leaveOpen: true);
 
             // The indented JSON ends its lines with the writer's line end, which is the platform's unless set.
             writer.NewLine = NewLineHelper.NewLine;

@@ -117,9 +117,9 @@ namespace Zametek.Contract.ProjectPlan
 
         void ResetProjectScenario();
 
-        ProjectScenarioImportModel ImportProjectScenarioFile(string filename);
+        ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format);
 
-        void ExportProjectScenarioFile(ProjectScenarioModel projectScenarioModel, ResourceSeriesSetModel resourceSeriesSetModel, TrackingSeriesSetModel trackingSeriesSetModel, bool showDates, string filename);
+        void ExportProjectScenarioFile(ProjectScenarioModel projectScenarioModel, ResourceSeriesSetModel resourceSeriesSetModel, TrackingSeriesSetModel trackingSeriesSetModel, bool showDates, Stream stream, ProjectScenarioExportFormat format);
 
         void ProcessProjectScenarioImport(ProjectScenarioImportModel projectScenarioImportModel, Guid projectScenarioId, string projectScenarioTitle);
 

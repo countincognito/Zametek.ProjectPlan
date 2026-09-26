@@ -1471,8 +1471,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+                    ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);
 
-                    await SaveGanttChartImageFileAsync(filename, boundedWidth, boundedHeight);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteGanttChartImageAsync(stream, format, boundedWidth, boundedHeight));
                 }
             }
             catch (Exception ex)
@@ -1602,33 +1605,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeAnnotationStyleCommand { get; }
 
-        public async Task SaveGanttChartImageFileAsync(
-            string? filename,
+        public async Task WriteGanttChartImageAsync(
+            Stream stream,
+            ChartImageFormat format,
             int width,
             int height)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    int calculatedHeight = CalculatedExportHeight(height);
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(GanttChartPlotModel, filename, width, calculatedHeight);
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            int calculatedHeight = CalculatedExportHeight(height);
+            await m_ScottPlotImageExporter.WritePlotImageAsync(GanttChartPlotModel, stream, format, width, calculatedHeight);
         }
 
         // The exported/copied image shows every bar at a readable fixed height (so a large chart is not

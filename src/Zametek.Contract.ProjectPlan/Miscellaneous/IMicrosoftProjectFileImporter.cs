@@ -4,6 +4,8 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IMicrosoftProjectFileImporter
     {
-        ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename);
+        // Reads an MS Project plan (.mpp or .xml, told apart by content) from the stream. The caller owns the stream, which
+        // is left open.
+        ProjectScenarioImportModel ImportMicrosoftProjectFile(Stream stream);
     }
 }

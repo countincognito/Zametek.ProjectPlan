@@ -796,8 +796,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+                    ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);
 
-                    await SaveEarnedValueChartImageFileAsync(filename, boundedWidth, boundedHeight);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteEarnedValueChartImageAsync(stream, format, boundedWidth, boundedHeight));
                 }
             }
             catch (Exception ex)
@@ -887,32 +890,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
-        public async Task SaveEarnedValueChartImageFileAsync(
-            string? filename,
+        public async Task WriteEarnedValueChartImageAsync(
+            Stream stream,
+            ChartImageFormat format,
             int width,
             int height)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(EarnedValueChartPlotModel, filename, width, height);
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            await m_ScottPlotImageExporter.WritePlotImageAsync(EarnedValueChartPlotModel, stream, format, width, height);
         }
 
         public void BuildEarnedValueChartPlotModel()

@@ -1,15 +1,14 @@
 using SkiaSharp;
 using Svg.Skia;
-using Zametek.Utility;
 
 namespace Zametek.Graphs.Avalonia
 {
     // Writes or renders a recorded SKPicture (the interactive canvas, or a rasterised MSAGL SVG) as a
     // JPEG, PNG, PDF or SVG. Each format offers Write* (to a Stream) and RenderTo* (to a byte[]), each
-    // with an async variant; SaveImageAsync picks the format from a file's extension. An internal
+    // with an async variant; WriteImageAsync picks the writer for a GraphFileFormat. An internal
     // SkiaSharp implementation detail of the export / clipboard paths - it takes an SKPicture, so it is
     // not part of the framework-neutral public surface. The neutral public export entry point is
-    // IInteractiveGraph.SaveImageAsync(filename, source, imageType).
+    // IInteractiveGraph.WriteImageAsync(stream, format, source, imageType).
     internal static class ImageExporter
     {
         #region Png
@@ -82,42 +81,23 @@ namespace Zametek.Graphs.Avalonia
 
         #endregion
 
-        #region File save
+        #region Any image format
 
-        // Convenience entry point: pick the format from the file's extension and write it. Used by the
-        // on-screen Save-As path.
-        public static async Task SaveImageAsync(SKPicture picture, string filename, int scaleX = 2, int scaleY = 2)
+        // Write the picture in one of the image formats. GraphML and GraphViz are data formats, built from the diagram
+        // rather than drawn from a picture, so they have no writer here.
+        public static Task WriteImageAsync(SKPicture picture, Stream stream, GraphFileFormat format, int scaleX = 2, int scaleY = 2)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
+            ArgumentNullException.ThrowIfNull(stream);
 
-            await Task.Run(() =>
+            return format switch
             {
-                string fileExtension = Path.GetExtension(filename);
-
-                fileExtension.ValueSwitchOn()
-                    .Case($".{GraphFileExtensions.Jpeg}", _ =>
-                    {
-                        using var stream = File.Create(filename);
-                        WriteJpeg(picture, stream, scaleX, scaleY);
-                    })
-                    .Case($".{GraphFileExtensions.Png}", _ =>
-                    {
-                        using var stream = File.Create(filename);
-                        WritePng(picture, stream, scaleX, scaleY);
-                    })
-                    .Case($".{GraphFileExtensions.Pdf}", _ =>
-                    {
-                        using var stream = File.Create(filename);
-                        WritePdf(picture, stream, scaleX, scaleY);
-                    })
-                    .Case($".{GraphFileExtensions.Svg}", _ =>
-                    {
-                        using var stream = File.Create(filename);
-                        WriteSvg(picture, stream, scaleX, scaleY);
-                    })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));
-            });
+                GraphFileFormat.Jpeg => WriteJpegAsync(picture, stream, scaleX, scaleY),
+                GraphFileFormat.Png => WritePngAsync(picture, stream, scaleX, scaleY),
+                GraphFileFormat.Pdf => WritePdfAsync(picture, stream, scaleX, scaleY),
+                GraphFileFormat.Svg => WriteSvgAsync(picture, stream, scaleX, scaleY),
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
+            };
         }
 
         #endregion
