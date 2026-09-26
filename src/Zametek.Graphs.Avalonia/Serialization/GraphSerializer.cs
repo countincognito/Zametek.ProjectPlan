@@ -23,9 +23,8 @@ namespace Zametek.Graphs.Avalonia
             using var sr = new StreamReader(ms);
 
             // XmlSerializer indents with the platform's line end, which it offers no way to change short of replacing
-            // its writer - and with it the XML declaration. The export's line ends are "\n" on every platform, so that
-            // the same diagram exports to the same bytes on Windows as on Linux.
-            string content = sr.ReadToEnd().Replace("\r\n", "\n", StringComparison.Ordinal);
+            // its writer - and with it the XML declaration.
+            string content = NewLineHelper.NormalizeNewLines(sr.ReadToEnd());
             return content.StringToByteArray();
         }
 

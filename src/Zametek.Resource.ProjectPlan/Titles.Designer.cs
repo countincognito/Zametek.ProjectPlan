@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current.
+        /// </summary>
+        public static string Title_Current {
+            get {
+                return ResourceManager.GetString("Title_Current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Title_DeleteNodes {
@@ -187,6 +196,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        public static string Title_Id {
+            get {
+                return ResourceManager.GetString("Title_Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Metrics.
         /// </summary>
         public static string Title_Metrics {
@@ -268,6 +286,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scenario.
+        /// </summary>
+        public static string Title_Scenario {
+            get {
+                return ResourceManager.GetString("Title_Scenario", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scenario Chart.
         /// </summary>
         public static string Title_ScenarioChartView {
@@ -282,6 +309,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Title_ScenarioUnsavedChanges {
             get {
                 return ResourceManager.GetString("Title_ScenarioUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tracked.
+        /// </summary>
+        public static string Title_Tracked {
+            get {
+                return ResourceManager.GetString("Title_Tracked", resourceCulture);
             }
         }
         

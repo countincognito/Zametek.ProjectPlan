@@ -70,6 +70,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.
+        /// </summary>
+        public static string Symbol_Current {
+            get {
+                return ResourceManager.GetString("Symbol_Current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &gt;&gt;.
         /// </summary>
         public static string Symbol_Forwards {
@@ -93,6 +102,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Symbol_Nowhere {
             get {
                 return ResourceManager.GetString("Symbol_Nowhere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /.
+        /// </summary>
+        public static string Symbol_PathSeparator {
+            get {
+                return ResourceManager.GetString("Symbol_PathSeparator", resourceCulture);
             }
         }
     }

@@ -413,8 +413,8 @@ namespace Zametek.Graphs.Avalonia
             using var textPaint = new SKPaint { Color = labelColor };
 
             // The label is monospace, centred in the node just like the TextBlock. Stack any lines
-            // about the node centre.
-            string[] lines = node.Label.Split('\n');
+            // about the node centre, breaking them where the fixed-layout SVG writer does.
+            string[] lines = NewLineHelper.SplitLines(node.Label);
             SKFontMetrics metrics = labelFont.Metrics;
             float lineHeight = metrics.Descent - metrics.Ascent;
             float blockHeight = lineHeight * lines.Length;

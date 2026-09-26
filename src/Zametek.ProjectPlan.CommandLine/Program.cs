@@ -509,9 +509,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 metrics.TotalMarginAbsolute,
             };
 
-            // Json.NET indents with the platform's line end; zpp's are "\n" everywhere. JSON escapes the line breaks in
-            // its strings, so every one left in the text is indentation.
-            return JsonConvert.SerializeObject(output, Formatting.Indented).Replace("\r\n", "\n", StringComparison.Ordinal);
+            // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
+            // left in the text is indentation.
+            return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
         }
 
         // Constructing a view model wires up its reactive subscriptions; in this
@@ -541,26 +541,26 @@ namespace Zametek.ProjectPlan.CommandLine
             if (options.InputFilename is not null
                 && options.ImportFilename is not null)
             {
-                throw new UsageException($@"Specify either {input} or {import}, but not both.");
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_SpecifyEitherOptionNotBoth, input, import));
             }
 
             if (options.InputFilename is null
                 && (options.Scenario is not null || options.ListScenarios))
             {
-                throw new UsageException($@"{scenario} and {listScenarios} are only valid with {input}.");
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionsOnlyValidWithOption, scenario, listScenarios, input));
             }
 
             if (options.Scenario is not null
                 && options.ListScenarios)
             {
-                throw new UsageException($@"Specify either {scenario} or {listScenarios}, but not both.");
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_SpecifyEitherOptionNotBoth, scenario, listScenarios));
             }
 
             // Zero switches the limit off; a negative value is meaningless rather
             // than a second way of saying that, so it is rejected outright.
             if (options.CompileTimeoutMilliseconds < 0)
             {
-                throw new UsageException($@"{OptionLongName(nameof(Options.CompileTimeoutMilliseconds))} cannot be negative (use 0 for no limit).");
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionCannotBeNegative, OptionLongName(nameof(Options.CompileTimeoutMilliseconds))));
             }
 
             RequireSize(
@@ -605,7 +605,7 @@ namespace Zametek.ProjectPlan.CommandLine
             if (directory is not null
                 && !size.Any())
             {
-                throw new UsageException($@"{sizeOption} is required when {directoryOption} is specified.");
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionRequiredWithOption, sizeOption, directoryOption));
             }
         }
 
@@ -630,7 +630,7 @@ namespace Zametek.ProjectPlan.CommandLine
             if (directory is not null
                 && !Directory.Exists(directory))
             {
-                throw new InvalidOperationException($@"Directory {directory} does not exist");
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_DirectoryDoesNotExist, directory));
             }
         }
 
@@ -701,18 +701,18 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (matches.Count == 0)
             {
-                throw new InvalidOperationException($@"No scenario matches '{selector}' - use {OptionLongName(nameof(Options.ListScenarios))} to see what the project contains");
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, selector, OptionLongName(nameof(Options.ListScenarios))));
             }
             if (matches.Count > 1)
             {
-                throw new InvalidOperationException($@"'{selector}' matches {matches.Count} scenarios - use {OptionLongName(nameof(Options.ListScenarios))} and select one by id");
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_SeveralScenariosMatch, selector, matches.Count, OptionLongName(nameof(Options.ListScenarios))));
             }
 
             Guid scenarioId = matches[0].Id;
 
             if (!projectModel.Files.Any(x => x.NodeId == scenarioId))
             {
-                throw new InvalidOperationException($@"Scenario '{selector}' has no scenario data in the project file");
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_ScenarioHasNoScenarioData, selector));
             }
 
             return scenarioId;
@@ -721,6 +721,11 @@ namespace Zametek.ProjectPlan.CommandLine
         // Git's abbreviation floor: an id prefix shorter than this is never
         // treated as an id, it just falls through to the not-found error.
         private const int c_MinimumScenarioIdPrefixLength = 4;
+
+        // An id prefix is matched against the id's 32 hex digits, without the
+        // hyphens that separate their groups in the listing.
+        private const string c_ScenarioIdDigitsFormat = @"N";
+        private const string c_ScenarioIdGroupSeparator = @"-";
 
         private static IEnumerable<ProjectScenarioNodeModel> MatchScenarioIdPrefix(
             IEnumerable<ProjectScenarioNodeModel> scenarios,
@@ -731,7 +736,7 @@ namespace Zametek.ProjectPlan.CommandLine
             // portion copied out of --list-scenarios works. The caller treats
             // multiple matches as ambiguous, so a prefix resolves only when it is
             // long enough to be unique.
-            string prefix = selector.Replace(@"-", string.Empty).ToLowerInvariant();
+            string prefix = selector.Replace(c_ScenarioIdGroupSeparator, string.Empty).ToLowerInvariant();
 
             if (prefix.Length < c_MinimumScenarioIdPrefixLength
                 || !prefix.All(char.IsAsciiHexDigit))
@@ -739,22 +744,26 @@ namespace Zametek.ProjectPlan.CommandLine
                 return [];
             }
 
-            return scenarios.Where(x => x.Id.ToString(@"N").StartsWith(prefix, StringComparison.Ordinal));
+            return scenarios.Where(x => x.Id.ToString(c_ScenarioIdDigitsFormat).StartsWith(prefix, StringComparison.Ordinal));
         }
 
         private static void DisplayScenarios(ProjectModel projectModel)
         {
             Dictionary<Guid, ProjectScenarioNodeModel> nodeLookup = projectModel.Nodes.ToDictionary(x => x.Id);
 
-            var table = new ConsoleTable(@"Scenario", @"Id", @"Tracked", @"Current");
+            var table = new ConsoleTable(
+                Resource.ProjectPlan.Titles.Title_Scenario,
+                Resource.ProjectPlan.Titles.Title_Id,
+                Resource.ProjectPlan.Titles.Title_Tracked,
+                Resource.ProjectPlan.Titles.Title_Current);
 
             foreach (ProjectScenarioNodeModel node in projectModel.Nodes.Where(x => x.NodeType == ProjectScenarioNodeType.File))
             {
                 table.AddRow(
                     BuildNodePath(projectModel, nodeLookup, node),
                     node.Id,
-                    node.IsTracked ? @"Yes" : string.Empty,
-                    node.Id == projectModel.Current ? @"*" : string.Empty);
+                    node.IsTracked ? Resource.ProjectPlan.Labels.Label_Yes : string.Empty,
+                    node.Id == projectModel.Current ? Resource.ProjectPlan.Symbols.Symbol_Current : string.Empty);
             }
 
             table.Configure(x =>
@@ -786,7 +795,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 parentId = parent.ParentId;
             }
 
-            return string.Join(@"/", names);
+            return string.Join(Resource.ProjectPlan.Symbols.Symbol_PathSeparator, names);
         }
 
         private static int OnParseErrors<T>(

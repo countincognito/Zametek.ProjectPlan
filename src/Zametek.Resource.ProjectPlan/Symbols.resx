@@ -129,4 +129,10 @@
   <data name="Symbol_Nowhere" xml:space="preserve">
     <value>-</value>
   </data>
+  <data name="Symbol_Current" xml:space="preserve">
+    <value>*</value>
+  </data>
+  <data name="Symbol_PathSeparator" xml:space="preserve">
+    <value>/</value>
+  </data>
 </root>

@@ -105,7 +105,7 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
         {
             GraphConfiguration configuration = ConfigurationNamed(configurationName);
             const string line = @"12345";
-            string label = string.Join('\n', Enumerable.Repeat(line, lineCount));
+            string label = NewLineHelper.JoinLines(Enumerable.Repeat(line, lineCount));
 
             double width = MeasureInBundledFont(line, MsaglGraphLayoutEngine.NodeLabelFontSize(label, configuration));
 

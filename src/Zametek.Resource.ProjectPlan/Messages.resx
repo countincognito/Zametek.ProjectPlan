@@ -366,4 +366,28 @@
   <data name="Message_CompilationTimedOut" xml:space="preserve">
     <value>The compilation did not complete within the time limit of {0} ms and was cancelled. Raise the compilation timeout to allow longer.</value>
   </data>
+  <data name="Message_SpecifyEitherOptionNotBoth" xml:space="preserve">
+    <value>Specify either {0} or {1}, but not both.</value>
+  </data>
+  <data name="Message_OptionsOnlyValidWithOption" xml:space="preserve">
+    <value>{0} and {1} are only valid with {2}.</value>
+  </data>
+  <data name="Message_OptionCannotBeNegative" xml:space="preserve">
+    <value>{0} cannot be negative (use 0 for no limit).</value>
+  </data>
+  <data name="Message_OptionRequiredWithOption" xml:space="preserve">
+    <value>{0} is required when {1} is specified.</value>
+  </data>
+  <data name="Message_DirectoryDoesNotExist" xml:space="preserve">
+    <value>Directory {0} does not exist</value>
+  </data>
+  <data name="Message_NoScenarioMatches" xml:space="preserve">
+    <value>No scenario matches '{0}' - use {1} to see what the project contains</value>
+  </data>
+  <data name="Message_SeveralScenariosMatch" xml:space="preserve">
+    <value>'{0}' matches {1} scenarios - use {2} and select one by id</value>
+  </data>
+  <data name="Message_ScenarioHasNoScenarioData" xml:space="preserve">
+    <value>Scenario '{0}' has no scenario data in the project file</value>
+  </data>
 </root>

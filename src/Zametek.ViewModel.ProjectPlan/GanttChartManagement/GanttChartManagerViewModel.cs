@@ -1165,7 +1165,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     activity.Duration,
                     dateTimeCalculator);
 
-                string barAnnotation = $"{Resource.ProjectPlan.Labels.Label_Activity}: {label}\n{Resource.ProjectPlan.Labels.Label_Start}: {from}\n{Resource.ProjectPlan.Labels.Label_End}: {to}";
+                string barAnnotation = NewLineHelper.JoinLines(
+                    $"{Resource.ProjectPlan.Labels.Label_Activity}: {label}",
+                    $"{Resource.ProjectPlan.Labels.Label_Start}: {from}",
+                    $"{Resource.ProjectPlan.Labels.Label_End}: {to}");
 
                 var item = new AnnotatedBar
                 {

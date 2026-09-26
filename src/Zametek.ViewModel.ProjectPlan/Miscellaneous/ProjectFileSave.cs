@@ -12,9 +12,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             using StreamWriter writer = File.CreateText(filename);
 
-            // The indented JSON ends its lines with the writer's line end, which is the platform's unless set. "\n"
-            // on every platform, so that the same plan saves to the same bytes on Windows as on Linux.
-            writer.NewLine = "\n";
+            // The indented JSON ends its lines with the writer's line end, which is the platform's unless set.
+            writer.NewLine = NewLineHelper.NewLine;
 
             var jsonSerializer = JsonSerializer.Create(
                 new JsonSerializerSettings

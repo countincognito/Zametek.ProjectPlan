@@ -208,8 +208,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             await m_Saver.SaveProjectFileAsync(model, path);
 
             string content = await File.ReadAllTextAsync(path);
-            content.ShouldContain("\n");
-            content.ShouldNotContain("\r");
+            content.ShouldContain(NewLineHelper.NewLine);
+            content.ShouldNotContain(NewLineHelper.CarriageReturn);
         }
 
         [Fact]

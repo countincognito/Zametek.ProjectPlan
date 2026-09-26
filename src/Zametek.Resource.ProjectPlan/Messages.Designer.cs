@@ -277,6 +277,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Directory {0} does not exist.
+        /// </summary>
+        public static string Message_DirectoryDoesNotExist {
+            get {
+                return ResourceManager.GetString("Message_DirectoryDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you wish to delete the {0} selected node(s)?.
         /// </summary>
         public static string Message_DoYouWishToDeleteTheseScenarios {
@@ -502,6 +511,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No scenario matches &apos;{0}&apos; - use {1} to see what the project contains.
+        /// </summary>
+        public static string Message_NoScenarioMatches {
+            get {
+                return ResourceManager.GetString("Message_NoScenarioMatches", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No Window icon available.
         /// </summary>
         public static string Message_NoWindowIconAvailable {
@@ -516,6 +534,33 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_NumberOfTrackersAcrossAllActivitiesNotIdentical {
             get {
                 return ResourceManager.GetString("Message_NumberOfTrackersAcrossAllActivitiesNotIdentical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot be negative (use 0 for no limit)..
+        /// </summary>
+        public static string Message_OptionCannotBeNegative {
+            get {
+                return ResourceManager.GetString("Message_OptionCannotBeNegative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is required when {1} is specified..
+        /// </summary>
+        public static string Message_OptionRequiredWithOption {
+            get {
+                return ResourceManager.GetString("Message_OptionRequiredWithOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} are only valid with {2}..
+        /// </summary>
+        public static string Message_OptionsOnlyValidWithOption {
+            get {
+                return ResourceManager.GetString("Message_OptionsOnlyValidWithOption", resourceCulture);
             }
         }
         
@@ -538,6 +583,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scenario &apos;{0}&apos; has no scenario data in the project file.
+        /// </summary>
+        public static string Message_ScenarioHasNoScenarioData {
+            get {
+                return ResourceManager.GetString("Message_ScenarioHasNoScenarioData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The scenario has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ScenarioUnsavedChanges {
@@ -547,11 +601,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; matches {1} scenarios - use {2} and select one by id.
+        /// </summary>
+        public static string Message_SeveralScenariosMatch {
+            get {
+                return ResourceManager.GetString("Message_SeveralScenariosMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit must be equal or greater than 0.
         /// </summary>
         public static string Message_SlackLimitMustBeEqualOrGreaterThanZero {
             get {
                 return ResourceManager.GetString("Message_SlackLimitMustBeEqualOrGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify either {0} or {1}, but not both..
+        /// </summary>
+        public static string Message_SpecifyEitherOptionNotBoth {
+            get {
+                return ResourceManager.GetString("Message_SpecifyEitherOptionNotBoth", resourceCulture);
             }
         }
         

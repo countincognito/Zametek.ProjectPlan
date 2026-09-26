@@ -16,10 +16,9 @@ namespace Zametek.View.ProjectPlan
     public static class DataGridHelper
     {
         // The BCL offers no named constants for these characters (Environment.NewLine
-        // is the platform newline *string*), so name them here.
+        // is the platform newline *string*), so name them here. The line-end
+        // characters live in NewLineHelper.
         public const char Tab = '\t';
-        public const char CarriageReturn = '\r';
-        public const char LineFeed = '\n';
         public const char Space = ' ';
 
         // Dates are copied in ISO format: unambiguous, invariant, and parsed by
@@ -160,7 +159,7 @@ namespace Zametek.View.ProjectPlan
         public static string EscapeCellText(string value)
         {
             ArgumentNullException.ThrowIfNull(value);
-            return value.Replace(Tab, Space).Replace(CarriageReturn, Space).Replace(LineFeed, Space);
+            return value.Replace(Tab, Space).Replace(NewLineHelper.CarriageReturn, Space).Replace(NewLineHelper.LineFeed, Space);
         }
     }
 }

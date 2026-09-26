@@ -96,6 +96,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return await RunCapturedAsync(args);
         }
 
+        // The text has lines, and each of them ends with NewLineHelper.NewLine: there is no carriage return anywhere.
+        private static void ShouldEndLinesWithNewLine(string text)
+        {
+            text.ShouldContain(NewLineHelper.NewLine);
+            text.ShouldNotContain(NewLineHelper.CarriageReturn);
+        }
+
         [Fact]
         public async Task Main_Given_ValidProject_Then_ExitSuccess()
         {
@@ -376,9 +383,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             metrics[@"TotalCost"].ShouldNotBeNull();
         }
 
-        // zpp ends the lines it writes with "\n" on every platform, so that a run produces the same bytes on Windows as
-        // on Linux. Windows' own line end is "\r\n", which is where these tests have teeth. The help text is the one
-        // exception on stdout, because CommandLineParser writes it.
+        // zpp ends the lines it writes with NewLineHelper.NewLine on every platform, so that a run produces the same bytes
+        // on Windows as on Linux. Windows' own line end is "\r\n", which is where these tests have teeth. The help text is
+        // the one exception on stdout, because CommandLineParser writes it.
         [Theory]
         [InlineData(@"json")]
         [InlineData(@"table")]
@@ -388,8 +395,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"--metrics-format", metricsFormat);
 
             exitCode.ShouldBe(0);
-            output.ShouldContain("\n");
-            output.ShouldNotContain("\r");
+            ShouldEndLinesWithNewLine(output);
         }
 
         [Fact]
@@ -398,8 +404,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"--list-scenarios");
 
             exitCode.ShouldBe(0);
-            output.ShouldContain("\n");
-            output.ShouldNotContain("\r");
+            ShouldEndLinesWithNewLine(output);
         }
 
         [Fact]
@@ -408,8 +413,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"broken-dependency.zpp"));
 
             exitCode.ShouldBe(3);
-            output.ShouldContain("\n");
-            output.ShouldNotContain("\r");
+            ShouldEndLinesWithNewLine(output);
         }
 
         [Fact]
@@ -421,8 +425,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             exitCode.ShouldBe(0);
             string content = File.ReadAllText(outputFile);
-            content.ShouldContain("\n");
-            content.ShouldNotContain("\r");
+            ShouldEndLinesWithNewLine(content);
         }
 
         [Theory]
@@ -436,8 +439,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             exitCode.ShouldBe(0);
             string content = File.ReadAllText(Directory.GetFiles(m_TempDirectory).ShouldHaveSingleItem());
-            content.ShouldContain("\n");
-            content.ShouldNotContain("\r");
+            ShouldEndLinesWithNewLine(content);
         }
 
         public void Dispose()

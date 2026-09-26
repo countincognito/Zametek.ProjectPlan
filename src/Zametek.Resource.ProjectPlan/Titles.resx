@@ -204,4 +204,16 @@
   <data name="Title_ClearRecentlyOpened" xml:space="preserve">
     <value>Clear Recently Opened</value>
   </data>
+  <data name="Title_Scenario" xml:space="preserve">
+    <value>Scenario</value>
+  </data>
+  <data name="Title_Id" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="Title_Tracked" xml:space="preserve">
+    <value>Tracked</value>
+  </data>
+  <data name="Title_Current" xml:space="preserve">
+    <value>Current</value>
+  </data>
 </root>
