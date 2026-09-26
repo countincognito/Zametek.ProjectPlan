@@ -19,13 +19,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 : File.OpenRead(filename);
         }
 
+        // The saves build the whole file in memory and write it only once that has succeeded, so a failure part-way
+        // through leaves the file already there as it was, rather than truncated or half written.
+
         public static void Save(string filename, Action<Stream> write)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(filename);
             ArgumentNullException.ThrowIfNull(write);
 
+            using var buffer = new MemoryStream();
+            write(buffer);
+
             using FileStream stream = CreateFile(filename);
-            write(stream);
+            buffer.WriteTo(stream);
         }
 
         public static async Task SaveAsync(string filename, Func<Stream, Task> write)
@@ -33,8 +39,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentException.ThrowIfNullOrWhiteSpace(filename);
             ArgumentNullException.ThrowIfNull(write);
 
+            using var buffer = new MemoryStream();
+            await write(buffer);
+
             await using FileStream stream = CreateFile(filename);
-            await write(stream);
+            buffer.Position = 0;
+            await buffer.CopyToAsync(stream);
         }
 
         // Replaces any existing file, and lets others read it while it is written.

@@ -49,6 +49,48 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task SaveAsync_Given_AWriterThatFails_Then_TheFileAlreadyThereIsLeftAsItWas()
+        {
+            // A save that fails part-way - a render that throws, a serialiser that trips over the plan - must not cost the
+            // user the file they already had.
+            string path = FilePath(@"project.zpp");
+            File.WriteAllBytes(path, new byte[] { 9, 9, 9 });
+
+            await Should.ThrowAsync<InvalidOperationException>(() => FileStreamHelper.SaveAsync(path, async stream =>
+            {
+                await stream.WriteAsync(new byte[] { 1, 2 });
+                throw new InvalidOperationException();
+            }));
+
+            File.ReadAllBytes(path).ShouldBe(new byte[] { 9, 9, 9 });
+        }
+
+        [Fact]
+        public void Save_Given_AWriterThatFails_Then_TheFileAlreadyThereIsLeftAsItWas()
+        {
+            string path = FilePath(@"scenario.xlsx");
+            File.WriteAllBytes(path, new byte[] { 9, 9, 9 });
+
+            Should.Throw<InvalidOperationException>(() => FileStreamHelper.Save(path, stream =>
+            {
+                stream.Write(new byte[] { 1, 2 });
+                throw new InvalidOperationException();
+            }));
+
+            File.ReadAllBytes(path).ShouldBe(new byte[] { 9, 9, 9 });
+        }
+
+        [Fact]
+        public async Task SaveAsync_Given_AWriterThatFails_Then_NoFileIsLeftBehind()
+        {
+            string path = FilePath(@"chart.png");
+
+            await Should.ThrowAsync<InvalidOperationException>(() => FileStreamHelper.SaveAsync(path, _ => throw new InvalidOperationException()));
+
+            File.Exists(path).ShouldBeFalse();
+        }
+
+        [Fact]
         public void OpenImportFile_Given_AnMsProjectPlanOpenForWritingElsewhere_Then_OpensIt()
         {
             // MS Project keeps a plan it is editing open for writing. MPXJ, handed the file name, opened the file sharing

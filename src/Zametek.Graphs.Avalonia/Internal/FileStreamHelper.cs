@@ -6,13 +6,19 @@ namespace Zametek.Graphs.Avalonia
     // that import both namespaces.
     internal static class FileStreamHelper
     {
+        // Builds the whole file in memory and writes it only once that has succeeded, so a failure part-way through
+        // leaves the file already there as it was, rather than truncated or half written.
         public static async Task SaveAsync(string filename, Func<Stream, Task> write)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(filename);
             ArgumentNullException.ThrowIfNull(write);
 
+            using var buffer = new MemoryStream();
+            await write(buffer);
+
             await using FileStream stream = CreateFile(filename);
-            await write(stream);
+            buffer.Position = 0;
+            await buffer.CopyToAsync(stream);
         }
 
         // Replaces any existing file, and lets others read it while it is written.
