@@ -12,13 +12,13 @@
          project: no Avalonia.Desktop (that is the desktop backends), no file-system logging sinks, and no
          window types beyond what Avalonia.Controls itself provides. The theme packages are listed because
          Themes/AppStyles.axaml resolves them by avares:// URI, which needs a real assembly reference. -->
-    <PackageReference Include="Autofac" Version="9.3.2" />
+    <PackageReference Include="Autofac" Version="9.3.4" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.1" />
-    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.1.0" />
+    <PackageReference Include="Avalonia" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.3" />
+    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.1.0.6" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.2.0" />
-    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.2" />
     <!-- Bridges the ILogger<T> abstraction the view models depend on to whichever Serilog logger the head
          has configured. SerilogLoggerFactory with no logger reads the static Log.Logger afresh on each
          write, so this project never needs to know how (or whether) a head configured its sinks. -->

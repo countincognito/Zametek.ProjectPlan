@@ -11,8 +11,8 @@
     <!-- The engine runs a plan from bytes in to bytes out, one job per scope of whatever container its host builds,
          so it takes nothing here beyond the container and logging abstractions: no console, no file paths, no
          command line. Those belong to the heads that host it - zpp today, and `zpp serve` after it. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>

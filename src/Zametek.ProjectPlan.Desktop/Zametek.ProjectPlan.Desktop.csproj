@@ -42,14 +42,14 @@
     <!-- The shared application composition, styles and theme packages come through
          Zametek.ProjectPlan.Core. What remains here is what only a desktop head needs: the desktop
          windowing backends, the developer tools, and a rolling file sink for the log. -->
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageReference Include="Avalonia" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.2" />
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
