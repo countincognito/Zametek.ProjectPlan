@@ -140,16 +140,18 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, null),
         };
 
-        // Unhinted advances, so that the measure is the font's own and the same on every platform.
+        // Unhinted advances, measured at the font's em size and scaled to the size asked for, so that the measure is
+        // the font's own and the same on every platform. Measuring at the size itself is not: FreeType, which Skia
+        // uses on Linux, first truncates the size to a 1/64 of a pixel, while DirectWrite on Windows keeps it exact.
         private static double MeasureInBundledFont(string text, double size)
         {
-            using var font = new SKFont(Regular, (float)size)
+            using var font = new SKFont(Regular, Regular.UnitsPerEm)
             {
                 Hinting = SKFontHinting.None,
                 Subpixel = true,
                 LinearMetrics = true,
             };
-            return font.MeasureText(text);
+            return font.MeasureText(text) * size / Regular.UnitsPerEm;
         }
 
         private static byte[] Rasterise(SKSvg svg, byte[] svgData)
