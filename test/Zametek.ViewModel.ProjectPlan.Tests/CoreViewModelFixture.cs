@@ -44,9 +44,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         public static CoreViewModel Create(
-            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
+            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+            TimeProvider? clock = null)
         {
-            (CoreViewModel coreViewModel, _) = Build(compilationTimeoutMilliseconds);
+            (CoreViewModel coreViewModel, _) = Build(compilationTimeoutMilliseconds, clock);
 
             coreViewModel.KillSubscriptions();
             coreViewModel.AutoCompile = false;
@@ -99,7 +100,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         private static (CoreViewModel CoreViewModel, ISettingService SettingService) Build(
-            int compilationTimeoutMilliseconds)
+            int compilationTimeoutMilliseconds,
+            TimeProvider? clock = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -108,7 +110,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 CompilationTimeoutMilliseconds = compilationTimeoutMilliseconds,
             };
-            var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
+            var dateTimeCalculator = new DateTimeCalculator(clock ?? TimeProvider.System);
 
             var coreViewModel = new CoreViewModel(
                 new TestProjectScenarioFileImport(),

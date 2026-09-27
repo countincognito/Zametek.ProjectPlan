@@ -10,6 +10,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly ISettingService m_SettingService;
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
 
         private static readonly int[] s_FilterTaskIds = [0];
 
@@ -19,10 +20,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public MicrosoftProjectFileImporter(ISettingService settingService)
+        public MicrosoftProjectFileImporter(
+            ISettingService settingService,
+            IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_SettingService = settingService;
+            m_DateTimeCalculator = dateTimeCalculator;
         }
 
         #endregion
@@ -128,7 +133,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var reader = new UniversalProjectReader();
             ProjectFile mpxjProjectFile = reader.Read(copy);
             ProjectProperties? props = mpxjProjectFile.ProjectProperties;
-            DateTimeOffset projectStart = props?.StartDate ?? DateTimeOffset.Now;
+            DateTimeOffset projectStart = props?.StartDate ?? m_DateTimeCalculator.GetLocalNow();
             TimeSpan projectStartOffset = projectStart.Offset;
 
             var resources = new List<ResourceModel>();
@@ -234,7 +239,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new ProjectScenarioImportModel
             {
                 ProjectStart = projectStart,
-                Today = new(DateTime.Today),
+                Today = m_DateTimeCalculator.GetLocalToday(),
                 DependentActivities = dependentActivities,
                 ResourceSettings = new ResourceSettingsModel
                 {

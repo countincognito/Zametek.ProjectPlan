@@ -25,7 +25,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             stream.CanWrite.ShouldBeTrue();
             stream.Position = 0;
 
-            ProjectScenarioImportModel imported = new XlsxScenarioFileImporter().ImportProjectScenarioXlsxFile(stream);
+            ProjectScenarioImportModel imported = new XlsxScenarioFileImporter(new DateTimeCalculator(TimeProvider.System))
+                .ImportProjectScenarioXlsxFile(stream);
 
             stream.CanRead.ShouldBeTrue();
             imported.DependentActivities
@@ -37,7 +38,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void ImportMicrosoftProjectFile_Given_MsProjectXml_Then_TheTasksBecomeActivitiesAndTheStreamStaysOpen()
         {
             // Three tasks in a chain - Design, then Build, then Test - between two resources, written by MPXJ itself.
-            var importer = new MicrosoftProjectFileImporter(CoreViewModelFixture.CreateSettingService());
+            var importer = new MicrosoftProjectFileImporter(
+                CoreViewModelFixture.CreateSettingService(),
+                new DateTimeCalculator(TimeProvider.System));
             using FileStream stream = File.OpenRead(Path.Combine(@"TestFiles", @"sample_mspdi.xml"));
 
             ProjectScenarioImportModel imported = importer.ImportMicrosoftProjectFile(stream);

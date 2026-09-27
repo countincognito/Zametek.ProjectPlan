@@ -20,6 +20,8 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset GetLocalNow();
 
+        DateTimeOffset GetLocalToday();
+
         DateTimeOffset GetLocal(DateTime dateTime);
 
         (int?, DateTimeOffset?) CalculateTimeAndDateTime(DateTimeOffset projectStart, int? input);

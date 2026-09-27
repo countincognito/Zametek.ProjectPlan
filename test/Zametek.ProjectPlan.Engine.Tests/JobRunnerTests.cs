@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
+using System.IO.Compression;
 using System.Text;
+using System.Xml.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -15,8 +18,9 @@ namespace Zametek.ProjectPlan.Engine.Tests
     /// </summary>
     public class JobRunnerTests
     {
-        // A fixed clock, so that two runs of the same job save the same project:
-        // saving stamps the scenario's ModifiedOn.
+        // A fixed clock, so that two runs of the same job save the same project and
+        // export the same workbook: saving stamps the scenario's ModifiedOn, and
+        // exporting stamps the workbook.
         private static readonly DateTimeOffset s_Now = new(2026, 9, 26, 12, 0, 0, TimeSpan.Zero);
 
         private static readonly Guid s_AlphaId = Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5");
@@ -51,6 +55,16 @@ namespace Zametek.ProjectPlan.Engine.Tests
             await using FileStream input = File.OpenRead(AssetPath(asset));
             JobResult result = await runner.RunAsync(buildRequest(input), sink);
             return (result, sink);
+        }
+
+        // Keeps each time as it was written, offset and all, rather than turning it into a local DateTime.
+        private static JObject ParseProject(byte[] project)
+        {
+            using var reader = new JsonTextReader(new StringReader(Encoding.UTF8.GetString(project)))
+            {
+                DateParseHandling = DateParseHandling.DateTimeOffset,
+            };
+            return JObject.Load(reader);
         }
 
         private static JobRequest EveryOutput(Stream input)
@@ -224,6 +238,73 @@ namespace Zametek.ProjectPlan.Engine.Tests
             node[@"Name"]!.ToString().ShouldBe(Resource.ProjectPlan.Labels.Label_BaseNode);
             saved[@"Current"]!.ToString().ShouldBe(node[@"Id"]!.ToString());
             saved[@"Files"]!.ShouldHaveSingleItem()[@"NodeId"]!.ToString().ShouldBe(node[@"Id"]!.ToString());
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_Now_Then_WhatTheJobStampsIsStampedWithIt()
+        {
+            // Nowhere near the host's clock, so neither could pass for the other.
+            var now = new DateTimeOffset(2001, 2, 3, 4, 5, 6, TimeSpan.FromHours(-5));
+            await using ServiceProvider services = BuildServices();
+
+            (_, MemoryJobSink sink) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"two-scenarios.zpp",
+                input => new JobRequest { Input = input, Now = now, SaveProject = true, ExportFormat = ProjectScenarioExportFormat.Xlsx });
+
+            // The scenario the job saved was modified then...
+            JObject saved = ParseProject(sink[JobOutput.Project]);
+            JToken current = saved[@"Nodes"]!.Single(x => x[@"Id"]!.ToString() == saved[@"Current"]!.ToString());
+            current[@"ModifiedOn"]!.Value<DateTimeOffset>().ShouldBe(now);
+
+            // ...and the workbook it exported was created then, every part of it written then as the host's clock
+            // tells it (a zip holds only the local time, to two seconds).
+            using var workbook = new ZipArchive(new MemoryStream(sink[JobOutput.ScenarioExport]), ZipArchiveMode.Read);
+            using (Stream core = workbook.GetEntry(@"docProps/core.xml")!.Open())
+            {
+                XDocument.Load(core).Descendants(XNamespace.Get(@"http://purl.org/dc/terms/") + @"created").Single().Value
+                    .ShouldBe(@"2001-02-03T09:05:06Z");
+            }
+            workbook.Entries.Select(x => x.LastWriteTime.DateTime).Distinct()
+                .ShouldBe([TimeZoneInfo.ConvertTime(now, TimeZoneInfo.Local).DateTime]);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheSameNowOnDifferentClocks_Then_TheSameOutputs()
+        {
+            var now = new DateTimeOffset(2026, 9, 27, 12, 0, 0, TimeSpan.FromHours(1));
+            await using ServiceProvider services = BuildServices();
+            await using ServiceProvider later = BuildServices(x => x.AddSingleton<TimeProvider>(new FixedTimeProvider(s_Now.AddDays(1))));
+
+            JobRequest Request(Stream input) =>
+                new() { Input = input, Now = now, SaveProject = true, ExportFormat = ProjectScenarioExportFormat.Xlsx };
+            (_, MemoryJobSink first) = await RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", Request);
+            (_, MemoryJobSink second) = await RunAsync(later.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", Request);
+
+            second[JobOutput.Project].ShouldBe(first[JobOutput.Project]);
+            second[JobOutput.ScenarioExport].ShouldBe(first[JobOutput.ScenarioExport]);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ImportAtNow_Then_TheNewProjectWasCreatedThen()
+        {
+            var now = new DateTimeOffset(2001, 2, 3, 4, 5, 6, TimeSpan.FromHours(-5));
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            (_, MemoryJobSink exported) = await RunAsync(
+                runner,
+                @"two-scenarios.zpp",
+                input => new JobRequest { Input = input, ExportFormat = ProjectScenarioExportFormat.Xlsx });
+
+            var sink = new MemoryJobSink();
+            using var workbook = new MemoryStream(exported[JobOutput.ScenarioExport]);
+            await runner.RunAsync(
+                new JobRequest { Input = workbook, ImportFormat = ProjectScenarioImportFormat.Xlsx, Now = now, SaveProject = true },
+                sink);
+
+            JToken node = ParseProject(sink[JobOutput.Project])[@"Nodes"]!.ShouldHaveSingleItem();
+            node[@"CreatedOn"]!.Value<DateTimeOffset>().ShouldBe(now);
+            node[@"ModifiedOn"]!.Value<DateTimeOffset>().ShouldBe(now);
         }
 
         [Fact]

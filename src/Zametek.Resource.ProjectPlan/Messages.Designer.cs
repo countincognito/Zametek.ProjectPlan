@@ -554,7 +554,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_OptionCannotBeNegative", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be a date and time with its offset from UTC, such as 2026-09-27T12:00:00+01:00 or 2026-09-27T11:00:00Z..
+        /// </summary>
+        public static string Message_OptionMustBeADateTimeWithOffset {
+            get {
+                return ResourceManager.GetString("Message_OptionMustBeADateTimeWithOffset", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0} is required when {1} is specified..
         /// </summary>

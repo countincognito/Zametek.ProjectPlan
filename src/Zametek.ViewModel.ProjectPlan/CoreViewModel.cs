@@ -112,8 +112,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_IsReadyToCompile = ReadyToCompile.No;
             m_HasStaleOutputs = false;
-            m_ProjectStart = new(DateTime.Today);
-            m_Today = new(DateTime.Today);
+            DateTimeOffset today = m_DateTimeCalculator.GetLocalToday();
+            m_ProjectStart = today;
+            m_Today = today;
             m_ResourceSettings = new ResourceSettingsModel();
             m_Activities = new();
             m_GraphSettings = m_SettingService.DefaultGraphSettings;
@@ -1370,10 +1371,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     BeginBusy();
 
+                    DateTimeOffset today = m_DateTimeCalculator.GetLocalToday();
                     var plan = new ProjectScenarioModel
                     {
-                        ProjectStart = new(DateTime.Today),
-                        Today = new(DateTime.Today),
+                        ProjectStart = today,
+                        Today = today,
                         DependentActivities = [],
                         GraphSettings = m_SettingService.DefaultGraphSettings,
                         ResourceSettings = m_SettingService.DefaultResourceSettings,

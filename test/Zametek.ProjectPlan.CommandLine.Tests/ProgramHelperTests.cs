@@ -157,6 +157,59 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 }));
         }
 
+        [Theory]
+        [InlineData(@"2026-09-27T12:00:00+01:00", 2026, 9, 27, 12, 0, 0, 0, 60)]
+        [InlineData(@"2026-09-27T11:00:00Z", 2026, 9, 27, 11, 0, 0, 0, 0)]
+        [InlineData(@"2026-09-27T06:30:00-04:30", 2026, 9, 27, 6, 30, 0, 0, -270)]
+        [InlineData(@"2026-09-27T12:00:00.25+01:00", 2026, 9, 27, 12, 0, 0, 250, 60)]
+        [InlineData(@"2026-09-27T11:00:00.5Z", 2026, 9, 27, 11, 0, 0, 500, 0)]
+        public void TryParseNow_Given_ATimeWithItsOffset_Then_ParsesIt(
+            string now,
+            int year, int month, int day, int hour, int minute, int second, int millisecond, int offsetMinutes)
+        {
+            Program.TryParseNow(now, out DateTimeOffset result).ShouldBeTrue();
+
+            result.ShouldBe(new DateTimeOffset(year, month, day, hour, minute, second, millisecond, TimeSpan.FromMinutes(offsetMinutes)));
+            result.Offset.ShouldBe(TimeSpan.FromMinutes(offsetMinutes));
+        }
+
+        [Theory]
+        [InlineData(@"2026-09-27T12:00:00")]
+        [InlineData(@"2026-09-27")]
+        [InlineData(@"2026-09-27 12:00:00+01:00")]
+        [InlineData(@"27/09/2026 12:00:00 +01:00")]
+        [InlineData(@"2026-09-27T12:00+01:00")]
+        [InlineData(@"now")]
+        [InlineData(@"")]
+        public void TryParseNow_Given_AnythingElse_Then_Refuses(string now)
+        {
+            // Without an offset in particular: the same time would be a different instant on each machine.
+            Program.TryParseNow(now, out _).ShouldBeFalse();
+        }
+
+        [Fact]
+        public void ValidateOptions_Given_NowWithoutAnOffset_Then_UsageException()
+        {
+            Should.Throw<Program.UsageException>(
+                () => Program.ValidateOptions(new Options
+                {
+                    InputFilename = @"a.zpp",
+                    Now = @"2026-09-27T12:00:00",
+                }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionMustBeADateTimeWithOffset, @"--now"));
+        }
+
+        [Fact]
+        public void ValidateOptions_Given_NowWithAnOffset_Then_DoesNotThrow()
+        {
+            Should.NotThrow(
+                () => Program.ValidateOptions(new Options
+                {
+                    InputFilename = @"a.zpp",
+                    Now = @"2026-09-27T12:00:00+01:00",
+                }));
+        }
+
         [Fact]
         public void ToChartImageFormat_Given_EveryPlotExport_Then_MapsToTheFormatOfTheSameName()
         {

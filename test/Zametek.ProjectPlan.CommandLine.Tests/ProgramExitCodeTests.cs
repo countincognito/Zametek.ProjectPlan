@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.IO.Compression;
@@ -219,6 +220,45 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"-1"]);
 
             exitCode.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task Main_Given_NowWithoutAnOffset_Then_ExitUsageError()
+        {
+            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--now", @"2026-09-27T12:00:00"]);
+
+            exitCode.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task Main_Given_Now_Then_EveryRunSavesAndExportsTheSameFiles()
+        {
+            var now = new DateTimeOffset(2001, 2, 3, 4, 5, 6, TimeSpan.FromHours(-5));
+            string[] Args(string directory) =>
+            [
+                @"-i", AssetPath(@"two-scenarios.zpp"),
+                @"-o", Path.Combine(directory, @"plan.zpp"),
+                @"-x", Path.Combine(directory, @"plan.xlsx"),
+                @"--now", @"2001-02-03T04:05:06-05:00",
+            ];
+            string first = Directory.CreateDirectory(Path.Combine(m_TempDirectory, @"first")).FullName;
+            string second = Directory.CreateDirectory(Path.Combine(m_TempDirectory, @"second")).FullName;
+
+            (await Program.Main(Args(first))).ShouldBe(0);
+            (await Program.Main(Args(second))).ShouldBe(0);
+
+            // The run happened at the time it was given...
+            using var reader = new JsonTextReader(new StringReader(File.ReadAllText(Path.Combine(first, @"plan.zpp"))))
+            {
+                DateParseHandling = DateParseHandling.DateTimeOffset,
+            };
+            JObject saved = JObject.Load(reader);
+            JToken current = saved[@"Nodes"]!.Single(x => x[@"Id"]!.ToString() == saved[@"Current"]!.ToString());
+            current[@"ModifiedOn"]!.Value<DateTimeOffset>().ShouldBe(now);
+
+            // ...so the second run wrote exactly what the first did.
+            File.ReadAllBytes(Path.Combine(second, @"plan.zpp")).ShouldBe(File.ReadAllBytes(Path.Combine(first, @"plan.zpp")));
+            File.ReadAllBytes(Path.Combine(second, @"plan.xlsx")).ShouldBe(File.ReadAllBytes(Path.Combine(first, @"plan.xlsx")));
         }
 
         [Fact]

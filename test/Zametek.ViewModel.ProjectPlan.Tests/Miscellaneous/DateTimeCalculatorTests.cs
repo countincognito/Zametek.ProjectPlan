@@ -255,5 +255,64 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         #endregion
+
+        #region GetLocalToday
+
+        [Fact]
+        public void GetLocalToday_Given_TheSystemClock_Then_ItIsWhatDateTimeTodayGives()
+        {
+            var calc = CreateCalc();
+
+            // Either side of the call, in case it straddles midnight.
+            DateTimeOffset before = new(DateTime.Today);
+            DateTimeOffset today = calc.GetLocalToday();
+            DateTimeOffset after = new(DateTime.Today);
+
+            (today.DateTime, today.Offset).ShouldBeOneOf(
+                (before.DateTime, before.Offset),
+                (after.DateTime, after.Offset));
+        }
+
+        [Fact]
+        public void GetLocalToday_Given_AClockAheadOfUtc_Then_ItIsTheStartOfTheDayWhereTheClockIs()
+        {
+            // 20:00 UTC is already 01:30 the next morning at +05:30.
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test +05:30", TimeSpan.FromMinutes(330), @"Test +05:30", @"Test +05:30");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 9, 27, 20, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset today = calc.GetLocalToday();
+
+            today.DateTime.ShouldBe(new DateTime(2026, 9, 28));
+            today.Offset.ShouldBe(TimeSpan.FromMinutes(330));
+        }
+
+        [Fact]
+        public void GetLocalToday_Given_AClockBehindUtc_Then_ItIsTheStartOfTheDayWhereTheClockIs()
+        {
+            // 03:00 UTC is still 20:00 the evening before at -07:00.
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -07:00", TimeSpan.FromHours(-7), @"Test -07:00", @"Test -07:00");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 9, 27, 3, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset today = calc.GetLocalToday();
+
+            today.DateTime.ShouldBe(new DateTime(2026, 9, 26));
+            today.Offset.ShouldBe(TimeSpan.FromHours(-7));
+        }
+
+        [Fact]
+        public void GetLocalToday_Given_ADayTheClocksGoForward_Then_ItHasTheOffsetOfItsMidnight()
+        {
+            // London moves from GMT to BST at 01:00 on 29 March 2026, so that day's midnight is at +00:00 even
+            // when it is asked for at noon, which is at +01:00.
+            TimeZoneInfo london = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? @"GMT Standard Time" : @"Europe/London");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 3, 29, 11, 0, 0, TimeSpan.Zero), london));
+
+            DateTimeOffset today = calc.GetLocalToday();
+
+            today.DateTime.ShouldBe(new DateTime(2026, 3, 29));
+            today.Offset.ShouldBe(TimeSpan.Zero);
+        }
+
+        #endregion
     }
 }

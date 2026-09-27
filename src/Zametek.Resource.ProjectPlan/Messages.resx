@@ -375,6 +375,9 @@
   <data name="Message_OptionCannotBeNegative" xml:space="preserve">
     <value>{0} cannot be negative (use 0 for no limit).</value>
   </data>
+  <data name="Message_OptionMustBeADateTimeWithOffset" xml:space="preserve">
+    <value>{0} must be a date and time with its offset from UTC, such as 2026-09-27T12:00:00+01:00 or 2026-09-27T11:00:00Z.</value>
+  </data>
   <data name="Message_OptionRequiredWithOption" xml:space="preserve">
     <value>{0} is required when {1} is specified.</value>
   </data>

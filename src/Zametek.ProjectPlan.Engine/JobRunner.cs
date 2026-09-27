@@ -60,9 +60,11 @@ namespace Zametek.ProjectPlan.Engine
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
             IServiceProvider services = scope.ServiceProvider;
 
-            // First, so that whatever the job reports reaches this job's sink.
+            // First, so that whatever the job reports reaches this job's sink, and whatever it stamps is stamped
+            // with the time it runs at.
             JobDialogService dialogService = services.GetRequiredService<JobDialogService>();
             dialogService.Sink = sink;
+            services.GetRequiredService<JobClock>().Now = request.Now;
 
             return await RunAsync(request, sink, dialogService, services);
         }

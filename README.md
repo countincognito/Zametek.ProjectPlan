@@ -220,6 +220,8 @@ Everything zpp writes as text - stdout (except the `--help` text), saved project
 
 Every compilation runs under a watchdog: `--compile-timeout` gives it a budget in milliseconds (5000 by default), and a compilation that runs past it is cancelled and exits with code 4. Large plans can legitimately need longer, so raise it - or pass `--compile-timeout 0` to switch the limit off entirely - for a batch run that must not be interrupted. The desktop application applies the same budget, read from `CompilationTimeoutMilliseconds` in its settings file.
 
+A run takes its times from the clock: saving a project marks the scenario it loaded as modified now, an import creates its project now and - unless the file says otherwise - takes today as the plan's today, and an Excel export records when it was written. `--now` gives the run a time of its own instead, with its offset from UTC (`--now 2026-09-27T12:00:00+01:00`, or `Z` for UTC itself), so the same command writes the same files whenever it is run. The one exception is an import, which gives the project it creates new ids every time. Either way the times are shown in the machine's time zone, so two machines write the same times only if they share one.
+
 ### Exit codes
 
 The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.ProjectPlan.CommandLine.Tests` suite:

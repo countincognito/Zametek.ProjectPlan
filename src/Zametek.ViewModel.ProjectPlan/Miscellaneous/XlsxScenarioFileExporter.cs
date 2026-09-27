@@ -2,6 +2,7 @@ using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Collections;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Reflection;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -143,6 +144,23 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        // Restamps every part of a zipped package as last written at the given time. A zip holds the local clock time
+        // it was given, to the nearest two seconds and only between 1980 and 2107, so a time outside that is held at
+        // the nearer end. Updating an entry's time rewrites its headers but not its compressed data.
+        private static void StampEntries(MemoryStream package, DateTimeOffset localNow)
+        {
+            DateTimeOffset earliest = new(1980, 1, 1, 0, 0, 0, localNow.Offset);
+            DateTimeOffset latest = new(2107, 12, 31, 23, 59, 58, localNow.Offset);
+            DateTimeOffset lastWriteTime = localNow < earliest ? earliest : localNow > latest ? latest : localNow;
+
+            package.Position = 0;
+            using var archive = new ZipArchive(package, ZipArchiveMode.Update, leaveOpen: true);
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                entry.LastWriteTime = lastWriteTime;
+            }
+        }
 
         private static void DateFromProjectStart(
             int time,
@@ -1104,8 +1122,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
-            // The caller owns the stream, so the workbook leaves it open.
-            workbook.Write(stream, leaveOpen: true);
+            // NPOI stamps the workbook with the wall clock twice over: as the time it was created, and as the time
+            // each part of the package was last written, as it zips them. Both are stamped here with the
+            // calculator's clock instead, so that a workbook written at a given time is the same workbook
+            // wherever and however it is written - which means zipping it to memory first, to restamp the parts.
+            DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
+            workbook.GetProperties().CoreProperties.Created = localNow.UtcDateTime;
+
+            using var package = new MemoryStream();
+            workbook.Write(package, leaveOpen: true);
+            StampEntries(package, localNow);
+
+            // The caller owns the stream, so it is left open.
+            package.Position = 0;
+            package.CopyTo(stream);
         }
 
         #endregion

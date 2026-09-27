@@ -110,6 +110,18 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(HolidayModel.Notes)
         ];
 
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
+
+        #endregion
+
+        #region Ctors
+
+        public XlsxScenarioFileImporter(IDateTimeCalculator dateTimeCalculator)
+        {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            m_DateTimeCalculator = dateTimeCalculator;
+        }
+
         #endregion
 
         #region Private Members
@@ -990,8 +1002,8 @@ namespace Zametek.ViewModel.ProjectPlan
             copy.Position = 0;
 
             var workbook = new XSSFWorkbook(copy);
-            DateTimeOffset projectStart = new(DateTime.Today);
-            DateTimeOffset today = new(DateTime.Today);
+            DateTimeOffset projectStart = m_DateTimeCalculator.GetLocalToday();
+            DateTimeOffset today = projectStart;
 
             {
                 ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);

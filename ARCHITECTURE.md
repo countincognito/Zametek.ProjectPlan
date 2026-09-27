@@ -210,9 +210,10 @@ The rule of thumb: **if a surface renders the live settings objects, mirror the 
 
 The headless engine ([`JobRunner`](src/Zametek.ProjectPlan.Engine/JobRunner.cs)), which the `zpp` command-line tool runs on, is the bulk update idea taken to its logical end. Each job runs in a DI scope of its own, disposed when the job ends. Within it, the engine resolves each view model and immediately calls `KillSubscriptions()` (so no reactive pipeline exists at all), sets `core.AutoCompile = false`, and then drives everything explicitly: `RunCompile()` followed by the Build\* calls in the same dependency order as `RunBuildCascade`. Seams that only the reactive pipeline used to reach must be public for this to work - e.g. `IProjectScenarioManagerViewModel.BuildTrackedMetrics()`, which the GUI invokes via a subscription but the engine must call directly before building the scenario chart.
 
-Jobs run side by side, so one rule holds for everything a job reaches:
+Jobs run side by side, so two rules hold for everything a job reaches:
 
 - **No view model calls `Dispatcher.UIThread`.** Work that only the UI thread may do goes through [`IUIDispatcher`](src/Zametek.Contract.ProjectPlan/Miscellaneous/IUIDispatcher.cs) (and, inside the graph library, [`IGraphDispatcher`](src/Zametek.Graphs.Avalonia/Abstractions/IGraphDispatcher.cs)). The desktop's implementations are the UI thread, exactly as before; the engine's run the work inline, because a job has no UI thread and nothing pumps one - work posted there would be held, with the job's whole scope, for the life of the process. Views keep using the dispatcher directly.
+- **Nothing reads the wall clock.** The time comes from the scope's `IDateTimeCalculator` (`GetLocalNow()`, `GetLocalToday()`), never `DateTime.Now`, `DateTime.Today` or `DateTimeOffset.Now`, and a library that stamps the clock itself (NPOI, on every workbook it writes) is overridden. A job's calculator reads a `JobClock`, which is the host's clock unless the request fixes the time it runs at (`JobRequest.Now`, `zpp --now`).
 
 ## 12. Diagnostics
 

@@ -19,7 +19,8 @@ namespace Zametek.ProjectPlan.Engine
 
             services.AddLogging();
 
-            // Shared between jobs: immutable or stateless.
+            // Shared between jobs: immutable or stateless. The clock is the host's, which a job reads through a
+            // JobClock of its own.
             services.AddSingleton(TimeProvider.System);
             services.AddSingleton(new Data.ProjectPlan.VersionMapper());
             services.AddSingleton(new ProjectPlanMapper());
@@ -38,8 +39,11 @@ namespace Zametek.ProjectPlan.Engine
             services.AddScoped<IDialogService>(x => x.GetRequiredService<JobDialogService>());
             services.AddScoped<IDataGridScrollManager, DataGridScrollManager>();
 
+            // ...the job's clock, which reads the host's unless the request fixes the time...
+            services.AddScoped<JobClock>();
+
             // ...and the project, with everything that works on it.
-            services.AddScoped<IDateTimeCalculator, DateTimeCalculator>();
+            services.AddScoped<IDateTimeCalculator>(x => new DateTimeCalculator(x.GetRequiredService<JobClock>()));
 
             services.AddScoped<IGraphCompilationService, GraphCompilationService>();
             services.AddScoped<IResourceSchedulingService, ResourceSchedulingService>();

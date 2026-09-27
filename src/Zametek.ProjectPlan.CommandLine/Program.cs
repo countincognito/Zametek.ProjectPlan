@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Serilog;
 using Serilog.Events;
+using System.Globalization;
 using System.Reflection;
 using Zametek.Common.ProjectPlan;
 using Zametek.ProjectPlan.Engine;
@@ -31,6 +32,15 @@ namespace Zametek.ProjectPlan.CommandLine
         private const int c_ExitUsageError = 2;
         private const int c_ExitCompilationErrors = 3;
         private const int c_ExitCompilationTimeout = 4;
+
+        // What --now accepts: ISO 8601, to the second or finer, with the offset from UTC or Z for UTC itself.
+        private static readonly string[] s_NowFormats =
+        [
+            @"yyyy-MM-dd'T'HH:mm:sszzz",
+            @"yyyy-MM-dd'T'HH:mm:ss.FFFFFFFzzz",
+            @"yyyy-MM-dd'T'HH:mm:ss'Z'",
+            @"yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'",
+        ];
 
         public static async Task<int> Main(string[] args)
         {
@@ -151,6 +161,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 Scenario = options.Scenario,
                 BaseTheme = options.BaseTheme,
                 CompileTimeoutMilliseconds = options.CompileTimeoutMilliseconds,
+                Now = ToNow(options.Now),
                 SaveProject = options.OutputFilename is not null,
                 ExportFormat = exportFormat,
                 GanttChart = ToChartOutputRequest(options.GanttDirectory, options.GanttFormat, options.GanttSize),
@@ -336,6 +347,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionCannotBeNegative, OptionLongName(nameof(Options.CompileTimeoutMilliseconds))));
             }
 
+            // Without its offset the same time would be a different instant on
+            // each machine, which is the one thing a fixed time is there to stop.
+            if (options.Now is not null
+                && !TryParseNow(options.Now, out _))
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionMustBeADateTimeWithOffset, OptionLongName(nameof(Options.Now))));
+            }
+
             RequireSize(
                 options.GanttDirectory,
                 options.GanttSize,
@@ -432,6 +451,25 @@ namespace Zametek.ProjectPlan.CommandLine
             return directory is null
                 ? null
                 : new GraphOutputRequest(ToGraphExportFormat(format));
+        }
+
+        // The time the options fix the run at, if they fix one. ValidateOptions has
+        // checked that a time they give parses.
+        private static DateTimeOffset? ToNow(string? now)
+        {
+            return now is not null && TryParseNow(now, out DateTimeOffset result)
+                ? result
+                : null;
+        }
+
+        internal static bool TryParseNow(string now, out DateTimeOffset result)
+        {
+            return DateTimeOffset.TryParseExact(
+                now,
+                s_NowFormats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal,
+                out result);
         }
 
         // The file each output the options ask for is written to: the project and

@@ -645,6 +645,14 @@ namespace Zametek.ViewModel.ProjectPlan
             return m_TimeProvider.GetLocalNow();
         }
 
+        // The start of today where the clock is - what DateTime.Today gives, but from this calculator's
+        // clock and time zone rather than the machine's.
+        public DateTimeOffset GetLocalToday()
+        {
+            DateTime today = m_TimeProvider.GetLocalNow().Date;
+            return new(today, m_TimeProvider.LocalTimeZone.GetUtcOffset(today));
+        }
+
         public DateTimeOffset GetLocal(DateTime dateTime)
         {
             var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);

@@ -21,6 +21,11 @@ namespace Zametek.ProjectPlan.Engine
         // Milliseconds a compilation may run before it is cancelled, or 0 for no limit.
         public int CompileTimeoutMilliseconds { get; init; } = AppSettingsModel.DefaultCompilationTimeoutMilliseconds;
 
+        // The time the job runs at: the time it stamps on what it creates or modifies, and the day an imported plan
+        // starts on. When it is not set, the job reads the host's clock. Either way the time is given in the host's time
+        // zone, so the same instant gives the same outputs only on hosts that share one.
+        public DateTimeOffset? Now { get; init; }
+
         // JobOutput.Project: the project, with the scenario the job loaded as its current scenario.
         public bool SaveProject { get; init; }
 
