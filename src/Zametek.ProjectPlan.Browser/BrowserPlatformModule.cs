@@ -5,9 +5,9 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ProjectPlan.Browser
 {
     /// <summary>
-    /// The three services <see cref="Core.CompositionRoot"/> cannot register for itself, in their
-    /// browser forms: settings held for the lifetime of the page, dialogs shown as popups over the
-    /// application root, and an MS Project importer that reports it is unavailable.
+    /// The three services <see cref="Shell.ProjectPlan.CompositionRoot"/> cannot register for
+    /// itself, in their browser forms: settings held for the lifetime of the page, dialogs shown as
+    /// popups over the application root, and an MS Project importer that reports it is unavailable.
     /// </summary>
     public sealed class BrowserPlatformModule
         : Module

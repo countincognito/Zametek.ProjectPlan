@@ -13,11 +13,11 @@
 	     sit on disk and is resolved via Assembly.Location, both of which a default single-file bundle
 	     breaks - the '<Module>' initializer then throws on MS Project import. Self-extracting ALL content
 	     restores the image on disk and a real Assembly.Location. Inert unless PublishSingleFile=true. See
-	     Zametek.ProjectPlan.csproj for the full explanation. -->
+	     Zametek.ProjectPlan.Desktop.csproj for the full explanation. -->
 	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
 	<!-- SelfContained and PublishSingleFile are passed explicitly on the publish/build command line (see
 	     makefile), not set here - shipping-critical flags kept explicit and loud. See
-	     Zametek.ProjectPlan.csproj for the rationale. -->
+	     Zametek.ProjectPlan.Desktop.csproj for the rationale. -->
 	<!-- PlatformTarget is deliberately NOT set; see Zametek.ProjectPlan.Desktop.csproj for the full
 	     explanation. In short: pinning it to AnyCPU stamped this assembly MSIL while its references followed
 	     the RID, which raised MSB3270 against every reference on every architecture. -->
@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zametek.ProjectPlan.Engine\Zametek.ProjectPlan.Engine.csproj" />
+    <ProjectReference Include="..\Zametek.Engine.ProjectPlan\Zametek.Engine.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
 

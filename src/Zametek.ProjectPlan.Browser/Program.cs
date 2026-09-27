@@ -3,7 +3,7 @@ using Avalonia.Browser;
 using ReactiveUI.Avalonia;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
-using Zametek.ProjectPlan.Core;
+using Zametek.Shell.ProjectPlan;
 
 namespace Zametek.ProjectPlan.Browser
 {

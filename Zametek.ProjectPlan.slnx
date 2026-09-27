@@ -27,6 +27,9 @@
     <Project Path="src/Zametek.Data.ProjectPlan/Zametek.Data.ProjectPlan.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
+    <Project Path="src/Zametek.Engine.ProjectPlan/Zametek.Engine.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="src/Zametek.Graphs.Avalonia/Zametek.Graphs.Avalonia.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
@@ -36,18 +39,15 @@
       <Platform Solution="*|x86" Project="x86" />
     </Project>
     <Project Path="src/Zametek.ProjectPlan.Browser/Zametek.ProjectPlan.Browser.csproj" />
-    <Project Path="src/Zametek.ProjectPlan.Core/Zametek.ProjectPlan.Core.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-    </Project>
     <Project Path="src/Zametek.ProjectPlan.Desktop/Zametek.ProjectPlan.Desktop.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
     </Project>
-    <Project Path="src/Zametek.ProjectPlan.Engine/Zametek.ProjectPlan.Engine.csproj">
+    <Project Path="src/Zametek.Resource.ProjectPlan/Zametek.Resource.ProjectPlan.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
-    <Project Path="src/Zametek.Resource.ProjectPlan/Zametek.Resource.ProjectPlan.csproj">
+    <Project Path="src/Zametek.Shell.ProjectPlan/Zametek.Shell.ProjectPlan.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="src/Zametek.View.ProjectPlan/Zametek.View.ProjectPlan.csproj">
@@ -61,6 +61,9 @@
     <Project Path="test/Zametek.Data.ProjectPlan.Tests/Zametek.Data.ProjectPlan.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
+    <Project Path="test/Zametek.Engine.ProjectPlan.Tests/Zametek.Engine.ProjectPlan.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="test/Zametek.Graphs.Avalonia.TestApp/Zametek.Graphs.Avalonia.TestApp.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -70,9 +73,6 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="test/Zametek.ProjectPlan.CommandLine.Tests/Zametek.ProjectPlan.CommandLine.Tests.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-    </Project>
-    <Project Path="test/Zametek.ProjectPlan.Engine.Tests/Zametek.ProjectPlan.Engine.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj">

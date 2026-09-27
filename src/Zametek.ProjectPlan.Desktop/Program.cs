@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using ReactiveUI.Avalonia;
 using System;
-using Zametek.ProjectPlan.Core;
+using Zametek.Shell.ProjectPlan;
 
 namespace Zametek.ProjectPlan.Desktop
 {

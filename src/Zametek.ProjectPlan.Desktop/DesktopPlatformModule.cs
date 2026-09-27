@@ -7,9 +7,9 @@ using Zametek.ViewModel.ProjectPlan;
 namespace Zametek.ProjectPlan.Desktop
 {
     /// <summary>
-    /// The three services <see cref="Core.CompositionRoot"/> cannot register for itself, in their
-    /// desktop forms: settings persisted as JSON files under the user's profile, dialogs and file
-    /// pickers owned by a real window, and MS Project import through MPXJ.
+    /// The three services <see cref="Shell.ProjectPlan.CompositionRoot"/> cannot register for
+    /// itself, in their desktop forms: settings persisted as JSON files under the user's profile,
+    /// dialogs and file pickers owned by a real window, and MS Project import through MPXJ.
     /// </summary>
     public sealed class DesktopPlatformModule
         : Module

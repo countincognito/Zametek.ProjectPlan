@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>AnyCPU;ARM64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The engine runs a plan from bytes in to bytes out, one job per scope of whatever container its host builds,
+         so it takes nothing here beyond the container and logging abstractions: no console, no file paths, no
+         command line. Those belong to the heads that host it - zpp today, and `zpp serve` after it. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
+    <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Zametek.Engine.ProjectPlan.Tests" />
+  </ItemGroup>
+
+</Project>

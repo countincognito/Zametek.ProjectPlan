@@ -9,17 +9,17 @@
 		<v:ViewLocator />
 	</Application.DataTemplates>
 
-	<!-- The styles and resources themselves live in Zametek.ProjectPlan.Core so that every head - desktop,
+	<!-- The styles and resources themselves live in Zametek.Shell.ProjectPlan so that every head - desktop,
 	     browser - presents the same application. Anything genuinely browser-only would be added here, after
 	     the include, so that it overrides the shared set. -->
 	<Application.Styles>
-		<StyleInclude Source="avares://Zametek.ProjectPlan.Core/Themes/AppStyles.axaml" />
+		<StyleInclude Source="avares://Zametek.Shell.ProjectPlan/Themes/AppStyles.axaml" />
 	</Application.Styles>
 
 	<Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
-				<ResourceInclude Source="avares://Zametek.ProjectPlan.Core/Themes/AppResources.axaml" />
+				<ResourceInclude Source="avares://Zametek.Shell.ProjectPlan/Themes/AppResources.axaml" />
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</Application.Resources>

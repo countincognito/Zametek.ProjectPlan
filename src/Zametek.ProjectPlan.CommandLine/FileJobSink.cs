@@ -1,4 +1,4 @@
-using Zametek.ProjectPlan.Engine;
+using Zametek.Engine.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine

@@ -1,7 +1,7 @@
 using Shouldly;
 using Xunit;
 using Zametek.Common.ProjectPlan;
-using Zametek.ProjectPlan.Engine;
+using Zametek.Engine.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
