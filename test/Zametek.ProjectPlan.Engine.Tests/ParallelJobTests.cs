@@ -6,18 +6,19 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.ProjectPlan.Engine.Tests
 {
     /// <summary>
-    /// Jobs running at the same time on one runner each produce exactly what they
-    /// produce on their own: nothing one job holds - its scenario, its theme - reaches
-    /// another, and nothing they share breaks under them. On Windows this is what
-    /// catches a chart written as SVG while others draw losing its text (see
-    /// ScottPlotImageExporter).
+    /// Jobs running at the same time on one runner each produce, byte for byte, what
+    /// they produce on their own: nothing one job holds - its scenario, its theme -
+    /// reaches another, nothing they share breaks under them, and nothing a job writes
+    /// depends on what was drawn before it. On Windows this is what catches a chart
+    /// written as SVG while others draw losing its text (see ScottPlotImageExporter).
     /// </summary>
     public class ParallelJobTests
     {
         // How many times each job runs among the others.
         private const int c_Rounds = 3;
 
-        // A fixed clock, so that every run of a job saves the same project.
+        // A fixed clock, so that every run of a job saves the same project and exports the
+        // same workbook: both are stamped with the time.
         private static readonly DateTimeOffset s_Now = new(2026, 9, 26, 12, 0, 0, TimeSpan.Zero);
 
         public ParallelJobTests()
@@ -84,9 +85,7 @@ namespace Zametek.ProjectPlan.Engine.Tests
 
                 foreach ((JobOutput output, byte[] content) in run.Sink.Outputs)
                 {
-                    OutputComparison.Comparable(output, content).ShouldBe(
-                        OutputComparison.Comparable(output, expected.Sink[output]),
-                        $@"{run.Name} {output}");
+                    content.ShouldBe(expected.Sink[output], $@"{run.Name} {output}");
                 }
             }
         }

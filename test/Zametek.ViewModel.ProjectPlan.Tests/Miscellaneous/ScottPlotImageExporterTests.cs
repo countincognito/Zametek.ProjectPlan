@@ -61,5 +61,43 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             data[0].ShouldNotBe((byte)0xEF);
             Encoding.UTF8.GetString(data).ShouldContain(@"<svg");
         }
+
+        [Fact]
+        public async Task WritePlotImageAsync_Given_TheSameChartAsSvgTwice_Then_TheSameBytes()
+        {
+            // Skia numbers clip paths from a counter as old as the process, so without renumbering the second
+            // chart would carry on from the first one's ids.
+            byte[] first = await WriteAsync(ChartImageFormat.Svg);
+            byte[] second = await WriteAsync(ChartImageFormat.Svg);
+
+            Encoding.UTF8.GetString(first).ShouldContain(@"<clipPath id=""cl_0"">");
+            second.ShouldBe(first);
+        }
+
+        [Fact]
+        public void WithClipPathsNumberedInOrder_Given_SkiasIds_Then_NumbersThemFromNoughtInOrderOfAppearance()
+        {
+            string svg =
+                @"<clipPath id=""cl_3b""><rect/></clipPath><g clip-path=""url(#cl_3b)""/>" +
+                @"<clipPath id=""cl_4""><rect/></clipPath><g clip-path=""url(#cl_4)""/><g clip-path=""url(#cl_3b)""/>" +
+                // Only the attributes are ids: text that happens to look like one is the chart's to keep.
+                @"<text>url(#cl_4) id=cl_3b</text>";
+
+            ScottPlotImageExporter.WithClipPathsNumberedInOrder(svg).ShouldBe(
+                @"<clipPath id=""cl_0""><rect/></clipPath><g clip-path=""url(#cl_0)""/>" +
+                @"<clipPath id=""cl_1""><rect/></clipPath><g clip-path=""url(#cl_1)""/><g clip-path=""url(#cl_0)""/>" +
+                @"<text>url(#cl_4) id=cl_3b</text>");
+        }
+
+        [Fact]
+        public void WithClipPathsNumberedInOrder_Given_MoreThanSixteenIds_Then_CountsInHexadecimalAsSkiaDoes()
+        {
+            string svg = string.Concat(Enumerable.Range(100, 17).Select(x => $@"<clipPath id=""cl_{x:x}""/>"));
+
+            string renumbered = ScottPlotImageExporter.WithClipPathsNumberedInOrder(svg);
+
+            renumbered.ShouldStartWith(@"<clipPath id=""cl_0""/>");
+            renumbered.ShouldEndWith(@"<clipPath id=""cl_f""/><clipPath id=""cl_10""/>");
+        }
     }
 }

@@ -1,5 +1,9 @@
+using System.Globalization;
+
 namespace Zametek.Graphs.Avalonia
 {
+    // Dot is a file for other programs to read, so every number in it is written the same whatever the culture:
+    // penwidth=1.5, never penwidth=1,5.
     public static class GraphVizBuilder
     {
         public static string ToGraphViz(DiagramGraphModel diagramGraph)
@@ -25,7 +29,7 @@ namespace Zametek.Graphs.Avalonia
                 double nodeBorderWidth = node.BorderThickness;
                 string nodeBorderColor = node.BorderColorHexCode ?? @"black";
 
-                string nodeOutput = $"\"{node.Id}\" [ label=\"{label}\" tooltip=\"{tooltip}\" shape=\"rectangle\" height=.3 width=.1 style=\"{style},filled,rounded\" fillcolor=\"#e7e7e7\" fontsize=8 fontname=\"Consolas\" penwidth={nodeBorderWidth} color=\"{nodeBorderColor}\" ];";
+                string nodeOutput = string.Create(CultureInfo.InvariantCulture, $"\"{node.Id}\" [ label=\"{label}\" tooltip=\"{tooltip}\" shape=\"rectangle\" height=.3 width=.1 style=\"{style},filled,rounded\" fillcolor=\"#e7e7e7\" fontsize=8 fontname=\"Consolas\" penwidth={nodeBorderWidth} color=\"{nodeBorderColor}\" ];");
                 lines.Add(nodeOutput);
             }
 
@@ -41,7 +45,7 @@ namespace Zametek.Graphs.Avalonia
                 string label = edge.ShowLabel ? edge.Label ?? string.Empty : string.Empty;
                 string edgeColor = edge.ForegroundColorHexCode ?? string.Empty;
 
-                string activity = $"\"{edge.SourceId}\" -> \"{edge.TargetId}\" [ id=\"{edge.Id}\" style=\"{style}\" edgetooltip=\"{tooltip}\" labeltooltip=\"{tooltip}\" color=\"{edgeColor}\" fontsize=8 fontname=\"Consolas\" label=\"{label}\" ];";
+                string activity = string.Create(CultureInfo.InvariantCulture, $"\"{edge.SourceId}\" -> \"{edge.TargetId}\" [ id=\"{edge.Id}\" style=\"{style}\" edgetooltip=\"{tooltip}\" labeltooltip=\"{tooltip}\" color=\"{edgeColor}\" fontsize=8 fontname=\"Consolas\" label=\"{label}\" ];");
 
                 lines.Add(activity);
             }

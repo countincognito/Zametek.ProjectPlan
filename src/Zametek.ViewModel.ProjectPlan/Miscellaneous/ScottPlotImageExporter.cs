@@ -1,6 +1,8 @@
 using ScottPlot;
 using SkiaSharp;
+using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -15,6 +17,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // The encoding ScottPlot saves an SVG file in: UTF-8, with no byte order mark.
         private static readonly UTF8Encoding s_SvgEncoding = new(encoderShouldEmitUTF8Identifier: false);
+
+        // A clip path's id where Skia's SVG canvas defines it (<clipPath id="cl_3b">) and where it uses it
+        // (clip-path="url(#cl_3b)"): the only places it writes one. Both are attributes, so no text in a chart can
+        // look like either - its quotes are escaped.
+        private static readonly Regex s_ClipPathId = new(
+            @"(?<= id=""|clip-path=""url\(#)cl_[0-9a-f]+(?=[""\)])",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         // Every chart draws in the same two bundled typefaces, and on Windows a typeface cannot be shared
         // while an SVG is written: Skia turns each run of glyphs back into characters for the SVG's text, and
@@ -42,7 +51,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void WriteSvg(Plot plot, Stream stream, int width, int height)
         {
-            stream.Write(s_SvgEncoding.GetBytes(plot.GetSvgXml(width, height)));
+            stream.Write(s_SvgEncoding.GetBytes(WithClipPathsNumberedInOrder(plot.GetSvgXml(width, height))));
+        }
+
+        // Skia numbers the clip paths of every SVG it writes from one counter that lasts as long as the process, so
+        // the same chart written twice came out with different ids, depending on everything drawn before it. Each
+        // document numbers its own instead, from nought in order of appearance - in hexadecimal, as Skia does.
+        internal static string WithClipPathsNumberedInOrder(string svg)
+        {
+            var numbers = new Dictionary<string, int>(StringComparer.Ordinal);
+            return s_ClipPathId.Replace(svg, match =>
+            {
+                if (!numbers.TryGetValue(match.Value, out int number))
+                {
+                    number = numbers.Count;
+                    numbers.Add(match.Value, number);
+                }
+                return string.Create(CultureInfo.InvariantCulture, $@"cl_{number:x}");
+            });
         }
 
         private static void WriteRaster(Plot plot, Stream stream, ImageFormat imageFormat, int width, int height)

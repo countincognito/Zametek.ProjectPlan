@@ -345,9 +345,7 @@ namespace Zametek.ProjectPlan.Engine.Tests
 
             foreach ((JobOutput output, byte[] content) in afterAnotherSink.Outputs)
             {
-                OutputComparison.Comparable(output, content).ShouldBe(
-                    OutputComparison.Comparable(output, aloneSink[output]),
-                    output.ToString());
+                content.ShouldBe(aloneSink[output], output.ToString());
             }
         }
 
