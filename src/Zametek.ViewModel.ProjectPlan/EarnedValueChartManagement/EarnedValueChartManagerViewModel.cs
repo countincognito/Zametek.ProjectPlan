@@ -103,7 +103,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
             IScottPlotImageExporter scottPlotImageExporter,
-            IResourceSchedulingService resourceSchedulingService)
+            IResourceSchedulingService resourceSchedulingService,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
@@ -111,6 +112,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             ArgumentNullException.ThrowIfNull(resourceSchedulingService);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -119,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceSchedulingService = resourceSchedulingService;
             m_EarnedValueChartPlotModel = new Plot();
-            m_PlotRetirer = new PlotRetirer();
+            m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
             m_ResourceSelector = new EarnedValueResourceSelectorViewModel(coreViewModel);
             ResourceSelector = m_ResourceSelector;

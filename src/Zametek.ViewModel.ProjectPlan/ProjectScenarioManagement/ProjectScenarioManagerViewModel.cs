@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -32,6 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IUIDispatcher m_UIDispatcher;
         private readonly ConcurrentDictionary<Guid, IManagedNodeViewModel> m_ManagedNodeLookup;
         private readonly ConcurrentDictionary<Guid, ProjectScenarioFileModel> m_FileScenarioLookup;
         private readonly ConcurrentDictionary<Guid, List<string>> m_NodeTagLookup;
@@ -56,17 +56,20 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IDateTimeCalculator dateTimeCalculator)
+            IDateTimeCalculator dateTimeCalculator,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_UIDispatcher = uiDispatcher;
             m_NodeSortComparer = new(ProjectScenarioNodeHelper.BuildSortComparer(SortMode.CreatedOn, SortDirection.Ascending));
             Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
@@ -1361,7 +1364,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task InvokeNodeActionChecksAsync()
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await m_UIDispatcher.InvokeAsync(() =>
             {
                 m_NodeActionCommandManualTrigger.OnNext(true);
             });
@@ -1656,7 +1659,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private async Task AddNodeTagInternalAsync(ProjectScenarioTagModel tagModel, IManagedNodeViewModel managedNodeViewModel) =>
-            await Dispatcher.UIThread.InvokeAsync(() => AddNodeTagInternal(tagModel, managedNodeViewModel));
+            await m_UIDispatcher.InvokeAsync(() => AddNodeTagInternal(tagModel, managedNodeViewModel));
 
         private void AddNodeTagInternal(
             ProjectScenarioTagModel tagModel,
@@ -1725,7 +1728,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private async Task RemoveNodeTagInternalAsync(ProjectScenarioTagModel tagModel, IManagedNodeViewModel managedNodeViewModel) =>
-            await Dispatcher.UIThread.InvokeAsync(() => RemoveNodeTagInternal(tagModel, managedNodeViewModel));
+            await m_UIDispatcher.InvokeAsync(() => RemoveNodeTagInternal(tagModel, managedNodeViewModel));
 
         private void RemoveNodeTagInternal(
             ProjectScenarioTagModel tagModel,
@@ -1785,7 +1788,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                await Dispatcher.UIThread.InvokeAsync(ChangeSortInternal);
+                await m_UIDispatcher.InvokeAsync(ChangeSortInternal);
             }
             catch (Exception ex)
             {

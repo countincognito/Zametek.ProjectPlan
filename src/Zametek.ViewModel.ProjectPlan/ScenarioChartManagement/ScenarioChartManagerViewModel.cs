@@ -116,7 +116,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
-            IScottPlotImageExporter scottPlotImageExporter)
+            IScottPlotImageExporter scottPlotImageExporter,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
@@ -124,6 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
@@ -132,7 +134,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ScenarioChartPlotModel = new Plot();
-            m_PlotRetirer = new PlotRetirer();
+            m_PlotRetirer = new PlotRetirer(uiDispatcher);
             m_CurveFittingFormulaY1 = string.Empty;
             m_CurveFittingFormulaY2 = string.Empty;
 

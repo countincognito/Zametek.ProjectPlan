@@ -71,6 +71,16 @@ namespace Zametek.ProjectPlan.Core
 
             // Services and ViewModels.
             s_Builder.RegisterInstance(TimeProvider.System);
+            // Where the view models put work that only the UI thread may do. This head has one, so
+            // both of these are Avalonia's dispatcher; a headless host runs the same work inline.
+            s_Builder.RegisterType<AvaloniaUIDispatcher>()
+                .As<IUIDispatcher>()
+                .As<AvaloniaUIDispatcher>()
+                .SingleInstance();
+            s_Builder.RegisterType<AvaloniaGraphDispatcher>()
+                .As<IGraphDispatcher>()
+                .As<AvaloniaGraphDispatcher>()
+                .SingleInstance();
             s_Builder.RegisterType<DateTimeCalculator>()
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()

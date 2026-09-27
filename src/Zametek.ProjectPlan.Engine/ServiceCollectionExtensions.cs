@@ -23,6 +23,9 @@ namespace Zametek.ProjectPlan.Engine
             services.AddSingleton(TimeProvider.System);
             services.AddSingleton(new Data.ProjectPlan.VersionMapper());
             services.AddSingleton(new ProjectPlanMapper());
+            // A job has no UI thread, so the work the view models would hand to one runs inline.
+            services.AddSingleton<IUIDispatcher, InlineUIDispatcher>();
+            services.AddSingleton<IGraphDispatcher, InlineGraphDispatcher>();
             services.AddSingleton<IGraphLayoutEngine, MsaglGraphLayoutEngine>();
             services.AddSingleton<IScottPlotImageExporter, ScottPlotImageExporter>();
             services.AddSingleton<IProjectFileSave, ProjectFileSave>();

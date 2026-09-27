@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Threading;
 using ReactiveUI;
 using SkiaSharp;
 using Svg.Skia;
@@ -26,6 +25,9 @@ namespace Zametek.Graphs.Avalonia
         private readonly IGraphLayoutEngine m_LayoutEngine;
         private readonly IGraphSerializer m_Serializer;
         private readonly IInteractiveEdgeRouter m_EdgeRouter;
+
+        // Where the work that a UI host may only do on its UI thread goes (see IGraphDispatcher).
+        private readonly IGraphDispatcher m_Dispatcher;
 
         // The live per-graph configuration (seeded from the preset passed in). It drives the layout/SVG
         // build and the routing-mode menu; the routing-mode command swaps the whole immutable record.
@@ -72,22 +74,25 @@ namespace Zametek.Graphs.Avalonia
             IGraphLayoutEngine layoutEngine,
             IGraphSerializer serializer,
             GraphConfiguration configuration,
-            GraphAppearance? appearance = null)
-            : this(host, layoutEngine, serializer, configuration, edgeRouter: null, appearance)
+            GraphAppearance? appearance = null,
+            IGraphDispatcher? dispatcher = null)
+            : this(host, layoutEngine, serializer, configuration, edgeRouter: null, appearance, dispatcher)
         {
         }
 
         // Router-injecting overload: supply a custom IInteractiveEdgeRouter (e.g. a future B that keeps a
         // persistent live router and reroutes only the dragged node's incident edges) or pass null to use
         // the default MSAGL router. Also used by the tests. The optional GraphAppearance re-skins the
-        // node/edge presentation (null = the original look).
+        // node/edge presentation (null = the original look), and the optional IGraphDispatcher says where
+        // the work a UI host may only do on its UI thread goes (null = Avalonia's UI thread).
         public InteractiveGraphViewModel(
             IGraphHost host,
             IGraphLayoutEngine layoutEngine,
             IGraphSerializer serializer,
             GraphConfiguration configuration,
             IInteractiveEdgeRouter? edgeRouter,
-            GraphAppearance? appearance = null)
+            GraphAppearance? appearance = null,
+            IGraphDispatcher? dispatcher = null)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(layoutEngine);
@@ -101,6 +106,8 @@ namespace Zametek.Graphs.Avalonia
             // Defaulted (not injected) so the manager view-models stay simple; a future B (live
             // rerouting) can inject a persistent router behind the same interface.
             m_EdgeRouter = edgeRouter ?? new MsaglInteractiveEdgeRouter();
+            // Defaulted to the UI thread, which is where all but a headless host wants this work.
+            m_Dispatcher = dispatcher ?? new AvaloniaGraphDispatcher();
 
             SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(() => SaveInteractiveImageAsync(DefaultExportMode));
             SaveGraphImageWithModeCommand = ReactiveCommand.CreateFromTask<GraphExportMode>(SaveInteractiveImageAsync);
@@ -207,15 +214,28 @@ namespace Zametek.Graphs.Avalonia
         #region Public Methods
 
         // Rebuild the interactive node/edge view-models from a fresh MSAGL layout. Called on the
-        // host's rebuild notification (off the UI thread); the populate is marshalled to the UI
-        // thread. Re-raises Theme/ShowNames so the background and the menu check-box stay in step.
+        // host's rebuild notification (off the UI thread); the populate is marshalled through the
+        // dispatcher. Re-raises Theme/ShowNames so the background and the menu check-box stay in step.
         public void Refresh()
         {
+            // The host's first notification fires as this view-model subscribes to it and arrives on
+            // a pool thread, so a refresh can still be on its way when the owner disposes the graph -
+            // which is what a host that only exports does, immediately. What it would populate then
+            // has nothing left to draw it, and what it would report has no one left to report to.
+            if (m_Disposed)
+            {
+                return;
+            }
+
             try
             {
                 GraphLayoutModel layout = BuildLayout();
-                Dispatcher.UIThread.Invoke(() =>
+                m_Dispatcher.Invoke(() =>
                 {
+                    if (m_Disposed)
+                    {
+                        return;
+                    }
                     PopulateInteractiveGraph(layout);
                     this.RaisePropertyChanged(nameof(Theme));
                     this.RaisePropertyChanged(nameof(ShowNames));
@@ -225,7 +245,10 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                Dispatcher.UIThread.Post(async () => await m_Host.ReportErrorAsync(ex.Message));
+                if (!m_Disposed)
+                {
+                    m_Dispatcher.Post(async () => await m_Host.ReportErrorAsync(ex.Message));
+                }
             }
         }
 
@@ -496,7 +519,11 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                await m_Host.ReportErrorAsync(ex.Message);
+                // Once the graph is disposed there is no one left to report to (see Refresh).
+                if (!m_Disposed)
+                {
+                    await m_Host.ReportErrorAsync(ex.Message);
+                }
             }
             finally
             {
@@ -842,7 +869,7 @@ namespace Zametek.Graphs.Avalonia
             GraphExportMode effectiveMode = provider is not null ? mode : GraphExportMode.Vector;
 
             SKPicture? picture = null;
-            Dispatcher.UIThread.Invoke(() =>
+            m_Dispatcher.Invoke(() =>
                 picture = provider is not null
                     ? provider.RenderPicture(effectiveMode)
                     : InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, GraphVectorExportStyle.Default, m_Appearance, Theme));
@@ -903,7 +930,9 @@ namespace Zametek.Graphs.Avalonia
 
         #region IDisposable Members
 
-        private bool m_Disposed = false;
+        // Volatile: Refresh reads it from whichever thread the host's rebuild notification arrives
+        // on, while the owner disposes the graph from its own.
+        private volatile bool m_Disposed = false;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -911,6 +940,10 @@ namespace Zametek.Graphs.Avalonia
             {
                 return;
             }
+
+            // Set before anything is torn down, so that a refresh still on its way sees it and
+            // leaves the node and edge view-models alone (see Refresh).
+            m_Disposed = true;
 
             if (disposing)
             {
@@ -922,8 +955,6 @@ namespace Zametek.Graphs.Avalonia
                     edge.Dispose();
                 }
             }
-
-            m_Disposed = true;
         }
 
         public void Dispose()

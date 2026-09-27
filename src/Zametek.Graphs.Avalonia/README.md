@@ -66,6 +66,7 @@ Key types:
 | **`IGraphSerializer`** → `GraphSerializer` | GraphML / GraphViz output. | use the default |
 | **`GraphConfiguration`** (+ `GraphConfigurations.Arrow` / `.Vertex`) | Per‑graph layout tuning (node/label sizes, routing). | pick a preset |
 | **`GraphAppearance`** | Themable presentation (brushes, fonts, opacities). *Optional.* | optional re‑skin |
+| **`IGraphDispatcher`** → `AvaloniaGraphDispatcher` / `InlineGraphDispatcher` | Where work that must reach the UI thread goes. *Optional.* | the default, or inline for a host with no UI thread |
 
 The same `InteractiveGraphViewModel` serves both arrow and vertex graphs - the difference is just the
 `GraphConfiguration` preset and (optionally) a `GraphAppearance` / templates.
@@ -138,6 +139,7 @@ var interactive = new InteractiveGraphViewModel(
     new GraphSerializer(),          // default GraphML/GraphViz serializer
     GraphConfigurations.Arrow);     // or .Vertex, or your own GraphConfiguration
     // optional 5th arg: a GraphAppearance to re-skin (see below)
+    // optional named arg dispatcher: an IGraphDispatcher (see Threading & gotchas)
 
 // Expose it to your view as IInteractiveGraph:
 public IInteractiveGraph Interactive => interactive;
@@ -538,7 +540,12 @@ Provided by the control with no extra work:
   (e.g. `TaskPoolScheduler.Default`) so the MSAGL pass never blocks the UI. The view‑model marshals the
   results back to the UI thread itself.
 - **Exports render on the UI thread.** Rasterising the real templates must run on it - the built‑in
-  copy/save paths already do (`Dispatcher.UIThread`).
+  copy/save paths already do.
+- **The UI thread is an `IGraphDispatcher`.** The view‑model reaches the UI thread through one, and by
+  default it is `AvaloniaGraphDispatcher` - `Dispatcher.UIThread`. A host with no UI thread (an automated
+  export, a server) passes `InlineGraphDispatcher` instead, which runs that work where it is asked for:
+  nothing pumps a dispatcher there, so work posted to one would never run, and would hold the graph for
+  the life of the process. A refresh still on its way when the view‑model is disposed does nothing.
 - **Immutable brushes only.** Avalonia ties a mutable brush (an `AvaloniaObject`) to the dispatcher of
   the thread that creates it, and the compositor verifies that ownership the first time the brush is
   drawn - a brush created off the UI thread crashes the render loop with "The calling thread cannot

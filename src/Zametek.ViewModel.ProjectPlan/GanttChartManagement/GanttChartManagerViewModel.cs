@@ -106,13 +106,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
-            IScottPlotImageExporter scottPlotImageExporter)
+            IScottPlotImageExporter scottPlotImageExporter,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -123,7 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel);
 
             m_GanttChartPlotModel = new Plot();
-            m_PlotRetirer = new PlotRetirer();
+            m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
             ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
             ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);

@@ -1,5 +1,5 @@
-using Avalonia.Threading;
 using ScottPlot;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -16,9 +16,10 @@ namespace Zametek.ViewModel.ProjectPlan
     /// <para>
     /// - The UI: the swap raises a property change that data binding processes on the UI thread,
     ///   which may be later than the swap itself (the chart rebuilds run on the taskpool). The
-    ///   view only re-hosts the new plot when that binding lands, so disposal is
-    ///   posted to the UI thread at Background priority, which runs only after pending binding
-    ///   updates and render passes have finished with the old plot.
+    ///   view only re-hosts the new plot when that binding lands, so disposal is deferred through
+    ///   the dispatcher, which on the UI thread runs it only after pending binding updates and
+    ///   render passes have finished with the old plot. Headless nothing is bound to the plot and
+    ///   nothing renders it, so the dispatcher there disposes it where it stands.
     /// </para>
     /// <para>
     /// - Image exports: RenderChartImageAsync and the save-image commands snapshot the current
@@ -34,12 +35,15 @@ namespace Zametek.ViewModel.ProjectPlan
         : IDisposable
     {
         private readonly Lock m_Lock;
+        private readonly IUIDispatcher m_UIDispatcher;
         private Plot? m_Retired;
         private bool m_Disposed;
 
-        public PlotRetirer()
+        public PlotRetirer(IUIDispatcher uiDispatcher)
         {
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
+            m_UIDispatcher = uiDispatcher;
         }
 
         public void Retire(Plot outgoing)
@@ -62,9 +66,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (previous is not null)
             {
-                // Background priority runs after data binding and rendering have moved the UI
-                // onto the newer plots, so the disposed plot can no longer be drawn.
-                Dispatcher.UIThread.Post(previous.Dispose, DispatcherPriority.Background);
+                // Deferring runs this after data binding and rendering have moved the UI onto the
+                // newer plots, so the disposed plot can no longer be drawn.
+                m_UIDispatcher.Defer(previous.Dispose);
             }
         }
 

@@ -108,12 +108,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IGraphLayoutEngine layoutEngine)
+            IGraphLayoutEngine layoutEngine,
+            IGraphDispatcher graphDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(layoutEngine);
+            ArgumentNullException.ThrowIfNull(graphDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -156,7 +158,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveGraphViewModel(this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex);
+            m_Interactive = new InteractiveGraphViewModel(
+                this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex, dispatcher: graphDispatcher);
 
             // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
             // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
