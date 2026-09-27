@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.Text;
-using System.Text.RegularExpressions;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -261,37 +260,14 @@ namespace Zametek.ProjectPlan.Engine.Tests
             (JobResult alone, MemoryJobSink aloneSink) = await RunAsync(fresh.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput);
 
             afterAnother.ShouldBe(alone);
+            afterAnotherSink.Outputs.Select(x => x.Output).ShouldBe(aloneSink.Outputs.Select(x => x.Output));
 
-            // Every output but the scenario export, whose workbook NPOI stamps
-            // with the time it was created.
-            afterAnotherSink[JobOutput.Project].ShouldBe(aloneSink[JobOutput.Project]);
-            WithClipPathsRenumbered(afterAnotherSink[JobOutput.GanttChart]).ShouldBe(WithClipPathsRenumbered(aloneSink[JobOutput.GanttChart]));
-            afterAnotherSink[JobOutput.ArrowGraph].ShouldBe(aloneSink[JobOutput.ArrowGraph]);
-            afterAnotherSink[JobOutput.VertexGraph].ShouldBe(aloneSink[JobOutput.VertexGraph]);
-            afterAnotherSink[JobOutput.ResourceChart].ShouldBe(aloneSink[JobOutput.ResourceChart]);
-            WithClipPathsRenumbered(afterAnotherSink[JobOutput.EarnedValueChart]).ShouldBe(WithClipPathsRenumbered(aloneSink[JobOutput.EarnedValueChart]));
-            WithClipPathsRenumbered(afterAnotherSink[JobOutput.ScenarioChart]).ShouldBe(WithClipPathsRenumbered(aloneSink[JobOutput.ScenarioChart]));
-        }
-
-        // Skia names each clip path in an SVG after a counter that lives as long as
-        // the process, so the same chart gets different ids depending on how much
-        // was drawn before it, by any job. Numbering them in the order they appear
-        // leaves everything else to compare.
-        private static string WithClipPathsRenumbered(byte[] svg)
-        {
-            var numbers = new Dictionary<string, int>();
-            return Regex.Replace(
-                Encoding.UTF8.GetString(svg),
-                @"(?<=id=""|url\(#)cl_[0-9a-f]+",
-                match =>
-                {
-                    if (!numbers.TryGetValue(match.Value, out int number))
-                    {
-                        number = numbers.Count;
-                        numbers.Add(match.Value, number);
-                    }
-                    return $@"cl_{number}";
-                });
+            foreach ((JobOutput output, byte[] content) in afterAnotherSink.Outputs)
+            {
+                OutputComparison.Comparable(output, content).ShouldBe(
+                    OutputComparison.Comparable(output, aloneSink[output]),
+                    output.ToString());
+            }
         }
 
         [Fact]

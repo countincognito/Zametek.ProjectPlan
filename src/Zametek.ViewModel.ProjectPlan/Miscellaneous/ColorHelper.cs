@@ -31,12 +31,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static readonly ScottPlot.Color ScottPlotDarkThemeForegroundColor = ScottPlot.Color.FromHex(@"#d7d7d7").WithAlpha(AnnotationAFull);
 
-        private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);
 
-        // Preset colors.
-        private static int s_PresetColorIndex = 0;
-        private static readonly List<Color> s_PresetColors =
+        // Preset colors, in the order a PresetColorSequence hands them out.
+        internal static readonly IReadOnlyList<Color> PresetColors =
             [
                 Colors.RoyalBlue,
                 Colors.Coral,
@@ -115,8 +113,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static ColorFormatModel Random()
         {
-            var b = new byte[3];
-            s_Rnd.NextBytes(b);
+            // The shared generator, which is safe to call from any thread.
+            Span<byte> b = stackalloc byte[3];
+            System.Random.Shared.NextBytes(b);
             return new ColorFormatModel
             {
                 A = AnnotationAFull,
@@ -124,20 +123,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 G = b[1],
                 B = b[2]
             };
-        }
-
-        // https://stackoverflow.com/questions/26075697/repeatedly-iterating-through-a-list
-        public static ColorFormatModel Preset()
-        {
-            s_PresetColorIndex = s_PresetColorIndex % s_PresetColors.Count;
-            var color = AvaloniaColorToColorFormatModel(s_PresetColors[s_PresetColorIndex]);
-            s_PresetColorIndex++;
-            return color;
-        }
-
-        public static void PresetReset()
-        {
-            s_PresetColorIndex = 0;
         }
 
         public static ScottPlot.Color ColorFormatToScottPlotColor(ColorFormatModel color)

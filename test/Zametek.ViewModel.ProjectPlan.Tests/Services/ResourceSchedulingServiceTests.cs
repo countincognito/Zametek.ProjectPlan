@@ -298,6 +298,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void BuildTrackingSeriesSet_GivenResourcesWithoutColors_ThenEachServiceDrawsThePresetsFromTheFirst()
+        {
+            // A resource without a colour of its own takes the next preset colour.
+            // Each job builds with a service of its own, so the colours one service
+            // draws must never move another's on.
+            ResourceSettingsModel settings = CreateResourceSettings();
+            settings = settings with { Resources = [.. settings.Resources.Select(x => x with { ColorFormat = null! })] };
+            List<ColorFormatModel> Colors(ResourceSchedulingService service) =>
+                [.. service.BuildTrackingSeriesSet(CreateActivities(), settings, hasResources: true).ByResource.Select(x => x.ColorFormat)];
+
+            List<ColorFormatModel> first = Colors(CreateService());
+            List<ColorFormatModel> second = Colors(CreateService());
+
+            first.ShouldBe([.. ColorHelper.PresetColors.Take(3).Select(ColorHelper.AvaloniaColorToColorFormatModel)]);
+            second.ShouldBe(first);
+        }
+
+        [Fact]
         public void BuildTrackingSeriesSet_GivenUnallocatedResource_ThenSeriesContainOnlyAnchorPoints()
         {
             TrackingSeriesSetModel set = BuildTrackingSeriesSet();

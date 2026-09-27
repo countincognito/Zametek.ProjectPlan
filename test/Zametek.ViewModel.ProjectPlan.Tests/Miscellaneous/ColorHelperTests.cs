@@ -1,5 +1,8 @@
 using Shouldly;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 
@@ -77,30 +80,61 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region Preset cycling
+        #region PresetColorSequence
 
         [Fact]
-        public void Preset_CyclesThrough_MultipleColors_Without_Repeating_Immediately()
+        public void PresetColorSequence_Next_Then_WalksThePresetsInOrderAndWrapsRound()
         {
-            ColorHelper.PresetReset();
-            ColorFormatModel first  = ColorHelper.Preset();
-            ColorFormatModel second = ColorHelper.Preset();
-            // Two consecutive Preset() calls must not return the identical value
-            // (the list has 20 entries so the first two are guaranteed to differ).
-            (first.R == second.R && first.G == second.G && first.B == second.B).ShouldBeFalse();
+            var sequence = new PresetColorSequence();
+            int count = ColorHelper.PresetColors.Count;
+
+            List<ColorFormatModel> drawn = [.. Enumerable.Range(0, count + 1).Select(_ => sequence.Next())];
+
+            drawn.Take(count).ShouldBe(ColorHelper.PresetColors.Select(ColorHelper.AvaloniaColorToColorFormatModel));
+            drawn[count].ShouldBe(drawn[0]);
         }
 
         [Fact]
-        public void PresetReset_Causes_NextPreset_ToReturnFirstColor()
+        public void PresetColorSequence_Reset_Then_StartsAgainFromTheFirst()
         {
-            ColorHelper.PresetReset();
-            ColorFormatModel a = ColorHelper.Preset();
-            ColorHelper.PresetReset();
-            ColorFormatModel b = ColorHelper.Preset();
-            // After resetting the index both calls should produce the same colour.
-            a.R.ShouldBe(b.R);
-            a.G.ShouldBe(b.G);
-            a.B.ShouldBe(b.B);
+            var sequence = new PresetColorSequence();
+            ColorFormatModel first = sequence.Next();
+            sequence.Next();
+
+            sequence.Reset();
+
+            sequence.Next().ShouldBe(first);
+        }
+
+        [Fact]
+        public void PresetColorSequence_Given_TwoSequences_Then_NeitherShiftsTheOther()
+        {
+            // Two builds - two jobs, say - each keep their own sequence, so what one
+            // draws or resets never moves the other.
+            var one = new PresetColorSequence();
+            var other = new PresetColorSequence();
+            one.Next();
+            one.Next();
+
+            ColorFormatModel otherFirst = other.Next();
+            one.Reset();
+            ColorFormatModel otherSecond = other.Next();
+
+            otherFirst.ShouldBe(ColorHelper.AvaloniaColorToColorFormatModel(ColorHelper.PresetColors[0]));
+            otherSecond.ShouldBe(ColorHelper.AvaloniaColorToColorFormatModel(ColorHelper.PresetColors[1]));
+        }
+
+        [Fact]
+        public async Task PresetColorSequence_Given_ConcurrentDraws_Then_EachColourIsAPreset()
+        {
+            // Drawn from many threads at once, the index must never leave the list.
+            var sequence = new PresetColorSequence();
+            HashSet<ColorFormatModel> presets = [.. ColorHelper.PresetColors.Select(ColorHelper.AvaloniaColorToColorFormatModel)];
+
+            ColorFormatModel[][] drawn = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(
+                () => Enumerable.Range(0, 10_000).Select(_ => sequence.Next()).ToArray())));
+
+            drawn.SelectMany(x => x).ShouldAllBe(x => presets.Contains(x));
         }
 
         #endregion

@@ -133,6 +133,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var resources = new List<ResourceModel>();
 
+            // Each resource takes the next preset colour, in the order the plan lists them, so importing
+            // the same plan always gives its resources the same colours.
+            var presetColors = new PresetColorSequence();
+
             foreach (MPXJ.Net.Resource mpxjResource in mpxjProjectFile.Resources)
             {
                 int id = mpxjResource.ID ?? default;
@@ -147,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsInactive = false,
                     Name = mpxjResource.Name ?? string.Empty,
                     DisplayOrder = id,
-                    ColorFormat = ColorHelper.Random()
+                    ColorFormat = presetColors.Next()
                 };
                 resources.Add(resource);
             }
