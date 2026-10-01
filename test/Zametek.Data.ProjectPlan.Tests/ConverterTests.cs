@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Shouldly;
 using System;
+using System.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 
@@ -9,6 +10,13 @@ namespace Zametek.Data.ProjectPlan.Tests
     public class ConverterTests
         : IClassFixture<ConverterFixture>
     {
+        // Where the fixtures older than v0.3.0, whose times carry no offset, are read: the v0.3.0 fixture holds the
+        // v0.2.1 fixture's project start as read in a zone whose offset in January is zero.
+        private static readonly TimeZoneInfo s_LocalTimeZone = TimeZoneInfo.Utc;
+
+        private static readonly TimeZoneInfo s_ZoneAheadOfUtc =
+            TimeZoneInfo.CreateCustomTimeZone(@"Test +05:30", TimeSpan.FromMinutes(330), @"Test +05:30", @"Test +05:30");
+
         private readonly ConverterFixture m_Fixture;
         private readonly DateTimeOffset m_LocalNow;
 
@@ -83,8 +91,8 @@ namespace Zametek.Data.ProjectPlan.Tests
             v0_2_0.ProjectModel? project_v0_2_0_upgraded = v0_2_0.Converter.Upgrade(project_v0_1_0!);
             project_v0_2_0_upgraded.ShouldBeEquivalentTo(project_v0_2_0);
 
-            ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_1_0!);
-            ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_2_0!);
+            ProjectModel model1 = Converter.Upgrade(m_LocalNow, s_LocalTimeZone, project_v0_1_0!);
+            ProjectModel model2 = Converter.Upgrade(m_LocalNow, s_LocalTimeZone, project_v0_2_0!);
             CompareModelsPreV0_6_0(model1, model2);
         }
 
@@ -97,8 +105,8 @@ namespace Zametek.Data.ProjectPlan.Tests
             v0_2_1.ProjectModel project_v0_2_1_upgraded = v0_2_1.Converter.Upgrade(mapper, project_v0_2_0!);
             project_v0_2_1_upgraded.ShouldBeEquivalentTo(project_v0_2_1);
 
-            ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_2_0!);
-            ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_2_1!);
+            ProjectModel model1 = Converter.Upgrade(m_LocalNow, s_LocalTimeZone, project_v0_2_0!);
+            ProjectModel model2 = Converter.Upgrade(m_LocalNow, s_LocalTimeZone, project_v0_2_1!);
             CompareModelsPreV0_6_0(model1, model2);
         }
 
@@ -107,13 +115,90 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_2_1.ProjectModel? project_v0_2_1 = JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString);
             v0_3_0.ProjectModel? project_v0_3_0 = JsonConvert.DeserializeObject<v0_3_0.ProjectModel>(m_Fixture.V0_3_0_JsonString);
-            var mapper = new VersionMapper();
+            var mapper = new VersionMapper(s_LocalTimeZone);
             v0_3_0.ProjectModel project_v0_3_0_upgraded = v0_3_0.Converter.Upgrade(mapper, project_v0_2_1!);
             project_v0_3_0_upgraded.ShouldBeEquivalentTo(project_v0_3_0);
 
-            ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_2_1!);
+            ProjectModel model1 = Converter.Upgrade(m_LocalNow, s_LocalTimeZone, project_v0_2_1!);
             ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_3_0!);
             CompareModelsPreV0_6_0(model1, model2);
+        }
+
+        [Fact]
+        public void Converter_Given_v0_2_1_InputAndATimeZone_Then_ItsTimesAreReadThere()
+        {
+            // The project's start and an activity's earliest start and latest finish, all without an offset.
+            v0_2_1.ProjectModel project = WithActivityDates(
+                JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString)!,
+                new DateTime(2015, 1, 12, 9, 0, 0),
+                new DateTime(2015, 1, 30, 17, 0, 0));
+
+            ProjectScenarioModel scenario = Converter.Upgrade(m_LocalNow, s_ZoneAheadOfUtc, project).Files.ShouldHaveSingleItem().Scenario;
+
+            TimeSpan offset = TimeSpan.FromMinutes(330);
+            (scenario.ProjectStart.DateTime, scenario.ProjectStart.Offset).ShouldBe((new DateTime(2015, 1, 5, 8, 0, 0), offset));
+            ActivityModel activity = scenario.DependentActivities.First(x => x.Activity.Id == project.DependentActivities[0].Activity!.Id).Activity;
+            (activity.MinimumEarliestStartDateTime!.Value.DateTime, activity.MinimumEarliestStartDateTime.Value.Offset).ShouldBe((new DateTime(2015, 1, 12, 9, 0, 0), offset));
+            (activity.MaximumLatestFinishDateTime!.Value.DateTime, activity.MaximumLatestFinishDateTime.Value.Offset).ShouldBe((new DateTime(2015, 1, 30, 17, 0, 0), offset));
+        }
+
+        [Theory]
+        [InlineData(1, 0)]
+        [InlineData(7, 1)]
+        public void Converter_Given_v0_2_1_Input_Then_EachTimeHasTheOffsetItsZoneHasOnItsDate(int month, int offsetHours)
+        {
+            // London is at +00:00 in January and +01:00 in July, whatever the date the file is opened on.
+            TimeZoneInfo london = TimeZoneInfo.FindSystemTimeZoneById(OperatingSystem.IsWindows() ? @"GMT Standard Time" : @"Europe/London");
+            v0_2_1.ProjectModel project = JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString)! with
+            {
+                ProjectStart = new DateTime(2015, month, 5, 8, 0, 0),
+            };
+
+            DateTimeOffset projectStart = Converter.Upgrade(m_LocalNow, london, project).Files.ShouldHaveSingleItem().Scenario.ProjectStart;
+
+            (projectStart.DateTime, projectStart.Offset).ShouldBe((new DateTime(2015, month, 5, 8, 0, 0), TimeSpan.FromHours(offsetHours)));
+        }
+
+        [Fact]
+        public void Converter_Given_v0_2_1_TimesWrittenWithAnOffsetOrInUtc_Then_EachKeepsItsInstant()
+        {
+            // The JSON reader turns a time written with an offset into the same instant in the machine's zone, and one
+            // written with a Z into UTC: the first is shown in the zone's offset, and the second stays in UTC.
+            v0_2_1.ProjectModel project = WithActivityDates(
+                JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString)!,
+                new DateTimeOffset(2015, 1, 12, 9, 0, 0, TimeSpan.FromHours(1)).LocalDateTime,
+                new DateTime(2015, 1, 30, 17, 0, 0, DateTimeKind.Utc));
+
+            ProjectScenarioModel scenario = Converter.Upgrade(m_LocalNow, s_ZoneAheadOfUtc, project).Files.ShouldHaveSingleItem().Scenario;
+
+            ActivityModel activity = scenario.DependentActivities.First(x => x.Activity.Id == project.DependentActivities[0].Activity!.Id).Activity;
+            (activity.MinimumEarliestStartDateTime!.Value.DateTime, activity.MinimumEarliestStartDateTime.Value.Offset).ShouldBe((new DateTime(2015, 1, 12, 13, 30, 0), TimeSpan.FromMinutes(330)));
+            (activity.MaximumLatestFinishDateTime!.Value.DateTime, activity.MaximumLatestFinishDateTime.Value.Offset).ShouldBe((new DateTime(2015, 1, 30, 17, 0, 0), TimeSpan.Zero));
+        }
+
+        // The project with its first activity's earliest start and latest finish set.
+        private static v0_2_1.ProjectModel WithActivityDates(
+            v0_2_1.ProjectModel project,
+            DateTime minimumEarliestStart,
+            DateTime maximumLatestFinish)
+        {
+            v0_2_1.DependentActivityModel first = project.DependentActivities[0];
+
+            return project with
+            {
+                DependentActivities =
+                [
+                    first with
+                    {
+                        Activity = first.Activity! with
+                        {
+                            MinimumEarliestStartDateTime = minimumEarliestStart,
+                            MaximumLatestFinishDateTime = maximumLatestFinish,
+                        },
+                    },
+                    .. project.DependentActivities.Skip(1),
+                ],
+            };
         }
 
         [Fact]

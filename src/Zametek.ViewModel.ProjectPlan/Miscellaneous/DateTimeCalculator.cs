@@ -640,6 +640,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The time zone of this calculator's clock, where its local times are - the machine's, unless the clock says
+        // otherwise.
+        public TimeZoneInfo LocalTimeZone => m_TimeProvider.LocalTimeZone;
+
         public DateTimeOffset GetLocalNow()
         {
             return m_TimeProvider.GetLocalNow();

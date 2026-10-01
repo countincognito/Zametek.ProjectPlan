@@ -236,6 +236,21 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task OpenProject_Given_AFileOlderThanV0_3_0_Then_ItsTimesAreReadInTheClocksTimeZone()
+        {
+            // A v0.2.1 file holds its project's start without an offset, so where it is comes from the clock the file is
+            // opened by, not from the machine.
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test +05:30", TimeSpan.FromMinutes(330), @"Test +05:30", @"Test +05:30");
+            var opener = new ProjectFileOpen(new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 9, 27, 12, 0, 0, TimeSpan.Zero), zone)));
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes($@"{{ ""Version"": ""{Versions.v0_2_1}"", ""ProjectStart"": ""2015-01-05T08:00:00"" }}"));
+
+            ProjectModel project = await opener.OpenProjectFileAsync(stream);
+
+            DateTimeOffset projectStart = project.Files.ShouldHaveSingleItem().Scenario.ProjectStart;
+            (projectStart.DateTime, projectStart.Offset).ShouldBe((new DateTime(2015, 1, 5, 8, 0, 0), TimeSpan.FromMinutes(330)));
+        }
+
+        [Fact]
         public async Task RoundTrip_Minimal_Preserves_Version()
         {
             ProjectModel original = BuildMinimalProjectModel();

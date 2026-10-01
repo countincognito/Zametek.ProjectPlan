@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.Engine.ProjectPlan.Tests
 {
@@ -49,12 +51,26 @@ namespace Zametek.Engine.ProjectPlan.Tests
             JobRunner runner,
             string asset,
             Func<Stream, JobRequest> buildRequest,
-            MemoryJobSink? sink = null)
+            MemoryJobSink? sink = null,
+            CancellationToken cancellationToken = default)
         {
             sink ??= new MemoryJobSink();
             await using FileStream input = File.OpenRead(AssetPath(asset));
-            JobResult result = await runner.RunAsync(buildRequest(input), sink);
+            JobResult result = await runner.RunAsync(buildRequest(input), sink, cancellationToken);
             return (result, sink);
+        }
+
+        public static TheoryData<JobOutput> EveryOutputButTheLast
+        {
+            get
+            {
+                var data = new TheoryData<JobOutput>();
+                foreach (JobOutput output in Enum.GetValues<JobOutput>().SkipLast(1))
+                {
+                    data.Add(output);
+                }
+                return data;
+            }
         }
 
         // Keeps each time as it was written, offset and all, rather than turning it into a local DateTime.
@@ -370,6 +386,170 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_ACancelledToken_Then_ThrowsBeforeReadingThePlan()
+        {
+            await using ServiceProvider services = BuildServices();
+            var sink = new MemoryJobSink();
+            await using FileStream input = File.OpenRead(AssetPath(@"two-scenarios.zpp"));
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => services.GetRequiredService<JobRunner>().RunAsync(EveryOutput(input), sink, new CancellationToken(canceled: true)));
+
+            input.Position.ShouldBe(0);
+            sink.Outputs.ShouldBeEmpty();
+            sink.Messages.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_CancellationWhileThePlanIsRead_Then_ItIsReadAndNotCompiled()
+        {
+            // A job that asks only for the metrics would have them once it compiled, so throwing shows it never did.
+            await using ServiceProvider services = BuildServices();
+            using var cancellation = new CancellationTokenSource();
+            using var input = new CancellingStream(await File.ReadAllBytesAsync(AssetPath(@"two-scenarios.zpp")), cancellation);
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink(), cancellation.Token));
+
+            input.Position.ShouldBe(input.Length);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_CancellationWhileThePlanIsCompiled_Then_NothingIsProduced()
+        {
+            // The compile under way runs to its end, and the project it would have saved is never started. Loading a
+            // plan compiles it too, so a first run counts how often the job builds the financial metrics - the last
+            // thing a compile builds - and the second is cancelled at the last of them, which is the job's own compile.
+            static JobRequest SaveProject(Stream input) => new() { Input = input, SaveProject = true };
+            CancellingMetricCalculationService? counted = null;
+            await using (ServiceProvider counting = BuildServices(x => x.AddScoped<IMetricCalculationService>(provider =>
+                counted = new CancellingMetricCalculationService(ActivatorUtilities.CreateInstance<MetricCalculationService>(provider), cancellation: null, cancelAt: 0))))
+            {
+                await RunAsync(counting.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", SaveProject);
+            }
+
+            using var cancellation = new CancellationTokenSource();
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IMetricCalculationService>(provider =>
+                new CancellingMetricCalculationService(ActivatorUtilities.CreateInstance<MetricCalculationService>(provider), cancellation, counted!.FinancialMetricsBuilt)));
+            var sink = new MemoryJobSink();
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", SaveProject, sink, cancellation.Token));
+
+            sink.Outputs.ShouldBeEmpty();
+        }
+
+        [Theory]
+        [MemberData(nameof(EveryOutputButTheLast))]
+        public async Task RunAsync_Given_CancellationWhileAnOutputIsProduced_Then_ItIsTheLastOneProduced(JobOutput cancelledDuring)
+        {
+            // The output under way is finished and handed over; the next one is never started.
+            await using ServiceProvider services = BuildServices();
+            using var cancellation = new CancellationTokenSource();
+            var sink = new MemoryJobSink
+            {
+                OnWrite = output =>
+                {
+                    if (output == cancelledDuring)
+                    {
+                        cancellation.Cancel();
+                    }
+                },
+            };
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput, sink, cancellation.Token));
+
+            sink.Outputs.Select(x => x.Output).ShouldBe(Enum.GetValues<JobOutput>().TakeWhile(x => x != cancelledDuring).Append(cancelledDuring));
+            sink.Messages.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_CancellationWhileTheLastOutputIsProduced_Then_TheJobCompletes()
+        {
+            // Once the last output is under way there is no step left to stop before.
+            await using ServiceProvider services = BuildServices();
+            using var cancellation = new CancellationTokenSource();
+            JobOutput last = Enum.GetValues<JobOutput>().Last();
+            var sink = new MemoryJobSink
+            {
+                OnWrite = output =>
+                {
+                    if (output == last)
+                    {
+                        cancellation.Cancel();
+                    }
+                },
+            };
+
+            (JobResult result, _) = await RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput, sink, cancellation.Token);
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            sink.Outputs.Select(x => x.Output).ShouldBe(Enum.GetValues<JobOutput>());
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheSinkGivesUpOnAChartBecauseTheJobWasCancelled_Then_TheJobStopsWithoutReportingIt()
+        {
+            // A chart the sink cannot store is reported, and the job carries on - but not when the job itself is what
+            // stopped it.
+            await using ServiceProvider services = BuildServices();
+            using var cancellation = new CancellationTokenSource();
+            var sink = new MemoryJobSink
+            {
+                OnWrite = output =>
+                {
+                    if (output == JobOutput.GanttChart)
+                    {
+                        cancellation.Cancel();
+                        cancellation.Token.ThrowIfCancellationRequested();
+                    }
+                },
+            };
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput, sink, cancellation.Token));
+
+            sink.Outputs.Select(x => x.Output).ShouldBe(Enum.GetValues<JobOutput>().TakeWhile(x => x != JobOutput.GanttChart));
+            sink.Messages.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheSinkCancelsAChartOfItsOwnAccord_Then_ItIsReportedAndTheJobCarriesOn()
+        {
+            // Cancelled, but not by the job: that is a chart the sink could not store, like any other.
+            await using ServiceProvider services = BuildServices();
+            var sink = new MemoryJobSink
+            {
+                OnWrite = output =>
+                {
+                    if (output == JobOutput.GanttChart)
+                    {
+                        throw new OperationCanceledException();
+                    }
+                },
+            };
+
+            (JobResult result, _) = await RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput, sink);
+
+            result.Status.ShouldBe(JobStatus.CompletedWithErrors);
+            sink.Outputs.Select(x => x.Output).ShouldBe(Enum.GetValues<JobOutput>().Where(x => x != JobOutput.GanttChart));
+            sink.Messages.ShouldHaveSingleItem().Kind.ShouldBe(JobMessageKind.Error);
+        }
+
+        [Fact]
+        public async Task ListScenariosAsync_Given_ACancelledToken_Then_ThrowsBeforeReadingThePlan()
+        {
+            await using ServiceProvider services = BuildServices();
+            await using FileStream input = File.OpenRead(AssetPath(@"two-scenarios.zpp"));
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => services.GetRequiredService<JobRunner>().ListScenariosAsync(input, new CancellationToken(canceled: true)));
+
+            input.Position.ShouldBe(0);
+        }
+
+        [Fact]
         public async Task ListScenariosAsync_Given_ProjectFile_Then_ListsItsScenarios()
         {
             await using ServiceProvider services = BuildServices();
@@ -402,6 +582,72 @@ namespace Zametek.Engine.ProjectPlan.Tests
             : TimeProvider
         {
             public override DateTimeOffset GetUtcNow() => now;
+        }
+
+        // Works out a plan's metrics as the engine does, counting each time it builds the financial metrics - the last
+        // thing a compile builds - and cancelling the job when the count reaches cancelAt.
+        private sealed class CancellingMetricCalculationService(
+            IMetricCalculationService metrics,
+            CancellationTokenSource? cancellation,
+            int cancelAt)
+            : IMetricCalculationService
+        {
+            public int FinancialMetricsBuilt { get; private set; }
+
+            public NetworkModel BuildNetworkMetrics(
+                IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+                bool hasCompilationErrors,
+                DateTimeOffset projectStart,
+                int? startTime,
+                int? finishTime) =>
+                metrics.BuildNetworkMetrics(graphCompilation, hasCompilationErrors, projectStart, startTime, finishTime);
+
+            public RisksModel BuildRiskMetrics(
+                IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+                bool hasCompilationErrors,
+                IEnumerable<ActivitySeverityModel> activitySeverities) =>
+                metrics.BuildRiskMetrics(graphCompilation, hasCompilationErrors, activitySeverities);
+
+            public (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics)
+                BuildFinancialMetrics(
+                ResourceSeriesSetModel resourceSeriesSet,
+                bool hasCompilationErrors)
+            {
+                if (++FinancialMetricsBuilt == cancelAt)
+                {
+                    cancellation?.Cancel();
+                }
+                return metrics.BuildFinancialMetrics(resourceSeriesSet, hasCompilationErrors);
+            }
+        }
+
+        // A plan that cancels the job as soon as the job starts to read it.
+        private sealed class CancellingStream(byte[] content, CancellationTokenSource cancellation)
+            : MemoryStream(content)
+        {
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                cancellation.Cancel();
+                return base.Read(buffer, offset, count);
+            }
+
+            public override int Read(Span<byte> buffer)
+            {
+                cancellation.Cancel();
+                return base.Read(buffer);
+            }
+
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                cancellation.Cancel();
+                return base.ReadAsync(buffer, offset, count, cancellationToken);
+            }
+
+            public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                cancellation.Cancel();
+                return base.ReadAsync(buffer, cancellationToken);
+            }
         }
 
         private sealed class ScrollManagerProbe

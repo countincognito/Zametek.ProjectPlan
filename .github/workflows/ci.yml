@@ -14,11 +14,6 @@ jobs:
     name: Build, Lint, Format & Test
     # Pinned rather than ubuntu-latest, so that the image changes only when this line does.
     runs-on: ubuntu-24.04
-    env:
-      # ConverterTests.Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0 passes only where the offset in January
-      # is zero (UTC, Europe/London), because the v0.2.1 upgrade reads dates that carry no zone in the machine's
-      # own zone. Set here rather than left to the runner's default; see TODO.md.
-      TZ: Etc/UTC
 
     steps:
       - name: Checkout

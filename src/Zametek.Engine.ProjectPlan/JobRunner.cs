@@ -32,9 +32,12 @@ namespace Zametek.Engine.ProjectPlan
         /// <summary>
         /// Lists the scenarios of a project file, without processing any of them.
         /// </summary>
-        public async Task<IReadOnlyList<ScenarioSummary>> ListScenariosAsync(Stream input)
+        public async Task<IReadOnlyList<ScenarioSummary>> ListScenariosAsync(
+            Stream input,
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(input);
+            cancellationToken.ThrowIfCancellationRequested();
 
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
             IProjectFileOpen projectFileOpen = scope.ServiceProvider.GetRequiredService<IProjectFileOpen>();
@@ -48,14 +51,19 @@ namespace Zametek.Engine.ProjectPlan
         /// with errors. Anything else the job cannot get past, it throws - an input it cannot read, a scenario it
         /// cannot select (<see cref="ScenarioSelectionException"/>), a compilation that runs out of time
         /// (<see cref="GraphCompilationTimeoutException"/>), or a project or scenario export the sink cannot store -
-        /// and whatever the sink stored before that stays where it is.
+        /// and whatever the sink stored before that stays where it is. Cancelling the token stops the job before the
+        /// next step it would take, with an <see cref="OperationCanceledException"/>: a step already under way - reading
+        /// the plan, compiling it, producing an output - runs to its end first, and a job that has produced its last
+        /// output completes.
         /// </summary>
         public async Task<JobResult> RunAsync(
             JobRequest request,
-            IJobSink sink)
+            IJobSink sink,
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
             ArgumentNullException.ThrowIfNull(sink);
+            cancellationToken.ThrowIfCancellationRequested();
 
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
             IServiceProvider services = scope.ServiceProvider;
@@ -66,7 +74,7 @@ namespace Zametek.Engine.ProjectPlan
             dialogService.Sink = sink;
             services.GetRequiredService<JobClock>().Now = request.Now;
 
-            return await RunAsync(request, sink, dialogService, services);
+            return await RunAsync(request, sink, dialogService, services, cancellationToken);
         }
 
         #endregion
@@ -77,7 +85,8 @@ namespace Zametek.Engine.ProjectPlan
             JobRequest request,
             IJobSink sink,
             JobDialogService dialogService,
-            IServiceProvider services)
+            IServiceProvider services,
+            CancellationToken cancellationToken)
         {
             IProjectScenarioManagerViewModel project = ResolveMuted<IProjectScenarioManagerViewModel>(services);
             ICoreViewModel core = ResolveMuted<ICoreViewModel>(services);
@@ -133,6 +142,8 @@ namespace Zametek.Engine.ProjectPlan
 
             // Compile.
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // We do not need to set IsReadyToReviseTrackers since this is a one step
                 // process (i.e. we are not changing any tracker UI elements).
 
@@ -163,12 +174,16 @@ namespace Zametek.Engine.ProjectPlan
             {
                 if (request.SaveProject)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     IProjectFileSave projectFileSave = services.GetRequiredService<IProjectFileSave>();
                     ProjectModel projectModel = project.BuildProject();
                     await sink.WriteOutputAsync(JobOutput.Project, stream => projectFileSave.SaveProjectFileAsync(projectModel, stream));
                 }
                 if (request.ExportFormat is ProjectScenarioExportFormat exportFormat)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     IProjectScenarioFileExport projectFileExport = services.GetRequiredService<IProjectScenarioFileExport>();
                     ProjectScenarioModel projectScenarioModel = core.BuildProjectScenario();
                     await sink.WriteOutputAsync(
@@ -194,6 +209,8 @@ namespace Zametek.Engine.ProjectPlan
             // Gantt chart export.
             if (request.GanttChart is ChartOutputRequest ganttChart)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 IGanttChartManagerViewModel gantt = ResolveMuted<IGanttChartManagerViewModel>(services);
 
                 await WriteChartAsync(
@@ -202,12 +219,15 @@ namespace Zametek.Engine.ProjectPlan
                     JobOutput.GanttChart,
                     ganttChart,
                     gantt.BuildGanttChartPlotModel,
-                    gantt.WriteGanttChartImageAsync);
+                    gantt.WriteGanttChartImageAsync,
+                    cancellationToken);
             }
 
             // Arrow graph export.
             if (request.ArrowGraph is GraphOutputRequest arrowGraph)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 IArrowGraphManagerViewModel arrow = ResolveMuted<IArrowGraphManagerViewModel>(services);
 
                 await WriteGraphAsync(
@@ -215,12 +235,15 @@ namespace Zametek.Engine.ProjectPlan
                     sink,
                     JobOutput.ArrowGraph,
                     arrowGraph,
-                    arrow.WriteFixedLayoutArrowGraphImageAsync);
+                    arrow.WriteFixedLayoutArrowGraphImageAsync,
+                    cancellationToken);
             }
 
             // Vertex graph export.
             if (request.VertexGraph is GraphOutputRequest vertexGraph)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 IVertexGraphManagerViewModel vertex = ResolveMuted<IVertexGraphManagerViewModel>(services);
 
                 await WriteGraphAsync(
@@ -228,12 +251,15 @@ namespace Zametek.Engine.ProjectPlan
                     sink,
                     JobOutput.VertexGraph,
                     vertexGraph,
-                    vertex.WriteFixedLayoutVertexGraphImageAsync);
+                    vertex.WriteFixedLayoutVertexGraphImageAsync,
+                    cancellationToken);
             }
 
             // Resource chart export.
             if (request.ResourceChart is ChartOutputRequest resourceChart)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 IResourceChartManagerViewModel resources = ResolveMuted<IResourceChartManagerViewModel>(services);
 
                 await WriteChartAsync(
@@ -242,12 +268,15 @@ namespace Zametek.Engine.ProjectPlan
                     JobOutput.ResourceChart,
                     resourceChart,
                     resources.BuildResourceChartPlotModel,
-                    resources.WriteResourceChartImageAsync);
+                    resources.WriteResourceChartImageAsync,
+                    cancellationToken);
             }
 
             // EV chart export.
             if (request.EarnedValueChart is ChartOutputRequest earnedValueChart)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 IEarnedValueChartManagerViewModel ev = ResolveMuted<IEarnedValueChartManagerViewModel>(services);
 
                 await WriteChartAsync(
@@ -256,12 +285,15 @@ namespace Zametek.Engine.ProjectPlan
                     JobOutput.EarnedValueChart,
                     earnedValueChart,
                     ev.BuildEarnedValueChartPlotModel,
-                    ev.WriteEarnedValueChartImageAsync);
+                    ev.WriteEarnedValueChartImageAsync,
+                    cancellationToken);
             }
 
             // Scenario chart export.
             if (request.ScenarioChart is ChartOutputRequest scenarioChart)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 IScenarioChartManagerViewModel scenarios = ResolveMuted<IScenarioChartManagerViewModel>(services);
 
                 // The tracked-metrics set the chart plots is normally assembled by
@@ -275,7 +307,8 @@ namespace Zametek.Engine.ProjectPlan
                     JobOutput.ScenarioChart,
                     scenarioChart,
                     scenarios.BuildScenarioChartPlotModel,
-                    scenarios.WriteScenarioChartImageAsync);
+                    scenarios.WriteScenarioChartImageAsync,
+                    cancellationToken);
             }
 
             // A chart or graph export that fails does not throw: WriteReportedOutputAsync
@@ -305,7 +338,8 @@ namespace Zametek.Engine.ProjectPlan
             JobOutput output,
             ChartOutputRequest chart,
             Action buildPlotModel,
-            Func<Stream, ChartImageFormat, int, int, Task> writePlotImageAsync)
+            Func<Stream, ChartImageFormat, int, int, Task> writePlotImageAsync,
+            CancellationToken cancellationToken)
         {
             buildPlotModel();
 
@@ -313,7 +347,8 @@ namespace Zametek.Engine.ProjectPlan
                 dialogService,
                 sink,
                 output,
-                stream => writePlotImageAsync(stream, chart.Format, chart.Width, chart.Height));
+                stream => writePlotImageAsync(stream, chart.Format, chart.Width, chart.Height),
+                cancellationToken);
         }
 
         private static async Task WriteGraphAsync(
@@ -321,29 +356,33 @@ namespace Zametek.Engine.ProjectPlan
             IJobSink sink,
             JobOutput output,
             GraphOutputRequest graph,
-            Func<Stream, GraphExportFormat, Task> writeGraphImageAsync)
+            Func<Stream, GraphExportFormat, Task> writeGraphImageAsync,
+            CancellationToken cancellationToken)
         {
             await WriteReportedOutputAsync(
                 dialogService,
                 sink,
                 output,
-                stream => writeGraphImageAsync(stream, graph.Format));
+                stream => writeGraphImageAsync(stream, graph.Format),
+                cancellationToken);
         }
 
         // A chart or graph export that fails is reported rather than thrown, as the desktop reports it in a dialog and
         // carries on, so that the remaining exports still run and the metrics are still taken. The job then completes
-        // with errors.
+        // with errors. A job being cancelled is not an export failing: if the sink gives up on an output because the job
+        // was cancelled, the job stops.
         private static async Task WriteReportedOutputAsync(
             IDialogService dialogService,
             IJobSink sink,
             JobOutput output,
-            Func<Stream, Task> write)
+            Func<Stream, Task> write,
+            CancellationToken cancellationToken)
         {
             try
             {
                 await sink.WriteOutputAsync(output, write);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
                 await dialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,

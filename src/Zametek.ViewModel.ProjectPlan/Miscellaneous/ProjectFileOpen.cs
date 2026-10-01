@@ -38,11 +38,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
             DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
+            // Files before v0.3.0 hold their times without an offset from UTC, so they are read in the clock's time zone.
+            TimeZoneInfo localTimeZone = m_DateTimeCalculator.LocalTimeZone;
+
             version.ValueSwitchOn()
                 .Case(Versions.v0_1_0_original, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
+                        localTimeZone,
                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString)
                         ?? new Data.ProjectPlan.v0_1_0.ProjectModel());
                 })
@@ -50,6 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
+                        localTimeZone,
                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString)
                         ?? new Data.ProjectPlan.v0_1_0.ProjectModel());
                 })
@@ -57,6 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
+                        localTimeZone,
                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectModel>(jString)
                         ?? new Data.ProjectPlan.v0_2_0.ProjectModel());
                 })
@@ -64,6 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
+                        localTimeZone,
                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_1.ProjectModel>(jString)
                         ?? new Data.ProjectPlan.v0_2_1.ProjectModel());
                 })

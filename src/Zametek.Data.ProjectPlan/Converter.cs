@@ -79,22 +79,25 @@
             return Upgrade(localNow, v0_3_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_2_1.ProjectModel project)
+        // v0.2.1 and the versions before it hold their dates and times without an offset from UTC, so their upgrades
+        // also take the time zone to read them in.
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, TimeZoneInfo localTimeZone, v0_2_1.ProjectModel project)
         {
+            ArgumentNullException.ThrowIfNull(localTimeZone);
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(localNow, v0_3_0.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_3_0.Converter.Upgrade(new VersionMapper(localTimeZone), project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_2_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, TimeZoneInfo localTimeZone, v0_2_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(localNow, v0_2_1.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, localTimeZone, v0_2_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_1_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, TimeZoneInfo localTimeZone, v0_1_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(localNow, v0_2_0.Converter.Upgrade(project));
+            return Upgrade(localNow, localTimeZone, v0_2_0.Converter.Upgrade(project));
         }
 
         #endregion

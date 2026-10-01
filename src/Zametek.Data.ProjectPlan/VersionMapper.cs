@@ -12,6 +12,22 @@ namespace Zametek.Data.ProjectPlan
     [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None, UseDeepCloning = true)]
     public partial class VersionMapper
     {
+        // Files before v0.3.0 hold their dates and times without an offset from UTC, so upgrading one has to say where
+        // they are: in the time zone a mapper is given, which for an upgrade is the zone of the clock it runs by. A
+        // mapper given none reads them in the machine's.
+        private readonly TimeZoneInfo m_LocalTimeZone;
+
+        public VersionMapper()
+            : this(TimeZoneInfo.Local)
+        {
+        }
+
+        public VersionMapper(TimeZoneInfo localTimeZone)
+        {
+            ArgumentNullException.ThrowIfNull(localTimeZone);
+            m_LocalTimeZone = localTimeZone;
+        }
+
         public static string FromNullableToDefault(string? src)
             => src is null ? string.Empty : src;
 
@@ -256,6 +272,19 @@ namespace Zametek.Data.ProjectPlan
 
         public v0_3_0.ActivityModel ActivityModelFromV0_2_1ToV0_3_0DisallowNull(v0_2_1.ActivityModel? src)
             => src is null ? new() : FromV0_2_1ToV0_3_0(src);
+
+        // Every date and time a file before v0.3.0 holds becomes one with an offset here - the project's start, and each
+        // activity's earliest start and latest finish. A time written without an offset is read in this mapper's time
+        // zone, at the offset the zone has on that date rather than today. A time written with one was read by the JSON
+        // reader as the same instant in the machine's zone, so it stays that instant, shown in this zone's offset. A time
+        // written in UTC stays in UTC.
+        public DateTimeOffset FromV0_2_1ToV0_3_0(DateTime value)
+            => value.Kind switch
+            {
+                DateTimeKind.Utc => new DateTimeOffset(value),
+                DateTimeKind.Local => TimeZoneInfo.ConvertTime(new DateTimeOffset(value), m_LocalTimeZone),
+                _ => new DateTimeOffset(value, m_LocalTimeZone.GetUtcOffset(value)),
+            };
 
         public partial v0_2_1.ActivityEdgeModel FromV0_3_0ToV0_2_1(v0_3_0.ActivityEdgeModel src);
 
