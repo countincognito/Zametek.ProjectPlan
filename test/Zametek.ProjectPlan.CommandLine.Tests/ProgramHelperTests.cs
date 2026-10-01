@@ -1,45 +1,16 @@
 using Shouldly;
 using Xunit;
 using Zametek.Common.ProjectPlan;
-using Zametek.Engine.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
-    /// Unit tests for the internal Program helpers: the wording of a scenario
-    /// the engine could not select (the engine's own ScenarioSelectorTests cover
-    /// the selecting), export file naming, the option-combination validation that
-    /// backs the usage-error exit code, and the export format mappings.
+    /// Unit tests for the internal Program helpers: export file naming, the
+    /// option-combination validation that backs the usage-error exit code, and
+    /// the export format mappings.
     /// </summary>
     public class ProgramHelperTests
     {
-        [Fact]
-        public void BuildScenarioSelectionMessage_Given_NoMatch_Then_PointsAtListScenarios()
-        {
-            var ex = new ScenarioSelectionException(@"No scenario matches 'Gamma'", @"Gamma", ScenarioSelectionFailure.NoMatch, 0);
-
-            Program.BuildScenarioSelectionMessage(ex).ShouldBe(
-                string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, @"Gamma", @"--list-scenarios"));
-        }
-
-        [Fact]
-        public void BuildScenarioSelectionMessage_Given_SeveralMatches_Then_CountsThemAndPointsAtListScenarios()
-        {
-            var ex = new ScenarioSelectionException(@"'Beta' matches 2 scenarios", @"Beta", ScenarioSelectionFailure.SeveralMatches, 2);
-
-            Program.BuildScenarioSelectionMessage(ex).ShouldBe(
-                string.Format(Resource.ProjectPlan.Messages.Message_SeveralScenariosMatch, @"Beta", 2, @"--list-scenarios"));
-        }
-
-        [Fact]
-        public void BuildScenarioSelectionMessage_Given_NoScenarioData_Then_NamesTheScenario()
-        {
-            var ex = new ScenarioSelectionException(@"Scenario 'Beta' has no scenario data in the project file", @"Beta", ScenarioSelectionFailure.NoScenarioData, 1);
-
-            Program.BuildScenarioSelectionMessage(ex).ShouldBe(
-                string.Format(Resource.ProjectPlan.Messages.Message_ScenarioHasNoScenarioData, @"Beta"));
-        }
-
         [Fact]
         public void BuildExportFilePath_Given_Format_Then_LowercasesExtension()
         {

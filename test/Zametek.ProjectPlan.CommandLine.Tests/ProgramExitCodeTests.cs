@@ -13,10 +13,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// exit-code contract: 0 success, 1 runtime failure, 2 bad usage, 3
     /// compilation errors, and 4 a compilation cancelled by --compile-timeout.
     /// Scripts and CI gates branch on these values, so a change here is a
-    /// breaking change to the CLI. Checks on the files a run writes are here
-    /// as well, since they need Main too. The tests all live in one
-    /// class so xunit runs them sequentially - Main swaps process-global state
-    /// (the console streams and the static Serilog logger) while it runs.
+    /// breaking change to the CLI. Checks on the files a run writes and on what
+    /// it prints are here as well, since they need Main too. The tests all live
+    /// in one class so xunit runs them sequentially - Main swaps process-global
+    /// state (the console streams and the static Serilog logger) while it runs.
     /// </summary>
     public class ProgramExitCodeTests
         : IDisposable
@@ -55,6 +55,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             finally
             {
                 Console.SetOut(original);
+            }
+        }
+
+        // Runs Main with stderr captured as well as stdout.
+        private static async Task<(int ExitCode, string Output, string Error)> RunCapturedWithErrorAsync(params string[] args)
+        {
+            TextWriter original = Console.Error;
+            try
+            {
+                using var writer = new StringWriter();
+                Console.SetError(writer);
+                (int exitCode, string output) = await RunCapturedAsync(args);
+                return (exitCode, output, writer.ToString());
+            }
+            finally
+            {
+                Console.SetError(original);
             }
         }
 
@@ -511,6 +528,29 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             exitCode.ShouldBe(0);
             string content = File.ReadAllText(Directory.GetFiles(m_TempDirectory).ShouldHaveSingleItem());
             ShouldEndLinesWithNewLine(content);
+        }
+
+        // A run that cannot go on says why on stderr and prints nothing else: the
+        // reason alone, ending with the platform's line end, since zpp leaves
+        // stderr's lines as the platform ends them.
+        [Fact]
+        public async Task Main_Given_InputAndImport_Then_StderrSaysWhy()
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"-m", AssetPath(@"two-scenarios.zpp"));
+
+            exitCode.ShouldBe(2);
+            output.ShouldBeEmpty();
+            error.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_SpecifyEitherOptionNotBoth, @"--input", @"--import") + Environment.NewLine);
+        }
+
+        [Fact]
+        public async Task Main_Given_UnknownScenario_Then_StderrPointsAtListScenarios()
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", @"No Such Scenario");
+
+            exitCode.ShouldBe(1);
+            output.ShouldBeEmpty();
+            error.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, @"No Such Scenario", @"--list-scenarios") + Environment.NewLine);
         }
 
         public void Dispose()

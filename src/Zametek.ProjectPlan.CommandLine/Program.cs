@@ -1,8 +1,6 @@
 using CommandLine;
 using CommandLine.Text;
-using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Serilog;
 using Serilog.Events;
 using System.Globalization;
@@ -19,20 +17,6 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     public class Program
     {
-        // Exit codes are part of the CLI contract: scripts and CI gates branch on
-        // them. 0 = success, 1 = runtime failure (bad paths, unreadable files,
-        // outputs that could not be written, unexpected errors), 2 = bad usage
-        // (invalid options or combinations), 3 = the project compiled with
-        // errors - kept distinct from 1 so a pipeline can tell a broken plan from
-        // a broken invocation - and 4 = a compilation ran past --compile-timeout
-        // and was cancelled, which says nothing about whether the plan is valid,
-        // only that it did not finish.
-        private const int c_ExitSuccess = 0;
-        private const int c_ExitFailure = 1;
-        private const int c_ExitUsageError = 2;
-        private const int c_ExitCompilationErrors = 3;
-        private const int c_ExitCompilationTimeout = 4;
-
         // What --now accepts: ISO 8601, to the second or finer, with the offset from UTC or Z for UTC itself.
         private static readonly string[] s_NowFormats =
         [
@@ -44,6 +28,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public static async Task<int> Main(string[] args)
         {
+            var console = new StandardConsole(Console.Out, Console.Error);
+
             try
             {
                 using var parser = new Parser(with =>
@@ -57,7 +43,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                 ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
 
-                return await parserResult.MapResult(
+                return (int)await parserResult.MapResult(
                     async options =>
                     {
                         ConfigureSerilog(options.Verbose);
@@ -71,29 +57,18 @@ namespace Zametek.ProjectPlan.CommandLine
                         // job, which the engine gives a scope of its own.
                         await using ServiceProvider services = BuildServices();
 
-                        return await RunAsync(options, services.GetRequiredService<JobRunner>());
+                        return await RunAsync(options, services.GetRequiredService<JobRunner>(), console);
                     },
                     errs => Task.FromResult(OnParseErrors(parserResult, errs)));
             }
             catch (UsageException ex)
             {
-                await Console.Error.WriteLineAsync(ex.Message);
-                return c_ExitUsageError;
-            }
-            catch (ScenarioSelectionException ex)
-            {
-                await Console.Error.WriteLineAsync(BuildScenarioSelectionMessage(ex));
-                return c_ExitFailure;
-            }
-            catch (GraphCompilationTimeoutException ex)
-            {
-                await Console.Error.WriteLineAsync(ex.Message);
-                return c_ExitCompilationTimeout;
+                await console.WriteErrorLineAsync(ex.Message);
+                return (int)ExitCode.UsageError;
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync(ex.Message);
-                return c_ExitFailure;
+                return (int)await JobConsoleHelper.WriteFailureAsync(console, ex);
             }
             finally
             {
@@ -124,9 +99,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 .BuildServiceProvider();
         }
 
-        private static async Task<int> RunAsync(
+        private static async Task<ExitCode> RunAsync(
             Options options,
-            JobRunner jobRunner)
+            JobRunner jobRunner,
+            IJobConsole console)
         {
             ValidateOptions(options);
 
@@ -143,8 +119,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (options.ListScenarios)
             {
-                DisplayScenarios(await jobRunner.ListScenariosAsync(input));
-                return c_ExitSuccess;
+                await JobConsoleHelper.WriteScenariosAsync(console, await jobRunner.ListScenariosAsync(input));
+                return ExitCode.Success;
             }
 
             // An export's format comes from its file's extension. Like the export
@@ -176,137 +152,9 @@ namespace Zametek.ProjectPlan.CommandLine
             // not after wherever its results are saved.
             string projectTitle = SettingServiceBase.GetProjectTitle(inputFilename);
 
-            JobResult result = await jobRunner.RunAsync(request, new FileJobSink(BuildOutputFilenames(options, projectTitle)));
+            JobResult result = await jobRunner.RunAsync(request, new FileJobSink(BuildOutputFilenames(options, projectTitle), console));
 
-            if (result.Status == JobStatus.CompilationErrors)
-            {
-                Display(result.CompilationOutput, hasErrors: true);
-                return c_ExitCompilationErrors;
-            }
-
-            // Metrics. A plan that compiled always has them.
-            {
-                JobMetrics metrics = result.Metrics ?? throw new InvalidOperationException();
-
-                switch (options.MetricsFormat)
-                {
-                    case MetricsExport.Json:
-                        // Machine output: undecorated, no colours, no leading
-                        // blank line, so it can be piped straight into a parser.
-                        StandardOutput.WriteLine(BuildMetricsJson(metrics));
-                        break;
-                    case MetricsExport.Table:
-                        Display(BuildMetricsTable(metrics).ToString());
-                        break;
-                    case MetricsExport.Markdown:
-                    default:
-                        Display(BuildMetricsTable(metrics).ToMarkDownString());
-                        break;
-                }
-            }
-
-            // A chart or graph export that fails does not throw: the job reports
-            // the failure through its sink, as the desktop reports it in a dialog.
-            // The remaining outputs have still been produced and the metrics
-            // printed, but the run as a whole has failed.
-            return result.Status == JobStatus.CompletedWithErrors ? c_ExitFailure : c_ExitSuccess;
-        }
-
-        private static ConsoleTable BuildMetricsTable(JobMetrics metrics)
-        {
-            var table = new ConsoleTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRisk, $@"{metrics.ActivityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection, $@"{metrics.ActivityRiskWithStdDevCorrection:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_CriticalityRisk, $@"{metrics.CriticalityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_FibonacciRisk, $@"{metrics.FibonacciRisk:F2}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricActivityRisk, $@"{metrics.GeometricActivityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk, $@"{metrics.GeometricCriticalityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk, $@"{metrics.GeometricFibonacciRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_CyclomaticComplexity, $@"{metrics.NetworkCyclomaticComplexity}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityEffort, $@"{metrics.ActivityEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DurationManMonths, $@"{metrics.NetworkDurationManMonths:F1}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ProjectFinish, $@"{metrics.ProjectFinish}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_EffortEfficiency, $@"{metrics.EffortEfficiency:F3}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectEffort, $@"{metrics.DirectEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectEffort, $@"{metrics.IndirectEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherEffort, $@"{metrics.OtherEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalEffort, $@"{metrics.TotalEffort:F0}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectCost, $@"{metrics.DirectCost:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectCost, $@"{metrics.IndirectCost:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherCost, $@"{metrics.OtherCost:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalCost, $@"{metrics.TotalCost:F2}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectBilling, $@"{metrics.DirectBilling:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectBilling, $@"{metrics.IndirectBilling:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherBilling, $@"{metrics.OtherBilling:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalBilling, $@"{metrics.TotalBilling:F2}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectMargin, $@"{metrics.DirectMarginAbsolute:F2}{metrics.DisplayDirectMargin}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectMargin, $@"{metrics.IndirectMarginAbsolute:F2}{metrics.DisplayIndirectMargin}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherMargin, $@"{metrics.OtherMarginAbsolute:F2}{metrics.DisplayOtherMargin}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalMargin, $@"{metrics.TotalMarginAbsolute:F2}{metrics.DisplayTotalMargin}");
-
-            table.Configure(x =>
-            {
-                x.NumberAlignment = Alignment.Left;
-                x.EnableCount = false;
-            });
-
-            return table;
-        }
-
-        private static string BuildMetricsJson(JobMetrics metrics)
-        {
-            // Raw values rather than display strings wherever the contract offers
-            // them: JSON numbers are culture-invariant by construction, and the
-            // *Margin/*MarginAbsolute pairs carry the ratio and the currency value
-            // that the table's display strings combine. ProjectFinish is the one
-            // exception - the contract only exposes it as a display string.
-            var output = new
-            {
-                metrics.ActivityRisk,
-                metrics.ActivityRiskWithStdDevCorrection,
-                metrics.CriticalityRisk,
-                metrics.FibonacciRisk,
-                metrics.GeometricActivityRisk,
-                metrics.GeometricCriticalityRisk,
-                metrics.GeometricFibonacciRisk,
-                metrics.NetworkCyclomaticComplexity,
-                metrics.NetworkDuration,
-                metrics.NetworkDurationManMonths,
-                metrics.ProjectFinish,
-                metrics.EffortEfficiency,
-                metrics.ActivityEffort,
-                metrics.DirectEffort,
-                metrics.IndirectEffort,
-                metrics.OtherEffort,
-                metrics.TotalEffort,
-                metrics.DirectCost,
-                metrics.IndirectCost,
-                metrics.OtherCost,
-                metrics.TotalCost,
-                metrics.DirectBilling,
-                metrics.IndirectBilling,
-                metrics.OtherBilling,
-                metrics.TotalBilling,
-                metrics.DirectMargin,
-                metrics.IndirectMargin,
-                metrics.OtherMargin,
-                metrics.TotalMargin,
-                metrics.DirectMarginAbsolute,
-                metrics.IndirectMarginAbsolute,
-                metrics.OtherMarginAbsolute,
-                metrics.TotalMarginAbsolute,
-            };
-
-            // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
-            // left in the text is indentation.
-            return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
+            return await JobConsoleHelper.WriteResultAsync(console, result, options.MetricsFormat);
         }
 
         // Error messages name options by their long form, resolved via
@@ -553,48 +401,7 @@ namespace Zametek.ProjectPlan.CommandLine
             return Path.Combine(directory, $@"{projectTitle}{suffix}.{formatDescription.ToLowerInvariant()}");
         }
 
-        // The engine says why it could not select the scenario; zpp says it in
-        // its own words, which point at the option that lists the scenarios.
-        internal static string BuildScenarioSelectionMessage(ScenarioSelectionException ex)
-        {
-            string listScenarios = OptionLongName(nameof(Options.ListScenarios));
-
-            return ex.Failure switch
-            {
-                ScenarioSelectionFailure.NoMatch => string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, ex.Selector, listScenarios),
-                ScenarioSelectionFailure.SeveralMatches => string.Format(Resource.ProjectPlan.Messages.Message_SeveralScenariosMatch, ex.Selector, ex.MatchCount, listScenarios),
-                ScenarioSelectionFailure.NoScenarioData => string.Format(Resource.ProjectPlan.Messages.Message_ScenarioHasNoScenarioData, ex.Selector),
-                _ => ex.Message,
-            };
-        }
-
-        private static void DisplayScenarios(IEnumerable<ScenarioSummary> scenarios)
-        {
-            var table = new ConsoleTable(
-                Resource.ProjectPlan.Titles.Title_Scenario,
-                Resource.ProjectPlan.Titles.Title_Id,
-                Resource.ProjectPlan.Titles.Title_Tracked,
-                Resource.ProjectPlan.Titles.Title_Current);
-
-            foreach (ScenarioSummary scenario in scenarios)
-            {
-                table.AddRow(
-                    scenario.Path,
-                    scenario.Id,
-                    scenario.IsTracked ? Resource.ProjectPlan.Labels.Label_Yes : string.Empty,
-                    scenario.IsCurrent ? Resource.ProjectPlan.Symbols.Symbol_Current : string.Empty);
-            }
-
-            table.Configure(x =>
-            {
-                x.NumberAlignment = Alignment.Left;
-                x.EnableCount = false;
-            });
-
-            Display(table.ToMarkDownString());
-        }
-
-        private static int OnParseErrors<T>(
+        private static ExitCode OnParseErrors<T>(
             ParserResult<T> result,
             IEnumerable<Error> errs)
         {
@@ -603,25 +410,8 @@ namespace Zametek.ProjectPlan.CommandLine
             // Help explicitly requested is a successful outcome; anything else
             // that lands here is a genuine usage error.
             return errs.Any(x => x.Tag is ErrorType.HelpRequestedError or ErrorType.HelpVerbRequestedError)
-                ? c_ExitSuccess
-                : c_ExitUsageError;
-        }
-
-        private static void Display(
-            string content,
-            bool hasErrors = false)
-        {
-            if (hasErrors)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-            }
-            StandardOutput.WriteLine();
-            StandardOutput.WriteLine(content);
-            Console.ResetColor();
+                ? ExitCode.Success
+                : ExitCode.UsageError;
         }
 
         private static void DisplayHelp<T>(ParserResult<T> result)

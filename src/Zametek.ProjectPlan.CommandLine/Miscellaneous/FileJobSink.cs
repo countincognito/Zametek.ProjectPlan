@@ -4,23 +4,28 @@ using Zametek.ViewModel.ProjectPlan;
 namespace Zametek.ProjectPlan.CommandLine
 {
     // zpp's end of a job: each output is written to the file the options name for it, as soon as the job produces it,
-    // and each message is printed as the desktop would show it in a dialog - errors and warnings on stderr, anything
-    // else on stdout.
+    // and each message is printed on zpp's console as the desktop would show it in a dialog - errors and warnings on
+    // stderr, anything else on stdout.
     internal class FileJobSink
         : IJobSink
     {
         #region Fields
 
         private readonly IReadOnlyDictionary<JobOutput, string> m_Filenames;
+        private readonly IJobConsole m_Console;
 
         #endregion
 
         #region Ctors
 
-        public FileJobSink(IReadOnlyDictionary<JobOutput, string> filenames)
+        public FileJobSink(
+            IReadOnlyDictionary<JobOutput, string> filenames,
+            IJobConsole console)
         {
             ArgumentNullException.ThrowIfNull(filenames);
+            ArgumentNullException.ThrowIfNull(console);
             m_Filenames = filenames;
+            m_Console = console;
         }
 
         #endregion
@@ -34,18 +39,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public async Task ReportAsync(JobMessage message)
         {
-            ArgumentNullException.ThrowIfNull(message);
-
-            string text = $@"{message.Title}: {message.Message}";
-
-            if (message.Kind is JobMessageKind.Error or JobMessageKind.Warning)
-            {
-                await Console.Error.WriteLineAsync(text);
-            }
-            else
-            {
-                await StandardOutput.WriteLineAsync(text);
-            }
+            await JobConsoleHelper.WriteMessageAsync(m_Console, message);
         }
 
         #endregion
