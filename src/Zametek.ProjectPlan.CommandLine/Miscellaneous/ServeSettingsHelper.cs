@@ -174,9 +174,16 @@ namespace Zametek.ProjectPlan.CommandLine
         // directory, as zpp takes every other path it is given.
         private static string? ResolveUnixSocket(ServeOptions options)
         {
-            return options.UnixSocket is string socket
-                ? Path.GetFullPath(socket)
-                : null;
+            if (options.UnixSocket is not string socket)
+            {
+                return null;
+            }
+
+            return string.IsNullOrWhiteSpace(socket)
+                ? throw new UsageException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath,
+                    OptionLongName(nameof(ServeOptions.UnixSocket))))
+                : Path.GetFullPath(socket);
         }
 
         private static string? ResolveApiKey(

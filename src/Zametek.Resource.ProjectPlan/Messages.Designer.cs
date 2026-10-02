@@ -817,6 +817,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} needs the path of the socket to listen on..
+        /// </summary>
+        public static string Message_ServeUnixSocketNeedsPath {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketNeedsPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; matches {1} scenarios - use {2} and select one by id.
         /// </summary>
         public static string Message_SeveralScenariosMatch {

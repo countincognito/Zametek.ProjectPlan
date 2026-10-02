@@ -468,4 +468,7 @@
   <data name="Message_ServeBusy" xml:space="preserve">
     <value>The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.</value>
   </data>
+  <data name="Message_ServeUnixSocketNeedsPath" xml:space="preserve">
+    <value>{0} needs the path of the socket to listen on.</value>
+  </data>
 </root>

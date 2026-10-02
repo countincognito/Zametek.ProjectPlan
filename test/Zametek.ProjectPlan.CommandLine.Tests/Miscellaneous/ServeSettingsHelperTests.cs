@@ -84,6 +84,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             settings.UnixSocket.ShouldBe(Path.Combine(Environment.CurrentDirectory, @"zpp.sock"));
         }
 
+        [Theory]
+        [InlineData(@"")]
+        [InlineData(@"   ")]
+        public void Resolve_Given_AUnixSocketWithoutAPath_Then_UsageException(string socket)
+        {
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { UnixSocket = socket }))
+                .Message.ShouldBe(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath,
+                    Option(nameof(ServeOptions.UnixSocket))));
+        }
+
         [Fact]
         public void Resolve_Given_LimitsInEachPlace_Then_OptionsBeatTheEnvironmentWhichBeatsTheFile()
         {

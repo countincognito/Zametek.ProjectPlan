@@ -89,6 +89,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_AUnixSocketWithoutAPath_Then_UsageErrorSayingWhy()
+        {
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            ExitCode exitCode = await JobServer.RunAsync([@"--unix-socket", string.Empty], console, stopping.Token);
+
+            exitCode.ShouldBe(ExitCode.UsageError);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(string.Format(
+                Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath,
+                @"--unix-socket")));
+        }
+
+        [Fact]
         public async Task RunAsync_Given_OptionsItCanRunWith_Then_ServesUntilStopped()
         {
             // On a socket, which the test can find the server on without being told a port.
