@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using System.Collections;
 using System.Globalization;
 using System.Net;
 using System.Threading.RateLimiting;
@@ -78,7 +77,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             try
             {
-                ServeSettings settings = ServeSettingsHelper.Resolve(parsed.Value, ServeSettingsHelper.GetSettingsDirectory(), ReadEnvironment());
+                ServeSettings settings = ServeSettingsHelper.Resolve(parsed.Value, ServeSettingsHelper.GetSettingsDirectory(), Program.ReadEnvironment());
 
                 // Before anything writes a number or a date: the engine fixes its date formats the first time it uses
                 // them.
@@ -290,19 +289,6 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 kestrel.ListenUnixSocket(socket);
             }
-        }
-
-        // The environment, as ServeSettingsHelper reads it: by name, whatever its case, as Windows reads it.
-        private static Dictionary<string, string> ReadEnvironment()
-        {
-            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
-            {
-                environment[(string)variable.Key] = (string?)variable.Value ?? string.Empty;
-            }
-
-            return environment;
         }
 
         #endregion

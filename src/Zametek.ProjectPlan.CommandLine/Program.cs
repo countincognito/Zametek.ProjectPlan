@@ -3,6 +3,7 @@ using CommandLine.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
+using System.Collections;
 using System.Globalization;
 using System.Reflection;
 using Zametek.Common.ProjectPlan;
@@ -27,6 +28,15 @@ namespace Zametek.ProjectPlan.CommandLine
         ];
 
         public static async Task<int> Main(string[] args)
+        {
+            return await MainAsync(args, ReadEnvironment());
+        }
+
+        // Main, with the environment it reads ZPP_SERVER and ZPP_API_KEY from given to it, so that a test can choose
+        // what it reads without changing the process's.
+        internal static async Task<int> MainAsync(
+            string[] args,
+            IReadOnlyDictionary<string, string> environment)
         {
             var console = new StandardConsole(Console.Out, Console.Error);
 
@@ -53,17 +63,14 @@ namespace Zametek.ProjectPlan.CommandLine
                     async options =>
                     {
                         ConfigureSerilog(options.Verbose);
+                        ValidateOptions(options);
 
-                        // Before the container exists, because the view models the
-                        // engine runs depend on it.
-                        ProjectPlanEngine.Initialize();
-
-                        // The container is built only once the options parse, so
-                        // help and usage errors never pay for it. The run is one
-                        // job, which the engine gives a scope of its own.
-                        await using ServiceProvider services = BuildServices();
-
-                        return await RunAsync(options, services.GetRequiredService<JobRunner>(), console);
+                        // A run sent to a server never builds the engine, nor so
+                        // much as loads its container: running here is a method
+                        // of its own, which only a run here compiles.
+                        return ClientSettingsHelper.Resolve(options, environment) is ClientSettings server
+                            ? await JobClient.RunAsync(options, server, console)
+                            : await RunHereAsync(options, console);
                     },
                     errs => Task.FromResult(OnParseErrors(parserResult, errs)));
             }
@@ -71,6 +78,11 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 await console.WriteErrorLineAsync(ex.Message);
                 return (int)ExitCode.UsageError;
+            }
+            catch (ServerException ex)
+            {
+                await console.WriteErrorLineAsync(ex.Message);
+                return (int)ExitCode.ServerFailure;
             }
             catch (Exception ex)
             {
@@ -80,6 +92,19 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 Log.CloseAndFlush();
             }
+        }
+
+        // The environment, by name, whatever its case - as Windows reads it.
+        internal static Dictionary<string, string> ReadEnvironment()
+        {
+            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
+            {
+                environment[(string)variable.Key] = (string?)variable.Value ?? string.Empty;
+            }
+
+            return environment;
         }
 
         private static void ConfigureSerilog(bool verbose)
@@ -112,13 +137,28 @@ namespace Zametek.ProjectPlan.CommandLine
                 });
         }
 
+        // The run, in this process, on an engine built for its one job.
+        private static async Task<ExitCode> RunHereAsync(
+            Options options,
+            IJobConsole console)
+        {
+            // Before the container exists, because the view models the
+            // engine runs depend on it.
+            ProjectPlanEngine.Initialize();
+
+            // The container is built only once the options parse, so
+            // help and usage errors never pay for it. The run is one
+            // job, which the engine gives a scope of its own.
+            await using ServiceProvider services = BuildServices();
+
+            return await RunAsync(options, services.GetRequiredService<JobRunner>(), console);
+        }
+
         private static async Task<ExitCode> RunAsync(
             Options options,
             JobRunner jobRunner,
             IJobConsole console)
         {
-            ValidateOptions(options);
-
             // File in: a project file, or a file to import. The parser's file-in
             // group requires one of the two, and ValidateOptions rejects both.
             string inputFilename = options.InputFilename ?? options.ImportFilename!;
@@ -163,7 +203,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             // Chart and graph files are named after the file the plan came from,
             // not after wherever its results are saved.
-            string projectTitle = SettingServiceBase.GetProjectTitle(inputFilename);
+            string projectTitle = FileFormatHelper.GetProjectTitle(inputFilename);
 
             JobResult result = await jobRunner.RunAsync(request, new FileJobSink(BuildOutputFilenames(options, projectTitle), console));
 
@@ -341,8 +381,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The file each output the options ask for is written to: the project and
         // the export where the options name them, and each chart and graph in its
-        // directory, named after the project.
-        private static Dictionary<JobOutput, string> BuildOutputFilenames(
+        // directory, named after the project - whether the job runs here or on a
+        // server.
+        internal static Dictionary<JobOutput, string> BuildOutputFilenames(
             Options options,
             string projectTitle)
         {

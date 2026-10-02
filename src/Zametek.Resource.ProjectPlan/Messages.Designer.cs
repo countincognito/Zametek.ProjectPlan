@@ -581,6 +581,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_OptionMustBeADateTimeWithOffset", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid when zpp runs on a server: use {1}, or set {2}..
+        /// </summary>
+        public static string Message_OptionOnlyValidWithServer {
+            get {
+                return ResourceManager.GetString("Message_OptionOnlyValidWithServer", resourceCulture);
+            }
+        }
 
         /// <summary>
         ///   Looks up a localized string similar to {0} is required when {1} is specified..
@@ -754,6 +763,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to it does not match the job zpp sent..
+        /// </summary>
+        public static string Message_ServerAnswerDoesNotMatchJob {
+            get {
+                return ResourceManager.GetString("Message_ServerAnswerDoesNotMatchJob", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave an answer zpp cannot read: {1}.
+        /// </summary>
+        public static string Message_ServerAnswerNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServerAnswerNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp serve imports .xlsx files only: to import {0}, run zpp without {1}..
+        /// </summary>
+        public static string Message_ServerCannotImport {
+            get {
+                return ResourceManager.GetString("Message_ServerCannotImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Send one plan: as a file named &apos;input&apos;, or named &apos;import&apos; to import it..
         /// </summary>
         public static string Message_ServeRequestNeedsPlan {
@@ -786,6 +822,78 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeRequestTooLarge {
             get {
                 return ResourceManager.GetString("Message_ServeRequestTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is set, so zpp runs on a server, which imports .xlsx files only: to import {1}, use {2}..
+        /// </summary>
+        public static string Message_ServerFromEnvironmentCannotImport {
+            get {
+                return ResourceManager.GetString("Message_ServerFromEnvironmentCannotImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} needs its API key: set {1}, or use {2}..
+        /// </summary>
+        public static string Message_ServerNeedsApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServerNeedsApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos;, from {1}, is not a server zpp can run on: give its http or https address, such as http://localhost:9770, or unix: and the path of its socket..
+        /// </summary>
+        public static string Message_ServerNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServerNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} did not run the job: {1}.
+        /// </summary>
+        public static string Message_ServerRefused {
+            get {
+                return ResourceManager.GetString("Message_ServerRefused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} did not accept the API key..
+        /// </summary>
+        public static string Message_ServerRefusedApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServerRefusedApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to there is no socket at {0}..
+        /// </summary>
+        public static string Message_ServerSocketNotThere {
+            get {
+                return ResourceManager.GetString("Message_ServerSocketNotThere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} was still busy after {1} seconds, so the job did not run..
+        /// </summary>
+        public static string Message_ServerStayedBusy {
+            get {
+                return ResourceManager.GetString("Message_ServerStayedBusy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp could not reach the server at {0}: {1}.
+        /// </summary>
+        public static string Message_ServerUnreachable {
+            get {
+                return ResourceManager.GetString("Message_ServerUnreachable", resourceCulture);
             }
         }
         

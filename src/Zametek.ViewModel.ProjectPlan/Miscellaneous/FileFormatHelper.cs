@@ -3,12 +3,20 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    // The format a file name's extension names, for the callers that start from a file name: the desktop's dialogs and
-    // zpp's import and export options. The file layer itself takes the format alongside a stream, which has no name to
-    // read one from. An extension outside the list is refused with the message the file layer gave when it was handed
-    // file names.
+    // What a file name says - the format its extension names, and the title of the project in it - for the callers that
+    // start from a file name: the desktop's dialogs and zpp's options. The file layer itself takes the format alongside
+    // a stream, which has no name to read one from. An extension outside the list is refused with the message the file
+    // layer gave when it was handed file names. A static class of its own, which loads nothing of the view models, so
+    // that zpp can read a file name without them when it runs a job on a server.
     public static class FileFormatHelper
     {
+        // The title a project takes from the name of the file it came from.
+        public static string GetProjectTitle(string filename)
+        {
+            ArgumentNullException.ThrowIfNull(filename);
+            return Path.GetFileNameWithoutExtension(filename).Trim();
+        }
+
         public static ProjectScenarioImportFormat GetProjectScenarioImportFormat(string filename)
         {
             ArgumentNullException.ThrowIfNull(filename);

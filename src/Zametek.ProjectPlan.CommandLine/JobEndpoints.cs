@@ -4,9 +4,7 @@ using Microsoft.Extensions.Primitives;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -67,9 +65,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         #region Properties
 
-        // How requests are read and responses written: camelCase, enums by name - in any case, never by number - and a
-        // job's options strictly, so that an option misspelt, or a number in quotes, is refused rather than ignored.
-        public static JsonSerializerOptions JsonOptions { get; } = CreateJsonOptions();
+        // How requests are read and responses written (see JobJsonHelper).
+        public static JsonSerializerOptions JsonOptions => JobJsonHelper.ServerOptions;
 
         #endregion
 
@@ -136,7 +133,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             // Only the name: a path that came with it says nothing about where the server is.
             string filename = Path.GetFileName(plan.FileName);
-            string projectTitle = SettingServiceBase.GetProjectTitle(filename);
+            string projectTitle = FileFormatHelper.GetProjectTitle(filename);
 
             if (projectTitle.Length == 0)
             {
@@ -421,23 +418,6 @@ namespace Zametek.ProjectPlan.CommandLine
 
             using Stream entryStream = entry.Open();
             entryStream.Write(content);
-        }
-
-        private static JsonSerializerOptions CreateJsonOptions()
-        {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true,
-                UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-
-                // The text zpp prints as it prints it - quotes and all - as the problem details write theirs. A response
-                // is JSON for its caller, never HTML, so nothing needs escaping that JSON does not escape.
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            };
-
-            options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
-            return options;
         }
 
         #endregion

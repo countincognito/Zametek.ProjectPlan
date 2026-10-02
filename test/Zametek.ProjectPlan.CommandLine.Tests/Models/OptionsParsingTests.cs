@@ -130,6 +130,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Parse_Given_ServerLocalAndApiKeyFile_Then_Populated()
+        {
+            Options options = ParsedValue(@"-i", @"a.zpp", @"--server", @"http://localhost:9770", @"--local", @"--api-key-file", @"api-key");
+
+            options.Server.ShouldBe(@"http://localhost:9770");
+            options.Local.ShouldBeTrue();
+            options.ApiKeyFile.ShouldBe(@"api-key");
+        }
+
+        [Fact]
+        public void Parse_Given_NoServerOptions_Then_NoneSet()
+        {
+            Options options = ParsedValue(@"-i", @"a.zpp");
+
+            options.Server.ShouldBeNull();
+            options.Local.ShouldBeFalse();
+            options.ApiKeyFile.ShouldBeNull();
+        }
+
+        [Fact]
         public void Options_Given_EveryOptionProperty_Then_HasLongName()
         {
             // Program.OptionLongName resolves message text from these attributes,

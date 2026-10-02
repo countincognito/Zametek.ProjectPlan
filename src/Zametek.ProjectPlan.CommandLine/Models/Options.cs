@@ -39,6 +39,9 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ScenarioChartDirectoryLongName = "scenario-chart-directory";
         private const string c_ScenarioChartFormatLongName = "scenario-chart-format";
         private const string c_ScenarioChartSizeLongName = "scenario-chart-size";
+        private const string c_ServerLongName = "server";
+        private const string c_LocalLongName = "local";
+        private const string c_ApiKeyFileLongName = "api-key-file";
 
         [Option('i', c_InputLongName, Group = "file-in", HelpText = "Input file path")]
         public string? InputFilename { get; set; } = default;
@@ -138,5 +141,16 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_ScenarioChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Scenario chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> ScenarioChartSize { get; set; } = [];
+
+
+
+        [Option(c_ServerLongName, HelpText = "Run on a zpp serve rather than in this process: its address, such as http://localhost:9770, or unix: and the path of its socket (defaults to ZPP_SERVER, when it is set). The run's files, text and exit code are as they would be here (a server that cannot run the job exits with code 5)")]
+        public string? Server { get; set; } = default;
+
+        [Option(c_LocalLongName, HelpText = "Run in this process, even when ZPP_SERVER is set")]
+        public bool Local { get; set; } = default;
+
+        [Option(c_ApiKeyFileLongName, HelpText = "File holding the server's API key - or set ZPP_API_KEY (only valid when the run is on a server)")]
+        public string? ApiKeyFile { get; set; } = default;
     }
 }

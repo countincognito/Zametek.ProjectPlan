@@ -206,5 +206,61 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             JobOptionsHelper.GetContentType(filename).ShouldBe(contentType);
         }
+
+        [Fact]
+        public void FromOptions_Given_EveryOptionAJobTakes_Then_TheSameLessThePaths()
+        {
+            var options = new Options
+            {
+                InputFilename = @"plan.zpp",
+                Scenario = @"Beta",
+                OutputFilename = @"saved.zpp",
+                ExportFilename = @"exported.xlsx",
+                BaseTheme = BaseTheme.Dark,
+                MetricsFormat = MetricsExport.Json,
+                CompileTimeoutMilliseconds = 3000,
+                Now = @"2026-10-02T09:00:00+01:00",
+                GanttDirectory = @"charts",
+                GanttFormat = PlotExport.Png,
+                GanttSize = [800, 600],
+                ArrowGraphDirectory = @"graphs",
+                ArrowGraphFormat = GraphExport.GraphML,
+                VertexGraphDirectory = @"graphs",
+                VertexGraphFormat = GraphExport.Dot,
+                ResourceDirectory = @"charts",
+                ResourceFormat = PlotExport.Svg,
+                ResourceSize = [640, 480],
+                EVDirectory = @"charts",
+                EVFormat = PlotExport.Webp,
+                EVSize = [320, 240],
+                ScenarioChartDirectory = @"charts",
+                ScenarioChartFormat = PlotExport.Bmp,
+                ScenarioChartSize = [100, 50],
+            };
+
+            JobOptionsHelper.FromOptions(options).ShouldBe(new JobOptions
+            {
+                Scenario = @"Beta",
+                Output = true,
+                Export = true,
+                BaseTheme = BaseTheme.Dark,
+                MetricsFormat = MetricsExport.Json,
+                CompileTimeout = 3000,
+                Now = @"2026-10-02T09:00:00+01:00",
+                Gantt = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                Arrow = new GraphOptions { Format = GraphExport.GraphML },
+                Vertex = new GraphOptions { Format = GraphExport.Dot },
+                Resource = new ChartOptions { Format = PlotExport.Svg, Width = 640, Height = 480 },
+                EV = new ChartOptions { Format = PlotExport.Webp, Width = 320, Height = 240 },
+                ScenarioChart = new ChartOptions { Format = PlotExport.Bmp, Width = 100, Height = 50 },
+            });
+        }
+
+        [Fact]
+        public void FromOptions_Given_NoOutputs_Then_AsksForNoneWithZppsCompileTimeout()
+        {
+            JobOptionsHelper.FromOptions(new Options { InputFilename = @"plan.zpp" })
+                .ShouldBe(new JobOptions { CompileTimeout = AppSettingsModel.DefaultCompilationTimeoutMilliseconds });
+        }
     }
 }

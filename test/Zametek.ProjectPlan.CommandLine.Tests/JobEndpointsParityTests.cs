@@ -206,7 +206,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             string directory = Directory.CreateDirectory(Path.Combine(m_TempDirectory, @"zpp")).FullName;
             string filename = Path.GetFileName(planPath);
-            string projectTitle = SettingServiceBase.GetProjectTitle(filename);
+            string projectTitle = FileFormatHelper.GetProjectTitle(filename);
 
             (int exitCode, string output, string error) = await RunZppAsync(ToZppArguments(options, planPath, isImport, directory, projectTitle));
 
@@ -359,7 +359,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 Console.SetOut(output);
                 Console.SetError(error);
 
-                int exitCode = await Program.Main(args);
+                int exitCode = await ZppMain.RunAsync(args);
                 return (exitCode, output.ToString(), error.ToString());
             }
             finally

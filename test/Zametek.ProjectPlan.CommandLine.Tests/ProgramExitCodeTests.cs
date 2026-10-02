@@ -54,7 +54,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 using var writer = new StringWriter();
                 Console.SetOut(writer);
-                int exitCode = await Program.Main(args);
+                int exitCode = await ZppMain.RunAsync(args);
                 return (exitCode, writer.ToString());
             }
             finally
@@ -96,12 +96,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string freshFile = buildOutputFilename(freshDirectory);
             string overwrittenFile = buildOutputFilename(staleDirectory);
 
-            int freshExitCode = await Program.Main(buildArgs(freshDirectory));
+            int freshExitCode = await ZppMain.RunAsync(buildArgs(freshDirectory));
             freshExitCode.ShouldBe(0);
 
             File.WriteAllText(overwrittenFile, new string('X', (int)new FileInfo(freshFile).Length + c_StaleFileExcessLength));
 
-            int overwriteExitCode = await Program.Main(buildArgs(staleDirectory));
+            int overwriteExitCode = await ZppMain.RunAsync(buildArgs(staleDirectory));
             overwriteExitCode.ShouldBe(0);
 
             return (freshFile, overwrittenFile);
@@ -129,7 +129,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_ValidProject_Then_ExitSuccess()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp")]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp")]);
 
             exitCode.ShouldBe(0);
         }
@@ -156,7 +156,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             string outputFile = Path.Combine(m_TempDirectory, @"switched.zpp");
 
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", @"Beta", @"-o", outputFile]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", @"Beta", @"-o", outputFile]);
 
             exitCode.ShouldBe(0);
             JObject saved = JObject.Parse(File.ReadAllText(outputFile));
@@ -174,7 +174,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             string outputFile = Path.Combine(m_TempDirectory, @"switched-by-prefix.zpp");
 
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", betaIdPrefix, @"-o", outputFile]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", betaIdPrefix, @"-o", outputFile]);
 
             exitCode.ShouldBe(0);
             JObject saved = JObject.Parse(File.ReadAllText(outputFile));
@@ -196,9 +196,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             string workbook = Path.Combine(m_TempDirectory, @"plan.xlsx");
             string outputFile = Path.Combine(m_TempDirectory, @"imported.zpp");
-            (await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-x", workbook])).ShouldBe(0);
+            (await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"-x", workbook])).ShouldBe(0);
 
-            int exitCode = await Program.Main([@"-m", workbook, @"-o", outputFile]);
+            int exitCode = await ZppMain.RunAsync([@"-m", workbook, @"-o", outputFile]);
 
             exitCode.ShouldBe(0);
             JObject saved = JObject.Parse(File.ReadAllText(outputFile));
@@ -215,7 +215,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_UnknownScenario_Then_ExitFailure()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", @"No Such Scenario"]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"-s", @"No Such Scenario"]);
 
             exitCode.ShouldBe(1);
         }
@@ -223,7 +223,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_InputAndImport_Then_ExitUsageError()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-m", AssetPath(@"two-scenarios.zpp")]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"-m", AssetPath(@"two-scenarios.zpp")]);
 
             exitCode.ShouldBe(2);
         }
@@ -231,7 +231,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_ScenarioWithImport_Then_ExitUsageError()
         {
-            int exitCode = await Program.Main([@"-m", AssetPath(@"two-scenarios.zpp"), @"-s", @"Beta"]);
+            int exitCode = await ZppMain.RunAsync([@"-m", AssetPath(@"two-scenarios.zpp"), @"-s", @"Beta"]);
 
             exitCode.ShouldBe(2);
         }
@@ -239,7 +239,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_NegativeCompileTimeout_Then_ExitUsageError()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"-1"]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"-1"]);
 
             exitCode.ShouldBe(2);
         }
@@ -247,7 +247,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_NowWithoutAnOffset_Then_ExitUsageError()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--now", @"2026-09-27T12:00:00"]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"--now", @"2026-09-27T12:00:00"]);
 
             exitCode.ShouldBe(2);
         }
@@ -266,8 +266,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string first = Directory.CreateDirectory(Path.Combine(m_TempDirectory, @"first")).FullName;
             string second = Directory.CreateDirectory(Path.Combine(m_TempDirectory, @"second")).FullName;
 
-            (await Program.Main(Args(first))).ShouldBe(0);
-            (await Program.Main(Args(second))).ShouldBe(0);
+            (await ZppMain.RunAsync(Args(first))).ShouldBe(0);
+            (await ZppMain.RunAsync(Args(second))).ShouldBe(0);
 
             // The run happened at the time it was given...
             using var reader = new JsonTextReader(new StringReader(File.ReadAllText(Path.Combine(first, @"plan.zpp"))))
@@ -291,7 +291,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // watchdog firing - has no test here: the smallest budget the timer can
             // reliably signal is coarser than the time this asset takes to compile,
             // so any attempt to provoke it would be a race.
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"0"]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"--compile-timeout", @"0"]);
 
             exitCode.ShouldBe(0);
         }
@@ -299,7 +299,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_DirectoryWithoutSize_Then_ExitUsageError()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", m_TempDirectory]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", m_TempDirectory]);
 
             exitCode.ShouldBe(2);
         }
@@ -309,7 +309,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             string missingDirectory = Path.Combine(m_TempDirectory, @"does-not-exist");
 
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", missingDirectory, @"--gantt-size", @"800:600"]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", missingDirectory, @"--gantt-size", @"800:600"]);
 
             exitCode.ShouldBe(1);
         }
@@ -317,7 +317,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Main_Given_BrokenDependencies_Then_ExitCompilationErrors()
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"broken-dependency.zpp")]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"broken-dependency.zpp")]);
 
             exitCode.ShouldBe(3);
         }
@@ -514,7 +514,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             string outputFile = Path.Combine(m_TempDirectory, @"two-scenarios.zpp");
 
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), @"-o", outputFile]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), @"-o", outputFile]);
 
             exitCode.ShouldBe(0);
             string content = File.ReadAllText(outputFile);
@@ -528,7 +528,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"vertex", GraphExport.Dot)]
         public async Task Main_Given_GraphDataExport_Then_FileLinesEndWithLf(string graph, GraphExport format)
         {
-            int exitCode = await Program.Main([@"-i", AssetPath(@"two-scenarios.zpp"), $@"--{graph}-directory", m_TempDirectory, $@"--{graph}-format", format.ToString()]);
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), $@"--{graph}-directory", m_TempDirectory, $@"--{graph}-format", format.ToString()]);
 
             exitCode.ShouldBe(0);
             string content = File.ReadAllText(Directory.GetFiles(m_TempDirectory).ShouldHaveSingleItem());

@@ -6,23 +6,26 @@ using Zametek.Engine.ProjectPlan;
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     // A zpp serve started for a test, as JobServer builds it - by default on a port of its own on this machine, chosen
-    // when it starts - with a client for it.
+    // when it starts - with a client for it, and a count of the requests its API has been sent, so that a test can tell
+    // a run sent to it from one that never reached it.
     internal sealed class RunningServer
         : IAsyncDisposable
     {
         private readonly WebApplication m_App;
+        private HttpClient? m_Client;
+        private int m_ApiRequests;
 
-        private RunningServer(
-            WebApplication app,
-            HttpClient client)
+        private RunningServer(WebApplication app)
         {
             m_App = app;
-            Client = client;
         }
 
-        public HttpClient Client { get; }
+        public HttpClient Client => m_Client ?? throw new InvalidOperationException();
 
         public string Address => m_App.Urls.First();
+
+        // The requests the API has taken - past its API key and its limits.
+        public int ApiRequests => Volatile.Read(ref m_ApiRequests);
 
         public static async Task<RunningServer> StartAsync(
             JobRunner jobRunner,
@@ -39,18 +42,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
 
             WebApplication app = JobServer.Build(settings, jobRunner, warmUp);
+            var server = new RunningServer(app);
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path.StartsWithSegments(JobServer.ApiPath))
+                {
+                    Interlocked.Increment(ref server.m_ApiRequests);
+                }
+
+                await next(context);
+            });
+
             await app.StartAsync();
 
             // A Unix domain socket has no address of its own: the handler connects to it. A request that is never
             // answered fails its test within a minute, rather than holding the run up.
             string address = settings.Listen.Count == 0 ? @"http://localhost" : app.Urls.First();
-            var client = new HttpClient(handler ?? new SocketsHttpHandler())
+            server.m_Client = new HttpClient(handler ?? new SocketsHttpHandler())
             {
                 BaseAddress = new Uri(address),
                 Timeout = TimeSpan.FromMinutes(1),
             };
 
-            return new RunningServer(app, client);
+            return server;
         }
 
         // The job, sent as zpp serve takes one: the plan as the named part - input or import - under its file name, and
@@ -83,7 +98,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         public async ValueTask DisposeAsync()
         {
-            Client.Dispose();
+            m_Client?.Dispose();
             await m_App.StopAsync();
             await m_App.DisposeAsync();
         }

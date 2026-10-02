@@ -471,4 +471,40 @@
   <data name="Message_ServeUnixSocketNeedsPath" xml:space="preserve">
     <value>{0} needs the path of the socket to listen on.</value>
   </data>
+  <data name="Message_ServerNotValid" xml:space="preserve">
+    <value>'{0}', from {1}, is not a server zpp can run on: give its http or https address, such as http://localhost:9770, or unix: and the path of its socket.</value>
+  </data>
+  <data name="Message_OptionOnlyValidWithServer" xml:space="preserve">
+    <value>{0} is only valid when zpp runs on a server: use {1}, or set {2}.</value>
+  </data>
+  <data name="Message_ServerCannotImport" xml:space="preserve">
+    <value>zpp serve imports .xlsx files only: to import {0}, run zpp without {1}.</value>
+  </data>
+  <data name="Message_ServerFromEnvironmentCannotImport" xml:space="preserve">
+    <value>{0} is set, so zpp runs on a server, which imports .xlsx files only: to import {1}, use {2}.</value>
+  </data>
+  <data name="Message_ServerUnreachable" xml:space="preserve">
+    <value>zpp could not reach the server at {0}: {1}</value>
+  </data>
+  <data name="Message_ServerRefused" xml:space="preserve">
+    <value>The server at {0} did not run the job: {1}</value>
+  </data>
+  <data name="Message_ServerNeedsApiKey" xml:space="preserve">
+    <value>The server at {0} needs its API key: set {1}, or use {2}.</value>
+  </data>
+  <data name="Message_ServerRefusedApiKey" xml:space="preserve">
+    <value>The server at {0} did not accept the API key.</value>
+  </data>
+  <data name="Message_ServerStayedBusy" xml:space="preserve">
+    <value>The server at {0} was still busy after {1} seconds, so the job did not run.</value>
+  </data>
+  <data name="Message_ServerAnswerNotValid" xml:space="preserve">
+    <value>The server at {0} gave an answer zpp cannot read: {1}</value>
+  </data>
+  <data name="Message_ServerAnswerDoesNotMatchJob" xml:space="preserve">
+    <value>it does not match the job zpp sent.</value>
+  </data>
+  <data name="Message_ServerSocketNotThere" xml:space="preserve">
+    <value>there is no socket at {0}.</value>
+  </data>
 </root>

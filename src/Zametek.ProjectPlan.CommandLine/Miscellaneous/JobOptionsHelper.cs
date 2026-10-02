@@ -5,7 +5,8 @@ using Zametek.Utility;
 namespace Zametek.ProjectPlan.CommandLine
 {
     // Turns the options a job was sent with into the engine's request for it, as zpp turns its own options into one,
-    // once they are checked against zpp serve's limits; and names each output the job produces as zpp names its file.
+    // once they are checked against zpp serve's limits; turns zpp's own options into a job's, when zpp sends its run to
+    // a server; and names each output the job produces as zpp names its file.
     internal static class JobOptionsHelper
     {
         // The media type of each output, by its file's extension.
@@ -96,6 +97,31 @@ namespace Zametek.ProjectPlan.CommandLine
             };
         }
 
+        // The options zpp sends a server for a run with these options of its own: the same, less the paths - where zpp
+        // names the file or directory an output goes to, the job asks for the output. ValidateOptions has checked them,
+        // and the parser that each size has exactly two values.
+        public static JobOptions FromOptions(Options options)
+        {
+            ArgumentNullException.ThrowIfNull(options);
+
+            return new JobOptions
+            {
+                Scenario = options.Scenario,
+                Output = options.OutputFilename is not null,
+                Export = options.ExportFilename is not null,
+                BaseTheme = options.BaseTheme,
+                MetricsFormat = options.MetricsFormat,
+                CompileTimeout = options.CompileTimeoutMilliseconds,
+                Now = options.Now,
+                Gantt = ToChartOptions(options.GanttDirectory, options.GanttFormat, options.GanttSize),
+                Arrow = ToGraphOptions(options.ArrowGraphDirectory, options.ArrowGraphFormat),
+                Vertex = ToGraphOptions(options.VertexGraphDirectory, options.VertexGraphFormat),
+                Resource = ToChartOptions(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
+                EV = ToChartOptions(options.EVDirectory, options.EVFormat, options.EVSize),
+                ScenarioChart = ToChartOptions(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
+            };
+        }
+
         // The name zpp gives the output's file: each chart and graph's as zpp names it in its directory, and - where zpp
         // writes them to whichever files --output and --export name - the project's and the scenario export's after the
         // plan they came from.
@@ -138,6 +164,29 @@ namespace Zametek.ProjectPlan.CommandLine
             yield return (@"resource", options.Resource);
             yield return (@"ev", options.EV);
             yield return (@"scenarioChart", options.ScenarioChart);
+        }
+
+        private static ChartOptions? ToChartOptions(
+            string? directory,
+            PlotExport format,
+            IEnumerable<int> size)
+        {
+            if (directory is null)
+            {
+                return null;
+            }
+
+            IList<int> sizeList = [.. size];
+            return new ChartOptions { Format = format, Width = sizeList[0], Height = sizeList[1] };
+        }
+
+        private static GraphOptions? ToGraphOptions(
+            string? directory,
+            GraphExport format)
+        {
+            return directory is null
+                ? null
+                : new GraphOptions { Format = format };
         }
 
         private static ChartOutputRequest? ToChartOutputRequest(ChartOptions? chart)
