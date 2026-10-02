@@ -1,0 +1,133 @@
+using CommandLine;
+using Shouldly;
+using System.Reflection;
+using Xunit;
+
+namespace Zametek.ProjectPlan.CommandLine.Tests
+{
+    /// <summary>
+    /// Tests for zpp serve's options as seen through a parser configured the
+    /// way JobServer configures its own - which, unlike zpp's, takes an option
+    /// more than once. The limits are optional, so that configuration supplies
+    /// any that are not given.
+    /// </summary>
+    public class ServeOptionsParsingTests
+    {
+        private static ParserResult<ServeOptions> Parse(params string[] args)
+        {
+            using var parser = new Parser(with =>
+            {
+                with.CaseInsensitiveEnumValues = true;
+                with.HelpWriter = null;
+                with.AutoVersion = false;
+                with.AllowMultiInstance = true;
+            });
+
+            return parser.ParseArguments<ServeOptions>(args);
+        }
+
+        private static ServeOptions ParsedValue(params string[] args)
+        {
+            return Parse(args).ShouldBeOfType<Parsed<ServeOptions>>().Value;
+        }
+
+        [Fact]
+        public void Parse_Given_Nothing_Then_LeavesEveryLimitToConfiguration()
+        {
+            ServeOptions options = ParsedValue();
+
+            options.Listen.ShouldBeEmpty();
+            options.UnixSocket.ShouldBeNull();
+            options.ApiKeyFile.ShouldBeNull();
+            options.Certificate.ShouldBeNull();
+            options.CertificateKey.ShouldBeNull();
+            options.Culture.ShouldBeNull();
+            options.Verbose.ShouldBeFalse();
+            options.MaxJobs.ShouldBeNull();
+            options.MaxQueue.ShouldBeNull();
+            options.MaxUploadMegabytes.ShouldBeNull();
+            options.MaxChartSize.ShouldBeEmpty();
+            options.JobTimeoutSeconds.ShouldBeNull();
+            options.MaxCompileTimeoutMilliseconds.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Parse_Given_ListenTwice_Then_BothAddresses()
+        {
+            ServeOptions options = ParsedValue(@"--listen", @"http://localhost:9770", @"--listen", @"https://0.0.0.0:9771");
+
+            options.Listen.ShouldBe([@"http://localhost:9770", @"https://0.0.0.0:9771"]);
+        }
+
+        [Fact]
+        public void Parse_Given_ListenWithTwoAddresses_Then_BothAddresses()
+        {
+            ServeOptions options = ParsedValue(@"--listen", @"http://localhost:9770", @"https://0.0.0.0:9771");
+
+            options.Listen.ShouldBe([@"http://localhost:9770", @"https://0.0.0.0:9771"]);
+        }
+
+        [Fact]
+        public void Parse_Given_EveryLimit_Then_Each()
+        {
+            ServeOptions options = ParsedValue(
+                @"--max-jobs", @"2",
+                @"--max-queue", @"3",
+                @"--max-upload", @"4",
+                @"--max-chart-size", @"600:400",
+                @"--job-timeout", @"5",
+                @"--max-compile-timeout", @"6000");
+
+            options.MaxJobs.ShouldBe(2);
+            options.MaxQueue.ShouldBe(3);
+            options.MaxUploadMegabytes.ShouldBe(4);
+            options.MaxChartSize.ShouldBe([600, 400]);
+            options.JobTimeoutSeconds.ShouldBe(5);
+            options.MaxCompileTimeoutMilliseconds.ShouldBe(6000);
+        }
+
+        [Fact]
+        public void Parse_Given_TheRest_Then_Each()
+        {
+            ServeOptions options = ParsedValue(
+                @"--unix-socket", @"/run/zpp.sock",
+                @"--api-key-file", @"key.txt",
+                @"--certificate", @"server.pem",
+                @"--certificate-key", @"server.key",
+                @"--culture", @"en-US",
+                @"-v");
+
+            options.UnixSocket.ShouldBe(@"/run/zpp.sock");
+            options.ApiKeyFile.ShouldBe(@"key.txt");
+            options.Certificate.ShouldBe(@"server.pem");
+            options.CertificateKey.ShouldBe(@"server.key");
+            options.Culture.ShouldBe(@"en-US");
+            options.Verbose.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void Parse_Given_AChartSizeWithOneValue_Then_Fails()
+        {
+            Parse(@"--max-chart-size", @"600").ShouldBeOfType<NotParsed<ServeOptions>>();
+        }
+
+        [Fact]
+        public void Parse_Given_AnUnknownOption_Then_Fails()
+        {
+            Parse(@"--nonsense").ShouldBeOfType<NotParsed<ServeOptions>>();
+        }
+
+        [Fact]
+        public void Options_Given_EveryOptionProperty_Then_HasLongName()
+        {
+            // Messages name options by their long names, as zpp's do.
+            foreach (PropertyInfo property in typeof(ServeOptions).GetProperties())
+            {
+                OptionAttribute? attribute = property.GetCustomAttribute<OptionAttribute>();
+
+                attribute.ShouldNotBeNull();
+                attribute.LongName.ShouldNotBeNullOrWhiteSpace($@"{property.Name} has no long option name");
+            }
+        }
+    }
+}

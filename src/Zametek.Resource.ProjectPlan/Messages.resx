@@ -402,4 +402,70 @@
   <data name="Message_SeveralScenariosMatchSelector" xml:space="preserve">
     <value>'{0}' matches {1} scenarios</value>
   </data>
+  <data name="Message_FileIsEmpty" xml:space="preserve">
+    <value>{0} is empty.</value>
+  </data>
+  <data name="Message_CultureNotKnown" xml:space="preserve">
+    <value>'{0}' is not a culture this machine knows.</value>
+  </data>
+  <data name="Message_ServeListenAddressNotValid" xml:space="preserve">
+    <value>'{0}' is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770.</value>
+  </data>
+  <data name="Message_ServeNeedsApiKey" xml:space="preserve">
+    <value>Other machines can reach {0}, so zpp serve needs an API key to listen there: set {1}, or use {2}.</value>
+  </data>
+  <data name="Message_ServeHttpsNeedsCertificate" xml:space="preserve">
+    <value>{0} needs a certificate: use {1}.</value>
+  </data>
+  <data name="Message_ServeCertificateNeedsHttps" xml:space="preserve">
+    <value>{0} is only valid with an https address to listen on.</value>
+  </data>
+  <data name="Message_ServeSettingsNotValid" xml:space="preserve">
+    <value>The limits in {0} or in the {1} environment variables could not be read: {2}</value>
+  </data>
+  <data name="Message_ServeLimitTooLow" xml:space="preserve">
+    <value>{0} ({1}) must be at least {2}.</value>
+  </data>
+  <data name="Message_ServeRequestNotMultipart" xml:space="preserve">
+    <value>Send the job as multipart/form-data: the plan as a file named 'input', or 'import' to import it, and its options in a part named 'options'.</value>
+  </data>
+  <data name="Message_ServeRequestNeedsPlan" xml:space="preserve">
+    <value>Send one plan: as a file named 'input', or named 'import' to import it.</value>
+  </data>
+  <data name="Message_ServePlanNeedsName" xml:space="preserve">
+    <value>The plan's file needs a name: the job's outputs are named after it.</value>
+  </data>
+  <data name="Message_ServeCannotImport" xml:space="preserve">
+    <value>zpp serve imports .xlsx files only: import {0} with zpp itself.</value>
+  </data>
+  <data name="Message_ServeScenariosNeedInput" xml:space="preserve">
+    <value>Send the project as a file named 'input'.</value>
+  </data>
+  <data name="Message_ServeRequestTooLarge" xml:space="preserve">
+    <value>The request is larger than the {0} MB the server accepts.</value>
+  </data>
+  <data name="Message_ServeRequestNotReadable" xml:space="preserve">
+    <value>The request could not be read: {0}</value>
+  </data>
+  <data name="Message_ServeOptionsNotValid" xml:space="preserve">
+    <value>The job's options are not valid: {0}</value>
+  </data>
+  <data name="Message_ServeScenarioOnlyWithInput" xml:space="preserve">
+    <value>'scenario' is only valid with a plan sent as 'input'.</value>
+  </data>
+  <data name="Message_ServeCompileTimeoutOutOfRange" xml:space="preserve">
+    <value>'compileTimeout' must be from 1 to {0} milliseconds.</value>
+  </data>
+  <data name="Message_ServeChartSizeOutOfRange" xml:space="preserve">
+    <value>'{0}' must be from 1 to {1} pixels wide and from 1 to {2} pixels high.</value>
+  </data>
+  <data name="Message_ServeJobTimedOut" xml:space="preserve">
+    <value>The job ran for longer than the server's limit of {0} seconds, and was stopped.</value>
+  </data>
+  <data name="Message_ServeApiKeyRequired" xml:space="preserve">
+    <value>The request needs the server's API key, as Authorization: Bearer &lt;key&gt;.</value>
+  </data>
+  <data name="Message_ServeBusy" xml:space="preserve">
+    <value>The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.</value>
+  </data>
 </root>

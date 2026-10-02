@@ -15,12 +15,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// Scripts and CI gates branch on these values, so a change here is a
     /// breaking change to the CLI. Checks on the files a run writes and on what
     /// it prints are here as well, since they need Main too. The tests all live
-    /// in one class so xunit runs them sequentially - Main swaps process-global
-    /// state (the console streams and the static Serilog logger) while it runs.
+    /// in one collection - with JobEndpointsParityTests, which run Main as well -
+    /// so xunit runs them one at a time: Main swaps process-global state (the
+    /// console streams and the static Serilog logger) while it runs.
     /// </summary>
+    [Collection(CollectionName)]
     public class ProgramExitCodeTests
         : IDisposable
     {
+        // The collection of the tests that run Main.
+        public const string CollectionName = @"Program.Main";
+
         // How much longer than a fresh export the file already sitting at the
         // output path is made. It has to be more than 64 KiB, because that is as
         // far back from the end of a file as a zip reader searches for the
@@ -551,6 +556,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             exitCode.ShouldBe(1);
             output.ShouldBeEmpty();
             error.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_NoScenarioMatches, @"No Such Scenario", @"--list-scenarios") + Environment.NewLine);
+        }
+
+        // zpp serve is zpp's too, with exit codes for its options as zpp has for its own. A server that starts runs until
+        // it is stopped, which Main cannot be asked to do, so JobServerTests checks what serve refuses to start with -
+        // giving it a time limit, so that a refusal that is lost cannot hold the run up.
+        [Fact]
+        public async Task Main_Given_ServeHelp_Then_ExitSuccess()
+        {
+            (int exitCode, string output) = await RunCapturedAsync(@"serve", @"--help");
+
+            exitCode.ShouldBe(0);
+            output.ShouldContain(@"--max-jobs");
+        }
+
+        [Fact]
+        public async Task Main_Given_ServeWithAnUnknownOption_Then_ExitUsageError()
+        {
+            (int exitCode, _) = await RunCapturedAsync(@"serve", @"--nonsense");
+
+            exitCode.ShouldBe(2);
         }
 
         public void Dispose()

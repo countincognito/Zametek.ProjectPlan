@@ -30,6 +30,12 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             var console = new StandardConsole(Console.Out, Console.Error);
 
+            // zpp serve runs zpp as a server instead, with options of its own.
+            if (args is [JobServer.Command, ..])
+            {
+                return (int)await JobServer.RunAsync(args[1..], console);
+            }
+
             try
             {
                 using var parser = new Parser(with =>
@@ -91,12 +97,19 @@ namespace Zametek.ProjectPlan.CommandLine
                 .CreateLogger();
         }
 
-        private static ServiceProvider BuildServices()
+        // The engine's container, the same for zpp and zpp serve. zpp serve, which keeps its container for as long as it
+        // runs, also has it check every registration up front, and that nothing a job holds is resolved outside the
+        // job's scope.
+        internal static ServiceProvider BuildServices(bool validate = false)
         {
             return new ServiceCollection()
                 .AddProjectPlanEngine()
                 .AddSerilog()
-                .BuildServiceProvider();
+                .BuildServiceProvider(new ServiceProviderOptions
+                {
+                    ValidateOnBuild = validate,
+                    ValidateScopes = validate,
+                });
         }
 
         private static async Task<ExitCode> RunAsync(
@@ -256,12 +269,18 @@ namespace Zametek.ProjectPlan.CommandLine
         // not an option, so a refactor that breaks the link fails loudly in tests.
         internal static string OptionLongName(string optionPropertyName)
         {
-            OptionAttribute? attribute = typeof(Options)
+            return OptionLongName<Options>(optionPropertyName);
+        }
+
+        // The same for another set of options - zpp serve's.
+        internal static string OptionLongName<TOptions>(string optionPropertyName)
+        {
+            OptionAttribute? attribute = typeof(TOptions)
                 .GetProperty(optionPropertyName)?
                 .GetCustomAttribute<OptionAttribute>();
 
             return attribute is null
-                ? throw new InvalidOperationException($@"{optionPropertyName} is not an option property on {nameof(Options)}")
+                ? throw new InvalidOperationException($@"{optionPropertyName} is not an option property on {typeof(TOptions).Name}")
                 : $@"--{attribute.LongName}";
         }
 
@@ -398,10 +417,21 @@ namespace Zametek.ProjectPlan.CommandLine
             string suffix,
             string formatDescription)
         {
-            return Path.Combine(directory, $@"{projectTitle}{suffix}.{formatDescription.ToLowerInvariant()}");
+            return Path.Combine(directory, BuildExportFilename(projectTitle, suffix, formatDescription));
         }
 
-        private static ExitCode OnParseErrors<T>(
+        // The name of a chart or graph's file: the project's title, the chart or graph's suffix, and its format's
+        // extension. zpp serve names the files it returns the same way.
+        internal static string BuildExportFilename(
+            string projectTitle,
+            string suffix,
+            string formatDescription)
+        {
+            return $@"{projectTitle}{suffix}.{formatDescription.ToLowerInvariant()}";
+        }
+
+        // zpp serve's options are parsed - and their help shown - the same way.
+        internal static ExitCode OnParseErrors<T>(
             ParserResult<T> result,
             IEnumerable<Error> errs)
         {
@@ -436,17 +466,6 @@ namespace Zametek.ProjectPlan.CommandLine
             }, e => e);
 
             Console.Out.WriteLine(helpText);
-        }
-
-        // Thrown for invalid option combinations: caught in Main and mapped to
-        // the usage-error exit code, distinct from runtime failures.
-        internal sealed class UsageException
-            : Exception
-        {
-            public UsageException(string message)
-                : base(message)
-            {
-            }
         }
     }
 }

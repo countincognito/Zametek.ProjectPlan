@@ -37,7 +37,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void ValidateOptions_Given_InputAndImport_Then_UsageException()
         {
-            Should.Throw<Program.UsageException>(
+            Should.Throw<UsageException>(
                 () => Program.ValidateOptions(new Options
                 {
                     InputFilename = @"a.zpp",
@@ -48,7 +48,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void ValidateOptions_Given_ScenarioWithImport_Then_UsageException()
         {
-            Should.Throw<Program.UsageException>(
+            Should.Throw<UsageException>(
                 () => Program.ValidateOptions(new Options
                 {
                     ImportFilename = @"b.xlsx",
@@ -59,7 +59,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void ValidateOptions_Given_ScenarioAndListScenarios_Then_UsageException()
         {
-            Should.Throw<Program.UsageException>(
+            Should.Throw<UsageException>(
                 () => Program.ValidateOptions(new Options
                 {
                     InputFilename = @"a.zpp",
@@ -71,7 +71,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void ValidateOptions_Given_DirectoryWithoutSize_Then_UsageException()
         {
-            Should.Throw<Program.UsageException>(
+            Should.Throw<UsageException>(
                 () => Program.ValidateOptions(new Options
                 {
                     InputFilename = @"a.zpp",
@@ -108,7 +108,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void ValidateOptions_Given_NegativeCompileTimeout_Then_UsageException()
         {
-            Should.Throw<Program.UsageException>(
+            Should.Throw<UsageException>(
                 () => Program.ValidateOptions(new Options
                 {
                     InputFilename = @"a.zpp",
@@ -161,7 +161,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void ValidateOptions_Given_NowWithoutAnOffset_Then_UsageException()
         {
-            Should.Throw<Program.UsageException>(
+            Should.Throw<UsageException>(
                 () => Program.ValidateOptions(new Options
                 {
                     InputFilename = @"a.zpp",
