@@ -12,9 +12,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// zpp serve's promise: a job sent to it ends as zpp would have ended it,
     /// given the same options as flags - the same exit code, the same text on
     /// stdout and stderr, and the same files, byte for byte, under the same
-    /// names. Each test runs zpp's Main and the server on the same plan and
-    /// compares the two. In the same collection as ProgramExitCodeTests,
-    /// because Main swaps the console's streams while it runs.
+    /// names - and its transcript, replayed through zpp's own console, prints
+    /// exactly what zpp printed. Each test runs zpp's Main and the server on
+    /// the same plan and compares the two. In the same collection as
+    /// ProgramExitCodeTests, because Main swaps the console's streams while it
+    /// runs.
     /// </summary>
     [Collection(ProgramExitCodeTests.CollectionName)]
     public class JobEndpointsParityTests
@@ -189,6 +191,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             scenarios.Stdout.ShouldBe(output);
             scenarios.Stderr.ShouldBe(WithoutLogLines(error));
             scenarios.Scenarios.ShouldNotBeNull().Select(x => x.Path).ShouldBe([@"Alpha", @"Beta"]);
+
+            (string replayedOutput, string replayedError) = await ReplayAsync(scenarios.Transcript);
+            replayedOutput.ShouldBe(output);
+            replayedError.ShouldBe(s_LogLine.Replace(error, string.Empty));
         }
 
         // Runs the plan through zpp, with the options as flags and each output written under the name zpp serve gives
@@ -222,6 +228,41 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 produced.Content.ShouldBe(File.ReadAllBytes(Path.Combine(directory, produced.FileName)), produced.FileName);
                 produced.ContentType.ShouldBe(JobOptionsHelper.GetContentType(produced.FileName));
             }
+
+            // Replayed through zpp's own console, the transcript prints exactly what zpp printed - stderr's lines ended
+            // as zpp ends them on this platform - and it names each output once, in the order the job produced them.
+            (string replayedOutput, string replayedError) = await ReplayAsync(response.Transcript);
+            replayedOutput.ShouldBe(output);
+            replayedError.ShouldBe(s_LogLine.Replace(error, string.Empty));
+            response.Transcript.Where(x => x.Kind == JobTranscriptKind.Output).Select(x => x.Index)
+                .ShouldBe(Enumerable.Range(0, response.Outputs.Count).Select(x => (int?)x));
+        }
+
+        // Prints what a transcript records on zpp's own console, as zpp would have printed it: stdout as it came, and
+        // stderr with its line ends the platform's, as zpp ends them there.
+        private static async Task<(string Output, string Error)> ReplayAsync(IReadOnlyList<JobTranscriptEntry> transcript)
+        {
+            using var output = new StringWriter();
+            using var error = new StringWriter();
+            var console = new StandardConsole(output, error);
+
+            foreach (JobTranscriptEntry entry in transcript)
+            {
+                switch (entry.Kind)
+                {
+                    case JobTranscriptKind.Line:
+                        await console.WriteLineAsync(entry.Text.ShouldNotBeNull());
+                        break;
+                    case JobTranscriptKind.Display:
+                        await console.DisplayAsync(entry.Text.ShouldNotBeNull(), entry.HasErrors);
+                        break;
+                    case JobTranscriptKind.ErrorLine:
+                        await console.WriteErrorLineAsync(entry.Text.ShouldNotBeNull().ReplaceLineEndings(Environment.NewLine));
+                        break;
+                }
+            }
+
+            return (output.ToString(), error.ToString());
         }
 
         // zpp's arguments for what the options ask zpp serve for, writing each output to directory, under the name zpp

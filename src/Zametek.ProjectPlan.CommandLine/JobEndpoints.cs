@@ -204,7 +204,7 @@ namespace Zametek.ProjectPlan.CommandLine
             m_Logger.LogInformation("Job {JobId} ({Path}): exit code {ExitCode} after {ElapsedMilliseconds} ms", jobId, context.Request.Path, (int)exitCode, stopwatch.ElapsedMilliseconds);
 
             List<JobResponseOutput> outputs = [.. sink.Outputs.Select(x => ToResponseOutput(x.Output, x.Content, options, projectTitle))];
-            var response = new JobResponse(jobId, (int)exitCode, console.Output, console.Error, metrics, outputs);
+            var response = new JobResponse(jobId, (int)exitCode, console.Output, console.Error, metrics, outputs, console.Transcript);
 
             return AcceptsZip(context.Request)
                 ? Zip(response, projectTitle, runsAt)
@@ -258,7 +258,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             m_Logger.LogInformation("Job {JobId} ({Path}): exit code {ExitCode} after {ElapsedMilliseconds} ms", jobId, context.Request.Path, (int)exitCode, stopwatch.ElapsedMilliseconds);
 
-            return Results.Json(new ScenariosResponse(jobId, (int)exitCode, console.Output, console.Error, scenarios), JsonOptions);
+            return Results.Json(new ScenariosResponse(jobId, (int)exitCode, console.Output, console.Error, scenarios, console.Transcript), JsonOptions);
         }
 
         // Gives the request a job's id, and says it in the response.

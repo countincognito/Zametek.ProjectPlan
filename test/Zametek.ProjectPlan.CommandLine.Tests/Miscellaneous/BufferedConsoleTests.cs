@@ -7,7 +7,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// <summary>
     /// Tests for a job's console on zpp serve: it keeps what zpp's own console
     /// would print, except that stderr's lines end with NewLineHelper.NewLine
-    /// too, as stdout's do, whatever the platform.
+    /// too, as stdout's do, whatever the platform; and it keeps the job's
+    /// transcript - each thing printed, and each output recorded, in order.
     /// </summary>
     public class BufferedConsoleTests
     {
@@ -59,6 +60,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             console.Output.ShouldBe(NewLineHelper.JoinLines(@"one", string.Empty, @"three") + NewLineHelper.NewLine);
             console.Error.ShouldBe(@"two" + NewLineHelper.NewLine);
+        }
+
+        [Fact]
+        public async Task Transcript_Given_EachKindOfCall_Then_RecordsEachInOrderWithItsLineEndsAsNewLine()
+        {
+            var console = new BufferedConsole();
+            string twoLines = NewLineHelper.JoinLines(@"first", @"second");
+
+            await console.WriteLineAsync(s_TwoLinesFromWindows);
+            console.RecordOutput(0);
+            await console.WriteErrorLineAsync(s_TwoLinesFromWindows);
+            await console.DisplayAsync(s_TwoLinesFromWindows, hasErrors: false);
+            console.RecordOutput(1);
+            await console.DisplayAsync(@"broken", hasErrors: true);
+
+            console.Transcript.ShouldBe(
+            [
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Line, Text = twoLines },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Output, Index = 0 },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.ErrorLine, Text = twoLines },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Display, Text = twoLines },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Output, Index = 1 },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Display, Text = @"broken", HasErrors = true },
+            ]);
         }
     }
 }

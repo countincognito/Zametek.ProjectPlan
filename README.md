@@ -263,13 +263,15 @@ The answer is JSON:
   "stdout": "\n| Metrics                 | Values      |\n|-------------------------|-------------|\n...",
   "stderr": "",
   "metrics": { "ActivityRisk": 1.0, ... },
-  "outputs": []
+  "outputs": [],
+  "transcript": [ { "kind": "display", "text": "| Metrics                 | Values      |\n..." } ]
 }
 ```
 
 - `exitCode` is the code zpp would have exited with (see [Exit codes](#exit-codes)), and `stdout` and `stderr` are what it would have printed - written by the server, in the server's culture. zpp's log is in neither: the server keeps its own. `curl -s ... | jq -j .stdout` prints the text exactly as zpp would.
 - `metrics` holds the metrics as `--metrics-format json` writes them, whichever format the job asked for, or `null` when the job ended before it had any - when the plan did not compile, say.
 - `outputs` lists each file the job produced, in the order zpp produces them: what it is (`kind`), the name zpp would give the file (`fileName`), its media type (`contentType`), and its `content` in base64.
+- `transcript` records the job call by call, in the order it ran: each `line` it printed, each `display`ed block (with `hasErrors` when the block reports errors, which zpp shows in red), each `errorLine` on stderr, and each `output` as it was produced (its `index` in `outputs`). Played back in order, it prints and writes everything when zpp would have, and shows each block as zpp shows it.
 
 The job's options go in a part named `options`, as JSON. They are zpp's own options, with its names, values and defaults, less the paths: where zpp writes an output to the file or directory you give it, here you ask for the output, and the answer carries it.
 

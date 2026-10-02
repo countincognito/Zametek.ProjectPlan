@@ -3,7 +3,8 @@ using Zametek.Engine.ProjectPlan;
 namespace Zametek.ProjectPlan.CommandLine
 {
     // zpp serve's end of a job: each output is kept in memory for the response, in the order the job produces them, and
-    // each message is printed on the job's console, as zpp prints it.
+    // each message is printed on the job's console, as zpp prints it. The console's transcript records each output as it
+    // is kept, so that it says where among the job's text zpp would have written each file.
     internal class MemoryJobSink
         : IJobSink
     {
@@ -11,13 +12,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private readonly Lock m_Lock = new();
         private readonly List<(JobOutput Output, byte[] Content)> m_Outputs = [];
-        private readonly IJobConsole m_Console;
+        private readonly BufferedConsole m_Console;
 
         #endregion
 
         #region Ctors
 
-        public MemoryJobSink(IJobConsole console)
+        public MemoryJobSink(BufferedConsole console)
         {
             ArgumentNullException.ThrowIfNull(console);
             m_Console = console;
@@ -54,6 +55,7 @@ namespace Zametek.ProjectPlan.CommandLine
             lock (m_Lock)
             {
                 m_Outputs.Add((output, content));
+                m_Console.RecordOutput(m_Outputs.Count - 1);
             }
         }
 

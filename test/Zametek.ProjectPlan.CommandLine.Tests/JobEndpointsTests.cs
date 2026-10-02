@@ -245,6 +245,70 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task RunJob_Given_OutputsAndMetrics_Then_TheTranscriptHasEachOutputThenTheMetricsBlock()
+        {
+            using HttpResponseMessage response = await PostJobAsync(new JobOptions
+            {
+                Output = true,
+                Gantt = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+            });
+
+            JobResponse job = await RunningServer.ReadAsync<JobResponse>(response);
+            job.Outputs.Select(x => x.Kind).ShouldBe([JobOutput.Project, JobOutput.GanttChart]);
+
+            // The block, as Stdout has it after the blank line that sets it apart.
+            string metrics = job.Stdout[NewLineHelper.NewLine.Length..^NewLineHelper.NewLine.Length];
+            job.Transcript.ShouldBe(
+            [
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Output, Index = 0 },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Output, Index = 1 },
+                new JobTranscriptEntry { Kind = JobTranscriptKind.Display, Text = metrics },
+            ]);
+        }
+
+        [Fact]
+        public async Task RunJob_Given_JsonMetrics_Then_TheTranscriptHasTheirLine()
+        {
+            using HttpResponseMessage response = await PostJobAsync(new JobOptions { MetricsFormat = MetricsExport.Json });
+
+            JobResponse job = await RunningServer.ReadAsync<JobResponse>(response);
+            job.Transcript.ShouldHaveSingleItem().ShouldBe(new JobTranscriptEntry
+            {
+                Kind = JobTranscriptKind.Line,
+                Text = job.Stdout[..^NewLineHelper.NewLine.Length],
+            });
+        }
+
+        [Fact]
+        public async Task RunJob_Given_APlanThatDoesNotCompile_Then_TheTranscriptHasABlockThatReportsErrors()
+        {
+            byte[] plan = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"broken-dependency.zpp"));
+            using var content = RunningServer.JobContent(plan, @"broken-dependency.zpp");
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/jobs", content);
+
+            JobResponse job = await RunningServer.ReadAsync<JobResponse>(response);
+            job.ExitCode.ShouldBe((int)ExitCode.CompilationErrors);
+            JobTranscriptEntry entry = job.Transcript.ShouldHaveSingleItem();
+            entry.Kind.ShouldBe(JobTranscriptKind.Display);
+            entry.HasErrors.ShouldBeTrue();
+            entry.Text.ShouldBe(job.Stdout[NewLineHelper.NewLine.Length..^NewLineHelper.NewLine.Length]);
+        }
+
+        [Fact]
+        public async Task RunJob_Given_AScenarioThatIsNotThere_Then_TheTranscriptHasTheErrorLine()
+        {
+            using HttpResponseMessage response = await PostJobAsync(new JobOptions { Scenario = @"Gamma" });
+
+            JobResponse job = await RunningServer.ReadAsync<JobResponse>(response);
+            job.ExitCode.ShouldBe((int)ExitCode.Failure);
+            job.Transcript.ShouldHaveSingleItem().ShouldBe(new JobTranscriptEntry
+            {
+                Kind = JobTranscriptKind.ErrorLine,
+                Text = job.Stderr[..^NewLineHelper.NewLine.Length],
+            });
+        }
+
+        [Fact]
         public async Task RunJob_Given_AJob_Then_ItsIdIsInTheHeaderAndTheResponse()
         {
             using HttpResponseMessage response = await PostJobAsync();
@@ -305,6 +369,21 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             result.Stdout.ShouldBe(expected.Stdout);
             result.Outputs.Select(x => (x.Kind, x.FileName, x.ContentType)).ShouldBe(expected.Outputs.Select(x => (x.Kind, x.FileName, x.ContentType)));
             result.Outputs.ShouldAllBe(x => x.Content == null);
+            result.Transcript.ShouldBe(expected.Transcript);
+        }
+
+        [Fact]
+        public async Task ListScenarios_Given_AProject_Then_TheTranscriptHasTheTable()
+        {
+            using var content = RunningServer.JobContent(TwoScenarios(), @"two-scenarios.zpp");
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/scenarios", content);
+
+            ScenariosResponse scenarios = await RunningServer.ReadAsync<ScenariosResponse>(response);
+            scenarios.Transcript.ShouldHaveSingleItem().ShouldBe(new JobTranscriptEntry
+            {
+                Kind = JobTranscriptKind.Display,
+                Text = scenarios.Stdout[NewLineHelper.NewLine.Length..^NewLineHelper.NewLine.Length],
+            });
         }
 
         [Fact]
