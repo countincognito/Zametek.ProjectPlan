@@ -1,8 +1,8 @@
 # TODO - Zametek.Graphs.Avalonia
 
 Library-scoped items only: this file travels with the folder when the library is spun
-out into its own repository. Repo-wide items belong in the root TODO.md. Date entries
-when added; delete them when done.
+out into its own repository. Repo-wide items belong in the repository's docs/TODO.md.
+Date entries when added; delete them when done.
 
 - [ ] **Spin out into a dedicated repository** *(2026-08-02)*:
   - Keep the name `Zametek.Graphs.Avalonia` (NOT `Zametek.Avalonia.Graphs`, which
@@ -18,5 +18,5 @@ when added; delete them when done.
   ReactiveUI 24+ no longer ships it transitively, and the library's public API exposes
   Rx types directly (`IGraphHost.RebuildRequested` is `IObservable<Unit>`), so dropping
   System.Reactive would be a breaking API change for consumers. Revisit only alongside
-  the solution-wide item in the root TODO.md (blocked until DynamicData and Dock go
-  Rx-free there).
+  the solution-wide item in the repository's docs/TODO.md (blocked until DynamicData and
+  Dock go Rx-free there).

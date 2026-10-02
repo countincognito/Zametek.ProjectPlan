@@ -10,7 +10,7 @@
     whichever project triggered the restore. 'dotnet husky install' looks for .git in the current
     directory and does not search upwards, so from a project folder it reported ".git can't be found",
     failed, and raised MSB3073 on every single restore - meaning the automatic installation described in
-    the README never actually installed anything, and only 'make hooks' (run from the root) ever did.
+    docs/BUILDING.md never actually installed anything, and only 'make hooks' (run from the root) ever did.
   -->
   <Target Name="HuskyInstall" BeforeTargets="Restore" Condition="'$(HUSKY)' != '0'">
     <Exec Command="dotnet tool restore"
