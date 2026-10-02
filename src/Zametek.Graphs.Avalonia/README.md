@@ -24,14 +24,14 @@ layout, or export machinery.
 2. [Quick start](#quick-start)
 3. [Data formats](#data-formats)
 4. [Presentation styling](#presentation-styling)
-   - [Re‑skinning with `GraphAppearance`](#re-skinning-with-graphappearance)
+   - [Re-skinning with `GraphAppearance`](#re-skinning-with-graphappearance)
    - [Custom node / edge templates](#custom-node--edge-templates)
 5. [Export & export styling](#export--export-styling)
-   - [Vector vs. high‑fidelity (raster)](#vector-vs-high-fidelity-raster)
+   - [Vector vs. high-fidelity (raster)](#vector-vs-high-fidelity-raster)
    - [`GraphVectorExportStyle`](#graphvectorexportstyle)
    - [Choosing modes & wiring copy/save](#choosing-modes--wiring-copysave)
 6. [Persisting the arrangement](#persisting-the-arrangement)
-7. [Built‑in interactions](#built-in-interactions)
+7. [Built-in interactions](#built-in-interactions)
 8. [Threading & gotchas](#threading--gotchas)
 
 ---
@@ -257,7 +257,7 @@ Two independent levers, use either or both:
 - **`NodeTemplate` / `EdgeTemplate`** - replace the drawn node/edge **body** entirely with your own
   Avalonia visuals.
 
-### Re‑skinning with `GraphAppearance`
+### Re-skinning with `GraphAppearance`
 
 Pass a `GraphAppearance` to the view‑model constructor. Start from `Default` and override what you need:
 
@@ -374,7 +374,7 @@ the built‑in body.
 The control can copy to the clipboard and save to PNG, JPEG, PDF, SVG (images) and GraphML / `.dot`
 (data). Image export has **two modes**.
 
-### Vector vs. high‑fidelity (raster)
+### Vector vs. high-fidelity (raster)
 
 `GraphExportMode`:
 
@@ -519,7 +519,7 @@ Node drags and the routing mode can be saved and restored. These live on the con
 
 ---
 
-## Built‑in interactions
+## Built-in interactions
 
 Provided by the control with no extra work:
 
