@@ -177,7 +177,7 @@ Published output lands in `src/<project>/bin/<configuration>/net10.0/<os>-<arch>
 
 ## Command line tool (zpp)
 
-The solution also ships a headless command line tool, `zpp` (the `Zametek.ProjectPlan.CommandLine` project), which opens or imports a project, compiles it, and produces any combination of outputs without launching the desktop app - useful for scripting, CI pipelines, and batch processing. It can also run as a server, which stays warm from one job to the next (see [Running zpp as a server](#running-zpp-as-a-server)). Build it with the standard SDK commands above, or produce a self-contained single-file build with `make publish-cli`.
+The solution also ships a headless command line tool, `zpp` (the `Zametek.ProjectPlan.CommandLine` project), which opens or imports a project, compiles it, and produces any combination of outputs without launching the desktop app - useful for scripting, CI pipelines, and batch processing. It can also run as a server, which stays warm from one job to the next, and send its runs to one (see [Running zpp as a server](#running-zpp-as-a-server)). Build it with the standard SDK commands above, or produce a self-contained single-file build with `make publish-cli`.
 
 ### Usage
 
@@ -233,6 +233,7 @@ The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.P
 | 2 | Bad usage (invalid options or combinations) |
 | 3 | The project compiled with errors |
 | 4 | A compilation ran past `--compile-timeout` and was cancelled |
+| 5 | The run was sent to a server, which did not run it (see [Running zpp on it](#running-zpp-on-it)) |
 
 A chart or graph that cannot be written - because the file is open in another program, say - does not stop the run: the error goes to stderr, the remaining outputs are still produced and the metrics still printed, and the run then exits with code 1.
 
@@ -244,7 +245,25 @@ A chart or graph that cannot be written - because the file is open in another pr
 zpp serve
 ```
 
-It listens on `http://localhost:9770`, which only this machine can reach. As it starts, it warms up on a sample plan it carries, which takes a few seconds, and `/health/ready` answers 200 once it has. Jobs sent before then still run, only more slowly.
+It listens on `http://localhost:9770`, which only this machine can reach. As it starts, it warms up on a sample plan it carries, which takes a few seconds, and `/health/ready` answers 200 once it has. Jobs sent before then still run, only more slowly. zpp sends its runs to it with `--server`, and anything that speaks HTTP can send it jobs.
+
+#### Running zpp on it
+
+`--server` sends a run to a server rather than running it in this process - the same command, with the same options, which prints the same text, writes the same files and exits with the same code:
+
+```
+zpp -i plan.zpp --gantt-directory out --gantt-size 1200:800 --server http://localhost:9770
+```
+
+zpp sends the plan and its options, less the paths, and the server runs the job and answers with what zpp would have printed and written, which zpp prints and writes here - each file where its options say, named as zpp names it. zpp itself still starts up, but its engine does not: on Windows, a run that took 0.7 seconds here took a quarter of a second on a warm server, and one with five exports took a third of a second rather than 1.4. Set `ZPP_SERVER` instead of giving `--server`, and every run goes to that server; `--local` runs one here regardless. An MS Project import has to run here: a server imports Excel workbooks only, so zpp refuses to send one.
+
+- The server is its `http` or `https` address - with a path, if a reverse proxy puts it under one - or `unix:` and the path of its socket (`--server unix:/tmp/zpp.sock`, or `unix:///tmp/zpp.sock` as Docker writes it). https trusts the certificates this machine trusts.
+- A server that needs its API key gets it from `ZPP_API_KEY`, or from the file `--api-key-file` names - never from the command line.
+- A server that is busy is tried again when it says to, for up to two minutes.
+- zpp's own checks come first: a usage error, a plan or a directory that is not there, or an export to a file zpp does not write fails as it would without a server, and nothing is sent.
+- A server that does not run the job - it cannot be reached, wants its key, refuses the job as beyond its limits, stays busy, or stops the job at its time limit - ends the run with exit code 5, and zpp says why on stderr.
+- The compile timeout goes with the run - 5000 milliseconds, unless `--compile-timeout` says otherwise - and must be within the server's limit (see [Limits](#limits)): `0`, which switches the watchdog off here, is refused, as is a timeout above the limit.
+- The text and the files are the server's, so numbers and dates come out in its culture and time zone, and the run takes its times from the server's clock unless `--now` gives it one (see [Culture, time zone and logs](#culture-time-zone-and-logs)). zpp's log stays in the server's log; `-v` says where the run went.
 
 #### Sending a job
 
