@@ -39,7 +39,7 @@ The application is split into a shared project and one project per host, so that
 | `Zametek.Shell.ProjectPlan` | The shared application: composition root, dock factory, and the styles and resources every host presents |
 | `Zametek.ProjectPlan.Desktop` | The desktop host (`projectplandotnet`), on Windows, Linux and macOS |
 | `Zametek.ProjectPlan.Browser` | The web host, an Avalonia WebAssembly application (see below) |
-| `Zametek.ProjectPlan.CommandLine` | The headless host, `zpp` (see below) |
+| `Zametek.ProjectPlan.CommandLine` | The headless host, `zpp`, which also runs as a server, `zpp serve` (see below) |
 | `Zametek.Engine.ProjectPlan` | The headless engine `zpp` runs on: it takes a plan's bytes to its outputs, each job in a DI scope of its own |
 
 Each host supplies the three services that cannot be shared - where settings persist, how dialogs and file pickers are presented, and whether MS Project import is available - as an Autofac module handed to `CompositionRoot.Configure`. Everything else is registered once, in `Zametek.Shell.ProjectPlan`. `zpp` is the exception: it has no views, and runs on the engine, which registers everything a job needs itself.
@@ -177,7 +177,7 @@ Published output lands in `src/<project>/bin/<configuration>/net10.0/<os>-<arch>
 
 ## Command line tool (zpp)
 
-The solution also ships a headless command line tool, `zpp` (the `Zametek.ProjectPlan.CommandLine` project), which opens or imports a project, compiles it, and produces any combination of outputs without launching the desktop app - useful for scripting, CI pipelines, and batch processing. Build it with the standard SDK commands above, or produce a self-contained single-file build with `make publish-cli`.
+The solution also ships a headless command line tool, `zpp` (the `Zametek.ProjectPlan.CommandLine` project), which opens or imports a project, compiles it, and produces any combination of outputs without launching the desktop app - useful for scripting, CI pipelines, and batch processing. It can also run as a server, which stays warm from one job to the next (see [Running zpp as a server](#running-zpp-as-a-server)). Build it with the standard SDK commands above, or produce a self-contained single-file build with `make publish-cli`.
 
 ### Usage
 
@@ -235,6 +235,145 @@ The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.P
 | 4 | A compilation ran past `--compile-timeout` and was cancelled |
 
 A chart or graph that cannot be written - because the file is open in another program, say - does not stop the run: the error goes to stderr, the remaining outputs are still produced and the metrics still printed, and the run then exits with code 1.
+
+### Running zpp as a server
+
+`zpp serve` runs zpp as a web server. It starts once and then takes one job after another, so its jobs do not pay zpp's start-up, which is most of a one-shot run: a plan that takes a new `zpp` process three-quarters of a second takes a warm server about 25 milliseconds. Each job runs exactly as zpp would run it, and the server answers with the code zpp would have exited with, what it would have printed, and the files it would have written, byte for byte.
+
+```
+zpp serve
+```
+
+It listens on `http://localhost:9770`, which only this machine can reach. As it starts, it warms up on a sample plan it carries, which takes a few seconds, and `/health/ready` answers 200 once it has. Jobs sent before then still run, only more slowly.
+
+#### Sending a job
+
+A job is a `multipart/form-data` POST to `/v1/jobs`, with the plan as a file named `input`, as `--input` takes it:
+
+```
+curl -F input=@plan.zpp http://localhost:9770/v1/jobs
+```
+
+The answer is JSON:
+
+```
+{
+  "jobId": "880c768fa78e4686aab361ddb9e338a4",
+  "exitCode": 0,
+  "stdout": "\n| Metrics                 | Values      |\n|-------------------------|-------------|\n...",
+  "stderr": "",
+  "metrics": { "ActivityRisk": 1.0, ... },
+  "outputs": []
+}
+```
+
+- `exitCode` is the code zpp would have exited with (see [Exit codes](#exit-codes)), and `stdout` and `stderr` are what it would have printed - written by the server, in the server's culture. zpp's log is in neither: the server keeps its own. `curl -s ... | jq -j .stdout` prints the text exactly as zpp would.
+- `metrics` holds the metrics as `--metrics-format json` writes them, whichever format the job asked for, or `null` when the job ended before it had any - when the plan did not compile, say.
+- `outputs` lists each file the job produced, in the order zpp produces them: what it is (`kind`), the name zpp would give the file (`fileName`), its media type (`contentType`), and its `content` in base64.
+
+The job's options go in a part named `options`, as JSON. They are zpp's own options, with its names, values and defaults, less the paths: where zpp writes an output to the file or directory you give it, here you ask for the output, and the answer carries it.
+
+```
+curl -F input=@plan.zpp \
+     -F 'options={"metricsFormat":"json","gantt":{"format":"png","width":1600,"height":900},"arrow":{"format":"svg"}}' \
+     http://localhost:9770/v1/jobs
+```
+
+| Option | zpp's | Value |
+| ------ | ----- | ----- |
+| `scenario` | `--scenario` | The scenario to load, by name or id (only with `input`) |
+| `output` | `--output` | `true` to return the project, as zpp saves it |
+| `export` | `--export` | `true` to return the scenario, as zpp exports it to Excel |
+| `baseTheme` | `--base-theme` | `light` (the default) or `dark` |
+| `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json` |
+| `compileTimeout` | `--compile-timeout` | Milliseconds, from 1 to the server's limit - zpp's 5000 by default, or the limit if it is lower |
+| `now` | `--now` | A time with its offset from UTC, such as `2026-09-27T12:00:00+01:00` |
+| `gantt`, `resource`, `ev`, `scenarioChart` | `--gantt-*`, `--resource-*`, `--ev-*`, `--scenario-chart-*` | A chart: `{"format": "png", "width": 1600, "height": 900}`, where `format` is `jpeg` (the default), `png`, `bmp`, `webp` or `svg`, and the size is required |
+| `arrow`, `vertex` | `--arrow-*`, `--vertex-*` | A graph: `{"format": "svg"}`, where `format` is `jpeg` (the default), `png`, `pdf`, `svg`, `graphml` or `dot` |
+
+Names and values are read whatever their case, but otherwise strictly: an option the server does not know, or a number in quotes, is refused rather than ignored. The options can also come from a file - `-F options=@job.json` - which saves quoting JSON for the shell. (In Windows PowerShell, where `curl` names another command, call `curl.exe`.)
+
+To get the files themselves, ask for a zip:
+
+```
+curl -F input=@plan.zpp \
+     -F 'options={"gantt":{"format":"png","width":1600,"height":900},"arrow":{"format":"svg"}}' \
+     -H 'Accept: application/zip' -o plan.zip \
+     http://localhost:9770/v1/jobs
+```
+
+`plan.zip` holds `plan-gantt.png` and `plan-arrow.svg`, named as zpp names them, and `result.json`, which is the JSON answer less the files' contents.
+
+A plan sent as `import` is imported, as `--import` imports it - from Excel only: import MS Project files with zpp itself. `/v1/scenarios` lists a project's scenarios, as `--list-scenarios` does, and gives them as JSON too:
+
+```
+curl -F import=@plan.xlsx -F 'options={"output":true}' -H 'Accept: application/zip' -o plan.zip http://localhost:9770/v1/jobs
+curl -F input=@plan.zpp http://localhost:9770/v1/scenarios
+```
+
+#### Endpoints and answers
+
+| Endpoint | Does |
+| -------- | ---- |
+| `POST /v1/jobs` | Runs a job |
+| `POST /v1/scenarios` | Lists a project's scenarios |
+| `GET /v1/info` | Gives the server's version, the culture and time zone its jobs write in, and its limits |
+| `GET /health/live` | Answers 200 once the server is listening |
+| `GET /health/ready` | Answers 200 once it has warmed up, and 503 until then |
+
+A job that runs is answered with 200, however it ends: a plan that does not compile, say, gets exit code 3, with its errors in `stdout` as zpp prints them. The `Zpp-Job-Id` header carries the job's id, which the server's log names it by. A request the server will not run gets problem details (`application/problem+json`), which say why in `detail`:
+
+| Status | When |
+| ------ | ---- |
+| 400 | zpp would refuse the job as a usage error, or its options are not valid JSON, or they go beyond the server's limits |
+| 401 | The request does not carry the server's API key (see below) |
+| 413 | The request is larger than the server accepts |
+| 415 | The request is not `multipart/form-data`, or the plan to import is not an Excel workbook |
+| 503 | The server is running all the jobs it can, with as many waiting as it allows - `Retry-After` says when to try again |
+| 504 | The job ran for longer than the server allows, and was stopped |
+
+#### Limits
+
+| Limit | Default | Option | Setting |
+| ----- | ------- | ------ | ------- |
+| Jobs at once | The number of processors | `--max-jobs` | `MaxJobs` |
+| Jobs waiting for one to finish | Twice the jobs at once | `--max-queue` | `MaxQueue` |
+| Largest request, in MB | 50 | `--max-upload` | `MaxUploadMegabytes` |
+| Largest chart, in pixels | 5000 x 5000 | `--max-chart-size <width>:<height>` | `MaxChartWidth`, `MaxChartHeight` |
+| A job's time, in seconds | 120 | `--job-timeout` | `JobTimeoutSeconds` |
+| A job's compile timeout, in milliseconds | 60000 | `--max-compile-timeout` | `MaxCompileTimeoutMilliseconds` |
+
+Each limit has its default unless it is configured: by its setting in `zpp-serve.json`, beside zpp; by an environment variable named for its setting after `ZPP_` (`ZPP_MaxJobs=4`); or by its option - each overriding the one before. The file is read once, when the server starts:
+
+```
+{
+  "MaxJobs": 4,
+  "JobTimeoutSeconds": 300
+}
+```
+
+A job's time is checked between its steps, so a step already under way - a compile, or a chart being drawn - finishes first. Unlike zpp, a job cannot switch its compile timeout off.
+
+#### Beyond this machine
+
+```
+zpp serve --listen http://0.0.0.0:9770 --api-key-file /etc/zpp/api-key
+```
+
+- `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port. Give it more than once to listen on several.
+- An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. Requests to `/v1` must then carry the key: `curl -H "Authorization: Bearer $ZPP_API_KEY" ...`. The health endpoints need no key, so that a load balancer can ask them.
+- An `https` address needs `--certificate`: a `.pfx` or `.p12` file, with its password - if it has one - in `ZPP_CERTIFICATE_PASSWORD`, or a `.pem` or `.crt` file, with `--certificate-key` if its key is in a file of its own.
+- `--unix-socket /tmp/zpp.sock` listens on a Unix domain socket instead of `localhost:9770`. Only the user running the server can connect to it (on Windows, the socket has its folder's access): `curl --unix-socket /tmp/zpp.sock -F input=@plan.zpp http://localhost/v1/jobs`.
+
+#### Culture, time zone and logs
+
+Jobs write numbers and dates in the machine's culture, and times in its time zone, as zpp does. `--culture` sets the culture for all of them (`--culture en-GB`); on Linux and macOS, `TZ` sets the time zone (`TZ=Europe/London zpp serve`). A job cannot choose either, and `/v1/info` says which they are.
+
+The log goes to stderr: starting, warming up, a line for each job with its id and its exit code - or why it was refused - and the warnings and errors of the jobs and of the web server. `-v` adds their informational output.
+
+#### Stopping it
+
+Ctrl+C, or SIGTERM from whatever started it, stops the server: it takes no more requests, gives the jobs it is running up to their time limit to finish, and exits with code 0. It exits with code 2 when its options or settings cannot be used, and with code 1 when it cannot start - when its port is taken, say. Docker gives a container only 10 seconds to stop before it kills it, so give `docker stop` at least the job time limit (`docker stop -t 120`, or `stop_grace_period` in Compose).
 
 ## Attributions
 
