@@ -59,7 +59,7 @@ namespace Zametek.ProjectPlan.CommandLine
             return new ServeSettings
             {
                 Listen = listen,
-                UnixSocket = options.UnixSocket,
+                UnixSocket = ResolveUnixSocket(options),
                 ApiKey = apiKey,
                 Certificate = ResolveCertificate(options, listen, environment),
                 Culture = ResolveCulture(options),
@@ -168,6 +168,15 @@ namespace Zametek.ProjectPlan.CommandLine
                 : options.UnixSocket is null ? [DefaultListenUrl] : [];
 
             return [.. urls.Select(ParseListenAddress)];
+        }
+
+        // The socket's path in full, which is the only way Kestrel takes it: a relative path is taken from the current
+        // directory, as zpp takes every other path it is given.
+        private static string? ResolveUnixSocket(ServeOptions options)
+        {
+            return options.UnixSocket is string socket
+                ? Path.GetFullPath(socket)
+                : null;
         }
 
         private static string? ResolveApiKey(

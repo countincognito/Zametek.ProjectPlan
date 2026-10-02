@@ -7,9 +7,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// <summary>
     /// Tests for what zpp serve works out it runs with: each limit's default,
     /// overridden by zpp-serve.json, then by the ZPP_ environment variables,
-    /// then by its options; where it listens, and that it listens beyond this
-    /// machine only with an API key; its certificate and its culture - and
-    /// that anything it cannot run with is a usage error.
+    /// then by its options; where it listens - its socket's path in full - and
+    /// that it listens beyond this machine only with an API key; its
+    /// certificate and its culture - and that anything it cannot run with is
+    /// a usage error.
     /// </summary>
     public class ServeSettingsHelperTests
     {
@@ -66,10 +67,21 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void Resolve_Given_AUnixSocketAlone_Then_ListensThereAlone()
         {
-            ServeSettings settings = Resolve(new ServeOptions { UnixSocket = @"/run/zpp.sock" });
+            string socket = Path.Combine(Path.GetTempPath(), @"zpp.sock");
 
-            settings.UnixSocket.ShouldBe(@"/run/zpp.sock");
+            ServeSettings settings = Resolve(new ServeOptions { UnixSocket = socket });
+
+            settings.UnixSocket.ShouldBe(socket);
             settings.Listen.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void Resolve_Given_ARelativeUnixSocket_Then_ItIsInTheCurrentDirectory()
+        {
+            // Kestrel listens only on a socket whose path is absolute.
+            ServeSettings settings = Resolve(new ServeOptions { UnixSocket = @"zpp.sock" });
+
+            settings.UnixSocket.ShouldBe(Path.Combine(Environment.CurrentDirectory, @"zpp.sock"));
         }
 
         [Fact]
