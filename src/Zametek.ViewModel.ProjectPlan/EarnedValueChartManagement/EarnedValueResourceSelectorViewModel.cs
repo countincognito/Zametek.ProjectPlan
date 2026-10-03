@@ -44,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </para>
     /// </remarks>
     public class EarnedValueResourceSelectorViewModel
-        : ResourceSelectorViewModel, IKillSubscriptions, IDisposable
+        : ResourceSelectorViewModel, IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         #region Fields
 
@@ -75,8 +75,10 @@ namespace Zametek.ViewModel.ProjectPlan
         // thread today, but the shape is kept uniform with that fix.
         private int m_RevisingCount;
 
-        private readonly IDisposable? m_ResourceSettingsSub;
-        private readonly IDisposable? m_ShowResourcesSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ResourceSettingsSub;
+        private IDisposable? m_ShowResourcesSub;
 
         #endregion
 
@@ -105,6 +107,63 @@ namespace Zametek.ViewModel.ProjectPlan
             finally
             {
                 Interlocked.Decrement(ref m_RevisingCount);
+            }
+        }
+
+        #endregion
+
+        #region Private Members
+
+        private void SelectedTargetResources_CollectionChanged(
+            object? sender,
+            NotifyCollectionChangedEventArgs e)
+        {
+            // A user edit of the filter: persist it with the project scenario
+            // and mark the scenario as updated, which is how a filter change
+            // comes to be saved in the file at all. Machine-driven revisions
+            // take the other branch and change nothing here, because the
+            // display settings are the authority in that direction - see the
+            // note on m_RevisingCount for why, and for what goes wrong without
+            // it. This is the same shape as the Gantt selector's write-through
+            // of GanttChartShowConnections.
+            if (m_RevisingCount == 0)
+            {
+                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
+                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(SelectedResourceIds);
+                m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
+            }
+        }
+
+        // Brings the target list into line with the current resource settings,
+        // preserving the current selection. It deliberately does NOT seed from
+        // the persisted filter: callers that know the filter is the authority
+        // apply it themselves, with SetSelectedTargetResources, which is the
+        // only operation that can select a resource the selector already knows
+        // about. Every caller must hold the revising guard, since this mutates
+        // the selection and would otherwise be taken for a user edit.
+        private void ReviseResources()
+        {
+            IEnumerable<TargetResourceModel> targetResources = m_CoreViewModel
+                .ResourceSettings
+                .Resources
+                .Select(x => new TargetResourceModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                });
+
+            SetTargetResources(targetResources, [.. SelectedResourceIds]);
+        }
+
+        #endregion
+
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
             }
 
             m_ResourceSettingsSub = this
@@ -159,55 +218,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region Private Members
-
-        private void SelectedTargetResources_CollectionChanged(
-            object? sender,
-            NotifyCollectionChangedEventArgs e)
-        {
-            // A user edit of the filter: persist it with the project scenario
-            // and mark the scenario as updated, which is how a filter change
-            // comes to be saved in the file at all. Machine-driven revisions
-            // take the other branch and change nothing here, because the
-            // display settings are the authority in that direction - see the
-            // note on m_RevisingCount for why, and for what goes wrong without
-            // it. This is the same shape as the Gantt selector's write-through
-            // of GanttChartShowConnections.
-            if (m_RevisingCount == 0)
-            {
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(SelectedResourceIds);
-                m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
-            }
-        }
-
-        // Brings the target list into line with the current resource settings,
-        // preserving the current selection. It deliberately does NOT seed from
-        // the persisted filter: callers that know the filter is the authority
-        // apply it themselves, with SetSelectedTargetResources, which is the
-        // only operation that can select a resource the selector already knows
-        // about. Every caller must hold the revising guard, since this mutates
-        // the selection and would otherwise be taken for a user edit.
-        private void ReviseResources()
-        {
-            IEnumerable<TargetResourceModel> targetResources = m_CoreViewModel
-                .ResourceSettings
-                .Resources
-                .Select(x => new TargetResourceModel
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                });
-
-            SetTargetResources(targetResources, [.. SelectedResourceIds]);
-        }
-
-        #endregion
-
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ResourceSettingsSub?.Dispose();
             m_ShowResourcesSub?.Dispose();
         }

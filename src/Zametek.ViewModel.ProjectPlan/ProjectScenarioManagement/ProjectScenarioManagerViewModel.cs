@@ -41,12 +41,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly NodeActionModel m_NodeAction;
         private readonly Subject<bool> m_NodeActionCommandManualTrigger;
 
-        private readonly IDisposable? m_ReadOnlyNodesSub;
-        private readonly IDisposable? m_ReadOnlyFlattenedNodesSub;
-        private readonly IDisposable? m_SortUpdateSub;
-        private readonly IDisposable? m_AreScenariosDisplayedSub;
-        private readonly IDisposable? m_MetricsSub;
-        private readonly IDisposable? m_ReviseTrackedMetricsSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime;
+        private IDisposable? m_ReadOnlyNodesSub;
+        private IDisposable? m_ReadOnlyFlattenedNodesSub;
+        private IDisposable? m_SortUpdateSub;
+        private IDisposable? m_AreScenariosDisplayedSub;
+        private IDisposable? m_MetricsSub;
+        private IDisposable? m_ReviseTrackedMetricsSub;
 
         #endregion
 
@@ -65,6 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
+            m_SubscriptionLifetime = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
@@ -232,21 +235,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ChangeSortModeCommand = ReactiveCommand.CreateFromTask<SortMode>(ChangeSortModeAsync);
             ChangeSortDirectionCommand = ReactiveCommand.CreateFromTask<SortDirection>(ChangeSortDirectionAsync);
 
-            // Create read-only view to the source list.
-            m_ReadOnlyNodesSub = m_Nodes.Connect()
-                .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
-                .AutoRefresh(node => node.CreatedOn)
-                .AutoRefresh(node => node.ModifiedOn)
-                .Sort(m_NodeSortComparer) // DynamicData listens to changes in this observable.
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Bind(out m_ReadOnlyNodes)
-                .Subscribe();
-
-            // Create read-only view to the source list.
-            m_ReadOnlyFlattenedNodesSub = m_FlattenedNodes.Connect()
-                //.AutoRefresh(node => node.IsTracked) // Re-evaluates when this property changes.
-                .Bind(out m_ReadOnlyFlattenedNodes)
-                .Subscribe();
+            // The read-only views of the source lists are made here, empty, so that they can be read and observed from
+            // the start. The binds that fill them are made by StartSubscriptions.
+            m_BoundNodes = [];
+            m_ReadOnlyNodes = new ReadOnlyObservableCollection<IManagedNodeViewModel>(m_BoundNodes);
+            m_BoundFlattenedNodes = [];
+            m_ReadOnlyFlattenedNodes = new ReadOnlyObservableCollection<IManagedNodeViewModel>(m_BoundFlattenedNodes);
 
             AttachSortDiagnostics();
 
@@ -314,58 +308,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScenarioChartAbsoluteCurveFittingY2 = this
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY2)
                 .ToProperty(this, pm => pm.ScenarioChartAbsoluteCurveFittingY2);
-
-            m_SortUpdateSub = this
-                .WhenAnyValue(
-                    pm => pm.ProjectScenarioSortMode,
-                    pm => pm.ProjectScenarioSortDirection)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await ChangeSortAsync());
-
-            m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedNodes
-                .ToObservableChangeSet()
-                .AutoRefresh(node => node.IsUpdated)
-                .AutoRefresh(node => node.DisplayName)
-                .AutoRefresh(node => node.IsTracked)
-                //.Filter(node => !node.IsFolder && node.Scenario is not null)
-                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ =>
-                {
-                    if (!IsBusy)
-                    {
-                        lock (m_Lock)
-                        {
-                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
-                        }
-                    }
-                });
-
-            m_MetricsSub = this
-                .WhenAnyValue(pm => pm.m_CoreViewModel.Metrics)
-                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ =>
-                {
-                    if (!IsBusy)
-                    {
-                        lock (m_Lock)
-                        {
-                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
-                        }
-                    }
-                });
-
-            m_ReviseTrackedMetricsSub = this
-                .WhenAnyValue(pm => pm.IsReadyToReviseTrackedMetrics)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(isReady =>
-                {
-                    if (isReady == ReadyToRevise.Yes)
-                    {
-                        BuildTrackedMetrics();
-                    }
-                });
 
             Id = Resource.ProjectPlan.Titles.Title_ProjectScenarios;
             Title = Resource.ProjectPlan.Titles.Title_ProjectScenarios;
@@ -481,6 +423,12 @@ namespace Zametek.ViewModel.ProjectPlan
                             ModifiedOn = localNow,
                             IsTracked = false,
                         });
+
+                    // Started as it is made when this has been started: see IStartSubscriptions.
+                    if (m_SubscriptionLifetime.IsStarted)
+                    {
+                        Root.StartSubscriptions();
+                    }
 
                     AddTagLabels(
                         [
@@ -790,6 +738,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (!m_ManagedNodeLookup.ContainsKey(projectScenarioNode.Id))
                         {
                             var projectScenarioViewModel = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer, projectScenarioNode);
+
+                            // Started as it is made when this has been started: see IStartSubscriptions.
+                            if (m_SubscriptionLifetime.IsStarted)
+                            {
+                                projectScenarioViewModel.StartSubscriptions();
+                            }
 
                             if (!projectScenarioViewModel.IsFolder
                                 && m_FileScenarioLookup.TryGetValue(projectScenarioViewModel.Id, out ProjectScenarioFileModel? projectScenarioFile))
@@ -2163,12 +2117,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedNodeViewModel> m_Nodes;
         public IReadOnlyList<IManagedNodeViewModel> RawNodes => m_Nodes.Items;
 
+        private readonly ObservableCollectionExtended<IManagedNodeViewModel> m_BoundNodes;
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes => m_ReadOnlyNodes;
 
         private readonly SourceList<IManagedNodeViewModel> m_FlattenedNodes;
         public IReadOnlyList<IManagedNodeViewModel> RawFlattenedNodes => m_FlattenedNodes.Items;
 
+        private readonly ObservableCollectionExtended<IManagedNodeViewModel> m_BoundFlattenedNodes;
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyFlattenedNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> FlattenedNodes => m_ReadOnlyFlattenedNodes;
 
@@ -2519,10 +2475,97 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The views of the source lists that the UI binds to.
+            m_ReadOnlyNodesSub = m_Nodes.Connect()
+                .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
+                .AutoRefresh(node => node.CreatedOn)
+                .AutoRefresh(node => node.ModifiedOn)
+                .Sort(m_NodeSortComparer) // DynamicData listens to changes in this observable.
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Bind(m_BoundNodes)
+                .Subscribe();
+
+            m_ReadOnlyFlattenedNodesSub = m_FlattenedNodes.Connect()
+                //.AutoRefresh(node => node.IsTracked) // Re-evaluates when this property changes.
+                .Bind(m_BoundFlattenedNodes)
+                .Subscribe();
+
+            m_SortUpdateSub = this
+                .WhenAnyValue(
+                    pm => pm.ProjectScenarioSortMode,
+                    pm => pm.ProjectScenarioSortDirection)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await ChangeSortAsync());
+
+            m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedNodes
+                .ToObservableChangeSet()
+                .AutoRefresh(node => node.IsUpdated)
+                .AutoRefresh(node => node.DisplayName)
+                .AutoRefresh(node => node.IsTracked)
+                //.Filter(node => !node.IsFolder && node.Scenario is not null)
+                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    if (!IsBusy)
+                    {
+                        lock (m_Lock)
+                        {
+                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
+                        }
+                    }
+                });
+
+            m_MetricsSub = this
+                .WhenAnyValue(pm => pm.m_CoreViewModel.Metrics)
+                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    if (!IsBusy)
+                    {
+                        lock (m_Lock)
+                        {
+                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
+                        }
+                    }
+                });
+
+            m_ReviseTrackedMetricsSub = this
+                .WhenAnyValue(pm => pm.IsReadyToReviseTrackedMetrics)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(isReady =>
+                {
+                    if (isReady == ReadyToRevise.Yes)
+                    {
+                        BuildTrackedMetrics();
+                    }
+                });
+
+            // The nodes made before the start start with it; those made after it start as they are made.
+            Root.StartSubscriptions();
+            foreach (IManagedNodeViewModel node in m_ManagedNodeLookup.Values)
+            {
+                node.StartSubscriptions();
+            }
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ReadOnlyNodesSub?.Dispose();
             m_ReadOnlyFlattenedNodesSub?.Dispose();
             m_SortUpdateSub?.Dispose();

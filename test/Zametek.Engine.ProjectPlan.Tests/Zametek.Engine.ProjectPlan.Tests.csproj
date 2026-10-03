@@ -32,6 +32,11 @@
     <Content Include="..\Zametek.ProjectPlan.CommandLine.Tests\Assets\**" LinkBase="Assets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- A plan of a size and shape a real project has - dozens of activities and resources, graph layouts - which the
+         view model tests read as well. -->
+    <Content Include="..\Zametek.ViewModel.ProjectPlan.Tests\TestFiles\sample_v0_6_1.zpp" LinkBase="Assets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

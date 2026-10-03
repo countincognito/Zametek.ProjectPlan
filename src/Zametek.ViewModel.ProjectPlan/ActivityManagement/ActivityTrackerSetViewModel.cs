@@ -18,7 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private ActivityTrackerModel? m_LastTracker;
 
-        private readonly IDisposable? m_DaysSub;
+        // Made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime;
+        private IDisposable? m_DaysSub;
 
         #endregion
 
@@ -31,6 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             m_Lock = new();
+            m_SubscriptionLifetime = new();
             m_CoreViewModel = coreViewModel;
             ActivityId = activityId;
             m_ActivityTrackerLookup = [];
@@ -49,18 +52,6 @@ namespace Zametek.ViewModel.ProjectPlan
             SetLastTracker();
 
             SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
-
-            m_DaysSub = this
-                .WhenAnyValue(
-                    x => x.m_CoreViewModel.TrackerIndex,
-                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
-                // The pre-compile Yes raise happens before any tracker has
-                // changed, so only the post-compile No transition (and window
-                // moves, which occur while No) can alter what the day cells
-                // show. Skipping Yes halves the per-edit binding fan-out.
-                .Where(x => x.Item2 == ReadyToRevise.No)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RefreshDays());
         }
 
         #endregion
@@ -204,6 +195,40 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_DaysSub = this
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.TrackerIndex,
+                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                // The pre-compile Yes raise happens before any tracker has
+                // changed, so only the post-compile No transition (and window
+                // moves, which occur while No) can alter what the day cells
+                // show. Skipping Yes halves the per-edit binding fan-out.
+                .Where(x => x.Item2 == ReadyToRevise.No)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RefreshDays());
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_DaysSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -217,7 +242,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_DaysSub?.Dispose();
+                KillSubscriptions();
             }
 
             m_Disposed = true;

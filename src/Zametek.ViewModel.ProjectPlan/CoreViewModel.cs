@@ -56,12 +56,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDataGridScrollManager m_DataGridScrollManager;
         private readonly ILogger<CoreViewModel> m_Logger;
 
-        private readonly IDisposable? m_ReadOnlyActivitiesSub;
-        private readonly IDisposable? m_OrderableActivitiesSub;
-        private readonly IDisposable? m_AreActivitiesUncompiledSub;
-        private readonly IDisposable? m_CompileOnSettingsUpdateSub;
-        private readonly IDisposable? m_BuildCascadeSub;
-        private readonly IDisposable? m_BuildRiskMetricsSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime;
+        private IDisposable? m_ReadOnlyActivitiesSub;
+        private IDisposable? m_OrderableActivitiesSub;
+        private IDisposable? m_AreActivitiesUncompiledSub;
+        private IDisposable? m_CompileOnSettingsUpdateSub;
+        private IDisposable? m_BuildCascadeSub;
+        private IDisposable? m_BuildRiskMetricsSub;
 
         #endregion
 
@@ -92,6 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger = logger;
             m_Lock = new();
             m_ActivityDataLock = new();
+            m_SubscriptionLifetime = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
             m_VertexGraphCompiler = new VertexGraphCompiler();
@@ -175,17 +178,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     })
                 .ToProperty(this, mm => mm.ProjectFinish);
 
-            // Create read-only view to the source list.
-            m_ReadOnlyActivitiesSub = m_Activities.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler)
-               .Bind(out m_ReadOnlyActivities)
-               .Subscribe();
-
-            m_OrderableActivitiesSub = m_Activities.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
-               .Bind(m_OrderableActivities)          // Bind to the mutable collection
-               .DisposeMany()                        // Clean up resources
-               .Subscribe();
+            // The read-only view of the source list is made here, empty, so that it can be read and observed from
+            // the start. The bind that fills it delivers on the UI thread and is made by StartSubscriptions.
+            m_BoundActivities = [];
+            m_ReadOnlyActivities = new ReadOnlyObservableCollection<IManagedActivityViewModel>(m_BoundActivities);
 
             m_HasActivities = m_ReadOnlyActivities
                 .ToObservableChangeSet()
@@ -209,131 +205,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.WorkStreamSettings,
                     settings => settings.WorkStreams.Any(x => x.IsPhase))
                 .ToProperty(this, core => core.HasPhases);
-
-            m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
-                .ToObservableChangeSet()
-                .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
-                .Filter(activity => !activity.IsCompiled)
-                // Drop emissions raised during a bulk update: the bulk update methods
-                // run the compilation explicitly, so these emissions are redundant.
-                // Note this must come after the DynamicData operators (so their
-                // internal state stays consistent) and before ObserveOn (so the check
-                // runs at emission time, not at deferred delivery time).
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(changeSet =>
-                {
-                    CascadeDiagnostics.RecordMarker($@"UncompiledSub fired: Replaced={changeSet.Replaced} Adds={changeSet.Adds} IsBusy={IsBusy} IsBulkUpdating={IsBulkUpdating} AutoCompile={AutoCompile} anyUncompiled={RawActivities.Any(a => !a.IsCompiled)}");
-                    if ((changeSet.Replaced + changeSet.Adds + changeSet.Refreshes) > 0)
-                    {
-                        lock (m_Lock)
-                        {
-                            if (!IsBusy)
-                            {
-                                // The changeset's uncompiled verdict is baked in at
-                                // emission time and may be stale by the time it is
-                                // delivered here (e.g. activities added during a load
-                                // are emitted as uncompiled, but the load has already
-                                // compiled them by the time the load releases m_Lock),
-                                // so re-check the live state before arming a redundant
-                                // compile, which would mark the project scenario as
-                                // updated.
-                                if (RawActivities.Any(activity => !activity.IsCompiled))
-                                {
-                                    if (AutoCompile)
-                                    {
-                                        IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                                        IsReadyToCompile = ReadyToCompile.Yes;
-                                        CascadeDiagnostics.RecordMarker(@"UncompiledSub armed IsReadyToCompile=Yes");
-                                    }
-                                    else
-                                    {
-                                        IsReadyToReviseTrackers = ReadyToRevise.No;
-                                        IsReadyToCompile = ReadyToCompile.No;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-            // Compile off the arming thread: the settings-apply subscriptions
-            // arm IsReadyToCompile on the UI thread, and the compile must
-            // never run there. The selector revisions still complete first,
-            // because they run inline during the IsReadyToReviseTrackers
-            // raise, which every arm site performs before this one.
-            m_CompileOnSettingsUpdateSub = this
-                .WhenAnyValue(core => core.IsReadyToCompile)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ =>
-                {
-                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: IsReadyToCompile={IsReadyToCompile} IsBusy={IsBusy}");
-                    try
-                    {
-                        lock (m_Lock)
-                        {
-                            // Re-read rather than trust the delivered value (rule 7).
-                            // Every completed compile clears this flag, so two edits in
-                            // quick succession arm it twice and the second delivery
-                            // arrives after the first compile has already absorbed both
-                            // - and a redundant compile marks the project scenario as
-                            // updated, exactly as the uncompiled-activities handler
-                            // above explains. The getter is lock-free (rule 9), so
-                            // reading it here costs nothing.
-                            if (IsReadyToCompile == ReadyToCompile.Yes
-                                && !IsBusy)
-                            {
-                                RunAutoCompile();
-                            }
-                        }
-                    }
-                    catch (GraphCompilationTimeoutException)
-                    {
-                        // Swallowed deliberately. RunCompile has already logged the
-                        // timeout and applied AbandonCompilation, and letting this
-                        // escape would tear down this subscription along with every
-                        // later compile it would have started. There is no dialog
-                        // service here to report it either - see the note on
-                        // AbandonCompilation.
-                    }
-                });
-
-            // One compile, one cascade: a GraphCompilation change runs the whole
-            // Build* cascade in dependency order (the same RunBuildCascade the
-            // bulk update methods invoke actively inside their muted window) and
-            // then bumps CompilationOutputRevision as the settled signal for
-            // subscribers that need every output in place. Emissions raised
-            // during a bulk update are dropped (rather than conflated): the drop
-            // check must run at emission time (i.e. before ObserveOn), otherwise
-            // the deferred taskpool invocation would run after the bulk update
-            // window has already closed.
-            m_BuildCascadeSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ =>
-                {
-                    try
-                    {
-                        RunBuildCascade();
-                    }
-                    catch (GraphCompilationTimeoutException)
-                    {
-                        // Swallowed for the same reason as the compile subscription
-                        // above: RunBuildCascade has already logged and applied the
-                        // state, and an escaping exception would end the cascade
-                        // subscription for the rest of the session.
-                    }
-                });
-
-            // Risk metrics are the one output with a non-compile trigger: the
-            // activity-severity settings feed them directly, so a settings
-            // change must rebuild them without waiting for a compile.
-            m_BuildRiskMetricsSub = this
-                .WhenAnyValue(core => core.GraphSettings)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildRiskMetrics());
         }
 
         #endregion
@@ -929,6 +800,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedActivityViewModel> m_Activities;
         public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_Activities.Items;
 
+        private readonly ObservableCollectionExtended<IManagedActivityViewModel> m_BoundActivities;
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
 
@@ -1876,6 +1748,13 @@ namespace Zametek.ViewModel.ProjectPlan
                                 dependentActivity.Activity.MinimumEarliestStartDateTime,
                                 dependentActivity.Activity.MaximumLatestFinishDateTime);
 
+                            // Started as it is made when this has been started; a host that has not started this
+                            // (the headless engine) gets activities that do nothing by themselves.
+                            if (m_SubscriptionLifetime.IsStarted)
+                            {
+                                activity.StartSubscriptions();
+                            }
+
                             if (m_VertexGraphCompiler.AddActivity(activity))
                             {
                                 activities.Add(activity);
@@ -2457,10 +2336,166 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The views of the source list that the UI binds to, filled on the UI thread.
+            m_ReadOnlyActivitiesSub = m_Activities.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
+               .Bind(m_BoundActivities)
+               .Subscribe();
+
+            m_OrderableActivitiesSub = m_Activities.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableActivities)          // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
+               .Subscribe();
+
+            m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
+                .ToObservableChangeSet()
+                .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
+                .Filter(activity => !activity.IsCompiled)
+                // Drop emissions raised during a bulk update: the bulk update methods
+                // run the compilation explicitly, so these emissions are redundant.
+                // Note this must come after the DynamicData operators (so their
+                // internal state stays consistent) and before ObserveOn (so the check
+                // runs at emission time, not at deferred delivery time).
+                .Where(_ => !IsBulkUpdating)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(changeSet =>
+                {
+                    CascadeDiagnostics.RecordMarker($@"UncompiledSub fired: Replaced={changeSet.Replaced} Adds={changeSet.Adds} IsBusy={IsBusy} IsBulkUpdating={IsBulkUpdating} AutoCompile={AutoCompile} anyUncompiled={RawActivities.Any(a => !a.IsCompiled)}");
+                    if ((changeSet.Replaced + changeSet.Adds + changeSet.Refreshes) > 0)
+                    {
+                        lock (m_Lock)
+                        {
+                            if (!IsBusy)
+                            {
+                                // The changeset's uncompiled verdict is baked in at
+                                // emission time and may be stale by the time it is
+                                // delivered here (e.g. activities added during a load
+                                // are emitted as uncompiled, but the load has already
+                                // compiled them by the time the load releases m_Lock),
+                                // so re-check the live state before arming a redundant
+                                // compile, which would mark the project scenario as
+                                // updated.
+                                if (RawActivities.Any(activity => !activity.IsCompiled))
+                                {
+                                    if (AutoCompile)
+                                    {
+                                        IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                                        IsReadyToCompile = ReadyToCompile.Yes;
+                                        CascadeDiagnostics.RecordMarker(@"UncompiledSub armed IsReadyToCompile=Yes");
+                                    }
+                                    else
+                                    {
+                                        IsReadyToReviseTrackers = ReadyToRevise.No;
+                                        IsReadyToCompile = ReadyToCompile.No;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            // Compile off the arming thread: the settings-apply subscriptions
+            // arm IsReadyToCompile on the UI thread, and the compile must
+            // never run there. The selector revisions still complete first,
+            // because they run inline during the IsReadyToReviseTrackers
+            // raise, which every arm site performs before this one.
+            m_CompileOnSettingsUpdateSub = this
+                .WhenAnyValue(core => core.IsReadyToCompile)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: IsReadyToCompile={IsReadyToCompile} IsBusy={IsBusy}");
+                    try
+                    {
+                        lock (m_Lock)
+                        {
+                            // Re-read rather than trust the delivered value (rule 7).
+                            // Every completed compile clears this flag, so two edits in
+                            // quick succession arm it twice and the second delivery
+                            // arrives after the first compile has already absorbed both
+                            // - and a redundant compile marks the project scenario as
+                            // updated, exactly as the uncompiled-activities handler
+                            // above explains. The getter is lock-free (rule 9), so
+                            // reading it here costs nothing.
+                            if (IsReadyToCompile == ReadyToCompile.Yes
+                                && !IsBusy)
+                            {
+                                RunAutoCompile();
+                            }
+                        }
+                    }
+                    catch (GraphCompilationTimeoutException)
+                    {
+                        // Swallowed deliberately. RunCompile has already logged the
+                        // timeout and applied AbandonCompilation, and letting this
+                        // escape would tear down this subscription along with every
+                        // later compile it would have started. There is no dialog
+                        // service here to report it either - see the note on
+                        // AbandonCompilation.
+                    }
+                });
+
+            // One compile, one cascade: a GraphCompilation change runs the whole
+            // Build* cascade in dependency order (the same RunBuildCascade the
+            // bulk update methods invoke actively inside their muted window) and
+            // then bumps CompilationOutputRevision as the settled signal for
+            // subscribers that need every output in place. Emissions raised
+            // during a bulk update are dropped (rather than conflated): the drop
+            // check must run at emission time (i.e. before ObserveOn), otherwise
+            // the deferred taskpool invocation would run after the bulk update
+            // window has already closed.
+            m_BuildCascadeSub = this
+                .WhenAnyValue(core => core.GraphCompilation)
+                .Where(_ => !IsBulkUpdating)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        RunBuildCascade();
+                    }
+                    catch (GraphCompilationTimeoutException)
+                    {
+                        // Swallowed for the same reason as the compile subscription
+                        // above: RunBuildCascade has already logged and applied the
+                        // state, and an escaping exception would end the cascade
+                        // subscription for the rest of the session.
+                    }
+                });
+
+            // Risk metrics are the one output with a non-compile trigger: the
+            // activity-severity settings feed them directly, so a settings
+            // change must rebuild them without waiting for a compile.
+            m_BuildRiskMetricsSub = this
+                .WhenAnyValue(core => core.GraphSettings)
+                .Where(_ => !IsBulkUpdating)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => BuildRiskMetrics());
+
+            // The activities made before the start start with it; those made after it start as they are made.
+            foreach (IManagedActivityViewModel activity in RawActivities)
+            {
+                activity.StartSubscriptions();
+            }
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ReadOnlyActivitiesSub?.Dispose();
             m_OrderableActivitiesSub?.Dispose();
             m_AreActivitiesUncompiledSub?.Dispose();

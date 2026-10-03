@@ -5,7 +5,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface ICoreViewModel
-        : IKillSubscriptions, IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

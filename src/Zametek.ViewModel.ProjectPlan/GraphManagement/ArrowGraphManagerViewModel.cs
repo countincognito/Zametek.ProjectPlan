@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -84,19 +85,26 @@ namespace Zametek.ViewModel.ProjectPlan
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
         private readonly InteractiveGraphViewModel m_Interactive;
 
+        // The reactive pipelines that deliver on another thread, made by StartSubscriptions and not by the constructor:
+        // see IStartSubscriptions. The rebuild trigger reaches the interactive graph through a subject that the
+        // constructor makes, and that stays silent until the pipeline is connected to it.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private readonly Subject<Unit> m_RebuildRequests;
+        private IDisposable? m_RebuildSub;
+
         // Keep the interactive graph's edge routing mode and the scenario's persisted routing-mode
         // setting in step (see the ctor).
         private readonly IDisposable m_EdgeRoutingModePushSub;
         private readonly IDisposable m_EdgeRoutingModeApplySub;
 
         // Reset the interactive viewport (zoom x1, default pan, cleared framing) when the project
-        // scenario is reset/closed, signalled by the domain graph going empty (see the ctor).
-        private readonly IDisposable m_ResetViewSub;
+        // scenario is reset/closed, signalled by the domain graph going empty (see StartSubscriptions).
+        private IDisposable? m_ResetViewSub;
 
         // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
         // load. m_PushedLayout holds the exact instance this manager last pushed, so the seed can
-        // recognise its own echo by identity (see the ctor).
-        private readonly IDisposable m_LayoutSeedSub;
+        // recognise its own echo by identity (see StartSubscriptions).
+        private IDisposable? m_LayoutSeedSub;
         private Common.ProjectPlan.GraphLayoutModel? m_PushedLayout;
 
         #endregion
@@ -147,19 +155,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Select(x => x.ToGraphTheme())
                 .ToProperty(this, agm => agm.Theme);
 
-            // The single live rebuild trigger: the domain graph, the graph settings, the theme or the
-            // show-names setting changing. Conflated while a project scenario is loaded/reset, and
-            // delivered off the UI thread. The interactive view-model subscribes to this and runs the
-            // MSAGL layout once per change (the headless SVG is built lazily, only when exporting).
-            m_RebuildRequested = this
-                .WhenAnyValue(
-                    agm => agm.m_CoreViewModel.ArrowGraph,
-                    agm => agm.m_CoreViewModel.GraphSettings,
-                    agm => agm.m_CoreViewModel.BaseTheme,
-                    agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
-                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Select(_ => Unit.Default);
+            // What the interactive view-model subscribes to. It is silent until StartSubscriptions connects it to the
+            // pipeline that raises it, so a manager that is never started never rebuilds.
+            m_RebuildRequests = new();
+            m_RebuildRequested = m_RebuildRequests.AsObservable();
 
             m_Interactive = new InteractiveGraphViewModel(
                 this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Arrow, dispatcher: graphDispatcher);
@@ -177,17 +176,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphEdgeRoutingMode)
                 .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
 
-            // Reset the interactive viewport whenever the domain arrow graph goes empty - the signal for
-            // a project scenario reset/close. Deliberately not gated by IsBulkUpdating, so it also fires
-            // during the reset phase of opening a project (which clears then repopulates inside one bulk
-            // window); the repopulation then auto-fits because the framing was cleared. Marshalled to the
-            // UI thread because ResetView raises ViewReset, which touches the control.
-            m_ResetViewSub = this
-                .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraph)
-                .Where(graph => graph.Nodes.Count == 0)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ => m_Interactive.ResetView());
-
             // Persist the interactive arrangement in the scenario. Arrow event ids are regenerated every
             // compile, so CoreViewModel.BuildArrowGraph stamps each event with a stable, activity-derived
             // id (see ArrowEventIdMapper) shared by the live graph, the diagram and the persisted layout -
@@ -197,31 +185,6 @@ namespace Zametek.ViewModel.ProjectPlan
             // flag set on push lets the seed ignore the manager's own echo so it does not re-seed; ObserveOn
             // keeps the seed (which touches the bound node collection) on the UI thread.
             m_Interactive.LayoutChanged += OnInteractiveLayoutChanged;
-
-            m_LayoutSeedSub = this
-                .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraphLayout)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Read the Core's current layout rather than the delivered snapshot (section 7
-                    // rule 7), and recognise this manager's own echo by identity rather than with a
-                    // one-shot flag. A bare bool was consumed by whichever delivery arrived next,
-                    // which is not necessarily the echo it was set for: a drag landing while a
-                    // load's layout change was still queued ate the flag on the load's delivery and
-                    // skipped seeding the arrangement that had just been opened. Comparing against
-                    // the instance actually pushed says exactly which delivery is ours - the same
-                    // idiom the settings managers use to avoid rebuilding their grids from their
-                    // own edits.
-                    Common.ProjectPlan.GraphLayoutModel layout = m_CoreViewModel.ArrowGraphLayout;
-
-                    if (ReferenceEquals(layout, m_PushedLayout))
-                    {
-                        return;
-                    }
-
-                    m_PushedLayout = null;
-                    m_Interactive.SeedNodeLayout(layout.ToNodePositions());
-                });
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -355,10 +318,78 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The single live rebuild trigger: the domain graph, the graph settings, the theme or the
+            // show-names setting changing. Conflated while a project scenario is loaded/reset, and
+            // delivered off the UI thread. The interactive view-model subscribes to this and runs the
+            // MSAGL layout once per change (the headless SVG is built lazily, only when exporting).
+            m_RebuildSub = this
+                .WhenAnyValue(
+                    agm => agm.m_CoreViewModel.ArrowGraph,
+                    agm => agm.m_CoreViewModel.GraphSettings,
+                    agm => agm.m_CoreViewModel.BaseTheme,
+                    agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
+                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Select(_ => Unit.Default)
+                .Subscribe(m_RebuildRequests);
+
+            // Reset the interactive viewport whenever the domain arrow graph goes empty - the signal for
+            // a project scenario reset/close. Deliberately not gated by IsBulkUpdating, so it also fires
+            // during the reset phase of opening a project (which clears then repopulates inside one bulk
+            // window); the repopulation then auto-fits because the framing was cleared. Marshalled to the
+            // UI thread because ResetView raises ViewReset, which touches the control.
+            m_ResetViewSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraph)
+                .Where(graph => graph.Nodes.Count == 0)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ => m_Interactive.ResetView());
+
+            // The arrangement a loaded scenario carries: see the note on LayoutChanged in the constructor.
+            m_LayoutSeedSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraphLayout)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Read the Core's current layout rather than the delivered snapshot (section 7
+                    // rule 7), and recognise this manager's own echo by identity rather than with a
+                    // one-shot flag. A bare bool was consumed by whichever delivery arrived next,
+                    // which is not necessarily the echo it was set for: a drag landing while a
+                    // load's layout change was still queued ate the flag on the load's delivery and
+                    // skipped seeding the arrangement that had just been opened. Comparing against
+                    // the instance actually pushed says exactly which delivery is ours - the same
+                    // idiom the settings managers use to avoid rebuilding their grids from their
+                    // own edits.
+                    Common.ProjectPlan.GraphLayoutModel layout = m_CoreViewModel.ArrowGraphLayout;
+
+                    if (ReferenceEquals(layout, m_PushedLayout))
+                    {
+                        return;
+                    }
+
+                    m_PushedLayout = null;
+                    m_Interactive.SeedNodeLayout(layout.ToNodePositions());
+                });
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
+            m_RebuildSub?.Dispose();
+            m_ResetViewSub?.Dispose();
+            m_LayoutSeedSub?.Dispose();
             m_Interactive.Dispose();
         }
 

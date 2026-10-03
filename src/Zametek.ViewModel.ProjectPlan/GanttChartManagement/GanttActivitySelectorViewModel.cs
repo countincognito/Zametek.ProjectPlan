@@ -53,8 +53,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         return x.Id.CompareTo(y.Id);
                     });
 
+        // Delivers on the current thread, so the constructor makes it.
         private readonly IDisposable? m_ReviseActivitiesSub;
-        private readonly IDisposable? m_ShowConnectionsSub;
+
+        // Delivers on another thread, so StartSubscriptions makes it and not the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ShowConnectionsSub;
 
         #endregion
 
@@ -72,8 +76,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_SelectedTargetActivities.CollectionChanged += SelectedTargetActivities_CollectionChanged;
 
-            // Initial set up.
-            ReviseActivities();
+            // Initial set up. The persisted connections filter is applied here, explicitly, and not left to the
+            // signal that m_ShowConnectionsSub observes: a project scenario loaded before this selector was made has
+            // consumed that signal already, and a selector that is never started would never see it. It is applied
+            // revising, so that it is not mistaken for a user edit and written straight back.
+            try
+            {
+                Interlocked.Increment(ref m_RevisingCount);
+                ReviseActivities();
+                SetSelectedTargetActivities(
+                    [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref m_RevisingCount);
+            }
 
             // This needs to be on the current thread because all the tracker updates
             // need to be completed before a compilation can start.
@@ -97,29 +114,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             // (dump-proven 2026-08-17).
                             Interlocked.Increment(ref m_RevisingCount);
                             ReviseActivities();
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref m_RevisingCount);
-                        }
-                    }
-                });
-
-            m_ShowConnectionsSub = this
-                .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(isReadyToRevise =>
-                {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
-                    {
-                        try
-                        {
-                            Interlocked.Increment(ref m_RevisingCount);
-                            ReviseActivities();
-                            SetSelectedTargetActivities(
-                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
-                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
                         }
                         finally
                         {
@@ -335,6 +329,52 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_ShowConnectionsSub = this
+                .WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(isReadyToRevise =>
+                {
+                    if (isReadyToRevise == ReadyToRevise.Yes)
+                    {
+                        try
+                        {
+                            Interlocked.Increment(ref m_RevisingCount);
+                            ReviseActivities();
+                            SetSelectedTargetActivities(
+                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
+                        }
+                        finally
+                        {
+                            Interlocked.Decrement(ref m_RevisingCount);
+                        }
+                    }
+                });
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_ReviseActivitiesSub?.Dispose();
+            m_ShowConnectionsSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -348,8 +388,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_ReviseActivitiesSub?.Dispose();
-                m_ShowConnectionsSub?.Dispose();
+                KillSubscriptions();
             }
 
             m_Disposed = true;

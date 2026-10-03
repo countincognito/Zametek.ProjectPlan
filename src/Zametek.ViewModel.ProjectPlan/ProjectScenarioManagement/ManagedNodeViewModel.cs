@@ -1,4 +1,5 @@
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -25,9 +26,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private ProjectScenarioNodeModel m_ProjectScenarioNodeModel;
         private ProjectScenarioModel? m_ProjectScenarioModel;
 
-        private readonly IDisposable m_ReadOnlyLabelsSub;
-        private readonly IDisposable m_ReadOnlyChildrenSub;
-        private readonly IDisposable m_IsUpdatedSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime;
+        private IDisposable? m_ReadOnlyLabelsSub;
+        private IDisposable? m_ReadOnlyChildrenSub;
+        private IDisposable? m_IsUpdatedSub;
 
         #endregion
 
@@ -69,14 +72,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(nodeSortComparer);
             ArgumentNullException.ThrowIfNull(projectScenarioNode);
             m_Lock = new();
+            m_SubscriptionLifetime = new();
             m_IsLoaded = false;
             m_Labels = new();
 
-            // Create read-only view to the source list.
-            m_ReadOnlyLabelsSub = m_Labels.Connect()
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Bind(out m_ReadOnlyLabels)
-                .Subscribe();
+            // The read-only views of the source lists are made here, empty, so that they can be read and observed
+            // from the start. The binds that fill them are made by StartSubscriptions.
+            m_BoundLabels = [];
+            m_ReadOnlyLabels = new ReadOnlyObservableCollection<string>(m_BoundLabels);
 
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_CoreViewModel = coreViewModel;
@@ -85,44 +88,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectScenarioNodeModel = projectScenarioNode;
             m_ProjectScenarioModel = null;
             m_Children = new();
-
-            // Create read-only view to the source list.
-            m_ReadOnlyChildrenSub = m_Children.Connect()
-                .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
-                .AutoRefresh(node => node.CreatedOn)
-                .AutoRefresh(node => node.ModifiedOn)
-                .Sort(m_NodeSortComparer)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Bind(out m_ReadOnlyChildren)
-                .Subscribe();
-
-            // The scenario-updated flag only LATCHES the node marker: a true
-            // transition marks the active scenario's node, and nothing here
-            // ever clears it - un-marking is exclusively ResetManagedNodes'
-            // job (on save, load and reset). Filtering the false ticks out is
-            // what makes that split race-free: re-emitting the current marker
-            // on a false tick used to queue a stale 'true' across the async
-            // hop, which could land after the reset's clear and resurrect the
-            // asterisk (caught live in the cascade diagnostics, 2026-08-15).
-            // Delivery is marshalled to the main thread so the write (and the
-            // DisplayName recompute it raises) stays off the pool threads
-            // that raise the flag.
-            m_IsUpdatedSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsProjectScenarioUpdated)
-                .Where(isProjectScenarioUpdated => isProjectScenarioUpdated)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    bool isActiveScenarioNode = !IsFolder
-                        && m_ProjectScenarioNodeModel.Id == m_SettingService.ScenarioId;
-
-                    CascadeDiagnostics.RecordEvent($@"IsUpdatedSub latch: node '{Name}' activeScenarioNode={isActiveScenarioNode} (current={IsUpdated})");
-
-                    if (isActiveScenarioNode)
-                    {
-                        IsUpdated = true;
-                    }
-                });
+            m_BoundChildren = [];
+            m_ReadOnlyChildren = new ReadOnlyObservableCollection<IManagedNodeViewModel>(m_BoundChildren);
 
             m_DisplayName = this
                 .WhenAnyValue(
@@ -298,6 +265,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<string> m_Labels;
         public IReadOnlyList<string> RawLabels => m_Labels.Items;
 
+        private readonly ObservableCollectionExtended<string> m_BoundLabels;
         private readonly ReadOnlyObservableCollection<string> m_ReadOnlyLabels;
         public ReadOnlyObservableCollection<string> Labels => m_ReadOnlyLabels;
 
@@ -334,6 +302,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedNodeViewModel> m_Children;
         public IReadOnlyList<IManagedNodeViewModel> RawChildren => m_Children.Items;
 
+        private readonly ObservableCollectionExtended<IManagedNodeViewModel> m_BoundChildren;
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyChildren;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Children => m_ReadOnlyChildren;
 
@@ -434,10 +403,66 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The views of the source lists that the UI binds to.
+            m_ReadOnlyLabelsSub = m_Labels.Connect()
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Bind(m_BoundLabels)
+                .Subscribe();
+
+            m_ReadOnlyChildrenSub = m_Children.Connect()
+                .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
+                .AutoRefresh(node => node.CreatedOn)
+                .AutoRefresh(node => node.ModifiedOn)
+                .Sort(m_NodeSortComparer)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Bind(m_BoundChildren)
+                .Subscribe();
+
+            // The scenario-updated flag only LATCHES the node marker: a true
+            // transition marks the active scenario's node, and nothing here
+            // ever clears it - un-marking is exclusively ResetManagedNodes'
+            // job (on save, load and reset). Filtering the false ticks out is
+            // what makes that split race-free: re-emitting the current marker
+            // on a false tick used to queue a stale 'true' across the async
+            // hop, which could land after the reset's clear and resurrect the
+            // asterisk (caught live in the cascade diagnostics, 2026-08-15).
+            // Delivery is marshalled to the main thread so the write (and the
+            // DisplayName recompute it raises) stays off the pool threads
+            // that raise the flag.
+            m_IsUpdatedSub = this
+                .WhenAnyValue(x => x.m_CoreViewModel.IsProjectScenarioUpdated)
+                .Where(isProjectScenarioUpdated => isProjectScenarioUpdated)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    bool isActiveScenarioNode = !IsFolder
+                        && m_ProjectScenarioNodeModel.Id == m_SettingService.ScenarioId;
+
+                    CascadeDiagnostics.RecordEvent($@"IsUpdatedSub latch: node '{Name}' activeScenarioNode={isActiveScenarioNode} (current={IsUpdated})");
+
+                    if (isActiveScenarioNode)
+                    {
+                        IsUpdated = true;
+                    }
+                });
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ReadOnlyLabelsSub?.Dispose();
             m_ReadOnlyChildrenSub?.Dispose();
             m_IsUpdatedSub?.Dispose();

@@ -1,7 +1,7 @@
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IOutputManagerViewModel
-        : IKillSubscriptions, IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

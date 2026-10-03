@@ -121,4 +121,48 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             RxSchedulers.MainThreadScheduler = m_Previous;
         }
     }
+
+    /// <summary>
+    /// Installs a <see cref="ManualSequencer"/> as the task pool scheduler for the duration of a test, and puts the
+    /// previous one back afterwards: the pool's counterpart to <see cref="MainThreadSequencerScope"/>, for a test that
+    /// is about what a view model hands to the thread pool, and when.
+    /// </summary>
+    internal sealed class TaskpoolSequencerScope
+        : IDisposable
+    {
+        private readonly ISequencer m_Previous;
+
+        public TaskpoolSequencerScope()
+        {
+            m_Previous = RxSchedulers.TaskpoolScheduler;
+            Pump = new ManualSequencer();
+            RxSchedulers.TaskpoolScheduler = Pump;
+        }
+
+        public ManualSequencer Pump { get; }
+
+        public void Dispose()
+        {
+            RxSchedulers.TaskpoolScheduler = m_Previous;
+        }
+    }
+
+    /// <summary>
+    /// Runs what the main thread's pump and the thread pool's hold, for a test that has installed both.
+    /// </summary>
+    internal static class SequencerScopes
+    {
+        /// <summary>
+        /// Runs everything both pumps hold, and everything that queues while it runs: what one runs can hand work to
+        /// the other, so it goes on until neither has any.
+        /// </summary>
+        public static void Drain(MainThreadSequencerScope main, TaskpoolSequencerScope pool)
+        {
+            while (main.Pump.PendingCount > 0 || pool.Pump.PendingCount > 0)
+            {
+                pool.Pump.Drain();
+                main.Pump.Drain();
+            }
+        }
+    }
 }

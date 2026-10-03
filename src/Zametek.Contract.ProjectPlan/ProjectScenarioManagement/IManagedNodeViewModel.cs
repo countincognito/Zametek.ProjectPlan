@@ -5,7 +5,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedNodeViewModel
-        : IDisposable, INotifyPropertyChanged, IKillSubscriptions
+        : IDisposable, INotifyPropertyChanged, IStartSubscriptions, IKillSubscriptions
     {
         Guid Id { get; }
 

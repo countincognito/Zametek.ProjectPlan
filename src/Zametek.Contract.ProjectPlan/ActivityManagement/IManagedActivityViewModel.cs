@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedActivityViewModel
-        : IDependentActivity, IDisposable, INotifyPropertyChanged, IKillSubscriptions, IMuteEdits
+        : IDependentActivity, IDisposable, INotifyPropertyChanged, IStartSubscriptions, IKillSubscriptions, IMuteEdits
     {
         bool IsIsolated { get; }
 

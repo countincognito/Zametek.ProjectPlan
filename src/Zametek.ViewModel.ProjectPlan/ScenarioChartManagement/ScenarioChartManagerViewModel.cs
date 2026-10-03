@@ -83,7 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
-        private readonly IDisposable? m_BuildScenarioChartPlotModelSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildScenarioChartPlotModelSub;
 
         private const double c_AnnotatedEllipseRadius = 5.0;
 
@@ -223,31 +225,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
                     fittingType => fittingType != CurveFittingType.None)
                 .ToProperty(this, rcm => rcm.HasCurveFittingY2);
-
-            // Split across two streams because WhenAnyValue cannot handle
-            // this many individual inputs.
-            m_BuildScenarioChartPlotModelSub = Observable.Merge(
-                    this.WhenAnyValue(
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY1,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1,
-                        rcm => rcm.m_CoreViewModel.ProjectStart,
-                        rcm => rcm.m_CoreViewModel.BaseTheme,
-                        (_, _, _, _, _, _, _, _, _, _, _, _) => Unit.Default),
-                    this.WhenAnyValue(
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY2,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2,
-                        (_, _) => Unit.Default))
-                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ScenarioChartView;
             Title = Resource.ProjectPlan.Titles.Title_ScenarioChartView;
@@ -1339,10 +1316,48 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Split across two streams because WhenAnyValue cannot handle
+            // this many individual inputs.
+            m_BuildScenarioChartPlotModelSub = Observable.Merge(
+                    this.WhenAnyValue(
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY1,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1,
+                        rcm => rcm.m_CoreViewModel.ProjectStart,
+                        rcm => rcm.m_CoreViewModel.BaseTheme,
+                        (_, _, _, _, _, _, _, _, _, _, _, _) => Unit.Default),
+                    this.WhenAnyValue(
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY2,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2,
+                        (_, _) => Unit.Default))
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_BuildScenarioChartPlotModelSub?.Dispose();
         }
 

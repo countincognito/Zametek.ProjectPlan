@@ -83,7 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
-        private readonly IDisposable? m_BuildResourceChartPlotModelSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildResourceChartPlotModelSub;
 
         private const float c_ScatterLineWidth = 5.0f;
 
@@ -158,25 +160,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ShowMilestones = this
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowMilestones)
                 .ToProperty(this, rcm => rcm.ShowMilestones);
-
-            m_BuildResourceChartPlotModelSub = this
-                .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
-                    rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.Today,
-                    rcm => rcm.AllocationMode,
-                    rcm => rcm.ScheduleMode,
-                    rcm => rcm.DisplayStyle,
-                    rcm => rcm.ShowToday,
-                    rcm => rcm.ShowMilestones,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;
             Title = Resource.ProjectPlan.Titles.Title_ResourceChartView;
@@ -759,10 +742,42 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_BuildResourceChartPlotModelSub = this
+                .WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Today,
+                    rcm => rcm.AllocationMode,
+                    rcm => rcm.ScheduleMode,
+                    rcm => rcm.DisplayStyle,
+                    rcm => rcm.ShowToday,
+                    rcm => rcm.ShowMilestones,
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_BuildResourceChartPlotModelSub?.Dispose();
         }
 

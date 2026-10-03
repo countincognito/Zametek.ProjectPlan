@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IActivityTrackerSetViewModel
-        : IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         List<ActivityTrackerModel> Trackers { get; }
 

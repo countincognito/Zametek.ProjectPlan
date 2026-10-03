@@ -34,6 +34,9 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private readonly Lock m_DataLock;
 
+        // Its two subscriptions deliver on the current thread, so the constructor makes them. What it starts is the
+        // tracker set it makes for itself: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
         private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
         private readonly IDisposable? m_CompilationSub;
 
@@ -1221,12 +1224,28 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            TrackerSet.StartSubscriptions();
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_DateTimeCalculatorDisplayModeSub?.Dispose();
             m_CompilationSub?.Dispose();
+            TrackerSet.KillSubscriptions();
         }
 
         #endregion

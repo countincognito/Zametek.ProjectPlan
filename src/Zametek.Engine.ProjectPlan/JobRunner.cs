@@ -88,10 +88,12 @@ namespace Zametek.Engine.ProjectPlan
             IServiceProvider services,
             CancellationToken cancellationToken)
         {
-            IProjectScenarioManagerViewModel project = ResolveMuted<IProjectScenarioManagerViewModel>(services);
-            ICoreViewModel core = ResolveMuted<ICoreViewModel>(services);
-            IMetricManagerViewModel metrics = ResolveMuted<IMetricManagerViewModel>(services);
-            IOutputManagerViewModel outputs = ResolveMuted<IOutputManagerViewModel>(services);
+            // The view models are resolved and never started (see IStartSubscriptions): a job invokes every build
+            // step itself, so no reactive pipeline of theirs exists to run alongside it.
+            IProjectScenarioManagerViewModel project = services.GetRequiredService<IProjectScenarioManagerViewModel>();
+            ICoreViewModel core = services.GetRequiredService<ICoreViewModel>();
+            IMetricManagerViewModel metrics = services.GetRequiredService<IMetricManagerViewModel>();
+            IOutputManagerViewModel outputs = services.GetRequiredService<IOutputManagerViewModel>();
 
             ISettingService settingService = services.GetRequiredService<ISettingService>();
 
@@ -211,7 +213,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IGanttChartManagerViewModel gantt = ResolveMuted<IGanttChartManagerViewModel>(services);
+                IGanttChartManagerViewModel gantt = services.GetRequiredService<IGanttChartManagerViewModel>();
 
                 await WriteChartAsync(
                     dialogService,
@@ -228,7 +230,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IArrowGraphManagerViewModel arrow = ResolveMuted<IArrowGraphManagerViewModel>(services);
+                IArrowGraphManagerViewModel arrow = services.GetRequiredService<IArrowGraphManagerViewModel>();
 
                 await WriteGraphAsync(
                     dialogService,
@@ -244,7 +246,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IVertexGraphManagerViewModel vertex = ResolveMuted<IVertexGraphManagerViewModel>(services);
+                IVertexGraphManagerViewModel vertex = services.GetRequiredService<IVertexGraphManagerViewModel>();
 
                 await WriteGraphAsync(
                     dialogService,
@@ -260,7 +262,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IResourceChartManagerViewModel resources = ResolveMuted<IResourceChartManagerViewModel>(services);
+                IResourceChartManagerViewModel resources = services.GetRequiredService<IResourceChartManagerViewModel>();
 
                 await WriteChartAsync(
                     dialogService,
@@ -277,7 +279,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IEarnedValueChartManagerViewModel ev = ResolveMuted<IEarnedValueChartManagerViewModel>(services);
+                IEarnedValueChartManagerViewModel ev = services.GetRequiredService<IEarnedValueChartManagerViewModel>();
 
                 await WriteChartAsync(
                     dialogService,
@@ -294,10 +296,10 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IScenarioChartManagerViewModel scenarios = ResolveMuted<IScenarioChartManagerViewModel>(services);
+                IScenarioChartManagerViewModel scenarios = services.GetRequiredService<IScenarioChartManagerViewModel>();
 
                 // The tracked-metrics set the chart plots is normally assembled by
-                // a reactive pipeline that this headless host mutes, so build it
+                // a reactive pipeline that a job never starts, so build it
                 // explicitly first.
                 project.BuildTrackedMetrics();
 
@@ -319,17 +321,6 @@ namespace Zametek.Engine.ProjectPlan
                 Status = dialogService.HasShownErrors ? JobStatus.CompletedWithErrors : JobStatus.Succeeded,
                 Metrics = JobMetrics.From(metrics),
             };
-        }
-
-        // Constructing a view model wires up its reactive subscriptions; in a job
-        // every build step is invoked explicitly, so those subscriptions are killed
-        // the moment each view model is resolved.
-        private static T ResolveMuted<T>(IServiceProvider services)
-            where T : notnull, IKillSubscriptions
-        {
-            T viewModel = services.GetRequiredService<T>();
-            viewModel.KillSubscriptions();
-            return viewModel;
         }
 
         private static async Task WriteChartAsync(

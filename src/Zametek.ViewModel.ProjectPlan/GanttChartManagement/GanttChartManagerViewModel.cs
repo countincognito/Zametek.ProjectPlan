@@ -83,7 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
-        private readonly IDisposable? m_BuildGanttChartPlotModelSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildGanttChartPlotModelSub;
 
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
@@ -223,26 +225,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         return BoolToggle.Up;
                     })
                 .ToProperty(this, rcm => rcm.BoolAccumulator);
-
-            m_BuildGanttChartPlotModelSub = this
-                .WhenAnyValue(
-                    // The settled signal: one raise per compile, after every
-                    // compilation output (resource series, metrics, project
-                    // finish) is in place - so one compile means one rebuild.
-                    rcm => rcm.m_CoreViewModel.CompilationOutputRevision,
-                    rcm => rcm.m_CoreViewModel.ResourceSettings,
-                    rcm => rcm.m_CoreViewModel.GraphSettings,
-                    rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.Today,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    rcm => rcm.GroupByMode,
-                    rcm => rcm.AnnotationStyle,
-                    rcm => rcm.BoolAccumulator,
-                    rcm => rcm.ActivitySelector.TargetActivitiesString,
-                    (x, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -1720,10 +1702,47 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The selector it made for itself starts first, as it was made first.
+            ActivitySelector.StartSubscriptions();
+
+            m_BuildGanttChartPlotModelSub = this
+                .WhenAnyValue(
+                    // The settled signal: one raise per compile, after every
+                    // compilation output (resource series, metrics, project
+                    // finish) is in place - so one compile means one rebuild.
+                    rcm => rcm.m_CoreViewModel.CompilationOutputRevision,
+                    rcm => rcm.m_CoreViewModel.ResourceSettings,
+                    rcm => rcm.m_CoreViewModel.GraphSettings,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Today,
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    rcm => rcm.GroupByMode,
+                    rcm => rcm.AnnotationStyle,
+                    rcm => rcm.BoolAccumulator,
+                    rcm => rcm.ActivitySelector.TargetActivitiesString,
+                    (x, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
+            ActivitySelector.KillSubscriptions();
             m_BuildGanttChartPlotModelSub?.Dispose();
         }
 

@@ -18,8 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
     ///   which may be later than the swap itself (the chart rebuilds run on the taskpool). The
     ///   view only re-hosts the new plot when that binding lands, so disposal is deferred through
     ///   the dispatcher, which on the UI thread runs it only after pending binding updates and
-    ///   render passes have finished with the old plot. Headless nothing is bound to the plot and
-    ///   nothing renders it, so the dispatcher there disposes it where it stands.
+    ///   render passes have finished with the old plot. Headless nothing is bound to the plot, so
+    ///   the dispatcher there disposes it where it stands - which is safe because a job builds each
+    ///   of its charts once, and so retires none before it has written it.
     /// </para>
     /// <para>
     /// - Image exports: RenderChartImageAsync and the save-image commands snapshot the current

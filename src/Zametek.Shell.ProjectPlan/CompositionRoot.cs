@@ -44,6 +44,10 @@ namespace Zametek.Shell.ProjectPlan
 
             s_Builder = new ContainerBuilder();
 
+            // The view models start their reactive pipelines when the container has built them, not when they are
+            // built: see IStartSubscriptions.
+            s_Builder.RegisterModule<StartSubscriptionsModule>();
+
             s_Resolver = s_Builder.UseAutofacDependencyResolver();
             s_Resolver.InitializeSplat();
 

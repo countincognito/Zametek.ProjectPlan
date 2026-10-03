@@ -18,7 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
-        private readonly IDisposable? m_BuildCompilationOutputSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildCompilationOutputSub;
 
         #endregion
 
@@ -65,19 +67,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectStart = this
                 .WhenAnyValue(om => om.m_CoreViewModel.ProjectStart)
                 .ToProperty(this, om => om.ProjectStart);
-
-            m_BuildCompilationOutputSub = this
-                .WhenAnyValue(
-                    om => om.m_CoreViewModel.GraphCompilation,
-                    om => om.m_CoreViewModel.ResourceSeriesSet,
-                    om => om.ShowDates,
-                    om => om.UseClassicDates,
-                    om => om.NonWorkingDayMode,
-                    om => om.ProjectStart,
-                    om => om.HasCompilationErrors)
-                .MuteWhile(this.WhenAnyValue(om => om.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildCompilationOutputAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_Output;
             Title = Resource.ProjectPlan.Titles.Title_Output;
@@ -245,10 +234,36 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_BuildCompilationOutputSub = this
+                .WhenAnyValue(
+                    om => om.m_CoreViewModel.GraphCompilation,
+                    om => om.m_CoreViewModel.ResourceSeriesSet,
+                    om => om.ShowDates,
+                    om => om.UseClassicDates,
+                    om => om.NonWorkingDayMode,
+                    om => om.ProjectStart,
+                    om => om.HasCompilationErrors)
+                .MuteWhile(this.WhenAnyValue(om => om.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await BuildCompilationOutputAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_BuildCompilationOutputSub?.Dispose();
         }
 

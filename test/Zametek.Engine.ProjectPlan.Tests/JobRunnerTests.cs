@@ -683,6 +683,8 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 tail.Start();
             }
 
+            public void StartSubscriptions() => outputs.StartSubscriptions();
+
             public void KillSubscriptions() => outputs.KillSubscriptions();
 
             public void Dispose() => outputs.Dispose();

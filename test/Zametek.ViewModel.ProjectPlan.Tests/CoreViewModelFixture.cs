@@ -17,10 +17,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// for the file and user interface seams a test never reaches.
     /// </summary>
     /// <remarks>
-    /// The reactive subscriptions are killed immediately, so a test drives the core
-    /// explicitly (RunCompile, the settings setters) rather than waiting on the
-    /// pipeline. That keeps these tests about what the core does with the plan, not
-    /// about when the pipeline decides to do it.
+    /// The core is never started, so it has no reactive pipelines, and a test drives it
+    /// explicitly (RunCompile, the settings setters) rather than waiting on them. That
+    /// keeps these tests about what the core does with the plan, not about when the
+    /// pipeline decides to do it.
     /// </remarks>
     public static class CoreViewModelFixture
     {
@@ -31,9 +31,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// models need in order to be constructed at all. The desktop application gets
         /// this from Avalonia and the command line tool does it directly; a test host has
         /// neither, so it is done here. Process-global, so it must happen exactly once
-        /// however many fixtures a run builds.
+        /// however many fixtures a run builds. It also sets the schedulers, so a test that
+        /// installs its own must call this first.
         /// </summary>
-        private static void EnsureReactiveUIInitialized()
+        internal static void EnsureReactiveUIInitialized()
         {
             if (Interlocked.Exchange(ref s_ReactiveUIInitialized, 1) == 0)
             {
@@ -49,23 +50,35 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             (CoreViewModel coreViewModel, _) = Build(compilationTimeoutMilliseconds, clock);
 
-            coreViewModel.KillSubscriptions();
             coreViewModel.AutoCompile = false;
             return coreViewModel;
         }
 
         /// <summary>
+        /// Builds a core as <see cref="Create"/> does, and hands back the settings service it was built over, for a
+        /// test that builds something else over the same one - as the application does.
+        /// </summary>
+        public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService()
+        {
+            (CoreViewModel coreViewModel, ISettingService settingService) = Build(AppSettingsModel.DefaultCompilationTimeoutMilliseconds);
+
+            coreViewModel.AutoCompile = false;
+            return (coreViewModel, settingService);
+        }
+
+        /// <summary>
         /// Builds the core and the settings managers that sit on top of it with their
-        /// reactive subscriptions <em>intact</em>, for the tests that are about when the
-        /// pipeline delivers rather than what the core computes.
+        /// reactive subscriptions <em>started</em>, as the application's container starts
+        /// them, for the tests that are about when the pipeline delivers rather than what
+        /// the core computes.
         /// </summary>
         /// <remarks>
-        /// The opposite of <see cref="Create"/>, and deliberately so. Killing the
+        /// The opposite of <see cref="Create"/>, and deliberately so. Never starting the
         /// subscriptions makes a test independent of the scheduler, which is what nearly
         /// every test here wants; but a whole class of defect lives in the deferral
-        /// itself, and none of it is reachable once the subscriptions are gone. Pair this
-        /// with a <c>MainThreadSequencerScope</c> so the deferred deliveries queue up and
-        /// the test says when they run.
+        /// itself, and none of it is reachable without them. Pair this with a
+        /// <c>MainThreadSequencerScope</c> so the deferred deliveries queue up and the
+        /// test says when they run.
         /// <para>
         /// Auto compilation is left off so a test is not racing background compiles it
         /// did not ask for; a scenario load still compiles, because
@@ -77,6 +90,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             (CoreViewModel coreViewModel, ISettingService settingService) = Build(compilationTimeoutMilliseconds);
 
+            // Each is started as soon as it is made, in the order they are made, as the application's container does it.
+            coreViewModel.StartSubscriptions();
             coreViewModel.AutoCompile = false;
 
             var dialogService = new TestDialogService();
@@ -185,16 +200,31 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public static async Task<ProjectScenarioModel> LoadProjectScenarioAsync(string testFileName)
         {
-            var projectFileOpen = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
-            ProjectModel projectModel;
-
-            await using (FileStream stream = File.OpenRead(Path.Combine(@"TestFiles", testFileName)))
-            {
-                projectModel = await projectFileOpen.OpenProjectFileAsync(stream);
-            }
-
+            ProjectModel projectModel = await LoadProjectAsync(testFileName);
             return projectModel.Files.Single(x => x.NodeId == projectModel.Current).Scenario;
         }
+
+        /// <summary>
+        /// Reads a whole project file in TestFiles, through the same reader the application uses.
+        /// </summary>
+        public static async Task<ProjectModel> LoadProjectAsync(string testFileName)
+        {
+            var projectFileOpen = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
+
+            await using FileStream stream = File.OpenRead(Path.Combine(@"TestFiles", testFileName));
+            return await projectFileOpen.OpenProjectFileAsync(stream);
+        }
+
+        /// <summary>
+        /// A dialog service for a test that never provokes a dialog: any it does provoke throws.
+        /// </summary>
+        public static IDialogService CreateDialogService() => new TestDialogService();
+
+        /// <summary>
+        /// A dispatcher that runs what it is given where it stands, as a job's does, for a test that has no user interface
+        /// thread.
+        /// </summary>
+        public static IUIDispatcher CreateUIDispatcher() => new InlineUIDispatcher();
 
         /// <summary>
         /// A plan of chained activities, each targeting one of two resources in turn, so
@@ -358,6 +388,18 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters) =>
                 throw new NotSupportedException();
+        }
+
+        private sealed class InlineUIDispatcher
+            : IUIDispatcher
+        {
+            public Task InvokeAsync(Action action)
+            {
+                action();
+                return Task.CompletedTask;
+            }
+
+            public void Defer(Action action) => action();
         }
 
         private sealed class TestDataGridScrollManager
