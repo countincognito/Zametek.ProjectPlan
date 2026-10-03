@@ -5,6 +5,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceSettingsManagerViewModel
+        : IStartSubscriptions, IKillSubscriptions
     {
         bool IsBusy { get; }
 

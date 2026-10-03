@@ -25,10 +25,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
-        private readonly IDisposable? m_ReadOnlyWorkStreamsSub;
-        private readonly IDisposable? m_OrderableWorkStreamsSub;
-        private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
-        private readonly IDisposable? m_UpdateWorkStreamSettingsSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ReadOnlyWorkStreamsSub;
+        private IDisposable? m_OrderableWorkStreamsSub;
+        private IDisposable? m_ProcessWorkStreamSettingsSub;
+        private IDisposable? m_UpdateWorkStreamSettingsSub;
 
         #endregion
 
@@ -65,17 +67,10 @@ namespace Zametek.ViewModel.ProjectPlan
             DuplicateManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(DuplicateManagedWorkStreamAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStream));
             EditManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(EditManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
-            // Create read-only view to the source list.
-            m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler)
-               .Bind(out m_ReadOnlyWorkStreams)
-               .Subscribe();
-
-            m_OrderableWorkStreamsSub = m_WorkStreams.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
-               .Bind(m_OrderableWorkStreams)         // Bind to the mutable collection
-               .DisposeMany()                        // Clean up resources
-               .Subscribe();
+            // The read-only views of the source lists are made here, empty, so that they can be read and observed from
+            // the start. The binds that fill them deliver on the UI thread and are made by StartSubscriptions.
+            m_BoundWorkStreams = [];
+            m_ReadOnlyWorkStreams = new ReadOnlyObservableCollection<IManagedWorkStreamViewModel>(m_BoundWorkStreams);
 
             m_IsBusy = this
                 .WhenAnyValue(wssm => wssm.m_CoreViewModel.IsBusy)
@@ -88,39 +83,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasCompilationErrors = this
                 .WhenAnyValue(wssm => wssm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, wssm => wssm.HasCompilationErrors);
-
-            m_ProcessWorkStreamSettingsSub = this
-                .WhenAnyValue(wssm => wssm.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Re-read rather than act on the delivered snapshot (rule 7). The
-                    // guard is kept because UpdateWorkStreamSettingsToCore assigns one
-                    // instance to both m_Current and the core property, so its own echo
-                    // compares reference-equal here and this manager does not rebuild
-                    // its grid in response to an edit it made itself.
-                    WorkStreamSettingsModel workStreamSettings = m_CoreViewModel.WorkStreamSettings;
-
-                    if (m_Current != workStreamSettings)
-                    {
-                        ProcessSettings(workStreamSettings);
-                    }
-                });
-
-            m_UpdateWorkStreamSettingsSub = this
-                .WhenAnyValue(wssm => wssm.AreSettingsUpdated)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Re-read rather than trust the delivered flag (rule 7): both
-                    // ProcessSettings and UpdateWorkStreamSettingsToCore clear it, so a
-                    // queued true can outlive its own clearing and push stale settings
-                    // back into the core after a load has replaced them.
-                    if (AreSettingsUpdated)
-                    {
-                        UpdateWorkStreamSettingsToCore();
-                    }
-                });
 
             RenumberWorkStreamsCommand = ReactiveCommand.CreateFromTask(RenumberWorkStreamsAsync);
 
@@ -555,6 +517,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedWorkStreamViewModel> m_WorkStreams;
         public IReadOnlyList<IManagedWorkStreamViewModel> RawWorkStreams => m_WorkStreams.Items;
 
+        private readonly ObservableCollectionExtended<IManagedWorkStreamViewModel> m_BoundWorkStreams;
         private readonly ReadOnlyObservableCollection<IManagedWorkStreamViewModel> m_ReadOnlyWorkStreams;
         public ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams => m_ReadOnlyWorkStreams;
 
@@ -584,6 +547,76 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Create read-only view to the source list.
+            m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
+               .Bind(m_BoundWorkStreams)
+               .Subscribe();
+
+            m_OrderableWorkStreamsSub = m_WorkStreams.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableWorkStreams)         // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
+               .Subscribe();
+
+            m_ProcessWorkStreamSettingsSub = this
+                .WhenAnyValue(wssm => wssm.m_CoreViewModel.WorkStreamSettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard is kept because UpdateWorkStreamSettingsToCore assigns one
+                    // instance to both m_Current and the core property, so its own echo
+                    // compares reference-equal here and this manager does not rebuild
+                    // its grid in response to an edit it made itself.
+                    WorkStreamSettingsModel workStreamSettings = m_CoreViewModel.WorkStreamSettings;
+
+                    if (m_Current != workStreamSettings)
+                    {
+                        ProcessSettings(workStreamSettings);
+                    }
+                });
+
+            m_UpdateWorkStreamSettingsSub = this
+                .WhenAnyValue(wssm => wssm.AreSettingsUpdated)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than trust the delivered flag (rule 7): both
+                    // ProcessSettings and UpdateWorkStreamSettingsToCore clear it, so a
+                    // queued true can outlive its own clearing and push stale settings
+                    // back into the core after a load has replaced them.
+                    if (AreSettingsUpdated)
+                    {
+                        UpdateWorkStreamSettingsToCore();
+                    }
+                });
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_ReadOnlyWorkStreamsSub?.Dispose();
+            m_OrderableWorkStreamsSub?.Dispose();
+            m_ProcessWorkStreamSettingsSub?.Dispose();
+            m_UpdateWorkStreamSettingsSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -600,10 +633,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_ReadOnlyWorkStreamsSub?.Dispose();
-                m_OrderableWorkStreamsSub?.Dispose();
-                m_ProcessWorkStreamSettingsSub?.Dispose();
-                m_UpdateWorkStreamSettingsSub?.Dispose();
+                KillSubscriptions();
                 ClearManagedWorkStreams();
                 m_WorkStreams?.Dispose();
             }

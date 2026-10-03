@@ -17,7 +17,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
         private readonly List<DayTitleViewModel> m_DayTitles;
 
-        private readonly IDisposable? m_ColumnTitleSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ColumnTitleSub;
 
         #endregion
 
@@ -67,17 +69,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasCompilationErrors = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, tm => tm.HasCompilationErrors);
-
-            m_ColumnTitleSub = this
-                .WhenAnyValue(
-                    tm => tm.m_DateTimeCalculator.NonWorkingDayMode,
-                    tm => tm.m_CoreViewModel.TrackerIndex,
-                    tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    tm => tm.m_CoreViewModel.HolidaySettings,
-                    tm => tm.m_CoreViewModel.ProjectStart)
-                .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RefreshDays());
         }
 
         #endregion
@@ -210,10 +201,34 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public virtual void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_ColumnTitleSub = this
+                .WhenAnyValue(
+                    tm => tm.m_DateTimeCalculator.NonWorkingDayMode,
+                    tm => tm.m_CoreViewModel.TrackerIndex,
+                    tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    tm => tm.m_CoreViewModel.HolidaySettings,
+                    tm => tm.m_CoreViewModel.ProjectStart)
+                .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RefreshDays());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
-        public void KillSubscriptions()
+        public virtual void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ColumnTitleSub?.Dispose();
         }
 

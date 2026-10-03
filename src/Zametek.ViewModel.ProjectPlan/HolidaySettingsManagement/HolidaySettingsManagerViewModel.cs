@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -24,9 +25,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
-        private readonly IDisposable? m_ReadOnlyHolidaysSub;
-        private readonly IDisposable? m_ProcessHolidaySettingsSub;
-        private readonly IDisposable? m_UpdateHolidaySettingsSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ReadOnlyHolidaysSub;
+        private IDisposable? m_ProcessHolidaySettingsSub;
+        private IDisposable? m_UpdateHolidaySettingsSub;
 
         #endregion
 
@@ -61,11 +64,10 @@ namespace Zametek.ViewModel.ProjectPlan
             DuplicateManagedHolidayCommand = ReactiveCommand.CreateFromTask(DuplicateManagedHolidayAsync, this.WhenAnyValue(rm => rm.HasSelectedHoliday));
             EditManagedHolidayCommand = ReactiveCommand.CreateFromTask(EditManagedHolidayAsync, this.WhenAnyValue(am => am.HasSelectedHoliday));
 
-            // Create read-only view to the source list.
-            m_ReadOnlyHolidaysSub = m_Holidays.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler)
-               .Bind(out m_ReadOnlyHolidays)
-               .Subscribe();
+            // The read-only views of the source lists are made here, empty, so that they can be read and observed from
+            // the start. The binds that fill them deliver on the UI thread and are made by StartSubscriptions.
+            m_BoundHolidays = [];
+            m_ReadOnlyHolidays = new ReadOnlyObservableCollection<IManagedHolidayViewModel>(m_BoundHolidays);
 
             m_IsBusy = this
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.IsBusy)
@@ -78,39 +80,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasCompilationErrors = this
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rsm => rsm.HasCompilationErrors);
-
-            m_ProcessHolidaySettingsSub = this
-                .WhenAnyValue(rsm => rsm.m_CoreViewModel.HolidaySettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Re-read rather than act on the delivered snapshot (rule 7). The
-                    // guard is kept because UpdateHolidaySettingsToCore assigns one
-                    // instance to both m_Current and the core property, so its own echo
-                    // compares reference-equal here and this manager does not rebuild
-                    // its grid in response to an edit it made itself.
-                    HolidaySettingsModel holidaySettings = m_CoreViewModel.HolidaySettings;
-
-                    if (m_Current != holidaySettings)
-                    {
-                        ProcessSettings(holidaySettings);
-                    }
-                });
-
-            m_UpdateHolidaySettingsSub = this
-                .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Re-read rather than trust the delivered flag (rule 7): both
-                    // ProcessSettings and UpdateHolidaySettingsToCore clear it, so a
-                    // queued true can outlive its own clearing and push stale settings
-                    // back into the core after a load has replaced them.
-                    if (AreSettingsUpdated)
-                    {
-                        UpdateHolidaySettingsToCore();
-                    }
-                });
 
             ProcessSettings(m_SettingService.DefaultHolidaySettings);
 
@@ -277,6 +246,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 var editViewModel = new HolidayEditViewModel(selectedHoliday, m_DateTimeCalculator);
+
+                // Started as it is made when this has been started: see IStartSubscriptions.
+                if (m_SubscriptionLifetime.IsStarted)
+                {
+                    editViewModel.StartSubscriptions();
+                }
 
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Titles.Title_EditCustomCalendar,
@@ -468,6 +443,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedHolidayViewModel> m_Holidays;
         public IReadOnlyList<IManagedHolidayViewModel> RawHolidays => m_Holidays.Items;
 
+        private readonly ObservableCollectionExtended<IManagedHolidayViewModel> m_BoundHolidays;
         private readonly ReadOnlyObservableCollection<IManagedHolidayViewModel> m_ReadOnlyHolidays;
         public ReadOnlyObservableCollection<IManagedHolidayViewModel> Holidays => m_ReadOnlyHolidays;
 
@@ -492,6 +468,69 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Create read-only view to the source list.
+            m_ReadOnlyHolidaysSub = m_Holidays.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
+               .Bind(m_BoundHolidays)
+               .Subscribe();
+
+            m_ProcessHolidaySettingsSub = this
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.HolidaySettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard is kept because UpdateHolidaySettingsToCore assigns one
+                    // instance to both m_Current and the core property, so its own echo
+                    // compares reference-equal here and this manager does not rebuild
+                    // its grid in response to an edit it made itself.
+                    HolidaySettingsModel holidaySettings = m_CoreViewModel.HolidaySettings;
+
+                    if (m_Current != holidaySettings)
+                    {
+                        ProcessSettings(holidaySettings);
+                    }
+                });
+
+            m_UpdateHolidaySettingsSub = this
+                .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than trust the delivered flag (rule 7): both
+                    // ProcessSettings and UpdateHolidaySettingsToCore clear it, so a
+                    // queued true can outlive its own clearing and push stale settings
+                    // back into the core after a load has replaced them.
+                    if (AreSettingsUpdated)
+                    {
+                        UpdateHolidaySettingsToCore();
+                    }
+                });
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_ReadOnlyHolidaysSub?.Dispose();
+            m_ProcessHolidaySettingsSub?.Dispose();
+            m_UpdateHolidaySettingsSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -508,9 +547,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_ReadOnlyHolidaysSub?.Dispose();
-                m_ProcessHolidaySettingsSub?.Dispose();
-                m_UpdateHolidaySettingsSub?.Dispose();
+                KillSubscriptions();
                 ClearManagedHolidays();
             }
 

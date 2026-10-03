@@ -23,7 +23,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly Dictionary<int, bool> m_ExpandedLookup;
         private int m_LastWindowIndex;
 
-        private readonly IDisposable? m_TimesheetSub;
+        // The base class has a lifetime of its own, for the pipeline it makes; this is for the one made here. Made by
+        // StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_HostSubscriptionLifetime = new();
+        private IDisposable? m_TimesheetSub;
 
         #endregion
 
@@ -41,30 +44,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_LastWindowIndex = 0;
             m_TimesheetSections = [];
             m_NameColumnWidth = 150;
-
-            // Rebuild the timesheet sections whenever the visible window
-            // moves, the trackers are revised, or the resource/activity
-            // collections change. The orderable collections are observed so
-            // drag-and-drop reordering in the settings grids repositions the
-            // sections and rows immediately. Everything runs on the UI thread
-            // because the sections read and write view models that are bound
-            // to the view.
-            m_TimesheetSub = Observable.Merge(
-                    this.WhenAnyValue(tm => tm.m_CoreViewModel.TrackerIndex)
-                        .Select(_ => Unit.Default),
-                    this.WhenAnyValue(tm => tm.m_CoreViewModel.IsReadyToReviseTrackers)
-                        .Select(_ => Unit.Default),
-                    Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-                            handler => ((INotifyCollectionChanged)m_ResourceSettingsManagerViewModel.OrderableResources).CollectionChanged += handler,
-                            handler => ((INotifyCollectionChanged)m_ResourceSettingsManagerViewModel.OrderableResources).CollectionChanged -= handler)
-                        .Select(_ => Unit.Default),
-                    Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-                            handler => ((INotifyCollectionChanged)m_CoreViewModel.OrderableActivities).CollectionChanged += handler,
-                            handler => ((INotifyCollectionChanged)m_CoreViewModel.OrderableActivities).CollectionChanged -= handler)
-                        .Select(_ => Unit.Default))
-                .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ => RefreshTimesheet());
 
             Id = Resource.ProjectPlan.Titles.Title_EffortTrackingView;
             Title = Resource.ProjectPlan.Titles.Title_EffortTrackingView;
@@ -146,6 +125,55 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public override void StartSubscriptions()
+        {
+            base.StartSubscriptions();
+
+            if (!m_HostSubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Rebuild the timesheet sections whenever the visible window
+            // moves, the trackers are revised, or the resource/activity
+            // collections change. The orderable collections are observed so
+            // drag-and-drop reordering in the settings grids repositions the
+            // sections and rows immediately. Everything runs on the UI thread
+            // because the sections read and write view models that are bound
+            // to the view.
+            m_TimesheetSub = Observable.Merge(
+                    this.WhenAnyValue(tm => tm.m_CoreViewModel.TrackerIndex)
+                        .Select(_ => Unit.Default),
+                    this.WhenAnyValue(tm => tm.m_CoreViewModel.IsReadyToReviseTrackers)
+                        .Select(_ => Unit.Default),
+                    Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                            handler => ((INotifyCollectionChanged)m_ResourceSettingsManagerViewModel.OrderableResources).CollectionChanged += handler,
+                            handler => ((INotifyCollectionChanged)m_ResourceSettingsManagerViewModel.OrderableResources).CollectionChanged -= handler)
+                        .Select(_ => Unit.Default),
+                    Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                            handler => ((INotifyCollectionChanged)m_CoreViewModel.OrderableActivities).CollectionChanged += handler,
+                            handler => ((INotifyCollectionChanged)m_CoreViewModel.OrderableActivities).CollectionChanged -= handler)
+                        .Select(_ => Unit.Default))
+                .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ => RefreshTimesheet());
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public override void KillSubscriptions()
+        {
+            m_HostSubscriptionLifetime.Kill();
+            m_TimesheetSub?.Dispose();
+            base.KillSubscriptions();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_HostDisposed = false;
@@ -160,7 +188,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_TimesheetSub?.Dispose();
+                KillSubscriptions();
             }
 
             m_HostDisposed = true;

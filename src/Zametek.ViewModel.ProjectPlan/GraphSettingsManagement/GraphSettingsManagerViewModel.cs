@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -24,9 +25,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
-        private readonly IDisposable? m_ReadOnlyActivitySeveritiesSub;
-        private readonly IDisposable? m_ProcessGraphSettingsSub;
-        private readonly IDisposable? m_UpdateGraphSettingsSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ReadOnlyActivitySeveritiesSub;
+        private IDisposable? m_ProcessGraphSettingsSub;
+        private IDisposable? m_UpdateGraphSettingsSub;
 
         #endregion
 
@@ -59,11 +62,10 @@ namespace Zametek.ViewModel.ProjectPlan
             RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(agsm => agsm.HasSelectedActivitySeverities));
             DuplicateManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivitySeverityAsync, this.WhenAnyValue(agsm => agsm.HasSelectedActivitySeverity));
 
-            // Create read-only view to the source list.
-            m_ReadOnlyActivitySeveritiesSub = m_ActivitySeverities.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler)
-               .Bind(out m_ReadOnlyActivitySeverities)
-               .Subscribe();
+            // The read-only views of the source lists are made here, empty, so that they can be read and observed from
+            // the start. The binds that fill them deliver on the UI thread and are made by StartSubscriptions.
+            m_BoundActivitySeverities = [];
+            m_ReadOnlyActivitySeverities = new ReadOnlyObservableCollection<IManagedActivitySeverityViewModel>(m_BoundActivitySeverities);
 
             m_IsBusy = this
                 .WhenAnyValue(agsm => agsm.m_CoreViewModel.IsBusy)
@@ -76,39 +78,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasCompilationErrors = this
                 .WhenAnyValue(agsm => agsm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, agsm => agsm.HasCompilationErrors);
-
-            m_ProcessGraphSettingsSub = this
-                .WhenAnyValue(agsm => agsm.m_CoreViewModel.GraphSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Re-read rather than act on the delivered snapshot (rule 7). The
-                    // guard is kept because UpdateGraphSettingsToCore assigns one
-                    // instance to both m_Current and the core property, so its own echo
-                    // compares reference-equal here and this manager does not rebuild
-                    // its grid in response to an edit it made itself.
-                    GraphSettingsModel graphSettings = m_CoreViewModel.GraphSettings;
-
-                    if (m_Current != graphSettings)
-                    {
-                        ProcessSettings(graphSettings);
-                    }
-                });
-
-            m_UpdateGraphSettingsSub = this
-                .WhenAnyValue(agsm => agsm.AreSettingsUpdated)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    // Re-read rather than trust the delivered flag (rule 7): both
-                    // ProcessSettings and UpdateGraphSettingsToCore clear it, so a
-                    // queued true can outlive its own clearing and push stale settings
-                    // back into the core after a load has replaced them.
-                    if (AreSettingsUpdated)
-                    {
-                        UpdateGraphSettingsToCore();
-                    }
-                });
 
             ProcessSettings(m_SettingService.DefaultGraphSettings);
 
@@ -423,6 +392,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedActivitySeverityViewModel> m_ActivitySeverities;
         public IReadOnlyList<IManagedActivitySeverityViewModel> RawActivitySeverities => m_ActivitySeverities.Items;
 
+        private readonly ObservableCollectionExtended<IManagedActivitySeverityViewModel> m_BoundActivitySeverities;
         private readonly ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> m_ReadOnlyActivitySeverities;
         public ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> ActivitySeverities => m_ReadOnlyActivitySeverities;
 
@@ -445,6 +415,69 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Create read-only view to the source list.
+            m_ReadOnlyActivitySeveritiesSub = m_ActivitySeverities.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
+               .Bind(m_BoundActivitySeverities)
+               .Subscribe();
+
+            m_ProcessGraphSettingsSub = this
+                .WhenAnyValue(agsm => agsm.m_CoreViewModel.GraphSettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard is kept because UpdateGraphSettingsToCore assigns one
+                    // instance to both m_Current and the core property, so its own echo
+                    // compares reference-equal here and this manager does not rebuild
+                    // its grid in response to an edit it made itself.
+                    GraphSettingsModel graphSettings = m_CoreViewModel.GraphSettings;
+
+                    if (m_Current != graphSettings)
+                    {
+                        ProcessSettings(graphSettings);
+                    }
+                });
+
+            m_UpdateGraphSettingsSub = this
+                .WhenAnyValue(agsm => agsm.AreSettingsUpdated)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than trust the delivered flag (rule 7): both
+                    // ProcessSettings and UpdateGraphSettingsToCore clear it, so a
+                    // queued true can outlive its own clearing and push stale settings
+                    // back into the core after a load has replaced them.
+                    if (AreSettingsUpdated)
+                    {
+                        UpdateGraphSettingsToCore();
+                    }
+                });
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_ReadOnlyActivitySeveritiesSub?.Dispose();
+            m_ProcessGraphSettingsSub?.Dispose();
+            m_UpdateGraphSettingsSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -461,9 +494,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_ReadOnlyActivitySeveritiesSub?.Dispose();
-                m_ProcessGraphSettingsSub?.Dispose();
-                m_UpdateGraphSettingsSub?.Dispose();
+                KillSubscriptions();
                 ClearManagedActivitySeverities();
                 m_ActivitySeverities?.Dispose();
             }

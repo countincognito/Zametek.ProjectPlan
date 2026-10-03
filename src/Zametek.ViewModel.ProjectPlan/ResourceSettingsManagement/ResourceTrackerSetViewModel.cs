@@ -18,7 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private IResourceActivitySelectorViewModel? m_LastResourceActivitySelector;
 
-        private readonly IDisposable? m_DaysSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_DaysSub;
 
         #endregion
 
@@ -50,18 +52,6 @@ namespace Zametek.ViewModel.ProjectPlan
             SetLastResourceActivitySelector();
 
             SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
-
-            m_DaysSub = this
-                .WhenAnyValue(
-                    x => x.m_CoreViewModel.TrackerIndex,
-                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
-                // The pre-compile Yes raise happens before any tracker has
-                // changed, so only the post-compile No transition (and window
-                // moves, which occur while No) can alter what the day cells
-                // show. Skipping Yes halves the per-edit binding fan-out.
-                .Where(x => x.Item2 == ReadyToRevise.No)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RefreshDays());
         }
 
         #endregion
@@ -248,6 +238,40 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_DaysSub = this
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.TrackerIndex,
+                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                // The pre-compile Yes raise happens before any tracker has
+                // changed, so only the post-compile No transition (and window
+                // moves, which occur while No) can alter what the day cells
+                // show. Skipping Yes halves the per-edit binding fan-out.
+                .Where(x => x.Item2 == ReadyToRevise.No)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RefreshDays());
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_DaysSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -261,7 +285,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_DaysSub?.Dispose();
+                KillSubscriptions();
                 foreach (IResourceActivitySelectorViewModel selector in m_ResourceActivitySelectorLookup.Values)
                 {
                     selector.Dispose();

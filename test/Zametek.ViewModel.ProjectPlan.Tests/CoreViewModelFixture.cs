@@ -100,12 +100,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 coreViewModel,
                 settingService,
                 dialogService);
+            resourceSettingsManagerViewModel.StartSubscriptions();
 
             var workStreamSettingsManagerViewModel = new WorkStreamSettingsManagerViewModel(
                 coreViewModel,
                 resourceSettingsManagerViewModel,
                 settingService,
                 dialogService);
+            workStreamSettingsManagerViewModel.StartSubscriptions();
 
             return new SubscribedHarness(
                 coreViewModel,
