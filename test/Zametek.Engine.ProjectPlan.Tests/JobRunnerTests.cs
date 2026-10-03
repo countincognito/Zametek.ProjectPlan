@@ -417,26 +417,34 @@ namespace Zametek.Engine.ProjectPlan.Tests
         [Fact]
         public async Task RunAsync_Given_CancellationWhileThePlanIsCompiled_Then_NothingIsProduced()
         {
-            // The compile under way runs to its end, and the project it would have saved is never started. Loading a
-            // plan compiles it too, so a first run counts how often the job builds the financial metrics - the last
-            // thing a compile builds - and the second is cancelled at the last of them, which is the job's own compile.
-            static JobRequest SaveProject(Stream input) => new() { Input = input, SaveProject = true };
-            CancellingMetricCalculationService? counted = null;
-            await using (ServiceProvider counting = BuildServices(x => x.AddScoped<IMetricCalculationService>(provider =>
-                counted = new CancellingMetricCalculationService(ActivatorUtilities.CreateInstance<MetricCalculationService>(provider), cancellation: null, cancelAt: 0))))
-            {
-                await RunAsync(counting.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", SaveProject);
-            }
-
+            // The compile under way runs to its end, and the project it would have saved is never started. The job is
+            // cancelled at a point only the job reaches: when it builds the compilation output, which it does itself
+            // right after it compiles, through its own handle on the output manager. The view models build things of
+            // their own accord too, on other threads and as often as the threads allow - one more of them, or one
+            // fewer, from one run to the next - so counting what they build cannot say where the job has got to.
+            // What is built after the job was cancelled is told from all that by the flow it is built in: the
+            // metrics the job still builds are the whole of the rest of its compile.
+            var tail = new CompileTail();
             using var cancellation = new CancellationTokenSource();
-            await using ServiceProvider services = BuildServices(x => x.AddScoped<IMetricCalculationService>(provider =>
-                new CancellingMetricCalculationService(ActivatorUtilities.CreateInstance<MetricCalculationService>(provider), cancellation, counted!.FinancialMetricsBuilt)));
+            await using ServiceProvider services = BuildServices(x =>
+            {
+                x.AddScoped<IMetricCalculationService>(provider => new TailCountingMetricCalculationService(
+                    ActivatorUtilities.CreateInstance<MetricCalculationService>(provider), tail));
+                x.AddScoped<IOutputManagerViewModel>(provider => new CancellingOutputManagerViewModel(
+                    ActivatorUtilities.CreateInstance<OutputManagerViewModel>(provider), cancellation, tail));
+            });
             var sink = new MemoryJobSink();
 
             await Should.ThrowAsync<OperationCanceledException>(
-                () => RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", SaveProject, sink, cancellation.Token));
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, SaveProject = true },
+                    sink,
+                    cancellation.Token));
 
             sink.Outputs.ShouldBeEmpty();
+            tail.MetricsBuilt.ShouldBe((Network: 1, Risk: 1, Financial: 1));
         }
 
         [Theory]
@@ -584,41 +592,100 @@ namespace Zametek.Engine.ProjectPlan.Tests
             public override DateTimeOffset GetUtcNow() => now;
         }
 
-        // Works out a plan's metrics as the engine does, counting each time it builds the financial metrics - the last
-        // thing a compile builds - and cancelling the job when the count reaches cancelAt.
-        private sealed class CancellingMetricCalculationService(
+        // What the job builds from the moment it is cancelled, kept apart from what else is built meanwhile. Start is
+        // called in the flow of the job, and an async-local value flows into whatever that flow goes on to do, and
+        // into nothing that was started before: not the work the view models queue when they are made, which may
+        // run at any time, on any thread.
+        private sealed class CompileTail
+        {
+            private readonly AsyncLocal<bool> m_IsTail = new();
+            private int m_NetworkMetrics;
+            private int m_RiskMetrics;
+            private int m_FinancialMetrics;
+
+            public (int Network, int Risk, int Financial) MetricsBuilt =>
+                (Volatile.Read(ref m_NetworkMetrics), Volatile.Read(ref m_RiskMetrics), Volatile.Read(ref m_FinancialMetrics));
+
+            public void Start() => m_IsTail.Value = true;
+
+            public void NetworkMetricsBuilt() => Count(ref m_NetworkMetrics);
+
+            public void RiskMetricsBuilt() => Count(ref m_RiskMetrics);
+
+            public void FinancialMetricsBuilt() => Count(ref m_FinancialMetrics);
+
+            private void Count(ref int built)
+            {
+                if (m_IsTail.Value)
+                {
+                    Interlocked.Increment(ref built);
+                }
+            }
+        }
+
+        // Works out a plan's metrics as the engine does, counting those built in the tail of the job's compile.
+        private sealed class TailCountingMetricCalculationService(
             IMetricCalculationService metrics,
-            CancellationTokenSource? cancellation,
-            int cancelAt)
+            CompileTail tail)
             : IMetricCalculationService
         {
-            public int FinancialMetricsBuilt { get; private set; }
-
             public NetworkModel BuildNetworkMetrics(
                 IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
                 bool hasCompilationErrors,
                 DateTimeOffset projectStart,
                 int? startTime,
-                int? finishTime) =>
-                metrics.BuildNetworkMetrics(graphCompilation, hasCompilationErrors, projectStart, startTime, finishTime);
+                int? finishTime)
+            {
+                tail.NetworkMetricsBuilt();
+                return metrics.BuildNetworkMetrics(graphCompilation, hasCompilationErrors, projectStart, startTime, finishTime);
+            }
 
             public RisksModel BuildRiskMetrics(
                 IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
                 bool hasCompilationErrors,
-                IEnumerable<ActivitySeverityModel> activitySeverities) =>
-                metrics.BuildRiskMetrics(graphCompilation, hasCompilationErrors, activitySeverities);
+                IEnumerable<ActivitySeverityModel> activitySeverities)
+            {
+                tail.RiskMetricsBuilt();
+                return metrics.BuildRiskMetrics(graphCompilation, hasCompilationErrors, activitySeverities);
+            }
 
             public (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics)
                 BuildFinancialMetrics(
                 ResourceSeriesSetModel resourceSeriesSet,
                 bool hasCompilationErrors)
             {
-                if (++FinancialMetricsBuilt == cancelAt)
-                {
-                    cancellation?.Cancel();
-                }
+                tail.FinancialMetricsBuilt();
                 return metrics.BuildFinancialMetrics(resourceSeriesSet, hasCompilationErrors);
             }
+        }
+
+        // The output manager as the job sees it, which cancels the job when the job builds the compilation output: the
+        // job does that itself, once, right after it compiles. The output manager's own reactive work builds it
+        // through the class, not through this interface, so it never reaches here.
+        private sealed class CancellingOutputManagerViewModel(
+            IOutputManagerViewModel outputs,
+            CancellationTokenSource cancellation,
+            CompileTail tail)
+            : IOutputManagerViewModel
+        {
+            public bool IsBusy => outputs.IsBusy;
+
+            public bool HasStaleOutputs => outputs.HasStaleOutputs;
+
+            public bool HasCompilationErrors => outputs.HasCompilationErrors;
+
+            public string CompilationOutput => outputs.CompilationOutput;
+
+            public void BuildCompilationOutput()
+            {
+                outputs.BuildCompilationOutput();
+                cancellation.Cancel();
+                tail.Start();
+            }
+
+            public void KillSubscriptions() => outputs.KillSubscriptions();
+
+            public void Dispose() => outputs.Dispose();
         }
 
         // A plan that cancels the job as soon as the job starts to read it.
