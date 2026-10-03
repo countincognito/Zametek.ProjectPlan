@@ -70,6 +70,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not an option, nor the value of one: {1} lists the options..
+        /// </summary>
+        public static string Message_ArgumentNotOptionOrValue {
+            get {
+                return ResourceManager.GetString("Message_ArgumentNotOptionOrValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Arrow Graph Data contain more than one End node.
         /// </summary>
         public static string Message_ArrowGraphDataContainMultipleEndNodes {
@@ -583,6 +592,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} needs a value..
+        /// </summary>
+        public static string Message_OptionNeedsValue {
+            get {
+                return ResourceManager.GetString("Message_OptionNeedsValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is only valid when zpp runs on a server: use {1}, or set {2}..
         /// </summary>
         public static string Message_OptionOnlyValidWithServer {
@@ -606,6 +624,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_OptionsOnlyValidWithOption {
             get {
                 return ResourceManager.GetString("Message_OptionsOnlyValidWithOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} takes at most {1} values..
+        /// </summary>
+        public static string Message_OptionTakesAtMostValues {
+            get {
+                return ResourceManager.GetString("Message_OptionTakesAtMostValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} takes no value..
+        /// </summary>
+        public static string Message_OptionTakesNoValue {
+            get {
+                return ResourceManager.GetString("Message_OptionTakesNoValue", resourceCulture);
             }
         }
         

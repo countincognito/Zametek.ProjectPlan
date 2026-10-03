@@ -13,7 +13,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// </summary>
     public class ServeOptionsParsingTests
     {
-        private static ParserResult<ServeOptions> Parse(params string[] args)
+        // ArgumentsHelperTests parses with it too.
+        internal static ParserResult<ServeOptions> Parse(params string[] args)
         {
             using var parser = new Parser(with =>
             {

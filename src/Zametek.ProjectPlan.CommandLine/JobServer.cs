@@ -33,6 +33,9 @@ namespace Zametek.ProjectPlan.CommandLine
         // Where its API is: everything under it needs the API key, when the server has one.
         public const string ApiPath = @"/v1";
 
+        // The command that lists its options.
+        private const string c_HelpCommand = @"zpp " + Command + @" --help";
+
         private const string c_JobsPolicy = @"jobs";
         private const string c_ReadyTag = @"ready";
         private const string c_Localhost = @"localhost";
@@ -68,15 +71,18 @@ namespace Zametek.ProjectPlan.CommandLine
                 with.AllowMultiInstance = true;
             });
 
-            ParserResult<ServeOptions> parserResult = parser.ParseArguments<ServeOptions>(args);
-
-            if (parserResult is not Parsed<ServeOptions> parsed)
-            {
-                return Program.OnParseErrors(parserResult, parserResult.Errors, ServeOptions.Usage);
-            }
-
             try
             {
+                // As for zpp, what the parser would let pass is refused before it reads the arguments.
+                ArgumentsHelper.Check<ServeOptions>(args, c_HelpCommand);
+
+                ParserResult<ServeOptions> parserResult = parser.ParseArguments<ServeOptions>(args);
+
+                if (parserResult is not Parsed<ServeOptions> parsed)
+                {
+                    return Program.OnParseErrors(parserResult, parserResult.Errors, ServeOptions.Usage);
+                }
+
                 ServeSettings settings = ServeSettingsHelper.Resolve(parsed.Value, ServeSettingsHelper.GetSettingsDirectory(), Program.ReadEnvironment());
 
                 // Before anything writes a number or a date: the engine fixes its date formats the first time it uses

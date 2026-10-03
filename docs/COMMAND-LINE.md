@@ -39,6 +39,8 @@ zpp -m plan.mpp -o plan.zpp
 
 Run `zpp --help` for the full option list, and `zpp serve --help` for the server's. Chart and graph exports honour the display settings saved in the project file (the theme excepted - pass `--base-theme Dark` for dark output). Diagnostic logging goes to stderr, never stdout: warnings and errors always show, and `--verbose` adds informational lifecycle output.
 
+zpp and `zpp serve` read their options strictly: an option that takes a value but is not given one, a value given to a switch such as `--verbose`, more values than a size takes, and a word that is neither an option nor an option's value are each refused with exit code 2, rather than ignored. A value that starts with `-`, other than a negative number, goes after `=` - `--scenario=-draft` - since on its own it would be read as an option.
+
 Everything zpp writes as text - stdout (except the `--help` text), saved project files, and GraphML and Dot exports - ends its lines with `\n` on every platform, so line endings never differ between operating systems. The desktop application saves project files and exports GraphML and Dot the same way.
 
 Every compilation runs under a watchdog: `--compile-timeout` gives it a budget in milliseconds (5000 by default), and a compilation that runs past it is cancelled and exits with code 4. Large plans can legitimately need longer, so raise it - or pass `--compile-timeout 0` to switch the limit off entirely - for a batch run that must not be interrupted. The desktop application applies the same budget, read from `CompilationTimeoutMilliseconds` in its settings file.

@@ -18,6 +18,9 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     public class Program
     {
+        // The command that lists zpp's options.
+        private const string c_HelpCommand = @"zpp --help";
+
         // What --now accepts: ISO 8601, to the second or finer, with the offset from UTC or Z for UTC itself.
         private static readonly string[] s_NowFormats =
         [
@@ -40,14 +43,20 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             var console = new StandardConsole(Console.Out, Console.Error);
 
-            // zpp serve runs zpp as a server instead, with options of its own.
-            if (args is [JobServer.Command, ..])
+            // zpp serve runs zpp as a server instead, with options of its own - whatever the case serve is written in,
+            // since zpp itself takes no such word.
+            if (args is [string command, ..]
+                && string.Equals(command, JobServer.Command, StringComparison.OrdinalIgnoreCase))
             {
                 return (int)await JobServer.RunAsync(args[1..], console);
             }
 
             try
             {
+                // An option without its value, and a word that is neither an option nor an option's value, are refused
+                // before the parser reads the arguments, since it would let them pass.
+                ArgumentsHelper.Check<Options>(args, c_HelpCommand);
+
                 using var parser = new Parser(with =>
                 {
                     with.CaseInsensitiveEnumValues = true;

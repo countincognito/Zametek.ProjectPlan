@@ -103,6 +103,38 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_AnOptionWithoutItsValue_Then_UsageErrorSayingSo()
+        {
+            // The parser would drop --culture at the end, and the server would start in the machine's culture - on a port
+            // of the system's choosing, so that a server that started after all would not take zpp serve's own.
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            ExitCode exitCode = await JobServer.RunAsync([@"--listen", @"http://127.0.0.1:0", @"--culture"], console, stopping.Token);
+
+            exitCode.ShouldBe(ExitCode.UsageError);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(
+                string.Format(Resource.ProjectPlan.Messages.Message_OptionNeedsValue, @"--culture")));
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AWordForNothing_Then_UsageErrorNamingIt()
+        {
+            // As in zpp serve help, which the parser would take for zpp serve, and start the server - here on a port of the
+            // system's choosing, as above.
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            ExitCode exitCode = await JobServer.RunAsync([@"help", @"--listen", @"http://127.0.0.1:0"], console, stopping.Token);
+
+            exitCode.ShouldBe(ExitCode.UsageError);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(string.Format(
+                Resource.ProjectPlan.Messages.Message_ArgumentNotOptionOrValue,
+                @"help",
+                @"zpp serve --help")));
+        }
+
+        [Fact]
         public async Task RunAsync_Given_OptionsItCanRunWith_Then_ServesUntilStopped()
         {
             // On a socket, which the test can find the server on without being told a port.

@@ -473,6 +473,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Run_Given_ServerWithoutItsAddress_Then_UsageErrorRatherThanARunHere()
+        {
+            // The parser would drop --server at the end, and the run would be here.
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server"]);
+
+            exitCode.ShouldBe((int)ExitCode.UsageError);
+            output.ShouldBeEmpty();
+            error.ShouldBe(ErrorLine(string.Format(Resource.ProjectPlan.Messages.Message_OptionNeedsValue, @"--server")));
+        }
+
+        [Fact]
         public async Task Run_Given_ServerAndLocal_Then_UsageError()
         {
             (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", AddressNothingListensOn(), @"--local"]);

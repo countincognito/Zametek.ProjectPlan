@@ -507,4 +507,16 @@
   <data name="Message_ServerSocketNotThere" xml:space="preserve">
     <value>there is no socket at {0}.</value>
   </data>
+  <data name="Message_OptionNeedsValue" xml:space="preserve">
+    <value>{0} needs a value.</value>
+  </data>
+  <data name="Message_OptionTakesNoValue" xml:space="preserve">
+    <value>{0} takes no value.</value>
+  </data>
+  <data name="Message_OptionTakesAtMostValues" xml:space="preserve">
+    <value>{0} takes at most {1} values.</value>
+  </data>
+  <data name="Message_ArgumentNotOptionOrValue" xml:space="preserve">
+    <value>'{0}' is not an option, nor the value of one: {1} lists the options.</value>
+  </data>
 </root>

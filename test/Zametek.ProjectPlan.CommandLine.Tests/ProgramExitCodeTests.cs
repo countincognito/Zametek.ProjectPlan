@@ -381,6 +381,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_AnOptionWithoutItsValue_Then_ExitUsageErrorBeforeTheRun()
+        {
+            // The parser would drop the -o at the end, and the run would go ahead, saving nothing.
+            string export = Path.Combine(m_TempDirectory, @"plan.xlsx");
+
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"-x", export, @"-o");
+
+            exitCode.ShouldBe(2);
+            error.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionNeedsValue, @"--output") + Environment.NewLine);
+            output.ShouldBeEmpty();
+            File.Exists(export).ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task Main_Given_AWordForNothing_Then_ExitUsageErrorNamingIt()
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"extra");
+
+            exitCode.ShouldBe(2);
+            error.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ArgumentNotOptionOrValue, @"extra", @"zpp --help") + Environment.NewLine);
+            output.ShouldBeEmpty();
+        }
+
+        [Fact]
         public async Task Main_Given_NoArguments_Then_ExitUsageError()
         {
             (int exitCode, _) = await RunCapturedAsync();
@@ -609,6 +633,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             output.ShouldContain(string.Join(Environment.NewLine, ServeOptions.Usage));
             output.IndexOf(ServeOptions.Usage[0], StringComparison.Ordinal).ShouldBeLessThan(output.IndexOf(@"--listen", StringComparison.Ordinal));
             output.ShouldNotContain(Options.Usage[1]);
+        }
+
+        [Theory]
+        [InlineData(@"Serve")]
+        [InlineData(@"SERVE")]
+        public async Task Main_Given_ServeInCapitals_Then_RunsServe(string serve)
+        {
+            (int exitCode, string output) = await RunCapturedAsync(serve, @"--help");
+
+            exitCode.ShouldBe(0);
+            output.ShouldContain(string.Join(Environment.NewLine, ServeOptions.Usage));
         }
 
         [Fact]
