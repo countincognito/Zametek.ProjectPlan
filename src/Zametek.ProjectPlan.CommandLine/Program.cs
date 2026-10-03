@@ -53,9 +53,10 @@ namespace Zametek.ProjectPlan.CommandLine
 
             try
             {
-                // An option without its value, and a word that is neither an option nor an option's value, are refused
-                // before the parser reads the arguments, since it would let them pass.
-                ArgumentsHelper.Check<Options>(args, c_HelpCommand);
+                // What the parser would let pass - an option without its value, or given twice, or a word that is
+                // neither an option nor an option's value - is refused before it reads the arguments, which it reads
+                // as the check gives them back: with -o=plan.zpp as -oplan.zpp, since it would keep the =.
+                string[] arguments = ArgumentsHelper.Check<Options>(args, c_HelpCommand);
 
                 using var parser = new Parser(with =>
                 {
@@ -66,7 +67,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     with.AutoVersion = false;
                 });
 
-                ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
+                ParserResult<Options> parserResult = parser.ParseArguments<Options>(arguments);
 
                 return (int)await parserResult.MapResult(
                     async options =>

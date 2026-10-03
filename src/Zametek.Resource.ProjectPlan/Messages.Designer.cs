@@ -581,6 +581,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_OptionCannotBeNegative", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} can only be given once..
+        /// </summary>
+        public static string Message_OptionGivenMoreThanOnce {
+            get {
+                return ResourceManager.GetString("Message_OptionGivenMoreThanOnce", resourceCulture);
+            }
+        }
 
         /// <summary>
         ///   Looks up a localized string similar to {0} must be a date and time with its offset from UTC, such as 2026-09-27T12:00:00+01:00 or 2026-09-27T11:00:00Z..

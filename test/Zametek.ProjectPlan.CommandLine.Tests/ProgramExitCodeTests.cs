@@ -395,6 +395,18 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_AShortOptionsValueAfterAnEquals_Then_TakesTheValueWithoutIt()
+        {
+            // The parser would keep the =, and save the plan somewhere else, if anywhere.
+            string saved = Path.Combine(m_TempDirectory, @"plan.zpp");
+
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"two-scenarios.zpp"), $@"-o={saved}"]);
+
+            exitCode.ShouldBe(0);
+            File.Exists(saved).ShouldBeTrue();
+        }
+
+        [Fact]
         public async Task Main_Given_AWordForNothing_Then_ExitUsageErrorNamingIt()
         {
             (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"extra");

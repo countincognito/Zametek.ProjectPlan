@@ -519,4 +519,7 @@
   <data name="Message_ArgumentNotOptionOrValue" xml:space="preserve">
     <value>'{0}' is not an option, nor the value of one: {1} lists the options.</value>
   </data>
+  <data name="Message_OptionGivenMoreThanOnce" xml:space="preserve">
+    <value>{0} can only be given once.</value>
+  </data>
 </root>

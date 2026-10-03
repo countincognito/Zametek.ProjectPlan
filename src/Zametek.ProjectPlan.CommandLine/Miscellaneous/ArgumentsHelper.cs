@@ -7,22 +7,27 @@ namespace Zametek.ProjectPlan.CommandLine
     // Checks the arguments of zpp and of zpp serve, before the parser reads them, for what the parser lets pass without
     // a word: an option that takes a value but is not given one, which it drops - or gives, as its value, the name of
     // the option after it - and a value given to a switch, values past the most a list takes, and a word that is
-    // neither an option nor an option's value, all of which it ignores. Each is refused with a UsageException.
+    // neither an option nor an option's value, all of which it ignores. zpp serve's parser, which takes an option more
+    // than once so that --listen can be, also keeps one value of an option given again - the last, or a list's first -
+    // and ignores the others. Each is refused with a UsageException: an option given again by zpp as by zpp serve,
+    // unless each time counts, as it does for a list without a most, such as --listen, and for a count of a flag.
     //
     // The arguments are read as the parser (CommandLineParser 2.9.1) reads them: --name value, --name=value, -n value,
     // -nvalue, and switches together, as -vl; a word that starts with - and a digit, as a negative number does, and -
-    // alone are values; and -- alone, which the parser drops, is a word for nothing. The parser is left to report what
-    // it reports itself: an option it does not know - after which the check reads no further, since the parser refuses
-    // the arguments anyway - --help, too few values for a list, and a value it cannot read.
+    // alone are values; and -- alone, which the parser drops, is a word for nothing. The one exception is -n=value, whose
+    // value the parser takes with its = at the front: it is read as --name=value is, and given to the parser as -nvalue.
+    // The parser is left to report what it reports itself: an option it does not know - after which the check reads no
+    // further, since the parser refuses the arguments anyway - --help, too few values for a list, and a value it cannot
+    // read.
     internal static class ArgumentsHelper
     {
         private const string c_LongPrefix = @"--";
         private const char c_ShortPrefix = '-';
         private const char c_ValueSeparator = '=';
 
-        // Refuses what the parser would let pass in args, the arguments of the command whose options are TOptions;
-        // helpCommand is the command that lists those options.
-        public static void Check<TOptions>(
+        // Refuses what the parser would let pass in args, the arguments of the command whose options are TOptions, and
+        // returns them as the parser is to read them; helpCommand is the command that lists those options.
+        public static string[] Check<TOptions>(
             IReadOnlyList<string> args,
             string helpCommand)
         {
@@ -30,13 +35,19 @@ namespace Zametek.ProjectPlan.CommandLine
             ArgumentNullException.ThrowIfNull(helpCommand);
 
             Dictionary<string, PropertyInfo> options = OptionsByName<TOptions>();
+            string[] arguments = [.. args];
+
+            // The options given so far.
+            var given = new HashSet<PropertyInfo>();
 
             // The option the next value is for, if there is one, and how many values it has been given.
             PropertyInfo? waiting = null;
             int values = 0;
 
-            foreach (string arg in args)
+            for (int position = 0; position < arguments.Length; position++)
             {
+                string arg = arguments[position];
+
                 if (IsValue(arg))
                 {
                     if (waiting is null)
@@ -79,8 +90,10 @@ namespace Zametek.ProjectPlan.CommandLine
 
                     if (!options.TryGetValue(name, out PropertyInfo? option))
                     {
-                        return;
+                        return arguments;
                     }
+
+                    Give<TOptions>(given, option);
 
                     if (separator < 0)
                     {
@@ -92,9 +105,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                     if (!TakesValue(option))
                     {
-                        throw new UsageException(string.Format(
-                            Resource.ProjectPlan.Messages.Message_OptionTakesNoValue,
-                            Program.OptionLongName<TOptions>(option.Name)));
+                        throw TakesNoValue<TOptions>(option);
                     }
 
                     if (value.Length == 0)
@@ -108,7 +119,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
 
                 // -n, or switches together, as -vl, perhaps ending with an option that takes a value: the rest of the
-                // word, if there is any, is its value, and otherwise the next word is.
+                // word, if there is any, is its value - after an =, if it starts with one - and otherwise the next word
+                // is.
                 for (int index = 1; index < arg.Length; index++)
                 {
                     if (!options.TryGetValue(arg[index..(index + 1)], out PropertyInfo? option))
@@ -117,28 +129,51 @@ namespace Zametek.ProjectPlan.CommandLine
                         // rest of the word for a value, which no option has.
                         if (index == 1)
                         {
-                            return;
+                            return arguments;
                         }
 
                         throw NotAnOptionOrValue(arg[index..], helpCommand);
                     }
 
-                    if (TakesValue(option))
+                    Give<TOptions>(given, option);
+                    string value = arg[(index + 1)..];
+
+                    if (!TakesValue(option))
                     {
-                        string value = arg[(index + 1)..];
+                        // -v=false, as --verbose=false.
+                        if (value.StartsWith(c_ValueSeparator))
+                        {
+                            throw TakesNoValue<TOptions>(option);
+                        }
+
+                        continue;
+                    }
+
+                    // -o=plan.zpp, as --output=plan.zpp: the parser would take =plan.zpp for the value, so it is given
+                    // -oplan.zpp.
+                    if (value.StartsWith(c_ValueSeparator))
+                    {
+                        value = value[1..];
 
                         if (value.Length == 0)
                         {
-                            waiting = option;
-                        }
-                        else
-                        {
-                            values = AddValues<TOptions>(option, 0, value);
-                            waiting = IsList(option) ? option : null;
+                            throw NeedsValue<TOptions>(option);
                         }
 
-                        break;
+                        arguments[position] = arg[..(index + 1)] + value;
                     }
+
+                    if (value.Length == 0)
+                    {
+                        waiting = option;
+                    }
+                    else
+                    {
+                        values = AddValues<TOptions>(option, 0, value);
+                        waiting = IsList(option) ? option : null;
+                    }
+
+                    break;
                 }
             }
 
@@ -147,6 +182,8 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 throw NeedsValue<TOptions>(waiting);
             }
+
+            return arguments;
         }
 
         // The options of TOptions, by each of their names: the parser looks a name up among the long and the short names
@@ -180,6 +217,20 @@ namespace Zametek.ProjectPlan.CommandLine
             return options;
         }
 
+        // Notes that the option is given, and refuses it if it was given already and cannot be given again.
+        private static void Give<TOptions>(
+            HashSet<PropertyInfo> given,
+            PropertyInfo option)
+        {
+            if (!given.Add(option)
+                && !MayBeGivenAgain(option))
+            {
+                throw new UsageException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_OptionGivenMoreThanOnce,
+                    Program.OptionLongName<TOptions>(option.Name)));
+            }
+        }
+
         // Whether the parser reads arg as a value: a word that does not start with -, - alone, or a word that starts with
         // - and a digit, as a negative number does.
         private static bool IsValue(string arg)
@@ -203,6 +254,16 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             return option.PropertyType != typeof(string)
                 && typeof(IEnumerable).IsAssignableFrom(option.PropertyType);
+        }
+
+        // Whether the option can be given more than once: a list without a most takes the values given each time, and a
+        // count of a flag counts each time.
+        private static bool MayBeGivenAgain(PropertyInfo option)
+        {
+            OptionAttribute attribute = option.GetCustomAttribute<OptionAttribute>()!;
+
+            return attribute.FlagCounter
+                || (IsList(option) && attribute.Max < 0);
         }
 
         // How many values the option has with value as well as the values it has: a list's first value after its name is
@@ -235,6 +296,13 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             return new UsageException(string.Format(
                 Resource.ProjectPlan.Messages.Message_OptionNeedsValue,
+                Program.OptionLongName<TOptions>(option.Name)));
+        }
+
+        private static UsageException TakesNoValue<TOptions>(PropertyInfo option)
+        {
+            return new UsageException(string.Format(
+                Resource.ProjectPlan.Messages.Message_OptionTakesNoValue,
                 Program.OptionLongName<TOptions>(option.Name)));
         }
 

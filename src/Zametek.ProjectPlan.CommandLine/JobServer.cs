@@ -73,10 +73,11 @@ namespace Zametek.ProjectPlan.CommandLine
 
             try
             {
-                // As for zpp, what the parser would let pass is refused before it reads the arguments.
-                ArgumentsHelper.Check<ServeOptions>(args, c_HelpCommand);
+                // As for zpp, what the parser would let pass is refused before it reads the arguments, which it reads as
+                // the check gives them back.
+                string[] arguments = ArgumentsHelper.Check<ServeOptions>(args, c_HelpCommand);
 
-                ParserResult<ServeOptions> parserResult = parser.ParseArguments<ServeOptions>(args);
+                ParserResult<ServeOptions> parserResult = parser.ParseArguments<ServeOptions>(arguments);
 
                 if (parserResult is not Parsed<ServeOptions> parsed)
                 {

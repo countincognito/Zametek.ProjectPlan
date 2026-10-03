@@ -135,6 +135,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_AnOptionGivenAgain_Then_UsageErrorSayingSo()
+        {
+            // The parser would keep the first size and ignore the second - here on a port of the system's choosing, as
+            // above.
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            ExitCode exitCode = await JobServer.RunAsync(
+                [@"--max-chart-size", @"600:400", @"--listen", @"http://127.0.0.1:0", @"--max-chart-size", @"700:500"],
+                console,
+                stopping.Token);
+
+            exitCode.ShouldBe(ExitCode.UsageError);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(
+                string.Format(Resource.ProjectPlan.Messages.Message_OptionGivenMoreThanOnce, @"--max-chart-size")));
+        }
+
+        [Fact]
         public async Task RunAsync_Given_OptionsItCanRunWith_Then_ServesUntilStopped()
         {
             // On a socket, which the test can find the server on without being told a port.
