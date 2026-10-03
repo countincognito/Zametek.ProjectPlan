@@ -342,11 +342,42 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_Help_Then_ShowsEachWayToRunZppAboveTheOptions()
+        {
+            (_, string output) = await RunCapturedAsync(@"--help");
+
+            // Set off from the heading by a blank line.
+            output.ShouldContain(Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, Options.Usage));
+            output.IndexOf(Options.Usage[0], StringComparison.Ordinal).ShouldBeLessThan(output.IndexOf(@"--input", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public void Usage_Given_EachLine_Then_FitsATerminal80ColumnsWide()
+        {
+            // The help wraps at 80 columns, so a longer line would come out broken where the library breaks it, not
+            // where its text does.
+            Options.Usage.Concat(ServeOptions.Usage).ShouldAllBe(line => line.Length <= 80);
+        }
+
+        [Fact]
         public async Task Main_Given_UnknownOption_Then_ExitUsageError()
         {
             (int exitCode, _) = await RunCapturedAsync(@"--nonsense");
 
             exitCode.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task Main_Given_UnknownOption_Then_SaysWhatIsWrongBeforeHowZppIsUsed()
+        {
+            (_, string output) = await RunCapturedAsync(@"--nonsense");
+
+            int error = output.IndexOf(@"Option 'nonsense' is unknown.", StringComparison.Ordinal);
+            int usage = output.IndexOf(Options.Usage[0], StringComparison.Ordinal);
+
+            error.ShouldBeGreaterThan(0);
+            usage.ShouldBeGreaterThan(error);
+            output.IndexOf(@"--input", StringComparison.Ordinal).ShouldBeGreaterThan(usage);
         }
 
         [Fact]
@@ -568,6 +599,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             exitCode.ShouldBe(0);
             output.ShouldContain(@"--max-jobs");
+        }
+
+        [Fact]
+        public async Task Main_Given_ServeHelp_Then_SaysWhatServeIsAboveItsOptions()
+        {
+            (_, string output) = await RunCapturedAsync(@"serve", @"--help");
+
+            output.ShouldContain(string.Join(Environment.NewLine, ServeOptions.Usage));
+            output.IndexOf(ServeOptions.Usage[0], StringComparison.Ordinal).ShouldBeLessThan(output.IndexOf(@"--listen", StringComparison.Ordinal));
+            output.ShouldNotContain(Options.Usage[1]);
         }
 
         [Fact]

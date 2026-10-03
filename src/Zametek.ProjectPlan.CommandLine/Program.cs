@@ -72,7 +72,7 @@ namespace Zametek.ProjectPlan.CommandLine
                             ? await JobClient.RunAsync(options, server, console)
                             : await RunHereAsync(options, console);
                     },
-                    errs => Task.FromResult(OnParseErrors(parserResult, errs)));
+                    errs => Task.FromResult(OnParseErrors(parserResult, errs, Options.Usage)));
             }
             catch (UsageException ex)
             {
@@ -471,12 +471,13 @@ namespace Zametek.ProjectPlan.CommandLine
             return $@"{projectTitle}{suffix}.{formatDescription.ToLowerInvariant()}";
         }
 
-        // zpp serve's options are parsed - and their help shown - the same way.
+        // zpp serve's options are parsed - and their help shown - the same way, with its own usage.
         internal static ExitCode OnParseErrors<T>(
             ParserResult<T> result,
-            IEnumerable<Error> errs)
+            IEnumerable<Error> errs,
+            IReadOnlyList<string> usage)
         {
-            DisplayHelp(result);
+            DisplayHelp(result, usage);
 
             // Help explicitly requested is a successful outcome; anything else
             // that lands here is a genuine usage error.
@@ -485,7 +486,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 : ExitCode.UsageError;
         }
 
-        private static void DisplayHelp<T>(ParserResult<T> result)
+        private static void DisplayHelp<T>(
+            ParserResult<T> result,
+            IReadOnlyList<string> usage)
         {
             // https://github.com/commandlineparser/commandline/wiki/How-To#q1
             // https://github.com/commandlineparser/commandline/wiki/HelpText-Configuration
@@ -503,7 +506,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 // This needs to be included to prevent the --version option.
                 h.AutoVersion = false;
 
-                return HelpText.DefaultParsingErrorsHandler(result, h);
+                // What was wrong with the options, if anything was, and then how the command is used, above its
+                // options - set off by a blank line, as the library sets off its errors: a line that starts with a
+                // new line, since it drops an empty line it is given first.
+                HelpText withErrors = HelpText.DefaultParsingErrorsHandler(result, h);
+                withErrors.AddPreOptionsLines(usage.Select((line, index) => index == 0 ? Environment.NewLine + line : line));
+                return withErrors;
             }, e => e);
 
             Console.Out.WriteLine(helpText);

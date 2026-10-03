@@ -72,7 +72,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (parserResult is not Parsed<ServeOptions> parsed)
             {
-                return Program.OnParseErrors(parserResult, parserResult.Errors);
+                return Program.OnParseErrors(parserResult, parserResult.Errors, ServeOptions.Usage);
             }
 
             try

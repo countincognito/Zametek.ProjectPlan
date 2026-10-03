@@ -43,10 +43,25 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_LocalLongName = "local";
         private const string c_ApiKeyFileLongName = "api-key-file";
 
+        // How zpp is used, shown above its options in its help: each form of the command, and what it does. Each line
+        // fits a terminal 80 columns wide.
+        public static IReadOnlyList<string> Usage { get; } =
+        [
+            @"USAGE:",
+            @"  zpp -i <file.zpp> [options]",
+            @"      Compile a project, print its metrics, and write what the options ask for.",
+            @"  zpp -m <file> [options]",
+            @"      The same, for a plan imported from .mpp, .xml or .xlsx.",
+            @"  zpp -i <file.zpp> --server <address> [options]",
+            @"      The same, run on a server started with zpp serve.",
+            @"  zpp serve [options]",
+            @"      Run zpp as a server, which takes its jobs over HTTP (zpp serve --help).",
+        ];
+
         [Option('i', c_InputLongName, Group = "file-in", HelpText = "Input file path")]
         public string? InputFilename { get; set; } = default;
 
-        [Option('m', c_ImportLongName, Group = "file-in", HelpText = "Import file path - must end in (.mpp|.xlsx)")]
+        [Option('m', c_ImportLongName, Group = "file-in", HelpText = "Import file path - must end in (.mpp|.xml|.xlsx)")]
         public string? ImportFilename { get; set; } = default;
 
 
@@ -144,7 +159,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option(c_ServerLongName, HelpText = "Run on a zpp serve rather than in this process: its address, such as http://localhost:9770, or unix: and the path of its socket (defaults to ZPP_SERVER, when it is set). The run's files, text and exit code are as they would be here (a server that cannot run the job exits with code 5)")]
+        [Option(c_ServerLongName, HelpText = "Send the run to a server started with zpp serve, rather than running it in this process: the server's address, such as http://localhost:9770, or unix: and the path of its socket (defaults to ZPP_SERVER, when it is set). The run's files, text and exit code are as they would be here (a server that cannot run the job exits with code 5)")]
         public string? Server { get; set; } = default;
 
         [Option(c_LocalLongName, HelpText = "Run in this process, even when ZPP_SERVER is set")]

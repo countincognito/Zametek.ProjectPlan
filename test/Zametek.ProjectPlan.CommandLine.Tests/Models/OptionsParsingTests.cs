@@ -153,8 +153,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         public void Options_Given_EveryOptionProperty_Then_HasLongName()
         {
             // Program.OptionLongName resolves message text from these attributes,
-            // so every option must carry a long name.
-            foreach (PropertyInfo property in typeof(Options).GetProperties())
+            // so every option must carry a long name. The options are the
+            // instance properties, which the parser sets - Usage, which is
+            // static, is the help's text.
+            foreach (PropertyInfo property in typeof(Options).GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 OptionAttribute? attribute = property.GetCustomAttribute<OptionAttribute>();
 

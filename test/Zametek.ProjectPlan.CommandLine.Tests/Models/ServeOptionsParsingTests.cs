@@ -120,8 +120,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void Options_Given_EveryOptionProperty_Then_HasLongName()
         {
-            // Messages name options by their long names, as zpp's do.
-            foreach (PropertyInfo property in typeof(ServeOptions).GetProperties())
+            // Messages name options by their long names, as zpp's do. The options are the instance properties, which
+            // the parser sets - Usage, which is static, is the help's text.
+            foreach (PropertyInfo property in typeof(ServeOptions).GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 OptionAttribute? attribute = property.GetCustomAttribute<OptionAttribute>();
 

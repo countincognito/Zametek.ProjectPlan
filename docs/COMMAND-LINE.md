@@ -37,7 +37,7 @@ Import from Microsoft Project or Excel, and convert to a project file:
 zpp -m plan.mpp -o plan.zpp
 ```
 
-Run `zpp --help` for the full option list. Chart and graph exports honour the display settings saved in the project file (the theme excepted - pass `--base-theme Dark` for dark output). Diagnostic logging goes to stderr, never stdout: warnings and errors always show, and `--verbose` adds informational lifecycle output.
+Run `zpp --help` for the full option list, and `zpp serve --help` for the server's. Chart and graph exports honour the display settings saved in the project file (the theme excepted - pass `--base-theme Dark` for dark output). Diagnostic logging goes to stderr, never stdout: warnings and errors always show, and `--verbose` adds informational lifecycle output.
 
 Everything zpp writes as text - stdout (except the `--help` text), saved project files, and GraphML and Dot exports - ends its lines with `\n` on every platform, so line endings never differ between operating systems. The desktop application saves project files and exports GraphML and Dot the same way.
 
