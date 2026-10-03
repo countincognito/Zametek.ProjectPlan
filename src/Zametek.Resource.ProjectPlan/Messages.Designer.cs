@@ -970,6 +970,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to zpp serve cannot restrict the socket {0} to its owner: {1}.
+        /// </summary>
+        public static string Message_ServeUnixSocketCannotRestrict {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketCannotRestrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to zpp serve cannot tell whether a server is listening on the socket {0}: {1}.
         /// </summary>
         public static string Message_ServeUnixSocketCannotTell {

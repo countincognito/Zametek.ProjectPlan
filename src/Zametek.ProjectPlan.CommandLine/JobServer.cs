@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -166,6 +167,13 @@ namespace Zametek.ProjectPlan.CommandLine
             // A server that is stopped lets the jobs it is running finish, as long as they do within their time limit.
             services.Configure<HostOptions>(x => x.ShutdownTimeout = TimeSpan.FromSeconds(limits.JobTimeoutSeconds));
 
+            // A socket is the server's access control, so only the user running the server may connect to it: it is left
+            // to that user as soon as it is bound, before it takes a connection (see UnixSocketFileHelper).
+            if (settings.UnixSockets.Count > 0)
+            {
+                services.Configure<SocketTransportOptions>(x => x.CreateBoundListenSocket = UnixSocketFileHelper.CreateBoundListenSocket);
+            }
+
             services.AddRateLimiter(limiter =>
             {
                 limiter.AddConcurrencyLimiter(c_JobsPolicy, jobs =>
@@ -222,22 +230,6 @@ namespace Zametek.ProjectPlan.CommandLine
             // Live as soon as it listens; ready once it has warmed up.
             app.MapHealthChecks(@"/health/live", new HealthCheckOptions { Predicate = _ => false });
             app.MapHealthChecks(@"/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains(c_ReadyTag) });
-
-            // A socket is the server's access control, so only its owner may connect to it. Windows gives a socket the
-            // access its directory gives.
-            if (settings.UnixSockets.Count > 0)
-            {
-                app.Lifetime.ApplicationStarted.Register(() =>
-                {
-                    if (!OperatingSystem.IsWindows())
-                    {
-                        foreach (string socket in settings.UnixSockets)
-                        {
-                            File.SetUnixFileMode(socket, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                        }
-                    }
-                });
-            }
 
             return app;
         }

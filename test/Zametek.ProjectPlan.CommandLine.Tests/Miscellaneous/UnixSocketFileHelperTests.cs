@@ -1,18 +1,19 @@
 using Shouldly;
+using System.Net;
 using System.Net.Sockets;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using Xunit;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
     /// Tests for what zpp serve does about the file of a socket before it
-    /// listens there, with real sockets and real files: a socket that a server
-    /// which was killed left behind is removed, so that the server can be
-    /// started again; a socket a server listens on, one that this user cannot
-    /// tell about, a file with anything in it, and a folder are not; and the
-    /// folder the socket is to be in must be there.
+    /// listens there, and as it makes the socket, with real sockets and real
+    /// files: a socket that a server which was killed left behind is removed,
+    /// so that the server can be started again; a socket a server listens on,
+    /// one that this user cannot tell about, a file with anything in it, and a
+    /// folder are not; the folder the socket is to be in must be there; and the
+    /// socket is left to the user running the server as soon as it is bound,
+    /// before it listens.
     /// </summary>
     public class UnixSocketFileHelperTests
         : IDisposable
@@ -34,23 +35,6 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private string SocketPath()
         {
             return Path.Combine(m_Folder, @"a.sock");
-        }
-
-        // Makes it so that this user cannot connect to the socket.
-        private static void DenyConnecting(string socket)
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                var file = new FileInfo(socket);
-                FileSecurity security = file.GetAccessControl();
-                using WindowsIdentity user = WindowsIdentity.GetCurrent();
-                security.AddAccessRule(new FileSystemAccessRule(user.User!, FileSystemRights.ReadData | FileSystemRights.WriteData, AccessControlType.Deny));
-                file.SetAccessControl(security);
-            }
-            else
-            {
-                File.SetUnixFileMode(socket, UnixFileMode.None);
-            }
         }
 
         [Fact]
@@ -132,7 +116,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             string socket = SocketPath();
             using Socket server = SocketFiles.ListenOn(socket);
-            DenyConnecting(socket);
+            SocketAccess.DenyConnecting(socket);
 
             IOException exception = await Should.ThrowAsync<IOException>(() => UnixSocketFileHelper.PrepareAsync(socket));
 
@@ -199,6 +183,109 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await Should.ThrowAsync<OperationCanceledException>(() => UnixSocketFileHelper.PrepareAsync(socket, cancelled.Token));
 
             File.Exists(socket).ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task PrepareAsync_Given_ASocketLeftBehindThatWasLeftToItsOwner_Then_RemovesIt()
+        {
+            // As the socket of a zpp serve that was killed is: it was its owner's alone while the server ran, and the
+            // next server, run by the same user, still removes it.
+            string socket = SocketPath();
+            SocketFiles.LeaveStale(socket, UnixSocketFileHelper.RestrictToOwner);
+            SocketAccess.AssertOwnerOnly(socket);
+
+            (await UnixSocketFileHelper.PrepareAsync(socket)).ShouldBeTrue();
+
+            File.Exists(socket).ShouldBeFalse();
+        }
+
+        [Fact]
+        public void RestrictToOwner_Given_ASocketOpenToEveryone_Then_TheOwnerAlone()
+        {
+            string socket = SocketPath();
+            using Socket server = SocketFiles.BindTo(socket);
+            SocketAccess.OpenToEveryone(socket);
+
+            UnixSocketFileHelper.RestrictToOwner(socket);
+
+            SocketAccess.AssertOwnerOnly(socket);
+        }
+
+        [Fact]
+        public async Task RestrictToOwner_Given_ASocket_Then_TheOwnerCanStillConnectToIt()
+        {
+            string socket = SocketPath();
+            using Socket server = SocketFiles.BindTo(socket);
+
+            UnixSocketFileHelper.RestrictToOwner(socket);
+            server.Listen(10);
+
+            using var client = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+            await client.ConnectAsync(new UnixDomainSocketEndPoint(socket));
+            client.Connected.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void RestrictToOwner_Given_NoSocket_Then_IOExceptionSayingWhy()
+        {
+            string socket = SocketPath();
+
+            IOException exception = Should.Throw<IOException>(() => UnixSocketFileHelper.RestrictToOwner(socket));
+
+            // It gives the system's own words for it.
+            Exception reason = exception.InnerException.ShouldNotBeNull();
+            reason.ShouldBeAssignableTo<IOException>();
+            exception.Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketCannotRestrict, socket, reason.Message));
+        }
+
+        [Fact]
+        public async Task CreateBoundListenSocket_Given_AUnixEndPoint_Then_TheOwnersAloneBeforeItListens()
+        {
+            string socket = SocketPath();
+            var endPoint = new UnixDomainSocketEndPoint(socket);
+
+            using Socket bound = UnixSocketFileHelper.CreateBoundListenSocket(endPoint);
+
+            // It is bound, and does not listen until Kestrel makes it: nothing can connect to it yet. It is the owner's
+            // alone already, so nobody else can connect to it once it does.
+            File.Exists(socket).ShouldBeTrue();
+            SocketAccess.AssertOwnerOnly(socket);
+            using (var early = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))
+            {
+                SocketException refused = await Should.ThrowAsync<SocketException>(async () => await early.ConnectAsync(endPoint));
+
+                refused.SocketErrorCode.ShouldBe(SocketError.ConnectionRefused);
+            }
+
+            bound.Listen(10);
+            using var client = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+            await client.ConnectAsync(endPoint);
+            client.Connected.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void CreateBoundListenSocket_Given_AnAddressOnTheNetwork_Then_BoundAndNotRestricted()
+        {
+            using Socket bound = UnixSocketFileHelper.CreateBoundListenSocket(
+                new IPEndPoint(IPAddress.Loopback, 0),
+                _ => throw new InvalidOperationException(@"Only a Unix domain socket is left to its owner."));
+
+            bound.IsBound.ShouldBeTrue();
+            bound.LocalEndPoint.ShouldBeOfType<IPEndPoint>().Port.ShouldBeGreaterThan(0);
+        }
+
+        [Fact]
+        public void CreateBoundListenSocket_Given_ASocketThatCannotBeLeftToItsOwner_Then_ThrowsAndTheSocketIsClosed()
+        {
+            string socket = SocketPath();
+            var failure = new IOException(@"Cannot be done.");
+
+            IOException exception = Should.Throw<IOException>(
+                () => UnixSocketFileHelper.CreateBoundListenSocket(new UnixDomainSocketEndPoint(socket), _ => throw failure));
+
+            // Nothing is left bound to the path to take connections from everybody: the socket took its file with it.
+            exception.ShouldBeSameAs(failure);
+            File.Exists(socket).ShouldBeFalse();
         }
     }
 }

@@ -543,4 +543,7 @@
   <data name="Message_ServeUnixSocketIsAFolder" xml:space="preserve">
     <value>{0} is a folder, not a socket.</value>
   </data>
+  <data name="Message_ServeUnixSocketCannotRestrict" xml:space="preserve">
+    <value>zpp serve cannot restrict the socket {0} to its owner: {1}</value>
+  </data>
 </root>

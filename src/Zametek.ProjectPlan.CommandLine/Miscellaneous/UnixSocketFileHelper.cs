@@ -1,13 +1,22 @@
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
+using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Versioning;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
-    // Gets the file a Unix domain socket is ready for zpp serve to listen on. A server that is stopped removes its
-    // socket, but one that is killed leaves it behind, and the system will not bind a socket to a path that is taken:
-    // so nothing could listen there until somebody removed the file - and a server that whatever started it starts
-    // again after it is killed would fail to start, and be started again, for ever. A socket that nothing listens on
-    // is therefore removed. Nothing else is: not a socket a server listens on, nor one that this user cannot tell
-    // about, nor a file with anything in it, nor a folder.
+    // Gets the file a Unix domain socket is ready for zpp serve to listen on, and leaves it to the user running the
+    // server once it is there. A server that is stopped removes its socket, but one that is killed leaves it behind,
+    // and the system will not bind a socket to a path that is taken: so nothing could listen there until somebody
+    // removed the file - and a server that whatever started it starts again after it is killed would fail to start, and
+    // be started again, for ever. A socket that nothing listens on is therefore removed. Nothing else is: not a socket
+    // a server listens on, nor one that this user cannot tell about, nor a file with anything in it, nor a folder.
+    //
+    // A socket is the server's access control - a server that listens on nothing else needs no API key - so no user but
+    // the one running it may connect to it. Linux and macOS keep a socket to its mode, but Windows gives it the access
+    // its folder has, which in a folder like C:\tmp is every signed-in user's.
     internal static class UnixSocketFileHelper
     {
         // How long a server is given to answer before it is taken for busy rather than gone: one with all its
@@ -62,6 +71,82 @@ namespace Zametek.ProjectPlan.CommandLine
 
             File.Delete(socket);
             return true;
+        }
+
+        // The socket for Kestrel to listen on at the endpoint: the one it would make itself, but a Unix domain socket is
+        // left to the user running the server as soon as it is bound. Kestrel makes it listen after that, and nothing can
+        // connect to a socket before it does - so nobody else can ever connect to it, not even in the moment between
+        // the server binding it and listening on it. A socket that cannot be left to its owner is closed, and its file
+        // with it: the server does not start, rather than listen to everybody.
+        public static Socket CreateBoundListenSocket(EndPoint endPoint)
+        {
+            return CreateBoundListenSocket(endPoint, RestrictToOwner);
+        }
+
+        internal static Socket CreateBoundListenSocket(
+            EndPoint endPoint,
+            Action<string> restrictToOwner)
+        {
+            ArgumentNullException.ThrowIfNull(endPoint);
+            ArgumentNullException.ThrowIfNull(restrictToOwner);
+
+            Socket socket = SocketTransportOptions.CreateDefaultBoundListenSocket(endPoint);
+
+            if (endPoint is UnixDomainSocketEndPoint unix)
+            {
+                try
+                {
+                    restrictToOwner(unix.ToString());
+                }
+                catch
+                {
+                    socket.Dispose();
+                    throw;
+                }
+            }
+
+            return socket;
+        }
+
+        // Leaves the socket at the path to the user running the server: nobody else can connect to it. On Windows that
+        // is its access list with that user alone in it and nothing inherited from its folder; elsewhere it is its mode,
+        // 600. Where this cannot be done it is an IOException that names the socket and says why.
+        public static void RestrictToOwner(string socket)
+        {
+            ArgumentNullException.ThrowIfNull(socket);
+
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    RestrictToCurrentUser(socket);
+                }
+                else
+                {
+                    File.SetUnixFileMode(socket, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                throw new IOException(string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketCannotRestrict, socket, ex.Message), ex);
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static void RestrictToCurrentUser(string socket)
+        {
+            using WindowsIdentity user = WindowsIdentity.GetCurrent();
+
+            // A new access list rather than the socket's own, which has its folder's entries: the user, with all access,
+            // and protected from inheriting any other.
+            var security = new FileSecurity();
+            security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+            security.AddAccessRule(new FileSystemAccessRule(
+                user.User ?? throw new InvalidOperationException(),
+                FileSystemRights.FullControl,
+                AccessControlType.Allow));
+
+            new FileInfo(socket).SetAccessControl(security);
         }
 
         // Whether a server is listening on the socket: yes if one answers, or does not answer in time, and no if the

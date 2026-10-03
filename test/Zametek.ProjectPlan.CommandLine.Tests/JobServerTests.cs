@@ -190,12 +190,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task RunAsync_Given_ASocketLeftBehindByAServerThatWasKilled_Then_RemovesItAndServes()
         {
-            // A server that is started again, by whatever restarts it, after it was killed.
+            // A server that is started again, by whatever restarts it, after it was killed - which left its socket as it
+            // was while it ran: the user's alone.
             string socket = NewSocketPath();
 
             try
             {
-                SocketFiles.LeaveStale(socket);
+                SocketFiles.LeaveStale(socket, UnixSocketFileHelper.RestrictToOwner);
 
                 (bool isLive, ExitCode exitCode, RecordingJobConsole console) = await ServeOnAsync(socket);
 
@@ -475,12 +476,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
                 using HttpResponseMessage response = await server.Client.GetAsync(@"/v1/info");
 
+                // Only its owner may connect to it - as it is, who has just done so.
                 response.StatusCode.ShouldBe(HttpStatusCode.OK);
-                if (!OperatingSystem.IsWindows())
-                {
-                    // Only its owner may connect to it.
-                    File.GetUnixFileMode(socket).ShouldBe(UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                }
+                SocketAccess.AssertOwnerOnly(socket);
             }
             finally
             {
@@ -507,11 +505,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
                 onFirst.StatusCode.ShouldBe(HttpStatusCode.OK);
                 onSecond.StatusCode.ShouldBe(HttpStatusCode.OK);
-                if (!OperatingSystem.IsWindows())
-                {
-                    File.GetUnixFileMode(first).ShouldBe(UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                    File.GetUnixFileMode(second).ShouldBe(UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                }
+                SocketAccess.AssertOwnerOnly(first);
+                SocketAccess.AssertOwnerOnly(second);
             }
             finally
             {

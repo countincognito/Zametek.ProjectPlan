@@ -39,7 +39,7 @@ namespace Zametek.ProjectPlan.CommandLine
             @"and 2 when its options or settings cannot be used.",
         ];
 
-        [Option(c_ListenLongName, HelpText = "Address to listen on: http or https, then localhost, an IP address or *, then a port - e.g. http://localhost:9770 or https://0.0.0.0:9771 - or unix: and the path of a Unix domain socket, e.g. unix:/tmp/zpp.sock. Repeat it to listen on more than one (defaults to http://localhost:9770)")]
+        [Option(c_ListenLongName, HelpText = "Address to listen on: http or https, then localhost, an IP address or *, then a port - e.g. http://localhost:9770 or https://0.0.0.0:9771 - or unix: and the path of a Unix domain socket, which only the user running zpp serve can connect to, e.g. unix:/tmp/zpp.sock. Repeat it to listen on more than one (defaults to http://localhost:9770)")]
         public IEnumerable<string> Listen { get; set; } = [];
 
         [Option(c_ApiKeyFileLongName, HelpText = "File holding the API key that requests must carry, as Authorization: Bearer <key> - or set ZPP_API_KEY. Required to listen on anything but this machine")]
