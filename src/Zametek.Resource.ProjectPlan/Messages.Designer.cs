@@ -970,6 +970,51 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to zpp serve cannot tell whether a server is listening on the socket {0}: {1}.
+        /// </summary>
+        public static string Message_ServeUnixSocketCannotTell {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketCannotTell", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no folder {0} for the socket {1}..
+        /// </summary>
+        public static string Message_ServeUnixSocketFolderNotThere {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketFolderNotThere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A server is already listening on the socket {0}..
+        /// </summary>
+        public static string Message_ServeUnixSocketInUse {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketInUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is a file, not a socket left behind by a server, and zpp serve does not remove it..
+        /// </summary>
+        public static string Message_ServeUnixSocketIsAFile {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketIsAFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is a folder, not a socket..
+        /// </summary>
+        public static string Message_ServeUnixSocketIsAFolder {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketIsAFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The socket {0} is listed more than once..
         /// </summary>
         public static string Message_ServeUnixSocketListedTwice {

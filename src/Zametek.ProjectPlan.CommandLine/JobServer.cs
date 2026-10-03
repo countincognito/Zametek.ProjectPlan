@@ -98,6 +98,16 @@ namespace Zametek.ProjectPlan.CommandLine
 
                 ConfigureSerilog(settings.Verbose);
 
+                // A socket it cannot listen on is known at once, rather than after the engine has started; and one that
+                // a server which was killed left behind is cleared away, so that it can be started again.
+                foreach (string socket in settings.UnixSockets)
+                {
+                    if (await UnixSocketFileHelper.PrepareAsync(socket, stoppingToken))
+                    {
+                        Log.Information("Removed {Socket}, which no server was listening on", socket);
+                    }
+                }
+
                 // Before the engine's container exists, as for zpp.
                 ProjectPlanEngine.Initialize();
 

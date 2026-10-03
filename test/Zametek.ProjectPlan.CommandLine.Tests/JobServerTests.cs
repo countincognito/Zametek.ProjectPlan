@@ -172,30 +172,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // On a socket, which the test can find the server on without being told a port.
             string socket = NewSocketPath();
-            var console = new RecordingJobConsole();
-            using var stopping = new CancellationTokenSource(s_RunLimit);
 
             try
             {
-                Task<ExitCode> running = JobServer.RunAsync([@"--listen", $@"unix:{socket}"], console, stopping.Token);
-
-                using var client = new HttpClient(UnixSocketHandler(socket)) { BaseAddress = new Uri(@"http://localhost") };
-                bool isLive = false;
-                for (int attempt = 0; attempt < 300 && !isLive && !running.IsCompleted; attempt++)
-                {
-                    try
-                    {
-                        using HttpResponseMessage live = await client.GetAsync(@"/health/live");
-                        isLive = live.StatusCode == HttpStatusCode.OK;
-                    }
-                    catch (HttpRequestException)
-                    {
-                        await Task.Delay(100);
-                    }
-                }
-
-                await stopping.CancelAsync();
-                ExitCode exitCode = await running;
+                (bool isLive, ExitCode exitCode, RecordingJobConsole console) = await ServeOnAsync(socket);
 
                 isLive.ShouldBeTrue();
                 exitCode.ShouldBe(ExitCode.Success);
@@ -204,6 +184,93 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             finally
             {
                 File.Delete(socket);
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ASocketLeftBehindByAServerThatWasKilled_Then_RemovesItAndServes()
+        {
+            // A server that is started again, by whatever restarts it, after it was killed.
+            string socket = NewSocketPath();
+
+            try
+            {
+                SocketFiles.LeaveStale(socket);
+
+                (bool isLive, ExitCode exitCode, RecordingJobConsole console) = await ServeOnAsync(socket);
+
+                isLive.ShouldBeTrue();
+                exitCode.ShouldBe(ExitCode.Success);
+                console.Calls.ShouldBeEmpty();
+            }
+            finally
+            {
+                File.Delete(socket);
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ASocketAServerListensOn_Then_FailureSayingSo()
+        {
+            // As it is for a port that is taken: the server cannot start, and the one that is there is left alone.
+            string socket = NewSocketPath();
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            try
+            {
+                using Socket server = SocketFiles.ListenOn(socket);
+
+                ExitCode exitCode = await JobServer.RunAsync([@"--listen", $@"unix:{socket}"], console, stopping.Token);
+
+                exitCode.ShouldBe(ExitCode.Failure);
+                console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(
+                    string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketInUse, socket)));
+                File.Exists(socket).ShouldBeTrue();
+            }
+            finally
+            {
+                File.Delete(socket);
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AFolderForTheSocketThatIsNotThere_Then_UsageErrorSayingSo()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}"[..12]);
+            string socket = Path.Combine(folder, @"zpp.sock");
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            ExitCode exitCode = await JobServer.RunAsync([@"--listen", $@"unix:{socket}"], console, stopping.Token);
+
+            exitCode.ShouldBe(ExitCode.UsageError);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(
+                string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketFolderNotThere, folder, socket)));
+            Directory.Exists(folder).ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AFileWhereTheSocketIs_Then_UsageErrorSayingSoAndTheFileIsLeftAlone()
+        {
+            string file = Path.GetTempFileName();
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            try
+            {
+                File.WriteAllText(file, @"precious");
+
+                ExitCode exitCode = await JobServer.RunAsync([@"--listen", $@"unix:{file}"], console, stopping.Token);
+
+                exitCode.ShouldBe(ExitCode.UsageError);
+                console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(
+                    string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketIsAFile, file)));
+                File.ReadAllText(file).ShouldBe(@"precious");
+            }
+            finally
+            {
+                File.Delete(file);
             }
         }
 
@@ -518,6 +585,34 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private static string NewSocketPath()
         {
             return Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}"[..12] + @".sock");
+        }
+
+        // Runs zpp serve on the socket until it answers its health check, and then stops it: whether it did answer, how it
+        // ended, and what it said to the console. A server that ends first, or does not answer in time, did not answer.
+        private static async Task<(bool IsLive, ExitCode ExitCode, RecordingJobConsole Console)> ServeOnAsync(string socket)
+        {
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            Task<ExitCode> running = JobServer.RunAsync([@"--listen", $@"unix:{socket}"], console, stopping.Token);
+
+            using var client = new HttpClient(UnixSocketHandler(socket)) { BaseAddress = new Uri(@"http://localhost") };
+            bool isLive = false;
+            for (int attempt = 0; attempt < 300 && !isLive && !running.IsCompleted; attempt++)
+            {
+                try
+                {
+                    using HttpResponseMessage live = await client.GetAsync(@"/health/live");
+                    isLive = live.StatusCode == HttpStatusCode.OK;
+                }
+                catch (HttpRequestException)
+                {
+                    await Task.Delay(100);
+                }
+            }
+
+            await stopping.CancelAsync();
+            return (isLive, await running, console);
         }
 
         // A handler that connects to the server on its socket, whatever the request's address.

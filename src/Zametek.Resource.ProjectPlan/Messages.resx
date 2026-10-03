@@ -528,4 +528,19 @@
   <data name="Message_UnixSocketPathTooLong" xml:space="preserve">
     <value>'{0}' is too long to be the path of a socket.</value>
   </data>
+  <data name="Message_ServeUnixSocketCannotTell" xml:space="preserve">
+    <value>zpp serve cannot tell whether a server is listening on the socket {0}: {1}</value>
+  </data>
+  <data name="Message_ServeUnixSocketFolderNotThere" xml:space="preserve">
+    <value>There is no folder {0} for the socket {1}.</value>
+  </data>
+  <data name="Message_ServeUnixSocketInUse" xml:space="preserve">
+    <value>A server is already listening on the socket {0}.</value>
+  </data>
+  <data name="Message_ServeUnixSocketIsAFile" xml:space="preserve">
+    <value>{0} is a file, not a socket left behind by a server, and zpp serve does not remove it.</value>
+  </data>
+  <data name="Message_ServeUnixSocketIsAFolder" xml:space="preserve">
+    <value>{0} is a folder, not a socket.</value>
+  </data>
 </root>
