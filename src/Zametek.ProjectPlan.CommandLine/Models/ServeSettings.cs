@@ -9,8 +9,8 @@ namespace Zametek.ProjectPlan.CommandLine
         // The addresses it listens on, each on a port of its own.
         public IReadOnlyList<ListenAddress> Listen { get; init; } = [];
 
-        // The Unix domain socket it listens on, if any.
-        public string? UnixSocket { get; init; }
+        // The Unix domain sockets it listens on, each by its path in full.
+        public IReadOnlyList<string> UnixSockets { get; init; } = [];
 
         // The key a request must carry, when it needs one.
         public string? ApiKey { get; init; }

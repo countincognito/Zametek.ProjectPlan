@@ -86,13 +86,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Theory]
         [InlineData(@"unix:/tmp/zpp.sock", @"/tmp/zpp.sock")]
         [InlineData(@"unix:///tmp/zpp.sock", @"/tmp/zpp.sock")]
-        [InlineData(@"UNIX:zpp.sock", @"zpp.sock")]
+        [InlineData(@"UNIX:" + UnixSocketHelperTests.UpToTheRoot + @"zpp.sock", UnixSocketHelperTests.UpToTheRoot + @"zpp.sock")]
         public void ParseServer_Given_ASocket_Then_ItsPathInFull(string server, string path)
         {
             (Uri address, string? socket) = ClientSettingsHelper.ParseServer(server, @"--server");
 
             address.ShouldBe(new Uri(@"http://localhost/"));
             socket.ShouldBe(Path.GetFullPath(path));
+        }
+
+        [Fact]
+        public void ParseServer_Given_ASocketWhosePathIsTooLong_Then_UsageException()
+        {
+            // Rather than the system's own words for it, when zpp tries to connect.
+            string socket = Path.Combine(Path.GetTempPath(), new string('x', 300) + @".sock");
+
+            Should.Throw<UsageException>(() => ClientSettingsHelper.ParseServer($@"unix:{socket}", @"--server"))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_UnixSocketPathTooLong, socket));
         }
 
         [Theory]

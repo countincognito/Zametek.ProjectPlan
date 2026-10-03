@@ -7,7 +7,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// <summary>
     /// Tests for what zpp serve works out it runs with: each limit's default,
     /// overridden by zpp-serve.json, then by the ZPP_ environment variables,
-    /// then by its options; where it listens - its socket's path in full - and
+    /// then by its options; where it listens - its sockets' paths in full - and
     /// that it listens beyond this machine only with an API key; its
     /// certificate and its culture - and that anything it cannot run with is
     /// a usage error.
@@ -50,7 +50,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ServeSettings settings = Resolve();
 
             settings.Listen.ShouldBe([new ListenAddress(ServeSettingsHelper.DefaultListenUrl, false, @"localhost", 9770)]);
-            settings.UnixSocket.ShouldBeNull();
+            settings.UnixSockets.ShouldBeEmpty();
             settings.ApiKey.ShouldBeNull();
             settings.Certificate.ShouldBeNull();
             settings.Culture.ShouldBeNull();
@@ -64,35 +64,97 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             settings.Limits.MaxCompileTimeoutMilliseconds.ShouldBe(60_000);
         }
 
+        private static string SocketPath(string name = @"zpp.sock")
+        {
+            return Path.Combine(Path.GetTempPath(), name);
+        }
+
         [Fact]
         public void Resolve_Given_AUnixSocketAlone_Then_ListensThereAlone()
         {
-            string socket = Path.Combine(Path.GetTempPath(), @"zpp.sock");
+            string socket = SocketPath();
 
-            ServeSettings settings = Resolve(new ServeOptions { UnixSocket = socket });
+            ServeSettings settings = Resolve(new ServeOptions { Listen = [$@"unix:{socket}"] });
 
-            settings.UnixSocket.ShouldBe(socket);
+            // Only a port beyond this machine needs a key.
+            settings.UnixSockets.ShouldBe([socket]);
             settings.Listen.ShouldBeEmpty();
+            settings.ApiKey.ShouldBeNull();
         }
 
         [Fact]
-        public void Resolve_Given_ARelativeUnixSocket_Then_ItIsInTheCurrentDirectory()
+        public void Resolve_Given_AUnixSocketAndAnAddress_Then_ListensOnBoth()
         {
-            // Kestrel listens only on a socket whose path is absolute.
-            ServeSettings settings = Resolve(new ServeOptions { UnixSocket = @"zpp.sock" });
+            string socket = SocketPath();
 
-            settings.UnixSocket.ShouldBe(Path.Combine(Environment.CurrentDirectory, @"zpp.sock"));
+            ServeSettings settings = Resolve(new ServeOptions { Listen = [@"http://localhost:9771", $@"unix:{socket}"] });
+
+            settings.Listen.ShouldBe([new ListenAddress(@"http://localhost:9771", false, @"localhost", 9771)]);
+            settings.UnixSockets.ShouldBe([socket]);
+        }
+
+        [Fact]
+        public void Resolve_Given_TwoUnixSockets_Then_ListensOnBothInTheOrderGiven()
+        {
+            string first = SocketPath(@"first.sock");
+            string second = SocketPath(@"second.sock");
+
+            ServeSettings settings = Resolve(new ServeOptions { Listen = [$@"unix:{second}", $@"unix:{first}"] });
+
+            settings.UnixSockets.ShouldBe([second, first]);
+        }
+
+        [Fact]
+        public void Resolve_Given_ARelativeUnixSocket_Then_ItsPathInFull()
+        {
+            // Kestrel listens only on a socket whose path is absolute. The current directory is where the tests are
+            // run, which may be too deep for a socket in it, so the path goes up to its root.
+            ServeSettings settings = Resolve(new ServeOptions { Listen = [$@"unix:{UnixSocketHelperTests.UpToTheRoot}zpp.sock"] });
+
+            settings.UnixSockets.ShouldBe([Path.Combine(Path.GetPathRoot(Environment.CurrentDirectory)!, @"zpp.sock")]);
         }
 
         [Theory]
-        [InlineData(@"")]
-        [InlineData(@"   ")]
-        public void Resolve_Given_AUnixSocketWithoutAPath_Then_UsageException(string socket)
+        [InlineData(@"unix:")]
+        [InlineData(@"unix://")]
+        [InlineData(@"unix:   ")]
+        public void Resolve_Given_AUnixSocketWithoutAPath_Then_UsageException(string address)
         {
-            Should.Throw<UsageException>(() => Resolve(new ServeOptions { UnixSocket = socket }))
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { Listen = [@"http://localhost:9771", address] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath, address));
+        }
+
+        [Fact]
+        public void Resolve_Given_TheSameUnixSocketTwice_Then_UsageException()
+        {
+            // However its path is written: it can be listened on only once.
+            string socket = SocketPath();
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { Listen = [$@"unix:{socket}", $@"unix://{socket}"] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketListedTwice, socket));
+        }
+
+        [Fact]
+        public void Resolve_Given_AUnixSocketWhosePathIsTooLong_Then_UsageException()
+        {
+            string socket = SocketPath(new string('x', 300) + @".sock");
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { Listen = [$@"unix:{socket}"] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_UnixSocketPathTooLong, socket));
+        }
+
+        [Fact]
+        public void Resolve_Given_AUnixSocketAndAnAddressOtherMachinesCanReachWithoutAKey_Then_UsageException()
+        {
+            // The socket does not make the address any safer.
+            const string url = @"http://0.0.0.0:9770";
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { Listen = [$@"unix:{SocketPath()}", url] }))
                 .Message.ShouldBe(string.Format(
-                    Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath,
-                    Option(nameof(ServeOptions.UnixSocket))));
+                    Resource.ProjectPlan.Messages.Message_ServeNeedsApiKey,
+                    url,
+                    ServeSettingsHelper.ApiKeyVariable,
+                    Option(nameof(ServeOptions.ApiKeyFile))));
         }
 
         [Fact]

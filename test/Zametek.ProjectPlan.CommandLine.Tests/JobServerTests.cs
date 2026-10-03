@@ -94,12 +94,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var console = new RecordingJobConsole();
             using var stopping = new CancellationTokenSource(s_RunLimit);
 
-            ExitCode exitCode = await JobServer.RunAsync([@"--unix-socket", string.Empty], console, stopping.Token);
+            ExitCode exitCode = await JobServer.RunAsync([@"--listen", @"unix:"], console, stopping.Token);
 
             exitCode.ShouldBe(ExitCode.UsageError);
             console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(string.Format(
                 Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath,
-                @"--unix-socket")));
+                @"unix:")));
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AUnixSocketWhosePathIsTooLong_Then_UsageErrorSayingSo()
+        {
+            // Rather than the system's own words for it, from the web server when it tries to listen there.
+            string socket = Path.Combine(Path.GetTempPath(), new string('x', 300) + @".sock");
+            var console = new RecordingJobConsole();
+            using var stopping = new CancellationTokenSource(s_RunLimit);
+
+            ExitCode exitCode = await JobServer.RunAsync([@"--listen", $@"unix:{socket}"], console, stopping.Token);
+
+            exitCode.ShouldBe(ExitCode.UsageError);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.ErrorLine(
+                string.Format(Resource.ProjectPlan.Messages.Message_UnixSocketPathTooLong, socket)));
         }
 
         [Fact]
@@ -162,7 +177,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             try
             {
-                Task<ExitCode> running = JobServer.RunAsync([@"--unix-socket", socket], console, stopping.Token);
+                Task<ExitCode> running = JobServer.RunAsync([@"--listen", $@"unix:{socket}"], console, stopping.Token);
 
                 using var client = new HttpClient(UnixSocketHandler(socket)) { BaseAddress = new Uri(@"http://localhost") };
                 bool isLive = false;
@@ -388,7 +403,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 await using RunningServer server = await RunningServer.StartAsync(
                     m_Engine.JobRunner,
-                    new ServeSettings { UnixSocket = socket },
+                    new ServeSettings { UnixSockets = [socket] },
                     handler: UnixSocketHandler(socket));
 
                 using HttpResponseMessage response = await server.Client.GetAsync(@"/v1/info");
@@ -399,6 +414,64 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     // Only its owner may connect to it.
                     File.GetUnixFileMode(socket).ShouldBe(UnixFileMode.UserRead | UnixFileMode.UserWrite);
                 }
+            }
+            finally
+            {
+                File.Delete(socket);
+            }
+        }
+
+        [Fact]
+        public async Task Request_Given_TwoUnixDomainSockets_Then_ServedOnEach()
+        {
+            string first = NewSocketPath();
+            string second = NewSocketPath();
+
+            try
+            {
+                await using RunningServer server = await RunningServer.StartAsync(
+                    m_Engine.JobRunner,
+                    new ServeSettings { UnixSockets = [first, second] },
+                    handler: UnixSocketHandler(first));
+                using var other = new HttpClient(UnixSocketHandler(second)) { BaseAddress = new Uri(@"http://localhost") };
+
+                using HttpResponseMessage onFirst = await server.Client.GetAsync(@"/v1/info");
+                using HttpResponseMessage onSecond = await other.GetAsync(@"/v1/info");
+
+                onFirst.StatusCode.ShouldBe(HttpStatusCode.OK);
+                onSecond.StatusCode.ShouldBe(HttpStatusCode.OK);
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.GetUnixFileMode(first).ShouldBe(UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                    File.GetUnixFileMode(second).ShouldBe(UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
+            }
+            finally
+            {
+                File.Delete(first);
+                File.Delete(second);
+            }
+        }
+
+        [Fact]
+        public async Task Request_Given_AUnixDomainSocketAndAnAddress_Then_ServedOnBoth()
+        {
+            string socket = NewSocketPath();
+
+            try
+            {
+                await using RunningServer server = await StartAsync(new ServeSettings
+                {
+                    Listen = [ServeSettingsHelper.ParseListenAddress(@"http://127.0.0.1:0")],
+                    UnixSockets = [socket],
+                });
+                using var onSocket = new HttpClient(UnixSocketHandler(socket)) { BaseAddress = new Uri(@"http://localhost") };
+
+                using HttpResponseMessage overTcp = await server.Client.GetAsync(@"/v1/info");
+                using HttpResponseMessage overSocket = await onSocket.GetAsync(@"/v1/info");
+
+                overTcp.StatusCode.ShouldBe(HttpStatusCode.OK);
+                overSocket.StatusCode.ShouldBe(HttpStatusCode.OK);
             }
             finally
             {

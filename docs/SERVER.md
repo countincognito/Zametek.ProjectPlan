@@ -233,7 +233,7 @@ alias zpp="$PWD/src/Zametek.ProjectPlan.CommandLine/bin/Release/net10.0/zpp"
 In one terminal, start the server:
 
 ```bash
-zpp serve --unix-socket /tmp/zpp.sock
+zpp serve --listen unix:/tmp/zpp.sock
 ```
 
 In another, from the folder with the sample files, send it a run - any of the runs above, with `--server unix:/tmp/zpp.sock`:

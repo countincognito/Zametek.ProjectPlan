@@ -772,7 +772,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770..
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770 - or unix: and the path of a socket..
         /// </summary>
         public static string Message_ServeListenAddressNotValid {
             get {
@@ -970,7 +970,16 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} needs the path of the socket to listen on..
+        ///   Looks up a localized string similar to The socket {0} is listed more than once..
+        /// </summary>
+        public static string Message_ServeUnixSocketListedTwice {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketListedTwice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; gives no path for the socket: give unix: and the path of the socket to listen on, such as unix:/tmp/zpp.sock..
         /// </summary>
         public static string Message_ServeUnixSocketNeedsPath {
             get {
@@ -1137,6 +1146,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_UnitCostMustBeZeroOrGreater {
             get {
                 return ResourceManager.GetString("Message_UnitCostMustBeZeroOrGreater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is too long to be the path of a socket..
+        /// </summary>
+        public static string Message_UnixSocketPathTooLong {
+            get {
+                return ResourceManager.GetString("Message_UnixSocketPathTooLong", resourceCulture);
             }
         }
         

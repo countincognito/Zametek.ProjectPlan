@@ -41,7 +41,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ArgumentNullException.ThrowIfNull(settingsDirectory);
             ArgumentNullException.ThrowIfNull(environment);
 
-            IReadOnlyList<ListenAddress> listen = ResolveListen(options);
+            (IReadOnlyList<ListenAddress> listen, IReadOnlyList<string> sockets) = ResolveListen(options);
             string? apiKey = ResolveApiKey(options, environment);
 
             // Anything that can reach a port beyond this machine has to say who it is.
@@ -59,7 +59,7 @@ namespace Zametek.ProjectPlan.CommandLine
             return new ServeSettings
             {
                 Listen = listen,
-                UnixSocket = ResolveUnixSocket(options),
+                UnixSockets = sockets,
                 ApiKey = apiKey,
                 Certificate = ResolveCertificate(options, listen, environment),
                 Culture = ResolveCulture(options),
@@ -159,31 +159,36 @@ namespace Zametek.ProjectPlan.CommandLine
             return X509CertificateLoader.LoadPkcs12FromFile(certificateFile, password);
         }
 
-        private static IReadOnlyList<ListenAddress> ResolveListen(ServeOptions options)
+        // What it listens on, as --listen gives it - or else only this machine, on the port zpp serve has - told apart:
+        // the addresses on the network, and the Unix domain sockets, each by its path in full.
+        private static (IReadOnlyList<ListenAddress> Addresses, IReadOnlyList<string> Sockets) ResolveListen(ServeOptions options)
         {
-            // By default it listens on this machine only - unless it has a Unix domain socket, when that is all it
-            // listens on.
-            IEnumerable<string> urls = options.Listen.Any()
-                ? options.Listen
-                : options.UnixSocket is null ? [DefaultListenUrl] : [];
+            IEnumerable<string> urls = options.Listen.Any() ? options.Listen : [DefaultListenUrl];
 
-            return [.. urls.Select(ParseListenAddress)];
-        }
+            var addresses = new List<ListenAddress>();
+            var sockets = new List<string>();
 
-        // The socket's path in full, which is the only way Kestrel takes it: a relative path is taken from the current
-        // directory, as zpp takes every other path it is given.
-        private static string? ResolveUnixSocket(ServeOptions options)
-        {
-            if (options.UnixSocket is not string socket)
+            foreach (string url in urls)
             {
-                return null;
+                if (!UnixSocketHelper.IsSocketAddress(url))
+                {
+                    addresses.Add(ParseListenAddress(url));
+                    continue;
+                }
+
+                string socket = UnixSocketHelper.GetPath(url)
+                    ?? throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath, url));
+
+                // A socket can be listened on only once, however its path is written.
+                if (sockets.Contains(socket))
+                {
+                    throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeUnixSocketListedTwice, socket));
+                }
+
+                sockets.Add(socket);
             }
 
-            return string.IsNullOrWhiteSpace(socket)
-                ? throw new UsageException(string.Format(
-                    Resource.ProjectPlan.Messages.Message_ServeUnixSocketNeedsPath,
-                    OptionLongName(nameof(ServeOptions.UnixSocket))))
-                : Path.GetFullPath(socket);
+            return (addresses, sockets);
         }
 
         private static string? ResolveApiKey(

@@ -208,10 +208,10 @@ A job's time is checked between its steps, so a step already under way - a compi
 zpp serve --listen http://0.0.0.0:9770 --api-key-file /etc/zpp/api-key
 ```
 
-- `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port. Give it more than once to listen on several.
+- `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port - or `unix:` and the path of a Unix domain socket. Give it more than once to listen on several.
 - An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. Requests to `/v1` must then carry the key: `curl -H "Authorization: Bearer $ZPP_API_KEY" ...`. The health endpoints need no key, so that a load balancer can ask them.
 - An `https` address needs `--certificate`: a `.pfx` or `.p12` file, with its password - if it has one - in `ZPP_CERTIFICATE_PASSWORD`, or a `.pem` or `.crt` file, with `--certificate-key` if its key is in a file of its own.
-- `--unix-socket /tmp/zpp.sock` listens on a Unix domain socket instead of `localhost:9770`. Only the user running the server can connect to it (on Windows, the socket has its folder's access): `curl --unix-socket /tmp/zpp.sock -F input=@plan.zpp http://localhost/v1/jobs`.
+- `--listen unix:/tmp/zpp.sock` listens on a Unix domain socket - by itself, instead of `localhost:9770`. Only the user running the server can connect to it (on Windows, the socket has its folder's access): `curl --unix-socket /tmp/zpp.sock -F input=@plan.zpp http://localhost/v1/jobs`.
 
 ### Culture, time zone and logs
 

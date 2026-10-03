@@ -409,7 +409,7 @@
     <value>'{0}' is not a culture this machine knows.</value>
   </data>
   <data name="Message_ServeListenAddressNotValid" xml:space="preserve">
-    <value>'{0}' is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770.</value>
+    <value>'{0}' is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770 - or unix: and the path of a socket.</value>
   </data>
   <data name="Message_ServeNeedsApiKey" xml:space="preserve">
     <value>Other machines can reach {0}, so zpp serve needs an API key to listen there: set {1}, or use {2}.</value>
@@ -469,7 +469,7 @@
     <value>The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.</value>
   </data>
   <data name="Message_ServeUnixSocketNeedsPath" xml:space="preserve">
-    <value>{0} needs the path of the socket to listen on.</value>
+    <value>'{0}' gives no path for the socket: give unix: and the path of the socket to listen on, such as unix:/tmp/zpp.sock.</value>
   </data>
   <data name="Message_ServerNotValid" xml:space="preserve">
     <value>'{0}', from {1}, is not a server zpp can run on: give its http or https address, such as http://localhost:9770, or unix: and the path of its socket.</value>
@@ -521,5 +521,11 @@
   </data>
   <data name="Message_OptionGivenMoreThanOnce" xml:space="preserve">
     <value>{0} can only be given once.</value>
+  </data>
+  <data name="Message_ServeUnixSocketListedTwice" xml:space="preserve">
+    <value>The socket {0} is listed more than once.</value>
+  </data>
+  <data name="Message_UnixSocketPathTooLong" xml:space="preserve">
+    <value>'{0}' is too long to be the path of a socket.</value>
   </data>
 </root>

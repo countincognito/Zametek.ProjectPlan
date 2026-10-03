@@ -13,8 +13,6 @@ namespace Zametek.ProjectPlan.CommandLine
         // The server's API key, when it is not in a file - as zpp serve reads its own.
         public const string ApiKeyVariable = ServeSettingsHelper.ApiKeyVariable;
 
-        private const string c_UnixScheme = @"unix:";
-
         // The address that stands for a server on a Unix domain socket, which has none of its own.
         private static readonly Uri s_SocketAddress = new(@"http://localhost/");
 
@@ -84,8 +82,8 @@ namespace Zametek.ProjectPlan.CommandLine
         }
 
         // A server as --server or ZPP_SERVER gives it: an http or https address, which a reverse proxy may have put under
-        // a path of its own; or unix: and the path of the server's socket - or unix:// and the path, as Docker writes
-        // one.
+        // a path of its own; or unix: and the path of the server's socket (see UnixSocketHelper), as zpp serve is given
+        // the socket to listen on.
         public static (Uri BaseAddress, string? UnixSocket) ParseServer(
             string server,
             string source)
@@ -93,17 +91,11 @@ namespace Zametek.ProjectPlan.CommandLine
             ArgumentNullException.ThrowIfNull(server);
             ArgumentNullException.ThrowIfNull(source);
 
-            if (server.StartsWith(c_UnixScheme, StringComparison.OrdinalIgnoreCase))
+            if (UnixSocketHelper.IsSocketAddress(server))
             {
-                string path = server[c_UnixScheme.Length..];
-                if (path.StartsWith(@"//", StringComparison.Ordinal))
-                {
-                    path = path[2..];
-                }
-
-                return string.IsNullOrWhiteSpace(path)
-                    ? throw NotAServer(server, source)
-                    : (s_SocketAddress, Path.GetFullPath(path));
+                return UnixSocketHelper.GetPath(server) is string path
+                    ? (s_SocketAddress, path)
+                    : throw NotAServer(server, source);
             }
 
             if (!Uri.TryCreate(server, UriKind.Absolute, out Uri? address)

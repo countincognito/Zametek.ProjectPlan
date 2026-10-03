@@ -8,7 +8,6 @@ namespace Zametek.ProjectPlan.CommandLine
     public class ServeOptions
     {
         private const string c_ListenLongName = "listen";
-        private const string c_UnixSocketLongName = "unix-socket";
         private const string c_ApiKeyFileLongName = "api-key-file";
         private const string c_CertificateLongName = "certificate";
         private const string c_CertificateKeyLongName = "certificate-key";
@@ -40,11 +39,8 @@ namespace Zametek.ProjectPlan.CommandLine
             @"and 2 when its options or settings cannot be used.",
         ];
 
-        [Option(c_ListenLongName, HelpText = "Address to listen on: http or https, then localhost, an IP address or *, then a port - e.g. http://localhost:9770 or https://0.0.0.0:9771. Repeat it to listen on more than one (defaults to http://localhost:9770, unless --" + c_UnixSocketLongName + " is given)")]
+        [Option(c_ListenLongName, HelpText = "Address to listen on: http or https, then localhost, an IP address or *, then a port - e.g. http://localhost:9770 or https://0.0.0.0:9771 - or unix: and the path of a Unix domain socket, e.g. unix:/tmp/zpp.sock. Repeat it to listen on more than one (defaults to http://localhost:9770)")]
         public IEnumerable<string> Listen { get; set; } = [];
-
-        [Option(c_UnixSocketLongName, HelpText = "Unix domain socket to listen on, which only its owner can connect to")]
-        public string? UnixSocket { get; set; } = default;
 
         [Option(c_ApiKeyFileLongName, HelpText = "File holding the API key that requests must carry, as Authorization: Bearer <key> - or set ZPP_API_KEY. Required to listen on anything but this machine")]
         public string? ApiKeyFile { get; set; } = default;

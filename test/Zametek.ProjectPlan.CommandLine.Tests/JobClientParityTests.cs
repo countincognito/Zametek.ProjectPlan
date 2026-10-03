@@ -240,7 +240,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // A path short enough for every platform's limit on a socket's.
             string socket = Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}"[..12] + @".sock");
-            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner, new ServeSettings { UnixSocket = socket });
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner, new ServeSettings { UnixSockets = [socket] });
 
             await ShouldDoWhatZppDoesHereAsync(
                 directory =>

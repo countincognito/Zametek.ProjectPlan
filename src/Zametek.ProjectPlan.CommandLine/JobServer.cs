@@ -213,15 +213,18 @@ namespace Zametek.ProjectPlan.CommandLine
             app.MapHealthChecks(@"/health/live", new HealthCheckOptions { Predicate = _ => false });
             app.MapHealthChecks(@"/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains(c_ReadyTag) });
 
-            // The socket is the server's access control, so only its owner may connect to it. Windows gives a socket the
+            // A socket is the server's access control, so only its owner may connect to it. Windows gives a socket the
             // access its directory gives.
-            if (settings.UnixSocket is string socket)
+            if (settings.UnixSockets.Count > 0)
             {
                 app.Lifetime.ApplicationStarted.Register(() =>
                 {
                     if (!OperatingSystem.IsWindows())
                     {
-                        File.SetUnixFileMode(socket, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                        foreach (string socket in settings.UnixSockets)
+                        {
+                            File.SetUnixFileMode(socket, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                        }
                     }
                 });
             }
@@ -292,7 +295,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
             }
 
-            if (settings.UnixSocket is string socket)
+            foreach (string socket in settings.UnixSockets)
             {
                 kestrel.ListenUnixSocket(socket);
             }

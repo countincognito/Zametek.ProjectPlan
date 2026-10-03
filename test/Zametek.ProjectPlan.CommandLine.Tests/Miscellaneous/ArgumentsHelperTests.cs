@@ -74,7 +74,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             { [@"--listen", @"http://localhost:9770", @"--listen", @"https://0.0.0.0:9771"] },
             { [@"--listen=http://localhost:9770", @"https://0.0.0.0:9771"] },
             { [@"--max-chart-size", @"600:400", @"-v"] },
-            { [@"--unix-socket", @"/run/zpp.sock", @"--culture", @"en-GB", @"--max-jobs", @"2"] },
+            { [@"--listen", @"unix:/run/zpp.sock", @"--culture", @"en-GB", @"--max-jobs", @"2"] },
+            { [@"--listen=unix:/run/zpp.sock"] },
+            { [@"--listen", @"unix:C:\Users\me\zpp.sock", @"http://localhost:9770"] },
         };
 
         [Theory]
@@ -186,7 +188,6 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         public static TheoryData<string[], string> ServeOptionsWithoutTheirValues => new()
         {
-            { [@"--unix-socket"], @"--unix-socket" },
             { [@"--culture"], @"--culture" },
             { [@"--max-jobs", @"--listen", @"http://localhost:9779"], @"--max-jobs" },
             { [@"--listen"], @"--listen" },

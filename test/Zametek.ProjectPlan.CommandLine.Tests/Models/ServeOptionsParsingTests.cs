@@ -38,7 +38,6 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ServeOptions options = ParsedValue();
 
             options.Listen.ShouldBeEmpty();
-            options.UnixSocket.ShouldBeNull();
             options.ApiKeyFile.ShouldBeNull();
             options.Certificate.ShouldBeNull();
             options.CertificateKey.ShouldBeNull();
@@ -69,6 +68,29 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Parse_Given_ASocketAndAnAddress_Then_BothAddresses()
+        {
+            // A socket is listened on by its address, as an address on the network is.
+            ServeOptions options = ParsedValue(@"--listen", @"unix:/run/zpp.sock", @"--listen", @"http://localhost:9770");
+
+            options.Listen.ShouldBe([@"unix:/run/zpp.sock", @"http://localhost:9770"]);
+        }
+
+        [Fact]
+        public void Parse_Given_ASocketWithADrive_Then_ItAsItIsGiven()
+        {
+            ServeOptions options = ParsedValue(@"--listen", @"unix:C:\Users\me\zpp.sock");
+
+            options.Listen.ShouldBe([@"unix:C:\Users\me\zpp.sock"]);
+        }
+
+        [Fact]
+        public void Parse_Given_TheRemovedUnixSocketOption_Then_Fails()
+        {
+            Parse(@"--unix-socket", @"/run/zpp.sock").ShouldBeOfType<NotParsed<ServeOptions>>();
+        }
+
+        [Fact]
         public void Parse_Given_EveryLimit_Then_Each()
         {
             ServeOptions options = ParsedValue(
@@ -91,14 +113,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         public void Parse_Given_TheRest_Then_Each()
         {
             ServeOptions options = ParsedValue(
-                @"--unix-socket", @"/run/zpp.sock",
                 @"--api-key-file", @"key.txt",
                 @"--certificate", @"server.pem",
                 @"--certificate-key", @"server.key",
                 @"--culture", @"en-US",
                 @"-v");
 
-            options.UnixSocket.ShouldBe(@"/run/zpp.sock");
             options.ApiKeyFile.ShouldBe(@"key.txt");
             options.Certificate.ShouldBe(@"server.pem");
             options.CertificateKey.ShouldBe(@"server.key");
