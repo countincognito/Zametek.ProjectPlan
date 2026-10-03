@@ -72,7 +72,7 @@ zpp serve
 
 It listens on `http://localhost:9770`, which only this machine can reach. As it starts, it warms up on a sample plan it carries, which takes a few seconds, and `/health/ready` answers 200 once it has. Jobs sent before then still run, only more slowly. zpp sends its runs to it with `--server`, and anything that speaks HTTP can send it jobs.
 
-For a start step by step - `zpp serve` over https on Windows, with zpp sending its runs to it from a second window, and sample plans to download - see the [client-server quick start](SERVER.md).
+For a start step by step - `zpp serve` over https on Windows, or on a Unix domain socket, with zpp sending its runs to it from a second window, and sample plans to download - see the [client-server quick start](SERVER.md).
 
 ### Running zpp on it
 
@@ -84,7 +84,7 @@ zpp -i plan.zpp --gantt-directory out --gantt-size 1200:800 --server http://loca
 
 zpp sends the plan and its options, less the paths, and the server runs the job and answers with what zpp would have printed and written, which zpp prints and writes here - each file where its options say, named as zpp names it. zpp itself still starts up, but its engine does not: on Windows, a run that took 0.7 seconds here took a quarter of a second on a warm server, and one with five exports took a third of a second rather than 1.4. Set `ZPP_SERVER` instead of giving `--server`, and every run goes to that server; `--local` runs one here regardless. An MS Project import has to run here: a server imports Excel workbooks only, so zpp refuses to send one.
 
-- The server is its `http` or `https` address - with a path, if a reverse proxy puts it under one - or `unix:` and the path of its socket (`--server unix:/tmp/zpp.sock`, or `unix:///tmp/zpp.sock` as Docker writes it). https trusts the certificates this machine trusts.
+- The server is its `http` or `https` address - with a path, if a reverse proxy puts it under one - or `unix:` and the path of its socket: `--server unix:/tmp/zpp.sock`, or on Windows `--server unix:C:\tmp\zpp.sock` (see [On a Unix domain socket](#on-a-unix-domain-socket)). https trusts the certificates this machine trusts.
 - A server that needs its API key gets it from `ZPP_API_KEY`, or from the file `--api-key-file` names - never from the command line.
 - A server that is busy is tried again when it says to, for up to two minutes.
 - zpp's own checks come first: a usage error, a plan or a directory that is not there, or an export to a file zpp does not write fails as it would without a server, and nothing is sent.
@@ -208,10 +208,21 @@ A job's time is checked between its steps, so a step already under way - a compi
 zpp serve --listen http://0.0.0.0:9770 --api-key-file /etc/zpp/api-key
 ```
 
-- `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port - or `unix:` and the path of a Unix domain socket. Give it more than once to listen on several.
+- `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port - or `unix:` and the path of a Unix domain socket (see [On a Unix domain socket](#on-a-unix-domain-socket)). Give it more than once to listen on several.
 - An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. Requests to `/v1` must then carry the key: `curl -H "Authorization: Bearer $ZPP_API_KEY" ...`. The health endpoints need no key, so that a load balancer can ask them.
 - An `https` address needs `--certificate`: a `.pfx` or `.p12` file, with its password - if it has one - in `ZPP_CERTIFICATE_PASSWORD`, or a `.pem` or `.crt` file, with `--certificate-key` if its key is in a file of its own.
-- `--listen unix:/tmp/zpp.sock` listens on a Unix domain socket - by itself, instead of `localhost:9770`. Only the user running the server can connect to it - zpp serve gives the socket that user's access alone, whatever its folder allows (on Linux and macOS, mode 600): `curl --unix-socket /tmp/zpp.sock -F input=@plan.zpp http://localhost/v1/jobs`. Anyone else needs an `http` or `https` address and an API key. The folder the socket is to be in must be there. A server that is stopped removes its socket, but one that is killed leaves it behind; the next removes it as it starts, if nothing is listening on it. A socket that another server listens on is not removed (zpp serve exits with code 1, as it does for a port that is taken), nor is anything else at that path - a folder, or a file that is not a socket left behind (exit code 2). On Linux and macOS, where zpp serve cannot tell an empty file from a socket, an empty file is taken for one.
+### On a Unix domain socket
+
+```
+zpp serve --listen unix:/tmp/zpp.sock
+```
+
+A Unix domain socket is a file that programs on this machine connect to, as they would to a port. Its address is `unix:` and its path, for `--listen` and for `zpp --server`, which sends its run over it. A server that is given sockets alone listens on them instead of `localhost:9770`; give `--listen` a port as well to listen on both.
+
+- On Linux and macOS the address is `unix:/tmp/zpp.sock` or, as Docker writes it, `unix:///tmp/zpp.sock`. On Windows the path is a Windows path, `unix:C:\tmp\zpp.sock`, which may also be written with `/`, or as a file URI, `unix:///C:/tmp/zpp.sock`. A relative path is taken from the folder the command runs in. The path, in full, can be about a hundred characters at most, which is as much as the system allows a socket: a longer one is refused (exit code 2).
+- Only the user running the server can connect to the socket: zpp serve leaves it to that user alone, whatever its folder allows, and does so before the server takes a connection. On Windows that is an access list with that user alone in it and nothing inherited - a socket otherwise has the access of its folder, which in a folder like `C:\tmp` is every signed-in user's - and on Linux and macOS it is mode 600. A server that cannot do so, because the folder's rules do not let it change the socket's access, does not start (exit code 1), rather than listen to everybody. So a server that listens on sockets alone needs no API key and no certificate; anyone else needs an `http` or `https` address, and a key.
+- Anything that speaks HTTP over a socket can use it: `curl --unix-socket /tmp/zpp.sock -F input=@plan.zpp http://localhost/v1/jobs`, or `curl.exe` in Windows PowerShell, where the host name in the URL is not used. The log gives the socket as the web server writes it, `Now listening on: http://unix:/tmp/zpp.sock`, which is not an address for `--listen` or `--server`: give them `unix:` and the path.
+- The folder the socket is to be in must be there, or the server does not start (exit code 2). A server that is stopped removes its socket, but one that is killed leaves it behind; the next removes it as it starts, if nothing is listening on it, and says so in its log. A socket that another server listens on is not removed (zpp serve exits with code 1, as it does for a port that is taken), nor is one that zpp serve is not allowed to connect to, to see whether a server is listening on it (exit code 1, with the reason), nor is anything else at that path - a folder, or a file that is not a socket left behind (exit code 2). On Linux and macOS, where zpp serve cannot tell an empty file from a socket, an empty file is taken for one.
 
 ### Culture, time zone and logs
 

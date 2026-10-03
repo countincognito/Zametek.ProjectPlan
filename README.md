@@ -22,7 +22,7 @@ The rest of the documentation is in [docs](docs):
 
 - [Building from source](docs/BUILDING.md) - the prerequisites, the git hooks, the web app, the Windows installers, Linux and WSL, and the makefile.
 - [Command line tool (zpp)](docs/COMMAND-LINE.md) - producing a project's outputs without launching the desktop app, the exit codes, and running zpp as a server.
-- [Client-server quick start](docs/SERVER.md) - `zpp serve` over https on Windows, and zpp sending its runs to it, step by step, with sample plans to download.
+- [Client-server quick start](docs/SERVER.md) - `zpp serve` over https on Windows, or on a Unix domain socket, and zpp sending its runs to it, step by step, with sample plans to download.
 - [Architecture](docs/ARCHITECTURE.md) - for anyone interested in the internals, or contributing to them: how edits propagate through the compile pipeline, how bulk updates (project loads, imports, resets) are suppressed and replayed, and the threading rules that keep it all deadlock-free.
 - [TODO](docs/TODO.md) - the engineering work the maintainers intend, which versions with the code.
 

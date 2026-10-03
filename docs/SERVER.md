@@ -1,6 +1,6 @@
 # Client-server quick start
 
-This walks through running zpp as a server on Windows, over https with a certificate made for the purpose, and sending zpp's runs to it from a second PowerShell window - with everything on the command line and nothing in the environment. For what each option does, and for the server's HTTP API, see [Running zpp as a server](COMMAND-LINE.md#running-zpp-as-a-server).
+This walks through running zpp as a server on Windows, over https with a certificate made for the purpose, and sending zpp's runs to it from a second PowerShell window - with everything on the command line and nothing in the environment. It ends with the other way to reach a server on the same machine, a Unix domain socket, which needs no certificate. For what each option does, and for the server's HTTP API, see [Running zpp as a server](COMMAND-LINE.md#running-zpp-as-a-server).
 
 You need Windows PowerShell; the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0), to build zpp (see [Building from source](BUILDING.md)); and [Git for Windows](https://git-scm.com/download/win), whose `openssl` makes the certificate. After any run, `$LASTEXITCODE` shows the code zpp exited with (see [Exit codes](COMMAND-LINE.md#exit-codes)).
 
@@ -222,24 +222,49 @@ Delete the folder, and the key with it:
 cd $HOME; Remove-Item -Recurse zpp-try
 ```
 
-## On Linux
+## On a Unix domain socket
 
-On Linux, the server can listen on a Unix domain socket instead, which needs no certificate: only the user who started the server can connect to it. Build zpp as above, with `/` in place of `\`, after installing the packages [Running on Linux or WSL](BUILDING.md#running-on-linux-or-wsl) lists. Then, from the repository root, give it a short name in each terminal:
+A server can be reached without a certificate from the same machine, over a Unix domain socket: a file that programs connect to, in place of a network address. zpp serve leaves the socket to the user who started the server - on Windows as on Linux - so that nobody else can connect to it, and there is no certificate to trust and no key to keep. The address, for `--listen` and for `--server`, is `unix:` and the path of the socket.
+
+This needs zpp built, and the sample files in a folder, as in [Set up, once](#set-up-once) - without the certificate. In window 1, with the alias and in the folder as in [Window 1: the server](#window-1-the-server), listen on a socket in the folder. A relative path is taken from the folder the command runs in:
+
+```powershell
+zpp serve --listen unix:zpp.sock
+```
+
+The log says where it listens in the web server's words for a socket, `http://unix:` and the path - which is not the address to give zpp:
+
+```text
+Now listening on: http://unix:C:\Users\you\zpp-try\zpp.sock
+Application started. Press Ctrl+C to shut down.
+Warmed up in 2767 ms: ready for jobs
+```
+
+In window 2, in the same folder, send it a run - this one, or any of the runs above, with `--server unix:zpp.sock` in place of the https address:
+
+```powershell
+zpp -i two-scenarios.zpp --server unix:zpp.sock
+```
+
+Only you can connect to the socket. `icacls` shows why: it lists you alone, with full access, `(F)`, and nothing inherited from the folder - an entry marked `(I)`, which a file made in the folder would carry:
+
+```powershell
+icacls zpp.sock
+```
+
+```text
+zpp.sock MYPC\you:(F)
+
+Successfully processed 1 files; Failed processing 0 files
+```
+
+Ctrl+C in window 1 stops the server, which removes the socket. For what zpp serve does about a socket that a killed server left behind, and about the other things in its way, see [On a Unix domain socket](COMMAND-LINE.md#on-a-unix-domain-socket).
+
+On Linux the same commands work in a bash terminal. Build zpp as above, with `/` in place of `\`, after installing the packages [Running on Linux or WSL](BUILDING.md#running-on-linux-or-wsl) lists. Then, from the repository root, give zpp a short name in each terminal, and go to a folder with the sample files:
 
 ```bash
 alias zpp="$PWD/src/Zametek.ProjectPlan.CommandLine/bin/Release/net10.0/zpp"
+mkdir -p ~/zpp-try && cp docs/assets/* ~/zpp-try && cd ~/zpp-try
 ```
 
-In one terminal, start the server:
-
-```bash
-zpp serve --listen unix:/tmp/zpp.sock
-```
-
-In another, from the folder with the sample files, send it a run - any of the runs above, with `--server unix:/tmp/zpp.sock`:
-
-```bash
-zpp -i two-scenarios.zpp --server unix:/tmp/zpp.sock
-```
-
-Ctrl+C stops the server, which removes the socket.
+The socket is the same file there, and `ls -l zpp.sock` shows `srw-------`: read and write for you alone.
