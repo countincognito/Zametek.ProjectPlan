@@ -64,13 +64,13 @@ A chart or graph that cannot be written - because the file is open in another pr
 
 ## Running zpp as a server
 
-`zpp serve` runs zpp as a web server. It starts once and then takes one job after another, so its jobs do not pay zpp's start-up, which is most of a one-shot run: a plan that takes a new `zpp` process three-quarters of a second takes a warm server about 25 milliseconds. Each job runs exactly as zpp would run it, and the server answers with the code zpp would have exited with, what it would have printed, and the files it would have written, byte for byte.
+`zpp serve` runs zpp as a web server. It starts once and then takes one job after another, so its jobs do not pay zpp's start-up, which is most of a one-shot run: a plan that takes a new `zpp` process three-quarters of a second takes a warm server about 25 milliseconds. Each job runs exactly as zpp would run it, and the server answers with the project's metrics and the files it would have written, byte for byte - and, when it is asked to, the code zpp would have exited with and what it would have printed.
 
 ```
 zpp serve
 ```
 
-It listens on `http://localhost:9770`, which only this machine can reach. As it starts, it warms up on a sample plan it carries, which takes a few seconds, and `/health/ready` answers 200 once it has. Jobs sent before then still run, only more slowly. zpp sends its runs to it with `--server`, and anything that speaks HTTP can send it jobs.
+It listens on `http://localhost:9770`, which only this machine can reach. As it starts, it warms up on a sample plan it carries, which takes a few seconds, and `/health/ready` answers 200 once it has. Jobs sent before then still run, only more slowly. zpp sends its runs to it with `--server`, and anything that speaks HTTP can send it projects (see [The API](#the-api)).
 
 For a start step by step - `zpp serve` over https on Windows, or on a Unix domain socket, with zpp sending its runs to it from a second window, and sample plans to download - see the [client-server quick start](SERVER.md).
 
@@ -86,99 +86,54 @@ zpp sends the plan and its options, less the paths, and the server runs the job 
 
 - The server is its `http` or `https` address - with a path, if a reverse proxy puts it under one - or `unix:` and the path of its socket: `--server unix:/tmp/zpp.sock`, or on Windows `--server unix:C:\tmp\zpp.sock` (see [On a Unix domain socket](#on-a-unix-domain-socket)). https trusts the certificates this machine trusts.
 - A server that needs its API key gets it from `ZPP_API_KEY`, or from the file `--api-key-file` names - never from the command line.
-- A server that is busy is tried again when it says to, for up to two minutes.
+- A server that is busy is tried again when it says to, and after longer each time, with a little at random, for up to two minutes. A server that stopped the job at its time limit is not: the job would only run out of time again.
 - zpp's own checks come first: a usage error, a plan or a directory that is not there, or an export to a file zpp does not write fails as it would without a server, and nothing is sent.
-- A server that does not run the job - it cannot be reached, wants its key, refuses the job as beyond its limits, stays busy, or stops the job at its time limit - ends the run with exit code 5, and zpp says why on stderr.
+- A server that does not run the job - it cannot be reached, wants its key, refuses the request as not valid or beyond its limits, stays busy, or stops the job at its time limit - ends the run with exit code 5, and zpp says why on stderr, with the id of the request, which the server's log names it by. A server that did run it, and failed - the project does not compile, a file cannot be read, a scenario cannot be selected - ends the run as the same run would have ended here, with the same text on stderr, whatever the answer's status.
 - The compile timeout goes with the run - 5000 milliseconds, unless `--compile-timeout` says otherwise - and must be within the server's limit (see [Limits](#limits)): `0`, which switches the watchdog off here, is refused, as is a timeout above the limit.
 - The text and the files are the server's, so numbers and dates come out in its culture and time zone, and the run takes its times from the server's clock unless `--now` gives it one (see [Culture, time zone and logs](#culture-time-zone-and-logs)). zpp's log stays in the server's log; `-v` says where the run went.
 
-### Sending a job
+### The API
 
-A job is a `multipart/form-data` POST to `/v1/jobs`, with the plan as a file named `input`, as `--input` takes it:
-
-```
-curl -F input=@plan.zpp http://localhost:9770/v1/jobs
-```
-
-The answer is JSON:
+A project is sent as a `multipart/form-data` POST to `/v1/projects/compile`, as a file named `project`, as `--input` takes it:
 
 ```
-{
-  "jobId": "880c768fa78e4686aab361ddb9e338a4",
-  "exitCode": 0,
-  "stdout": "\n| Metrics                 | Values      |\n|-------------------------|-------------|\n...",
-  "stderr": "",
-  "metrics": { "ActivityRisk": 1.0, ... },
-  "outputs": [],
-  "transcript": [ { "kind": "display", "text": "| Metrics                 | Values      |\n..." } ]
-}
+curl -F project=@plan.zpp http://localhost:9770/v1/projects/compile
 ```
 
-- `exitCode` is the code zpp would have exited with (see [Exit codes](#exit-codes)), and `stdout` and `stderr` are what it would have printed - written by the server, in the server's culture. zpp's log is in neither: the server keeps its own. `curl -s ... | jq -j .stdout` prints the text exactly as zpp would.
-- `metrics` holds the metrics as `--metrics-format json` writes them, whichever format the job asked for, or `null` when the job ended before it had any - when the plan did not compile, say.
-- `outputs` lists each file the job produced, in the order zpp produces them: what it is (`kind`), the name zpp would give the file (`fileName`), its media type (`contentType`), and its `content` in base64.
-- `transcript` records the job call by call, in the order it ran: each `line` it printed, each `display`ed block (with `hasErrors` when the block reports errors, which zpp shows in red), each `errorLine` on stderr, and each `output` as it was produced (its `index` in `outputs`). Played back in order, it prints and writes everything when zpp would have, and shows each block as zpp shows it.
-
-The job's options go in a part named `options`, as JSON. They are zpp's own options, with its names, values and defaults, less the paths: where zpp writes an output to the file or directory you give it, here you ask for the output, and the answer carries it.
+The answer is JSON: the project's metrics, and the outputs it was asked for. The request asks for them in its options, which are JSON in a part named `options` - zpp's own options, with its names, values and defaults, less the paths: where zpp writes an output to the file or directory it is given, the request asks for the output, and the answer carries it, in base64:
 
 ```
-curl -F input=@plan.zpp \
-     -F 'options={"metricsFormat":"json","gantt":{"format":"png","width":1600,"height":900},"arrow":{"format":"svg"}}' \
-     http://localhost:9770/v1/jobs
+curl -F project=@plan.zpp \
+     -F 'options={"outputs":{"ganttChart":{"format":"png","width":1600,"height":900},"arrowGraph":{"format":"svg"}}}' \
+     http://localhost:9770/v1/projects/compile
 ```
 
-| Option | zpp's | Value |
-| ------ | ----- | ----- |
-| `scenario` | `--scenario` | The scenario to load, by name or id (only with `input`) |
-| `output` | `--output` | `true` to return the project, as zpp saves it |
-| `export` | `--export` | `true` to return the scenario, as zpp exports it to Excel |
-| `baseTheme` | `--base-theme` | `light` (the default) or `dark` |
-| `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json` |
-| `compileTimeout` | `--compile-timeout` | Milliseconds, from 1 to the server's limit - zpp's 5000 by default, or the limit if it is lower |
-| `now` | `--now` | A time with its offset from UTC, such as `2026-09-27T12:00:00+01:00` |
-| `gantt`, `resource`, `ev`, `scenarioChart` | `--gantt-*`, `--resource-*`, `--ev-*`, `--scenario-chart-*` | A chart: `{"format": "png", "width": 1600, "height": 900}`, where `format` is `jpeg` (the default), `png`, `bmp`, `webp` or `svg`, and the size is required |
-| `arrow`, `vertex` | `--arrow-*`, `--vertex-*` | A graph: `{"format": "svg"}`, where `format` is `jpeg` (the default), `png`, `pdf`, `svg`, `graphml` or `dot` |
-
-Names and values are read whatever their case, but otherwise strictly: an option the server does not know, or a number in quotes, is refused rather than ignored. The options can also come from a file - `-F options=@job.json` - which saves quoting JSON for the shell. (In Windows PowerShell, where `curl` names another command, call `curl.exe`.)
-
-To get the files themselves, ask for a zip:
+To get the files themselves, ask for a zip, which holds each file under the name zpp gives it, and `result.json`, which is the answer less the files' contents:
 
 ```
-curl -F input=@plan.zpp \
-     -F 'options={"gantt":{"format":"png","width":1600,"height":900},"arrow":{"format":"svg"}}' \
+curl -F project=@plan.zpp \
+     -F 'options={"outputs":{"ganttChart":{"format":"png","width":1600,"height":900},"arrowGraph":{"format":"svg"}}}' \
      -H 'Accept: application/zip' -o plan.zip \
-     http://localhost:9770/v1/jobs
+     http://localhost:9770/v1/projects/compile
 ```
 
-`plan.zip` holds `plan-gantt.png` and `plan-arrow.svg`, named as zpp names them, and `result.json`, which is the JSON answer less the files' contents.
-
-A plan sent as `import` is imported, as `--import` imports it - from Excel only: import MS Project files with zpp itself. `/v1/scenarios` lists a project's scenarios, as `--list-scenarios` does, and gives them as JSON too:
+In Windows PowerShell, where `curl` names another command, call `curl.exe`, and put the options in a file - `-F "options=@options.json;type=application/json"` - which saves quoting JSON for the shell. A workbook to import goes in a part named `import`, as `--import` takes it - from Excel only. `/v1/projects/scenarios` lists a project's scenarios, as `--list-scenarios` does, and gives them as JSON:
 
 ```
-curl -F import=@plan.xlsx -F 'options={"output":true}' -H 'Accept: application/zip' -o plan.zip http://localhost:9770/v1/jobs
-curl -F input=@plan.zpp http://localhost:9770/v1/scenarios
+curl -F project=@plan.zpp http://localhost:9770/v1/projects/scenarios
 ```
 
-### Endpoints and answers
+What the server cannot answer is not an answer but a problem - `application/problem+json`, with the status that says why: `422` for a project that does not compile, whose errors it lists, or a request that is not valid, whose every problem it lists; `500` when the server failed; `503`, with `Retry-After`, when it is busy. `curl --fail-with-body` makes that a failed command, which makes it a gate for a build. A request asks for what zpp would have printed and exited with by adding `?include=console`, which comes with a problem as well as with an answer, and every response carries `Request-Id`, which is what the server's log names the request by.
 
 | Endpoint | Does |
 | -------- | ---- |
-| `POST /v1/jobs` | Runs a job |
-| `POST /v1/scenarios` | Lists a project's scenarios |
+| `POST /v1/projects/compile` | Compiles a project, and answers with its metrics and the outputs the request asks for |
+| `POST /v1/projects/scenarios` | Lists a project's scenarios |
 | `GET /v1/info` | Gives the server's version, the culture and time zone its jobs write in, and its limits |
 | `GET /health/live` | Answers 200 once the server is listening |
 | `GET /health/ready` | Answers 200 once it has warmed up, and 503 until then |
 
-A job that runs is answered with 200, however it ends: a plan that does not compile, say, gets exit code 3, with its errors in `stdout` as zpp prints them. The `Zpp-Job-Id` header carries the job's id, which the server's log names it by. A request the server will not run gets problem details (`application/problem+json`), which say why in `detail`:
-
-| Status | When |
-| ------ | ---- |
-| 400 | zpp would refuse the job as a usage error, or its options are not valid JSON, or they go beyond the server's limits |
-| 401 | The request does not carry the server's API key (see below) |
-| 413 | The request is larger than the server accepts |
-| 415 | The request is not `multipart/form-data`, or the plan to import is not an Excel workbook |
-| 503 | The server is running all the jobs it can, with as many waiting as it allows - `Retry-After` says when to try again |
-| 504 | The job ran for longer than the server allows, and was stopped |
+[The zpp serve API](API.md) is the reference - every option, answer and problem, with the security review and the changelog - and [openapi.yaml](openapi.yaml) describes it for programs (OpenAPI 3.1).
 
 ### Limits
 
@@ -200,17 +155,19 @@ Each limit has its default unless it is configured: by its setting in `zpp-serve
 }
 ```
 
-A job's time is checked between its steps, so a step already under way - a compile, or a chart being drawn - finishes first. Unlike zpp, a job cannot switch its compile timeout off.
+`GET /v1/info` gives the limits a server is running with, as ISO 8601 durations where they are times (`"jobTimeout": "PT2M"`). A job's time is checked between its steps, so a step already under way - a compile, or a chart being drawn - finishes first. Unlike zpp, a job cannot switch its compile timeout off.
 
 ### Beyond this machine
 
 ```
-zpp serve --listen http://0.0.0.0:9770 --api-key-file /etc/zpp/api-key
+zpp serve --listen https://0.0.0.0:9771 --certificate server.pfx --api-key-file /etc/zpp/api-key
 ```
 
 - `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port - or `unix:` and the path of a Unix domain socket (see [On a Unix domain socket](#on-a-unix-domain-socket)). Give it more than once to listen on several.
-- An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. Requests to `/v1` must then carry the key: `curl -H "Authorization: Bearer $ZPP_API_KEY" ...`. The health endpoints need no key, so that a load balancer can ask them.
-- An `https` address needs `--certificate`: a `.pfx` or `.p12` file, with its password - if it has one - in `ZPP_CERTIFICATE_PASSWORD`, or a `.pem` or `.crt` file, with `--certificate-key` if its key is in a file of its own.
+- An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. A key is at least 32 characters, which the server checks as it starts; a random 256-bit key written in base64 is 44, and `openssl rand -base64 32` makes one. Requests to `/v1` must then carry the key, as `Authorization: Bearer <key>`: `curl` reads that header from a file, `-H @key-header.txt`, so that the key is not on a command line, where the other users of the machine can read it. The health endpoints need no key, so that a load balancer can ask them.
+- An `https` address needs `--certificate`: a `.pfx` or `.p12` file, with its password - if it has one - in `ZPP_CERTIFICATE_PASSWORD`, or a `.pem` or `.crt` file, with `--certificate-key` if its key is in a file of its own. It takes TLS 1.2 and 1.3, and nothing older.
+- Plain `http` that other machines can reach would send the API key, and every project, in the clear, so the server refuses to start with it - unless `--behind-tls-proxy` says that a proxy in front of the server ends TLS, and that only the proxy can reach the address: `zpp serve --listen http://10.0.0.5:9770 --api-key-file /etc/zpp/api-key --behind-tls-proxy`. The server then says so in its log, as a warning, each time it starts. `--behind-tls-proxy` is refused without such an address, and so is plain http beside https that other machines can reach: a client could use the one that is not protected.
+
 ### On a Unix domain socket
 
 ```
@@ -221,14 +178,14 @@ A Unix domain socket is a file that programs on this machine connect to, as they
 
 - On Linux and macOS the address is `unix:/tmp/zpp.sock` or, as Docker writes it, `unix:///tmp/zpp.sock`. On Windows the path is a Windows path, `unix:C:\tmp\zpp.sock`, which may also be written with `/`, or as a file URI, `unix:///C:/tmp/zpp.sock`. A relative path is taken from the folder the command runs in. The path, in full, can be about a hundred characters at most, which is as much as the system allows a socket: a longer one is refused (exit code 2).
 - Only the user running the server can connect to the socket: zpp serve leaves it to that user alone, whatever its folder allows, and does so before the server takes a connection. On Windows that is an access list with that user alone in it and nothing inherited - a socket otherwise has the access of its folder, which in a folder like `C:\tmp` is every signed-in user's - and on Linux and macOS it is mode 600. A server that cannot do so, because the folder's rules do not let it change the socket's access, does not start (exit code 1), rather than listen to everybody. So a server that listens on sockets alone needs no API key and no certificate; anyone else needs an `http` or `https` address, and a key.
-- Anything that speaks HTTP over a socket can use it: `curl --unix-socket /tmp/zpp.sock -F input=@plan.zpp http://localhost/v1/jobs`, or `curl.exe` in Windows PowerShell, where the host name in the URL is not used. The log gives the socket as the web server writes it, `Now listening on: http://unix:/tmp/zpp.sock`, which is not an address for `--listen` or `--server`: give them `unix:` and the path.
+- Anything that speaks HTTP over a socket can use it: `curl --unix-socket /tmp/zpp.sock -F project=@plan.zpp http://localhost/v1/projects/compile`, or `curl.exe` in Windows PowerShell, where the host name in the URL is not used. The log gives the socket as the web server writes it, `Now listening on: http://unix:/tmp/zpp.sock`, which is not an address for `--listen` or `--server`: give them `unix:` and the path.
 - The folder the socket is to be in must be there, or the server does not start (exit code 2). A server that is stopped removes its socket, but one that is killed leaves it behind; the next removes it as it starts, if nothing is listening on it, and says so in its log. A socket that another server listens on is not removed (zpp serve exits with code 1, as it does for a port that is taken), nor is one that zpp serve is not allowed to connect to, to see whether a server is listening on it (exit code 1, with the reason), nor is anything else at that path - a folder, or a file that is not a socket left behind (exit code 2). On Linux and macOS, where zpp serve cannot tell an empty file from a socket, an empty file is taken for one.
 
 ### Culture, time zone and logs
 
-Jobs write numbers and dates in the machine's culture, and times in its time zone, as zpp does. `--culture` sets the culture for all of them (`--culture en-GB`); on Linux and macOS, `TZ` sets the time zone (`TZ=Europe/London zpp serve`). A job cannot choose either, and `/v1/info` says which they are.
+Jobs write numbers and dates in the machine's culture, and times in its time zone, as zpp does. `--culture` sets the culture for all of them (`--culture en-GB`); on Linux and macOS, `TZ` sets the time zone (`TZ=Europe/London zpp serve`). A job cannot choose either, and `/v1/info` says which they are - the time zone by its IANA name, whatever the system calls it.
 
-The log goes to stderr: starting, warming up, a line for each job with its id and its exit code - or why it was refused - and the warnings and errors of the jobs and of the web server. `-v` adds their informational output.
+The log goes to stderr: starting, warming up, a line for each request with its status, its exit code and how long it took - or why it was refused, with the method and the path, and never the key - and the warnings and errors of the jobs and of the web server. `-v` adds their informational output. Each line that belongs to a request begins with its id, which is the `Request-Id` of its response and the `traceId` of its problem, so that a request can be found in the log from what it was answered with - or from the trace it came in, as a request that carries a `traceparent` keeps its trace id. `--log-format json` writes each line as a JSON object, for a program to read (see [The log](API.md#the-log)).
 
 ### Stopping it
 

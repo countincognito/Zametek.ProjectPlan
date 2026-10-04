@@ -1,0 +1,1297 @@
+openapi: 3.1.0
+info:
+  title: zpp serve API
+  summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
+  description: |
+    The HTTP API of `zpp serve`, which runs zpp as a web server. A project is sent with each request - the server keeps
+    nothing between requests - and the server answers with the project's metrics and the outputs asked for: its project
+    file, charts and graphs, an Excel export.
+
+    This description is the source of truth for programs; [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
+    is the written guide, with the changelog, the security review and the deviations from the guide the API follows. The
+    problems' `type` URIs are the addresses of that guide's sections.
+
+    Every response, including a problem, carries `Request-Id`: 32 hexadecimal characters, the `traceId` of a problem and
+    the trace id on every line of the server's log that belongs to the request. A request that carries a `traceparent`
+    keeps the trace it names.
+
+    Nothing is stored, so each POST is safe to send again: the same request does the same again.
+  version: 1.0.0
+  contact:
+    name: Zametek.ProjectPlan
+    url: https://github.com/countincognito/Zametek.ProjectPlan
+  license:
+    name: BSD 2-Clause License
+    identifier: BSD-2-Clause
+servers:
+  - url: http://localhost:9770
+    description: zpp serve as it starts, on this machine
+tags:
+  - name: Projects
+    description: What the API does with a project.
+  - name: Server
+    description: What the server is.
+  - name: Probes
+    description: Health checks, which need no API key.
+security:
+  - apiKey: []
+paths:
+  /v1/projects/compile:
+    post:
+      operationId: compileProject
+      tags: [Projects]
+      summary: Compile a project
+      description: |
+        Compiles the project - or the Excel workbook, imported into a new project - in the request, and answers with its
+        metrics and the outputs the options ask for. Answers `200` only when the project compiled and every output was
+        produced: anything else is a problem, with the status that says why.
+
+        With `Accept: application/zip` the answer is a zip: each output as a file, named as zpp names it, and
+        `result.json`, which is the JSON answer less the files' contents.
+      parameters:
+        - $ref: '#/components/parameters/Include'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CompileRequest'
+            encoding:
+              project:
+                contentType: application/octet-stream
+              import:
+                contentType: application/octet-stream
+              options:
+                contentType: application/json
+      responses:
+        '200':
+          description: The project compiled, and every output asked for was produced.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Vary:
+              description: The answer varies with what the request accepts.
+              schema:
+                type: string
+                const: Accept
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompileResponse'
+              examples:
+                compiled:
+                  $ref: '#/components/examples/CompiledProject'
+                compiledWithOutputs:
+                  $ref: '#/components/examples/CompiledProjectWithOutputs'
+            application/zip:
+              schema:
+                type: string
+                contentMediaType: application/zip
+        '400':
+          $ref: '#/components/responses/MalformedRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerFailed'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    options:
+      operationId: optionsCompileProject
+      tags: [Projects]
+      summary: What the endpoint takes
+      description: Says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the rest of `/v1` does.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsPost'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/projects/scenarios:
+    post:
+      operationId: listScenarios
+      tags: [Projects]
+      summary: List a project's scenarios
+      description: |
+        Lists the scenarios of the project in the request, as `zpp --list-scenarios` does. It only reads: nothing
+        is changed or kept.
+      parameters:
+        - $ref: '#/components/parameters/Include'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScenariosRequest'
+            encoding:
+              project:
+                contentType: application/octet-stream
+      responses:
+        '200':
+          description: The project's scenarios.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenariosResponse'
+              examples:
+                twoScenarios:
+                  $ref: '#/components/examples/TwoScenarios'
+        '400':
+          $ref: '#/components/responses/MalformedRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerFailed'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    options:
+      operationId: optionsListScenarios
+      tags: [Projects]
+      summary: What the endpoint takes
+      description: Says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the rest of `/v1` does.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsPost'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/info:
+    get:
+      operationId: getInfo
+      tags: [Server]
+      summary: Ask what the server is
+      description: |
+        The server's version, the culture it writes numbers and dates in, its time zone, and its limits. It cannot change
+        while the server runs, so it has a strong `ETag` and can be kept for a minute.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: What the server is.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Cache-Control:
+              description: May be kept by the client that asked, for a minute.
+              schema:
+                type: string
+                const: private, max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoResponse'
+              examples:
+                server:
+                  $ref: '#/components/examples/Server'
+        '304':
+          description: The client has what the server is, as the `ETag` says.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    head:
+      operationId: headInfo
+      tags: [Server]
+      summary: The headers of what the server is
+      description: Answers with the headers of `GET`, `ETag` among them, and no body.
+      responses:
+        '200':
+          description: The headers of `GET`, and no body.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    options:
+      operationId: optionsInfo
+      tags: [Server]
+      summary: What the endpoint takes
+      description: Says that the endpoint takes `GET` and `HEAD`. It needs the API key, as the rest of `/v1` does.
+      responses:
+        '204':
+          description: What the endpoint takes.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Allow:
+              description: The methods it takes.
+              schema:
+                type: string
+                const: GET, HEAD, OPTIONS
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /health/live:
+    get:
+      operationId: getLive
+      tags: [Probes]
+      summary: Is the server listening
+      description: Answers 200 as soon as the server listens. It needs no API key, so that a load balancer or an orchestrator can ask.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+  /health/ready:
+    get:
+      operationId: getReady
+      tags: [Probes]
+      summary: Has the server warmed up
+      description: Answers 200 once the server has warmed up on a sample project, a few seconds after it starts, and 503 until then. It needs no API key.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+        '503':
+          description: The server is still warming up.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            text/plain:
+              schema:
+                type: string
+                const: Unhealthy
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: |
+        The server's API key, at least 32 characters: `openssl rand -base64 32` makes one. A server on this machine alone
+        needs none.
+  parameters:
+    Include:
+      name: include
+      in: query
+      description: |
+        What to add to the answer, as a comma-separated list. `console` adds what zpp would have printed and exited with,
+        to the answer or to the problem. Any other value, and any other query parameter, is a problem with the request.
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum: [console]
+    Traceparent:
+      name: traceparent
+      in: header
+      description: The W3C trace context of the request. The request keeps its trace id, which is its `Request-Id`.
+      required: false
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$'
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      description: The `ETag` the client has. The server answers `304` if it is current.
+      required: false
+      schema:
+        type: string
+  headers:
+    RequestId:
+      description: The request's id, which is its trace id and the `traceId` of its problem.
+      required: true
+      schema:
+        $ref: '#/components/schemas/TraceId'
+    ETag:
+      description: A strong validator of what the server is.
+      schema:
+        type: string
+        pattern: '^"[0-9a-f]{32}"$'
+    RetryAfter:
+      description: How many seconds to wait before sending the request again.
+      required: true
+      schema:
+        type: integer
+        minimum: 0
+    NoStore:
+      description: Nothing the server answers is to be kept.
+      schema:
+        type: string
+        const: no-store
+  responses:
+    MalformedRequest:
+      description: The request cannot be understood.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/MalformedRequestProblem'
+          examples:
+            malformedRequest:
+              $ref: '#/components/examples/MalformedRequest'
+    Unauthorized:
+      description: The request needs the API key, and does not carry it, or carries another.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        WWW-Authenticate:
+          description: How to authenticate.
+          required: true
+          schema:
+            type: string
+            const: Bearer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            unauthorized:
+              $ref: '#/components/examples/Unauthorized'
+    NotAcceptable:
+      description: '`Accept` offers nothing the operation answers with; `detail` says what it can.'
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            notAcceptable:
+              $ref: '#/components/examples/NotAcceptable'
+    PayloadTooLarge:
+      description: The request is larger than the server accepts, or its `options` are larger than 64 KB.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+    UnsupportedMediaType:
+      description: The request is not `multipart/form-data`, or the file to import is not an Excel workbook.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            notMultipart:
+              $ref: '#/components/examples/NotMultipart'
+            notAWorkbook:
+              $ref: '#/components/examples/NotAWorkbook'
+    Unprocessable:
+      description: |
+        The request is understood, and what it says is not valid, or the project - or what is asked of it - cannot be
+        processed. `type` says which.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ValidationFailedProblem'
+              - $ref: '#/components/schemas/ProjectNotReadableProblem'
+              - $ref: '#/components/schemas/CompilationFailedProblem'
+              - $ref: '#/components/schemas/CompilationTimedOutProblem'
+              - $ref: '#/components/schemas/ScenarioNotSelectableProblem'
+          examples:
+            validationFailed:
+              $ref: '#/components/examples/ValidationFailed'
+            projectNotReadable:
+              $ref: '#/components/examples/ProjectNotReadable'
+            compilationFailed:
+              $ref: '#/components/examples/CompilationFailed'
+            compilationTimedOut:
+              $ref: '#/components/examples/CompilationTimedOut'
+            scenarioNotSelectable:
+              $ref: '#/components/examples/ScenarioNotSelectable'
+    ServerFailed:
+      description: The server failed. `type` says whether an output could not be produced, or something nobody expected.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/OutputFailedProblem'
+              - $ref: '#/components/schemas/UnexpectedErrorProblem'
+          examples:
+            outputFailed:
+              $ref: '#/components/examples/OutputFailed'
+            unexpectedError:
+              $ref: '#/components/examples/UnexpectedError'
+    Unavailable:
+      description: The server is busy, or the job ran for longer than the server allows. `type` says which.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BusyProblem'
+              - $ref: '#/components/schemas/JobTimeoutProblem'
+          examples:
+            busy:
+              $ref: '#/components/examples/Busy'
+            jobTimeout:
+              $ref: '#/components/examples/JobTimeout'
+    OptionsPost:
+      description: What the endpoint takes.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Allow:
+          description: The methods it takes.
+          schema:
+            type: string
+            const: POST, OPTIONS
+        Accept-Post:
+          description: The media type of what it takes.
+          schema:
+            type: string
+            const: multipart/form-data
+    Healthy:
+      description: The server is up.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Cache-Control:
+          $ref: '#/components/headers/NoStore'
+      content:
+        text/plain:
+          schema:
+            type: string
+            const: Healthy
+  examples:
+    CompiledProject:
+      summary: A project that compiled, with no outputs asked for
+      value:
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        outputs: []
+    CompiledProjectWithOutputs:
+      summary: A project that compiled, with its project file and its Gantt chart (their contents shortened)
+      value:
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        outputs:
+          - kind: project
+            fileName: two-scenarios.zpp
+            contentType: application/json
+            content: eyJWZXJzaW9uIjogIjAuNi4xIn0=
+          - kind: ganttChart
+            fileName: two-scenarios-gantt.png
+            contentType: image/png
+            content: iVBORw0KGgo=
+    TwoScenarios:
+      summary: The scenarios of a project
+      value:
+        scenarios:
+          - path: Alpha
+            id: 8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5
+            isTracked: true
+            isCurrent: true
+          - path: Beta
+            id: 17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4
+            isTracked: false
+            isCurrent: false
+    Server:
+      summary: A server with its limits as they start
+      value:
+        version: 0.10.1
+        culture: en-GB
+        timeZone: Europe/London
+        limits:
+          maxJobs: 4
+          maxQueue: 8
+          maxUploadMegabytes: 50
+          maxChartWidth: 5000
+          maxChartHeight: 5000
+          jobTimeout: PT2M
+          maxCompileTimeout: PT1M
+    MalformedRequest:
+      summary: Options that are not JSON, and an include that is not one
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#malformed-request
+        title: The request could not be understood
+        status: 400
+        detail: The request has 2 problems.
+        traceId: 56a374c353c621113aedeb980f329e0b
+        errors:
+          - parameter: include
+            code: notAllowed
+            detail: "'metrics' is not something the answer can include: use console"
+          - pointer: '#/options'
+            code: invalidFormat
+            detail: must be valid JSON (line 2, position 1)
+    ValidationFailed:
+      summary: Four problems with the options, listed together
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#validation-failed
+        title: The request is not valid
+        status: 422
+        detail: The request has 4 problems.
+        traceId: 5c69656d2c55ff91fe9b25ed75481324
+        errors:
+          - pointer: '#/options/compileTimeout'
+            code: outOfRange
+            detail: must be from PT0.001S to PT1M
+          - pointer: '#/options/outputs/ganttChart/width'
+            code: outOfRange
+            detail: must be from 1 to 5000 pixels
+          - pointer: '#/options/outputs/ev'
+            code: unknownProperty
+            detail: 'is not known here: check its spelling'
+          - pointer: '#/options/colour'
+            code: unknownProperty
+            detail: 'is not known here: check its spelling'
+    ProjectNotReadable:
+      summary: A workbook sent as the project, with the console
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable
+        title: The project could not be read
+        status: 422
+        detail: The file could not be read as a project.
+        traceId: d7edba72f6893b71f0d947b1e0bb763d
+        errors:
+          - pointer: '#/project'
+            code: unreadable
+            detail: The file could not be read as a project.
+        console:
+          exitCode: 1
+          standardOutput: ''
+          standardError: "Unexpected character encountered while parsing value: P. Path '', line 0, position 0.\n"
+          transcript:
+            - kind: errorLine
+              text: "Unexpected character encountered while parsing value: P. Path '', line 0, position 0."
+    CompilationFailed:
+      summary: A project with an activity that depends on one that is not there
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed
+        title: The project did not compile
+        status: 422
+        detail: The project has a compilation error.
+        traceId: 75343173ee6b17eac0d809a803f55737
+        errors:
+          - pointer: '#/project'
+            code: P0010
+            detail: |-
+              Invalid activity dependencies:
+              999 is invalid but referenced by: 1
+    CompilationTimedOut:
+      summary: A compilation that did not finish in its time
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-timed-out
+        title: The compilation ran out of time
+        status: 422
+        detail: The compilation did not finish within its time limit.
+        traceId: 9f1c0e3a5d7b4c28a6e41b0d93f2c7a8
+    ScenarioNotSelectable:
+      summary: A scenario that is not in the project
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#scenario-not-selectable
+        title: The scenario cannot be selected
+        status: 422
+        detail: No scenario matches 'Gamma'
+        traceId: 51205d67f2ec394b8a00ec1b86f88e4c
+        errors:
+          - pointer: '#/options/scenario'
+            code: notFound
+            detail: No scenario matches 'Gamma'
+    OutputFailed:
+      summary: A project that compiled, whose Gantt chart could not be produced (its project file was)
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#output-failed
+        title: An output could not be produced
+        status: 500
+        detail: The gantt chart could not be produced.
+        traceId: c40b7e9a21d84f6b8d35a7e0f1926b4d
+        errors:
+          - pointer: '#/options/outputs/ganttChart'
+            code: failed
+            detail: The gantt chart could not be produced.
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        outputs:
+          - kind: project
+            fileName: two-scenarios.zpp
+            contentType: application/json
+            content: eyJWZXJzaW9uIjogIjAuNi4xIn0=
+    UnexpectedError:
+      summary: Something nobody expected, of which the answer says only that it happened
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unexpected-error
+        title: The server could not process the request
+        status: 500
+        detail: The server failed to process the request. Its log says why, under the request's trace id.
+        traceId: 7be0d4a91c3f4e5a8b26f9d1c0e7a354
+    Busy:
+      summary: Every job the server runs at once is running, and as many wait as it allows
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy
+        title: The server is busy
+        status: 503
+        detail: The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.
+        traceId: 002ff9eeea0321b50b20f508d7d0b4e6
+    JobTimeout:
+      summary: A job that ran for longer than the server allows
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#job-timeout
+        title: The job took too long
+        status: 503
+        detail: The job ran for longer than the server's limit of 120 seconds, and was stopped.
+        traceId: 4879f96e5055e1e6d6c598b43dee3fe0
+    Unauthorized:
+      summary: A request without the API key
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.2
+        title: Unauthorized
+        status: 401
+        detail: 'The request needs the server''s API key, as Authorization: Bearer <key>.'
+        traceId: f9e88ee6a376f8b7f7abc3e52fad53ef
+    NotAcceptable:
+      summary: An Accept the operation cannot meet
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.7
+        title: Not Acceptable
+        status: 406
+        detail: The server can answer as application/json, application/zip.
+        traceId: b05ecb18da1c42bdcf4b8b057cad979d
+    NotMultipart:
+      summary: A body that is not multipart/form-data
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.16
+        title: Unsupported Media Type
+        status: 415
+        detail: "Send the request as multipart/form-data: the project as a file named 'project' - or a workbook to import, named 'import' - and its options as JSON in a part named 'options'."
+        traceId: 6a8d9949ba40d0e24f35c51c3e4ff571
+    NotAWorkbook:
+      summary: A project sent as the workbook to import
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.16
+        title: Unsupported Media Type
+        status: 415
+        detail: 'zpp serve imports .xlsx files only: import two-scenarios.zpp with zpp itself.'
+        traceId: 79cc58f8f0fa67194a853ef1067445f7
+        errors:
+          - pointer: '#/import'
+            code: unsupportedFormat
+            detail: must be an Excel workbook (.xlsx)
+  schemas:
+    TraceId:
+      type: string
+      pattern: '^[0-9a-f]{32}$'
+      description: A trace id, as 32 hexadecimal characters.
+    CompileRequest:
+      description: |
+        The request as OpenAPI models a multipart body: an object whose properties are its parts. The pointers of a
+        problem's errors point into it (`#/options/outputs/ganttChart/width`).
+      type: object
+      additionalProperties: false
+      properties:
+        project:
+          type: string
+          contentMediaType: application/octet-stream
+          description: A project (`.zpp`). Its file needs a name, as the outputs are named after it.
+        import:
+          type: string
+          contentMediaType: application/octet-stream
+          description: An Excel workbook (`.xlsx`) to import into a new project.
+        options:
+          $ref: '#/components/schemas/CompileOptions'
+      oneOf:
+        - required: [project]
+        - required: [import]
+    ScenariosRequest:
+      type: object
+      additionalProperties: false
+      required: [project]
+      properties:
+        project:
+          type: string
+          contentMediaType: application/octet-stream
+          description: A project (`.zpp`).
+    CompileOptions:
+      description: zpp's own options, less the paths. At most 64 KB, nested at most 16 deep. Every member may be `null`, which is as if it were not given.
+      type: object
+      additionalProperties: false
+      properties:
+        scenario:
+          type: [string, 'null']
+          description: The scenario to load, by name, or by id - the whole id, or a unique prefix of it of at least four hexadecimal characters. Only with a `project`.
+        baseTheme:
+          type: [string, 'null']
+          enum: [light, dark, null]
+          default: light
+        metricsFormat:
+          type: [string, 'null']
+          enum: [markdown, table, json, null]
+          default: markdown
+          description: How the console shows the metrics. It shapes nothing else.
+        compileTimeout:
+          type: [string, 'null']
+          format: duration
+          examples: [PT5S]
+          description: From `PT0.001S` to the server's `maxCompileTimeout`. Without it, `PT5S`, or the limit if that is shorter.
+        now:
+          type: [string, 'null']
+          format: date-time
+          description: A time with its offset from UTC, used in place of the clock.
+        outputs:
+          oneOf:
+            - $ref: '#/components/schemas/OutputsOptions'
+            - type: 'null'
+    OutputsOptions:
+      description: The outputs to produce, in the order they are produced. One that is given is produced.
+      type: object
+      additionalProperties: false
+      properties:
+        project:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        scenarioExport:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        ganttChart:
+          $ref: '#/components/schemas/ChartOptions'
+        arrowGraph:
+          $ref: '#/components/schemas/GraphOptions'
+        vertexGraph:
+          $ref: '#/components/schemas/GraphOptions'
+        resourceChart:
+          $ref: '#/components/schemas/ChartOptions'
+        earnedValueChart:
+          $ref: '#/components/schemas/ChartOptions'
+        scenarioChart:
+          $ref: '#/components/schemas/ChartOptions'
+    OutputWithoutSettings:
+      description: 'An output with no settings, yet: given as an empty object, which can later carry settings.'
+      type: [object, 'null']
+      additionalProperties: false
+    ChartOptions:
+      type: [object, 'null']
+      additionalProperties: false
+      required: [width, height]
+      properties:
+        format:
+          type: [string, 'null']
+          enum: [jpeg, png, bmp, webp, svg, null]
+          default: jpeg
+        width:
+          type: [integer, 'null']
+          minimum: 1
+          description: In pixels, at most the server's `maxChartWidth`.
+        height:
+          type: [integer, 'null']
+          minimum: 1
+          description: In pixels, at most the server's `maxChartHeight`.
+    GraphOptions:
+      type: [object, 'null']
+      additionalProperties: false
+      properties:
+        format:
+          type: [string, 'null']
+          enum: [jpeg, png, pdf, svg, graphml, dot, null]
+          default: jpeg
+    CompileResponse:
+      type: object
+      required: [metrics, outputs]
+      properties:
+        metrics:
+          $ref: '#/components/schemas/Metrics'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Output'
+        console:
+          $ref: '#/components/schemas/Console'
+    Metrics:
+      description: |
+        A compiled project's metrics: in words, in `lowerCamelCase`, and as values rather than the text zpp prints. A metric
+        that cannot be worked out is `null`. The costs, billings and margins are estimates, which have no currency.
+      type: object
+      required:
+        - activityRisk
+        - activityRiskWithStandardDeviationCorrection
+        - criticalityRisk
+        - fibonacciRisk
+        - geometricActivityRisk
+        - geometricCriticalityRisk
+        - geometricFibonacciRisk
+        - networkCyclomaticComplexity
+        - networkDuration
+        - networkDurationManMonths
+        - projectFinishDays
+        - projectFinishDate
+        - effortEfficiency
+        - activityEffort
+        - directEffort
+        - indirectEffort
+        - otherEffort
+        - totalEffort
+        - directCost
+        - indirectCost
+        - otherCost
+        - totalCost
+        - directBilling
+        - indirectBilling
+        - otherBilling
+        - totalBilling
+        - directMargin
+        - indirectMargin
+        - otherMargin
+        - totalMargin
+        - directMarginAbsolute
+        - indirectMarginAbsolute
+        - otherMarginAbsolute
+        - totalMarginAbsolute
+      properties:
+        activityRisk: { type: [number, 'null'] }
+        activityRiskWithStandardDeviationCorrection: { type: [number, 'null'] }
+        criticalityRisk: { type: [number, 'null'] }
+        fibonacciRisk: { type: [number, 'null'] }
+        geometricActivityRisk: { type: [number, 'null'] }
+        geometricCriticalityRisk: { type: [number, 'null'] }
+        geometricFibonacciRisk: { type: [number, 'null'] }
+        networkCyclomaticComplexity: { type: [integer, 'null'] }
+        networkDuration:
+          type: [integer, 'null']
+          description: In days.
+        networkDurationManMonths: { type: [number, 'null'] }
+        projectFinishDays:
+          type: [integer, 'null']
+          description: The days from the project's start to its finish. `null` when the project has no duration.
+        projectFinishDate:
+          type: [string, 'null']
+          format: date
+          description: The date the project finishes on, in the working calendar it keeps. `null` when the project has no duration.
+        effortEfficiency: { type: [number, 'null'] }
+        activityEffort: { type: [number, 'null'] }
+        directEffort: { type: [number, 'null'] }
+        indirectEffort: { type: [number, 'null'] }
+        otherEffort: { type: [number, 'null'] }
+        totalEffort: { type: [number, 'null'] }
+        directCost: { type: [number, 'null'] }
+        indirectCost: { type: [number, 'null'] }
+        otherCost: { type: [number, 'null'] }
+        totalCost: { type: [number, 'null'] }
+        directBilling: { type: [number, 'null'] }
+        indirectBilling: { type: [number, 'null'] }
+        otherBilling: { type: [number, 'null'] }
+        totalBilling: { type: [number, 'null'] }
+        directMargin: { type: [number, 'null'] }
+        indirectMargin: { type: [number, 'null'] }
+        otherMargin: { type: [number, 'null'] }
+        totalMargin: { type: [number, 'null'] }
+        directMarginAbsolute: { type: [number, 'null'] }
+        indirectMarginAbsolute: { type: [number, 'null'] }
+        otherMarginAbsolute: { type: [number, 'null'] }
+        totalMarginAbsolute: { type: [number, 'null'] }
+    Output:
+      type: object
+      required: [kind, fileName, contentType]
+      properties:
+        kind:
+          type: string
+          enum: [project, scenarioExport, ganttChart, arrowGraph, vertexGraph, resourceChart, earnedValueChart, scenarioChart]
+        fileName:
+          type: string
+          description: The name zpp gives the file.
+        contentType:
+          type: string
+        content:
+          type: string
+          contentEncoding: base64
+          description: The file. Left out of a zip's `result.json`, where the zip holds the file itself.
+    Console:
+      description: |
+        What zpp would have printed and exited with, for a client that prints and writes exactly that, as `zpp --server`
+        does. There when the request asks for it with `?include=console`.
+      type: object
+      required: [exitCode, standardOutput, standardError, transcript]
+      properties:
+        exitCode:
+          type: integer
+          description: The code zpp would have exited with.
+        standardOutput:
+          type: string
+          description: Every line ends in `\n`.
+        standardError:
+          type: string
+        transcript:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranscriptEntry'
+    TranscriptEntry:
+      description: One thing the job did, in the order it did it.
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [line, display, errorLine, output]
+        text:
+          type: string
+          description: What a line or a block printed.
+        hasErrors:
+          type: boolean
+          description: Whether a block reports errors. Left out when it does not.
+        index:
+          type: integer
+          minimum: 0
+          description: 'Which output the job produced: its index in `outputs`.'
+    ScenariosResponse:
+      type: object
+      required: [scenarios]
+      properties:
+        scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scenario'
+        console:
+          $ref: '#/components/schemas/Console'
+    Scenario:
+      type: object
+      required: [path, id, isTracked, isCurrent]
+      properties:
+        path:
+          type: string
+          description: The scenario's name, with the names of those it is a child of.
+        id:
+          type: string
+          format: uuid
+        isTracked:
+          type: boolean
+        isCurrent:
+          type: boolean
+    InfoResponse:
+      type: object
+      required: [version, culture, timeZone, limits]
+      properties:
+        version:
+          type: string
+        culture:
+          type: string
+          description: The culture the server writes numbers and dates in.
+        timeZone:
+          type: string
+          description: The time zone it writes times in, by its IANA name.
+        limits:
+          $ref: '#/components/schemas/Limits'
+    Limits:
+      type: object
+      required: [maxJobs, maxQueue, maxUploadMegabytes, maxChartWidth, maxChartHeight, jobTimeout, maxCompileTimeout]
+      properties:
+        maxJobs:
+          type: integer
+          minimum: 1
+          description: Jobs that run at once.
+        maxQueue:
+          type: integer
+          minimum: 0
+          description: Jobs that wait for one to finish. Any more are turned away.
+        maxUploadMegabytes:
+          type: integer
+          minimum: 1
+          description: The largest request, in megabytes of 1,048,576 bytes.
+        maxChartWidth:
+          type: integer
+          minimum: 1
+        maxChartHeight:
+          type: integer
+          minimum: 1
+        jobTimeout:
+          type: string
+          format: duration
+          description: How long a job may run before it is stopped.
+        maxCompileTimeout:
+          type: string
+          format: duration
+          description: The longest a request may give its compilation.
+    ProblemError:
+      type: object
+      required: [detail]
+      properties:
+        pointer:
+          type: string
+          description: Where the problem is, as a JSON pointer in URI-fragment form into the request (`CompileRequest`).
+        parameter:
+          type: string
+          description: The query parameter the problem is with, in place of `pointer`.
+        code:
+          type: string
+          description: |
+            The rule it breaks, for programs: `required`, `unknownProperty`, `wrongType`, `notAllowed`, `invalidFormat`,
+            `outOfRange`, `notAllowedWithImport`, `tooLarge`, `unsupportedFormat`, `unreadable`, `notFound`, `ambiguous`,
+            `hasNoData` or `failed` - or, for a project that did not compile, the compiler's own, such as `P0010`.
+        detail:
+          type: string
+          description: 'What is wrong, for people: a phrase that reads on from the place.'
+    Problem:
+      description: Problem details, as RFC 9457 has them.
+      type: object
+      required: [type, title, status, traceId]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          description: The same for every problem of its type.
+        status:
+          type: integer
+        detail:
+          type: string
+          description: What is wrong this time, for people.
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemError'
+        console:
+          $ref: '#/components/schemas/Console'
+    StatusProblem:
+      description: A problem that is what its status says, with the type RFC 9110 gives the status.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+    MalformedRequestProblem:
+      description: The request cannot be understood.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#malformed-request
+            status:
+              const: 400
+    ValidationFailedProblem:
+      description: The request is understood, and what it says is not valid. Every problem is in `errors`.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#validation-failed
+            status:
+              const: 422
+    ProjectNotReadableProblem:
+      description: The file sent as the project, or as the workbook to import, is not one the server can read.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable
+            status:
+              const: 422
+    CompilationFailedProblem:
+      description: The project has compilation errors, each of which is in `errors` with the compiler's own code.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed
+            status:
+              const: 422
+    CompilationTimedOutProblem:
+      description: The compilation did not finish within its time limit, which says nothing of whether the project is valid.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-timed-out
+            status:
+              const: 422
+    ScenarioNotSelectableProblem:
+      description: The scenario the request named cannot be selected.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#scenario-not-selectable
+            status:
+              const: 422
+    OutputFailedProblem:
+      description: The project compiled, and an output it was asked for could not be produced. The metrics and the outputs that were produced come with it.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#output-failed
+            status:
+              const: 500
+            metrics:
+              $ref: '#/components/schemas/Metrics'
+            outputs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Output'
+    UnexpectedErrorProblem:
+      description: Anything the server did not expect. Its cause is in the server's log, under the request's trace id, and is not in the answer.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unexpected-error
+            status:
+              const: 500
+    BusyProblem:
+      description: All the jobs the server runs at once are running, and as many wait as it allows. Send the request again, after `Retry-After`.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy
+            status:
+              const: 503
+    JobTimeoutProblem:
+      description: The job ran for longer than the server allows a job, and was stopped. Sent again unchanged, it would run out of time again.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#job-timeout
+            status:
+              const: 503
