@@ -129,6 +129,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             error.Code.ShouldBe(@"P0010");
             error.Detail.ShouldContain(@"999 is invalid but referenced by: 1");
             error.Detail.ShouldBe(error.Detail.TrimEnd());
+            // Its lines end as everything the server says does, whatever system the compiler wrote them on.
+            error.Detail.ShouldContain("\n");
+            error.Detail.ShouldNotContain("\r");
             problem.Console.ShouldBeNull();
             problem.Metrics.ShouldBeNull();
             problem.Outputs.ShouldBeNull();

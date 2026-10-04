@@ -681,7 +681,8 @@ namespace Zametek.ProjectPlan.CommandLine
             };
         }
 
-        // A project that did not compile: each of the compiler's errors, with its own code, where the project is.
+        // A project that did not compile: each of the compiler's errors, with its own code, where the project is. Its message
+        // is the compiler's, built with the system's line end, which the response says as it says every other: with \n.
         private static Answer CompilationFailed(
             HttpContext context,
             JobResult result,
@@ -691,7 +692,7 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             List<ProblemError> errors =
             [
-                .. result.CompilationErrors.Select(x => PartError(part, x.Code, x.Message.TrimEnd())),
+                .. result.CompilationErrors.Select(x => PartError(part, x.Code, NewLineHelper.NormalizeNewLines(x.Message.TrimEnd()))),
             ];
 
             string detail = errors.Count == 1
