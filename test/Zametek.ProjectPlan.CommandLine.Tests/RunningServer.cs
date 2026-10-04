@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Routing;
 using Shouldly;
 using System.Net.Http.Headers;
 using System.Text;
@@ -28,6 +30,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         // The requests the API has taken - past its API key and its limits.
         public int ApiRequests => Volatile.Read(ref m_ApiRequests);
+
+        // The routes the server maps, each with a method it takes - GET, for the health checks, which take any - as the
+        // description of the API is held to them.
+        public IReadOnlyList<(string Method, string Path)> Routes => [.. ((IEndpointRouteBuilder)m_App).DataSources
+            .SelectMany(x => x.Endpoints)
+            .OfType<RouteEndpoint>()
+            .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [@"GET"])
+                .Select(method => (method, endpoint.RoutePattern.RawText ?? string.Empty)))];
 
         public static async Task<RunningServer> StartAsync(
             JobRunner jobRunner,

@@ -19,6 +19,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Lint the API description
+        # docs/openapi.yaml against the rules of .spectral.yaml, on top of Spectral's own for OpenAPI, which also check that every
+        # example fits its schema. Pinned, so that a new version's rules cannot fail the build without a change to the description;
+        # node and npx come with the runner image. OpenApiContractTests hold the same description to the server.
+        run: npx --yes @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset .spectral.yaml --fail-severity warn
+
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:

@@ -1,4 +1,4 @@
-.PHONY: help clean build-desktop build-cli build-browser build publish-desktop publish-cli publish-browser run-browser publish hooks workloads format format-check lint test
+.PHONY: help clean build-desktop build-cli build-browser build publish-desktop publish-cli publish-browser run-browser publish hooks workloads format format-check lint lint-api test
 .DEFAULT_GOAL := help
 
 ARCH := x64
@@ -61,6 +61,9 @@ format-check: ## Check code style without modifying files
 
 lint: ## Build the solution (NU1903 warnings logged but not errors)
 	dotnet build --configuration Release Zametek.ProjectPlan.slnf
+
+lint-api: ## Lint the API description (docs/openapi.yaml) with Spectral, as CI does - needs Node.js
+	npx --yes @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset .spectral.yaml --fail-severity warn
 
 test: ## Run all tests
 	dotnet test --configuration Release Zametek.ProjectPlan.slnf

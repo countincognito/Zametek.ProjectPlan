@@ -1,0 +1,107 @@
+# The API Guide's rules that a description can be checked against, for docs/openapi.yaml: run in CI (see ci.yml), and by hand with
+#   make lint-api
+# (npx @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset .spectral.yaml --fail-severity warn). The rest of the guide is
+# held to the server by tests (OpenApiContractTests).
+extends: ["spectral:oas"]
+
+rules:
+  # URI-1, URI-2, URI-5: lower-case words, which hyphens may join, between slashes; no trailing slash, no extension.
+  zpp-path-lower-case:
+    description: A path is made of lower-case words between slashes, with no trailing slash and no extension.
+    message: "{{property}} is not a lower-case path"
+    severity: error
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-9]+(-[a-z0-9]+)*)+$"
+
+  # REP-1: the names of members are lowerCamelCase.
+  zpp-property-lower-camel-case:
+    description: A schema's properties are named in lowerCamelCase.
+    message: "{{property}} is not in lowerCamelCase"
+    severity: error
+    given: "$..properties[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+
+  # REP-2: so are the values of an enumeration, which are strings and not numbers.
+  zpp-enum-value-lower-camel-case:
+    description: A string in an enumeration is in lowerCamelCase.
+    message: "{{value}} is not in lowerCamelCase"
+    severity: error
+    given: "$..enum[?(@ && @property !== undefined)]"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+
+  zpp-operation-id-lower-camel-case:
+    description: An operation is identified in lowerCamelCase.
+    severity: error
+    given: "$.paths[*][*].operationId"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+
+  # ERR-1, ERR-2: what the API cannot answer is a problem, application/problem+json.
+  zpp-problem-media-type:
+    description: A 4xx or 5xx response is application/problem+json, and nothing else.
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[?(@property.startsWith('/v1/'))][*].responses[?(@property.match(/^[45]/))]"
+    then:
+      field: content
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["application/problem+json"]
+          properties:
+            application/problem+json: {}
+          additionalProperties: false
+
+  # HDR-8: every response carries the request's id.
+  zpp-request-id-on-every-response:
+    description: Every response has a Request-Id header.
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[*][*].responses[*]"
+    then:
+      field: headers
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["Request-Id"]
+
+  # HDR-6: Retry-After accompanies a 503 of the API (a probe says only that it is not ready).
+  zpp-503-has-retry-after:
+    description: A 503 response has a Retry-After header.
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[?(@property.startsWith('/v1/'))][*].responses['503']"
+    then:
+      field: headers
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["Retry-After"]
+
+  # SEC-8: a 401 says how to authenticate.
+  zpp-401-has-www-authenticate:
+    description: A 401 response has a WWW-Authenticate header.
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[?(@property.startsWith('/v1/'))][*].responses['401']"
+    then:
+      field: headers
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["WWW-Authenticate"]

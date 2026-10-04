@@ -143,6 +143,7 @@ The targets:
 | `format` | Apply code style fixes to the solution filter |
 | `format-check` | Verify code style without modifying files |
 | `lint` | Release build of the solution filter, as a compilation check |
+| `lint-api` | Lint the API description, `docs/openapi.yaml`, with Spectral and the rules of `.spectral.yaml`, as CI does (needs Node.js) |
 | `test` | Run all test suites in Release |
 
 Unlike the plain SDK commands above, the `build` and `publish` targets compile for an explicit OS and architecture. They are parameterised by variables that can be overridden on the command line: `ARCH` (`x64`, `x86`, `arm64`; default `x64`), `OS` (`win`, `linux`, `osx`; default `win`) and `CONFIGURATION` (default `Release`). For example:

@@ -72,6 +72,7 @@ paths:
               $ref: '#/components/headers/RequestId'
             Vary:
               description: The answer varies with what the request accepts.
+              required: true
               schema:
                 type: string
                 const: Accept
@@ -194,6 +195,7 @@ paths:
               $ref: '#/components/headers/ETag'
             Cache-Control:
               description: May be kept by the client that asked, for a minute.
+              required: true
               schema:
                 type: string
                 const: private, max-age=60
@@ -243,6 +245,7 @@ paths:
               $ref: '#/components/headers/RequestId'
             Allow:
               description: The methods it takes.
+              required: true
               schema:
                 type: string
                 const: GET, HEAD, OPTIONS
@@ -327,6 +330,7 @@ components:
         $ref: '#/components/schemas/TraceId'
     ETag:
       description: A strong validator of what the server is.
+      required: true
       schema:
         type: string
         pattern: '^"[0-9a-f]{32}"$'
@@ -338,6 +342,7 @@ components:
         minimum: 0
     NoStore:
       description: Nothing the server answers is to be kept.
+      required: true
       schema:
         type: string
         const: no-store
@@ -475,11 +480,13 @@ components:
           $ref: '#/components/headers/RequestId'
         Allow:
           description: The methods it takes.
+          required: true
           schema:
             type: string
             const: POST, OPTIONS
         Accept-Post:
           description: The media type of what it takes.
+          required: true
           schema:
             type: string
             const: multipart/form-data
@@ -814,6 +821,12 @@ components:
       type: string
       pattern: '^[0-9a-f]{32}$'
       description: A trace id, as 32 hexadecimal characters.
+    Duration:
+      type: string
+      pattern: '^P(?=\d|T\d)(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$'
+      description: |
+        An ISO 8601 duration of days, hours, minutes and seconds, and of nothing longer, as the server writes and reads it: `PT5S`,
+        `PT2M`, `P1DT2H`, `PT0.001S`. Seconds may have a fraction, which the `duration` format of JSON Schema does not allow.
     CompileRequest:
       description: |
         The request as OpenAPI models a multipart body: an object whose properties are its parts. The pointers of a
@@ -861,8 +874,9 @@ components:
           default: markdown
           description: How the console shows the metrics. It shapes nothing else.
         compileTimeout:
-          type: [string, 'null']
-          format: duration
+          anyOf:
+            - $ref: '#/components/schemas/Duration'
+            - type: 'null'
           examples: [PT5S]
           description: From `PT0.001S` to the server's `maxCompileTimeout`. Without it, `PT5S`, or the limit if that is shorter.
         now:
@@ -1131,12 +1145,10 @@ components:
           type: integer
           minimum: 1
         jobTimeout:
-          type: string
-          format: duration
+          $ref: '#/components/schemas/Duration'
           description: How long a job may run before it is stopped.
         maxCompileTimeout:
-          type: string
-          format: duration
+          $ref: '#/components/schemas/Duration'
           description: The longest a request may give its compilation.
     ProblemError:
       type: object
@@ -1149,11 +1161,29 @@ components:
           type: string
           description: The query parameter the problem is with, in place of `pointer`.
         code:
-          type: string
           description: |
-            The rule it breaks, for programs: `required`, `unknownProperty`, `wrongType`, `notAllowed`, `invalidFormat`,
-            `outOfRange`, `notAllowedWithImport`, `tooLarge`, `unsupportedFormat`, `unreadable`, `notFound`, `ambiguous`,
-            `hasNoData` or `failed` - or, for a project that did not compile, the compiler's own, such as `P0010`.
+            The rule it breaks, for programs: one of those listed - or, for a project that did not compile, the compiler's
+            own code for the error, such as `P0010`.
+          anyOf:
+            - type: string
+              enum:
+                - required
+                - unknownProperty
+                - wrongType
+                - notAllowed
+                - invalidFormat
+                - outOfRange
+                - notAllowedWithImport
+                - tooLarge
+                - unsupportedFormat
+                - unreadable
+                - notFound
+                - ambiguous
+                - hasNoData
+                - failed
+            - type: string
+              pattern: '^[A-Z][0-9]{4}$'
+              description: The compiler's own code for an error, such as `P0010`.
         detail:
           type: string
           description: 'What is wrong, for people: a phrase that reads on from the place.'
