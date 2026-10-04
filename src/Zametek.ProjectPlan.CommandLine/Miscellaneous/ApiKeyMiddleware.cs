@@ -42,9 +42,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 && !IsAuthorized(context.Request.Headers.Authorization.ToString()))
             {
                 context.Response.Headers.WWWAuthenticate = c_Scheme;
-                await Results.Problem(
-                    detail: Resource.ProjectPlan.Messages.Message_ServeApiKeyRequired,
-                    statusCode: StatusCodes.Status401Unauthorized).ExecuteAsync(context);
+                await ProblemHelper.ToResult(ProblemHelper.CreateForStatus(
+                    context,
+                    StatusCodes.Status401Unauthorized,
+                    Resource.ProjectPlan.Messages.Message_ServeApiKeyRequired)).ExecuteAsync(context);
                 return;
             }
 

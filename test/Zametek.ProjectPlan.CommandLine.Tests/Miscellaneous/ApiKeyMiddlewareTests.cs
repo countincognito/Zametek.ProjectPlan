@@ -40,7 +40,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var middleware = new ApiKeyMiddleware(_ => { passedOn = true; return Task.CompletedTask; }, c_ApiKey);
             await using ServiceProvider services = new ServiceCollection().AddLogging().AddProblemDetails().BuildServiceProvider();
             var context = new DefaultHttpContext { RequestServices = services };
-            context.Request.Path = @"/v1/jobs";
+            context.Request.Path = @"/v1/projects/compile";
             context.Response.Body = new MemoryStream();
 
             await middleware.InvokeAsync(context);
@@ -56,7 +56,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             bool passedOn = false;
             var middleware = new ApiKeyMiddleware(_ => { passedOn = true; return Task.CompletedTask; }, c_ApiKey);
             var context = new DefaultHttpContext();
-            context.Request.Path = @"/v1/jobs";
+            context.Request.Path = @"/v1/projects/compile";
             context.Request.Headers.Authorization = @"Bearer " + c_ApiKey;
 
             await middleware.InvokeAsync(context);

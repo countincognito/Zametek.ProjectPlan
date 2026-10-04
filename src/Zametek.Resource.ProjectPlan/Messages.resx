@@ -426,38 +426,14 @@
   <data name="Message_ServeLimitTooLow" xml:space="preserve">
     <value>{0} ({1}) must be at least {2}.</value>
   </data>
-  <data name="Message_ServeRequestNotMultipart" xml:space="preserve">
-    <value>Send the job as multipart/form-data: the plan as a file named 'input', or 'import' to import it, and its options in a part named 'options'.</value>
-  </data>
-  <data name="Message_ServeRequestNeedsPlan" xml:space="preserve">
-    <value>Send one plan: as a file named 'input', or named 'import' to import it.</value>
-  </data>
-  <data name="Message_ServePlanNeedsName" xml:space="preserve">
-    <value>The plan's file needs a name: the job's outputs are named after it.</value>
-  </data>
   <data name="Message_ServeCannotImport" xml:space="preserve">
     <value>zpp serve imports .xlsx files only: import {0} with zpp itself.</value>
-  </data>
-  <data name="Message_ServeScenariosNeedInput" xml:space="preserve">
-    <value>Send the project as a file named 'input'.</value>
   </data>
   <data name="Message_ServeRequestTooLarge" xml:space="preserve">
     <value>The request is larger than the {0} MB the server accepts.</value>
   </data>
   <data name="Message_ServeRequestNotReadable" xml:space="preserve">
-    <value>The request could not be read: {0}</value>
-  </data>
-  <data name="Message_ServeOptionsNotValid" xml:space="preserve">
-    <value>The job's options are not valid: {0}</value>
-  </data>
-  <data name="Message_ServeScenarioOnlyWithInput" xml:space="preserve">
-    <value>'scenario' is only valid with a plan sent as 'input'.</value>
-  </data>
-  <data name="Message_ServeCompileTimeoutOutOfRange" xml:space="preserve">
-    <value>'compileTimeout' must be from 1 to {0} milliseconds.</value>
-  </data>
-  <data name="Message_ServeChartSizeOutOfRange" xml:space="preserve">
-    <value>'{0}' must be from 1 to {1} pixels wide and from 1 to {2} pixels high.</value>
+    <value>The request could not be read as multipart/form-data.</value>
   </data>
   <data name="Message_ServeJobTimedOut" xml:space="preserve">
     <value>The job ran for longer than the server's limit of {0} seconds, and was stopped.</value>
@@ -545,5 +521,155 @@
   </data>
   <data name="Message_ServeUnixSocketCannotRestrict" xml:space="preserve">
     <value>zpp serve cannot restrict the socket {0} to its owner: {1}</value>
+  </data>
+  <data name="Message_ServeTitleMalformedRequest" xml:space="preserve">
+    <value>The request could not be understood</value>
+  </data>
+  <data name="Message_ServeTitleValidationFailed" xml:space="preserve">
+    <value>The request is not valid</value>
+  </data>
+  <data name="Message_ServeTitleProjectNotReadable" xml:space="preserve">
+    <value>The project could not be read</value>
+  </data>
+  <data name="Message_ServeTitleCompilationFailed" xml:space="preserve">
+    <value>The project did not compile</value>
+  </data>
+  <data name="Message_ServeTitleCompilationTimedOut" xml:space="preserve">
+    <value>The compilation ran out of time</value>
+  </data>
+  <data name="Message_ServeTitleScenarioNotSelectable" xml:space="preserve">
+    <value>The scenario cannot be selected</value>
+  </data>
+  <data name="Message_ServeTitleOutputFailed" xml:space="preserve">
+    <value>An output could not be produced</value>
+  </data>
+  <data name="Message_ServeTitleUnexpectedError" xml:space="preserve">
+    <value>The server could not process the request</value>
+  </data>
+  <data name="Message_ServeTitleBusy" xml:space="preserve">
+    <value>The server is busy</value>
+  </data>
+  <data name="Message_ServeTitleJobTimeout" xml:space="preserve">
+    <value>The job took too long</value>
+  </data>
+  <data name="Message_ServeRequestHasAProblem" xml:space="preserve">
+    <value>The request has a problem.</value>
+  </data>
+  <data name="Message_ServeRequestHasProblems" xml:space="preserve">
+    <value>The request has {0} problems.</value>
+  </data>
+  <data name="Message_ServeRequestNotMultipartCompile" xml:space="preserve">
+    <value>Send the request as multipart/form-data: the project as a file named 'project' - or a workbook to import, named 'import' - and its options as JSON in a part named 'options'.</value>
+  </data>
+  <data name="Message_ServeRequestNotMultipartScenarios" xml:space="preserve">
+    <value>Send the request as multipart/form-data: the project as a file named 'project'.</value>
+  </data>
+  <data name="Message_ServeNotAcceptable" xml:space="preserve">
+    <value>The server can answer as {0}.</value>
+  </data>
+  <data name="Message_ServeOptionsTooLarge" xml:space="preserve">
+    <value>The options are larger than the {0} KB the server accepts.</value>
+  </data>
+  <data name="Message_ServeProjectNotReadable" xml:space="preserve">
+    <value>The file could not be read as a project.</value>
+  </data>
+  <data name="Message_ServeWorkbookNotReadable" xml:space="preserve">
+    <value>The file could not be read as a workbook.</value>
+  </data>
+  <data name="Message_ServeProjectHasACompilationError" xml:space="preserve">
+    <value>The project has a compilation error.</value>
+  </data>
+  <data name="Message_ServeProjectHasCompilationErrors" xml:space="preserve">
+    <value>The project has {0} compilation errors.</value>
+  </data>
+  <data name="Message_ServeCompilationTimedOut" xml:space="preserve">
+    <value>The compilation did not finish within its time limit.</value>
+  </data>
+  <data name="Message_ServeAnOutputFailed" xml:space="preserve">
+    <value>An output could not be produced.</value>
+  </data>
+  <data name="Message_ServeOutputFailed" xml:space="preserve">
+    <value>The {0} could not be produced.</value>
+  </data>
+  <data name="Message_ServeOutputsFailed" xml:space="preserve">
+    <value>{0} outputs could not be produced.</value>
+  </data>
+  <data name="Message_ServeUnexpectedError" xml:space="preserve">
+    <value>The server failed to process the request. Its log says why, under the request's trace id.</value>
+  </data>
+  <data name="Message_ServeUnexpectedErrorConsole" xml:space="preserve">
+    <value>The server failed to process the request (trace id {0}).</value>
+  </data>
+  <data name="Message_ServerReasonWithRequestId" xml:space="preserve">
+    <value>{0} (trace id {1})</value>
+  </data>
+  <data name="Message_ServeErrorRequired" xml:space="preserve">
+    <value>is required</value>
+  </data>
+  <data name="Message_ServeErrorProjectRequired" xml:space="preserve">
+    <value>is required: send the project as a file named 'project', or a workbook to import as 'import'</value>
+  </data>
+  <data name="Message_ServeErrorProjectRequiredForScenarios" xml:space="preserve">
+    <value>is required: send the project as a file named 'project'</value>
+  </data>
+  <data name="Message_ServeErrorProjectOrImport" xml:space="preserve">
+    <value>send a project or a workbook to import, not both</value>
+  </data>
+  <data name="Message_ServeErrorFileNeedsName" xml:space="preserve">
+    <value>needs a name: the outputs are named after it</value>
+  </data>
+  <data name="Message_ServeErrorPartNotKnown" xml:space="preserve">
+    <value>'{0}' is not a part this endpoint takes</value>
+  </data>
+  <data name="Message_ServeErrorParameterNotKnown" xml:space="preserve">
+    <value>is not a parameter this endpoint takes</value>
+  </data>
+  <data name="Message_ServeErrorIncludeNotKnown" xml:space="preserve">
+    <value>'{0}' is not something the answer can include: use console</value>
+  </data>
+  <data name="Message_ServeErrorNotKnown" xml:space="preserve">
+    <value>is not known here: check its spelling</value>
+  </data>
+  <data name="Message_ServeErrorOnlyWithProject" xml:space="preserve">
+    <value>is only valid with a project sent as 'project'</value>
+  </data>
+  <data name="Message_ServeErrorOptionsTooLarge" xml:space="preserve">
+    <value>must be at most {0} KB</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAFile" xml:space="preserve">
+    <value>must be a file</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAWorkbook" xml:space="preserve">
+    <value>must be an Excel workbook (.xlsx)</value>
+  </data>
+  <data name="Message_ServeErrorMustBeMultipart" xml:space="preserve">
+    <value>must be valid multipart/form-data</value>
+  </data>
+  <data name="Message_ServeErrorMustBeJson" xml:space="preserve">
+    <value>must be valid JSON (line {0}, position {1})</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAnObject" xml:space="preserve">
+    <value>must be a JSON object</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAString" xml:space="preserve">
+    <value>must be a string</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAWholeNumber" xml:space="preserve">
+    <value>must be a whole number</value>
+  </data>
+  <data name="Message_ServeErrorMustBeOneOf" xml:space="preserve">
+    <value>must be one of: {0}</value>
+  </data>
+  <data name="Message_ServeErrorMustBeADuration" xml:space="preserve">
+    <value>must be a duration of days, hours, minutes and seconds, such as PT5S</value>
+  </data>
+  <data name="Message_ServeErrorMustBeADateTimeWithOffset" xml:space="preserve">
+    <value>must be a date and time with its offset from UTC, such as 2026-10-03T09:00:00+01:00</value>
+  </data>
+  <data name="Message_ServeErrorDurationOutOfRange" xml:space="preserve">
+    <value>must be from {0} to {1}</value>
+  </data>
+  <data name="Message_ServeErrorPixelsOutOfRange" xml:space="preserve">
+    <value>must be from 1 to {0} pixels</value>
   </data>
 </root>

@@ -13,7 +13,7 @@ namespace Zametek.ProjectPlan.CommandLine
         // A transcript that cannot be played back is refused before anything of it is printed or written.
         public static bool IsPlayable(
             IReadOnlyList<JobTranscriptEntry>? transcript,
-            IReadOnlyList<JobResponseOutput>? outputs,
+            IReadOnlyList<OutputResponse>? outputs,
             IReadOnlyDictionary<JobOutput, string> filenames)
         {
             ArgumentNullException.ThrowIfNull(filenames);
@@ -40,7 +40,7 @@ namespace Zametek.ProjectPlan.CommandLine
         // unless a chart or a graph could not be written here, when the run, as a whole, has failed.
         public static async Task<ExitCode> PlayAsync(
             IReadOnlyList<JobTranscriptEntry> transcript,
-            IReadOnlyList<JobResponseOutput> outputs,
+            IReadOnlyList<OutputResponse> outputs,
             ExitCode exitCode,
             IJobConsole console,
             IJobSink sink)
@@ -67,7 +67,7 @@ namespace Zametek.ProjectPlan.CommandLine
                         await console.WriteErrorLineAsync((entry.Text ?? throw new InvalidOperationException()).ReplaceLineEndings(Environment.NewLine));
                         break;
                     case JobTranscriptKind.Output:
-                        JobResponseOutput output = outputs[entry.Index ?? throw new InvalidOperationException()];
+                        OutputResponse output = outputs[entry.Index ?? throw new InvalidOperationException()];
                         hasFailedOutputs |= !await WriteOutputAsync(output, sink);
                         break;
                 }
@@ -78,7 +78,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // Writes an output as a job's sink is given it, and says whether it could be.
         private static async Task<bool> WriteOutputAsync(
-            JobResponseOutput output,
+            OutputResponse output,
             IJobSink sink)
         {
             byte[] content = output.Content ?? throw new InvalidOperationException();

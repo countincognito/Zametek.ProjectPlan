@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
+using Shouldly;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using Zametek.Engine.ProjectPlan;
 
@@ -71,13 +73,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return server;
         }
 
-        // The job, sent as zpp serve takes one: the plan as the named part - input or import - under its file name, and
-        // the options, if any, as JSON.
-        public static MultipartFormDataContent JobContent(
+        // A request to compile a project, sent as zpp serve takes one: the plan as the named part - project or import - under
+        // its file name, and the options, if any, as JSON, declared as such, as zpp sends them.
+        public static MultipartFormDataContent CompileContent(
             byte[] plan,
             string filename,
-            JobOptions? options = null,
-            string part = @"input")
+            CompileOptions? options = null,
+            string part = @"project")
         {
             var content = new MultipartFormDataContent();
             var file = new ByteArrayContent(plan);
@@ -86,17 +88,31 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             if (options is not null)
             {
-                content.Add(new StringContent(JsonSerializer.Serialize(options, JobEndpoints.JsonOptions)), @"options");
+                content.Add(new StringContent(JsonSerializer.Serialize(options, JobJsonHelper.ClientOptions), Encoding.UTF8, @"application/json"), @"options");
             }
 
             return content;
         }
 
+        // The answer, read as the contract has it - strictly, so that a member it does not name is found.
         public static async Task<T> ReadAsync<T>(HttpResponseMessage response)
         {
             string json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<T>(json, JobEndpoints.JsonOptions)
+            return JsonSerializer.Deserialize<T>(json, ProjectEndpoints.JsonOptions)
                 ?? throw new InvalidOperationException(json);
+        }
+
+        // The answer, which is a problem: of the type RFC 9457 gives it, with the trace id of the request in it and in its
+        // Request-Id.
+        public static async Task<ProblemResponse> ReadProblemAsync(HttpResponseMessage response)
+        {
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(@"application/problem+json");
+
+            ProblemResponse problem = await ReadAsync<ProblemResponse>(response);
+
+            problem.Status.ShouldBe((int)response.StatusCode);
+            problem.TraceId.ShouldBe(response.Headers.GetValues(ResponseHeadersMiddleware.RequestIdHeader).ShouldHaveSingleItem());
+            return problem;
         }
 
         public async ValueTask DisposeAsync()

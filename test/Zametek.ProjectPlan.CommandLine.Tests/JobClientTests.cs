@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System.Diagnostics;
 using System.Globalization;
@@ -9,23 +6,28 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Xunit;
+using Zametek.Engine.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
     /// Tests for zpp --server around the job: where it runs - on --server, on
     /// ZPP_SERVER unless --local says otherwise, or here - and what it refuses
-    /// before anything is sent; a server that does not run the job - one that
-    /// is not there or not trusted, wants its API key, is asked for more than
-    /// its limits allow, stays busy for longer than zpp may wait, runs out of
-    /// time, or answers with something zpp cannot read - which ends the run
-    /// with exit code 5, saying why; and one that is busy for a while, which
-    /// zpp tries again when it says to. What a job a server runs prints and
-    /// writes - as zpp would - JobClientParityTests pins. In the same
-    /// collection as ProgramExitCodeTests, because Main swaps the console's
-    /// streams while it runs.
+    /// before anything is sent; how it talks to the server - the request it sends
+    /// and the problems it tells apart by their types; a server that does not
+    /// run the job - one that is not there or not trusted, wants its API key, is
+    /// asked for more than its limits allow, stays busy for longer than zpp may
+    /// wait, runs out of time, or answers with something zpp cannot read - which
+    /// ends the run with exit code 5, saying why, and with the request's id; one
+    /// that is busy for a while, which zpp tries again when it says to; and a
+    /// job that ran and failed, which ends the run as it would have ended here.
+    /// What a job a server runs prints and writes - as zpp would -
+    /// JobClientParityTests pins. In the same collection as ProgramExitCodeTests,
+    /// because Main swaps the console's streams while it runs.
     /// </summary>
     [Collection(ProgramExitCodeTests.CollectionName)]
     public class JobClientTests
@@ -34,13 +36,19 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private const string c_ApiKey = @"s3cr3t-k3y";
 
         // The answer to a job that printed and produced nothing, and succeeded.
-        private const string c_NothingToDoAnswer = @"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""outputs"":[],""transcript"":[]}";
+        private const string c_NothingToDoAnswer = @"{""metrics"":{},""outputs"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[]}}";
 
         // How long a job held part way through its upload is given to reach the server, before another is sent.
         private static readonly TimeSpan s_Settle = TimeSpan.FromMilliseconds(250);
 
+        // How long a client that should have given up is given to, before it is stopped.
+        private static readonly TimeSpan s_Hang = TimeSpan.FromSeconds(30);
+
         // A line a log wrote on stderr.
         private static readonly Regex s_LogLine = new(@"^\[\d\d:\d\d:\d\d [A-Z]{3}\] .*(\r?\n|$)", RegexOptions.Multiline);
+
+        // The id of the request that an error says.
+        private static readonly Regex s_TraceId = new(@"\(trace id ([0-9a-f]{32})\)");
 
         private readonly EngineFixture m_Engine;
         private readonly string m_TempDirectory;
@@ -118,39 +126,84 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return ServeSettingsHelper.LoadCertificate(file, null, @"p4ssw0rd");
         }
 
-        // A server that answers every job, and every request for a plan's scenarios, with the same text, whatever it is
-        // sent - once it has said it is busy, and when to try again, as many times as it is told to.
-        private static async Task<WebApplication> StartAnsweringAsync(
-            string answer,
-            int busy = 0,
-            Func<string>? retryAfter = null)
+        private static string Json<T>(T value)
         {
-            WebApplicationBuilder builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
-            builder.WebHost.UseKestrelCore();
-            builder.WebHost.ConfigureKestrel(kestrel => kestrel.Listen(IPAddress.Loopback, 0));
-            builder.Services.AddRoutingCore();
+            return JsonSerializer.Serialize(value, JobJsonHelper.ServerOptions);
+        }
 
-            WebApplication app = builder.Build();
-            int requests = 0;
+        // The console of a job that ended with the exit code, and printed the line - if it did - on stderr.
+        private static ConsoleResponse ConsoleOf(
+            ExitCode exitCode,
+            string? errorLine = null)
+        {
+            return new ConsoleResponse(
+                (int)exitCode,
+                string.Empty,
+                errorLine is null ? string.Empty : errorLine + "\n",
+                errorLine is null ? [] : [new JobTranscriptEntry { Kind = JobTranscriptKind.ErrorLine, Text = errorLine }]);
+        }
 
-            async Task AnswerAsync(HttpContext context)
+        // A problem of the kind, as a server answers with it.
+        private static FakeServer.Answer ProblemOf(
+            ProblemKind kind,
+            ConsoleResponse? console = null,
+            string? detail = null,
+            IReadOnlyList<ProblemError>? errors = null,
+            IReadOnlyList<OutputResponse>? outputs = null,
+            IReadOnlyDictionary<string, string>? headers = null)
+        {
+            var problem = new ProblemResponse
             {
-                if (Interlocked.Increment(ref requests) <= busy)
-                {
-                    context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                    context.Response.Headers.RetryAfter = retryAfter?.Invoke();
-                    return;
-                }
+                Type = ProblemHelper.GetType(kind),
+                Title = ProblemHelper.GetTitle(kind),
+                Status = ProblemHelper.GetStatus(kind),
+                Detail = detail,
+                TraceId = new string('a', 32),
+                Errors = errors,
+                Metrics = outputs is null ? null : new MetricsResponse(),
+                Outputs = outputs,
+                Console = console,
+            };
 
-                context.Response.ContentType = @"application/json";
-                await context.Response.WriteAsync(answer);
+            return new FakeServer.Answer(problem.Status, Json(problem), ProblemHelper.MediaType, headers);
+        }
+
+        private static FakeServer.Answer Busy(string retryAfter)
+        {
+            return ProblemOf(ProblemKind.Busy, detail: Resource.ProjectPlan.Messages.Message_ServeBusy, headers: new Dictionary<string, string> { [@"Retry-After"] = retryAfter });
+        }
+
+        private static FakeServer.Answer Ok(string body = c_NothingToDoAnswer)
+        {
+            return new FakeServer.Answer(Body: body);
+        }
+
+        // The reason zpp ends a run with when a server did not run the job, in the words zpp says it in, with the id of the
+        // request - which zpp made, and sent in its traceparent, and which the server's log names the request by.
+        private static void ShouldBeRefused(
+            string error,
+            string address,
+            string reason,
+            string? traceId = null)
+        {
+            Match match = s_TraceId.Match(error);
+            match.Success.ShouldBeTrue(error);
+
+            if (traceId is not null)
+            {
+                match.Groups[1].Value.ShouldBe(traceId);
             }
 
-            app.MapPost(@"/v1/jobs", (RequestDelegate)AnswerAsync);
-            app.MapPost(@"/v1/scenarios", (RequestDelegate)AnswerAsync);
+            error.ShouldBe(ErrorLine(string.Format(
+                Resource.ProjectPlan.Messages.Message_ServerRefused,
+                address,
+                string.Format(Resource.ProjectPlan.Messages.Message_ServerReasonWithRequestId, reason, match.Groups[1].Value))));
+        }
 
-            await app.StartAsync();
-            return app;
+        // The id of the request, as the traceparent it came with says it.
+        private static string TraceIdOf(FakeServer.Request request)
+        {
+            return request.Headers[@"traceparent"].Split('-')[1];
         }
 
         [Fact]
@@ -256,7 +309,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Run_Given_AChartBeyondTheServersLimits_Then_ServerFailureWithTheServersReason()
+        public async Task Run_Given_AChartBeyondTheServersLimits_Then_ServerFailureWithTheServersReasonAndWhereItIs()
         {
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxChartWidth = 300 } });
 
@@ -264,10 +317,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 [@"-i", Plan, @"--server", server.Address, @"--gantt-directory", m_TempDirectory, @"--gantt-size", @"800:600"]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
-            error.ShouldBe(ErrorLine(string.Format(
-                Resource.ProjectPlan.Messages.Message_ServerRefused,
+            ShouldBeRefused(
+                error,
                 server.Address,
-                string.Format(Resource.ProjectPlan.Messages.Message_ServeChartSizeOutOfRange, @"gantt", 300, new ServeLimits().MaxChartHeight))));
+                $@"{Resource.ProjectPlan.Messages.Message_ServeRequestHasAProblem.TrimEnd('.')}: #/options/outputs/ganttChart/width {string.Format(Resource.ProjectPlan.Messages.Message_ServeErrorPixelsOutOfRange, 300)}");
             Directory.GetFiles(m_TempDirectory).ShouldBeEmpty();
         }
 
@@ -281,14 +334,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (int exitCode, _, string error) = await RunAsync([@"-i", plan, @"--server", server.Address]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
-            error.ShouldBe(ErrorLine(string.Format(
-                Resource.ProjectPlan.Messages.Message_ServerRefused,
-                server.Address,
-                string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1))));
+            ShouldBeRefused(error, server.Address, string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1));
         }
 
         [Fact]
-        public async Task Run_Given_AJobThatRunsOutOfTimeOnTheServer_Then_ServerFailureWithTheServersReason()
+        public async Task Run_Given_AJobThatRunsOutOfTimeOnTheServer_Then_ServerFailureWithTheServersReasonAndNoSecondTry()
         {
             // A limit of no time at all is one no job can keep to.
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { JobTimeoutSeconds = 0 } });
@@ -296,18 +346,18 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
-            error.ShouldBe(ErrorLine(string.Format(
-                Resource.ProjectPlan.Messages.Message_ServerRefused,
-                server.Address,
-                string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 0))));
+            ShouldBeRefused(error, server.Address, string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 0));
+
+            // It is a 503, as a busy server is, and not tried again: it would only run out of time again.
+            server.ApiRequests.ShouldBe(1);
         }
 
         [Fact]
         public async Task Run_Given_ABusyServerThatStaysBusy_Then_ServerFailureOnceItHasWaitedAsLongAsItMay()
         {
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxJobs = 1, MaxQueue = 0 } });
-            using HeldContent held = await HeldContent.CreateAsync(RunningServer.JobContent(File.ReadAllBytes(Plan), @"two-scenarios.zpp"));
-            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/jobs", held);
+            using HeldContent held = await HeldContent.CreateAsync(RunningServer.CompileContent(File.ReadAllBytes(Plan), @"two-scenarios.zpp"));
+            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/projects/compile", held);
             await held.Started;
             await Task.Delay(s_Settle);
 
@@ -315,14 +365,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull();
 
             // The server says to try again in 5 seconds, which is more than the second zpp may wait - so it gives up at
-            // once, rather than wait past its limit.
+            // once, rather than wait past its limit. A client that waited past it would wait for the job to end, which it
+            // never does: so it is stopped, and fails, rather than hold up the run.
+            using var stopped = new CancellationTokenSource(s_Hang);
             var waited = Stopwatch.StartNew();
-            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1))))
-                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, server.Address, 1));
-            waited.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(4));
 
-            held.Release();
-            (await running).Dispose();
+            try
+            {
+                (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), stopped.Token)))
+                    .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, server.Address, 1));
+                waited.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(4));
+            }
+            finally
+            {
+                held.Release();
+                (await running).Dispose();
+            }
         }
 
         [Theory]
@@ -332,22 +390,60 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // The server says to try again in a second or two - in seconds, or as the time to - which is within the 4
             // seconds zpp may wait, as the 5 seconds zpp waits for a server that does not say are not.
-            await using WebApplication app = await StartAnsweringAsync(
-                c_NothingToDoAnswer,
-                busy: 1,
-                retryAfter: () => asTime ? DateTimeOffset.UtcNow.AddSeconds(2).ToString(@"R", CultureInfo.InvariantCulture) : @"1");
-            var options = new Options { InputFilename = Plan, Server = app.Urls.First() };
+            await using FakeServer server = await FakeServer.StartAsync(
+                n => n == 1
+                    ? Busy(asTime ? DateTimeOffset.UtcNow.AddSeconds(2).ToString(@"R", CultureInfo.InvariantCulture) : @"1")
+                    : Ok());
+            var options = new Options { InputFilename = Plan, Server = server.Address };
             ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull();
 
             (await JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(4))).ShouldBe(ExitCode.Success);
+
+            server.Requests.Count.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task Run_Given_AServerThatIsBusyMoreThanOnce_Then_WaitsLongerEachTimeAndSendsTheSameRequestUnderOneTrace()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(n => n <= 2 ? Busy(@"1") : Ok());
+            var options = new Options { InputFilename = Plan, Server = server.Address };
+            ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull();
+
+            // A second, then two: more than the two seconds that waiting a second each time would take.
+            var waited = Stopwatch.StartNew();
+            (await JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(30))).ShouldBe(ExitCode.Success);
+            waited.Elapsed.ShouldBeGreaterThan(TimeSpan.FromSeconds(2.9));
+            waited.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(10));
+
+            // The same job each time, in one trace: only the span of each request is its own.
+            IReadOnlyList<FakeServer.Request> requests = server.Requests;
+            requests.Count.ShouldBe(3);
+            requests.Select(x => x.Body.Length).Distinct().Count().ShouldBe(1);
+            requests.Select(TraceIdOf).Distinct().Count().ShouldBe(1);
+            requests.Select(x => x.Headers[@"traceparent"].Split('-')[2]).Distinct().Count().ShouldBe(3);
+        }
+
+        [Fact]
+        public async Task Run_Given_ABusyServerWithoutAProblemAndWithoutSayingWhen_Then_StillBusyAndNotRetriedBeyondTheLimit()
+        {
+            // A 503 from a proxy in front of the server says nothing, and is as busy as the server's own.
+            await using FakeServer server = await FakeServer.StartAsync(_ => new FakeServer.Answer(StatusCodes.Status503ServiceUnavailable, @"<html>busy</html>", @"text/html"));
+            var options = new Options { InputFilename = Plan, Server = server.Address };
+            ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull();
+
+            // The 5 seconds zpp waits for a server that does not say are more than the second it may wait.
+            using var stopped = new CancellationTokenSource(s_Hang);
+            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), stopped.Token)))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, server.Address, 1));
+            server.Requests.Count.ShouldBe(1);
         }
 
         [Fact]
         public async Task Run_Given_ABusyServerThatFreesUp_Then_TriesAgainAndRunsTheJob()
         {
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxJobs = 1, MaxQueue = 0 } });
-            using HeldContent held = await HeldContent.CreateAsync(RunningServer.JobContent(File.ReadAllBytes(Plan), @"two-scenarios.zpp"));
-            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/jobs", held);
+            using HeldContent held = await HeldContent.CreateAsync(RunningServer.CompileContent(File.ReadAllBytes(Plan), @"two-scenarios.zpp"));
+            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/projects/compile", held);
             await held.Started;
             await Task.Delay(s_Settle);
 
@@ -369,61 +465,325 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Run_Given_AnAnswerThatIsNotJson_Then_ServerFailureSayingSo()
         {
-            await using WebApplication app = await StartAnsweringAsync(@"not an answer");
-            string address = app.Urls.First();
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok(@"not an answer"));
 
-            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", address]);
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
             output.ShouldBeEmpty();
-            error.ShouldStartWith(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, address, string.Empty));
+            error.ShouldStartWith(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, server.Address, string.Empty));
         }
 
         [Theory]
         [InlineData(@"{}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""outputs"":[]}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""outputs"":[],""transcript"":[{""kind"":""output"",""index"":0}]}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""outputs"":[{""kind"":""project"",""fileName"":""x.zpp"",""contentType"":""application/json"",""content"":""AAAA""}],""transcript"":[{""kind"":""output"",""index"":0}]}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""outputs"":[],""transcript"":[{""kind"":""line""}]}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":2,""stdout"":"""",""stderr"":"""",""outputs"":[],""transcript"":[]}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":""""}}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[{""kind"":""output"",""index"":0}]}}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[{""kind"":""project"",""fileName"":""x.zpp"",""contentType"":""application/json"",""content"":""AAAA""}],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[{""kind"":""output"",""index"":0}]}}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[{""kind"":""project"",""fileName"":""x.zpp"",""contentType"":""application/json""}],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[{""kind"":""output"",""index"":0}]}}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[{""kind"":""line""}]}}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[],""console"":{""exitCode"":2,""standardOutput"":"""",""standardError"":"""",""transcript"":[]}}")]
+        [InlineData(@"{""metrics"":{},""outputs"":[],""console"":{""exitCode"":1,""standardOutput"":"""",""standardError"":"""",""transcript"":[]}}")]
         public async Task Run_Given_AnAnswerThatDoesNotMatchTheJob_Then_ServerFailureWithoutWritingAnything(string answer)
         {
-            // An answer with no transcript; one naming an output it does not have; one with an output the job did not
-            // ask for; a line with no text; and an exit code no job ends with.
-            await using WebApplication app = await StartAnsweringAsync(answer);
-            string address = app.Urls.First();
+            // An answer with no console; one with no transcript; one naming an output it does not have; one with an output
+            // the job did not ask for; one whose output has no content; a line with no text; an exit code no job ends with;
+            // and the exit code of a failure, which is not what a server that answers the job says.
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok(answer));
 
-            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", address]);
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
             output.ShouldBeEmpty();
             error.ShouldBe(ErrorLine(string.Format(
                 Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid,
-                address,
+                server.Address,
                 Resource.ProjectPlan.Messages.Message_ServerAnswerDoesNotMatchJob)));
             Directory.GetFiles(m_TempDirectory).ShouldBeEmpty();
         }
 
         [Theory]
         [InlineData(@"{}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""scenarios"":[],""transcript"":[{""kind"":""line""}]}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":0,""stdout"":"""",""stderr"":"""",""scenarios"":[],""transcript"":[{""kind"":""output"",""index"":0}]}")]
-        [InlineData(@"{""jobId"":""1"",""exitCode"":3,""stdout"":"""",""stderr"":"""",""scenarios"":[],""transcript"":[]}")]
+        [InlineData(@"{""scenarios"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":""""}}")]
+        [InlineData(@"{""scenarios"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[{""kind"":""line""}]}}")]
+        [InlineData(@"{""scenarios"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[{""kind"":""output"",""index"":0}]}}")]
+        [InlineData(@"{""scenarios"":[],""console"":{""exitCode"":3,""standardOutput"":"""",""standardError"":"""",""transcript"":[]}}")]
         public async Task ListScenarios_Given_AnAnswerThatDoesNotMatchTheList_Then_ServerFailure(string answer)
         {
-            // An answer with no transcript; a line with no text; an output, which a list of scenarios never has; and an
-            // exit code no list of scenarios ends with.
-            await using WebApplication app = await StartAnsweringAsync(answer);
-            string address = app.Urls.First();
+            // An answer with no console; one with no transcript; a line with no text; an output, which a list of scenarios
+            // never has; and an exit code no list of scenarios ends with.
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok(answer));
 
-            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--list-scenarios", @"--server", address]);
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--list-scenarios", @"--server", server.Address]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
             output.ShouldBeEmpty();
             error.ShouldBe(ErrorLine(string.Format(
                 Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid,
-                address,
+                server.Address,
                 Resource.ProjectPlan.Messages.Message_ServerAnswerDoesNotMatchJob)));
+        }
+
+        [Fact]
+        public async Task ListScenarios_Given_AnAnswerWithMoreInItThanZppKnows_Then_PrintsItsConsole()
+        {
+            // From a newer server, with a member this zpp has never heard of.
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok(
+                @"{""scenarios"":[],""colour"":""red"",""console"":{""exitCode"":0,""standardOutput"":""x"",""standardError"":"""",""transcript"":[{""kind"":""line"",""text"":""Alpha"",""extra"":1}],""more"":true}}"));
+
+            (int exitCode, string output, _) = await RunAsync([@"-i", Plan, @"--list-scenarios", @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            output.ShouldBe("Alpha\n");
+        }
+
+        public static TheoryData<ProblemKind, ExitCode> JobProblems => new()
+        {
+            { ProblemKind.CompilationFailed, ExitCode.CompilationErrors },
+            { ProblemKind.CompilationTimedOut, ExitCode.CompilationTimeout },
+            { ProblemKind.ProjectNotReadable, ExitCode.Failure },
+            { ProblemKind.ScenarioNotSelectable, ExitCode.Failure },
+            { ProblemKind.OutputFailed, ExitCode.Failure },
+            { ProblemKind.UnexpectedError, ExitCode.Failure },
+        };
+
+        [Theory]
+        [MemberData(nameof(JobProblems))]
+        public async Task Run_Given_AProblemOfAJobThatRanAndFailed_Then_PrintsItsConsoleAndEndsAsTheJobEnded(ProblemKind kind, ExitCode expected)
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => ProblemOf(kind, ConsoleOf(expected, @"The job went wrong.")));
+
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)expected);
+            output.ShouldBeEmpty();
+            error.ShouldBe(ErrorLine(@"The job went wrong."));
+        }
+
+        [Theory]
+        [MemberData(nameof(JobProblems))]
+        public async Task ListScenarios_Given_AProblemOfAJobThatRanAndFailed_Then_PrintsItsConsoleAndEndsAsTheJobEnded(ProblemKind kind, ExitCode expected)
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => ProblemOf(kind, ConsoleOf(expected, @"The job went wrong.")));
+
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--list-scenarios", @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)expected);
+            output.ShouldBeEmpty();
+            error.ShouldBe(ErrorLine(@"The job went wrong."));
+        }
+
+        [Theory]
+        [InlineData(ProblemKind.CompilationFailed, ExitCode.Success)]
+        [InlineData(ProblemKind.CompilationFailed, ExitCode.Failure)]
+        [InlineData(ProblemKind.CompilationTimedOut, ExitCode.CompilationErrors)]
+        [InlineData(ProblemKind.ProjectNotReadable, ExitCode.CompilationErrors)]
+        [InlineData(ProblemKind.OutputFailed, ExitCode.Success)]
+        [InlineData(ProblemKind.UnexpectedError, ExitCode.CompilationTimeout)]
+        public async Task Run_Given_AProblemWhoseConsoleDoesNotEndAsItsKindDoes_Then_ServerFailureWithoutPrintingAnything(ProblemKind kind, ExitCode ended)
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => ProblemOf(kind, ConsoleOf(ended, @"The job went wrong.")));
+
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            output.ShouldBeEmpty();
+            error.ShouldBe(ErrorLine(string.Format(
+                Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid,
+                server.Address,
+                Resource.ProjectPlan.Messages.Message_ServerAnswerDoesNotMatchJob)));
+        }
+
+        [Theory]
+        [InlineData(ProblemKind.CompilationFailed)]
+        [InlineData(ProblemKind.ScenarioNotSelectable)]
+        [InlineData(ProblemKind.UnexpectedError)]
+        public async Task Run_Given_AProblemOfAJobThatRanAndNoConsole_Then_ServerFailureWithItsReason(ProblemKind kind)
+        {
+            // A server that does not give the console, which zpp always asks for: its problem is all there is to say.
+            await using FakeServer server = await FakeServer.StartAsync(_ => ProblemOf(kind, detail: @"It went wrong."));
+
+            (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            ShouldBeRefused(error, server.Address, @"It went wrong.", TraceIdOf(server.Requests[0]));
+        }
+
+        [Theory]
+        [InlineData(ProblemKind.MalformedRequest)]
+        [InlineData(ProblemKind.ValidationFailed)]
+        public async Task Run_Given_AProblemWithTheRequest_Then_ServerFailureListingEachError(ProblemKind kind)
+        {
+            // The console, if the server gives it, is not the answer to a job that did not run.
+            await using FakeServer server = await FakeServer.StartAsync(_ => ProblemOf(
+                kind,
+                ConsoleOf(ExitCode.Failure, @"Not printed."),
+                @"The request has 2 problems.",
+                [
+                    new ProblemError { Pointer = @"#/options/scenario", Code = ProblemCodes.WrongType, Detail = @"must be a string" },
+                    new ProblemError { Parameter = @"include", Code = ProblemCodes.NotAllowed, Detail = @"is not allowed" },
+                ]));
+
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            output.ShouldBeEmpty();
+            ShouldBeRefused(error, server.Address, @"The request has 2 problems: #/options/scenario must be a string; include is not allowed");
+        }
+
+        [Fact]
+        public async Task Run_Given_AProblemOfATypeZppDoesNotKnow_Then_ServerFailureWithItsReason()
+        {
+            // As a newer server may have more kinds of problem than this zpp has heard of: a client takes it as its status says.
+            var problem = new ProblemResponse
+            {
+                Type = @"https://example.com/problems#something-new",
+                Title = @"Something new",
+                Status = StatusCodes.Status422UnprocessableEntity,
+                Detail = @"Something new went wrong.",
+                TraceId = new string('a', 32),
+                Console = ConsoleOf(ExitCode.Failure, @"Not printed."),
+            };
+            await using FakeServer server = await FakeServer.StartAsync(_ => new FakeServer.Answer(problem.Status, Json(problem), ProblemHelper.MediaType));
+
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            output.ShouldBeEmpty();
+            ShouldBeRefused(error, server.Address, @"Something new went wrong.");
+        }
+
+        [Fact]
+        public async Task Run_Given_AnAnswerThatIsNotAProblemAndFailed_Then_ServerFailureWithItsStatus()
+        {
+            // As a proxy in front of the server answers.
+            await using FakeServer server = await FakeServer.StartAsync(_ => new FakeServer.Answer(StatusCodes.Status502BadGateway, @"<html>Bad gateway</html>", @"text/html"));
+
+            (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            ShouldBeRefused(error, server.Address, @"502 Bad Gateway", TraceIdOf(server.Requests[0]));
+        }
+
+        [Fact]
+        public async Task Run_Given_AnAnswerThatIsNotAProblemAndHasNoBody_Then_ServerFailureWithItsStatus()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => new FakeServer.Answer(StatusCodes.Status404NotFound));
+
+            (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            ShouldBeRefused(error, server.Address, @"404 Not Found");
+        }
+
+        [Fact]
+        public async Task Run_Given_AServerThatSaysWhichRequestItWas_Then_NamesItByItsRequestId()
+        {
+            // The id the server gives it, which a server that sees a different trace - a proxy's - may not share.
+            string requestId = new('b', 32);
+            await using FakeServer server = await FakeServer.StartAsync(_ => new FakeServer.Answer(
+                StatusCodes.Status404NotFound,
+                Headers: new Dictionary<string, string> { [ResponseHeadersMiddleware.RequestIdHeader] = requestId }));
+
+            (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            ShouldBeRefused(error, server.Address, @"404 Not Found", requestId);
+        }
+
+        [Fact]
+        public async Task Run_Given_AnOutputThatCouldNotBeProduced_Then_WritesTheOthersPrintsTheConsoleAndFails()
+        {
+            // The job ran, and produced the project and not the chart: the project comes with the problem.
+            var project = new OutputResponse(JobOutput.Project, @"two-scenarios.zpp", @"application/json", [1, 2, 3]);
+            var console = new ConsoleResponse(
+                (int)ExitCode.Failure,
+                string.Empty,
+                "The gantt chart could not be produced.\n",
+                [
+                    new JobTranscriptEntry { Kind = JobTranscriptKind.Output, Index = 0 },
+                    new JobTranscriptEntry { Kind = JobTranscriptKind.ErrorLine, Text = @"The gantt chart could not be produced." },
+                ]);
+            await using FakeServer server = await FakeServer.StartAsync(_ => ProblemOf(ProblemKind.OutputFailed, console, outputs: [project]));
+            string saved = Path.Combine(m_TempDirectory, @"saved.zpp");
+
+            (int exitCode, string output, string error) = await RunAsync(
+                [@"-i", Plan, @"-o", saved, @"--gantt-directory", m_TempDirectory, @"--gantt-size", @"800:600", @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.Failure);
+            output.ShouldBeEmpty();
+            error.ShouldBe(ErrorLine(@"The gantt chart could not be produced."));
+            File.ReadAllBytes(saved).ShouldBe([1, 2, 3]);
+            Directory.GetFiles(m_TempDirectory).Select(Path.GetFileName).ShouldBe([@"saved.zpp"]);
+        }
+
+        [Fact]
+        public async Task Run_Given_AJob_Then_SendsTheRequestAsTheContractHasIt()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            (int exitCode, _, _) = await RunAsync(
+                [@"-i", Plan, @"-s", @"Beta", @"--metrics-format", @"json", @"--compile-timeout", @"3500", @"--gantt-directory", m_TempDirectory, @"--gantt-format", @"png", @"--gantt-size", @"800:600", @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            FakeServer.Request request = server.Requests.ShouldHaveSingleItem();
+            request.Path.ShouldBe(@"/v1/projects/compile");
+            request.Query.ShouldBe(@"?include=console");
+            request.Headers[@"Accept"].ShouldBe(@"application/json");
+            request.Headers.ContainsKey(@"Authorization").ShouldBeFalse();
+            request.Headers[@"traceparent"].ShouldMatch(@"^00-[0-9a-f]{32}-[0-9a-f]{16}-00$");
+
+            IReadOnlyList<FakeServer.Part> parts = await request.ReadPartsAsync();
+            parts.Select(x => x.Name).ShouldBe([@"project", @"options"]);
+
+            FakeServer.Part project = parts[0];
+            project.FileName.ShouldBe(@"two-scenarios.zpp");
+            project.ContentType.ShouldBe(@"application/octet-stream");
+            project.Content.ShouldBe(File.ReadAllBytes(Plan));
+
+            FakeServer.Part options = parts[1];
+            options.FileName.ShouldBeNull();
+            options.ContentType.ShouldStartWith(@"application/json");
+            Encoding.UTF8.GetString(options.Content).ShouldBe(
+                @"{""scenario"":""Beta"",""metricsFormat"":""json"",""compileTimeout"":""PT3.5S"",""outputs"":{""ganttChart"":{""format"":""png"",""width"":800,""height"":600}}}");
+        }
+
+        [Fact]
+        public async Task Run_Given_AnApiKey_Then_SendsItAsABearerToken()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            await RunAsync([@"-i", Plan, @"--server", server.Address], Variables((ClientSettingsHelper.ApiKeyVariable, c_ApiKey)));
+
+            server.Requests.ShouldHaveSingleItem().Headers[@"Authorization"].ShouldBe($@"Bearer {c_ApiKey}");
+        }
+
+        [Fact]
+        public async Task Run_Given_AnImport_Then_SendsTheWorkbookAsTheImportPart()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+            string workbook = Path.Combine(m_TempDirectory, @"plan.xlsx");
+            (await ZppMain.RunAsync([@"-i", Plan, @"-x", workbook, @"--now", @"2026-10-02T09:00:00+01:00"])).ShouldBe(0);
+
+            (int exitCode, _, _) = await RunAsync([@"-m", workbook, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            IReadOnlyList<FakeServer.Part> parts = await server.Requests.ShouldHaveSingleItem().ReadPartsAsync();
+            parts.Select(x => x.Name).ShouldBe([@"import", @"options"]);
+            parts[0].FileName.ShouldBe(@"plan.xlsx");
+        }
+
+        [Fact]
+        public async Task ListScenarios_Given_AProject_Then_SendsOnlyTheProject()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok(@"{""scenarios"":[],""console"":{""exitCode"":0,""standardOutput"":"""",""standardError"":"""",""transcript"":[]}}"));
+
+            (int exitCode, _, _) = await RunAsync([@"-i", Plan, @"--list-scenarios", @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            FakeServer.Request request = server.Requests.ShouldHaveSingleItem();
+            request.Path.ShouldBe(@"/v1/projects/scenarios");
+            request.Query.ShouldBe(@"?include=console");
+            (await request.ReadPartsAsync()).Select(x => x.Name).ShouldBe([@"project"]);
         }
 
         [Theory]
@@ -560,7 +920,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Run_Given_Verbose_Then_SaysWhereTheJobRan()
+        public async Task Run_Given_Verbose_Then_SaysWhereTheJobRanAndTheRequestsId()
         {
             await using RunningServer server = await StartAsync();
 
@@ -568,7 +928,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             exitCode.ShouldBe((int)ExitCode.Success);
             error.ShouldContain($@"Running two-scenarios.zpp on {server.Address}");
-            error.ShouldContain($@"ran on {server.Address}: exit code 0");
+            error.ShouldMatch($@"Request [0-9a-f]{{32}} ran on {Regex.Escape(server.Address)}: exit code 0");
         }
     }
 }

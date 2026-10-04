@@ -15,7 +15,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// Scripts and CI gates branch on these values, so a change here is a
     /// breaking change to the CLI. Checks on the files a run writes and on what
     /// it prints are here as well, since they need Main too. The tests all live
-    /// in one collection - with JobEndpointsParityTests, which run Main as well -
+    /// in one collection - with ProjectEndpointsParityTests, which run Main as well -
     /// so xunit runs them one at a time: Main swaps process-global state (the
     /// console streams and the static Serilog logger) while it runs.
     /// </summary>

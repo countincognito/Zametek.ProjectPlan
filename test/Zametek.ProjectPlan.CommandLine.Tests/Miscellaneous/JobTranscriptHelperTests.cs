@@ -24,16 +24,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [JobOutput.ArrowGraph] = @"plan-arrow.svg",
         };
 
-        private static readonly JobResponseOutput[] s_Outputs =
+        private static readonly OutputResponse[] s_Outputs =
         [
             Output(JobOutput.Project, @"project"),
             Output(JobOutput.GanttChart, @"gantt"),
             Output(JobOutput.ArrowGraph, @"arrow"),
         ];
 
-        private static JobResponseOutput Output(JobOutput kind, string content)
+        private static OutputResponse Output(JobOutput kind, string content)
         {
-            return new JobResponseOutput(kind, s_Filenames[kind], @"application/octet-stream", Encoding.UTF8.GetBytes(content));
+            return new OutputResponse(kind, s_Filenames[kind], @"application/octet-stream", Encoding.UTF8.GetBytes(content));
         }
 
         private static JobTranscriptEntry Line(string text) => new() { Kind = JobTranscriptKind.Line, Text = text };

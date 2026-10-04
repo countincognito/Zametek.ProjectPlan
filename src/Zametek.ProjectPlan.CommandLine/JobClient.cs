@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
@@ -11,13 +12,16 @@ using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
-    // zpp --server: zpp, with its run sent as a job to a zpp serve rather than run in this process. It opens the plan
+    // zpp --server: zpp, with its run sent as a request to a zpp serve rather than run in this process. It opens the plan
     // and checks the outputs' names as zpp does, so that what zpp would refuse fails as it would, before anything is
-    // sent; sends the plan, with zpp's options less the paths; and plays the answer's transcript back through zpp's own
-    // console and file sink, so that the run prints and writes what zpp would have, in the order zpp would have, and
-    // ends with the exit code zpp would have. A server that does not run the job - it cannot be reached, refuses the
-    // request, stays busy, or stops the job at its time limit - fails the run with a ServerException. It never builds
-    // the engine.
+    // sent; sends the plan, with zpp's options less the paths, asking for the console; and plays the console's transcript
+    // back through zpp's own console and file sink, so that the run prints and writes what zpp would have, in the order zpp
+    // would have, and ends with the exit code zpp would have - whether the server answered, or answered with a problem that
+    // says why the job failed: a plan that does not compile, a file it cannot read, a scenario it cannot select. A server
+    // that does not run the job - it cannot be reached, refuses the request, stays busy, or stops the job at its time limit
+    // - fails the run with a ServerException. It never builds the engine. Like any client of the API it sends a
+    // traceparent, tells a problem by its type, and tries a busy server again as it says to, with a little more patience
+    // each time.
     internal static class JobClient
     {
         #region Fields
@@ -25,13 +29,14 @@ namespace Zametek.ProjectPlan.CommandLine
         // How long zpp keeps trying a server that is busy.
         public static readonly TimeSpan BusyLimit = TimeSpan.FromMinutes(2);
 
-        private const string c_JobsPath = @"v1/jobs";
-        private const string c_ScenariosPath = @"v1/scenarios";
-        private const string c_InputPart = @"input";
+        private const string c_CompilePath = @"v1/projects/compile?include=console";
+        private const string c_ScenariosPath = @"v1/projects/scenarios?include=console";
+        private const string c_ProjectPart = @"project";
         private const string c_ImportPart = @"import";
         private const string c_OptionsPart = @"options";
         private const string c_Scheme = @"Bearer";
-        private const string c_DetailProperty = @"detail";
+        private const string c_TraceParentHeader = @"traceparent";
+        private const string c_JsonMediaType = @"application/json";
 
         // The name a plan whose own gives it no title is sent under.
         private const string c_StandInPlanName = @"plan";
@@ -42,6 +47,12 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // How long zpp waits for a busy server that does not say.
         private static readonly TimeSpan s_DefaultRetryAfter = TimeSpan.FromSeconds(5);
+
+        // The shortest zpp waits between two tries, whatever the server says.
+        private static readonly TimeSpan s_ShortestWait = TimeSpan.FromSeconds(1);
+
+        // The longest zpp waits between two tries, however many there have been, unless the server asks for longer.
+        private static readonly TimeSpan s_LongestBackOff = TimeSpan.FromSeconds(30);
 
         // How long zpp tries to connect to a server. Once it has, the server's own limits bound the job.
         private static readonly TimeSpan s_ConnectTimeout = TimeSpan.FromSeconds(30);
@@ -90,24 +101,27 @@ namespace Zametek.ProjectPlan.CommandLine
                 : c_StandInPlanName + Path.GetExtension(planName);
             using HttpClient client = CreateClient(settings);
 
+            // One trace for the run, however many requests it takes.
+            string traceId = ActivityTraceId.CreateRandom().ToHexString();
+
             Log.Information("Running {Plan} on {Server}", planName, settings.Server);
 
             if (options.ListScenarios)
             {
-                ScenariosResponse scenarios = await PostAsync<ScenariosResponse>(
+                ServerAnswer<ScenariosResponse> answer = await PostAsync<ScenariosResponse>(
                     client,
                     settings,
+                    traceId,
                     c_ScenariosPath,
-                    () => CreateContent(plan, sentName, c_InputPart, null),
+                    () => CreateContent(plan, sentName, c_ProjectPart, null),
                     limit,
                     cancellationToken);
 
                 var noOutputs = new Dictionary<JobOutput, string>();
 
-                return !JobTranscriptHelper.IsPlayable(scenarios.Transcript, [], noOutputs)
-                    || scenarios.ExitCode is not ((int)ExitCode.Success or (int)ExitCode.Failure)
-                    ? throw NotReadable(settings)
-                    : await JobTranscriptHelper.PlayAsync(scenarios.Transcript, [], (ExitCode)scenarios.ExitCode, console, new FileJobSink(noOutputs, console));
+                return answer.Problem is not null
+                    ? await ReplayProblemAsync(settings, answer, [], noOutputs, console)
+                    : await ReplayAsync(settings, answer.Value!.Console, [], noOutputs, console, ExitCode.Success, answer.RequestId);
             }
 
             // Checked as zpp checks it, before anything is sent, so that a bad name fails the run before any file has
@@ -119,27 +133,31 @@ namespace Zametek.ProjectPlan.CommandLine
 
             // Where zpp writes each output: named here, as zpp names it, whatever the server calls it.
             IReadOnlyDictionary<JobOutput, string> filenames = Program.BuildOutputFilenames(options, FileFormatHelper.GetProjectTitle(inputFilename));
-            JobOptions jobOptions = JobOptionsHelper.FromOptions(options);
+            CompileOptions compileOptions = CompileOptionsHelper.FromOptions(options);
 
-            JobResponse response = await PostAsync<JobResponse>(
+            ServerAnswer<CompileResponse> compiled = await PostAsync<CompileResponse>(
                 client,
                 settings,
-                c_JobsPath,
-                () => CreateContent(plan, sentName, importFormat is null ? c_InputPart : c_ImportPart, jobOptions),
+                traceId,
+                c_CompilePath,
+                () => CreateContent(plan, sentName, importFormat is null ? c_ProjectPart : c_ImportPart, compileOptions),
                 limit,
                 cancellationToken);
 
-            Log.Information("Job {JobId} ran on {Server}: exit code {ExitCode}", response.JobId, settings.Server, response.ExitCode);
-
-            return !JobTranscriptHelper.IsPlayable(response.Transcript, response.Outputs, filenames)
-                || response.ExitCode is not ((int)ExitCode.Success or (int)ExitCode.Failure or (int)ExitCode.CompilationErrors or (int)ExitCode.CompilationTimeout)
-                ? throw NotReadable(settings)
-                : await JobTranscriptHelper.PlayAsync(response.Transcript, response.Outputs, (ExitCode)response.ExitCode, console, new FileJobSink(filenames, console));
+            return compiled.Problem is not null
+                ? await ReplayProblemAsync(settings, compiled, compiled.Problem.Outputs ?? [], filenames, console)
+                : await ReplayAsync(settings, compiled.Value!.Console, compiled.Value.Outputs, filenames, console, ExitCode.Success, compiled.RequestId);
         }
 
         #endregion
 
         #region Private Members
+
+        // What a server answered a request with: the answer, or the problem it was not answered with; and the request's id.
+        private sealed record ServerAnswer<T>(
+            T? Value,
+            ProblemResponse? Problem,
+            string RequestId);
 
         private static HttpClient CreateClient(ClientSettings settings)
         {
@@ -183,12 +201,13 @@ namespace Zametek.ProjectPlan.CommandLine
             };
         }
 
-        // The plan as the named part - input or import - under its own name, and the job's options, if any, as JSON.
+        // The plan as the named part - project or import - under its own name, and the request's options, if any, as
+        // JSON, declared as such.
         private static MultipartFormDataContent CreateContent(
             byte[] plan,
             string planName,
             string part,
-            JobOptions? options)
+            CompileOptions? options)
         {
             var content = new MultipartFormDataContent();
             var file = new ByteArrayContent(plan);
@@ -197,26 +216,32 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (options is not null)
             {
-                content.Add(new StringContent(JsonSerializer.Serialize(options, JobJsonHelper.ClientOptions)), c_OptionsPart);
+                content.Add(new StringContent(JsonSerializer.Serialize(options, JobJsonHelper.ClientOptions), Encoding.UTF8, c_JsonMediaType), c_OptionsPart);
             }
 
             return content;
         }
 
-        // Sends the request, and again while the server is busy, for as long as busyLimit allows, and reads the answer.
-        private static async Task<T> PostAsync<T>(
+        // Sends the request, and again while the server is busy, for as long as busyLimit allows - waiting what the server says
+        // and a little more each time, with a little at random, as a client that every other waits with does not all come
+        // back at once - and reads the answer, or the problem that is the answer.
+        private static async Task<ServerAnswer<T>> PostAsync<T>(
             HttpClient client,
             ClientSettings settings,
+            string traceId,
             string path,
             Func<HttpContent> createContent,
             TimeSpan busyLimit,
             CancellationToken cancellationToken)
         {
             var waiting = Stopwatch.StartNew();
+            int tries = 0;
 
             while (true)
             {
                 using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = createContent() };
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(c_JsonMediaType));
+                request.Headers.Add(c_TraceParentHeader, $@"00-{traceId}-{ActivitySpanId.CreateRandom().ToHexString()}-00");
 
                 if (request.Content.Headers.ContentLength > c_ExpectContinueBytes)
                 {
@@ -229,10 +254,32 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
 
                 using HttpResponseMessage response = await SendAsync(client, request, settings, cancellationToken);
+                string requestId = response.Headers.TryGetValues(ResponseHeadersMiddleware.RequestIdHeader, out IEnumerable<string>? ids)
+                    ? ids.FirstOrDefault() ?? traceId
+                    : traceId;
 
-                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                if (response.IsSuccessStatusCode)
                 {
-                    TimeSpan retryAfter = GetRetryAfter(response);
+                    try
+                    {
+                        T value = await response.Content.ReadFromJsonAsync<T>(JobJsonHelper.ClientOptions, cancellationToken)
+                            ?? throw NotReadable(settings);
+                        return new ServerAnswer<T>(value, null, requestId);
+                    }
+                    catch (JsonException ex)
+                    {
+                        throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, settings.Server, ex.Message));
+                    }
+                }
+
+                ProblemResponse? problem = await ReadProblemAsync(response, cancellationToken);
+
+                // Busy: the job did not run, and is the same job tried again. A job that ran out of time is a 503 as well,
+                // which trying again would only run out of time again.
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable
+                    && !IsKind(problem, ProblemKind.JobTimeout))
+                {
+                    TimeSpan retryAfter = GetRetryAfter(response, tries);
 
                     if (waiting.Elapsed + retryAfter > busyLimit)
                     {
@@ -241,6 +288,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                     Log.Warning("The server at {Server} is busy: trying again in {Seconds} s", settings.Server, retryAfter.TotalSeconds);
                     await Task.Delay(retryAfter, cancellationToken);
+                    tries++;
                     continue;
                 }
 
@@ -255,23 +303,19 @@ namespace Zametek.ProjectPlan.CommandLine
                         : string.Format(Resource.ProjectPlan.Messages.Message_ServerRefusedApiKey, settings.Server));
                 }
 
-                if (!response.IsSuccessStatusCode)
+                // A job that ran and failed, and says so with the console: a project that does not compile, a file that cannot
+                // be read, a scenario that cannot be selected, an output that could not be produced.
+                if (problem?.Console is not null
+                    && ProblemHelper.TryGetKind(problem.Type, out ProblemKind kind)
+                    && GetExitCode(kind) is not null)
                 {
-                    throw new ServerException(string.Format(
-                        Resource.ProjectPlan.Messages.Message_ServerRefused,
-                        settings.Server,
-                        await GetReasonAsync(response, cancellationToken)));
+                    return new ServerAnswer<T>(default, problem, requestId);
                 }
 
-                try
-                {
-                    return await response.Content.ReadFromJsonAsync<T>(JobJsonHelper.ClientOptions, cancellationToken)
-                        ?? throw NotReadable(settings);
-                }
-                catch (JsonException ex)
-                {
-                    throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, settings.Server, ex.Message));
-                }
+                throw new ServerException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServerRefused,
+                    settings.Server,
+                    Describe(problem, response, requestId)));
             }
         }
 
@@ -294,42 +338,137 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // How long a busy server says to wait before trying again.
-        private static TimeSpan GetRetryAfter(HttpResponseMessage response)
+        // How long to wait before trying a busy server again: what it says - or zpp's own wait - and more each time that it
+        // has to be said, up to a limit that it may exceed by saying more, and a little over, at random.
+        private static TimeSpan GetRetryAfter(
+            HttpResponseMessage response,
+            int tries)
         {
             RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
-            TimeSpan? wait = retryAfter?.Delta
+            TimeSpan? said = retryAfter?.Delta
                 ?? (retryAfter?.Date is DateTimeOffset date ? date - TimeProvider.System.GetUtcNow() : null);
 
-            return wait is TimeSpan given && given >= TimeSpan.Zero
-                ? given
-                : s_DefaultRetryAfter;
+            return GetBackOff(said, tries, Random.Shared.NextDouble());
         }
 
-        // Why a server did not run the job: what its problem details say, or else its status.
-        private static async Task<string> GetReasonAsync(
+        // The wait before the try after this many: what the server says - or, if it says nothing that can be waited for,
+        // zpp's own wait; and never less than a second, so that a server that says to come back at once is not asked again
+        // and again in a tight loop - doubled for each try so far, up to 30 seconds, or what the server says if that is
+        // more; and up to a quarter more, as the jitter, from 0 to 1, takes it.
+        internal static TimeSpan GetBackOff(
+            TimeSpan? said,
+            int tries,
+            double jitter)
+        {
+            TimeSpan given = said is TimeSpan wait && wait >= TimeSpan.Zero
+                ? TimeSpan.FromTicks(Math.Max(wait.Ticks, s_ShortestWait.Ticks))
+                : s_DefaultRetryAfter;
+
+            TimeSpan ceiling = given > s_LongestBackOff ? given : s_LongestBackOff;
+
+            // Doubled for up to ten tries, and without overflowing for a server that says a long time.
+            long factor = 1L << Math.Min(tries, 10);
+            TimeSpan backedOff = given.Ticks > ceiling.Ticks / factor ? ceiling : TimeSpan.FromTicks(given.Ticks * factor);
+
+            return backedOff + TimeSpan.FromTicks((long)(backedOff.Ticks * 0.25 * jitter));
+        }
+
+        // The problem a response is, if it is one: problem details, which a proxy in front of the server, say, does not send.
+        private static async Task<ProblemResponse?> ReadProblemAsync(
             HttpResponseMessage response,
             CancellationToken cancellationToken)
         {
             try
             {
-                using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-
-                if (problem.RootElement.ValueKind == JsonValueKind.Object
-                    && problem.RootElement.TryGetProperty(c_DetailProperty, out JsonElement detail)
-                    && detail.ValueKind == JsonValueKind.String
-                    && detail.GetString() is string text
-                    && text.Length > 0)
-                {
-                    return text;
-                }
+                return await response.Content.ReadFromJsonAsync<ProblemResponse>(JobJsonHelper.ClientOptions, cancellationToken);
             }
-            catch (JsonException)
+            catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException)
             {
-                // Not problem details - from a proxy in front of the server, say - so the status says why.
+                return null;
+            }
+        }
+
+        private static bool IsKind(
+            ProblemResponse? problem,
+            ProblemKind kind)
+        {
+            return problem is not null
+                && ProblemHelper.TryGetKind(problem.Type, out ProblemKind found)
+                && found == kind;
+        }
+
+        // The exit code zpp ends a run with when the server says the job failed in this way, or null if the kind is not one
+        // of a job that ran: a project that does not compile ends as it does here, a compilation out of time too, and a file
+        // or a scenario that cannot be read or selected, an output that cannot be produced, or something unexpected, is a
+        // failure.
+        private static ExitCode? GetExitCode(ProblemKind kind)
+        {
+            return kind switch
+            {
+                ProblemKind.CompilationFailed => ExitCode.CompilationErrors,
+                ProblemKind.CompilationTimedOut => ExitCode.CompilationTimeout,
+                ProblemKind.ProjectNotReadable or ProblemKind.ScenarioNotSelectable or ProblemKind.OutputFailed or ProblemKind.UnexpectedError => ExitCode.Failure,
+                _ => null,
+            };
+        }
+
+        // Plays back the console of a job that ran to its end, and returns the exit code the run ends with.
+        private static async Task<ExitCode> ReplayAsync(
+            ClientSettings settings,
+            ConsoleResponse? served,
+            IReadOnlyList<OutputResponse> outputs,
+            IReadOnlyDictionary<JobOutput, string> filenames,
+            IJobConsole console,
+            ExitCode expected,
+            string requestId)
+        {
+            if (served is null
+                || served.ExitCode != (int)expected
+                || !JobTranscriptHelper.IsPlayable(served.Transcript, outputs, filenames))
+            {
+                throw NotReadable(settings);
             }
 
-            return $@"{(int)response.StatusCode} {response.ReasonPhrase}";
+            Log.Information("Request {RequestId} ran on {Server}: exit code {ExitCode}", requestId, settings.Server, served.ExitCode);
+
+            return await JobTranscriptHelper.PlayAsync(served.Transcript, outputs, expected, console, new FileJobSink(filenames, console));
+        }
+
+        // Plays back the console of a job that ran and failed, which the problem carries with the outputs - the others - that
+        // an output that could not be produced was produced with, and returns the exit code the run ends with.
+        private static async Task<ExitCode> ReplayProblemAsync<T>(
+            ClientSettings settings,
+            ServerAnswer<T> answer,
+            IReadOnlyList<OutputResponse> outputs,
+            IReadOnlyDictionary<JobOutput, string> filenames,
+            IJobConsole console)
+        {
+            ProblemResponse problem = answer.Problem ?? throw new InvalidOperationException();
+
+            ProblemHelper.TryGetKind(problem.Type, out ProblemKind kind);
+            ExitCode expected = GetExitCode(kind) ?? throw new InvalidOperationException();
+
+            return await ReplayAsync(settings, problem.Console, outputs, filenames, console, expected, answer.RequestId);
+        }
+
+        // Why a server did not run the job: what its problem details say - what is wrong, and where - or else its status;
+        // and the request's id, which its log names the request by.
+        private static string Describe(
+            ProblemResponse? problem,
+            HttpResponseMessage response,
+            string requestId)
+        {
+            string reason = string.IsNullOrEmpty(problem?.Detail)
+                ? $@"{(int)response.StatusCode} {response.ReasonPhrase}"
+                : problem.Detail;
+
+            // The errors read on from the sentence that says there are some, which has its full stop where they begin.
+            if (problem?.Errors is { Count: > 0 } errors)
+            {
+                reason = $@"{reason.TrimEnd('.')}: {string.Join(@"; ", errors.Select(x => $@"{x.Pointer ?? x.Parameter} {x.Detail}"))}";
+            }
+
+            return string.Format(Resource.ProjectPlan.Messages.Message_ServerReasonWithRequestId, reason, requestId);
         }
 
         private static ServerException NotReadable(ClientSettings settings)

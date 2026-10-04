@@ -21,7 +21,7 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     // zpp serve: zpp as a web server, which keeps the engine warm from one job to the next. It runs each job as zpp would
     // have run it, in a scope of its own, and answers with what zpp would have printed, exited with and written (see
-    // JobEndpoints for its API). It listens on this machine alone unless it is told otherwise, and then only with an API
+    // ProjectEndpoints for its API). It listens on this machine alone unless it is told otherwise, and then only with an API
     // key; it runs as many jobs at once as its limits allow, keeps as many more waiting as they allow, and turns any
     // more away; and it says it is ready, at /health/ready, once it has warmed up.
     internal static class JobServer
@@ -42,8 +42,8 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_Localhost = @"localhost";
         private const long c_Megabyte = 1024 * 1024;
 
-        // How long a job turned away is told to wait before it tries again.
-        private const int c_RetryAfterSeconds = 5;
+        // How long a request turned away is told to wait before it tries again, in seconds.
+        public const int RetryAfterSeconds = 5;
 
         #endregion
 
@@ -161,7 +161,6 @@ namespace Zametek.ProjectPlan.CommandLine
 
             services.AddSerilog();
             services.AddRoutingCore();
-            services.AddProblemDetails();
             services.Configure<FormOptions>(x => x.MultipartBodyLengthLimit = maxRequestBodySize);
 
             // A server that is stopped lets the jobs it is running finish, as long as they do within their time limit.
@@ -186,11 +185,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 limiter.RejectionStatusCode = StatusCodes.Status503ServiceUnavailable;
                 limiter.OnRejected = async (context, cancellationToken) =>
                 {
-                    context.HttpContext.Response.Headers.RetryAfter = c_RetryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+                    context.HttpContext.Response.Headers.RetryAfter = RetryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
-                    await Results.Problem(
-                        detail: Resource.ProjectPlan.Messages.Message_ServeBusy,
-                        statusCode: StatusCodes.Status503ServiceUnavailable).ExecuteAsync(context.HttpContext);
+                    await ProblemHelper.ToResult(ProblemHelper.Create(
+                        context.HttpContext,
+                        ProblemKind.Busy,
+                        Resource.ProjectPlan.Messages.Message_ServeBusy)).ExecuteAsync(context.HttpContext);
                 };
             });
 
@@ -199,7 +199,7 @@ namespace Zametek.ProjectPlan.CommandLine
             services.AddSingleton(jobRunner);
             services.AddSingleton(limits);
             services.AddSingleton(TimeProvider.System);
-            services.AddSingleton<JobEndpoints>();
+            services.AddSingleton<ProjectEndpoints>();
             services.AddSingleton<WarmUpService>();
 
             if (warmUp)
@@ -209,8 +209,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
             WebApplication app = builder.Build();
 
-            app.UseExceptionHandler();
-            app.UseStatusCodePages();
+            // First, so that every response has what none is without - the request's id among it - whatever made it.
+            app.UseMiddleware<ResponseHeadersMiddleware>();
+
+            // What the server did not expect, and what nothing answered - an unknown path, a method a path does not take - is
+            // a problem like the rest.
+            app.UseExceptionHandler(handler => handler.Run(ProblemHelper.WriteUnexpectedErrorAsync));
+            app.UseStatusCodePages(ProblemHelper.WriteStatusAsync);
 
             // Before the limiter, so that a request without the key never takes a job's place.
             if (settings.ApiKey is string apiKey)
@@ -221,11 +226,11 @@ namespace Zametek.ProjectPlan.CommandLine
             app.UseRateLimiter();
 
             RouteGroupBuilder api = app.MapGroup(ApiPath);
-            api.MapPost(@"/jobs", (RequestDelegate)(x => x.RequestServices.GetRequiredService<JobEndpoints>().RunJobAsync(x)))
+            api.MapPost(@"/projects/compile", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().CompileAsync(x)))
                 .RequireRateLimiting(c_JobsPolicy);
-            api.MapPost(@"/scenarios", (RequestDelegate)(x => x.RequestServices.GetRequiredService<JobEndpoints>().ListScenariosAsync(x)))
+            api.MapPost(@"/projects/scenarios", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().ListScenariosAsync(x)))
                 .RequireRateLimiting(c_JobsPolicy);
-            api.MapGet(@"/info", (RequestDelegate)(x => x.RequestServices.GetRequiredService<JobEndpoints>().GetInfoAsync(x)));
+            api.MapGet(@"/info", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x)));
 
             // Live as soon as it listens; ready once it has warmed up.
             app.MapHealthChecks(@"/health/live", new HealthCheckOptions { Predicate = _ => false });

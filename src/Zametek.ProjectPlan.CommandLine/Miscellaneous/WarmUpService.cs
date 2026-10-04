@@ -46,28 +46,34 @@ namespace Zametek.ProjectPlan.CommandLine
         public bool IsReady => m_IsReady;
 
         // The jobs it warms up with: every output, in raster formats, then in vector ones.
-        internal static IReadOnlyList<JobOptions> Jobs { get; } =
+        internal static IReadOnlyList<CompileOptions> Jobs { get; } =
         [
-            new JobOptions
+            new CompileOptions
             {
-                Output = true,
-                Export = true,
-                Gantt = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
-                Arrow = new GraphOptions { Format = GraphExport.Png },
-                Vertex = new GraphOptions { Format = GraphExport.Png },
-                Resource = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
-                EV = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
-                ScenarioChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                Outputs = new OutputsOptions
+                {
+                    Project = new ProjectOptions(),
+                    ScenarioExport = new ScenarioExportOptions(),
+                    GanttChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                    ArrowGraph = new GraphOptions { Format = GraphExport.Png },
+                    VertexGraph = new GraphOptions { Format = GraphExport.Png },
+                    ResourceChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                    EarnedValueChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                    ScenarioChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                },
             },
-            new JobOptions
+            new CompileOptions
             {
                 MetricsFormat = MetricsExport.Json,
-                Gantt = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
-                Arrow = new GraphOptions { Format = GraphExport.Svg },
-                Vertex = new GraphOptions { Format = GraphExport.Svg },
-                Resource = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
-                EV = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
-                ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                Outputs = new OutputsOptions
+                {
+                    GanttChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    ArrowGraph = new GraphOptions { Format = GraphExport.Svg },
+                    VertexGraph = new GraphOptions { Format = GraphExport.Svg },
+                    ResourceChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    EarnedValueChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                },
             },
         ];
 
@@ -95,13 +101,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
             try
             {
-                foreach (JobOptions options in Jobs)
+                foreach (CompileOptions options in Jobs)
                 {
                     await using Stream input = OpenSample();
                     var console = new BufferedConsole();
 
                     JobResult result = await m_JobRunner.RunAsync(
-                        JobOptionsHelper.ToJobRequest(options, input, null, m_Limits),
+                        CompileOptionsHelper.ToJobRequest(options, input, null, m_Limits),
                         new MemoryJobSink(console),
                         stoppingToken);
 

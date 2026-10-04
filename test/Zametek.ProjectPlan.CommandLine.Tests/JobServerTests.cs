@@ -45,7 +45,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         private static MultipartFormDataContent Job()
         {
-            return RunningServer.JobContent(TwoScenarios(), @"two-scenarios.zpp");
+            return RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
         }
 
         private Task<RunningServer> StartAsync(ServeSettings settings)
@@ -281,7 +281,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await using RunningServer server = await StartAsync(new ServeSettings { ApiKey = c_ApiKey });
 
             using HttpResponseMessage info = await server.Client.GetAsync(@"/v1/info");
-            using HttpResponseMessage job = await server.Client.PostAsync(@"/v1/jobs", Job());
+            using HttpResponseMessage job = await server.Client.PostAsync(@"/v1/projects/compile", Job());
 
             info.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
             info.Headers.WwwAuthenticate.ShouldHaveSingleItem().Scheme.ShouldBe(@"Bearer");
@@ -336,11 +336,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxJobs = 1, MaxQueue = 0 } });
             using HeldContent held = await HeldContent.CreateAsync(Job());
-            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/jobs", held);
+            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/projects/compile", held);
             await held.Started;
             await Task.Delay(s_Settle);
 
-            using HttpResponseMessage turnedAway = await server.Client.PostAsync(@"/v1/jobs", Job());
+            using HttpResponseMessage turnedAway = await server.Client.PostAsync(@"/v1/projects/compile", Job());
 
             turnedAway.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
             turnedAway.Headers.RetryAfter.ShouldNotBeNull().Delta.ShouldBe(TimeSpan.FromSeconds(5));
@@ -348,7 +348,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             held.Release();
             using HttpResponseMessage ran = await running;
-            using HttpResponseMessage next = await server.Client.PostAsync(@"/v1/jobs", Job());
+            using HttpResponseMessage next = await server.Client.PostAsync(@"/v1/projects/compile", Job());
 
             ran.StatusCode.ShouldBe(HttpStatusCode.OK);
             next.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -359,13 +359,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxJobs = 1, MaxQueue = 1 } });
             using HeldContent held = await HeldContent.CreateAsync(Job());
-            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/jobs", held);
+            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/projects/compile", held);
             await held.Started;
             await Task.Delay(s_Settle);
-            Task<HttpResponseMessage> waiting = server.Client.PostAsync(@"/v1/jobs", Job());
+            Task<HttpResponseMessage> waiting = server.Client.PostAsync(@"/v1/projects/compile", Job());
             await Task.Delay(s_Settle);
 
-            using HttpResponseMessage turnedAway = await server.Client.PostAsync(@"/v1/jobs", Job());
+            using HttpResponseMessage turnedAway = await server.Client.PostAsync(@"/v1/projects/compile", Job());
             waiting.IsCompleted.ShouldBeFalse();
             held.Release();
 
@@ -380,7 +380,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxJobs = 1, MaxQueue = 0 } });
             using HeldContent held = await HeldContent.CreateAsync(Job());
             using var givenUp = new CancellationTokenSource();
-            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/jobs", held, givenUp.Token);
+            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/projects/compile", held, givenUp.Token);
             await held.Started;
             await Task.Delay(s_Settle);
 
@@ -391,7 +391,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             HttpStatusCode status = HttpStatusCode.ServiceUnavailable;
             for (int attempt = 0; attempt < 50 && status == HttpStatusCode.ServiceUnavailable; attempt++)
             {
-                using HttpResponseMessage next = await server.Client.PostAsync(@"/v1/jobs", Job());
+                using HttpResponseMessage next = await server.Client.PostAsync(@"/v1/projects/compile", Job());
                 status = next.StatusCode;
                 if (status == HttpStatusCode.ServiceUnavailable)
                 {
@@ -413,11 +413,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             });
             server.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(@"Bearer", c_ApiKey);
             using HeldContent held = await HeldContent.CreateAsync(Job());
-            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/jobs", held);
+            Task<HttpResponseMessage> running = server.Client.PostAsync(@"/v1/projects/compile", held);
             await held.Started;
             await Task.Delay(s_Settle);
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, @"/v1/jobs") { Content = Job() };
+            using var request = new HttpRequestMessage(HttpMethod.Post, @"/v1/projects/compile") { Content = Job() };
             request.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", @"wrong-key");
             using HttpResponseMessage unauthorized = await server.Client.SendAsync(request);
             held.Release();
@@ -432,9 +432,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxUploadMegabytes = 1 } });
 
             // Asking to continue first, so that the server answers before the request is sent in full.
-            using var request = new HttpRequestMessage(HttpMethod.Post, @"/v1/jobs")
+            using var request = new HttpRequestMessage(HttpMethod.Post, @"/v1/projects/compile")
             {
-                Content = RunningServer.JobContent(new byte[2 * 1024 * 1024], @"large.zpp"),
+                Content = RunningServer.CompileContent(new byte[2 * 1024 * 1024], @"large.zpp"),
             };
             request.Headers.ExpectContinue = true;
             using HttpResponseMessage response = await server.Client.SendAsync(request);
