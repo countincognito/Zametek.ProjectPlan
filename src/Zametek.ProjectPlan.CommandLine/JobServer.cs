@@ -36,8 +36,13 @@ namespace Zametek.ProjectPlan.CommandLine
         // The first argument that runs zpp as a server rather than once.
         public const string Command = @"serve";
 
-        // Where its API is: everything under it needs the API key, when the server has one.
+        // Where its API is: everything under it needs the API key, when the server has one - but its description, which holds
+        // nothing that is not in the repository.
         public const string ApiPath = @"/v1";
+
+        // Where the description of the API is served.
+        internal const string DescriptionRoute = @"/openapi";
+        internal const string DescriptionPath = ApiPath + DescriptionRoute;
 
         // The command that lists its options.
         private const string c_HelpCommand = @"zpp " + Command + @" --help";
@@ -183,12 +188,12 @@ namespace Zametek.ProjectPlan.CommandLine
             services.AddSerilog();
             services.AddRoutingCore();
 
-            // What is answered as JSON is compressed, for a client that accepts it: over https too, as nothing in it is a
-            // secret that the request could have put there. A zip is not compressed again.
+            // What is answered as JSON, and the description of the API, is compressed, for a client that accepts it: over https too,
+            // as nothing in it is a secret that the request could have put there. A zip is not compressed again.
             services.AddResponseCompression(compression =>
             {
                 compression.EnableForHttps = true;
-                compression.MimeTypes = [c_JsonMediaType, ProblemHelper.MediaType];
+                compression.MimeTypes = [c_JsonMediaType, ProblemHelper.MediaType, .. ProjectEndpoints.DescriptionMediaTypes];
                 compression.Providers.Add<BrotliCompressionProvider>();
                 compression.Providers.Add<GzipCompressionProvider>();
             });
@@ -267,11 +272,13 @@ namespace Zametek.ProjectPlan.CommandLine
             api.MapPost(@"/projects/scenarios", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().ListScenariosAsync(x)))
                 .RequireRateLimiting(c_JobsPolicy);
             api.MapMethods(@"/info", [HttpMethods.Get, HttpMethods.Head], (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x)));
+            api.MapMethods(DescriptionRoute, [HttpMethods.Get, HttpMethods.Head], (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetDescriptionAsync(x)));
 
             // What each takes, for a client that asks: the methods, and what a POST takes.
             api.MapMethods(@"/projects/compile", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType)));
             api.MapMethods(@"/projects/scenarios", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType)));
             api.MapMethods(@"/info", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS")));
+            api.MapMethods(DescriptionRoute, [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS")));
 
             // Live as soon as it listens; ready once it has warmed up. What a probe is answered is of its moment: nothing the
             // health checks add to say so, which Cache-Control does, as it does for everything else.

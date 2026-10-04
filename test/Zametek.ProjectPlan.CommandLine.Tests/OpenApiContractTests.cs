@@ -154,7 +154,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"info, as HTML", client, Get(@"/v1/info", accept: @"text/html"), HttpStatusCode.NotAcceptable);
             await observations.SendAsync(@"info, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/info"), HttpStatusCode.OK);
 
-            foreach (string path in new[] { @"/v1/info", @"/v1/projects/compile", @"/v1/projects/scenarios" })
+            using HttpResponseMessage description = await observations.SendAndKeepAsync(@"description", client, Get(@"/v1/openapi"), HttpStatusCode.OK);
+            await observations.SendAsync(@"description, as YAML", client, Get(@"/v1/openapi", accept: @"application/yaml"), HttpStatusCode.OK);
+            await observations.SendAsync(@"description, as it was", client, Get(@"/v1/openapi", description.Headers.ETag.ShouldNotBeNull().ToString()), HttpStatusCode.NotModified);
+            await observations.SendAsync(@"description, as JSON", client, Get(@"/v1/openapi", accept: @"application/json"), HttpStatusCode.NotAcceptable);
+            await observations.SendAsync(@"description, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"), HttpStatusCode.OK);
+
+            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/projects/compile", @"/v1/projects/scenarios" })
             {
                 await observations.SendAsync($@"what {path} takes", client, new HttpRequestMessage(HttpMethod.Options, path), HttpStatusCode.NoContent);
             }
@@ -207,10 +213,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"compile, without the key", client, Post(@"/v1/projects/compile", Plan()), HttpStatusCode.Unauthorized);
             await observations.SendAsync(@"scenarios, without the key", client, Post(@"/v1/projects/scenarios", Plan()), HttpStatusCode.Unauthorized);
 
+            // The description needs no key: it holds nothing that the repository does not.
+            await observations.SendAsync(@"description, without the key", client, Get(@"/v1/openapi"), HttpStatusCode.OK);
+            await observations.SendAsync(@"description, the headers, without the key", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"), HttpStatusCode.OK);
+
             foreach (string path in new[] { @"/v1/info", @"/v1/projects/compile", @"/v1/projects/scenarios" })
             {
                 await observations.SendAsync($@"what {path} takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, path), HttpStatusCode.Unauthorized);
             }
+
+            await observations.SendAsync(@"what the description takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, @"/v1/openapi"), HttpStatusCode.NoContent);
 
             HttpRequestMessage withTheKey = Get(@"/v1/info");
             withTheKey.Headers.TryAddWithoutValidation(@"Authorization", $@"Bearer {c_ApiKey}");
@@ -411,6 +423,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 problems.Add($@"{response}: does not require {name}");
             }
+        }
+
+        [Fact]
+        public void Security_Given_TheDescription_Then_OnlyTheProbesAndTheDescriptionAreOpenAndEveryOtherOperationCanBeRefused()
+        {
+            // An operation that needs no key says so, and has no 401 to describe; every other has one.
+            string[] open = [.. Description.Operations.Where(x => x.Operation[@"security"] is JsonArray { Count: 0 }).Select(x => $@"{x.Method} {x.Path}")];
+            open.ShouldBe([@"GET /health/live", @"GET /health/ready", @"GET /v1/openapi", @"HEAD /v1/openapi", @"OPTIONS /v1/openapi"], ignoreOrder: true);
+
+            string[] refusable = [.. Description.Operations.Where(x => x.Operation[@"responses"]!.AsObject().ContainsKey(@"401")).Select(x => $@"{x.Method} {x.Path}")];
+            refusable.ShouldBe([.. Description.Operations.Select(x => $@"{x.Method} {x.Path}").Except(open)], ignoreOrder: true);
         }
 
         [Fact]
@@ -799,6 +822,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                             }
 
                             CheckJson(situation, content[@"application/json"]![@"schema"]!, stream.ToArray(), response, isProblem: false);
+                        }
+
+                        break;
+                    case @"application/openapi+yaml":
+                    case @"application/yaml":
+                        // The description is the file of the repository, byte for byte.
+                        if (!body.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Docs", @"openapi.yaml"))))
+                        {
+                            m_Problems.Add($@"{situation}: is not the file docs/openapi.yaml");
                         }
 
                         break;

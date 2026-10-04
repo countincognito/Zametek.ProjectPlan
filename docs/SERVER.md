@@ -289,6 +289,22 @@ curl.exe -s http://localhost:9770/v1/info
 {"version":"0.10.1","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
 ```
 
+The server serves its own description too - the `openapi.yaml` of [the API reference](API.md), as it was when the server was built - for any tool that reads OpenAPI. It needs no key:
+
+```powershell
+curl.exe -s -o openapi.yaml http://localhost:9770/v1/openapi
+```
+
+```powershell
+Get-Content openapi.yaml -TotalCount 3
+```
+
+```text
+openapi: 3.1.0
+info:
+  title: zpp serve API
+```
+
 Compile a project, which a request sends as a file in a part named `project`. The answer is JSON: the project's metrics, here shortened, and the outputs it was asked for, which are none yet:
 
 ```powershell
@@ -384,7 +400,7 @@ Set-Content -Path key-header.txt -Value "Authorization: Bearer $((Get-Content ap
 curl.exe -s -H "@key-header.txt" http://localhost:9770/v1/info
 ```
 
-The answer is the same as it was without a key. The server's log shows what it refused, with the method and the path and never the key - `GET /v1/info: refused, no API key` - and the id of the request, which the `401` carried.
+The answer is the same as it was without a key. The one thing that needs no key is the description, `http://localhost:9770/v1/openapi`. The server's log shows what it refused, with the method and the path and never the key - `GET /v1/info: refused, no API key` - and the id of the request, which the `401` carried.
 
 Stop the server with Ctrl+C in window 1, and delete the folder, and the key with it, when you are done.
 

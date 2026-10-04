@@ -12,6 +12,10 @@ info:
     [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), which the API
     follows. The problems' `type` URIs are the addresses of that reference's sections.
 
+    The server serves this description itself, at `GET /v1/openapi`, without an API key: the file of the repository, as it was when
+    the server was built. A description that is read from the repository names no server of its own, so a tool is given the address
+    of one; one that is fetched from a server describes that server.
+
     Every response, including a problem, carries `Request-Id`: 32 hexadecimal characters, the `traceId` of a problem and
     the trace id on every line of the server's log that belongs to the request. A request that carries a `traceparent`
     keeps the trace it names.
@@ -40,6 +44,8 @@ info:
     name: BSD 2-Clause License
     identifier: BSD-2-Clause
 servers:
+  - url: /
+    description: The server that this description was fetched from
   - url: http://localhost:9770
     description: zpp serve as it starts, on this machine
 tags:
@@ -255,18 +261,89 @@ paths:
       description: Says that the endpoint takes `GET` and `HEAD`. It needs the API key, as the rest of `/v1` does.
       responses:
         '204':
-          description: What the endpoint takes.
+          $ref: '#/components/responses/OptionsGet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/openapi:
+    get:
+      operationId: getDescription
+      tags: [Server]
+      summary: Fetch the description of this API
+      description: |
+        This description, as YAML, as it was when the server was built: the file of the repository, so that a server says what it
+        takes, and not what some other version of it took. It holds nothing that is not in the repository, so it needs no API key.
+        It cannot change while the server runs, so it has a strong `ETag` and can be kept for an hour by anyone.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: This description.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
-            Allow:
-              description: The methods it takes.
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Cache-Control:
+              description: May be kept by anyone, for an hour.
               required: true
               schema:
                 type: string
-                const: GET, HEAD, OPTIONS
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                const: public, max-age=3600
+            Vary:
+              description: The answer varies with what the request accepts.
+              required: true
+              schema:
+                type: string
+                const: Accept
+          content:
+            application/openapi+yaml:
+              schema:
+                type: string
+              examples:
+                start:
+                  summary: The start of it
+                  value: |
+                    openapi: 3.1.0
+                    info:
+                      title: zpp serve API
+                      summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
+            application/yaml:
+              schema:
+                type: string
+        '304':
+          description: The client has this description, as the `ETag` says.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    head:
+      operationId: headDescription
+      tags: [Server]
+      summary: The headers of the description
+      description: Answers with the headers of `GET`, `ETag` among them, and no body. It needs no API key.
+      security: []
+      responses:
+        '200':
+          description: The headers of `GET`, and no body.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+    options:
+      operationId: optionsDescription
+      tags: [Server]
+      summary: What the endpoint takes
+      description: Says that the endpoint takes `GET` and `HEAD`. It needs no API key, as they need none.
+      security: []
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGet'
   /health/live:
     get:
       operationId: getLive
@@ -489,6 +566,17 @@ components:
               $ref: '#/components/examples/Busy'
             jobTimeout:
               $ref: '#/components/examples/JobTimeout'
+    OptionsGet:
+      description: What the endpoint takes.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Allow:
+          description: The methods it takes.
+          required: true
+          schema:
+            type: string
+            const: GET, HEAD, OPTIONS
     OptionsPost:
       description: What the endpoint takes.
       headers:

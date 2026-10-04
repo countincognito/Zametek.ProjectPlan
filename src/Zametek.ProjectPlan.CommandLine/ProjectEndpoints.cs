@@ -19,8 +19,9 @@ namespace Zametek.ProjectPlan.CommandLine
     // JSON in a part named options (see CompileOptions). It is answered with the project's metrics and the outputs it
     // produced (see CompileResponse): as JSON, or - when the request accepts application/zip - as a zip of the outputs, with
     // the rest in result.json. Asked to include the console, it also says what zpp would have printed and exited with.
-    // POST /v1/projects/scenarios lists a project's scenarios, as --list-scenarios does, and GET /v1/info says what the
-    // server is. What cannot be answered is a problem (see ProblemResponse), with the status that says why: a request that
+    // POST /v1/projects/scenarios lists a project's scenarios, as --list-scenarios does, GET /v1/info says what the server
+    // is, and GET /v1/openapi gives the description of the API. What cannot be answered is a problem (see ProblemResponse),
+    // with the status that says why: a request that
     // cannot be understood is 400, one whose content is not valid, or whose project cannot be processed, is 422, and
     // whatever the server did not expect, or cannot do now, is 500 or 503.
     internal class ProjectEndpoints
@@ -38,15 +39,27 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_AcceptPostHeader = @"Accept-Post";
         private const string c_InfoCacheControl = @"private, max-age=60";
         private const string c_InfoContentType = @"application/json; charset=utf-8";
+        private const string c_DescriptionCacheControl = @"public, max-age=3600";
+        private const string c_DescriptionResourceName = @"openapi.yaml";
         private const string c_ResultFilename = @"result.json";
 
         // Where the parts of a request are, as a JSON pointer: the request, as OpenAPI models a multipart body, is an object
         // whose properties are its parts.
         private const string c_RequestPointer = @"#";
 
+        // The media types that the description of the API is offered as, the first being the answer to a request that asks for
+        // none in particular: that of a description of OpenAPI in YAML, and then YAML as such (RFC 9512).
+        internal const string DescriptionMediaType = @"application/openapi+yaml";
+        internal const string YamlMediaType = @"application/yaml";
+
         // The earliest and latest times a zip can stamp on its files.
         private static readonly DateTime s_EarliestZipTime = new(1980, 1, 1);
         private static readonly DateTime s_LatestZipTime = new(2107, 12, 31, 23, 59, 58);
+
+        private static readonly string[] s_DescriptionMediaTypes = [DescriptionMediaType, YamlMediaType];
+
+        // The description of the API as it was embedded when the server was built, and its strong ETag: read when first asked for.
+        private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_Description = new(ReadDescription);
 
         private readonly JobRunner m_JobRunner;
         private readonly ServeLimits m_Limits;
@@ -79,6 +92,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // How requests are read and responses written (see JobJsonHelper).
         public static JsonSerializerOptions JsonOptions => JobJsonHelper.ServerOptions;
+
+        // The media types that the description of the API is offered as.
+        public static IReadOnlyList<string> DescriptionMediaTypes => s_DescriptionMediaTypes;
 
         #endregion
 
@@ -125,21 +141,29 @@ namespace Zametek.ProjectPlan.CommandLine
                 LimitsResponse.From(m_Limits));
 
             byte[] body = JsonSerializer.SerializeToUtf8Bytes(info, JsonOptions);
-            var tag = new EntityTagHeaderValue($@"""{Convert.ToHexStringLower(SHA256.HashData(body))[..32]}""");
+            await WriteFixedAsync(context, body, GetStrongTag(body), c_InfoCacheControl, c_InfoContentType);
+        }
 
-            IHeaderDictionary headers = context.Response.Headers;
-            headers.ETag = tag.ToString();
-            headers.CacheControl = c_InfoCacheControl;
+        // The description of the API: docs/openapi.yaml, as it was when the server was built. It holds nothing that is not in the
+        // repository, so that anyone may have it, and the API key is not asked for; and it cannot change while the server runs,
+        // so it has an ETag of its own, and may be kept for an hour by whoever asked.
+        public async Task GetDescriptionAsync(HttpContext context)
+        {
+            ArgumentNullException.ThrowIfNull(context);
 
-            if (context.Request.GetTypedHeaders().IfNoneMatch.Any(x => x.Equals(EntityTagHeaderValue.Any) || x.Compare(tag, useStrongComparison: false)))
+            // What it is answered with depends on what the request accepts.
+            context.Response.Headers.Vary = c_AcceptHeader;
+
+            if (AcceptHelper.Choose(context.Request, s_DescriptionMediaTypes) is not string mediaType)
             {
-                context.Response.StatusCode = StatusCodes.Status304NotModified;
+                Answer refusal = NotAcceptable(context, s_DescriptionMediaTypes);
+                Log(context, refusal, Stopwatch.StartNew());
+                await refusal.Result.ExecuteAsync(context);
                 return;
             }
 
-            context.Response.ContentType = c_InfoContentType;
-            context.Response.ContentLength = body.Length;
-            await context.Response.Body.WriteAsync(body, context.RequestAborted);
+            (byte[] body, EntityTagHeaderValue tag) = s_Description.Value;
+            await WriteFixedAsync(context, body, tag, c_DescriptionCacheControl, mediaType);
         }
 
         // What an endpoint takes, as OPTIONS says it: no content, the methods it answers, and - for a POST - the media type
@@ -173,6 +197,48 @@ namespace Zametek.ProjectPlan.CommandLine
             int Status,
             string? Problem = null,
             ExitCode? ExitCode = null);
+
+        // The strong ETag of a body: a hash of it, which two bodies share only if they are the same.
+        private static EntityTagHeaderValue GetStrongTag(byte[] body)
+        {
+            return new EntityTagHeaderValue($@"""{Convert.ToHexStringLower(SHA256.HashData(body))[..32]}""");
+        }
+
+        // A body that cannot change while the server runs, with the ETag that says so: answered 304, and without the body, to a
+        // client that has it.
+        private static async Task WriteFixedAsync(
+            HttpContext context,
+            byte[] body,
+            EntityTagHeaderValue tag,
+            string cacheControl,
+            string contentType)
+        {
+            IHeaderDictionary headers = context.Response.Headers;
+            headers.ETag = tag.ToString();
+            headers.CacheControl = cacheControl;
+
+            if (context.Request.GetTypedHeaders().IfNoneMatch.Any(x => x.Equals(EntityTagHeaderValue.Any) || x.Compare(tag, useStrongComparison: false)))
+            {
+                context.Response.StatusCode = StatusCodes.Status304NotModified;
+                return;
+            }
+
+            context.Response.ContentType = contentType;
+            context.Response.ContentLength = body.Length;
+            await context.Response.Body.WriteAsync(body, context.RequestAborted);
+        }
+
+        private static (byte[] Body, EntityTagHeaderValue Tag) ReadDescription()
+        {
+            Type type = typeof(ProjectEndpoints);
+            using Stream stream = type.Assembly.GetManifestResourceStream(c_DescriptionResourceName)
+                ?? throw new InvalidOperationException($@"{c_DescriptionResourceName} is not embedded in {type.Assembly.GetName().Name}");
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+
+            byte[] body = memory.ToArray();
+            return (body, GetStrongTag(body));
+        }
 
         private async Task<Answer> CompileAnswerAsync(HttpContext context)
         {

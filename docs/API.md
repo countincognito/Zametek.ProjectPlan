@@ -1,14 +1,15 @@
 # The zpp serve API
 
-`zpp serve` runs zpp as a web server (see [Running zpp as a server](COMMAND-LINE.md#running-zpp-as-a-server)). This is the reference for the HTTP API it offers: what a request is, what each answer is, and every problem it can answer with. It is written for anyone who sends it projects - with `curl`, from a script, from a program of their own - and for the maintainers, who change it only as the [changelog](#changelog) records. [`openapi.yaml`](openapi.yaml) describes the same API for programs (OpenAPI 3.1): where the two differ, the description wins and this document has a bug. zpp itself, run as `zpp --server`, is one client of it; [what it does with each answer](#what-zpp---server-does-with-each-answer) is below. The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md) and cites its rules by their identifiers (`ASY-1`); [where it does not follow one](#deviations-from-the-guide) is recorded below.
+`zpp serve` runs zpp as a web server (see [Running zpp as a server](COMMAND-LINE.md#running-zpp-as-a-server)). This is the reference for the HTTP API it offers: what a request is, what each answer is, and every problem it can answer with. It is written for anyone who sends it projects - with `curl`, from a script, from a program of their own - and for the maintainers, who change it only as the [changelog](#changelog) records. [`openapi.yaml`](openapi.yaml) describes the same API for programs (OpenAPI 3.1), and the server [serves it](#fetch-the-description): where the two differ, the description wins and this document has a bug. zpp itself, run as `zpp --server`, is one client of it; [what it does with each answer](#what-zpp---server-does-with-each-answer) is below. The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md) and cites its rules by their identifiers (`ASY-1`); [where it does not follow one](#deviations-from-the-guide) is recorded below.
 
-The API has three operations, all under `/v1`:
+The API has four operations, all under `/v1`:
 
 | Operation | Does |
 | --------- | ---- |
 | [`POST /v1/projects/compile`](#compile-a-project) | Compiles the project in the request, and answers with its metrics and the outputs - files - that the request asks for |
 | [`POST /v1/projects/scenarios`](#list-a-projects-scenarios) | Lists the scenarios of the project in the request |
 | [`GET /v1/info`](#ask-what-the-server-is) | Says what the server is: its version, culture, time zone and limits |
+| [`GET /v1/openapi`](#fetch-the-description) | Gives the description of this API, `openapi.yaml`, for programs - without an API key |
 
 The server keeps nothing between requests. A project is sent with each request, and nothing of it is stored: the two POSTs are only POSTs because a project is a file, which cannot go in a URL. Sending one again does the same again, and a request can go to any server of the same version.
 
@@ -50,23 +51,29 @@ A project that does not compile is not an answer but a [problem](#problems): `42
 curl --fail-with-body -s -F project=@plan.zpp http://localhost:9770/v1/projects/compile
 ```
 
+The server also serves its own description, for any tool that reads OpenAPI ([more](#fetch-the-description)):
+
+```
+curl -s -o openapi.yaml http://localhost:9770/v1/openapi
+```
+
 ## Conventions
 
 Everything below applies to every operation unless it says otherwise.
 
-**Media types.** A request that sends a file is `multipart/form-data`. An answer is `application/json`, or - when a request to compile asks for it with `Accept: application/zip` - a zip. A problem is always `application/problem+json`, whatever `Accept` says. `Accept` is negotiated by quality: `*/*` and `application/*` are taken for what they are, `q=0` refuses a type, and a request whose `Accept` offers nothing the operation answers with is `406`, which says what the operation can answer with. The answer of a compile varies with `Accept`, and says so with `Vary: Accept`.
+**Media types.** A request that sends a file is `multipart/form-data`. An answer is `application/json`, or - when a request to compile asks for it with `Accept: application/zip` - a zip; the description of the API is YAML. A problem is always `application/problem+json`, whatever `Accept` says. `Accept` is negotiated by quality: `*/*` and `application/*` are taken for what they are, `q=0` refuses a type, and a request whose `Accept` offers nothing the operation answers with is `406`, which says what the operation can answer with. The answer of a compile varies with `Accept`, and says so with `Vary: Accept`.
 
 **Names and values.** JSON is compact and written in `lowerCamelCase`; names are matched exactly as they are written, case and all. An enumerated value is a string in `lowerCamelCase`, never a number - `png`, `graphml`, `markdown`. A time is RFC 3339 with its offset, a date is `2024-01-06`, a duration is ISO 8601 (`PT5S`, `PT2M`) in days, hours, minutes and seconds and nothing longer, and a metric that cannot be worked out is `null`: it is known, and has no value. A request that names a member the server does not know is refused, and says which (`422`); an answer may gain members in a later version, which a client has to ignore.
 
 **Request ids.** Every response - answer, problem, `401`, `404`, `OPTIONS`, probe - carries `Request-Id`, 32 hexadecimal characters, which is the `traceId` of its problem and the trace id on every line of the server's log that belongs to the request: send it to whoever runs the server, who finds the request in the log by it. A request that carries a [`traceparent`](https://www.w3.org/TR/trace-context/) keeps the trace it names, and its trace id is the request's id; one that does not is given an id of its own.
 
-**Authentication.** A server on this machine alone needs no API key; one that other machines can reach has to have one, and everything under `/v1` then needs it, as `Authorization: Bearer <key>`. A request without it, or with another, is `401` with `WWW-Authenticate: Bearer`. The health endpoints are the only paths that need no key. A key is at least 32 characters, and a random 256-bit key written in base64 is 44: `openssl rand -base64 32` makes one. The server keeps only a hash of the key and compares it in constant time, and logs each request it refuses - its method, its path and the trace id, never the key - at warning level. A key on a command line can be read by the other users of the machine, so give `curl` the header from a file - a file with the one line `Authorization: Bearer <key>` in it - with `-H @key-header.txt`.
+**Authentication.** A server on this machine alone needs no API key; one that other machines can reach has to have one, and everything under `/v1` then needs it, as `Authorization: Bearer <key>`. A request without it, or with another, is `401` with `WWW-Authenticate: Bearer`. The health endpoints and [the description of the API](#fetch-the-description) are the only paths that need no key. A key is at least 32 characters, and a random 256-bit key written in base64 is 44: `openssl rand -base64 32` makes one. The server keeps only a hash of the key and compares it in constant time, and logs each request it refuses - its method, its path and the trace id, never the key - at warning level. A key on a command line can be read by the other users of the machine, so give `curl` the header from a file - a file with the one line `Authorization: Bearer <key>` in it - with `-H @key-header.txt`.
 
 **Transport.** Beyond this machine the API is served over https, which takes TLS 1.2 and 1.3, or over plain http behind a proxy that ends TLS (`--behind-tls-proxy`): the server refuses to listen on plain http that other machines can reach without being told so, as it would send the key and every project in the clear. On this machine it can listen on plain http, on a Unix domain socket - which only the user running the server can connect to, and which needs no key - or on both.
 
-**Compression.** JSON, and problems, are compressed with brotli or gzip for a client that accepts them (`Accept-Encoding`), and say so with `Vary: Accept-Encoding`. A zip is not compressed again.
+**Compression.** JSON, problems and the description of the API are compressed with brotli or gzip for a client that accepts them (`Accept-Encoding`), and say so with `Vary: Accept-Encoding`. A zip is not compressed again.
 
-**Caching.** Every response says `Cache-Control: no-store` - what the server answers is made of somebody's project - except [`/v1/info`](#ask-what-the-server-is), which can be cached for a minute and validated with its `ETag`.
+**Caching.** Every response says `Cache-Control: no-store` - what the server answers is made of somebody's project - except [`/v1/info`](#ask-what-the-server-is), which can be cached for a minute by whoever asked, and [the description of the API](#fetch-the-description), which can be cached for an hour by anyone; each is validated with its `ETag`.
 
 **Limits.** [`/v1/info`](#ask-what-the-server-is) gives the server's limits, which its operator sets (see [Limits](COMMAND-LINE.md#limits)): how large a request and a chart may be, how long a job and a compilation may take, how many jobs run at once, and how many wait. A request beyond them is a problem that says which limit.
 
@@ -225,7 +232,34 @@ The request is a `multipart/form-data` body with a part named `project`, and not
 - `maxJobs` jobs run at once and `maxQueue` more wait for one to finish; any more are turned away (`503 busy`). A request, with its files, is at most `maxUploadMegabytes` megabytes; a chart at most `maxChartWidth` by `maxChartHeight` pixels. A job that runs past `jobTimeout` is stopped (`503 job-timeout`), and a request's `compileTimeout` is at most `maxCompileTimeout`.
 - It cannot change while the server runs, so it has a strong `ETag`, and may be kept for a minute (`Cache-Control: private, max-age=60`): `If-None-Match` with the `ETag` answers `304`. `HEAD` answers with the headers alone.
 
-`OPTIONS` on any of the paths answers `204`, with `Allow` - `POST, OPTIONS`; `GET, HEAD, OPTIONS` for `/v1/info` - and `Accept-Post: multipart/form-data` for the POSTs. It needs the API key, as the rest of `/v1` does.
+`OPTIONS` on any of the paths answers `204`, with `Allow` - `POST, OPTIONS`; `GET, HEAD, OPTIONS` for `/v1/info` and `/v1/openapi` - and `Accept-Post: multipart/form-data` for the POSTs. It needs the API key, as the rest of `/v1` does, but on `/v1/openapi`.
+
+## Fetch the description
+
+`GET /v1/openapi`
+
+The description of this API, [`openapi.yaml`](openapi.yaml), as it was when the server was built: the file of the repository itself, byte for byte, so that a server says what it takes, and not what some other version of it took.
+
+```
+curl -s -o openapi.yaml http://localhost:9770/v1/openapi
+```
+
+```
+HTTP/1.1 200 OK
+Content-Length: 56562
+Content-Type: application/openapi+yaml
+Date: Sun, 04 Oct 2026 18:42:54 GMT
+Cache-Control: public, max-age=3600
+ETag: "327657af6f700650fad3968337480cff"
+Vary: Accept
+Request-Id: deb7630432becdbd9ed7809ae90af7b0
+X-Content-Type-Options: nosniff
+```
+
+- It is YAML. A request asks for it as `application/openapi+yaml`, the media type of a description of OpenAPI - which is what a request that says nothing is answered with - or as `application/yaml`; any other `Accept` is `406`, which says which it can answer with. It is not offered as JSON.
+- It needs no API key, and neither do `HEAD` and `OPTIONS` on it: it holds nothing that is not in the repository, and a tool has to read what a server takes before it is told the key. It is the only path of `/v1` that needs none.
+- It cannot change while the server runs, so it has a strong `ETag`, and may be kept by anyone for an hour (`Cache-Control: public, max-age=3600`): `If-None-Match` with the `ETag` answers `304`. It varies with `Accept`, and says so, and it is compressed for a client that accepts it. `HEAD` answers with the headers alone.
+- The first server it names is `/`: the server that a description was fetched from is the one that it describes. Read from the repository, it names no server, and a tool is given the address of one.
 
 ## Probes
 
@@ -507,11 +541,11 @@ The API Security Top 10 of OWASP, 2023, against the API as it stands (each relea
 | API2 Broken authentication | One shared key, at least 32 characters, kept as a hash, compared in constant time, sent as a bearer token, and over TLS beyond this machine; refusals are logged without it; a Unix domain socket is the user's alone |
 | API3 Broken object property level authorization | A request's members are checked, one by one; one that is not known is refused, so a property cannot be assigned that was not meant to be; the answer holds only what the operation produces |
 | API4 Unrestricted resource consumption | A limit on the size of a request, of its `options` and their depth, of a chart, of a job's time and of a compilation's, on the jobs that run at once and those that wait; the rest are turned away with `Retry-After` |
-| API5 Broken function level authorization | One role: whoever has the key may use every operation; the health endpoints, which reveal only whether the server is ready, need none |
+| API5 Broken function level authorization | One role: whoever has the key may use every operation; the health endpoints, which reveal only whether the server is ready, and the description of the API, which is the repository's, need none |
 | API6 Unrestricted access to sensitive business flows | The operations compute from what they are sent and keep nothing; the limits bound what one client can ask for |
 | API7 Server side request forgery | The server never fetches a URL: nothing in a request names one |
 | API8 Security misconfiguration | TLS 1.2 and 1.3; plain http beyond this machine refused unless a proxy is said to end TLS; no `Server` header; `nosniff` and `no-store` on every response; a failure the server did not expect is answered generically, with nothing of its paths, types or code; no CORS - no browser calls it |
-| API9 Improper inventory management | One version, `/v1`; `openapi.yaml` and this document describe every path, and a test holds the description to the server; `/v1/info` says what the server is |
+| API9 Improper inventory management | One version, `/v1`; `openapi.yaml` and this document describe every path, a test holds the description to the server, and the server serves the description at `/v1/openapi`; `/v1/info` says what the server is |
 | API10 Unsafe consumption of APIs | The server calls no other API |
 
 ## Deviations from the guide
@@ -537,7 +571,7 @@ The API is versioned as a whole, by its path (`/v1`), as [VER-1 to VER-3](RESTFU
 
 The first version of the API.
 
-- `POST /v1/projects/compile`, `POST /v1/projects/scenarios`, `GET /v1/info`, `HEAD` and `OPTIONS`, and the health probes.
+- `POST /v1/projects/compile`, `POST /v1/projects/scenarios`, `GET /v1/info`, `GET /v1/openapi`, `HEAD` and `OPTIONS`, and the health probes.
 - The outcome is the status: `200` for a project that compiled and every output produced, `422` for one that cannot be processed, `500` for a server that failed, `503` for one that is busy or ran out of time; every problem is `application/problem+json`, with its request's id and every error listed.
 - `?include=console` adds what zpp would have printed and exited with, to an answer or a problem.
 - Optional: zip answers, `Accept` negotiation, compression, `ETag`.

@@ -14,8 +14,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
     /// Tests for how zpp serve's API is carried: what an OPTIONS says, what /v1/info is answered with - its members, its ETag
-    /// and the 304 that a client that has it is answered with, HEAD, and what it refuses to be asked for - how what is answered
-    /// as JSON is compressed, what a probe is answered with, what no response is without, and the protocols it takes over
+    /// and the 304 that a client that has it is answered with, HEAD, and what it refuses to be asked for - the description of the
+    /// API at /v1/openapi, which is carried the same way but for needing no key, how what is answered as JSON, or as the
+    /// description, is compressed, what a probe is answered with, what no response is without, and the protocols it takes over
     /// https.
     /// </summary>
     public class ProjectTransportTests
@@ -82,6 +83,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"/v1/projects/compile", @"POST, OPTIONS", @"multipart/form-data")]
         [InlineData(@"/v1/projects/scenarios", @"POST, OPTIONS", @"multipart/form-data")]
         [InlineData(@"/v1/info", @"GET, HEAD, OPTIONS", null)]
+        [InlineData(@"/v1/openapi", @"GET, HEAD, OPTIONS", null)]
         public async Task Options_Given_AnEndpoint_Then_NoContentAndWhatItTakes(string path, string allow, string? acceptPost)
         {
             using HttpResponseMessage response = await SendAsync(HttpMethod.Options, path);
@@ -220,6 +222,149 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             response.StatusCode.ShouldBe(HttpStatusCode.NotAcceptable);
             problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeNotAcceptable, @"application/json"));
+        }
+
+        [Fact]
+        public async Task Description_Given_AGet_Then_TheFileThatWasEmbeddedAsADescriptionOfOpenApiInYaml()
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/openapi");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(@"application/openapi+yaml");
+            (await response.Content.ReadAsByteArrayAsync()).ShouldBe(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Docs", @"openapi.yaml")));
+            response.Headers.GetValues(@"X-Content-Type-Options").ShouldBe([@"nosniff"]);
+            response.Headers.GetValues(ResponseHeadersMiddleware.RequestIdHeader).ShouldHaveSingleItem().ShouldMatch(@"^[0-9a-f]{32}$");
+        }
+
+        [Theory]
+        [InlineData(null, @"application/openapi+yaml")]
+        [InlineData(@"*/*", @"application/openapi+yaml")]
+        [InlineData(@"application/*", @"application/openapi+yaml")]
+        [InlineData(@"application/openapi+yaml", @"application/openapi+yaml")]
+        [InlineData(@"application/yaml", @"application/yaml")]
+        [InlineData(@"application/yaml, application/openapi+yaml;q=0.5", @"application/yaml")]
+        [InlineData(@"text/html, application/yaml;q=0.1", @"application/yaml")]
+        public async Task Description_Given_AnAccept_Then_TheOfferedTypeItPrefers(string? accept, string expected)
+        {
+            using HttpResponseMessage response = await SendAsync(
+                HttpMethod.Get,
+                @"/v1/openapi",
+                headers =>
+                {
+                    if (accept is not null)
+                    {
+                        headers.TryAddWithoutValidation(@"Accept", accept);
+                    }
+                });
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(expected);
+            response.Headers.Vary.ShouldContain(@"Accept");
+        }
+
+        [Theory]
+        [InlineData(@"application/json")]
+        [InlineData(@"application/openapi+json")]
+        [InlineData(@"text/html")]
+        [InlineData(@"application/yaml;q=0, application/openapi+yaml;q=0")]
+        public async Task Description_Given_AnAcceptItCannotMeet_Then_NotAcceptableSayingWhatItCanBe(string accept)
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/openapi", headers => headers.TryAddWithoutValidation(@"Accept", accept));
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.NotAcceptable);
+            problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeNotAcceptable, @"application/openapi+yaml, application/yaml"));
+        }
+
+        [Fact]
+        public async Task Description_Given_AGet_Then_AStrongETagAndAPublicLifeOfAnHourInACache()
+        {
+            using HttpResponseMessage first = await SendAsync(HttpMethod.Get, @"/v1/openapi");
+            using HttpResponseMessage second = await SendAsync(HttpMethod.Get, @"/v1/openapi");
+
+            first.Headers.ETag.ShouldNotBeNull().IsWeak.ShouldBeFalse();
+            first.Headers.ETag.Tag.ShouldMatch(@"^""[0-9a-f]{32}""$");
+            second.Headers.ETag.ShouldBe(first.Headers.ETag);
+            CacheControlHeaderValue cacheControl = first.Headers.CacheControl.ShouldNotBeNull();
+            cacheControl.Public.ShouldBeTrue();
+            cacheControl.Private.ShouldBeFalse();
+            cacheControl.NoStore.ShouldBeFalse();
+            cacheControl.MaxAge.ShouldBe(TimeSpan.FromHours(1));
+            first.Content.Headers.Contains(@"Expires").ShouldBeFalse();
+        }
+
+        [Theory]
+        [InlineData(@"{0}", HttpStatusCode.NotModified)]
+        [InlineData(@"W/{0}", HttpStatusCode.NotModified)]
+        [InlineData(@"*", HttpStatusCode.NotModified)]
+        [InlineData(@"""other"", {0}", HttpStatusCode.NotModified)]
+        [InlineData(@"""other""", HttpStatusCode.OK)]
+        public async Task Description_Given_IfNoneMatch_Then_NotModifiedWhenItHasTheETag(string ifNoneMatch, HttpStatusCode expected)
+        {
+            using HttpResponseMessage first = await SendAsync(HttpMethod.Get, @"/v1/openapi");
+            string tag = first.Headers.ETag.ShouldNotBeNull().Tag;
+
+            using HttpResponseMessage response = await SendAsync(
+                HttpMethod.Get,
+                @"/v1/openapi",
+                headers => headers.TryAddWithoutValidation(@"If-None-Match", string.Format(ifNoneMatch, tag)));
+
+            response.StatusCode.ShouldBe(expected);
+
+            if (expected == HttpStatusCode.NotModified)
+            {
+                (await response.Content.ReadAsByteArrayAsync()).ShouldBeEmpty();
+                response.Headers.ETag.ShouldBe(first.Headers.ETag);
+                response.Headers.CacheControl.ShouldNotBeNull().MaxAge.ShouldBe(TimeSpan.FromHours(1));
+                response.Headers.Vary.ShouldContain(@"Accept");
+            }
+        }
+
+        [Fact]
+        public async Task Description_Given_AHead_Then_TheHeadersOfAGetAndNoBody()
+        {
+            using HttpResponseMessage get = await SendAsync(HttpMethod.Get, @"/v1/openapi");
+            using HttpResponseMessage head = await SendAsync(HttpMethod.Head, @"/v1/openapi");
+
+            head.StatusCode.ShouldBe(HttpStatusCode.OK);
+            (await head.Content.ReadAsByteArrayAsync()).ShouldBeEmpty();
+            head.Headers.ETag.ShouldBe(get.Headers.ETag);
+            head.Content.Headers.ContentType.ShouldBe(get.Content.Headers.ContentType);
+            head.Content.Headers.ContentLength.ShouldBe((await get.Content.ReadAsByteArrayAsync()).Length);
+        }
+
+        [Fact]
+        public async Task Description_Given_AServerThatHasAKey_Then_NeedsNoneForIt_AsTheRestOfTheApiDoes()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner, new ServeSettings { ApiKey = @"0123456789abcdef0123456789abcdef" });
+
+            using HttpResponseMessage get = await server.Client.GetAsync(@"/v1/openapi");
+            using HttpResponseMessage head = await server.Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"));
+            using HttpResponseMessage options = await server.Client.SendAsync(new HttpRequestMessage(HttpMethod.Options, @"/v1/openapi"));
+            using HttpResponseMessage info = await server.Client.GetAsync(@"/v1/info");
+
+            get.StatusCode.ShouldBe(HttpStatusCode.OK);
+            head.StatusCode.ShouldBe(HttpStatusCode.OK);
+            options.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            info.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+
+        [Theory]
+        [InlineData(@"gzip")]
+        [InlineData(@"br")]
+        public async Task Compression_Given_TheDescription_Then_CompressedLikeJsonAndVariesWithTheEncodingAndTheType(string encoding)
+        {
+            using HttpResponseMessage plain = await SendAsync(HttpMethod.Get, @"/v1/openapi");
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/openapi", headers => headers.TryAddWithoutValidation(@"Accept-Encoding", encoding));
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentEncoding.ShouldBe([encoding]);
+            response.Headers.Vary.ShouldContain(@"Accept-Encoding");
+            response.Headers.Vary.ShouldContain(@"Accept");
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(@"application/openapi+yaml");
+            byte[] expected = await plain.Content.ReadAsByteArrayAsync();
+            (await response.Content.ReadAsByteArrayAsync()).Length.ShouldBeLessThan(expected.Length);
+            (await DecompressAsync(response, encoding)).ShouldBe(expected);
         }
 
         [Theory]
@@ -361,7 +506,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Every_Given_AnythingButInfo_Then_NoStore()
+        public async Task Every_Given_AnythingButTheInfoAndTheDescription_Then_NoStore()
         {
             using HttpResponseMessage notFound = await SendAsync(HttpMethod.Get, @"/nothing");
             using HttpResponseMessage options = await SendAsync(HttpMethod.Options, @"/v1/projects/compile");

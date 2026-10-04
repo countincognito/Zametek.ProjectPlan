@@ -7,7 +7,8 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     // Turns away any request to zpp serve's API that does not carry its key, as Authorization: Bearer <key> - before the
     // request can take a job's place, or wait for one. The health checks need no key, so that a load balancer or an
-    // orchestrator can ask for them.
+    // orchestrator can ask for them; nor does the description of the API, which holds nothing that is not in the repository,
+    // so that a tool can read what the server takes before it has the key.
     internal class ApiKeyMiddleware
     {
         #region Fields
@@ -46,6 +47,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string authorization = context.Request.Headers.Authorization.ToString();
 
             if (context.Request.Path.StartsWithSegments(JobServer.ApiPath)
+                && !context.Request.Path.Equals(JobServer.DescriptionPath, StringComparison.OrdinalIgnoreCase)
                 && !IsAuthorized(authorization))
             {
                 // What was refused, and not the key: the log is kept where the key must not be. The path is written as the

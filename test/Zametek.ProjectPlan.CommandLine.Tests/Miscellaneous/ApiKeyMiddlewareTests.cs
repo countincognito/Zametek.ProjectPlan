@@ -10,7 +10,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// <summary>
     /// Tests for zpp serve's API key: a request to its API carries it as
     /// Authorization: Bearer key, or is turned away before it goes any further;
-    /// anything else - the health checks - needs none.
+    /// anything else - the health checks, and the description of the API - needs none.
     /// </summary>
     public class ApiKeyMiddlewareTests
     {
@@ -155,6 +155,43 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await middleware.InvokeAsync(context);
 
             passedOn.ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(@"/v1/openapi")]
+        [InlineData(@"/V1/OpenApi")]
+        public async Task InvokeAsync_Given_TheDescriptionOfTheApi_Then_PassesItOnWithoutAKey(string path)
+        {
+            bool passedOn = false;
+            var middleware = new ApiKeyMiddleware(_ => { passedOn = true; return Task.CompletedTask; }, c_ApiKey, NullLogger<ApiKeyMiddleware>.Instance);
+            var context = new DefaultHttpContext();
+            context.Request.Path = path;
+
+            await middleware.InvokeAsync(context);
+
+            passedOn.ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(@"/v1/openapi/")]
+        [InlineData(@"/v1/openapi.yaml")]
+        [InlineData(@"/v1/openapix")]
+        [InlineData(@"/v1/openapi/info")]
+        [InlineData(@"/v1/info/openapi")]
+        [InlineData(@"/v1")]
+        public async Task InvokeAsync_Given_APathThatOnlyLooksLikeTheDescription_Then_TurnsItAwayWithoutAKey(string path)
+        {
+            bool passedOn = false;
+            var middleware = new ApiKeyMiddleware(_ => { passedOn = true; return Task.CompletedTask; }, c_ApiKey, NullLogger<ApiKeyMiddleware>.Instance);
+            await using ServiceProvider services = new ServiceCollection().AddLogging().AddProblemDetails().BuildServiceProvider();
+            var context = new DefaultHttpContext { RequestServices = services };
+            context.Request.Path = path;
+            context.Response.Body = new MemoryStream();
+
+            await middleware.InvokeAsync(context);
+
+            passedOn.ShouldBeFalse();
+            context.Response.StatusCode.ShouldBe(StatusCodes.Status401Unauthorized);
         }
     }
 }

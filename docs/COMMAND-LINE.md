@@ -130,10 +130,11 @@ What the server cannot answer is not an answer but a problem - `application/prob
 | `POST /v1/projects/compile` | Compiles a project, and answers with its metrics and the outputs the request asks for |
 | `POST /v1/projects/scenarios` | Lists a project's scenarios |
 | `GET /v1/info` | Gives the server's version, the culture and time zone its jobs write in, and its limits |
+| `GET /v1/openapi` | Gives the description of this API (OpenAPI 3.1, in YAML), without an API key |
 | `GET /health/live` | Answers 200 once the server is listening |
 | `GET /health/ready` | Answers 200 once it has warmed up, and 503 until then |
 
-[The zpp serve API](API.md) is the reference - every option, answer and problem, with the security review and the changelog - and [openapi.yaml](openapi.yaml) describes it for programs (OpenAPI 3.1).
+[The zpp serve API](API.md) is the reference - every option, answer and problem, with the security review and the changelog - and [openapi.yaml](openapi.yaml) describes it for programs (OpenAPI 3.1), and the server serves it at `/v1/openapi`.
 
 ### Limits
 
@@ -164,7 +165,7 @@ zpp serve --listen https://0.0.0.0:9771 --certificate server.pfx --api-key-file 
 ```
 
 - `--listen` takes `http` or `https`, then `localhost`, an IP address or `*` for every address the machine has, then a port - or `unix:` and the path of a Unix domain socket (see [On a Unix domain socket](#on-a-unix-domain-socket)). Give it more than once to listen on several.
-- An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. A key is at least 32 characters, which the server checks as it starts; a random 256-bit key written in base64 is 44, and `openssl rand -base64 32` makes one. Requests to `/v1` must then carry the key, as `Authorization: Bearer <key>`: `curl` reads that header from a file, `-H @key-header.txt`, so that the key is not on a command line, where the other users of the machine can read it. The health endpoints need no key, so that a load balancer can ask them.
+- An address other machines can reach needs an API key - from the file `--api-key-file` names, or from `ZPP_API_KEY`, never from the command line, which other users of the machine can see - and without one the server refuses to start. A key is at least 32 characters, which the server checks as it starts; a random 256-bit key written in base64 is 44, and `openssl rand -base64 32` makes one. Requests to `/v1` must then carry the key, as `Authorization: Bearer <key>`: `curl` reads that header from a file, `-H @key-header.txt`, so that the key is not on a command line, where the other users of the machine can read it. The health endpoints need no key, so that a load balancer can ask them, and nor does the description of the API, which a tool reads before it has the key.
 - An `https` address needs `--certificate`: a `.pfx` or `.p12` file, with its password - if it has one - in `ZPP_CERTIFICATE_PASSWORD`, or a `.pem` or `.crt` file, with `--certificate-key` if its key is in a file of its own. It takes TLS 1.2 and 1.3, and nothing older.
 - Plain `http` that other machines can reach would send the API key, and every project, in the clear, so the server refuses to start with it - unless `--behind-tls-proxy` says that a proxy in front of the server ends TLS, and that only the proxy can reach the address: `zpp serve --listen http://10.0.0.5:9770 --api-key-file /etc/zpp/api-key --behind-tls-proxy`. The server then says so in its log, as a warning, each time it starts. `--behind-tls-proxy` is refused without such an address, and so is plain http beside https that other machines can reach: a client could use the one that is not protected.
 
