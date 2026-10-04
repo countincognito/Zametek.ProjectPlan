@@ -58,6 +58,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return options;
         }
 
+        private static string[] GuideLines()
+        {
+            return File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, @"Docs", @"RESTFUL-API-GUIDE.md"));
+        }
+
         // The part of the reference under a heading - from the line after it to the next heading of its level or above.
         private static string[] Section(string heading)
         {
@@ -453,6 +458,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var pattern = new Regex(anyOf[1]![@"pattern"]!.GetValue<string>());
             Type compilerCodes = typeof(GraphCompilationErrorModel).GetProperty(nameof(GraphCompilationErrorModel.ErrorCode))!.PropertyType;
             Enum.GetNames(compilerCodes).ShouldAllBe(x => pattern.IsMatch(x));
+        }
+
+        [Fact]
+        public void Deviations_Given_TheReference_Then_TheDescriptionRecordsTheSameRulesAndTheGuideHasEachOfThem()
+        {
+            // The rules that the reference's table cites, and those that the description's section does - each in bold there.
+            string[] fromReference = [.. Section(@"## Deviations from the guide")
+                .Where(x => x.StartsWith(@"| [", StringComparison.Ordinal))
+                .SelectMany(x => Regex.Matches(x.Split('|')[1], @"\[([A-Z]{2,4}-\d{1,2})\]").Select(m => m.Groups[1].Value))];
+
+            string description = Description.Root[@"info"]![@"description"]!.GetValue<string>();
+            int start = description.IndexOf(@"## Deviations from the RESTful API Guide", StringComparison.Ordinal);
+            start.ShouldBeGreaterThanOrEqualTo(0, @"The description has no section on the deviations.");
+            string[] fromDescription = [.. Regex.Matches(description[start..], @"\*\*([A-Z]{2,4}-\d{1,2})\*\*").Select(m => m.Groups[1].Value)];
+
+            fromReference.ShouldNotBeEmpty();
+            fromDescription.ShouldBe(fromReference, ignoreOrder: true);
+
+            // Each is a rule of the guide, and not one that it has withdrawn.
+            string[] rules = [.. GuideLines()
+                .Where(x => Regex.IsMatch(x, @"^- \*\*[A-Z]{2,4}-\d{1,2}\*\* (?!\*Withdrawn)"))
+                .Select(x => Regex.Match(x, @"^- \*\*([A-Z]{2,4}-\d{1,2})\*\*").Groups[1].Value)];
+            rules.Length.ShouldBeGreaterThan(100);
+            fromReference.ShouldBeSubsetOf(rules);
         }
 
         [Fact]

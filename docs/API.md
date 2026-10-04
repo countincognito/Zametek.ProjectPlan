@@ -516,7 +516,7 @@ The API Security Top 10 of OWASP, 2023, against the API as it stands (each relea
 
 ## Deviations from the guide
 
-The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md), version 1.1, and records here where it does not follow a rule, or takes an option that a rule gives it, and why ([section 0.5](RESTFUL-API-GUIDE.md#05-deviations) of the guide):
+The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md), version 1.1, and records here where it does not follow a rule, or takes an option that a rule gives it, and why ([section 0.5](RESTFUL-API-GUIDE.md#05-deviations) of the guide). The description of the API records the same, as [DOC-2](RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance) asks, and a test keeps its list of rules in step with this one:
 
 | Rule | Deviation | Reason |
 | ---- | --------- | ------ |

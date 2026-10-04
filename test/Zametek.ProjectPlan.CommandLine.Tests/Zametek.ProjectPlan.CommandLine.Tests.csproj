@@ -35,11 +35,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The description of the API, and its reference: OpenApiContractTests hold the server to them. -->
+    <!-- The description of the API, its reference and the guide they follow: OpenApiContractTests hold the server to them. -->
     <Content Include="..\..\docs\openapi.yaml" Link="Docs\openapi.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\docs\API.md" Link="Docs\API.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\docs\RESTFUL-API-GUIDE.md" Link="Docs\RESTFUL-API-GUIDE.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
