@@ -150,6 +150,25 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_SelectedTheme = m_SettingService.SelectedTheme;
 
+            // The finish, as numbers and as text. Each has a pipeline of its own - they depend on one another through
+            // nothing but the plan - and the text is the numbers, shown as the display settings ask.
+            m_ProjectFinishDays = this
+                .WhenAnyValue(core => core.NetworkMetrics, (NetworkModel networkModel) => GetProjectFinishDays(networkModel))
+                .ToProperty(this, core => core.ProjectFinishDays);
+
+            m_ProjectFinishDate = this
+                .WhenAnyValue(
+                    core => core.ProjectStart,
+                    core => core.NetworkMetrics,
+                    core => core.HolidaySettings,
+                    core => core.m_DateTimeCalculator.NonWorkingDayMode,
+                    core => core.m_DateTimeCalculator.DisplayMode,
+                    (DateTimeOffset projectStart, NetworkModel networkModel, HolidaySettingsModel _, NonWorkingDayMode _, DateTimeDisplayMode _) =>
+                        GetProjectFinishDays(networkModel) is int days
+                            ? DateOnly.FromDateTime(CalculateProjectFinish(projectStart, days).DateTime)
+                            : (DateOnly?)null)
+                .ToProperty(this, core => core.ProjectFinishDate);
+
             m_ProjectFinish = this
                 .WhenAnyValue(
                     core => core.DisplaySettingsViewModel.ShowDates,
@@ -160,21 +179,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.m_DateTimeCalculator.DisplayMode,
                     (bool showDates, DateTimeOffset projectStart, NetworkModel networkModel, HolidaySettingsModel _, NonWorkingDayMode _, DateTimeDisplayMode _) =>
                     {
-                        if (networkModel.Duration is null || networkModel.Duration == 0)
+                        if (GetProjectFinishDays(networkModel) is not int days)
                         {
                             return string.Empty;
                         }
 
-                        if (showDates)
-                        {
-                            int durationValue = networkModel.Duration.GetValueOrDefault();
-                            DateTimeOffset startAndFinish = m_DateTimeCalculator.AddDays(projectStart, durationValue);
-                            return m_DateTimeCalculator
-                                .DisplayFinishDate(startAndFinish, startAndFinish, 1)
-                                .ToString(DateTimeCalculator.DateFormat);
-                        }
-
-                        return networkModel.Duration.GetValueOrDefault().ToString();
+                        return showDates
+                            ? CalculateProjectFinish(projectStart, days).ToString(DateTimeCalculator.DateFormat)
+                            : days.ToString();
                     })
                 .ToProperty(this, mm => mm.ProjectFinish);
 
@@ -210,6 +222,25 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        // The days from the project's start to its finish: the network's duration, or null when it has none to finish
+        // after.
+        private static int? GetProjectFinishDays(NetworkModel networkModel)
+        {
+            return networkModel.Duration is int duration && duration != 0
+                ? duration
+                : null;
+        }
+
+        // When the project finishes, as the display shows it: the day the last of its days ends on, in the working
+        // calendar the settings give.
+        private DateTimeOffset CalculateProjectFinish(
+            DateTimeOffset projectStart,
+            int days)
+        {
+            DateTimeOffset startAndFinish = m_DateTimeCalculator.AddDays(projectStart, days);
+            return m_DateTimeCalculator.DisplayFinishDate(startAndFinish, startAndFinish, 1);
+        }
 
         /// <summary>
         /// Recounts every activity's date-derived compiler inputs against the current
@@ -679,6 +710,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
         public string ProjectFinish => m_ProjectFinish.Value;
+
+        private readonly ObservableAsPropertyHelper<int?> m_ProjectFinishDays;
+        public int? ProjectFinishDays => m_ProjectFinishDays.Value;
+
+        private readonly ObservableAsPropertyHelper<DateOnly?> m_ProjectFinishDate;
+        public DateOnly? ProjectFinishDate => m_ProjectFinishDate.Value;
 
         private readonly ProjectScenarioDisplaySettingsViewModel m_DisplaySettingsViewModel;
         public IProjectScenarioDisplaySettingsViewModel DisplaySettingsViewModel
@@ -2521,6 +2558,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 KillSubscriptions();
                 m_ProjectFinish?.Dispose();
+                m_ProjectFinishDays?.Dispose();
+                m_ProjectFinishDate?.Dispose();
                 m_HasActivities?.Dispose();
                 m_HasResources?.Dispose();
                 m_HasWorkStreams?.Dispose();

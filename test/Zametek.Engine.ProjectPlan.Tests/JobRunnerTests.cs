@@ -111,9 +111,28 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
             result.Status.ShouldBe(JobStatus.Succeeded);
             result.CompilationOutput.ShouldBeEmpty();
+            result.CompilationErrors.ShouldBeEmpty();
             result.Metrics.ShouldNotBeNull().NetworkDuration.ShouldBe(5);
             sink.Outputs.ShouldBeEmpty();
             sink.Messages.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ProjectFile_Then_TheFinishIsGivenAsDaysAndAsADate()
+        {
+            // Five days from the plan's start, 1 January 2024, in a calendar that works every day. The plan shows its
+            // finish as days; the metrics give both, whichever the plan shows.
+            await using ServiceProvider services = BuildServices();
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"two-scenarios.zpp",
+                input => new JobRequest { Input = input });
+
+            JobMetrics metrics = result.Metrics.ShouldNotBeNull();
+            metrics.ProjectFinish.ShouldBe(@"5");
+            metrics.ProjectFinishDays.ShouldBe(5);
+            metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 6));
         }
 
         [Fact]
@@ -169,6 +188,92 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_AFileThatIsNotAProject_Then_ThrowsProjectNotReadableInTheReadersWords()
+        {
+            await using ServiceProvider services = BuildServices();
+            var sink = new MemoryJobSink();
+            using var input = new MemoryStream(Encoding.UTF8.GetBytes(@"This is not a plan."));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input, SaveProject = true }, sink));
+
+            // What zpp has always printed for such a file is the reader's own message.
+            ex.InnerException.ShouldNotBeNull();
+            ex.Message.ShouldNotBeNullOrWhiteSpace();
+            ex.Message.ShouldBe(ex.InnerException.Message);
+            sink.Outputs.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AFileThatIsNotAWorkbook_Then_ThrowsProjectNotReadable()
+        {
+            await using ServiceProvider services = BuildServices();
+            var sink = new MemoryJobSink();
+            using var input = new MemoryStream(Encoding.UTF8.GetBytes(@"This is not a workbook."));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => services.GetRequiredService<JobRunner>().RunAsync(
+                    new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx, SaveProject = true },
+                    sink));
+
+            ex.InnerException.ShouldNotBeNull();
+            ex.Message.ShouldBe(ex.InnerException.Message);
+            sink.Outputs.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AReaderThatFails_Then_ThrowsProjectNotReadableWithItsMessage()
+        {
+            var failure = new InvalidOperationException(@"The file is of a version nobody knows.");
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectFileOpen>(_ => new FailingProjectFileOpen(failure)));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input }));
+
+            ex.Message.ShouldBe(failure.Message);
+            ex.InnerException.ShouldBeSameAs(failure);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AWorkbookReaderThatFails_Then_ThrowsProjectNotReadableWithItsMessage()
+        {
+            var failure = new InvalidDataException(@"The workbook has no sheets.");
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FailingProjectScenarioFileImport(failure)));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx }));
+
+            ex.Message.ShouldBe(failure.Message);
+            ex.InnerException.ShouldBeSameAs(failure);
+        }
+
+        [Theory]
+        [InlineData(typeof(OperationCanceledException))]
+        [InlineData(typeof(OutOfMemoryException))]
+        public async Task RunAsync_Given_AReaderThatIsCancelledOrRunsOutOfMemory_Then_ThrowsItAsItIs(Type kind)
+        {
+            // Neither is a file the engine cannot read: a job that was cancelled is cancelled, and one that ran out of
+            // memory failed, whatever it was reading.
+            var failure = (Exception)Activator.CreateInstance(kind)!;
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectFileOpen>(_ => new FailingProjectFileOpen(failure)));
+
+            Exception thrown = await Should.ThrowAsync<Exception>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input }));
+
+            thrown.ShouldBeAssignableTo(kind);
+            thrown.ShouldNotBeOfType<ProjectNotReadableException>();
+        }
+
+        [Fact]
         public async Task RunAsync_Given_BrokenPlan_Then_ReportsCompilationErrorsAndProducesNothing()
         {
             await using ServiceProvider services = BuildServices();
@@ -182,6 +287,56 @@ namespace Zametek.Engine.ProjectPlan.Tests
             result.CompilationOutput.ShouldNotBeNullOrWhiteSpace();
             result.Metrics.ShouldBeNull();
             sink.Outputs.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_BrokenPlan_Then_ListsEachCompilationErrorWithItsCode()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"broken-dependency.zpp",
+                input => new JobRequest { Input = input });
+
+            JobCompilationError error = result.CompilationErrors.ShouldHaveSingleItem();
+            error.Code.ShouldBe(@"P0010");
+            error.Message.ShouldContain(@"999 is invalid but referenced by: 1");
+
+            // What zpp prints is made of the same errors.
+            result.CompilationOutput.ShouldContain(error.Code);
+            result.CompilationOutput.ShouldContain(error.Message);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_APlanWithTwoKindsOfError_Then_ListsBothInTheOrderTheyArePrinted()
+        {
+            // An activity that depends on one that is not there, and two that depend on each other.
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(await File.ReadAllTextAsync(AssetPath(@"broken-dependency.zpp")));
+            var activities = (JArray)plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]!;
+
+            foreach ((int id, int dependency) in new[] { (2, 3), (3, 2) })
+            {
+                JToken activity = activities[0].DeepClone();
+                activity[@"Activity"]![@"Id"] = id;
+                activity[@"Activity"]![@"Name"] = $@"Task {id}";
+                activity[@"Dependencies"] = new JArray(dependency);
+                activities.Add(activity);
+            }
+
+            using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink());
+
+            result.CompilationErrors.Select(x => x.Code).ShouldBe([@"P0010", @"P0020"]);
+            result.CompilationErrors[0].Message.ShouldContain(@"999 is invalid but referenced by: 1");
+            result.CompilationErrors[1].Message.ShouldContain(@"3 -> 2");
+
+            foreach (JobCompilationError error in result.CompilationErrors)
+            {
+                result.CompilationOutput.ShouldContain(error.Message);
+            }
         }
 
         [Fact]
@@ -558,6 +713,19 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task ListScenariosAsync_Given_AFileThatIsNotAProject_Then_ThrowsProjectNotReadable()
+        {
+            await using ServiceProvider services = BuildServices();
+            using var input = new MemoryStream(Encoding.UTF8.GetBytes(@"This is not a plan."));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => services.GetRequiredService<JobRunner>().ListScenariosAsync(input));
+
+            ex.InnerException.ShouldNotBeNull();
+            ex.Message.ShouldBe(ex.InnerException.Message);
+        }
+
+        [Fact]
         public async Task ListScenariosAsync_Given_ProjectFile_Then_ListsItsScenarios()
         {
             await using ServiceProvider services = BuildServices();
@@ -717,6 +885,20 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 cancellation.Cancel();
                 return base.ReadAsync(buffer, cancellationToken);
             }
+        }
+
+        // The reader of projects, failing with whatever it is told to fail with.
+        private sealed class FailingProjectFileOpen(Exception exception)
+            : IProjectFileOpen
+        {
+            public Task<ProjectModel> OpenProjectFileAsync(Stream stream) => Task.FromException<ProjectModel>(exception);
+        }
+
+        // The reader of workbooks, likewise.
+        private sealed class FailingProjectScenarioFileImport(Exception exception)
+            : IProjectScenarioFileImport
+        {
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) => throw exception;
         }
 
         private sealed class ScrollManagerProbe

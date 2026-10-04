@@ -37,6 +37,10 @@
 
         string ProjectFinish { get; }
 
+        int? ProjectFinishDays { get; }
+
+        DateOnly? ProjectFinishDate { get; }
+
         double? DirectCost { get; }
 
         double? IndirectCost { get; }

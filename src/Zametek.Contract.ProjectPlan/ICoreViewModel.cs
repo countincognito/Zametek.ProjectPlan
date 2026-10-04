@@ -23,6 +23,10 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectFinish { get; }
 
+        int? ProjectFinishDays { get; }
+
+        DateOnly? ProjectFinishDate { get; }
+
         IProjectScenarioDisplaySettingsViewModel DisplaySettingsViewModel { get; }
 
         bool DefaultShowDates { get; set; }

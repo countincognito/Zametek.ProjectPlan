@@ -30,7 +30,8 @@ namespace Zametek.Engine.ProjectPlan
         #region Public Members
 
         /// <summary>
-        /// Lists the scenarios of a project file, without processing any of them.
+        /// Lists the scenarios of a project file, without processing any of them. A file the engine cannot read is
+        /// <see cref="ProjectNotReadableException"/>.
         /// </summary>
         public async Task<IReadOnlyList<ScenarioSummary>> ListScenariosAsync(
             Stream input,
@@ -41,15 +42,16 @@ namespace Zametek.Engine.ProjectPlan
 
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
             IProjectFileOpen projectFileOpen = scope.ServiceProvider.GetRequiredService<IProjectFileOpen>();
-            ProjectModel projectModel = await projectFileOpen.OpenProjectFileAsync(input);
+            ProjectModel projectModel = await OpenProjectAsync(projectFileOpen, input);
             return ScenarioSelector.ListScenarios(projectModel);
         }
 
         /// <summary>
         /// Runs one job. A chart or graph that cannot be produced does not stop it: the error is reported through the
         /// sink, as the desktop reports it in a dialog, the remaining outputs are still produced, and the job completes
-        /// with errors. Anything else the job cannot get past, it throws - an input it cannot read, a scenario it
-        /// cannot select (<see cref="ScenarioSelectionException"/>), a compilation that runs out of time
+        /// with errors. Anything else the job cannot get past, it throws - an input it cannot read
+        /// (<see cref="ProjectNotReadableException"/>), a scenario it cannot select
+        /// (<see cref="ScenarioSelectionException"/>), a compilation that runs out of time
         /// (<see cref="GraphCompilationTimeoutException"/>), or a project or scenario export the sink cannot store -
         /// and whatever the sink stored before that stays where it is. Cancelling the token stops the job before the
         /// next step it would take, with an <see cref="OperationCanceledException"/>: a step already under way - reading
@@ -80,6 +82,45 @@ namespace Zametek.Engine.ProjectPlan
         #endregion
 
         #region Private Members
+
+        // The project in the stream or, when the engine cannot read it, ProjectNotReadableException, in the reader's own
+        // words.
+        private static async Task<ProjectModel> OpenProjectAsync(
+            IProjectFileOpen projectFileOpen,
+            Stream input)
+        {
+            try
+            {
+                return await projectFileOpen.OpenProjectFileAsync(input);
+            }
+            catch (Exception ex) when (IsUnreadable(ex))
+            {
+                throw new ProjectNotReadableException(ex.Message, ex);
+            }
+        }
+
+        // The workbook's scenario or, when the engine cannot read it, ProjectNotReadableException.
+        private static ProjectScenarioImportModel ImportProjectScenario(
+            IProjectScenarioFileImport projectFileImport,
+            Stream input,
+            ProjectScenarioImportFormat importFormat)
+        {
+            try
+            {
+                return projectFileImport.ImportProjectScenarioFile(input, importFormat);
+            }
+            catch (Exception ex) when (IsUnreadable(ex))
+            {
+                throw new ProjectNotReadableException(ex.Message, ex);
+            }
+        }
+
+        // Whether an exception from a reader says that the file cannot be read. A job that was cancelled, or that ran out
+        // of memory, has not met a file it cannot read.
+        private static bool IsUnreadable(Exception ex)
+        {
+            return ex is not (OperationCanceledException or OutOfMemoryException);
+        }
 
         private static async Task<JobResult> RunAsync(
             JobRequest request,
@@ -117,14 +158,14 @@ namespace Zametek.Engine.ProjectPlan
                 IProjectScenarioFileImport projectFileImport = services.GetRequiredService<IProjectScenarioFileImport>();
                 Guid projectScenarioId = settingService.ScenarioId;
                 string projectScenarioTitle = settingService.ScenarioTitle;
-                ProjectScenarioImportModel projectImport = projectFileImport.ImportProjectScenarioFile(request.Input, importFormat);
+                ProjectScenarioImportModel projectImport = ImportProjectScenario(projectFileImport, request.Input, importFormat);
 
                 core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
             }
             else
             {
                 IProjectFileOpen projectFileOpen = services.GetRequiredService<IProjectFileOpen>();
-                ProjectModel projectModel = await projectFileOpen.OpenProjectFileAsync(request.Input);
+                ProjectModel projectModel = await OpenProjectAsync(projectFileOpen, request.Input);
 
                 if (request.Scenario is not null)
                 {
@@ -158,6 +199,7 @@ namespace Zametek.Engine.ProjectPlan
                     {
                         Status = JobStatus.CompilationErrors,
                         CompilationOutput = outputs.CompilationOutput,
+                        CompilationErrors = [.. core.GraphCompilation.CompilationErrors.Select(x => new JobCompilationError(x.ErrorCode.ToString(), x.ErrorMessage))],
                     };
                 }
 

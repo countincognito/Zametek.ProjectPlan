@@ -50,6 +50,10 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 {
                     return (int?)position;
                 }
+                if (type == typeof(DateOnly?))
+                {
+                    return (DateOnly?)DateOnly.FromDayNumber(position);
+                }
                 if (type == typeof(string))
                 {
                     return name;

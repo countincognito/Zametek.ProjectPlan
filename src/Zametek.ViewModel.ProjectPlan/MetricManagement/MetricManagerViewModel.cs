@@ -247,6 +247,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinish)
                 .ToProperty(this, mm => mm.ProjectFinish);
 
+            m_ProjectFinishDays = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinishDays)
+                .ToProperty(this, mm => mm.ProjectFinishDays);
+
+            m_ProjectFinishDate = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinishDate)
+                .ToProperty(this, mm => mm.ProjectFinishDate);
+
             Id = Resource.ProjectPlan.Titles.Title_Metrics;
             Title = Resource.ProjectPlan.Titles.Title_Metrics;
         }
@@ -330,6 +338,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
         public string ProjectFinish => m_ProjectFinish.Value;
+
+        private readonly ObservableAsPropertyHelper<int?> m_ProjectFinishDays;
+        public int? ProjectFinishDays => m_ProjectFinishDays.Value;
+
+        private readonly ObservableAsPropertyHelper<DateOnly?> m_ProjectFinishDate;
+        public DateOnly? ProjectFinishDate => m_ProjectFinishDate.Value;
 
         private readonly ObservableAsPropertyHelper<double?> m_DirectCost;
         public double? DirectCost => m_DirectCost.Value;
@@ -457,6 +471,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_NetworkDuration?.Dispose();
                 m_NetworkDurationManMonths?.Dispose();
                 m_ProjectFinish?.Dispose();
+                m_ProjectFinishDays?.Dispose();
+                m_ProjectFinishDate?.Dispose();
                 m_DirectCost?.Dispose();
                 m_IndirectCost?.Dispose();
                 m_OtherCost?.Dispose();

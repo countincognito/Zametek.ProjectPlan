@@ -29,6 +29,12 @@ namespace Zametek.Engine.ProjectPlan
 
         public string ProjectFinish { get; init; } = string.Empty;
 
+        // The finish as numbers rather than text: the days from the project's start to its finish, and the date it
+        // finishes on. A plan with no duration has neither.
+        public int? ProjectFinishDays { get; init; }
+
+        public DateOnly? ProjectFinishDate { get; init; }
+
         public double? EffortEfficiency { get; init; }
 
         public double? ActivityEffort { get; init; }
@@ -98,6 +104,8 @@ namespace Zametek.Engine.ProjectPlan
                 NetworkDuration = metrics.NetworkDuration,
                 NetworkDurationManMonths = metrics.NetworkDurationManMonths,
                 ProjectFinish = metrics.ProjectFinish,
+                ProjectFinishDays = metrics.ProjectFinishDays,
+                ProjectFinishDate = metrics.ProjectFinishDate,
                 EffortEfficiency = metrics.EffortEfficiency,
                 ActivityEffort = metrics.ActivityEffort,
                 DirectEffort = metrics.DirectEffort,
