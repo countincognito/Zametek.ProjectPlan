@@ -205,7 +205,11 @@ The request is a `multipart/form-data` body with a part named `project`, and not
 }
 ```
 
-`path` names the scenario by where it is in the project - a child of another is `Alpha/Beta` - and is what `scenario` takes, as the `id` is. The problems are those of a compile, as far as they apply.
+- `path` names the scenario by where it is in the project - a child of another is `Alpha/Beta` - and is what `scenario` takes, as the `id` is.
+- `isTracked` says that the scenario is *tracked*: its metrics are on the scenario chart, as a point against the metrics that the chart has for its axes. That is all that tracking does: it changes nothing about how the scenario compiles, what its metrics are or what any other output holds, and it is not the progress tracking of activities.
+- `isCurrent` says that the scenario is the project's *current* one: the one that was open when the project was saved, and so the one that `zpp` loads when it is not told which (`scenario`). At most one scenario of a project is current.
+
+The problems are those of a compile, as far as they apply.
 
 ## Ask what the server is
 

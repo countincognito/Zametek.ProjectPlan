@@ -25,6 +25,17 @@ zpp -i plan.zpp --scenario "Iteration 2" -o plan-iter2.zpp
 
 `--scenario` accepts a name or an id - either the full id shown by `--list-scenarios` or, git-style, any unique prefix of it that is at least four hex characters long (an exact name match wins over an id prefix, the same way a git ref beats an abbreviated commit hash).
 
+`--list-scenarios` prints a table of the project's scenarios, which looks like this for the sample project [two-scenarios.zpp](assets/two-scenarios.zpp):
+
+```
+| Scenario | Id                                   | Tracked | Current |
+|----------|--------------------------------------|---------|---------|
+| Alpha    | 8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5 | Yes     | *       |
+| Beta     | 17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4 |         |         |
+```
+
+A scenario in a folder, or under another, is named by where it is: `Folder/Scenario`. **Tracked** says that the scenario is on the scenario chart: its metrics are plotted there as a point, against the metrics that the chart has for its axes (`--scenario-chart-directory` writes the chart). That is all that tracking does - it changes nothing about how the scenario compiles, what its metrics are or what any other output holds - and it is not the progress tracking of activities. **Current** (`*`) marks the project's current scenario: the one that was open when the project was saved, which `zpp` loads when `--scenario` does not name another.
+
 Emit machine-readable metrics (stdout carries only the JSON document, so it pipes cleanly):
 
 ```

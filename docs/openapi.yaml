@@ -1210,8 +1210,15 @@ components:
           format: uuid
         isTracked:
           type: boolean
+          description: |
+            Whether the scenario is tracked: its metrics are on the scenario chart, as a point against the metrics that the chart has
+            for its axes. That is all that tracking does. It changes nothing about how the scenario compiles, what its metrics are or
+            what any other output holds, and it is not the progress tracking of activities.
         isCurrent:
           type: boolean
+          description: |
+            Whether the scenario is the project's current scenario: the one that was open when the project was saved, and so the one
+            that `zpp` loads when it is not told which. At most one scenario of a project is current.
     InfoResponse:
       type: object
       required: [version, culture, timeZone, limits]
