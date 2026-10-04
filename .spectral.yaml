@@ -1,11 +1,12 @@
-# The API Guide's rules that a description can be checked against, for docs/openapi.yaml: run in CI (see ci.yml), and by hand with
+# The rules of the RESTful API Guide (docs/RESTFUL-API-GUIDE.md) that a description can be checked against (DOC-3), for
+# docs/openapi.yaml: run in CI (see ci.yml), and by hand with
 #   make lint-api
 # (npx @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset .spectral.yaml --fail-severity warn). The rest of the guide is
 # held to the server by tests (OpenApiContractTests).
 extends: ["spectral:oas"]
 
 rules:
-  # URI-1, URI-2, URI-5: lower-case words, which hyphens may join, between slashes; no trailing slash, no extension.
+  # URI-1, URI-2: lower-case words, which hyphens may join, between slashes; no trailing slash, no extension.
   zpp-path-lower-case:
     description: A path is made of lower-case words between slashes, with no trailing slash and no extension.
     message: "{{property}} is not a lower-case path"
@@ -16,7 +17,7 @@ rules:
       functionOptions:
         match: "^(/[a-z0-9]+(-[a-z0-9]+)*)+$"
 
-  # REP-1: the names of members are lowerCamelCase.
+  # REP-4: the names of members are lowerCamelCase.
   zpp-property-lower-camel-case:
     description: A schema's properties are named in lowerCamelCase.
     message: "{{property}} is not in lowerCamelCase"
@@ -27,7 +28,7 @@ rules:
       functionOptions:
         match: "^[a-z][a-zA-Z0-9]*$"
 
-  # REP-2: so are the values of an enumeration, which are strings and not numbers.
+  # REP-5: so are the values of an enumeration, which are strings and not numbers.
   zpp-enum-value-lower-camel-case:
     description: A string in an enumeration is in lowerCamelCase.
     message: "{{value}} is not in lowerCamelCase"
@@ -38,6 +39,7 @@ rules:
       functionOptions:
         match: "^[a-z][a-zA-Z0-9]*$"
 
+  # Not a rule of the guide: an operation is identified as its members are named (REP-4).
   zpp-operation-id-lower-camel-case:
     description: An operation is identified in lowerCamelCase.
     severity: error
@@ -47,7 +49,7 @@ rules:
       functionOptions:
         match: "^[a-z][a-zA-Z0-9]*$"
 
-  # ERR-1, ERR-2: what the API cannot answer is a problem, application/problem+json.
+  # ERR-1, REQ-6: what the API cannot answer is a problem, application/problem+json, whatever Accept says.
   zpp-problem-media-type:
     description: A 4xx or 5xx response is application/problem+json, and nothing else.
     message: "{{error}}"
@@ -92,7 +94,7 @@ rules:
           type: object
           required: ["Retry-After"]
 
-  # SEC-8: a 401 says how to authenticate.
+  # STS-6, HDR-6: a 401 says how to authenticate.
   zpp-401-has-www-authenticate:
     description: A 401 response has a WWW-Authenticate header.
     message: "{{error}}"

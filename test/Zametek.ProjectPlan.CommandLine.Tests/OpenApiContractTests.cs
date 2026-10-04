@@ -14,12 +14,12 @@ using Zametek.Engine.ProjectPlan;
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
-    /// Tests that hold the description of zpp serve's API - docs/openapi.yaml - and the guide beside it - docs/API.md - to the
+    /// Tests that hold the description of zpp serve's API - docs/openapi.yaml - and the reference beside it - docs/API.md - to the
     /// server. The description has the routes the server maps, and no others. Each response it describes is one the server gives,
     /// as it says: the status, the headers, the type of the body and a body that fits its schema, with no member in it that the
     /// schema does not name; and each response the server gives to what these tests send it is one the description has. Each
     /// kind of problem, each code, each metric, each option and each limit is in the description as it is in the code, and each
-    /// kind of problem has its section in the guide, at the address its type names.
+    /// kind of problem has its section in the reference, at the address its type names.
     /// </summary>
     [Collection(ProgramExitCodeTests.CollectionName)]
     public class OpenApiContractTests
@@ -43,7 +43,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", filename));
         }
 
-        private static string[] GuideLines()
+        private static string[] ReferenceLines()
         {
             return File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, @"Docs", @"API.md"));
         }
@@ -58,12 +58,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return options;
         }
 
-        // The part of the guide under a heading - from the line after it to the next heading of its level or above.
+        // The part of the reference under a heading - from the line after it to the next heading of its level or above.
         private static string[] Section(string heading)
         {
-            string[] lines = GuideLines();
+            string[] lines = ReferenceLines();
             int start = Array.IndexOf(lines, heading);
-            start.ShouldBeGreaterThanOrEqualTo(0, $@"{heading} is not in the guide.");
+            start.ShouldBeGreaterThanOrEqualTo(0, $@"{heading} is not in the reference.");
             int level = heading.IndexOf(' ');
 
             int end = start + 1;
@@ -374,7 +374,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     // HDR-8: every response carries the id of its request.
                     RequireHeader(headers, @"Request-Id", name, problems);
 
-                    // HDR-6: a server that cannot take a request now says when to come back; SEC-8: a request that needs a key is told so.
+                    // HDR-6: a server that cannot take a request now says when to come back; STS-6: a request that needs a key is told how to give it.
                     if (status == @"503"
                         && path.StartsWith(@"/v1/", StringComparison.Ordinal))
                     {
@@ -427,7 +427,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 example[@"title"]!.GetValue<string>().ShouldBe(ProblemHelper.GetTitle(kind), name);
             }
 
-            // The problems the description has are those, and the sections of the guide are those, under their slugs.
+            // The problems the description has are those, and the sections of the reference are those, under their slugs.
             Description.Components(@"schemas").Select(x => x.Key).Where(x => x.EndsWith(@"Problem", StringComparison.Ordinal) && x is not (@"Problem" or @"StatusProblem"))
                 .ShouldBe(Enum.GetValues<ProblemKind>().Select(x => $@"{x}Problem"), ignoreOrder: true);
 
@@ -436,7 +436,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public void Codes_Given_TheCode_Then_TheDescriptionAndTheGuideListEachOne()
+        public void Codes_Given_TheCode_Then_TheDescriptionAndTheReferenceListEachOne()
         {
             string[] codes = [.. typeof(ProblemCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral).Select(x => (string)x.GetRawConstantValue()!)];
             codes.ShouldNotBeEmpty();
@@ -444,10 +444,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             JsonArray anyOf = Schema(@"ProblemError")[@"properties"]![@"code"]![@"anyOf"]!.AsArray();
             Enumerated(anyOf[0]!).ShouldBe(codes, ignoreOrder: true);
 
-            string[] guide = [.. Section(@"### Codes")
+            string[] reference = [.. Section(@"### Codes")
                 .Where(x => x.StartsWith(@"| `", StringComparison.Ordinal))
                 .SelectMany(x => Regex.Matches(x.Split('|')[1], @"`([A-Za-z]+)`").Select(m => m.Groups[1].Value))];
-            guide.ShouldBe(codes, ignoreOrder: true);
+            reference.ShouldBe(codes, ignoreOrder: true);
 
             // The compiler's own, which the second schema names by what they look like.
             var pattern = new Regex(anyOf[1]![@"pattern"]!.GetValue<string>());

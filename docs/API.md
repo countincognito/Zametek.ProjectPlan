@@ -1,6 +1,6 @@
 # The zpp serve API
 
-`zpp serve` runs zpp as a web server (see [Running zpp as a server](COMMAND-LINE.md#running-zpp-as-a-server)). This is the reference for the HTTP API it offers: what a request is, what each answer is, and every problem it can answer with. It is written for anyone who sends it projects - with `curl`, from a script, from a program of their own - and for the maintainers, who change it only as the [changelog](#changelog) records. [`openapi.yaml`](openapi.yaml) describes the same API for programs (OpenAPI 3.1): where the two differ, the description wins and this document has a bug. zpp itself, run as `zpp --server`, is one client of it; [what it does with each answer](#what-zpp---server-does-with-each-answer) is below.
+`zpp serve` runs zpp as a web server (see [Running zpp as a server](COMMAND-LINE.md#running-zpp-as-a-server)). This is the reference for the HTTP API it offers: what a request is, what each answer is, and every problem it can answer with. It is written for anyone who sends it projects - with `curl`, from a script, from a program of their own - and for the maintainers, who change it only as the [changelog](#changelog) records. [`openapi.yaml`](openapi.yaml) describes the same API for programs (OpenAPI 3.1): where the two differ, the description wins and this document has a bug. zpp itself, run as `zpp --server`, is one client of it; [what it does with each answer](#what-zpp---server-does-with-each-answer) is below. The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md) and cites its rules by their identifiers (`ASY-1`); [where it does not follow one](#deviations-from-the-guide) is recorded below.
 
 The API has three operations, all under `/v1`:
 
@@ -428,7 +428,7 @@ Each section is named for the last part of its `type`.
 
 #### job-timeout
 
-`503`, with `Retry-After: 5`. The job ran for longer than the server allows a job, `jobTimeout` in `/v1/info`, and was stopped. It is a `503` because the server's own limit stopped it, which the guide this API follows says is not `504`; but it is not worth sending again unchanged, as it would run out of time again. Make it less: fewer outputs, or smaller charts.
+`503`, with `Retry-After: 5`. The job ran for longer than the server allows a job, `jobTimeout` in `/v1/info`, and was stopped. It is a `503` because the server's own limit stopped it, which the [RESTful API Guide](RESTFUL-API-GUIDE.md) says is not `504` ([RL-5](RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection)); but it is not worth sending again unchanged, as it would run out of time again. Make it less: fewer outputs, or smaller charts.
 
 ```json
 {
@@ -499,7 +499,7 @@ A request the server refuses for its API key is logged at warning level, with no
 
 ## Security review
 
-The API Security Top 10 of OWASP, 2023, against the API as it stands (each release repeats the review):
+The API Security Top 10 of OWASP, 2023, against the API as it stands (each release repeats the review, as [SEC-20](RESTFUL-API-GUIDE.md#105-operating-securely) of the guide requires):
 
 | Risk | Where the API stands |
 | ---- | -------------------- |
@@ -516,22 +516,22 @@ The API Security Top 10 of OWASP, 2023, against the API as it stands (each relea
 
 ## Deviations from the guide
 
-The guide this API follows is the maintainer's RESTful API Guide, version 1.1. Where the API does not follow a rule, and why:
+The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md), version 1.1, and records here where it does not follow a rule, or takes an option that a rule gives it, and why ([section 0.5](RESTFUL-API-GUIDE.md#05-deviations) of the guide):
 
 | Rule | Deviation | Reason |
 | ---- | --------- | ------ |
-| ASY-1 | A job is answered in its request, bounded by `jobTimeout`; past it the job is stopped (`503`), not carried on as a `202` | The server keeps nothing between requests: a job carried on would need results, owners and an expiry to be kept |
-| REP-7 | The costs, billings and margins in `metrics` are floating-point numbers | The engine works them out so, and a project has no currency: they are estimates, not amounts of money |
-| COL-1, COL-2 | `scenarios` and `outputs` are plain arrays, not paged `items` | They are bounded views of what the caller sent, not collections the server holds |
-| ACT-4, REQ-1 | `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data` | A project is a file, which cannot go in a URL |
-| RL-3 | No `RateLimit` fields | They are still an Internet-Draft, and the limit is a cap on jobs at once, not a rate: `Retry-After` and `limits` say the rest |
-| OPS-3 | No availability objective | See [Objectives](#objectives) |
-| ERR-1 | `408`, `414` and `431`, and a request the web server cannot read, have no body | The web server answers them before the API is reached, and cannot be made to write one |
-| SEC-3, SEC-15 | No HSTS, no CORS | No browser calls this API; a proxy that ends TLS can add HSTS |
+| [ASY-1](RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) | A job is answered in its request, bounded by `jobTimeout`; past it the job is stopped (`503`), not carried on as a `202` | The server keeps nothing between requests: a job carried on would need results, owners and an expiry to be kept, and ASY-1 lets a service that keeps nothing stop the job at its bound instead |
+| [REP-7](RESTFUL-API-GUIDE.md#3-representations) | The costs, billings and margins in `metrics` are floating-point numbers | The engine works them out so, and a project has no currency: they are estimates in the unit the project keeps its figures in, not amounts of money, which REP-7 lets be JSON numbers |
+| [COL-1](RESTFUL-API-GUIDE.md#51-the-collection-representation), [COL-2](RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) | `scenarios` and `outputs` are plain arrays, not paged `items` | They are bounded views of what the caller sent, not collections the server holds: COL-1 says that a bounded array inside a representation is a plain array under a descriptive name |
+| [ACT-4](RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [REQ-1](RESTFUL-API-GUIDE.md#4-requests) | `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data` | A project is a file, which cannot go in a URL |
+| [RL-3](RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection) | No `RateLimit` fields | They are still an Internet-Draft, and the limit is a cap on jobs at once, not a rate: `Retry-After` and `limits` say the rest |
+| [OPS-3](RESTFUL-API-GUIDE.md#14-operations) | No availability objective | See [Objectives](#objectives) |
+| [ERR-1](RESTFUL-API-GUIDE.md#7-errors) | `408`, `414` and `431`, and a request the web server cannot read, have no body | The web server answers them before the API is reached, and cannot be made to write one |
+| [SEC-3](RESTFUL-API-GUIDE.md#101-transport), [SEC-15](RESTFUL-API-GUIDE.md#104-input-and-resources) | No HSTS, no CORS | No browser calls this API; a proxy that ends TLS can add HSTS |
 
 ## Changelog
 
-The API is versioned as a whole, by its path (`/v1`): a change that breaks a client - a removed or renamed member, a changed status or problem `type`, a stricter rule - would be a new version; a member or an operation added would not.
+The API is versioned as a whole, by its path (`/v1`), as [VER-1 to VER-3](RESTFUL-API-GUIDE.md#12-versioning-and-evolution) of the guide have it: a change that breaks a client - a removed or renamed member, a changed status or problem `type`, a stricter rule - would be a new version; a member or an operation added would not.
 
 ### Unreleased
 

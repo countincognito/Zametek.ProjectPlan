@@ -8,8 +8,9 @@ info:
     file, charts and graphs, an Excel export.
 
     This description is the source of truth for programs; [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
-    is the written guide, with the changelog, the security review and the deviations from the guide the API follows. The
-    problems' `type` URIs are the addresses of that guide's sections.
+    is the written reference, with the changelog, the security review and the deviations from the
+    [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), which the API
+    follows. The problems' `type` URIs are the addresses of that reference's sections.
 
     Every response, including a problem, carries `Request-Id`: 32 hexadecimal characters, the `traceId` of a problem and
     the trace id on every line of the server's log that belongs to the request. A request that carries a `traceparent`

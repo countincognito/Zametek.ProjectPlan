@@ -24,6 +24,7 @@ The rest of the documentation is in [docs](docs):
 - [Command line tool (zpp)](docs/COMMAND-LINE.md) - producing a project's outputs without launching the desktop app, the exit codes, and running zpp as a server.
 - [Client-server quick start](docs/SERVER.md) - `zpp serve` over https on Windows, or on a Unix domain socket, and zpp sending its runs to it, step by step, with sample plans to download.
 - [The zpp serve API](docs/API.md) - the reference for the server's HTTP API, which [openapi.yaml](docs/openapi.yaml) also describes for programs: compiling a project and listing its scenarios, every problem it answers with, its security review and its changelog.
+- [RESTful API Guide](docs/RESTFUL-API-GUIDE.md) - the conventions that the zpp serve API follows - URIs, methods, representations, errors, security, versioning and documentation - whose rules the API reference cites by their identifiers.
 - [Architecture](docs/ARCHITECTURE.md) - for anyone interested in the internals, or contributing to them: how edits propagate through the compile pipeline, how bulk updates (project loads, imports, resets) are suppressed and replayed, and the threading rules that keep it all deadlock-free.
 - [TODO](docs/TODO.md) - the engineering work the maintainers intend, which versions with the code.
 

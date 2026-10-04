@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The description of the API, and its guide: OpenApiContractTests hold the server to them. -->
+    <!-- The description of the API, and its reference: OpenApiContractTests hold the server to them. -->
     <Content Include="..\..\docs\openapi.yaml" Link="Docs\openapi.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
