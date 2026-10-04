@@ -444,8 +444,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             InfoResponse info = await RunningServer.ReadAsync<InfoResponse>(response);
             info.Version.ShouldBe(Resource.ProjectPlan.Labels.Label_AppVersion);
             info.Culture.ShouldBe(CultureInfo.CurrentCulture.Name);
-            info.TimeZone.ShouldBe(TimeZoneInfo.Local.Id);
-            info.Limits.ShouldBe(s_Limits);
+            info.TimeZone.ShouldBe(TimeZoneHelper.GetIanaId(TimeZoneInfo.Local));
+            info.Limits.ShouldBe(LimitsResponse.From(s_Limits));
         }
 
         [Fact]

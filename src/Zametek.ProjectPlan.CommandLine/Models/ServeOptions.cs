@@ -19,6 +19,8 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_MaxChartSizeLongName = "max-chart-size";
         private const string c_JobTimeoutLongName = "job-timeout";
         private const string c_MaxCompileTimeoutLongName = "max-compile-timeout";
+        private const string c_BehindTlsProxyLongName = "behind-tls-proxy";
+        private const string c_LogFormatLongName = "log-format";
 
         // How zpp serve is used, shown above its options in its help: what it does, how to reach and stop it, where else
         // its limits can come from, and what it exits with. Each line fits a terminal 80 columns wide.
@@ -42,7 +44,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option(c_ListenLongName, HelpText = "Address to listen on: http or https, then localhost, an IP address or *, then a port - e.g. http://localhost:9770 or https://0.0.0.0:9771 - or unix: and the path of a Unix domain socket, which only the user running zpp serve can connect to, e.g. unix:/tmp/zpp.sock. Repeat it to listen on more than one (defaults to http://localhost:9770)")]
         public IEnumerable<string> Listen { get; set; } = [];
 
-        [Option(c_ApiKeyFileLongName, HelpText = "File holding the API key that requests must carry, as Authorization: Bearer <key> - or set ZPP_API_KEY. Required to listen on anything but this machine")]
+        [Option(c_ApiKeyFileLongName, HelpText = "File holding the API key that requests must carry, as Authorization: Bearer <key> - or set ZPP_API_KEY. It must be at least 32 characters, and a server that other machines can reach must have one")]
         public string? ApiKeyFile { get; set; } = default;
 
         [Option(c_CertificateLongName, HelpText = "Certificate for https addresses: a .pfx or .p12 file, its password in ZPP_CERTIFICATE_PASSWORD if it has one, or a .pem or .crt file")]
@@ -56,6 +58,12 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option('v', c_VerboseLongName, HelpText = "Show the jobs' and the web server's informational log output on stderr")]
         public bool Verbose { get; set; } = default;
+
+        [Option(c_LogFormatLongName, Default = LogFormat.Text, HelpText = "How the log is written on stderr: for people, or as an object a line for a program (Text|Json) - each line says the id of the request it belongs to")]
+        public LogFormat LogFormat { get; set; } = LogFormat.Text;
+
+        [Option(c_BehindTlsProxyLongName, HelpText = "Say that a proxy in front of zpp serve ends TLS, which lets it listen on an http address that other machines can reach - it refuses to otherwise, as plain http would send the API key in the clear. Only the proxy may be able to reach that address")]
+        public bool BehindTlsProxy { get; set; } = default;
 
 
 

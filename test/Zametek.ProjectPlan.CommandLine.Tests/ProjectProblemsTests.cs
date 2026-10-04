@@ -761,7 +761,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
 
             response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
-            response.Content.Headers.Allow.ShouldBe([@"POST"]);
+            response.Content.Headers.Allow.ShouldBe([@"POST", @"OPTIONS"], ignoreOrder: true);
             problem.Type.ShouldBe($@"{c_StatusTypeBase}15.5.6");
         }
 

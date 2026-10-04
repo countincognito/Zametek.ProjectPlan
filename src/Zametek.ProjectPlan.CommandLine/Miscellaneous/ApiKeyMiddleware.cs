@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,6 +16,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private readonly RequestDelegate m_Next;
         private readonly byte[] m_KeyHash;
+        private readonly ILogger<ApiKeyMiddleware> m_Logger;
 
         #endregion
 
@@ -22,12 +24,15 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public ApiKeyMiddleware(
             RequestDelegate next,
-            string apiKey)
+            string apiKey,
+            ILogger<ApiKeyMiddleware> logger)
         {
             ArgumentNullException.ThrowIfNull(next);
             ArgumentException.ThrowIfNullOrEmpty(apiKey);
+            ArgumentNullException.ThrowIfNull(logger);
             m_Next = next;
             m_KeyHash = Hash(apiKey);
+            m_Logger = logger;
         }
 
         #endregion
@@ -38,9 +43,19 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             ArgumentNullException.ThrowIfNull(context);
 
+            string authorization = context.Request.Headers.Authorization.ToString();
+
             if (context.Request.Path.StartsWithSegments(JobServer.ApiPath)
-                && !IsAuthorized(context.Request.Headers.Authorization.ToString()))
+                && !IsAuthorized(authorization))
             {
+                // What was refused, and not the key: the log is kept where the key must not be. The path is written as the
+                // request escaped it, so that nothing in it can end a line of the log.
+                m_Logger.LogWarning(
+                    "{Method} {Path}: refused, {Reason}",
+                    context.Request.Method,
+                    context.Request.Path.ToUriComponent(),
+                    authorization.Length == 0 ? @"no API key" : @"API key not accepted");
+
                 context.Response.Headers.WWWAuthenticate = c_Scheme;
                 await ProblemHelper.ToResult(ProblemHelper.CreateForStatus(
                     context,

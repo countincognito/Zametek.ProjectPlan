@@ -24,6 +24,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public const string DefaultListenUrl = @"http://localhost:9770";
 
+        // The shortest an API key may be, in characters: a random 256-bit key written in base64 is 44, in hexadecimal 64.
+        public const int MinimumApiKeyLength = 32;
+
         private const string c_Localhost = @"localhost";
 
         // Hosts that stand for every address the machine has, as Kestrel reads them.
@@ -44,6 +47,12 @@ namespace Zametek.ProjectPlan.CommandLine
             (IReadOnlyList<ListenAddress> listen, IReadOnlyList<string> sockets) = ResolveListen(options);
             string? apiKey = ResolveApiKey(options, environment);
 
+            if (apiKey is not null
+                && apiKey.Length < MinimumApiKeyLength)
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeApiKeyTooShort, MinimumApiKeyLength));
+            }
+
             // Anything that can reach a port beyond this machine has to say who it is.
             ListenAddress? exposed = listen.FirstOrDefault(x => !IsLoopback(x));
             if (exposed is not null
@@ -56,6 +65,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     OptionLongName(nameof(ServeOptions.ApiKeyFile))));
             }
 
+            ValidatePlainHttp(options, listen);
+
             return new ServeSettings
             {
                 Listen = listen,
@@ -64,6 +75,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 Certificate = ResolveCertificate(options, listen, environment),
                 Culture = ResolveCulture(options),
                 Verbose = options.Verbose,
+                LogFormat = options.LogFormat,
+                BehindTlsProxy = options.BehindTlsProxy,
                 Limits = ResolveLimits(options, settingsDirectory, environment),
             };
         }
@@ -138,6 +151,13 @@ namespace Zametek.ProjectPlan.CommandLine
             return new ListenAddress(url, isHttps, host, address.Port);
         }
 
+        // Whether the address is plain http that other machines can reach.
+        public static bool IsPlainHttpBeyondThisMachine(ListenAddress address)
+        {
+            ArgumentNullException.ThrowIfNull(address);
+            return !address.IsHttps && !IsLoopback(address);
+        }
+
         // A .pem certificate - with its key in the same file, or in keyFile - or else a .pfx or .p12 one, with its
         // password if it has one.
         public static X509Certificate2 LoadCertificate(
@@ -189,6 +209,39 @@ namespace Zametek.ProjectPlan.CommandLine
             }
 
             return (addresses, sockets);
+        }
+
+        // Plain http that other machines can reach sends the API key, and every project, in the clear: it is refused, unless
+        // a proxy in front of the server is said to end TLS - and then only the proxy can reach it, so that nothing is
+        // served in the clear beside what is served over TLS.
+        private static void ValidatePlainHttp(
+            ServeOptions options,
+            IReadOnlyList<ListenAddress> listen)
+        {
+            string behindTlsProxy = OptionLongName(nameof(ServeOptions.BehindTlsProxy));
+            ListenAddress? plain = listen.FirstOrDefault(IsPlainHttpBeyondThisMachine);
+
+            if (plain is null)
+            {
+                if (options.BehindTlsProxy)
+                {
+                    throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeBehindTlsProxyNeedsHttp, behindTlsProxy));
+                }
+
+                return;
+            }
+
+            if (!options.BehindTlsProxy)
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServePlainHttpBeyondThisMachine, plain.Url, behindTlsProxy));
+            }
+
+            ListenAddress? secure = listen.FirstOrDefault(x => x.IsHttps && !IsLoopback(x));
+
+            if (secure is not null)
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServePlainHttpBesideTls, plain.Url, secure.Url));
+            }
         }
 
         private static string? ResolveApiKey(

@@ -43,12 +43,36 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             options.CertificateKey.ShouldBeNull();
             options.Culture.ShouldBeNull();
             options.Verbose.ShouldBeFalse();
+            options.LogFormat.ShouldBe(LogFormat.Text);
+            options.BehindTlsProxy.ShouldBeFalse();
             options.MaxJobs.ShouldBeNull();
             options.MaxQueue.ShouldBeNull();
             options.MaxUploadMegabytes.ShouldBeNull();
             options.MaxChartSize.ShouldBeEmpty();
             options.JobTimeoutSeconds.ShouldBeNull();
             options.MaxCompileTimeoutMilliseconds.ShouldBeNull();
+        }
+
+        [Theory]
+        [InlineData(@"text", LogFormat.Text)]
+        [InlineData(@"Text", LogFormat.Text)]
+        [InlineData(@"json", LogFormat.Json)]
+        [InlineData(@"JSON", LogFormat.Json)]
+        public void Parse_Given_ALogFormat_Then_ItInAnyCase(string value, LogFormat expected)
+        {
+            ParsedValue(@"--log-format", value).LogFormat.ShouldBe(expected);
+        }
+
+        [Fact]
+        public void Parse_Given_ALogFormatThatIsNotOne_Then_AParseError()
+        {
+            Parse(@"--log-format", @"xml").ShouldBeOfType<NotParsed<ServeOptions>>();
+        }
+
+        [Fact]
+        public void Parse_Given_BehindTlsProxy_Then_ItIsSet()
+        {
+            ParsedValue(@"--behind-tls-proxy").BehindTlsProxy.ShouldBeTrue();
         }
 
         [Fact]

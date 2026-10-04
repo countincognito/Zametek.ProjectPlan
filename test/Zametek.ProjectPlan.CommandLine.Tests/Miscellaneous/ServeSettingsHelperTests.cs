@@ -14,6 +14,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// </summary>
     public class ServeSettingsHelperTests
     {
+        // A key of the shortest length a server takes, and another of its length.
+        private const string c_Key = @"0123456789abcdef0123456789abcdef";
+        private const string c_OtherKey = @"fedcba9876543210fedcba9876543210";
+
         private static ServeSettings Resolve(
             ServeOptions? options = null,
             string? settingsJson = null,
@@ -287,13 +291,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         public void Resolve_Given_ThatAddressAndAKeyInTheEnvironment_Then_TheKey()
         {
             ServeSettings settings = Resolve(
-                new ServeOptions { Listen = [@"http://0.0.0.0:9770"] },
+                new ServeOptions { Listen = [@"http://0.0.0.0:9770"], BehindTlsProxy = true },
                 environment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    [ServeSettingsHelper.ApiKeyVariable] = @" s3cr3t ",
+                    [ServeSettingsHelper.ApiKeyVariable] = $@" {c_Key} ",
                 });
 
-            settings.ApiKey.ShouldBe(@"s3cr3t");
+            settings.ApiKey.ShouldBe(c_Key);
         }
 
         [Fact]
@@ -303,16 +307,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             try
             {
-                File.WriteAllText(keyFile, @"from-the-file" + Environment.NewLine);
+                File.WriteAllText(keyFile, c_Key + Environment.NewLine);
 
                 ServeSettings settings = Resolve(
                     new ServeOptions { ApiKeyFile = keyFile },
                     environment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                     {
-                        [ServeSettingsHelper.ApiKeyVariable] = @"from-the-environment",
+                        [ServeSettingsHelper.ApiKeyVariable] = c_OtherKey,
                     });
 
-                settings.ApiKey.ShouldBe(@"from-the-file");
+                settings.ApiKey.ShouldBe(c_Key);
             }
             finally
             {
@@ -334,6 +338,186 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 File.Delete(keyFile);
             }
+        }
+
+        [Theory]
+        [InlineData(31, false)]
+        [InlineData(32, true)]
+        [InlineData(33, true)]
+        [InlineData(1, false)]
+        public void Resolve_Given_AKeyInTheEnvironment_Then_RefusedWhenShorterThanTheFloor(int length, bool accepted)
+        {
+            string key = new('k', length);
+            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [ServeSettingsHelper.ApiKeyVariable] = key };
+
+            if (accepted)
+            {
+                Resolve(environment: environment).ApiKey.ShouldBe(key);
+            }
+            else
+            {
+                Should.Throw<UsageException>(() => Resolve(environment: environment))
+                    .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeApiKeyTooShort, ServeSettingsHelper.MinimumApiKeyLength));
+            }
+        }
+
+        [Theory]
+        [InlineData(31, false)]
+        [InlineData(32, true)]
+        public void Resolve_Given_AKeyInAFile_Then_RefusedWhenShorterThanTheFloor(int length, bool accepted)
+        {
+            string keyFile = Path.GetTempFileName();
+
+            try
+            {
+                string key = new('k', length);
+                File.WriteAllText(keyFile, key + Environment.NewLine);
+
+                if (accepted)
+                {
+                    Resolve(new ServeOptions { ApiKeyFile = keyFile }).ApiKey.ShouldBe(key);
+                }
+                else
+                {
+                    Should.Throw<UsageException>(() => Resolve(new ServeOptions { ApiKeyFile = keyFile }))
+                        .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeApiKeyTooShort, ServeSettingsHelper.MinimumApiKeyLength));
+                }
+            }
+            finally
+            {
+                File.Delete(keyFile);
+            }
+        }
+
+        [Fact]
+        public void MinimumApiKeyLength_Then_ThirtyTwoCharacters()
+        {
+            ServeSettingsHelper.MinimumApiKeyLength.ShouldBe(32);
+        }
+
+        [Theory]
+        [InlineData(@"http://0.0.0.0:9770")]
+        [InlineData(@"http://*:9770")]
+        [InlineData(@"http://[::]:9770")]
+        [InlineData(@"http://192.168.1.10:9770")]
+        public void Resolve_Given_PlainHttpThatOtherMachinesCanReach_Then_UsageExceptionUnlessAProxyEndsTls(string url)
+        {
+            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [ServeSettingsHelper.ApiKeyVariable] = c_Key };
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { Listen = [url] }, environment: environment))
+                .Message.ShouldBe(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServePlainHttpBeyondThisMachine,
+                    url,
+                    Option(nameof(ServeOptions.BehindTlsProxy))));
+
+            ServeSettings settings = Resolve(new ServeOptions { Listen = [url], BehindTlsProxy = true }, environment: environment);
+
+            settings.BehindTlsProxy.ShouldBeTrue();
+            settings.Listen.ShouldHaveSingleItem().Url.ShouldBe(url);
+        }
+
+        [Fact]
+        public void Resolve_Given_PlainHttpThatOtherMachinesCanReachWithNoKeyAndBehindAProxy_Then_StillNeedsAKey()
+        {
+            const string url = @"http://0.0.0.0:9770";
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { Listen = [url], BehindTlsProxy = true }))
+                .Message.ShouldBe(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeNeedsApiKey,
+                    url,
+                    ServeSettingsHelper.ApiKeyVariable,
+                    Option(nameof(ServeOptions.ApiKeyFile))));
+        }
+
+        [Theory]
+        [InlineData(@"http://localhost:9770")]
+        [InlineData(@"http://127.0.0.1:9770")]
+        [InlineData(@"http://[::1]:9770")]
+        public void Resolve_Given_PlainHttpOnThisMachine_Then_NeedsNothingToSayThatTlsEndsInFront(string url)
+        {
+            ServeSettings settings = Resolve(new ServeOptions { Listen = [url] });
+
+            settings.BehindTlsProxy.ShouldBeFalse();
+            settings.Listen.ShouldHaveSingleItem().Url.ShouldBe(url);
+        }
+
+        [Fact]
+        public void Resolve_Given_BehindATlsProxyAndNothingBeyondThisMachine_Then_UsageException()
+        {
+            // It has nothing to say that is true of the address it is given, or of none.
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { BehindTlsProxy = true }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeBehindTlsProxyNeedsHttp, Option(nameof(ServeOptions.BehindTlsProxy))));
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { BehindTlsProxy = true, Listen = [$@"unix:{SocketPath()}"] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeBehindTlsProxyNeedsHttp, Option(nameof(ServeOptions.BehindTlsProxy))));
+        }
+
+        [Fact]
+        public void Resolve_Given_PlainHttpBesideHttpsBeyondThisMachine_Then_UsageException()
+        {
+            // A client could use the one that is not protected.
+            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [ServeSettingsHelper.ApiKeyVariable] = c_Key };
+
+            Should.Throw<UsageException>(() => Resolve(
+                new ServeOptions { Listen = [@"http://0.0.0.0:9770", @"https://0.0.0.0:9771"], BehindTlsProxy = true },
+                environment: environment))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServePlainHttpBesideTls, @"http://0.0.0.0:9770", @"https://0.0.0.0:9771"));
+        }
+
+        [Fact]
+        public void Resolve_Given_PlainHttpBeyondThisMachineBesideHttpsOnThisMachine_Then_ListensOnBoth()
+        {
+            // Only the proxy reaches the one, and only this machine the other: nothing is served in the clear beside what is served
+            // over TLS to the same clients.
+            string directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), $@"zpp-settings-{Guid.NewGuid():N}")).FullName;
+
+            try
+            {
+                // Written to its file, which is what the options name.
+                TestCertificates.CreateSelfSigned(directory).Dispose();
+
+                ServeSettings settings = Resolve(
+                    new ServeOptions
+                    {
+                        Listen = [@"http://0.0.0.0:9770", @"https://localhost:9771"],
+                        BehindTlsProxy = true,
+                        Certificate = Path.Combine(directory, @"server.pfx"),
+                    },
+                    environment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        [ServeSettingsHelper.ApiKeyVariable] = c_Key,
+                        [ServeSettingsHelper.CertificatePasswordVariable] = @"p4ssw0rd",
+                    });
+
+                settings.Listen.Select(x => x.Url).ShouldBe([@"http://0.0.0.0:9770", @"https://localhost:9771"]);
+                settings.Certificate.ShouldNotBeNull();
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Theory]
+        [InlineData(@"http://localhost:9770", false)]
+        [InlineData(@"http://127.0.0.1:9770", false)]
+        [InlineData(@"http://[::1]:9770", false)]
+        [InlineData(@"https://localhost:9770", false)]
+        [InlineData(@"https://0.0.0.0:9770", false)]
+        [InlineData(@"http://0.0.0.0:9770", true)]
+        [InlineData(@"http://[::]:9770", true)]
+        [InlineData(@"http://*:9770", true)]
+        [InlineData(@"http://192.168.1.10:9770", true)]
+        public void IsPlainHttpBeyondThisMachine_Given_AnAddress_Then_WhetherItIsPlainAndOtherMachinesCanReachIt(string url, bool expected)
+        {
+            ServeSettingsHelper.IsPlainHttpBeyondThisMachine(ServeSettingsHelper.ParseListenAddress(url)).ShouldBe(expected);
+        }
+
+        [Theory]
+        [InlineData(LogFormat.Text)]
+        [InlineData(LogFormat.Json)]
+        public void Resolve_Given_ALogFormat_Then_ItInTheSettings(LogFormat format)
+        {
+            Resolve(new ServeOptions { LogFormat = format }).LogFormat.ShouldBe(format);
         }
 
         [Fact]

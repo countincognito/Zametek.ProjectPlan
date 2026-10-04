@@ -672,4 +672,16 @@
   <data name="Message_ServeErrorPixelsOutOfRange" xml:space="preserve">
     <value>must be from 1 to {0} pixels</value>
   </data>
+  <data name="Message_ServeApiKeyTooShort" xml:space="preserve">
+    <value>The API key must be at least {0} characters. A random 256-bit key is 44: make one with openssl rand -base64 32.</value>
+  </data>
+  <data name="Message_ServePlainHttpBeyondThisMachine" xml:space="preserve">
+    <value>{0} is plain http, which sends the API key and every project in the clear to any machine on the way. Listen on https instead - or, if a proxy in front of zpp serve ends TLS and only the proxy can reach this address, say so with {1}.</value>
+  </data>
+  <data name="Message_ServeBehindTlsProxyNeedsHttp" xml:space="preserve">
+    <value>{0} is only valid with an http address that other machines can reach to listen on: it says that a proxy in front of zpp serve ends TLS.</value>
+  </data>
+  <data name="Message_ServePlainHttpBesideTls" xml:space="preserve">
+    <value>{0} is plain http and {1} is https, and other machines can reach both: a client could use the one that is not protected. Listen beyond this machine on one kind of address.</value>
+  </data>
 </root>

@@ -709,6 +709,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The API key must be at least {0} characters. A random 256-bit key is 44: make one with openssl rand -base64 32..
+        /// </summary>
+        public static string Message_ServeApiKeyTooShort {
+            get {
+                return ResourceManager.GetString("Message_ServeApiKeyTooShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid with an http address that other machines can reach to listen on: it says that a proxy in front of zpp serve ends TLS..
+        /// </summary>
+        public static string Message_ServeBehindTlsProxyNeedsHttp {
+            get {
+                return ResourceManager.GetString("Message_ServeBehindTlsProxyNeedsHttp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The server is running all the jobs it can, with as many waiting as it allows. Try again shortly..
         /// </summary>
         public static string Message_ServeBusy {
@@ -1029,6 +1047,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeOutputsFailed {
             get {
                 return ResourceManager.GetString("Message_ServeOutputsFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is plain http and {1} is https, and other machines can reach both: a client could use the one that is not protected. Listen beyond this machine on one kind of address..
+        /// </summary>
+        public static string Message_ServePlainHttpBesideTls {
+            get {
+                return ResourceManager.GetString("Message_ServePlainHttpBesideTls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is plain http, which sends the API key and every project in the clear to any machine on the way. Listen on https instead - or, if a proxy in front of zpp serve ends TLS and only the proxy can reach this address, say so with {1}..
+        /// </summary>
+        public static string Message_ServePlainHttpBeyondThisMachine {
+            get {
+                return ResourceManager.GetString("Message_ServePlainHttpBeyondThisMachine", resourceCulture);
             }
         }
         

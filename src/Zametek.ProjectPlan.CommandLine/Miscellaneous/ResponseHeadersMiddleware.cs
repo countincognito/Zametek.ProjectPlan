@@ -6,8 +6,8 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     // Puts the request in its trace - the one its caller gave it in a traceparent, or one of its own - and on every response
     // puts what none should be without, whatever made it - an endpoint, the key check, the router: the request's id, which
-    // is its trace id, as Request-Id; X-Content-Type-Options: nosniff; and, on what the API answers with - which is made
-    // of somebody's project - Cache-Control: no-store, unless the answer says otherwise.
+    // is its trace id, as Request-Id; X-Content-Type-Options: nosniff; and Cache-Control: no-store - what the API answers
+    // with is made of somebody's project, and a probe's answer is of its moment - unless the answer says otherwise.
     internal class ResponseHeadersMiddleware
     {
         #region Fields
@@ -50,8 +50,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     headers[RequestIdHeader] = RequestIdHelper.Get(httpContext);
                     headers.XContentTypeOptions = c_NoSniff;
 
-                    if (httpContext.Request.Path.StartsWithSegments(JobServer.ApiPath)
-                        && !headers.ContainsKey(HeaderNames.CacheControl))
+                    if (!headers.ContainsKey(HeaderNames.CacheControl))
                     {
                         headers.CacheControl = c_NoStore;
                     }

@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Zametek.Common.ProjectPlan;
@@ -33,6 +35,9 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_JsonMediaType = @"application/json";
         private const string c_ZipMediaType = @"application/zip";
         private const string c_AcceptHeader = @"Accept";
+        private const string c_AcceptPostHeader = @"Accept-Post";
+        private const string c_InfoCacheControl = @"private, max-age=60";
+        private const string c_InfoContentType = @"application/json; charset=utf-8";
         private const string c_ResultFilename = @"result.json";
 
         // Where the parts of a request are, as a JSON pointer: the request, as OpenAPI models a multipart body, is an object
@@ -99,17 +104,63 @@ namespace Zametek.ProjectPlan.CommandLine
             await answer.Result.ExecuteAsync(context);
         }
 
+        // What the server is. It cannot change while it runs, so it has an ETag of its own, which a client that asks
+        // again says it has - and is answered 304.
         public async Task GetInfoAsync(HttpContext context)
         {
             ArgumentNullException.ThrowIfNull(context);
 
+            if (AcceptHelper.Choose(context.Request, [c_JsonMediaType]) is null)
+            {
+                Answer refusal = NotAcceptable(context, [c_JsonMediaType]);
+                Log(context, refusal, Stopwatch.StartNew());
+                await refusal.Result.ExecuteAsync(context);
+                return;
+            }
+
             var info = new InfoResponse(
                 Resource.ProjectPlan.Labels.Label_AppVersion,
                 CultureInfo.CurrentCulture.Name,
-                TimeZoneInfo.Local.Id,
-                m_Limits);
+                TimeZoneHelper.GetIanaId(TimeZoneInfo.Local),
+                LimitsResponse.From(m_Limits));
 
-            await Results.Json(info, JsonOptions).ExecuteAsync(context);
+            byte[] body = JsonSerializer.SerializeToUtf8Bytes(info, JsonOptions);
+            var tag = new EntityTagHeaderValue($@"""{Convert.ToHexStringLower(SHA256.HashData(body))[..32]}""");
+
+            IHeaderDictionary headers = context.Response.Headers;
+            headers.ETag = tag.ToString();
+            headers.CacheControl = c_InfoCacheControl;
+
+            if (context.Request.GetTypedHeaders().IfNoneMatch.Any(x => x.Equals(EntityTagHeaderValue.Any) || x.Compare(tag, useStrongComparison: false)))
+            {
+                context.Response.StatusCode = StatusCodes.Status304NotModified;
+                return;
+            }
+
+            context.Response.ContentType = c_InfoContentType;
+            context.Response.ContentLength = body.Length;
+            await context.Response.Body.WriteAsync(body, context.RequestAborted);
+        }
+
+        // What an endpoint takes, as OPTIONS says it: no content, the methods it answers, and - for a POST - the media type
+        // of what it takes.
+        public static Task GetOptionsAsync(
+            HttpContext context,
+            string allow,
+            string? acceptPost = null)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(allow);
+
+            context.Response.StatusCode = StatusCodes.Status204NoContent;
+            context.Response.Headers.Allow = allow;
+
+            if (acceptPost is not null)
+            {
+                context.Response.Headers[c_AcceptPostHeader] = acceptPost;
+            }
+
+            return Task.CompletedTask;
         }
 
         #endregion

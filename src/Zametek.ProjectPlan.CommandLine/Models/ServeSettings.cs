@@ -23,6 +23,12 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public bool Verbose { get; init; }
 
+        // How its log is written.
+        public LogFormat LogFormat { get; init; }
+
+        // Whether a proxy in front of it ends TLS, which lets it listen over plain http beyond this machine.
+        public bool BehindTlsProxy { get; init; }
+
         public ServeLimits Limits { get; init; } = new();
     }
 }

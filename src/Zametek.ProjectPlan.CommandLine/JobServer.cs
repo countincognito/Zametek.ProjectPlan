@@ -5,15 +5,20 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using System.Globalization;
+using System.IO.Compression;
 using System.Net;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
 using Zametek.Engine.ProjectPlan;
 
@@ -37,7 +42,16 @@ namespace Zametek.ProjectPlan.CommandLine
         // The command that lists its options.
         private const string c_HelpCommand = @"zpp " + Command + @" --help";
 
+        // The protocols it takes over https: the oldest that are still sound, and the newest, whatever the system allows.
+        internal const SslProtocols TlsProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+
+        // How a line of its log is written for people: the time, the level, the id of the request - if the line belongs to
+        // one - and what it says.
+        internal const string TextLogTemplate = @"[{Timestamp:HH:mm:ss} {Level:u3}] {TraceIdPrefix:l}{Message:lj}{NewLine}{Exception}";
+
         private const string c_JobsPolicy = @"jobs";
+        private const string c_JsonMediaType = @"application/json";
+        private const string c_MultipartMediaType = @"multipart/form-data";
         private const string c_ReadyTag = @"ready";
         private const string c_Localhost = @"localhost";
         private const long c_Megabyte = 1024 * 1024;
@@ -97,7 +111,14 @@ namespace Zametek.ProjectPlan.CommandLine
                     CultureInfo.CurrentUICulture = culture;
                 }
 
-                ConfigureSerilog(settings.Verbose);
+                ConfigureSerilog(settings.Verbose, settings.LogFormat);
+
+                // Said once, where a person who started the server will see it: nothing in front of this address is there to
+                // keep the key and the projects out of sight, but the proxy.
+                foreach (ListenAddress address in settings.Listen.Where(ServeSettingsHelper.IsPlainHttpBeyondThisMachine))
+                {
+                    Log.Warning("Listening on {Url} over plain http, as --behind-tls-proxy says: the proxy in front of it must end TLS, and nothing else may be able to reach it", address.Url);
+                }
 
                 // A socket it cannot listen on is known at once, rather than after the engine has started; and one that
                 // a server which was killed left behind is cleared away, so that it can be started again.
@@ -161,6 +182,18 @@ namespace Zametek.ProjectPlan.CommandLine
 
             services.AddSerilog();
             services.AddRoutingCore();
+
+            // What is answered as JSON is compressed, for a client that accepts it: over https too, as nothing in it is a
+            // secret that the request could have put there. A zip is not compressed again.
+            services.AddResponseCompression(compression =>
+            {
+                compression.EnableForHttps = true;
+                compression.MimeTypes = [c_JsonMediaType, ProblemHelper.MediaType];
+                compression.Providers.Add<BrotliCompressionProvider>();
+                compression.Providers.Add<GzipCompressionProvider>();
+            });
+            services.Configure<BrotliCompressionProviderOptions>(x => x.Level = CompressionLevel.Fastest);
+            services.Configure<GzipCompressionProviderOptions>(x => x.Level = CompressionLevel.Fastest);
             services.Configure<FormOptions>(x => x.MultipartBodyLengthLimit = maxRequestBodySize);
 
             // A server that is stopped lets the jobs it is running finish, as long as they do within their time limit.
@@ -212,6 +245,9 @@ namespace Zametek.ProjectPlan.CommandLine
             // First, so that every response has what none is without - the request's id among it - whatever made it.
             app.UseMiddleware<ResponseHeadersMiddleware>();
 
+            // Before whatever answers, so that every answer is.
+            app.UseResponseCompression();
+
             // What the server did not expect, and what nothing answered - an unknown path, a method a path does not take - is
             // a problem like the rest.
             app.UseExceptionHandler(handler => handler.Run(ProblemHelper.WriteUnexpectedErrorAsync));
@@ -230,11 +266,17 @@ namespace Zametek.ProjectPlan.CommandLine
                 .RequireRateLimiting(c_JobsPolicy);
             api.MapPost(@"/projects/scenarios", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().ListScenariosAsync(x)))
                 .RequireRateLimiting(c_JobsPolicy);
-            api.MapGet(@"/info", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x)));
+            api.MapMethods(@"/info", [HttpMethods.Get, HttpMethods.Head], (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x)));
 
-            // Live as soon as it listens; ready once it has warmed up.
-            app.MapHealthChecks(@"/health/live", new HealthCheckOptions { Predicate = _ => false });
-            app.MapHealthChecks(@"/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains(c_ReadyTag) });
+            // What each takes, for a client that asks: the methods, and what a POST takes.
+            api.MapMethods(@"/projects/compile", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType)));
+            api.MapMethods(@"/projects/scenarios", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType)));
+            api.MapMethods(@"/info", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS")));
+
+            // Live as soon as it listens; ready once it has warmed up. What a probe is answered is of its moment: nothing the
+            // health checks add to say so, which Cache-Control does, as it does for everything else.
+            app.MapHealthChecks(@"/health/live", new HealthCheckOptions { Predicate = _ => false, AllowCachingResponses = true });
+            app.MapHealthChecks(@"/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains(c_ReadyTag), AllowCachingResponses = true });
 
             return app;
         }
@@ -243,20 +285,40 @@ namespace Zametek.ProjectPlan.CommandLine
 
         #region Private Members
 
-        private static void ConfigureSerilog(bool verbose)
+        private static void ConfigureSerilog(
+            bool verbose,
+            LogFormat logFormat)
         {
-            // On stderr, as zpp's log is, which leaves stdout to whatever runs the server. The log says what the server
-            // does - starting, listening, warming up, and a line for each job - and what goes wrong in its jobs and in
-            // the web server. --verbose adds their informational output.
+            Log.Logger = CreateLogger(verbose, logFormat);
+        }
+
+        // On stderr, as zpp's log is, which leaves stdout to whatever runs the server. The log says what the server does -
+        // starting, listening, warming up, and a line for each request - and what goes wrong in its jobs and in the web
+        // server; each line says the id of the request it belongs to, which the response says as Request-Id. --verbose adds
+        // their informational output.
+        internal static Serilog.Core.Logger CreateLogger(
+            bool verbose,
+            LogFormat logFormat)
+        {
             LoggerConfiguration configuration = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 // Whenever something asks whether the server is ready while it warms up, the health checks log the
                 // answer - not yet - as an error. It is expected, and the warm-up logs for itself whether it failed.
                 .MinimumLevel.Override(@"Microsoft.Extensions.Diagnostics.HealthChecks", LogEventLevel.Fatal)
                 .Enrich.FromLogContext()
-                .WriteTo.Console(
+                .Enrich.With<TraceIdEnricher>();
+
+            if (logFormat == LogFormat.Json)
+            {
+                configuration.WriteTo.Console(new LogJsonFormatter(), standardErrorFromLevel: LogEventLevel.Verbose);
+            }
+            else
+            {
+                configuration.WriteTo.Console(
+                    outputTemplate: TextLogTemplate,
                     standardErrorFromLevel: LogEventLevel.Verbose,
                     formatProvider: CultureInfo.InvariantCulture);
+            }
 
             if (!verbose)
             {
@@ -267,7 +329,19 @@ namespace Zametek.ProjectPlan.CommandLine
                     .MinimumLevel.Override(typeof(JobServer).Namespace!, LogEventLevel.Information);
             }
 
-            Log.Logger = configuration.CreateLogger();
+            return configuration.CreateLogger();
+        }
+
+        // How an https address is served: with the certificate, over the protocols TlsProtocols names.
+        internal static HttpsConnectionAdapterOptions CreateHttpsOptions(X509Certificate2 certificate)
+        {
+            ArgumentNullException.ThrowIfNull(certificate);
+
+            return new HttpsConnectionAdapterOptions
+            {
+                ServerCertificate = certificate,
+                SslProtocols = TlsProtocols,
+            };
         }
 
         private static void ConfigureKestrel(
@@ -284,7 +358,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 {
                     if (address.IsHttps)
                     {
-                        listen.UseHttps(settings.Certificate ?? throw new InvalidOperationException());
+                        listen.UseHttps(CreateHttpsOptions(settings.Certificate ?? throw new InvalidOperationException()));
                     }
                 }
 
