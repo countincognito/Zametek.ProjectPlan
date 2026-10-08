@@ -267,23 +267,49 @@ namespace Zametek.ProjectPlan.CommandLine
             app.UseRateLimiter();
 
             RouteGroupBuilder api = app.MapGroup(ApiPath);
-            api.MapPost(@"/projects/compile", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().CompileAsync(x)))
+            api.MapPost(
+                @"/projects/compile",
+                x => x.RequestServices.GetRequiredService<ProjectEndpoints>().CompileAsync(x))
                 .RequireRateLimiting(c_JobsPolicy);
-            api.MapPost(@"/projects/scenarios", (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().ListScenariosAsync(x)))
+            api.MapPost(
+                @"/projects/scenarios",
+                x => x.RequestServices.GetRequiredService<ProjectEndpoints>().ListScenariosAsync(x))
                 .RequireRateLimiting(c_JobsPolicy);
-            api.MapMethods(@"/info", [HttpMethods.Get, HttpMethods.Head], (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x)));
-            api.MapMethods(DescriptionRoute, [HttpMethods.Get, HttpMethods.Head], (RequestDelegate)(x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetDescriptionAsync(x)));
+            api.MapMethods(
+                @"/info",
+                [HttpMethods.Get, HttpMethods.Head],
+                x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x));
+            api.MapMethods(
+                DescriptionRoute,
+                [HttpMethods.Get, HttpMethods.Head],
+                x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetDescriptionAsync(x));
 
             // What each takes, for a client that asks: the methods, and what a POST takes.
-            api.MapMethods(@"/projects/compile", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType)));
-            api.MapMethods(@"/projects/scenarios", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType)));
-            api.MapMethods(@"/info", [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS")));
-            api.MapMethods(DescriptionRoute, [HttpMethods.Options], (RequestDelegate)(x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS")));
+            api.MapMethods(
+                @"/projects/compile",
+                [HttpMethods.Options],
+                x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType));
+            api.MapMethods(
+                @"/projects/scenarios",
+                [HttpMethods.Options],
+                x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType));
+            api.MapMethods(
+                @"/info",
+                [HttpMethods.Options],
+                x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS"));
+            api.MapMethods(
+                DescriptionRoute,
+                [HttpMethods.Options],
+                x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS"));
 
             // Live as soon as it listens; ready once it has warmed up. What a probe is answered is of its moment: nothing the
             // health checks add to say so, which Cache-Control does, as it does for everything else.
-            app.MapHealthChecks(@"/health/live", new HealthCheckOptions { Predicate = _ => false, AllowCachingResponses = true });
-            app.MapHealthChecks(@"/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains(c_ReadyTag), AllowCachingResponses = true });
+            app.MapHealthChecks(
+                @"/health/live",
+                new HealthCheckOptions { Predicate = _ => false, AllowCachingResponses = true });
+            app.MapHealthChecks(
+                @"/health/ready",
+                new HealthCheckOptions { Predicate = x => x.Tags.Contains(c_ReadyTag), AllowCachingResponses = true });
 
             return app;
         }
