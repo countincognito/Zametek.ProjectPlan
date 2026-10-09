@@ -1,45 +1,37 @@
 # Zametek.Graphs.Avalonia
 
-A reusable, embeddable **interactive graph control** for [Avalonia](https://avaloniaui.net/). One
-generic control family draws directed graphs - activity‑on‑**arrow** and activity‑on‑**vertex**
-alike - with dragging, click‑to‑select highlighting, hover tooltips, unbounded pan/zoom, automatic
-[MSAGL](https://github.com/microsoft/automatic-graph-layout) layout, and image/vector export (PNG,
-JPEG, PDF, SVG, plus GraphML and GraphViz).
+Zametek.Graphs.Avalonia is a reusable **interactive graph control** that you can embed in an [Avalonia](https://avaloniaui.net/) application. One generic family of controls draws directed graphs: activity-on-**arrow** graphs and activity-on-**vertex** graphs. The controls give you dragging, highlighting of the selected item with a click, tooltips on hover, unbounded pan and zoom, and automatic layout with [MSAGL](https://github.com/microsoft/automatic-graph-layout). They also export PNG, JPEG, PDF and SVG images, and GraphML and GraphViz data.
 
-Everything application‑specific (your domain graph, settings, save/error dialogs) is supplied through
-one thin interface, so a consumer writes an adapter and a single wiring line - not the interactive,
-layout, or export machinery.
+The application supplies everything that is specific to the application through one thin interface. This includes your domain graph, the settings, and the dialogs for save and error. Thus, a consumer writes an adapter and one line to connect it. The consumer does not write the logic for interaction, layout or export.
 
 - **Target framework:** `net10.0`
-- **Key dependencies:** Avalonia 12, ReactiveUI.Avalonia 12, SkiaSharp (via Svg.Skia), MSAGL
-  (`AutomaticGraphLayout.Drawing`), `Xaml.Behaviors.Avalonia`.
-- **Root namespace / XAML namespace:** `Zametek.Graphs.Avalonia`
+- **Key dependencies:** Avalonia 12, ReactiveUI.Avalonia 12, SkiaSharp (through Svg.Skia), MSAGL (`AutomaticGraphLayout.Drawing`) and `Xaml.Behaviors.Avalonia`.
+- **Root namespace and XAML namespace:** `Zametek.Graphs.Avalonia`
 - Compiled bindings are on by default (`AvaloniaUseCompiledBindingsByDefault=true`).
 
 ---
 
 ## Contents
 
-1. [How it works](#how-it-works)
+1. [Structure of the library](#structure-of-the-library)
 2. [Quick start](#quick-start)
 3. [Data formats](#data-formats)
-4. [Presentation styling](#presentation-styling)
-   - [Re-skinning with `GraphAppearance`](#re-skinning-with-graphappearance)
+4. [Presentation style](#presentation-style)
+   - [Re-skin with `GraphAppearance`](#re-skin-with-graphappearance)
    - [Custom node / edge templates](#custom-node--edge-templates)
-5. [Export & export styling](#export--export-styling)
-   - [Vector vs. high-fidelity (raster)](#vector-vs-high-fidelity-raster)
+5. [Export and export style](#export-and-export-style)
+   - [Vector or high-fidelity (raster)](#vector-or-high-fidelity-raster)
    - [`GraphVectorExportStyle`](#graphvectorexportstyle)
-   - [Choosing modes & wiring copy/save](#choosing-modes--wiring-copysave)
-6. [Persisting the arrangement](#persisting-the-arrangement)
+   - [Select a mode, and connect copy and save](#select-a-mode-and-connect-copy-and-save)
+6. [Persistence of the arrangement](#persistence-of-the-arrangement)
 7. [Built-in interactions](#built-in-interactions)
-8. [Threading & gotchas](#threading--gotchas)
+8. [Threading and known problems](#threading-and-known-problems)
 
 ---
 
-## How it works
+## Structure of the library
 
-The library is MVVM. You provide data and services; the library owns the view‑model, the layout, and
-the view.
+The library uses the MVVM pattern. You provide data and services. The library owns the view-model, the layout and the UI.
 
 ```
  Your app                         Zametek.Graphs.Avalonia
@@ -54,22 +46,21 @@ the view.
        (coordinate-free "what to draw")                    (adds positions)     (what the control renders)
 ```
 
-Key types:
+These are the key types:
 
 | Type | Role | You supply? |
 |---|---|---|
-| **`InteractiveGraphView`** | The Avalonia `UserControl` you place in XAML. | - (use it) |
-| **`IInteractiveGraph`** | The contract the control binds to. | - |
-| **`InteractiveGraphViewModel`** | The reusable implementation of `IInteractiveGraph`. Runs layout, holds the interactive node/edge view‑models, drives export. | construct it |
-| **`IGraphHost`** | Thin adapter to *your* app: theme, data, rebuild signal, save/error dialogs. | **implement it** |
-| **`IGraphLayoutEngine`** → `MsaglGraphLayoutEngine` | Runs the MSAGL layout / SVG. | use the default |
-| **`IGraphSerializer`** → `GraphSerializer` | GraphML / GraphViz output. | use the default |
-| **`GraphConfiguration`** (+ `GraphConfigurations.Arrow` / `.Vertex`) | Per‑graph layout tuning (node/label sizes, routing). | pick a preset |
-| **`GraphAppearance`** | Themable presentation (brushes, fonts, opacities). *Optional.* | optional re‑skin |
-| **`IGraphDispatcher`** → `AvaloniaGraphDispatcher` / `InlineGraphDispatcher` | Where work that must reach the UI thread goes. *Optional.* | the default, or inline for a host with no UI thread |
+| **`InteractiveGraphView`** | The Avalonia `UserControl` that you put in XAML. | - (use it) |
+| **`IInteractiveGraph`** | The contract that the control binds to. | - |
+| **`InteractiveGraphViewModel`** | The reusable implementation of `IInteractiveGraph`. It runs the layout, holds the interactive node and edge view-models, and drives the export. | make it |
+| **`IGraphHost`** | A thin adapter to *your* application: theme, data, rebuild signal, and the dialogs for save and error. | **implement it** |
+| **`IGraphLayoutEngine`** → `MsaglGraphLayoutEngine` | It runs the MSAGL layout and makes the SVG. | use the default |
+| **`IGraphSerializer`** → `GraphSerializer` | It makes the GraphML and GraphViz output. | use the default |
+| **`GraphConfiguration`** (+ `GraphConfigurations.Arrow` / `.Vertex`) | The layout tuning for each graph: the sizes of nodes and labels, and the routing. | pick a preset |
+| **`GraphAppearance`** | The theme of the presentation: brushes, fonts and opacities. *Optional.* | optional re-skin |
+| **`IGraphDispatcher`** → `AvaloniaGraphDispatcher` / `InlineGraphDispatcher` | It sends the work that must run on the UI thread to that thread. *Optional.* | the default, or inline for a host that has no UI thread |
 
-The same `InteractiveGraphViewModel` serves both arrow and vertex graphs - the difference is just the
-`GraphConfiguration` preset and (optionally) a `GraphAppearance` / templates.
+The same `InteractiveGraphViewModel` is the view-model for arrow graphs and vertex graphs. The only differences are the `GraphConfiguration` preset and, optionally, a `GraphAppearance` or templates.
 
 ---
 
@@ -77,7 +68,7 @@ The same `InteractiveGraphViewModel` serves both arrow and vertex graphs - the d
 
 ### 1. Implement `IGraphHost`
 
-This is the only interface you must write. It adapts your application to the library:
+This is the only interface that you must write. It adapts your application to the library:
 
 ```csharp
 using System.Reactive;
@@ -125,10 +116,9 @@ public sealed class MyGraphHost : IGraphHost, IDisposable
 }
 ```
 
-The library rebuilds the graph **every time `RebuildRequested` fires**. You own throttling/scheduling
-(the example observes on the task pool). The `BehaviorSubject` seed produces the initial layout.
+The library rebuilds the graph **each time `RebuildRequested` fires**. You own the throttling and the scheduling. The example observes on the task pool. The seed of the `BehaviorSubject` produces the initial layout.
 
-### 2. Construct the view‑model
+### 2. Make the view-model
 
 ```csharp
 var host = new MyGraphHost();
@@ -139,15 +129,15 @@ var interactive = new InteractiveGraphViewModel(
     new GraphSerializer(),          // default GraphML/GraphViz serializer
     GraphConfigurations.Arrow);     // or .Vertex, or your own GraphConfiguration
     // optional 5th arg: a GraphAppearance to re-skin (see below)
-    // optional named arg dispatcher: an IGraphDispatcher (see Threading & gotchas)
+    // optional named arg dispatcher: an IGraphDispatcher (see Threading and known problems)
 
 // Expose it to your view as IInteractiveGraph:
 public IInteractiveGraph Interactive => interactive;
 ```
 
-`InteractiveGraphViewModel` is `IDisposable` - dispose it (and your host) with the owning view‑model.
+`InteractiveGraphViewModel` is `IDisposable`. Dispose it and your host when your own view-model, which owns them, ends.
 
-### 3. Place the control
+### 3. Put the control in XAML
 
 ```xml
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -161,16 +151,13 @@ public IInteractiveGraph Interactive => interactive;
 </UserControl>
 ```
 
-That's the whole integration. Drag, select, pan/zoom, the context menu (routing modes, fit‑to‑view,
-reset layout, copy/save) and export all come from the control.
+These three steps are the full integration. The control gives you dragging, selection, pan and zoom, the context menu, and export. The context menu has the routing modes, *Fit to View*, *Reset Layout*, and the items for copy and save.
 
 ---
 
 ## Data formats
 
-You never hand the library coordinates or Avalonia objects - you produce a **`DiagramGraphModel`**: a
-flat, coordinate‑free description of *what* to draw, with presentation already resolved to hex colours
-and simple enums. MSAGL computes the positions.
+You do not give the library coordinates or Avalonia objects. You make a **`DiagramGraphModel`**. This is a flat description of *what* to draw, with no coordinates. The presentation is in hex colors and simple enums. MSAGL calculates the positions.
 
 ```csharp
 var diagram = new DiagramGraphModel
@@ -211,55 +198,41 @@ var diagram = new DiagramGraphModel
 
 ### Model reference
 
-**`DiagramNodeModel`** - `Id`, `X`, `Y`, `Width`, `Height`, `FillColorHexCode?`, `BorderColorHexCode?`,
-`BorderDashStyle` (`GraphDashStyle`), `BorderThickness`, `Text?`, `Name?`, `Tooltip?`.
-*(`X`/`Y` are only meaningful in the GraphML export; on‑screen positions come from the layout pass.)*
+**`DiagramNodeModel`** has these members: `Id`, `X`, `Y`, `Width`, `Height`, `FillColorHexCode?`, `BorderColorHexCode?`, `BorderDashStyle` (`GraphDashStyle`), `BorderThickness`, `Text?`, `Name?` and `Tooltip?`. `X` and `Y` have a meaning only in the GraphML export. The positions on the screen come from the layout pass.
 
-**`DiagramEdgeModel`** - `Id`, `Name?`, `SourceId`, `TargetId`, `DashStyle` (`GraphDashStyle`),
-`ForegroundColorHexCode?`, `StrokeThickness`, `Label?`, `ShowLabel`, `Tooltip?`.
+**`DiagramEdgeModel`** has these members: `Id`, `Name?`, `SourceId`, `TargetId`, `DashStyle` (`GraphDashStyle`), `ForegroundColorHexCode?`, `StrokeThickness`, `Label?`, `ShowLabel` and `Tooltip?`.
 
-**Enums / helper types**
+**Enums and helper types**
 
-- `GraphDashStyle` - `Normal`, `Dashed`.
-- `GraphTheme` - `Light`, `Dark`. Map your own theme onto this in `IGraphHost.Theme`; the canvas
-  background and export background follow it.
-- Colours are hex strings parsed by Avalonia's `Color.Parse` (`#RRGGBB` or `#AARRGGBB`). `null` falls
-  back to the `GraphAppearance` fallback brushes.
+- `GraphDashStyle` has the values `Normal` and `Dashed`.
+- `GraphTheme` has the values `Light` and `Dark`. Map your own theme to it in `IGraphHost.Theme`. The canvas background and the export background follow it.
+- Colors are hex strings that `Color.Parse` of Avalonia reads (`#RRGGBB` or `#AARRGGBB`). For `null`, the library uses the fallback brushes of `GraphAppearance`.
 
-### Choosing / tuning the configuration
+### Choose and tune the configuration
 
-Pass a preset:
+Give the view-model a preset:
 
-- **`GraphConfigurations.Arrow`** - event nodes with single‑line labels and labelled edges; offers the
-  *show names* toggle.
-- **`GraphConfigurations.Vertex`** - activity nodes with a three‑line label box, unlabelled edges.
+- **`GraphConfigurations.Arrow`** has event nodes with single-line labels and edges with labels. It has a toggle that shows the names.
+- **`GraphConfigurations.Vertex`** has activity nodes with a three-line label box and edges with no labels.
 
-Or build your own `GraphConfiguration` (a `record`) to change node/label box sizes, font, the default
-`EdgeRoutingMode`, and the `InteractiveLayoutScalingFactor`. These values tune the **MSAGL layout**
-(they size the boxes MSAGL lays out, which also sets the interactive node sizes), so treat them as a
-matched set - start from a preset and adjust with `with { ... }`.
+You can also make your own `GraphConfiguration` (a `record`). With it, you can change the sizes of the node and label boxes, the font, the default `EdgeRoutingMode`, and the `InteractiveLayoutScalingFactor`. These values tune the **MSAGL layout**. They set the size of the boxes that MSAGL lays out, and this also sets the sizes of the interactive nodes. Thus, treat them as a matched set. Start from a preset and adjust it with `with { ... }`.
 
 ### Edge routing
 
-`GraphEdgeRoutingMode`: `None`, `Spline`, `SplineBundling`, `StraightLine`, `SugiyamaSplines`,
-`Rectilinear`, `RectilinearToCenter`. The presets use `SugiyamaSplines` (arrow) / `Spline` (vertex).
-The user can switch modes from the context menu; the fixed‑layout SVG export honours each fully, while
-the live canvas draws a fast local approximation.
+`GraphEdgeRoutingMode` has these values: `None`, `Spline`, `SplineBundling`, `StraightLine`, `SugiyamaSplines`, `Rectilinear` and `RectilinearToCenter`. The presets use `SugiyamaSplines` for arrow graphs and `Spline` for vertex graphs. The user can switch the mode in the context menu. The fixed-layout SVG export uses each mode fully. The live canvas draws a fast local approximation.
 
 ---
 
-## Presentation styling
+## Presentation style
 
-Two independent levers, use either or both:
+Two independent methods are available. You can use one method, or the two together:
 
-- **`GraphAppearance`** - re‑skin the *built‑in* templates (brushes, fonts, opacities, metrics) without
-  writing XAML.
-- **`NodeTemplate` / `EdgeTemplate`** - replace the drawn node/edge **body** entirely with your own
-  Avalonia visuals.
+- **`GraphAppearance`** changes the appearance of the *built-in* templates (brushes, fonts, opacities and metrics) without XAML.
+- **`NodeTemplate` and `EdgeTemplate`** replace the drawn **body** of the node or edge with your own Avalonia visuals.
 
-### Re-skinning with `GraphAppearance`
+### Re-skin with `GraphAppearance`
 
-Pass a `GraphAppearance` to the view‑model constructor. Start from `Default` and override what you need:
+Give a `GraphAppearance` to the constructor of the view-model. Start from `Default` and override the members that you want to change:
 
 ```csharp
 using Avalonia.Media;
@@ -269,7 +242,7 @@ var appearance = GraphAppearance.Default with
 {
     SelectionBrush     = new ImmutableSolidColorBrush(Color.Parse("#FF7A00")),   // NOTE: immutable, not
     NodeLabelBrush     = new ImmutableSolidColorBrush(Colors.White),             // SolidColorBrush - see
-    NodeLabelFontFamily = new FontFamily("Cascadia Code"),                       // Threading & gotchas
+    NodeLabelFontFamily = new FontFamily("Cascadia Code"),                       // Threading and known problems
     NodeCornerRadius   = 6.0,
     EdgeDefaultBrush   = new ImmutableSolidColorBrush(Color.Parse("#667085")),
     DashPattern        = new double[] { 4.0, 2.0 },
@@ -280,7 +253,7 @@ var interactive = new InteractiveGraphViewModel(
     GraphConfigurations.Vertex, appearance);
 ```
 
-`GraphAppearance` members (all `init`, defaults give the library's standard look):
+The members of `GraphAppearance` are all `init`. The defaults give the standard appearance of the library:
 
 | Group | Members |
 |---|---|
@@ -288,27 +261,20 @@ var interactive = new InteractiveGraphViewModel(
 | Nodes | `NodeFillFallbackBrush`, `NodeBorderFallbackBrush`, `NodeCornerRadius`, `DefaultNodeBorderThickness`, `NodeDimmedOpacity`, `NodeLabelFontFamily`, `NodeLabelFontSize`, `NodeLabelBrush` |
 | Edges | `EdgeDefaultBrush`, `DefaultEdgeStrokeThickness`, `EdgeDimmedOpacity`, `EdgeLightLabelBrush`, `EdgeDarkLabelBrush`, `EdgeLabelFontFamily`, `EdgeLabelFontSize`, `ArrowLength`, `ArrowHalfWidth`, `DashPattern` |
 
-> **The label font is bundled.** Both label font families default to **Cascadia Mono**, which the
-> library ships as an Avalonia resource (SIL Open Font License, `Assets/Fonts/OFL.txt`) rather than
-> looking it up on the machine, so labels look the same everywhere: the on‑screen labels, the canvas
-> export and the rasterised fixed layout all draw from the bundled files, even where no Cascadia Mono
-> is installed. The fixed‑layout SVG names `Cascadia Mono, Consolas, monospace`, for viewers that
-> cannot see the bundled copy. Any other family you set is looked up on the system as usual. The
-> presets' label factors are tuned to Cascadia Mono's metrics, so a different font may need its own.
+> The library bundles the label font. The two label font families use **Cascadia Mono** by default. The library supplies this font as an Avalonia resource (SIL Open Font License, `Assets/Fonts/OFL.txt`). It does not look for the font on the computer. Thus, the labels look the same on all computers.
+>
+> The screen, the canvas export and the rasterized fixed layout all draw from the bundled files. This is true also where Cascadia Mono is not installed.
+>
+> The fixed-layout SVG names `Cascadia Mono, Consolas, monospace`, for viewers that cannot see the bundled copy. For each other font family that you set, the library looks on the system, as usual. The label factors of the presets match the metrics of Cascadia Mono. Thus, it can be necessary to set other factors for a different font.
 
-> ⚠️ **Font‑family properties must be typed `Avalonia.Media.FontFamily`, not `string`.** With compiled
-> bindings, binding a `string` to `FontFamily` throws at runtime (and silently falls back to the
-> default font). This applies to `GraphAppearance` and the template contract below.
+> ⚠️ **Font-family properties must have the type `Avalonia.Media.FontFamily`, and not `string`.** With compiled bindings, the binding of a `string` to `FontFamily` throws an exception at runtime, and the library silently uses the default font. This applies to `GraphAppearance` and to the template contract that follows.
 
 ### Custom node / edge templates
 
-Set `NodeTemplate` and/or `EdgeTemplate` on the control to replace the drawn **body**. The control keeps
-ownership of positioning, dragging, the selection ring, dimming, the wide invisible hit area and the
-tooltip - your template only draws the visible node/edge. Bind against the stable contract interfaces
-(`x:DataType`), never the concrete view‑model:
+Set `NodeTemplate`, `EdgeTemplate` or both on the control to replace the drawn **body**. The control still owns the position, the drag, the selection ring, the dimming, the wide invisible area that receives pointer input, and the tooltip. Your template draws only the visible node or edge. Bind to the stable contract interfaces (`x:DataType`) and not to the concrete view-model:
 
-- Node body → **`IGraphNodeViewModel`**
-- Edge body → **`IGraphEdgeViewModel`**
+- The node body uses **`IGraphNodeViewModel`**.
+- The edge body uses **`IGraphEdgeViewModel`**.
 
 ```xml
 <g:InteractiveGraphView DataContext="{Binding Interactive}">
@@ -353,42 +319,33 @@ tooltip - your template only draws the visible node/edge. Bind against the stabl
 </g:InteractiveGraphView>
 ```
 
-**Contract you can bind to:**
+**The contract that you can bind to:**
 
-- `IGraphNodeViewModel` - `Id`, `Width`, `Height`, `Label`, `Tooltip`, `FillBrush`, `BorderBrush`,
-  `BorderThickness`, `StrokeDashArray`, `CornerRadius`, `LabelFontFamily`, `LabelFontSize`, `LabelBrush`,
-  `SelectionBrush`, `IsSelected`, `IsDimmed`, `NodeOpacity` (`X`/`Y` are read‑write but owned by the
-  control's drag/positioning - don't bind them for layout).
-- `IGraphEdgeViewModel` - `Id`, `EdgeGeometry`, `Stroke`, `StrokeThickness`, `StrokeDashArray`,
-  `EdgeOpacity`, `ArrowPoints`, `Label`, `ShowLabel`, `LabelBrush`, `LabelFontFamily`, `LabelFontSize`,
-  `LabelX`, `LabelY`, `Tooltip`.
+- `IGraphNodeViewModel` has these members: `Id`, `Width`, `Height`, `Label`, `Tooltip`, `FillBrush`, `BorderBrush`, `BorderThickness`, `StrokeDashArray`, `CornerRadius`, `LabelFontFamily`, `LabelFontSize`, `LabelBrush`, `SelectionBrush`, `IsSelected`, `IsDimmed` and `NodeOpacity`. You can read and write `X` and `Y`, but the control owns them for the drag and the positioning. Do not bind them for layout.
+- `IGraphEdgeViewModel` has these members: `Id`, `EdgeGeometry`, `Stroke`, `StrokeThickness`, `StrokeDashArray`, `EdgeOpacity`, `ArrowPoints`, `Label`, `ShowLabel`, `LabelBrush`, `LabelFontFamily`, `LabelFontSize`, `LabelX`, `LabelY` and `Tooltip`.
 
-The library ships a `g:HalfNegativeConverter` (shifts a canvas‑positioned control by minus half its own
-size) for centring an edge label/chip on its `LabelX`/`LabelY` anchor. Anything you leave unset keeps
-the built‑in body.
+The library supplies a `g:HalfNegativeConverter`. It moves a control that has a position on a canvas by minus half of its own size. Use it to center an edge label or chip on its `LabelX` and `LabelY` anchor. The library keeps the built-in body for each item that you leave unset.
 
 ---
 
-## Export & export styling
+## Export and export style
 
-The control can copy to the clipboard and save to PNG, JPEG, PDF, SVG (images) and GraphML / `.dot`
-(data). Image export has **two modes**.
+The control can put the graph on the clipboard. It can also save images (PNG, JPEG, PDF and SVG) and data (GraphML and `.dot`). Image export has **two modes**.
 
-### Vector vs. high-fidelity (raster)
+### Vector or high-fidelity (raster)
 
-`GraphExportMode`:
+`GraphExportMode` has two values:
 
 | Mode | What it draws | Best for |
 |---|---|---|
-| **`Vector`** (default) | Crisp shapes drawn imperatively in SkiaSharp, described by a `GraphVectorExportStyle`. True vector in SVG/PDF. **Does not** read your custom templates. | scalable, razor‑sharp output; approximating a custom look in vector form |
-| **`Raster`** ("High Fidelity") | The **real** `NodeTemplate` / `EdgeTemplate` rendered to a bitmap (2× supersampled), embedded into SVG/PDF. Reproduces gradients, shadows, arbitrary shapes exactly. | pixel‑exact reproduction of a bespoke template |
+| **`Vector`** (default) | The control draws crisp shapes imperatively in SkiaSharp, as a `GraphVectorExportStyle` describes. The shapes are true vector in SVG and PDF. This mode **does not** read your custom templates. | Scalable, razor-sharp output, and an approximation of a custom appearance in vector form |
+| **`Raster`** ("High Fidelity") | The control renders the **real** `NodeTemplate` and `EdgeTemplate` to a bitmap (2× supersampled) and embeds it into the SVG or PDF. It reproduces gradients, shadows and arbitrary shapes exactly. | Pixel-exact reproduction of a bespoke template |
 
-Because the vector renderer can't read an arbitrary template, you *describe* the look you want with a
-`GraphVectorExportStyle`; the raster path needs no configuration (it uses the templates directly).
+The vector renderer cannot read an arbitrary template. Thus, you *describe* the appearance that you want with a `GraphVectorExportStyle`. The raster path needs no configuration, because it uses the templates directly.
 
 ### `GraphVectorExportStyle`
 
-An immutable record (start from `Default`). Set it on the control via `VectorExportStyle`:
+`GraphVectorExportStyle` is an immutable record. Start from `Default`. Set it on the control with `VectorExportStyle`:
 
 ```csharp
 using Avalonia.Media;
@@ -422,7 +379,7 @@ graphView.VectorExportStyle = GraphVectorExportStyle.Default with
 };
 ```
 
-Members, grouped:
+The table that follows groups the members:
 
 | Group | Members |
 |---|---|
@@ -435,19 +392,15 @@ Members, grouped:
 | Edge glow | `ShowEdgeGlow`, `EdgeGlowBrush`, `EdgeGlowBlurRadius`, `EdgeGlowOpacity` |
 | Edge label chip | `ShowEdgeLabelChip`, `EdgeLabelChipBrush`, `EdgeLabelChipBorderBrush`, `EdgeLabelChipBorderThickness`, `EdgeLabelChipCornerRadius`, `EdgeLabelChipPaddingX`, `EdgeLabelChipPaddingY`, `EdgeLabelChipTextBrush` |
 
-`GraphVectorExportStyle.Default` reproduces the original rounded‑rectangle look, so an unset consumer's
-vector export is unchanged. Colours/fonts/dash/arrowheads that the node/edge data already carry flow
-through automatically - this record only adds what the imperative renderer cannot otherwise infer.
+`GraphVectorExportStyle.Default` reproduces the original rounded-rectangle appearance. Thus, the vector export of a consumer that sets nothing does not change. The export uses the colors, fonts, dash styles and arrowheads that the node and edge data carry. This type adds only what the imperative renderer cannot infer.
 
-> The node **glow** becomes a blur filter in SVG/PDF, which softens the otherwise‑crisp vector output a
-> little - the one trade‑off versus the flat vector look. Everything else stays sharp.
+> The node **glow** becomes a blur filter in SVG and PDF. This softens the crisp vector output a little. It is the one trade-off against the flat vector appearance. Everything else stays sharp.
 
-### Choosing modes & wiring copy/save
+### Select a mode, and connect copy and save
 
-**Which mode the built‑in copy/save use** is the control's `ExportMode` (default `Vector`).
+**The mode that the built-in copy and save use** is the `ExportMode` of the control. The default is `Vector`.
 
-**Context‑menu entries** - Copy/Save each offer *Vector* and *High Fidelity* sub‑items. Hide whichever
-you don't want:
+**Context menu entries.** Copy and Save each offer the sub-items *Vector* and *High Fidelity*. Hide the item that you do not want:
 
 ```xml
 <g:InteractiveGraphView DataContext="{Binding Interactive}"
@@ -456,18 +409,16 @@ you don't want:
                         ShowRasterExportOptions="True"/>
 ```
 
-**Programmatic copy** (whole graph, cropped like the saved image):
+**Copy in source code** (all of the graph, cropped like the saved image):
 
 ```csharp
 await graphView.CopyImageAsync(GraphExportMode.Raster);  // or omit the arg to use ExportMode
 ```
 
-**Programmatic / bound save** - the view‑model exposes commands (they call your
-`IGraphHost.PickSaveFileAsync`, then write by file extension):
+**Save in source code, or with a binding.** The view-model has commands for this. They call your `IGraphHost.PickSaveFileAsync` and then write by file extension:
 
-- `SaveGraphImageFileCommand` - save at the default mode.
-- `SaveGraphImageWithModeCommand` - save at an explicit `GraphExportMode` (pass it as the command
-  parameter).
+- `SaveGraphImageFileCommand` saves in the default mode.
+- `SaveGraphImageWithModeCommand` saves in an explicit `GraphExportMode`. Give the mode as the command parameter.
 
 ```xml
 <Button Content="Save (vector)"
@@ -475,8 +426,7 @@ await graphView.CopyImageAsync(GraphExportMode.Raster);  // or omit the arg to u
         CommandParameter="{x:Static g:GraphExportMode.Vector}"/>
 ```
 
-**Headless / to a stream** - write without any on‑screen control (e.g. a CLI or a service). The
-fixed‑layout source builds straight from the diagram, so no interactive surface is needed:
+**To a stream, with no control on the screen.** You can write an image with no control on the screen, for example in a command line tool or a service. The fixed-layout source builds directly from the diagram. Thus, no interactive surface is necessary:
 
 ```csharp
 await using FileStream stream = File.Create("graph.svg");
@@ -487,75 +437,46 @@ await interactive.WriteImageAsync(
     FixedLayoutGraphType.Arrow);   // or .Vertex
 ```
 
-`WriteImageAsync` writes the `GraphFileFormat` it is given: `Png` / `Jpeg` / `Pdf` / `Svg` produce images;
-`GraphML` / `GraphViz` (Dot) produce data. The caller owns the stream, which is left open, and a failure is
-thrown to the caller rather than reported through `IGraphHost.ReportErrorAsync`.
-`GraphImageSource.InteractiveCanvas` exports the current dragged arrangement; `GraphImageSource.FixedLayout`
-exports the default MSAGL layout.
+`WriteImageAsync` writes the `GraphFileFormat` that you give it. `Png`, `Jpeg`, `Pdf` and `Svg` make images. `GraphML` and `GraphViz` (Dot) make data. The caller owns the stream, and the method leaves it open. The method throws an exception to the caller. It does not send the failure to `IGraphHost.ReportErrorAsync`.
 
-> Under the hood the control implements `IGraphImageProvider` and registers itself on the view‑model, so
-> the view‑model's Save path can render through your templates/mode - but **only a SkiaSharp picture
-> crosses that seam** (no view or template object reaches the view‑model). With no control attached
-> (headless), Save falls back to the vector renderer.
+`GraphImageSource.InteractiveCanvas` exports the current arrangement after dragging. `GraphImageSource.FixedLayout` exports the default MSAGL layout.
+
+> The control implements `IGraphImageProvider` and registers itself on the view-model. Thus, the save path of the view-model can render through your templates and mode. But **only a SkiaSharp picture crosses that seam**. No control or template object reaches the view-model. If the view-model has no control, for example in a host that has no UI, Save uses the vector renderer.
 
 ---
 
-## Persisting the arrangement
+## Persistence of the arrangement
 
-Node drags and the routing mode can be saved and restored. These live on the concrete
-`InteractiveGraphViewModel` (hold the concrete type in your host, expose `IInteractiveGraph` to the view):
+You can save and restore the node drags and the routing mode. The members for this are on the concrete `InteractiveGraphViewModel`. Hold the concrete type in your host, and expose `IInteractiveGraph` to the UI:
 
-- `IReadOnlyList<GraphNodePosition> GetNodeLayout()` - the current arrangement (layout space).
-- `void SeedNodeLayout(IReadOnlyList<GraphNodePosition>)` - best‑effort overlay by node `Id` applied on
-  the next build (ids no longer present are dropped; unseeded nodes keep the fresh layout).
-- `bool HasManualLayout` - true once the user has actually dragged (so you save the live arrangement,
-  not a round‑tripped seed).
-- `event EventHandler LayoutChanged` - a drag‑end or reset changed the arrangement (seeding does *not*
-  raise it) - capture for persistence here.
-- `void ApplyEdgeRoutingMode(GraphEdgeRoutingMode)` - restore a saved routing mode.
-- `void ResetView()` - drop the persisted zoom/pan so the next graph re‑frames from scratch (e.g. on
-  project close). The viewport transform (`ViewZoom`/`ViewPanX`/`ViewPanY`/`HasViewState`) is persisted
-  by the control across re‑materialisation automatically.
+- `IReadOnlyList<GraphNodePosition> GetNodeLayout()` gives the current arrangement (in layout space).
+- `void SeedNodeLayout(IReadOnlyList<GraphNodePosition>)` puts an overlay by node `Id` on the next build, on a best-effort basis. The library drops ids that no longer exist. Nodes with no seed keep the new layout.
+- `bool HasManualLayout` is true after the user drags a node. Thus, you save the live arrangement and not a seed that went through a round trip.
+- `event EventHandler LayoutChanged` shows that the end of a drag or a reset changed the arrangement. Seeding does *not* raise it. Capture the arrangement here for persistence.
+- `void ApplyEdgeRoutingMode(GraphEdgeRoutingMode)` restores a saved routing mode.
+- `void ResetView()` removes the saved zoom and pan. Then the next graph frames itself from the start, for example when a project closes. The control keeps the viewport transform (`ViewZoom`, `ViewPanX`, `ViewPanY` and `HasViewState`) when it re-materializes, with no extra work from you.
 
 ---
 
 ## Built-in interactions
 
-Provided by the control with no extra work:
+The control provides these items with no extra work:
 
-- **Drag** nodes; the workspace grows so dragged nodes never clip.
-- **Click** a node to highlight it, its edges and neighbours (everything else dims); click empty space
-  to clear.
-- **Pan** (drag empty space) and **zoom** (mouse wheel or the slider), unbounded.
-- **Context menu:** edge‑routing modes, *Fit to View*, *Reset Layout*, *Copy Image* (Vector / High
-  Fidelity), *Save As…* (Vector / High Fidelity), and the *show names* toggle when the configuration
-  supports it.
-- Automatic re‑framing on load; the user's pan/zoom is preserved across re‑layouts.
+- **Drag** nodes. The workspace grows, and thus the control does not cut off a dragged node.
+- **Click** a node to highlight it, its edges and its neighbors. Everything else dims. Click empty space to remove the highlight.
+- **Pan** (drag empty space) and **zoom** (mouse wheel or the slider) with no limits.
+- **Context menu:** The menu has the edge routing modes, *Fit to View*, *Reset Layout*, *Copy Image* and *Save As…*. Copy and Save each offer Vector and High Fidelity. When the configuration supports it, the menu also has the toggle for the names.
+- The control frames the graph when it loads. It keeps the pan and zoom of the user through each new layout.
 
 ---
 
-## Threading & gotchas
+## Threading and known problems
 
-- **Layout runs off the UI thread.** Observe `IGraphHost.RebuildRequested` on a background scheduler
-  (e.g. `TaskPoolScheduler.Default`) so the MSAGL pass never blocks the UI. The view‑model marshals the
-  results back to the UI thread itself.
-- **Exports render on the UI thread.** Rasterising the real templates must run on it - the built‑in
-  copy/save paths already do.
-- **The UI thread is an `IGraphDispatcher`.** The view‑model reaches the UI thread through one, and by
-  default it is `AvaloniaGraphDispatcher` - `Dispatcher.UIThread`. A host with no UI thread (an automated
-  export, a server) passes `InlineGraphDispatcher` instead, which runs that work where it is asked for:
-  nothing pumps a dispatcher there, so work posted to one would never run, and would hold the graph for
-  the life of the process. A refresh still on its way when the view‑model is disposed does nothing.
-- **Immutable brushes only.** Avalonia ties a mutable brush (an `AvaloniaObject`) to the dispatcher of
-  the thread that creates it, and the compositor verifies that ownership the first time the brush is
-  drawn - a brush created off the UI thread crashes the render loop with "The calling thread cannot
-  access this object because a different thread owns it". Every brush the library creates is an
-  `ImmutableSolidColorBrush`; supply immutable brushes in your `GraphAppearance` /
-  `GraphVectorExportStyle` overrides too, because your host view‑model - and with it the appearance -
-  may well be constructed off the UI thread (e.g. behind a splash screen).
-- **`FontFamily`, not `string`** for all font‑family properties (see the appearance note above).
-- **Dispose** the `InteractiveGraphViewModel` (and your `IGraphHost`) when the owning view‑model goes
-  away.
-- Set custom `NodeTemplate` / `EdgeTemplate` bodies to `IsHitTestVisible="False"` where appropriate -
-  the control owns the hit area, drag and tooltip.
-```
+- **The layout runs off the UI thread.** Observe `IGraphHost.RebuildRequested` on a background scheduler, for example `TaskPoolScheduler.Default`. Then the MSAGL pass does not block the UI. The view-model itself moves the results back to the UI thread.
+- **Exports render on the UI thread.** The rasterization of the templates must run on it. The built-in copy and save paths do this for you.
+- **Dispatcher.** The view-model reaches the UI thread through an `IGraphDispatcher`. By default, this is `AvaloniaGraphDispatcher` (`Dispatcher.UIThread`).
+- **A host that has no UI thread** passes `InlineGraphDispatcher` instead. Examples are an automated export and a server. This dispatcher runs the work at the point of the call. Nothing pumps a dispatcher there. Thus, work that you post to a dispatcher does not run, and it holds the graph for the life of the process. A refresh that is in progress when you dispose the view-model does nothing.
+- **Use immutable brushes only.** Avalonia ties a mutable brush (an `AvaloniaObject`) to the dispatcher of the thread that creates it. The compositor verifies this ownership the first time that it draws the brush. A brush that you create off the UI thread causes a crash of the render loop with the message "The calling thread cannot access this object because a different thread owns it". Each brush that the library creates is an `ImmutableSolidColorBrush`. Also supply immutable brushes in your `GraphAppearance` and `GraphVectorExportStyle` overrides. This matters because a thread other than the UI thread can make your host view-model and its appearance, for example behind a splash screen.
+- **Use `FontFamily` and not `string`** for all font-family properties (refer to the appearance note above).
+- **Dispose** the `InteractiveGraphViewModel` and your `IGraphHost` when your own view-model, which owns them, ends.
+- Set `IsHitTestVisible="False"` on the bodies of custom `NodeTemplate` and `EdgeTemplate` where this is applicable. The control owns the pointer input, the drag and the tooltip.

@@ -1,22 +1,11 @@
 # TODO - Zametek.Graphs.Avalonia
 
-Library-scoped items only: this file travels with the folder when the library is spun
-out into its own repository. Repo-wide items belong in the repository's docs/TODO.md.
-Date entries when added; delete them when done.
+This file lists the items for the library only. It stays with the folder when the library moves to its own repository. Items that apply to all of the repository belong in the file `docs/TODO.md`. Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Spin out into a dedicated repository** *(2026-08-02)*:
-  - Keep the name `Zametek.Graphs.Avalonia` (NOT `Zametek.Avalonia.Graphs`, which
-    captures the `Avalonia` namespace and breaks unqualified references).
-  - Own solution + CI, plus NuGet packaging metadata in the csproj (PackageId, license,
-    readme, icon, source link).
-  - Move `test/Zametek.Graphs.Avalonia.Tests` and `test/Zametek.Graphs.Avalonia.TestApp`
-    across with the library; the `InternalsVisibleTo("Zametek.Graphs.Avalonia.Tests")`
-    declaration keeps working as long as the test assembly name is unchanged.
-  - Switch Zametek.ProjectPlan from the project reference to the published package.
+- [ ] **Move the library to a dedicated repository** *(2026-08-02)*:
+  - Keep the name `Zametek.Graphs.Avalonia`. Do not use `Zametek.Avalonia.Graphs`. That name captures the `Avalonia` namespace and breaks unqualified references.
+  - Make a new `.slnx` file and a CI workflow for the library. Add the NuGet packaging metadata to the csproj file: PackageId, license, readme, icon and source link.
+  - Move `test/Zametek.Graphs.Avalonia.Tests` and `test/Zametek.Graphs.Avalonia.TestApp` with the library. The `InternalsVisibleTo("Zametek.Graphs.Avalonia.Tests")` declaration continues to work if the name of the test assembly does not change.
+  - Change Zametek.ProjectPlan to use the published package and not the project reference.
 
-- [ ] **System.Reactive is a deliberate, explicit dependency** *(2026-08-02)* -
-  ReactiveUI 24+ no longer ships it transitively, and the library's public API exposes
-  Rx types directly (`IGraphHost.RebuildRequested` is `IObservable<Unit>`), so dropping
-  System.Reactive would be a breaking API change for consumers. Revisit only alongside
-  the solution-wide item in the repository's docs/TODO.md (blocked until DynamicData and
-  Dock go Rx-free there).
+- [ ] **System.Reactive is an explicit dependency by design** *(2026-08-02)* - Since version 24, ReactiveUI does not supply it transitively. The public API of the library exposes Rx types directly (`IGraphHost.RebuildRequested` is `IObservable<Unit>`). Thus, the removal of System.Reactive is a breaking change of the API for consumers. Review this item only together with the item for all of the repository in `docs/TODO.md`. That item cannot start until DynamicData and Dock stop their dependency on Rx.

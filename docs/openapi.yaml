@@ -3,39 +3,38 @@ info:
   title: zpp serve API
   summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
   description: |
-    The HTTP API of `zpp serve`, which runs zpp as a web server. A project is sent with each request - the server keeps
-    nothing between requests - and the server answers with the project's metrics and the outputs asked for: its project
-    file, charts and graphs, an Excel export.
+    The HTTP API of `zpp serve`, which starts `zpp` as a web server. Each request carries its project, because the server keeps
+    nothing between requests. The server answers with the metrics of the project and the outputs that the request asks for. These
+    outputs are the project file, charts and graphs, and an Excel export.
 
-    This description is the source of truth for programs; [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
-    is the written reference, with the changelog, the security review and the deviations from the
+    This description is the source of truth for programs. [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
+    is the written reference. It has the changelog, the security review and the deviations from the
     [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), which the API
-    follows. The problems' `type` URIs are the addresses of that reference's sections.
+    follows. The `type` URIs of the problems are the addresses of the sections of that reference.
 
-    The server serves this description itself, at `GET /v1/openapi`, without an API key: the file of the repository, as it was when
-    the server was built. A description that is read from the repository names no server of its own, so a tool is given the address
-    of one; one that is fetched from a server describes that server.
+    The server supplies this description itself, at `GET /v1/openapi`, without an API key. It is the file of the repository, in the
+    version from the time of the build of the server. A description that you read from the repository names no server of its own,
+    and thus a tool receives the address of a server. A description that you fetch from a server describes that server.
 
-    Every response, including a problem, carries `Request-Id`: 32 hexadecimal characters, the `traceId` of a problem and
-    the trace id on every line of the server's log that belongs to the request. A request that carries a `traceparent`
-    keeps the trace it names.
+    Each response, including a problem, has `Request-Id`. This is 32 hexadecimal characters. It is the `traceId` of a problem. It is
+    also the trace id on each line of the server log that belongs to the request. A request that has a `traceparent` keeps
+    the trace that it names.
 
-    Nothing is stored, so each POST is safe to send again: the same request does the same again.
+    The server stores nothing, and thus it is safe to send each POST again. The same request has the same result.
 
     ## Deviations from the RESTful API Guide
 
-    The API follows the [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), version 1.1. Where it does not follow a rule - or takes an option that a rule
-    gives it - the guide asks that the description say so, and why ([DOC-2](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance),
+    The API follows the [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), version 1.2. The guide asks that the description records each deviation. A deviation is a rule that the API does not follow, or an option that a rule gives to the API. The description gives the reason for each deviation ([DOC-2](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance),
     [section 0.5](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#05-deviations)):
 
-    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - A job is answered in its request, bounded by `jobTimeout`; past it the job is stopped (`503`), not carried on as a `202`. The server keeps nothing between requests: a job carried on would need results, owners and an expiry to be kept, and ASY-1 lets a service that keeps nothing stop the job at its bound instead.
-    - [**REP-7**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#3-representations) - The costs, billings and margins in `metrics` are floating-point numbers. The engine works them out so, and a project has no currency: they are estimates in the unit the project keeps its figures in, not amounts of money, which REP-7 lets be JSON numbers.
-    - [**COL-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#51-the-collection-representation), [**COL-2**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) - `scenarios` and `outputs` are plain arrays, not paged `items`. They are bounded views of what the caller sent, not collections the server holds: COL-1 says that a bounded array inside a representation is a plain array under a descriptive name.
-    - [**ACT-4**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [**REQ-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#4-requests) - `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. A project is a file, which cannot go in a URL.
-    - [**RL-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection) - No `RateLimit` fields. They are still an Internet-Draft, and the limit is a cap on jobs at once, not a rate: `Retry-After` and `limits` say the rest.
-    - [**OPS-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#14-operations) - No availability objective. `zpp serve` is a tool its users run for themselves; its latency is bounded by `jobTimeout`.
-    - [**ERR-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#7-errors) - `408`, `414` and `431`, and a request the web server cannot read, have no body. The web server answers them before the API is reached, and cannot be made to write one.
-    - [**SEC-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#101-transport), [**SEC-15**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#104-input-and-resources) - No HSTS, no CORS. No browser calls this API; a proxy that ends TLS can add HSTS.
+    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead.
+    - [**REP-7**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#3-representations) - The costs, billings and margins in `metrics` are floating-point numbers. The engine calculates them in this way, and a project has no currency. They are estimates in the unit of the figures of the project, and not amounts of money. REP-7 lets such values be JSON numbers.
+    - [**COL-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#51-the-collection-representation), [**COL-2**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) - `scenarios` and `outputs` are plain arrays and not paged `items`. They are bounded parts of what the caller sent, and not collections that the server holds. COL-1 says that a bounded array inside a representation is a plain array under a descriptive name.
+    - [**ACT-4**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [**REQ-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#4-requests) - `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. A project is a file, and a file cannot go in a URL.
+    - [**RL-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection) - The API has no `RateLimit` fields. They are still an Internet-Draft. The limit is a cap on the jobs at one time, and not a rate. `Retry-After` and `limits` give the other information.
+    - [**OPS-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#14-operations) - The API has no availability objective. `zpp serve` is a tool that its users operate for themselves, and `jobTimeout` limits its latency.
+    - [**ERR-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#7-errors) - `408`, `414` and `431`, and a request that the web server cannot read, have no body. The web server answers them before the API gets them, and it cannot write a body.
+    - [**SEC-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#101-transport), [**SEC-15**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#104-input-and-resources) - The API has no HSTS and no CORS. No browser calls this API. A proxy that ends TLS can add HSTS.
   version: 1.0.0
   contact:
     name: Zametek.ProjectPlan
@@ -45,14 +44,14 @@ info:
     identifier: BSD-2-Clause
 servers:
   - url: /
-    description: The server that this description was fetched from
+    description: The server from which a client fetches this description
   - url: http://localhost:9770
-    description: zpp serve as it starts, on this machine
+    description: The default address of `zpp serve`, on this computer
 tags:
   - name: Projects
     description: What the API does with a project.
   - name: Server
-    description: What the server is.
+    description: Information about the server.
   - name: Probes
     description: Health checks, which need no API key.
 security:
@@ -64,12 +63,13 @@ paths:
       tags: [Projects]
       summary: Compile a project
       description: |
-        Compiles the project - or the Excel workbook, imported into a new project - in the request, and answers with its
-        metrics and the outputs the options ask for. Answers `200` only when the project compiled and every output was
-        produced: anything else is a problem, with the status that says why.
+        This operation compiles the project in the request. The request can have an Excel workbook instead, which the server imports
+        into a new project. The server answers with the metrics of the project and the outputs that the options ask for. The status is
+        `200` only when the project compiled and the job produced each output. Each other result is a problem, and its status shows the
+        reason.
 
-        With `Accept: application/zip` the answer is a zip: each output as a file, named as zpp names it, and
-        `result.json`, which is the JSON answer less the files' contents.
+        With `Accept: application/zip`, the answer is a zip. It contains each output as a file, with the name that `zpp` gives it. It also
+        contains `result.json`, which is the JSON answer without the contents of the files.
       parameters:
         - $ref: '#/components/parameters/Include'
         - $ref: '#/components/parameters/Traceparent'
@@ -88,7 +88,7 @@ paths:
                 contentType: application/json
       responses:
         '200':
-          description: The project compiled, and every output asked for was produced.
+          description: The project compiled, and the job produced each output that the request asked for.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
@@ -131,7 +131,7 @@ paths:
       operationId: optionsCompileProject
       tags: [Projects]
       summary: What the endpoint takes
-      description: Says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the rest of `/v1` does.
+      description: This operation says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the other operations under `/v1` do.
       responses:
         '204':
           $ref: '#/components/responses/OptionsPost'
@@ -143,8 +143,8 @@ paths:
       tags: [Projects]
       summary: List a project's scenarios
       description: |
-        Lists the scenarios of the project in the request, as `zpp --list-scenarios` does. It only reads: nothing
-        is changed or kept.
+        This operation lists the scenarios of the project in the request, as `zpp --list-scenarios` does. It only reads. It does not
+        change or keep anything.
       parameters:
         - $ref: '#/components/parameters/Include'
         - $ref: '#/components/parameters/Traceparent'
@@ -159,7 +159,7 @@ paths:
                 contentType: application/octet-stream
       responses:
         '200':
-          description: The project's scenarios.
+          description: The scenarios of the project.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
@@ -190,7 +190,7 @@ paths:
       operationId: optionsListScenarios
       tags: [Projects]
       summary: What the endpoint takes
-      description: Says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the rest of `/v1` does.
+      description: This operation says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the other operations under `/v1` do.
       responses:
         '204':
           $ref: '#/components/responses/OptionsPost'
@@ -202,21 +202,22 @@ paths:
       tags: [Server]
       summary: Ask what the server is
       description: |
-        The server's version, the culture it writes numbers and dates in, its time zone, and its limits. It cannot change
-        while the server runs, so it has a strong `ETag` and can be kept for a minute.
+        This operation gives the version of the server, the culture in which it writes numbers and dates, its time zone, and its limits.
+        This information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for
+        one minute.
       parameters:
         - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/Traceparent'
       responses:
         '200':
-          description: What the server is.
+          description: Information about the server.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
             ETag:
               $ref: '#/components/headers/ETag'
             Cache-Control:
-              description: May be kept by the client that asked, for a minute.
+              description: The client that asked can keep the response for one minute.
               required: true
               schema:
                 type: string
@@ -229,7 +230,7 @@ paths:
                 server:
                   $ref: '#/components/examples/Server'
         '304':
-          description: The client has what the server is, as the `ETag` says.
+          description: The client has the current information about the server, as the `ETag` shows.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
@@ -242,8 +243,8 @@ paths:
     head:
       operationId: headInfo
       tags: [Server]
-      summary: The headers of what the server is
-      description: Answers with the headers of `GET`, `ETag` among them, and no body.
+      summary: The headers of the information about the server
+      description: This operation answers with the headers of `GET`, with the `ETag`, and with no body.
       responses:
         '200':
           description: The headers of `GET`, and no body.
@@ -258,7 +259,7 @@ paths:
       operationId: optionsInfo
       tags: [Server]
       summary: What the endpoint takes
-      description: Says that the endpoint takes `GET` and `HEAD`. It needs the API key, as the rest of `/v1` does.
+      description: This operation says that the endpoint takes `GET` and `HEAD`. It needs the API key, as the other operations under `/v1` do.
       responses:
         '204':
           $ref: '#/components/responses/OptionsGet'
@@ -270,9 +271,10 @@ paths:
       tags: [Server]
       summary: Fetch the description of this API
       description: |
-        This description, as YAML, as it was when the server was built: the file of the repository, so that a server says what it
-        takes, and not what some other version of it took. It holds nothing that is not in the repository, so it needs no API key.
-        It cannot change while the server runs, so it has a strong `ETag` and can be kept for an hour by anyone.
+        This operation gives this description as YAML, in the version from the time of the build of the server. It is the file of the
+        repository. Thus, a server describes what it takes, and not what a different version of it took. The description holds only what
+        is in the repository, and thus it needs no API key. It cannot change while the server operates. Thus, the response has a strong
+        `ETag`, and any cache can keep it for one hour.
       security: []
       parameters:
         - $ref: '#/components/parameters/IfNoneMatch'
@@ -286,7 +288,7 @@ paths:
             ETag:
               $ref: '#/components/headers/ETag'
             Cache-Control:
-              description: May be kept by anyone, for an hour.
+              description: Any cache can keep the response for one hour.
               required: true
               schema:
                 type: string
@@ -303,7 +305,7 @@ paths:
                 type: string
               examples:
                 start:
-                  summary: The start of it
+                  summary: The start of the description
                   value: |
                     openapi: 3.1.0
                     info:
@@ -313,7 +315,7 @@ paths:
               schema:
                 type: string
         '304':
-          description: The client has this description, as the `ETag` says.
+          description: The client has this description, as the `ETag` shows.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
@@ -325,7 +327,7 @@ paths:
       operationId: headDescription
       tags: [Server]
       summary: The headers of the description
-      description: Answers with the headers of `GET`, `ETag` among them, and no body. It needs no API key.
+      description: This operation answers with the headers of `GET`, with the `ETag`, and with no body. It needs no API key.
       security: []
       responses:
         '200':
@@ -339,7 +341,7 @@ paths:
       operationId: optionsDescription
       tags: [Server]
       summary: What the endpoint takes
-      description: Says that the endpoint takes `GET` and `HEAD`. It needs no API key, as they need none.
+      description: This operation says that the endpoint takes `GET` and `HEAD`. It needs no API key, because they need none.
       security: []
       responses:
         '204':
@@ -349,7 +351,7 @@ paths:
       operationId: getLive
       tags: [Probes]
       summary: Is the server listening
-      description: Answers 200 as soon as the server listens. It needs no API key, so that a load balancer or an orchestrator can ask.
+      description: This operation answers 200 when the server listens. It needs no API key, and thus a load balancer or an orchestrator can ask.
       security: []
       responses:
         '200':
@@ -358,14 +360,14 @@ paths:
     get:
       operationId: getReady
       tags: [Probes]
-      summary: Has the server warmed up
-      description: Answers 200 once the server has warmed up on a sample project, a few seconds after it starts, and 503 until then. It needs no API key.
+      summary: Is the server ready
+      description: This operation answers 200 after the warm-up of the server with a sample project, which takes some seconds after the start, and 503 before that. It needs no API key.
       security: []
       responses:
         '200':
           $ref: '#/components/responses/Healthy'
         '503':
-          description: The server is still warming up.
+          description: The warm-up of the server is not complete.
           headers:
             Request-Id:
               $ref: '#/components/headers/RequestId'
@@ -382,15 +384,15 @@ components:
       type: http
       scheme: bearer
       description: |
-        The server's API key, at least 32 characters: `openssl rand -base64 32` makes one. A server on this machine alone
-        needs none.
+        The API key of the server. It has a minimum of 32 characters, and `openssl rand -base64 32` makes such a key. A server that only
+        this computer can reach needs no key.
   parameters:
     Include:
       name: include
       in: query
       description: |
-        What to add to the answer, as a comma-separated list. `console` adds what zpp would have printed and exited with,
-        to the answer or to the problem. Any other value, and any other query parameter, is a problem with the request.
+        What the server adds to the answer, as a comma-separated list. The value `console` adds the text and the exit code of a local run
+        of `zpp` to the answer or to the problem. Any other value and any other query parameter is a problem with the request.
       required: false
       style: form
       explode: false
@@ -411,37 +413,37 @@ components:
     IfNoneMatch:
       name: If-None-Match
       in: header
-      description: The `ETag` the client has. The server answers `304` if it is current.
+      description: The `ETag` that the client has. The server answers `304` if the `ETag` is current.
       required: false
       schema:
         type: string
   headers:
     RequestId:
-      description: The request's id, which is its trace id and the `traceId` of its problem.
+      description: The id of the request. It is the trace id of the request and the `traceId` of its problem.
       required: true
       schema:
         $ref: '#/components/schemas/TraceId'
     ETag:
-      description: A strong validator of what the server is.
+      description: A strong validator of the response.
       required: true
       schema:
         type: string
         pattern: '^"[0-9a-f]{32}"$'
     RetryAfter:
-      description: How many seconds to wait before sending the request again.
+      description: The number of seconds to wait before you send the request again.
       required: true
       schema:
         type: integer
         minimum: 0
     NoStore:
-      description: Nothing the server answers is to be kept.
+      description: A cache must not keep the response.
       required: true
       schema:
         type: string
         const: no-store
   responses:
     MalformedRequest:
-      description: The request cannot be understood.
+      description: The server cannot understand the request.
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -453,7 +455,7 @@ components:
             malformedRequest:
               $ref: '#/components/examples/MalformedRequest'
     Unauthorized:
-      description: The request needs the API key, and does not carry it, or carries another.
+      description: The request needs the API key, and it does not have the key or it has an incorrect key.
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -471,7 +473,7 @@ components:
             unauthorized:
               $ref: '#/components/examples/Unauthorized'
     NotAcceptable:
-      description: '`Accept` offers nothing the operation answers with; `detail` says what it can.'
+      description: '`Accept` offers nothing that the operation can answer with. `detail` says what it can answer with.'
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -507,8 +509,8 @@ components:
               $ref: '#/components/examples/NotAWorkbook'
     Unprocessable:
       description: |
-        The request is understood, and what it says is not valid, or the project - or what is asked of it - cannot be
-        processed. `type` says which.
+        The server understands the request, but what it says is not valid, or the server cannot process the project or what the request
+        asks for. `type` shows which.
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -533,7 +535,7 @@ components:
             scenarioNotSelectable:
               $ref: '#/components/examples/ScenarioNotSelectable'
     ServerFailed:
-      description: The server failed. `type` says whether an output could not be produced, or something nobody expected.
+      description: The server failed. `type` shows if the job did not produce an output, or if something happened that nobody expected.
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -549,7 +551,7 @@ components:
             unexpectedError:
               $ref: '#/components/examples/UnexpectedError'
     Unavailable:
-      description: The server is busy, or the job ran for longer than the server allows. `type` says which.
+      description: The server is busy, or the job used more time than the server allows. `type` shows which.
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -595,7 +597,7 @@ components:
             type: string
             const: multipart/form-data
     Healthy:
-      description: The server is up.
+      description: The server operates.
       headers:
         Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -706,7 +708,7 @@ components:
             isTracked: false
             isCurrent: false
     Server:
-      summary: A server with its limits as they start
+      summary: A server with the limits that it has at its start
       value:
         version: 0.10.1
         culture: en-GB
@@ -720,7 +722,7 @@ components:
           jobTimeout: PT2M
           maxCompileTimeout: PT1M
     MalformedRequest:
-      summary: Options that are not JSON, and an include that is not one
+      summary: Options that are not JSON, and an `include` value that the server does not know
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#malformed-request
         title: The request could not be understood
@@ -775,7 +777,7 @@ components:
             - kind: errorLine
               text: "Unexpected character encountered while parsing value: P. Path '', line 0, position 0."
     CompilationFailed:
-      summary: A project with an activity that depends on one that is not there
+      summary: A project with an activity that depends on an activity that does not exist
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed
         title: The project did not compile
@@ -789,7 +791,7 @@ components:
               Invalid activity dependencies:
               999 is invalid but referenced by: 1
     CompilationTimedOut:
-      summary: A compilation that did not finish in its time
+      summary: A compilation that did not end within its time limit
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-timed-out
         title: The compilation ran out of time
@@ -809,7 +811,7 @@ components:
             code: notFound
             detail: No scenario matches 'Gamma'
     OutputFailed:
-      summary: A project that compiled, whose Gantt chart could not be produced (its project file was)
+      summary: A project that compiled, where the job did not produce the Gantt chart but produced the project file
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#output-failed
         title: An output could not be produced
@@ -861,7 +863,7 @@ components:
             contentType: application/json
             content: eyJWZXJzaW9uIjogIjAuNi4xIn0=
     UnexpectedError:
-      summary: Something nobody expected, of which the answer says only that it happened
+      summary: A failure that nobody expected. The answer says only that it happened
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unexpected-error
         title: The server could not process the request
@@ -869,7 +871,7 @@ components:
         detail: The server failed to process the request. Its log says why, under the request's trace id.
         traceId: 7be0d4a91c3f4e5a8b26f9d1c0e7a354
     Busy:
-      summary: Every job the server runs at once is running, and as many wait as it allows
+      summary: The server runs the maximum number of jobs at one time, and the maximum number of jobs wait
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy
         title: The server is busy
@@ -877,7 +879,7 @@ components:
         detail: The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.
         traceId: 002ff9eeea0321b50b20f508d7d0b4e6
     JobTimeout:
-      summary: A job that ran for longer than the server allows
+      summary: A job that used more time than the server allows
       value:
         type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#job-timeout
         title: The job took too long
@@ -893,7 +895,7 @@ components:
         detail: 'The request needs the server''s API key, as Authorization: Bearer <key>.'
         traceId: f9e88ee6a376f8b7f7abc3e52fad53ef
     NotAcceptable:
-      summary: An Accept the operation cannot meet
+      summary: An `Accept` that the operation cannot meet
       value:
         type: https://tools.ietf.org/html/rfc9110#section-15.5.7
         title: Not Acceptable
@@ -929,19 +931,19 @@ components:
       type: string
       pattern: '^P(?=\d|T\d)(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$'
       description: |
-        An ISO 8601 duration of days, hours, minutes and seconds, and of nothing longer, as the server writes and reads it: `PT5S`,
-        `PT2M`, `P1DT2H`, `PT0.001S`. Seconds may have a fraction, which the `duration` format of JSON Schema does not allow.
+        An ISO 8601 duration in days, hours, minutes and seconds, and not in longer units. The server writes and reads it in this form:
+        `PT5S`, `PT2M`, `P1DT2H`, `PT0.001S`. Seconds can have a fraction, which the `duration` format of JSON Schema does not allow.
     CompileRequest:
       description: |
-        The request as OpenAPI models a multipart body: an object whose properties are its parts. The pointers of a
-        problem's errors point into it (`#/options/outputs/ganttChart/width`).
+        The request as OpenAPI models a multipart body: an object whose properties are its parts. The pointers in the errors of a
+        problem point into it (`#/options/outputs/ganttChart/width`).
       type: object
       additionalProperties: false
       properties:
         project:
           type: string
           contentMediaType: application/octet-stream
-          description: A project (`.zpp`). Its file needs a name, as the outputs are named after it.
+          description: A project (`.zpp`). Its file needs a name, because the outputs get their names from it.
         import:
           type: string
           contentMediaType: application/octet-stream
@@ -961,13 +963,13 @@ components:
           contentMediaType: application/octet-stream
           description: A project (`.zpp`).
     CompileOptions:
-      description: zpp's own options, less the paths. At most 64 KB, nested at most 16 deep. Every member may be `null`, which is as if it were not given.
+      description: The options of `zpp`, without the paths. The maximum size is 64 KB, and the maximum nesting depth is 16. Each member can be `null`, which is the same as if the request does not give it.
       type: object
       additionalProperties: false
       properties:
         scenario:
           type: [string, 'null']
-          description: The scenario to load, by name, or by id - the whole id, or a unique prefix of it of at least four hexadecimal characters. Only with a `project`.
+          description: The scenario to load, by name or by id. The id is the whole id, or a unique prefix of it of a minimum of four hexadecimal characters. Only with a `project`.
         baseTheme:
           type: [string, 'null']
           enum: [light, dark, null]
@@ -976,23 +978,23 @@ components:
           type: [string, 'null']
           enum: [markdown, table, json, null]
           default: markdown
-          description: How the console shows the metrics. It shapes nothing else.
+          description: How the console shows the metrics. It has no other effect.
         compileTimeout:
           anyOf:
             - $ref: '#/components/schemas/Duration'
             - type: 'null'
           examples: [PT5S]
-          description: From `PT0.001S` to the server's `maxCompileTimeout`. Without it, `PT5S`, or the limit if that is shorter.
+          description: From `PT0.001S` to the `maxCompileTimeout` of the server. Without it, the value is `PT5S`, or the limit if that is shorter.
         now:
           type: [string, 'null']
           format: date-time
-          description: A time with its offset from UTC, used in place of the clock.
+          description: A time with its offset from UTC. The job uses it in place of the clock.
         outputs:
           oneOf:
             - $ref: '#/components/schemas/OutputsOptions'
             - type: 'null'
     OutputsOptions:
-      description: The outputs to produce, in the order they are produced. One that is given is produced.
+      description: The outputs to produce, in the order in which the job produces them. The job produces an output that the request gives.
       type: object
       additionalProperties: false
       properties:
@@ -1013,7 +1015,7 @@ components:
         scenarioChart:
           $ref: '#/components/schemas/ChartOptions'
     OutputWithoutSettings:
-      description: 'An output with no settings, yet: given as an empty object, which can later carry settings.'
+      description: An output with no settings at this time. The request gives it as an empty object, which can carry settings later.
       type: [object, 'null']
       additionalProperties: false
     ChartOptions:
@@ -1028,11 +1030,11 @@ components:
         width:
           type: [integer, 'null']
           minimum: 1
-          description: In pixels, at most the server's `maxChartWidth`.
+          description: In pixels. The maximum is the `maxChartWidth` of the server.
         height:
           type: [integer, 'null']
           minimum: 1
-          description: In pixels, at most the server's `maxChartHeight`.
+          description: In pixels. The maximum is the `maxChartHeight` of the server.
     GraphOptions:
       type: [object, 'null']
       additionalProperties: false
@@ -1055,8 +1057,9 @@ components:
           $ref: '#/components/schemas/Console'
     Metrics:
       description: |
-        A compiled project's metrics: in words, in `lowerCamelCase`, and as values rather than the text zpp prints. A metric
-        that cannot be worked out is `null`. The costs, billings and margins are estimates, which have no currency.
+        The metrics of a compiled project. The names are words in `lowerCamelCase`, and the values are numbers and not the text that
+        `zpp` prints. A metric that the server cannot calculate is `null`. The costs, billings and margins are estimates, and they have
+        no currency.
       type: object
       required:
         - activityRisk
@@ -1108,11 +1111,11 @@ components:
         networkDurationManMonths: { type: [number, 'null'] }
         projectFinishDays:
           type: [integer, 'null']
-          description: The days from the project's start to its finish. `null` when the project has no duration.
+          description: The number of days from the start of the project to its finish. `null` when the project has no duration.
         projectFinishDate:
           type: [string, 'null']
           format: date
-          description: The date the project finishes on, in the working calendar it keeps. `null` when the project has no duration.
+          description: The date on which the project finishes, in the working calendar of the project. `null` when the project has no duration.
         effortEfficiency: { type: [number, 'null'] }
         activityEffort: { type: [number, 'null'] }
         directEffort: { type: [number, 'null'] }
@@ -1144,26 +1147,26 @@ components:
           enum: [project, scenarioExport, ganttChart, arrowGraph, vertexGraph, resourceChart, earnedValueChart, scenarioChart]
         fileName:
           type: string
-          description: The name zpp gives the file.
+          description: The name that `zpp` gives to the file.
         contentType:
           type: string
         content:
           type: string
           contentEncoding: base64
-          description: The file. Left out of a zip's `result.json`, where the zip holds the file itself.
+          description: The file. The `result.json` of a zip does not have it, because the zip contains the file itself.
     Console:
       description: |
-        What zpp would have printed and exited with, for a client that prints and writes exactly that, as `zpp --server`
-        does. There when the request asks for it with `?include=console`.
+        The text and the exit code of a local run of `zpp`, for a client that prints and writes exactly this, as `zpp --server` does. The
+        console is in the answer when the request asks for it with `?include=console`.
       type: object
       required: [exitCode, standardOutput, standardError, transcript]
       properties:
         exitCode:
           type: integer
-          description: The code zpp would have exited with.
+          description: The exit code of `zpp` in a local run.
         standardOutput:
           type: string
-          description: Every line ends in `\n`.
+          description: Each line ends with `\n`.
         standardError:
           type: string
         transcript:
@@ -1171,7 +1174,7 @@ components:
           items:
             $ref: '#/components/schemas/TranscriptEntry'
     TranscriptEntry:
-      description: One thing the job did, in the order it did it.
+      description: One step of the job, in the order in which the job did it.
       type: object
       required: [kind]
       properties:
@@ -1180,14 +1183,14 @@ components:
           enum: [line, display, errorLine, output]
         text:
           type: string
-          description: What a line or a block printed.
+          description: The text that a line or a block printed.
         hasErrors:
           type: boolean
-          description: Whether a block reports errors. Left out when it does not.
+          description: Shows if a block reports errors. The entry does not have it when the block reports no errors.
         index:
           type: integer
           minimum: 0
-          description: 'Which output the job produced: its index in `outputs`.'
+          description: The output that the job produced, by its index in `outputs`.
     ScenariosResponse:
       type: object
       required: [scenarios]
@@ -1204,21 +1207,21 @@ components:
       properties:
         path:
           type: string
-          description: The scenario's name, with the names of those it is a child of.
+          description: The name of the scenario, with the names of the scenarios that it is a child of.
         id:
           type: string
           format: uuid
         isTracked:
           type: boolean
           description: |
-            Whether the scenario is tracked: its metrics are on the scenario chart, as a point against the metrics that the chart has
-            for its axes. That is all that tracking does. It changes nothing about how the scenario compiles, what its metrics are or
-            what any other output holds, and it is not the progress tracking of activities.
+            Shows if the scenario is tracked. The scenario chart shows the metrics of a tracked scenario as a point, against the metrics of
+            the axes of the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any
+            other output holds. It is not the progress tracking of activities.
         isCurrent:
           type: boolean
           description: |
-            Whether the scenario is the project's current scenario: the one that was open when the project was saved, and so the one
-            that `zpp` loads when it is not told which. At most one scenario of a project is current.
+            Shows if the scenario is the current scenario of the project. This is the scenario that was open when a user saved the project.
+            `zpp` loads it when the request does not name a scenario. A project has a maximum of one current scenario.
     InfoResponse:
       type: object
       required: [version, culture, timeZone, limits]
@@ -1227,10 +1230,10 @@ components:
           type: string
         culture:
           type: string
-          description: The culture the server writes numbers and dates in.
+          description: The culture in which the server writes numbers and dates.
         timeZone:
           type: string
-          description: The time zone it writes times in, by its IANA name.
+          description: The time zone in which the server writes times, by its IANA name.
         limits:
           $ref: '#/components/schemas/Limits'
     Limits:
@@ -1240,11 +1243,11 @@ components:
         maxJobs:
           type: integer
           minimum: 1
-          description: Jobs that run at once.
+          description: Jobs that run at one time.
         maxQueue:
           type: integer
           minimum: 0
-          description: Jobs that wait for one to finish. Any more are turned away.
+          description: Jobs that wait for a free place. The server turns away more requests.
         maxUploadMegabytes:
           type: integer
           minimum: 1
@@ -1257,24 +1260,24 @@ components:
           minimum: 1
         jobTimeout:
           $ref: '#/components/schemas/Duration'
-          description: How long a job may run before it is stopped.
+          description: The time that a job can use before the server stops it.
         maxCompileTimeout:
           $ref: '#/components/schemas/Duration'
-          description: The longest a request may give its compilation.
+          description: The longest compile timeout that a request can give.
     ProblemError:
       type: object
       required: [detail]
       properties:
         pointer:
           type: string
-          description: Where the problem is, as a JSON pointer in URI-fragment form into the request (`CompileRequest`).
+          description: The location of the problem, as a JSON pointer in URI-fragment form into the request (`CompileRequest`).
         parameter:
           type: string
-          description: The query parameter the problem is with, in place of `pointer`.
+          description: The query parameter that has the problem, in place of `pointer`.
         code:
           description: |
-            The rule it breaks, for programs: one of those listed - or, for a project that did not compile, the compiler's
-            own code for the error, such as `P0010`.
+            The rule that the request breaks, for programs. It is one of the codes in the list. For a project that did not compile, it is the
+            code of the compiler for the error, for example `P0010`.
           anyOf:
             - type: string
               enum:
@@ -1294,12 +1297,12 @@ components:
                 - failed
             - type: string
               pattern: '^[A-Z][0-9]{4}$'
-              description: The compiler's own code for an error, such as `P0010`.
+              description: The code of the compiler for an error, for example `P0010`.
         detail:
           type: string
-          description: 'What is wrong, for people: a phrase that reads on from the place.'
+          description: What is wrong, for persons. It is a phrase that continues from the location.
     Problem:
-      description: Problem details, as RFC 9457 has them.
+      description: Problem details, as RFC 9457 gives them.
       type: object
       required: [type, title, status, traceId]
       properties:
@@ -1308,12 +1311,12 @@ components:
           format: uri
         title:
           type: string
-          description: The same for every problem of its type.
+          description: The same for each problem of its type.
         status:
           type: integer
         detail:
           type: string
-          description: What is wrong this time, for people.
+          description: What is wrong this time, for persons.
         traceId:
           $ref: '#/components/schemas/TraceId'
         errors:
@@ -1323,11 +1326,11 @@ components:
         console:
           $ref: '#/components/schemas/Console'
     StatusProblem:
-      description: A problem that is what its status says, with the type RFC 9110 gives the status.
+      description: A problem that has only its status, with the type that RFC 9110 gives to the status.
       allOf:
         - $ref: '#/components/schemas/Problem'
     MalformedRequestProblem:
-      description: The request cannot be understood.
+      description: The server cannot understand the request.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1337,7 +1340,7 @@ components:
             status:
               const: 400
     ValidationFailedProblem:
-      description: The request is understood, and what it says is not valid. Every problem is in `errors`.
+      description: The server understands the request, but what it says is not valid. `errors` has each problem.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1348,7 +1351,7 @@ components:
             status:
               const: 422
     ProjectNotReadableProblem:
-      description: The file sent as the project, or as the workbook to import, is not one the server can read.
+      description: The server cannot read the file that the request sends as the project or as the workbook to import.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1359,7 +1362,7 @@ components:
             status:
               const: 422
     CompilationFailedProblem:
-      description: The project has compilation errors, each of which is in `errors` with the compiler's own code.
+      description: The project has compilation errors. `errors` has each error with the code of the compiler.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1370,7 +1373,7 @@ components:
             status:
               const: 422
     CompilationTimedOutProblem:
-      description: The compilation did not finish within its time limit, which says nothing of whether the project is valid.
+      description: The compilation did not end within its time limit. This does not show if the project is valid.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1380,7 +1383,7 @@ components:
             status:
               const: 422
     ScenarioNotSelectableProblem:
-      description: The scenario the request named cannot be selected.
+      description: The server cannot select the scenario that the request names.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1391,7 +1394,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, and an output it was asked for could not be produced. The metrics and the outputs that were produced come with it.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics and the outputs that the job produced.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1407,7 +1410,7 @@ components:
               items:
                 $ref: '#/components/schemas/Output'
     UnexpectedErrorProblem:
-      description: Anything the server did not expect. Its cause is in the server's log, under the request's trace id, and is not in the answer.
+      description: A failure that the server did not expect. The cause is in the log of the server, under the trace id of the request. It is not in the answer.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1417,7 +1420,7 @@ components:
             status:
               const: 500
     BusyProblem:
-      description: All the jobs the server runs at once are running, and as many wait as it allows. Send the request again, after `Retry-After`.
+      description: The server runs the maximum number of jobs at one time, and the maximum number of jobs wait. Send the request again after the time in `Retry-After`.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1427,7 +1430,7 @@ components:
             status:
               const: 503
     JobTimeoutProblem:
-      description: The job ran for longer than the server allows a job, and was stopped. Sent again unchanged, it would run out of time again.
+      description: The job used more time than the server allows for a job, and the server stopped it. If you send the request again without a change, the job reaches the time limit again.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
