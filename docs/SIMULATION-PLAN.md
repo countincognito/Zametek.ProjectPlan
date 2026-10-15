@@ -91,8 +91,10 @@ The maintainer made these decisions on 2026-10-15.
 
 ### The estimates (phase 1)
 
-- The file format moves to v0_6_2. The existing member `Duration` holds ML. Two new members hold the own value of O and of P, and null means that the value follows ML.
-- A new format is necessary. An older application that reads the new file would schedule ML and not the expected duration, and the schedule would change without a message.
+- The file format moves to v0_6_2. The member `Duration` of an activity keeps its meaning: it is the duration that the compiler schedules, which is the expected duration. Three new members hold the estimates: `MostLikelyDuration`, `OptimisticDuration` and `PessimisticDuration`.
+- Each new member is optional, and a member that is null follows the one before it. No `MostLikelyDuration` is the `Duration`. No `OptimisticDuration` or `PessimisticDuration` is the most likely duration. Thus, a model that sets only `Duration` is an activity with no uncertainty. This is true for a file of an older version, for an import, and for a model that a test builds.
+- `Duration` keeps its meaning for a reason. The graph labels, the Gantt chart, the earned value chart and the resource scheduling all read it from the same model, as the scheduled duration. A different meaning in the file would change them without a message.
+- A new format is necessary. An older application that reads the new file would schedule ML and not the expected duration, and the schedule would change without a message. Going down to v0.6.1 drops the estimates and keeps `Duration`, and thus the older application schedules what this one scheduled.
 - The activities grid shows "Most likely", "Optimistic" and "Pessimistic" and the read-only columns "Expected" and "Standard deviation". The edit dialog and the XLSX export get the same fields.
 - An import from MS Project or Excel puts its duration into ML.
 - The managed activity gives the expected duration to the compiler as the `Duration` of the library activity. Thus, the compiler and the library do not change for this phase.

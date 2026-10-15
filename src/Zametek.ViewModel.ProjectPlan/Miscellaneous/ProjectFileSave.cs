@@ -24,7 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore,
                 });
-            Data.ProjectPlan.v0_6_1.ProjectModel output = Converter.Format(project);
+            Data.ProjectPlan.v0_6_2.ProjectModel output = Converter.Format(project);
             await Task.Run(() => jsonSerializer.Serialize(writer, output, output.GetType()));
         }
     }

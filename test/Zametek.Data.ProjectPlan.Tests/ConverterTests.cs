@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -357,6 +359,66 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectModel model1 = Converter.Upgrade(project_v0_6_0!);
             ProjectModel model2 = Converter.Upgrade(project_v0_6_1!);
             CompareModels(model1, model2);
+        }
+
+        [Fact]
+        public void Converter_Given_v0_6_1_Input_Then_ConvertsTo_v0_6_2()
+        {
+            v0_6_1.ProjectModel? project_v0_6_1 = JsonConvert.DeserializeObject<v0_6_1.ProjectModel>(m_Fixture.V0_6_1_JsonString);
+            v0_6_2.ProjectModel? project_v0_6_2 = JsonConvert.DeserializeObject<v0_6_2.ProjectModel>(m_Fixture.V0_6_2_JsonString);
+            var mapper = new VersionMapper();
+            v0_6_2.ProjectModel project_v0_6_1_upgraded = v0_6_2.Converter.Upgrade(mapper, project_v0_6_1!);
+            project_v0_6_1_upgraded.ShouldBeEquivalentTo(project_v0_6_2);
+
+            ProjectModel model1 = Converter.Upgrade(project_v0_6_1!);
+            ProjectModel model2 = Converter.Upgrade(project_v0_6_2!);
+            CompareModels(model1, model2);
+
+            // A plan that has no estimates is an activity with no uncertainty, however it
+            // got here: each estimate follows the one before it, and the Duration is the
+            // one the plan has always scheduled.
+            model1.Files.SelectMany(x => x.Scenario.DependentActivities).ShouldNotBeEmpty();
+            model1.Files
+                .SelectMany(x => x.Scenario.DependentActivities)
+                .ShouldAllBe(x => x.Activity.MostLikelyDuration == null
+                    && x.Activity.OptimisticDuration == null
+                    && x.Activity.PessimisticDuration == null);
+        }
+
+        [Fact]
+        public void Converter_Given_v0_6_2_Input_With_Estimates_Then_TheyReachTheCurrentModel()
+        {
+            // The fixture has no estimates, so give three activities some, one in each shape
+            // that a file can hold: all three, an optimistic duration alone, and only the
+            // most likely duration.
+            JObject json = JObject.Parse(m_Fixture.V0_6_2_JsonString);
+            var activities = (JArray)json["Files"]![0]!["Scenario"]!["DependentActivities"]!;
+            var chosen = activities.Where(x => (int)x["Activity"]!["Duration"]! > 0).Take(3).Select(x => (JObject)x["Activity"]!).ToList();
+            chosen.Count.ShouldBe(3);
+
+            chosen[0]["MostLikelyDuration"] = 8;
+            chosen[0]["OptimisticDuration"] = 5;
+            chosen[0]["PessimisticDuration"] = 14;
+            chosen[1]["MostLikelyDuration"] = 4;
+            chosen[1]["OptimisticDuration"] = 2;
+            chosen[2]["MostLikelyDuration"] = 3;
+
+            v0_6_2.ProjectModel? stored = JsonConvert.DeserializeObject<v0_6_2.ProjectModel>(json.ToString());
+            ProjectModel model = Converter.Upgrade(stored!);
+
+            List<ActivityModel> upgraded = [.. model.Files[0].Scenario.DependentActivities.Select(x => x.Activity)];
+            int[] ids = [.. chosen.Select(x => (int)x["Id"]!)];
+            ActivityModel first = upgraded.Single(x => x.Id == ids[0]);
+            ActivityModel second = upgraded.Single(x => x.Id == ids[1]);
+            ActivityModel third = upgraded.Single(x => x.Id == ids[2]);
+
+            (first.MostLikelyDuration, first.OptimisticDuration, first.PessimisticDuration).ShouldBe((8, 5, 14));
+            (second.MostLikelyDuration, second.OptimisticDuration, second.PessimisticDuration).ShouldBe((4, 2, (int?)null));
+            (third.MostLikelyDuration, third.OptimisticDuration, third.PessimisticDuration).ShouldBe((3, (int?)null, (int?)null));
+
+            // The Duration is not changed by them. It is the duration that the file
+            // recorded, and the application works it out again from the estimates.
+            first.Duration.ShouldBe((int)chosen[0]["Duration"]!);
         }
     }
 }

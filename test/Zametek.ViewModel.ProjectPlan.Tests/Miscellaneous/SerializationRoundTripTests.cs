@@ -4,6 +4,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -174,7 +175,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using MemoryStream stream = await SaveToStreamAsync(model);
 
             JObject json = JObject.Parse(ReadAllText(stream));
-            json["Version"]!.ToString().ShouldBe(Versions.v0_6_1);
+            json["Version"]!.ToString().ShouldBe(Versions.v0_6_2);
         }
 
         [Fact]
@@ -257,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             ProjectModel loaded = await RoundTripAsync(original);
 
-            loaded.Version.ShouldBe(Versions.v0_6_1);
+            loaded.Version.ShouldBe(Versions.v0_6_2);
         }
 
         [Fact]
@@ -357,7 +358,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ProjectModel loaded1 = await RoundTripAsync(original);
             ProjectModel loaded2 = await RoundTripAsync(loaded1);
 
-            loaded2.Version.ShouldBe(Versions.v0_6_1);
+            loaded2.Version.ShouldBe(Versions.v0_6_2);
         }
 
         [Fact]
@@ -370,6 +371,83 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             loaded2.Nodes.Count.ShouldBe(original.Nodes.Count);
         }
+
+        [Fact]
+        public async Task RoundTrip_Preserves_TheEstimatesOfADuration()
+        {
+            // Three activities, one in each shape that a plan can hold: all three
+            // estimates, a most likely duration alone, and no estimates at all.
+            ProjectModel original = WithActivities(
+                BuildMinimalProjectModel(),
+                new ActivityModel { Id = 1, Duration = 6, MostLikelyDuration = 5, OptimisticDuration = 3, PessimisticDuration = 12 },
+                new ActivityModel { Id = 2, Duration = 4, MostLikelyDuration = 4 },
+                new ActivityModel { Id = 3, Duration = 7 });
+
+            using MemoryStream stream = await SaveToStreamAsync(original);
+            JObject json = JObject.Parse(ReadAllText(stream));
+            var written = (JArray)json["Files"]![0]!["Scenario"]!["DependentActivities"]!;
+
+            // A member that is null is not written, so an activity with no estimates
+            // looks in the file as it did in the version before them.
+            written[0]["Activity"]!["MostLikelyDuration"]!.Value<int>().ShouldBe(5);
+            written[0]["Activity"]!["OptimisticDuration"]!.Value<int>().ShouldBe(3);
+            written[0]["Activity"]!["PessimisticDuration"]!.Value<int>().ShouldBe(12);
+            written[1]["Activity"]!["OptimisticDuration"].ShouldBeNull();
+            written[2]["Activity"]!["MostLikelyDuration"].ShouldBeNull();
+
+            stream.Position = 0;
+            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(stream);
+
+            List<ActivityModel> activities = [.. loaded.Files[0].Scenario.DependentActivities.Select(x => x.Activity)];
+            (activities[0].Duration, activities[0].MostLikelyDuration, activities[0].OptimisticDuration, activities[0].PessimisticDuration)
+                .ShouldBe((6, 5, 3, 12));
+            (activities[1].Duration, activities[1].MostLikelyDuration, activities[1].OptimisticDuration, activities[1].PessimisticDuration)
+                .ShouldBe((4, 4, (int?)null, (int?)null));
+            (activities[2].Duration, activities[2].MostLikelyDuration, activities[2].OptimisticDuration, activities[2].PessimisticDuration)
+                .ShouldBe((7, (int?)null, (int?)null, (int?)null));
+        }
+
+        [Fact]
+        public async Task OpenProject_Given_AV0_6_1File_Then_ItOpensAsV0_6_2WithTheSameDurationsAndNoEstimates()
+        {
+            // The file of every plan that exists today. It has no estimates, and its Duration
+            // is the duration that was scheduled, which must stay the duration.
+            ProjectModel current = WithActivities(
+                BuildMinimalProjectModel(),
+                new ActivityModel { Id = 1, Duration = 6 },
+                new ActivityModel { Id = 2, Duration = 0 });
+            Data.ProjectPlan.v0_6_1.ProjectModel stored = new VersionMapper().FromCurrentToV0_6_1(current);
+            stored.Version.ShouldBe(Versions.v0_6_1);
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(stored)));
+            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(stream);
+
+            loaded.Version.ShouldBe(Versions.v0_6_2);
+            List<ActivityModel> activities = [.. loaded.Files[0].Scenario.DependentActivities.Select(x => x.Activity)];
+            activities.Select(x => x.Duration).ShouldBe([6, 0]);
+            activities.ShouldAllBe(x => x.MostLikelyDuration == null
+                && x.OptimisticDuration == null
+                && x.PessimisticDuration == null);
+        }
+
+        #endregion
+
+        #region Helpers for the estimates
+
+        private static ProjectModel WithActivities(ProjectModel project, params ActivityModel[] activities) =>
+            project with
+            {
+                Files =
+                [
+                    project.Files[0] with
+                    {
+                        Scenario = project.Files[0].Scenario with
+                        {
+                            DependentActivities = [.. activities.Select(x => new DependentActivityModel { Activity = x })],
+                        },
+                    },
+                ],
+            };
 
         #endregion
     }

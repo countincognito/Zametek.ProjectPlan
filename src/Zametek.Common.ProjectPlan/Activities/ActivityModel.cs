@@ -31,7 +31,20 @@ namespace Zametek.Common.ProjectPlan
 
         public bool HasNoRisk { get; init; }
 
+        // The duration that the compiler schedules. When an activity has estimates, this is
+        // the PERT expected duration of them, rounded to a whole day. Everything that reads
+        // a compiled activity reads this member, and thus it keeps its meaning.
         public int Duration { get; init; }
+
+        // The three estimates of the duration. A member that is null follows the one before
+        // it: no most likely duration is the Duration, and no optimistic or pessimistic
+        // duration is the most likely duration. Thus a model that sets only Duration, such
+        // as one from an older file or an import, is an activity with no uncertainty.
+        public int? MostLikelyDuration { get; init; }
+
+        public int? OptimisticDuration { get; init; }
+
+        public int? PessimisticDuration { get; init; }
 
         public int? FreeSlack { get; init; }
 

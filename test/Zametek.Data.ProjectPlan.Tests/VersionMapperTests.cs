@@ -42,6 +42,16 @@ namespace Zametek.Data.ProjectPlan.Tests
             @"$.DependentActivities[].Activity.EarliestFinishTime",
         ];
 
+        // The three estimates of a duration arrived in v0.6.2, so no earlier version holds
+        // them. What an earlier version does hold is the Duration, which is the one the
+        // compiler scheduled.
+        private static readonly string[] s_ActivityEstimates =
+        [
+            @"$.DependentActivities[].Activity.MostLikelyDuration",
+            @"$.DependentActivities[].Activity.OptimisticDuration",
+            @"$.DependentActivities[].Activity.PessimisticDuration",
+        ];
+
         // A resource's activity trackers record which activity was worked on by id; the
         // name shown beside it is looked up when the plan is loaded rather than stored.
         private const string c_TrackedActivityName =
@@ -55,15 +65,144 @@ namespace Zametek.Data.ProjectPlan.Tests
 
         #endregion
 
-        #region Current <-> v0.6.1
+        #region Current <-> v0.6.2
 
         /// <summary>
-        /// The v0.6.1 models mirror the current ones, so a project that goes down to
-        /// v0.6.1 and comes back is the project it started as, apart from the version
+        /// The v0.6.2 models mirror the current ones, so a project that goes down to
+        /// v0.6.2 and comes back is the project it started as, apart from the version
         /// stamp and the values no version stores.
         /// </summary>
         [Fact]
-        public void Project_RoundTrippedThroughV0_6_1_Then_NothingIsLost()
+        public void Project_RoundTrippedThroughV0_6_2_Then_NothingIsLost()
+        {
+            var mapper = new VersionMapper();
+            ProjectModel original = ModelReflection.Fill<ProjectModel>();
+
+            ProjectModel roundTripped =
+                mapper.FromV0_6_2ToCurrent(mapper.FromCurrentToV0_6_2(original));
+
+            ModelReflection
+                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses())])
+                .ShouldBeEmpty();
+
+            roundTripped.Version.ShouldBe(@"v0.6.2");
+        }
+
+        [Fact]
+        public void ProjectScenario_RoundTrippedThroughV0_6_2_Then_NothingIsLost()
+        {
+            var mapper = new VersionMapper();
+            ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
+
+            ProjectScenarioModel roundTripped =
+                mapper.FromV0_6_2ToCurrent(mapper.FromCurrentToV0_6_2(original));
+
+            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses()).ShouldBeEmpty();
+
+            // Guards the guard: the estimates are what v0.6.2 added, so the filled scenario
+            // has to be carrying them, or keeping them would prove nothing.
+            original.DependentActivities.ShouldNotBeEmpty();
+            original.DependentActivities.ShouldAllBe(x =>
+                x.Activity.MostLikelyDuration.HasValue
+                && x.Activity.OptimisticDuration.HasValue
+                && x.Activity.PessimisticDuration.HasValue);
+        }
+
+        /// <summary>
+        /// Each estimate on its own, present or absent. An absent estimate is null and not
+        /// zero: null follows the estimate before it, and zero is a duration.
+        /// </summary>
+        [Theory]
+        [InlineData(null, null, null)]
+        [InlineData(5, null, null)]
+        [InlineData(5, 3, null)]
+        [InlineData(5, null, 9)]
+        [InlineData(5, 3, 9)]
+        [InlineData(0, 0, 0)]
+        [InlineData(null, 3, 9)]
+        public void ActivityEstimates_RoundTrippedThroughV0_6_2_Then_EachOneSurvivesAsItWas(
+            int? mostLikely,
+            int? optimistic,
+            int? pessimistic)
+        {
+            var mapper = new VersionMapper();
+            var original = new ActivityModel
+            {
+                Id = 1,
+                Duration = 6,
+                MostLikelyDuration = mostLikely,
+                OptimisticDuration = optimistic,
+                PessimisticDuration = pessimistic,
+            };
+
+            ActivityModel roundTripped =
+                mapper.FromV0_6_2ToCurrent(mapper.FromCurrentToV0_6_2(original));
+
+            roundTripped.Duration.ShouldBe(6);
+            roundTripped.MostLikelyDuration.ShouldBe(mostLikely);
+            roundTripped.OptimisticDuration.ShouldBe(optimistic);
+            roundTripped.PessimisticDuration.ShouldBe(pessimistic);
+        }
+
+        /// <summary>
+        /// Upgrading from v0.6.1. The estimates are new, so the activities come back from
+        /// v0.6.1 with none, and each of them follows its Duration, which is the duration
+        /// the plan has always scheduled.
+        /// </summary>
+        [Fact]
+        public void ProjectScenario_UpgradedFromV0_6_1_Then_EveryActivityHasNoEstimatesAndKeepsItsDuration()
+        {
+            var mapper = new VersionMapper();
+            ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
+
+            v0_6_1.ProjectScenarioModel stored = mapper.FromCurrentToV0_6_1(original);
+            ProjectScenarioModel upgraded =
+                mapper.FromV0_6_2ToCurrent(mapper.FromV0_6_1ToV0_6_2(stored));
+
+            upgraded.DependentActivities.ShouldNotBeEmpty();
+            upgraded.DependentActivities.ShouldAllBe(x =>
+                x.Activity.MostLikelyDuration == null
+                && x.Activity.OptimisticDuration == null
+                && x.Activity.PessimisticDuration == null);
+            upgraded.DependentActivities.Select(x => x.Activity.Duration)
+                .ShouldBe(original.DependentActivities.Select(x => x.Activity.Duration));
+
+            // Everything else came across: the only differences are the estimates, which
+            // the scenario was never holding in v0.6.1, and the values no version stores.
+            ModelReflection
+                .Differences(original, upgraded, StoredScenarioLosses(s_ActivityEstimates))
+                .ShouldBeEmpty();
+        }
+
+        /// <summary>
+        /// Going down to v0.6.1 drops the estimates and keeps the Duration, so an older
+        /// release that opens the plan schedules what this release scheduled.
+        /// </summary>
+        [Fact]
+        public void ProjectScenario_DowngradedToV0_6_1_Then_ItKeepsTheScheduledDuration()
+        {
+            var mapper = new VersionMapper();
+            ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
+
+            v0_6_1.ProjectScenarioModel downgraded =
+                mapper.FromV0_6_2ToV0_6_1(mapper.FromCurrentToV0_6_2(original));
+
+            downgraded.DependentActivities.Select(x => x.Activity.Duration)
+                .ShouldBe(original.DependentActivities.Select(x => x.Activity.Duration));
+        }
+
+        #endregion
+
+        #region Current <-> v0.6.1, and what that version cannot hold
+
+        /// <summary>
+        /// The v0.6.1 models mirror the current ones, apart from the estimates of a
+        /// duration. So a project that goes down to v0.6.1 and comes back is the project it
+        /// started as, apart from the version stamp, the estimates and the values no
+        /// version stores.
+        /// </summary>
+        [Fact]
+        public void Project_RoundTrippedThroughV0_6_1_Then_LosesOnlyTheEstimates()
         {
             var mapper = new VersionMapper();
             ProjectModel original = ModelReflection.Fill<ProjectModel>();
@@ -72,14 +211,14 @@ namespace Zametek.Data.ProjectPlan.Tests
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
             ModelReflection
-                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses())])
+                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses(s_ActivityEstimates))])
                 .ShouldBeEmpty();
 
             roundTripped.Version.ShouldBe(@"v0.6.1");
         }
 
         [Fact]
-        public void ProjectScenario_RoundTrippedThroughV0_6_1_Then_NothingIsLost()
+        public void ProjectScenario_RoundTrippedThroughV0_6_1_Then_LosesOnlyTheEstimates()
         {
             var mapper = new VersionMapper();
             ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
@@ -87,7 +226,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectScenarioModel roundTripped =
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
-            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses()).ShouldBeEmpty();
+            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses(s_ActivityEstimates)).ShouldBeEmpty();
 
             // The graph layouts and the per-resource metrics are what v0.6.1 added, so
             // this is the pair that has to carry them.
@@ -227,6 +366,10 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             ModelReflection
                 .Differences(expected, roundTripped, StoredScenarioLosses(
+                    // The three estimates of a duration arrived in v0.6.2.
+                    @"$.DependentActivities[].Activity.MostLikelyDuration",
+                    @"$.DependentActivities[].Activity.OptimisticDuration",
+                    @"$.DependentActivities[].Activity.PessimisticDuration",
                     // Per-activity colour overrides arrived in v0.6.1.
                     @"$.DependentActivities[].Activity.OverrideColor",
                     @"$.DependentActivities[].Activity.ColorFormat.A",
