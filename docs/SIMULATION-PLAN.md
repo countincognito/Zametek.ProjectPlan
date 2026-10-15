@@ -2,7 +2,7 @@
 
 This document is the plan to add three-point (PERT) estimates and a Monte Carlo schedule simulation to the application. It records the decisions, the design, the phases and the results of the measurements. The work is on the branch `mc-sim` of this repository and of the repository Zametek.Maths.Graphs.
 
-Status: phase 0 (measure and prototype) is finished and waits for a review. Nothing else is started. The sections about phases 1 to 4 describe what the team intends to do. Phase 0 shows four points that need a decision before phase 2 (refer to [Decisions that phase 0 needs](#decisions-that-phase-0-needs)).
+Status: phase 0 (measure and prototype) is finished. The maintainer decided the four points that it raised (refer to [Decisions of phase 0](#decisions-of-phase-0)). Phase 1 is not started. The sections about phases 1 to 4 describe what the team intends to do.
 
 ## What the work gives to a user
 
@@ -101,7 +101,7 @@ The maintainer made these decisions on 2026-10-15.
 
 - **Input.** The core takes the compiled plan: the activities, their dependencies, the resources and the three estimates of each activity. It copies this data once, and each iteration then changes only the durations.
 - **Samplers.** The core has four samplers: beta-PERT, triangular, normal and uniform. The normal sampler stays in the range from O to P. Each sampler rounds its result to the nearest whole day.
-- **Two betas.** The reference tool uses a beta with the PERT mean and the PERT variance. The usual modified PERT beta has its mode at ML and a shape value of 4, and its variance is larger. Phase 0 shows that the two give different results (refer to [The reference sample](#the-reference-sample)). The team must choose the default.
+- **Two betas.** The reference tool uses a beta with the PERT mean and the PERT variance. The usual modified PERT beta has its mode at ML and a shape value of 4, and its variance is larger. The two give different results (refer to [The reference sample](#the-reference-sample)). The default is the beta of the reference tool, and the core also offers the modified PERT beta.
 - **Random numbers.** The core uses a generator that the library specifies. It does not use `System.Random`, because the sequence of that class exists only in .NET.
 - **Seeds.** The core splits the iterations into fixed chunks. The seed of a chunk comes from the main seed and the number of the chunk. Thus, the result is the same for any number of threads.
 - **Each iteration.** It sets the durations, schedules the resources and calculates the critical path. It returns the finish time, the critical activities and the path that sets the finish time. A link between two activities that share a resource is a different kind of link in the path.
@@ -110,6 +110,7 @@ The maintainer made these decisions on 2026-10-15.
 ### The results and the desktop panel (phase 3)
 
 - The application makes the statistics, the percentiles, the histogram bins, the path table and the criticality indexes from the raw iterations.
+- When an iteration has more than one critical path, its weight is split equally among those paths. The path shares then add to 100 %.
 - The panel "Schedule Simulation" has the controls (distribution, number of iterations, seed, target date, Run and Cancel) and a progress display.
 - The chart is a stacked histogram with the eight most frequent paths and a group "Other". It has lines at the mean, at P50, P80 and P90, and at the compiled finish. The S-curve uses the axis on the right.
 - The panel does not run inside the build cascade. It copies the compiled plan under the lock and then runs on the task pool. It marks a result as stale when the plan compiles again. Refer to [Architecture](ARCHITECTURE.md), section 7.
@@ -136,8 +137,8 @@ The team stops after each phase for a review.
 
 ## The risks
 
-- **Speed.** An iteration that schedules the resources again costs as much as a compile. Phase 0 measured this cost. It is small for a plan like the sample plan and large for a plan with 500 or more activities.
-- **Ties.** Whole days make a tie between paths much more likely than in the reference tool. Phase 0 measured about 20 % of the iterations, against 0.2 %. A "Multiple" group of this size is not useful, and thus the chart must attribute a tie in a different way.
+- **Speed.** An iteration that schedules the resources again costs as much as a compile. Phase 0 measured this cost. It is small for a plan like the sample plan and large for a plan with 500 or more activities. The panel shows progress and the time that remains, and it has a Cancel button. The server limits the number of iterations or the time of a simulation.
+- **Ties.** Whole days make a tie between paths much more likely than in the reference tool. Phase 0 measured about 20 % of the iterations, against 0.2 %. A "Multiple" group of this size is not useful, and thus a tie splits the weight of the iteration among the tied paths.
 - **Floating-point numbers.** The same seed gives the same result on one platform. Windows, Linux and Rust can differ in the last bit of `Log` and `Pow`. Tests that compare platforms must use a tolerance.
 - **The browser version.** It has one thread. The simulation must run in small batches so that the UI does not freeze.
 
@@ -221,11 +222,13 @@ Keeping the order is 430 to 1,400 times faster. In both plans it gives a larger 
 - The mode that keeps the resource order is nearly free, and it is accurate for plans that resources do not decide.
 - A tie between paths is common with whole days, and the "Multiple" group of the reference tool is too large to be useful.
 
-### Decisions that phase 0 needs
+### Decisions of phase 0
 
-1. **The default beta.** Use the beta of the reference tool, or the modified PERT beta (shape value 4)? The first one matches the "Expected" and "Standard deviation" columns of the grid, and it reproduces the reference tool. The second one has its mode at ML, and it is the usual choice of risk tools. The core can offer both.
-2. **The attribution of a tie.** A tie can go to a group "Multiple", it can split its weight equally among the tied paths, or it can follow a fixed rule. The recommendation is to split the weight. The criticality index of an activity then stays correct.
-3. **The resource modes.** Keep the decision to schedule the resources in each iteration as the default. Add the mode that keeps the order, for plans that are too large and for a fast first look. Before it starts, the panel shows the expected time, from a short pilot. When the expected time is long, the panel offers the second mode.
-4. **A flat kernel.** Build it in phase 2, after the first version that uses the lean path, or do not build it. The kernel needs tests that compare it with the compile, as the lean path has.
+The maintainer made these decisions on 2026-10-15, after the results above.
 
-The proposal for the number of iterations is 5,000 by default. The expected time for the sample plan is a few seconds. A limit of 1,000,000 stays, but the panel warns when the expected time is more than a minute.
+1. **The default beta.** The default is the beta of the reference tool. It matches the "Expected" and "Standard deviation" columns of the grid, and it reproduces the reference tool. The core also offers the modified PERT beta (shape value 4), which has its mode at ML.
+2. **The attribution of a tie.** The weight of an iteration with more than one critical path is split equally among the tied paths. The path shares add to 100 %, and the criticality index of an activity stays correct.
+3. **The resource mode.** There is one mode. Each iteration schedules the resources again. The plan does not add a mode that keeps the resource order. A large plan therefore takes minutes or more. The panel shows progress and the time that remains, from the iterations that are done, and it has a Cancel button. The server limits the number of iterations or the time of a simulation.
+4. **A flat kernel.** Phase 2 does not build it. Phase 2 uses the lean path, which the tests hold to the compile. The team can build the kernel later if the speed is a problem.
+
+The proposal for the number of iterations is 5,000 by default. The expected time for the sample plan is a few seconds. A limit of 1,000,000 stays, and phase 3 can change the default.
