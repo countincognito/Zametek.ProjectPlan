@@ -232,3 +232,37 @@ The maintainer made these decisions on 2026-10-15, after the results above.
 4. **A flat kernel.** Phase 2 does not build it. Phase 2 uses the lean path, which the tests hold to the compile. The team can build the kernel later if the speed is a problem.
 
 The proposal for the number of iterations is 5,000 by default. The expected time for the sample plan is a few seconds. A limit of 1,000,000 stays, and phase 3 can change the default.
+
+## Performance work to explore later
+
+The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them.
+
+### Where the time goes
+
+The priority list is about half of one iteration in a profile of the list alone. Removing it completely made an iteration faster. The factor was 3.1 for the sample plan, 3.2 for a layered plan of 100 activities and 5.5 for a plan of 250 activities. This is the ceiling for any exact change to the list. The profile and the end-to-end figure differ for the sample plan, and nobody has explained the difference.
+
+Inside the list, 80 to 85 % of the time is the incremental update of the critical-path engine. The engine does one update for each activity that the list places. The two scans over all activities are only 4 to 13 %, and the copy of the graph is 1 to 4 %. The incremental update never gave up and fell back to a full calculation in the plans of phase 0. Thus, a better structure for the selection would win little. A faster list needs a faster incremental update.
+
+### The possibilities
+
+| Possibility | Rough effort | Likely gain | Effect on the accuracy |
+| --- | --- | --- | --- |
+| A mode that keeps the resource order of the compiled plan | 1 to 2 days, with the UI | 430 to 1,400 times | None for plans that the resources do not decide. For a plan that they decide, the mean moved by 2.6 % and the standard deviation by 24 % in one measurement. |
+| A faster incremental update in the critical-path engine (about 600 lines of source code) | About a week in C# and a few days for the Rust port | Up to 2 to 3 times for the sample plan. Not proven. | None. The same list comes out. |
+| A flat kernel for the list and the scheduler, on arrays and without copies of the graph | 2 to 4 weeks for each language | Not measured | None, if the tests show that it gives the same schedules. |
+| An approximate priority list | A few days | Up to the ceiling above | A loss that nobody can predict. The team does not recommend it. |
+
+The first possibility is the cheapest and the largest. The maintainer declined it for now, and it stays possible later. It changes only the panel and the call to the library, because each iteration is then a critical-path calculation with extra dependencies.
+
+The approximations of phase 0 show why the last possibility is not safe. The frozen list is the exact list for the most likely durations, used in every iteration. It gave a different finish in about 30 % of the iterations of the sample plan and of a plan of 100 activities. It was exact for a plan of 250 activities.
+
+The static order sorts the activities once by total slack and then by earliest start. It was exact for the sample plan and for 250 activities. In the plan of 100 activities, the resources decide the schedule. There it was 8.5 % too late on average, in 99.9 % of the iterations. Thus, the same shortcut is exact for one plan and wrong for another.
+
+### What keeps these possibilities cheap
+
+- The scheduling of one iteration stays behind one internal call of the library. The app, the panel, `zpp` and the server then do not change when the team replaces what is behind the call.
+- The library does not expose its builder or its copies of the graph in the simulation API.
+- The comparison between the lean path and a full compile stays in the test suite. The test `PriorityListEquivalenceTests` already pins the exact priority list, ties included. Together they are the oracle for any exact change.
+- The measurement tests of phase 0 stay too, and a later change can show its gain with them.
+- Each change is necessary twice, because the Rust port must give the same iterations for the same seed.
+- A new kernel must also give the critical activities that a compile gives. For a plan with no resources, the compile uses synthetic resources. Ties can then mark more activities as critical than the plain critical-path calculation does.
