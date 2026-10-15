@@ -99,6 +99,17 @@ The maintainer made these decisions on 2026-10-15.
 - An import from MS Project or Excel puts its duration into ML.
 - The managed activity gives the expected duration to the compiler as the `Duration` of the library activity. Thus, the compiler and the library do not change for this phase.
 
+How a managed activity behaves, as built:
+
+- The activity writes the most likely duration, the two estimates that the user gave, and `Duration` together, under one lock. A compilation therefore never copies a mix of two edits.
+- Setting `Duration` sets the most likely duration. The Gantt chart sets a duration when a user drags the end of a bar, and so it sets the most likely duration too. An activity with estimates of its own then shows the expected duration. This can differ from the length that the user dragged to.
+- A value outside the rule is limited to the nearest value inside it, and the activity reports an error for that property. A milestone (a most likely duration of 0) has an optimistic and a pessimistic duration of 0.
+- When the most likely duration moves past an optimistic or pessimistic duration that the user gave, that duration moves to it. A value that the user did not give follows the most likely duration.
+- An activity that is made from a model takes its estimates from the model, and it works its `Duration` out from them. When a model's `Duration` and its estimates disagree, the estimates win.
+- The rules are in one place, `EstimateHelper`. The activity and the later simulation use it, and thus they cannot disagree.
+
+Open point for phase 2: an optimistic duration of 0 on an activity that takes time is allowed. A draw can then round to 0 days, and an activity of 0 days has no resource. Phase 2 must decide what an iteration does in that case. One choice is to keep a draw for an activity that takes time at 1 day or more.
+
 ### The simulation core (phase 2)
 
 - **Input.** The core takes the compiled plan: the activities, their dependencies, the resources and the three estimates of each activity. It copies this data once, and each iteration then changes only the durations.

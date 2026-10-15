@@ -336,6 +336,15 @@
   <data name="Label_IsPhase" xml:space="preserve">
     <value>Phase</value>
   </data>
+  <data name="Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero" xml:space="preserve">
+    <value>Optimistic and Pessimistic must be 0 when Most Likely is 0</value>
+  </data>
+  <data name="Label_OptimisticMustBeBetweenZeroAndMostLikely" xml:space="preserve">
+    <value>Optimistic must be between 0 and Most Likely</value>
+  </data>
+  <data name="Label_PessimisticMustBeGreaterThanOrEqualToMostLikely" xml:space="preserve">
+    <value>Pessimistic must be &gt;= Most Likely</value>
+  </data>
   <data name="Label_ShowGroupLabels" xml:space="preserve">
     <value>Show Group Labels</value>
   </data>

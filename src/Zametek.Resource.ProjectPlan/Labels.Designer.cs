@@ -1268,6 +1268,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimistic and Pessimistic must be 0 when Most Likely is 0.
+        /// </summary>
+        public static string Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero {
+            get {
+                return ResourceManager.GetString("Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimistic must be between 0 and Most Likely.
+        /// </summary>
+        public static string Label_OptimisticMustBeBetweenZeroAndMostLikely {
+            get {
+                return ResourceManager.GetString("Label_OptimisticMustBeBetweenZeroAndMostLikely", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Other Billing.
         /// </summary>
         public static string Label_OtherBilling {
@@ -1345,6 +1363,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_PercentageCompleted {
             get {
                 return ResourceManager.GetString("Label_PercentageCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pessimistic must be &gt;= Most Likely.
+        /// </summary>
+        public static string Label_PessimisticMustBeGreaterThanOrEqualToMostLikely {
+            get {
+                return ResourceManager.GetString("Label_PessimisticMustBeGreaterThanOrEqualToMostLikely", resourceCulture);
             }
         }
         
