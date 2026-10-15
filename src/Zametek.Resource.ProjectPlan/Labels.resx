@@ -273,6 +273,9 @@
   <data name="Label_End" xml:space="preserve">
     <value>End</value>
   </data>
+  <data name="Label_ExpectedDuration" xml:space="preserve">
+    <value>Expected</value>
+  </data>
   <data name="Label_FibonacciRisk" xml:space="preserve">
     <value>Fibonacci Risk</value>
   </data>
@@ -336,11 +339,20 @@
   <data name="Label_IsPhase" xml:space="preserve">
     <value>Phase</value>
   </data>
+  <data name="Label_MostLikelyDuration" xml:space="preserve">
+    <value>Most Likely</value>
+  </data>
   <data name="Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero" xml:space="preserve">
     <value>Optimistic and Pessimistic must be 0 when Most Likely is 0</value>
   </data>
+  <data name="Label_OptimisticDuration" xml:space="preserve">
+    <value>Optimistic</value>
+  </data>
   <data name="Label_OptimisticMustBeBetweenZeroAndMostLikely" xml:space="preserve">
     <value>Optimistic must be between 0 and Most Likely</value>
+  </data>
+  <data name="Label_PessimisticDuration" xml:space="preserve">
+    <value>Pessimistic</value>
   </data>
   <data name="Label_PessimisticMustBeGreaterThanOrEqualToMostLikely" xml:space="preserve">
     <value>Pessimistic must be &gt;= Most Likely</value>
@@ -359,6 +371,9 @@
   </data>
   <data name="Label_Metric" xml:space="preserve">
     <value>Metric</value>
+  </data>
+  <data name="Label_StandardDeviation" xml:space="preserve">
+    <value>Std Dev</value>
   </data>
   <data name="Label_Value" xml:space="preserve">
     <value>Value</value>

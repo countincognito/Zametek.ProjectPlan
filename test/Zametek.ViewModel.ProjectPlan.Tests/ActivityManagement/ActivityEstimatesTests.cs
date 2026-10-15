@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -350,6 +351,72 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ErrorsOf(activity, nameof(IManagedActivityViewModel.PessimisticDuration)).ShouldBeEmpty();
         }
 
+        [Fact]
+        public void ResetActivityEstimates_Given_SomeActivities_Then_OnlyThoseActivitiesFollowMostLikelyAgain()
+        {
+            using CoreViewModel core = CreateCore(
+                new ActivityModel { Id = 1, Duration = 9, MostLikelyDuration = 10, OptimisticDuration = 2, PessimisticDuration = 12 },
+                new ActivityModel { Id = 2, Duration = 9, MostLikelyDuration = 10, OptimisticDuration = 2, PessimisticDuration = 12 },
+                new ActivityModel { Id = 3, Duration = 5 });
+            core.IsProjectScenarioUpdated = false;
+
+            core.ResetActivityEstimates([1, 3]);
+
+            IManagedActivityViewModel first = core.RawActivities.Single(x => x.Id == 1);
+            IManagedActivityViewModel second = core.RawActivities.Single(x => x.Id == 2);
+            first.HasOwnEstimates.ShouldBeFalse();
+            first.Duration.ShouldBe(10);
+
+            // Not selected, so not touched.
+            second.OwnOptimisticDuration.ShouldBe(2);
+            second.OwnPessimisticDuration.ShouldBe(12);
+            second.Duration.ShouldBe(9);
+
+            core.IsProjectScenarioUpdated.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void ResetActivityEstimates_Given_ActivitiesThatHaveNoEstimatesOfTheirOwn_Then_NothingChangesAndThePlanIsNotMarkedAsUpdated()
+        {
+            using CoreViewModel core = CreateCore(new ActivityModel { Id = 1, Duration = 5 });
+            core.IsProjectScenarioUpdated = false;
+
+            core.ResetActivityEstimates([1]);
+
+            core.IsProjectScenarioUpdated.ShouldBeFalse();
+            core.RawActivities.Single().Duration.ShouldBe(5);
+        }
+
+        [Fact]
+        public async Task ResetEstimatesCommand_Given_ASelection_Then_ResetsTheSelectedActivities()
+        {
+            using CoreViewModel core = CreateCore(
+                new ActivityModel { Id = 1, Duration = 9, MostLikelyDuration = 10, OptimisticDuration = 2, PessimisticDuration = 12 },
+                new ActivityModel { Id = 2, Duration = 9, MostLikelyDuration = 10, OptimisticDuration = 2, PessimisticDuration = 12 });
+            var manager = new ActivitiesManagerViewModel(core, CoreViewModelFixture.CreateDialogService());
+            manager.SelectedActivities[1] = core.RawActivities.Single(x => x.Id == 1);
+            manager.HasSelectedActivities = true;
+
+            manager.ResetEstimatesCommand.Execute(null);
+            await WaitUntilAsync(() => !core.RawActivities.Single(x => x.Id == 1).HasOwnEstimates);
+
+            core.RawActivities.Single(x => x.Id == 1).HasOwnEstimates.ShouldBeFalse();
+            core.RawActivities.Single(x => x.Id == 2).HasOwnEstimates.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void ResetEstimatesCommand_Given_NoSelection_Then_CannotExecute()
+        {
+            using CoreViewModel core = CreateCore(new ActivityModel { Id = 1, Duration = 5 });
+            var manager = new ActivitiesManagerViewModel(core, CoreViewModelFixture.CreateDialogService());
+
+            manager.ResetEstimatesCommand.CanExecute(null).ShouldBeFalse();
+
+            manager.HasSelectedActivities = true;
+
+            manager.ResetEstimatesCommand.CanExecute(null).ShouldBeTrue();
+        }
+
         #endregion
 
         #region Validation
@@ -694,6 +761,20 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
             core.AddManagedActivities(activities);
             return core;
+        }
+
+        // The command runs its work on the task pool, so the effect arrives a moment after Execute returns.
+        private static async Task WaitUntilAsync(Func<bool> condition)
+        {
+            DateTime limit = DateTime.UtcNow.AddSeconds(30);
+            while (!condition())
+            {
+                if (DateTime.UtcNow > limit)
+                {
+                    throw new TimeoutException(@"The command did not finish.");
+                }
+                await Task.Delay(10);
+            }
         }
 
         private static List<string> ErrorsOf(IManagedActivityViewModel activity, string propertyName) =>

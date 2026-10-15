@@ -799,6 +799,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected.
+        /// </summary>
+        public static string Label_ExpectedDuration {
+            get {
+                return ResourceManager.GetString("Label_ExpectedDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fibonacci Risk.
         /// </summary>
         public static string Label_FibonacciRisk {
@@ -1205,6 +1214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Most Likely.
+        /// </summary>
+        public static string Label_MostLikelyDuration {
+            get {
+                return ResourceManager.GetString("Label_MostLikelyDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
         public static string Label_Name {
@@ -1273,6 +1291,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero {
             get {
                 return ResourceManager.GetString("Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimistic.
+        /// </summary>
+        public static string Label_OptimisticDuration {
+            get {
+                return ResourceManager.GetString("Label_OptimisticDuration", resourceCulture);
             }
         }
         
@@ -1363,6 +1390,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_PercentageCompleted {
             get {
                 return ResourceManager.GetString("Label_PercentageCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pessimistic.
+        /// </summary>
+        public static string Label_PessimisticDuration {
+            get {
+                return ResourceManager.GetString("Label_PessimisticDuration", resourceCulture);
             }
         }
         
@@ -1813,6 +1849,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SlackLimit {
             get {
                 return ResourceManager.GetString("Label_SlackLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Std Dev.
+        /// </summary>
+        public static string Label_StandardDeviation {
+            get {
+                return ResourceManager.GetString("Label_StandardDeviation", resourceCulture);
             }
         }
         

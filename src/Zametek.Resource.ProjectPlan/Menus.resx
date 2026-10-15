@@ -177,6 +177,9 @@
   <data name="Menu_Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
+  <data name="Menu_ResetEstimates" xml:space="preserve">
+    <value>Reset Estimates</value>
+  </data>
   <data name="Menu_Save" xml:space="preserve">
     <value>_Save</value>
   </data>

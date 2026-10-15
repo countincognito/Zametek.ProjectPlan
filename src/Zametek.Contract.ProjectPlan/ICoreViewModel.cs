@@ -153,6 +153,9 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetActivityDuration(int activityId, int newDuration);
 
+        // Takes the optimistic and the pessimistic duration of each of the activities back to its most likely duration.
+        void ResetActivityEstimates(IEnumerable<int> activityIds);
+
         void RunCompile();
 
         void RunAutoCompile();

@@ -2139,6 +2139,40 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void ResetActivityEstimates(IEnumerable<int> activityIds)
+        {
+            ArgumentNullException.ThrowIfNull(activityIds);
+
+            try
+            {
+                lock (m_Lock)
+                {
+                    BeginBusy();
+                    HashSet<int> ids = [.. activityIds];
+
+                    foreach (IManagedActivityViewModel activity in RawActivities.Where(x => ids.Contains(x.Id)))
+                    {
+                        // An activity whose estimates all follow its most likely duration has nothing to
+                        // reset, and an edit that changed nothing must not mark the plan as updated.
+                        if (!activity.HasOwnEstimates
+                            || activity is not IEditableObject editable)
+                        {
+                            continue;
+                        }
+
+                        editable.BeginEdit();
+                        activity.ResetEstimates();
+                        editable.EndEdit();
+                        IsProjectScenarioUpdated = true;
+                    }
+                }
+            }
+            finally
+            {
+                EndBusy();
+            }
+        }
+
         public void RunCompile()
         {
             CascadeDiagnostics.RecordStackTrace($@"{nameof(CoreViewModel)}.{nameof(RunCompile)} invoked");

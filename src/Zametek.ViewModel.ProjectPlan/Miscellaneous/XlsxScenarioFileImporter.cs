@@ -49,6 +49,9 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.HasNoEffort),
             nameof(ActivityModel.HasNoRisk),
             nameof(ActivityModel.Duration),
+            nameof(ActivityModel.MostLikelyDuration),
+            nameof(ActivityModel.OptimisticDuration),
+            nameof(ActivityModel.PessimisticDuration),
             nameof(ActivityModel.MinimumFreeSlack),
             nameof(ActivityModel.MinimumEarliestStartTime),
             nameof(ActivityModel.MinimumEarliestStartDateTime),
@@ -212,6 +215,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     bool hasNoEffort = false;
                     bool hasNoRisk = false;
                     int duration = 0;
+                    // A blank cell, or a workbook with no such column, is an estimate that was not given.
+                    // It follows the one before it, and the activity is then exactly what the Duration says.
+                    int? mostLikelyDuration = null;
+                    int? optimisticDuration = null;
+                    int? pessimisticDuration = null;
                     int? minimumFreeSlack = null;
                     int? minimumEarliestStartTime = null;
                     DateTimeOffset? minimumEarliestStartDateTime = null;
@@ -308,6 +316,30 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (int.TryParse(row[colName]?.ToString(), out int output))
                                     {
                                         duration = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.MostLikelyDuration),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        mostLikelyDuration = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.OptimisticDuration),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        optimisticDuration = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.PessimisticDuration),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        pessimisticDuration = output;
                                     }
                                 })
                             .Case(nameof(ActivityModel.MinimumFreeSlack),
@@ -418,6 +450,9 @@ namespace Zametek.ViewModel.ProjectPlan
                                 HasNoEffort = hasNoEffort,
                                 HasNoRisk = hasNoRisk,
                                 Duration = duration,
+                                MostLikelyDuration = mostLikelyDuration,
+                                OptimisticDuration = optimisticDuration,
+                                PessimisticDuration = pessimisticDuration,
                                 MinimumFreeSlack = minimumFreeSlack,
                                 MinimumEarliestStartTime = minimumEarliestStartTime,
                                 MinimumEarliestStartDateTime = minimumEarliestStartDateTime,

@@ -322,6 +322,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset Estimates.
+        /// </summary>
+        public static string Menu_ResetEstimates {
+            get {
+                return ResourceManager.GetString("Menu_ResetEstimates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save _Layout.
         /// </summary>
         public static string Menu_SaveLayout {

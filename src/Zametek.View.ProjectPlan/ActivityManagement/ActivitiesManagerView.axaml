@@ -20,6 +20,10 @@
 
     <local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedActivitySortComparer x:Key="durationSortComparer" SortMemberPath="Duration"/>
+		<local:ManagedActivitySortComparer x:Key="mostLikelyDurationSortComparer" SortMemberPath="MostLikelyDuration"/>
+		<local:ManagedActivitySortComparer x:Key="optimisticDurationSortComparer" SortMemberPath="OptimisticDuration"/>
+		<local:ManagedActivitySortComparer x:Key="pessimisticDurationSortComparer" SortMemberPath="PessimisticDuration"/>
+		<local:ManagedActivitySortComparer x:Key="standardDeviationSortComparer" SortMemberPath="StandardDeviation"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedActivitySortComparer x:Key="dependenciesStringSortComparer" SortMemberPath="DependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="planningDependenciesStringSortComparer" SortMemberPath="PlanningDependenciesString"/>
@@ -145,6 +149,9 @@
 
 							<MenuItem Header="{x:Static resources:Menus.Menu_RenumberActivities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberActivitiesCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_ResetEstimates}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.ResetEstimatesCommand, Mode=OneWay}" />
 
 							<Separator />
 
@@ -288,15 +295,15 @@
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
-										CustomSortComparer="{StaticResource durationSortComparer}"
+										CustomSortComparer="{StaticResource mostLikelyDurationSortComparer}"
 										Width="90">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_Duration}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Duration}"/>
+									   Text="{x:Static resources:Labels.Label_MostLikelyDuration}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MostLikelyDuration}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -307,13 +314,13 @@
 										 Margin="0"
 										 Padding="3"
 										 Classes="displayOnly"
-										 Text="{Binding Path=Duration, Mode=OneWay}"/>
+										 Text="{Binding Path=MostLikelyDuration, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<u:NumericIntUpDown Value="{Binding Path=Duration, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							<u:NumericIntUpDown Value="{Binding Path=MostLikelyDuration, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 												VerticalAlignment="Center"
 												ShowButtonSpinner="False"
 												Focusable="True"
@@ -322,6 +329,138 @@
 												Minimum="0"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource optimisticDurationSortComparer}"
+										Width="90">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_OptimisticDuration}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_OptimisticDuration}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=OptimisticDuration, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<u:NumericIntUpDown Value="{Binding Path=OptimisticDuration, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="0"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource pessimisticDurationSortComparer}"
+										Width="90">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_PessimisticDuration}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_PessimisticDuration}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=PessimisticDuration, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<u:NumericIntUpDown Value="{Binding Path=PessimisticDuration, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="0"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource durationSortComparer}"
+										Width="90">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ExpectedDuration}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ExpectedDuration}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Duration, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource standardDeviationSortComparer}"
+										Width="90">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_StandardDeviation}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_StandardDeviation}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=StandardDeviation, Mode=OneWay, StringFormat=\{0:0.##\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
 				<DataGridTemplateColumn CanUserResize="True"

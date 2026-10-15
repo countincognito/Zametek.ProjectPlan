@@ -95,8 +95,10 @@ The maintainer made these decisions on 2026-10-15.
 - Each new member is optional, and a member that is null follows the one before it. No `MostLikelyDuration` is the `Duration`. No `OptimisticDuration` or `PessimisticDuration` is the most likely duration. Thus, a model that sets only `Duration` is an activity with no uncertainty. This is true for a file of an older version, for an import, and for a model that a test builds.
 - `Duration` keeps its meaning for a reason. The graph labels, the Gantt chart, the earned value chart and the resource scheduling all read it from the same model, as the scheduled duration. A different meaning in the file would change them without a message.
 - A new format is necessary. An older application that reads the new file would schedule ML and not the expected duration, and the schedule would change without a message. Going down to v0.6.1 drops the estimates and keeps `Duration`, and thus the older application schedules what this one scheduled.
-- The activities grid shows "Most likely", "Optimistic" and "Pessimistic" and the read-only columns "Expected" and "Standard deviation". The edit dialog and the XLSX export get the same fields.
-- An import from MS Project or Excel puts its duration into ML.
+- The activities grid shows the columns "Most Likely", "Optimistic" and "Pessimistic", which a user can edit, and the read-only columns "Expected" and "Std Dev". The old column "Duration" is now "Most Likely". The menu of the grid has "Reset Estimates", which makes the optimistic and pessimistic durations of the selected activities follow the most likely duration again. The table that "Copy Table" gives has the same columns.
+- The edit dialog for many activities has no duration, and thus it does not change.
+- The Excel export has three new columns, `MostLikelyDuration`, `OptimisticDuration` and `PessimisticDuration`. A blank cell is an estimate that nobody gave. The column `Duration` of a workbook is the expected duration. When a row has a most likely duration, the import uses the estimates, and it ignores the `Duration` of that row. A row with no most likely duration uses its `Duration`, as before.
+- An import from MS Project puts its duration into ML. So does an import from an Excel workbook that has no estimate columns.
 - The managed activity gives the expected duration to the compiler as the `Duration` of the library activity. Thus, the compiler and the library do not change for this phase.
 
 How a managed activity behaves, as built:
