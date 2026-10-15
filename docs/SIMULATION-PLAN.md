@@ -2,7 +2,7 @@
 
 This document is the plan to add three-point (PERT) estimates and a Monte Carlo schedule simulation to the application. It records the decisions, the design, the phases and the results of the measurements. The work is on the branch `mc-sim` of this repository and of the repository Zametek.Maths.Graphs.
 
-Status: phase 0 (measure and prototype) is in progress. Nothing else is started. The sections that follow phase 0 describe what the team intends to do. They can change when the measurements of phase 0 show a problem.
+Status: phase 0 (measure and prototype) is finished and waits for a review. Nothing else is started. The sections about phases 1 to 4 describe what the team intends to do. Phase 0 shows four points that need a decision before phase 2 (refer to [Decisions that phase 0 needs](#decisions-that-phase-0-needs)).
 
 ## What the work gives to a user
 
@@ -100,7 +100,8 @@ The maintainer made these decisions on 2026-10-15.
 ### The simulation core (phase 2)
 
 - **Input.** The core takes the compiled plan: the activities, their dependencies, the resources and the three estimates of each activity. It copies this data once, and each iteration then changes only the durations.
-- **Samplers.** The core has four samplers: beta-PERT, triangular, normal and uniform. The beta-PERT sampler has a shape value of 4 by default. The normal sampler stays in the range from O to P. Each sampler rounds its result to the nearest whole day.
+- **Samplers.** The core has four samplers: beta-PERT, triangular, normal and uniform. The normal sampler stays in the range from O to P. Each sampler rounds its result to the nearest whole day.
+- **Two betas.** The reference tool uses a beta with the PERT mean and the PERT variance. The usual modified PERT beta has its mode at ML and a shape value of 4, and its variance is larger. Phase 0 shows that the two give different results (refer to [The reference sample](#the-reference-sample)). The team must choose the default.
 - **Random numbers.** The core uses a generator that the library specifies. It does not use `System.Random`, because the sequence of that class exists only in .NET.
 - **Seeds.** The core splits the iterations into fixed chunks. The seed of a chunk comes from the main seed and the number of the chunk. Thus, the result is the same for any number of threads.
 - **Each iteration.** It sets the durations, schedules the resources and calculates the critical path. It returns the finish time, the critical activities and the path that sets the finish time. A link between two activities that share a resource is a different kind of link in the path.
@@ -135,11 +136,96 @@ The team stops after each phase for a review.
 
 ## The risks
 
-- **Speed.** An iteration that schedules the resources again costs as much as a compile. Phase 0 measures this cost before the team commits to the design.
-- **Ties.** Whole days make a tie between paths more likely than in the reference tool. The chart groups the less frequent paths as "Other".
+- **Speed.** An iteration that schedules the resources again costs as much as a compile. Phase 0 measured this cost. It is small for a plan like the sample plan and large for a plan with 500 or more activities.
+- **Ties.** Whole days make a tie between paths much more likely than in the reference tool. Phase 0 measured about 20 % of the iterations, against 0.2 %. A "Multiple" group of this size is not useful, and thus the chart must attribute a tie in a different way.
 - **Floating-point numbers.** The same seed gives the same result on one platform. Windows, Linux and Rust can differ in the last bit of `Log` and `Pow`. Tests that compare platforms must use a tolerance.
 - **The browser version.** It has one thread. The simulation must run in small batches so that the UI does not freeze.
 
-## Phase 0
+## Phase 0: the results
 
-This section records the measurements and the decisions of phase 0. The measurements are not yet in this document.
+Phase 0 finished on 2026-10-15. Its work is in the library repository, on the branch `mc-sim`, in the commit `1a73f3a`. It is a spike in the test project `Zametek.Maths.Graphs.Compilers.Tests`, in the folder `Compilers/SimulationSpike`. The library itself did not change.
+
+The tests that check results run with the other tests. The tests that measure are explicit, and a reader can run them again. The comments at the top of `SimulationSpikeTests.cs` give the command.
+
+The measurements use two kinds of plan. One is the sample plan of this repository ([sample.zpp](assets/sample.zpp), with 46 activities and 15 resources). The others are layered plans of 100 to 1,000 activities. The machine has two cores and four logical processors. Each time is the best of three rounds after a warm-up. Repeated runs differ by up to a quarter, and thus the times show proportions and not exact values.
+
+### The cost of an iteration
+
+An iteration that schedules the resources again costs about as much as a compile. The lean path is a scheduling pass that keeps only the steps that change the finish time. It saves 10 to 25 %.
+
+| Plan | Activities | Resources | A new compile | The lean path | 10,000 iterations on one thread |
+| --- | --- | --- | --- | --- | --- |
+| Sample plan | 46 | 15 | 1.09 ms | 0.82 ms | 8 s |
+| Layered | 100 | 10 | 1.95 ms | 1.49 ms | 15 s |
+| Layered | 250 | 20 | 9.04 ms | 7.64 ms | 76 s |
+| Layered | 500 | 20 | 33.9 ms | 30.2 ms | 5 minutes |
+| Layered | 1,000 | 20 | 118 ms | 107 ms | 18 minutes |
+
+The cost grows about with the square of the number of activities. The priority list is 48 to 78 % of an iteration. The tick loop is 9 to 24 %, and the two copies of the graph are 2 to 15 %. The first and the second critical-path calculations are 6 % or less together. Thus, a faster iteration needs a faster priority list and a faster scheduler, and removing the checks around the compile does not help much.
+
+The library limit is 2,000 activities. The notes of the library give about 0.4 seconds for a compile at this size, and the table suggests the same for an iteration. Thus, 10,000 iterations take more than an hour on one thread.
+
+### The threads
+
+The design for the threads works. Each chunk of 64 iterations has its own random number generator, and its seed comes from the main seed and the number of the chunk. A test shows that one thread and three threads give the same results.
+
+The speed does not scale well on this machine. The table gives the iterations for each second.
+
+| Plan | 1 thread | 2 threads | 3 threads | 4 threads |
+| --- | --- | --- | --- | --- |
+| Sample plan | 1,173 | 1,960 | 2,778 | 3,093 |
+| Layered, 250 activities | 128 | 207 | 228 | 227 |
+
+The machine has two physical cores. Each iteration also allocates much memory (4 to 72 MB for one compile, in the notes of the library). Thus, the table shows the limit of this machine, and a machine with more cores can scale better. A kernel that allocates less can also scale better.
+
+### The lean path against the compile
+
+The lean path gives the finish time and the critical activities of a compile. A test shows this for the sample plan with and without its resources, for a layered plan and for the reference sample. Each test uses one lean scheduler for all the random durations, and thus it also finds state that an iteration leaves behind. The test fails when the lean path leaves out the second critical-path calculation or the reset of the resource state. Thus, the test can detect an error.
+
+When a plan has no resources, the compile still schedules onto synthetic resources. A tie between the finish of one activity and the start of the next can then make a chain of resource links critical. The finish time is the same, but the compile marks more activities as critical than the plain critical-path calculation does. This happened in 4 of 60 iterations of the reference sample. The shortcut for plans with no resources (stop after the first critical-path calculation) gives the same finish time and a smaller critical set.
+
+### The reference sample
+
+A replica of the arithmetic of the reference tool, in hundredths of a day, reproduces its published results. The table has 100,000 iterations of the replica and the whole-day version. The path shares for whole days are in the next paragraph.
+
+| Arithmetic | Mean | Standard deviation | P80 | A > D > F > H > L > O | A > D > I > M > O | A > E > J > M > O | More than one path |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| The reference tool (published, 10,000 iterations) | 52.39 | 1.59 | not given | 70.1 % | 24.6 % | 5.2 % | 0.2 % |
+| The replica, in hundredths | 52.38 | 1.60 | 53.7 | 70.0 % | 24.6 % | 5.3 % | 0.2 % |
+| Whole days | 52.41 | 1.71 | 54 | 59.6 % | 17.5 % | about 3 % | 19.5 % |
+
+Rounding to whole days has two effects. The standard deviation is 7 % larger, because each activity adds noise from its rounding. About 20 % of the iterations have more than one critical path, because many paths now have exactly the same length.
+
+The two betas give different results. With the usual modified PERT beta (shape value 4), the standard deviation is 1.76 in the reference arithmetic. With the beta of the reference tool, it is 1.60. The P80 is 53.9 and 53.7. The triangular and uniform distributions are wider (standard deviations of 2.06 and 2.82).
+
+### Scheduling the resources again, or keeping their order
+
+The alternative to the scheduling of the resources in each iteration is to keep the resource order of the compiled plan as extra dependencies. Each iteration is then only a critical-path calculation. The table uses the same random durations for both modes.
+
+| Plan | Mode | Mean finish | Standard deviation | P80 | P90 | One iteration |
+| --- | --- | --- | --- | --- | --- | --- |
+| Sample plan | Schedule again | 226.08 | 8.54 | 233 | 237 | 0.8 ms |
+| Sample plan | Keep the order | 226.97 | 8.49 | 234 | 238 | 1.9 µs |
+| Layered, 250 activities | Schedule again | 82.92 | 2.60 | 85 | 86 | 7.6 ms |
+| Layered, 250 activities | Keep the order | 85.08 | 2.10 | 87 | 88 | 5.6 µs |
+
+The finish times differ in 48 % of the iterations of the sample plan and in 75 % of those of the layered plan. For the sample plan, the mean differs by 0.4 % and the standard deviation by 0.6 %. For the layered plan, the resources decide the schedule. The mean differs by 2.6 % and the standard deviation by 24 %.
+
+Keeping the order is 430 to 1,400 times faster. In both plans it gives a larger mean. The likely reason is that the kept order cannot give a resource to a different activity when a duration is shorter.
+
+### What the results mean
+
+- Scheduling the resources in each iteration is practical for plans like the sample plan. Ten thousand iterations take 8 seconds on one thread, or 3 seconds on four.
+- It is not practical for plans with 500 or more activities. Ten thousand iterations take 5 minutes or more.
+- The lean path is not enough to change this. A flat kernel for the priority list and the scheduler, on arrays and without copies of the graph, is the way to a large gain. The team did not build it in phase 0, and thus its gain is not measured.
+- The mode that keeps the resource order is nearly free, and it is accurate for plans that resources do not decide.
+- A tie between paths is common with whole days, and the "Multiple" group of the reference tool is too large to be useful.
+
+### Decisions that phase 0 needs
+
+1. **The default beta.** Use the beta of the reference tool, or the modified PERT beta (shape value 4)? The first one matches the "Expected" and "Standard deviation" columns of the grid, and it reproduces the reference tool. The second one has its mode at ML, and it is the usual choice of risk tools. The core can offer both.
+2. **The attribution of a tie.** A tie can go to a group "Multiple", it can split its weight equally among the tied paths, or it can follow a fixed rule. The recommendation is to split the weight. The criticality index of an activity then stays correct.
+3. **The resource modes.** Keep the decision to schedule the resources in each iteration as the default. Add the mode that keeps the order, for plans that are too large and for a fast first look. Before it starts, the panel shows the expected time, from a short pilot. When the expected time is long, the panel offers the second mode.
+4. **A flat kernel.** Build it in phase 2, after the first version that uses the lean path, or do not build it. The kernel needs tests that compare it with the compile, as the lean path has.
+
+The proposal for the number of iterations is 5,000 by default. The expected time for the sample plan is a few seconds. A limit of 1,000,000 stays, but the panel warns when the expected time is more than a minute.
