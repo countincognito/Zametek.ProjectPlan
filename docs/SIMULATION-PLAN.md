@@ -110,7 +110,7 @@ How a managed activity behaves, as built:
 - An activity that is made from a model takes its estimates from the model, and it works its `Duration` out from them. When a model's `Duration` and its estimates disagree, the estimates win.
 - The rules are in one place, `EstimateHelper`. The activity and the later simulation use it, and thus they cannot disagree.
 
-Open point for phase 2: an optimistic duration of 0 on an activity that takes time is allowed. A draw can then round to 0 days, and an activity of 0 days has no resource. Phase 2 must decide what an iteration does in that case. One choice is to keep a draw for an activity that takes time at 1 day or more.
+An optimistic duration of 0 on an activity that takes time is allowed. A draw can then round to 0 days. Phase 2 decided this: the draw stays 0 (refer to [Phase 2: the results](#phase-2-the-results)).
 
 ### The simulation core (phase 2)
 
@@ -146,7 +146,7 @@ The team stops after each phase for a review.
 | --- | --- | --- |
 | 0 | Measure the cost of one iteration. Prototype a lean path. Check the prototype against the reference tool. Decide the default iteration count. | Library and this repository |
 | 1 | The estimates: the new file format, the rules, the grid and the dialog, the imports and the export. | This repository |
-| 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. | Library |
+| 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
 | 3 | The desktop panel. | This repository |
 | 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. | This repository |
 
@@ -247,6 +247,33 @@ The maintainer made these decisions on 2026-10-15, after the results above.
 4. **A flat kernel.** Phase 2 does not build it. Phase 2 uses the lean path, which the tests hold to the compile. The team can build the kernel later if the speed is a problem.
 
 The proposal for the number of iterations is 5,000 by default. The expected time for the sample plan is a few seconds. A limit of 1,000,000 stays, and phase 3 can change the default.
+
+## Phase 2: the results
+
+Phase 2 finished on 2026-10-16. All the work is in the library repository, on the branch `mc-sim`, in the commits `e5a952c` (random numbers and samplers), `c6a68c9` (the simulator), `f239d36` (whole simulations in the baseline) and `df644cb` (the Rust port, the documentation and the version 3.3.0). Nothing is published. The version is 3.3.0 in the library, and this repository reads the library source through a local file that git ignores (refer to [Reading the library source](#reading-the-library-source)).
+
+### What the library has now
+
+- **Types** (in Primitives): `DurationEstimate`, `DurationDistribution`, `SimulationSettings`, `SimulationResult<T>`, `CriticalPath<T>`, `CriticalPathStep<T>` and `CriticalPathLink`. `GraphLimits.MaximumSimulationIterations` is 1,000,000.
+- **The simulator** (in Compilers): `ScheduleSimulator<T, TResourceId, TWorkStreamId>`. The constructor takes the activities, the resources, the work streams and a dictionary of estimates. It compiles the plan once, and `CompilationErrors` gives the errors. `Run` takes the settings, an optional `IProgress<int>` and a cancellation token.
+- **The result is raw.** For each iteration it holds the finish time (`-1` for a failed iteration), one bit for each activity (critical or not) and the critical paths. The application makes the statistics.
+- **One internal seam.** `SimulationIterationRunner` does the scheduling of one iteration. Nothing else touches the graph builder. The tests hold it to a full compile for many random durations, and a runner that leaves out the reset of the resource state, or the second critical-path calculation, fails them.
+- **Same result for any thread count.** The iterations go in chunks of 64. The seed of a chunk is the output of splitmix64 that follows the main seed, a number of steps on that is the number of the chunk. A run of fewer iterations is therefore the start of a longer run with the same seed.
+- **Same result in Rust, bit for bit.** The generator (xoshiro256**), the logarithm, the exponential and all the samplers are written out in C# and in Rust, and they use only operations that IEEE 754 fixes. The file `SimulationBaseline.txt` in the .NET tests holds the exact bits. It includes four whole simulations. The Rust test passed on the first run.
+
+### Decisions in phase 2
+
+1. **Zero-day draws.** A draw of 0 for an activity that takes time stays 0. The activity is then as short as a milestone in that iteration. A test shows that an iteration still agrees with the compile when this happens.
+2. **Plans with no resources.** By default the iteration stops after the first critical-path calculation. The finish times are those of a compile. The critical activities are those of the plan alone, without the links of the synthetic resources that a compile makes up. The setting `ScheduleOntoSyntheticResources` gives the behaviour of the compile.
+3. **What a critical path is.** It is a chain of critical activities in which each one starts at the moment that the one before it finishes (a tight link). The link is a dependency of the plan, or a resource link where the resource is busy with the one before. The walk takes activities and predecessors in the order of the plan, so that C# and Rust find the same paths in the same order.
+4. **Milestones are not on a path.** This follows the reference tool, which names only the activities that have a duration. It also stops two chains that differ only by a milestone from counting as two paths, which would split the weight of a tied iteration with no real difference. The criticality of a milestone is still in the critical bits of the result. The maintainer confirmed this on 2026-10-16.
+5. **Tied paths are capped.** An iteration records at most 32 critical paths by default (`MaximumCriticalPathsPerIteration`), and the result says when the list is not complete. The phase 3 code splits the weight of an iteration among the paths that the result gives.
+6. **Folders.** The new types follow the kind folders that the library already has (`Engines`, `Compilers`, and `Entities` and `Enums` in Primitives).
+7. **The modified beta.** Its mean is the PERT mean, but its variance is `(mean - O)(P - mean) / (shape + 3)`. That is larger than the PERT variance when ML is near the middle of the range, and smaller when ML is near O or P. The earlier text of this plan said "larger", which is not true in every case.
+
+### Reading the library source
+
+The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages. Before this work merges, the packages must be published at 3.3.0, and the two package references must change to that version.
 
 ## Performance work to explore later
 

@@ -61,4 +61,15 @@
              Importance="Normal"
              Text="The WebAssembly workload could not be restored automatically. If the build then fails with NETSDK1147, run 'dotnet workload install wasm-tools' from an elevated shell (or 'make workloads')." />
   </Target>
+
+  <!--
+    A way to build against the source of Zametek.Maths.Graphs, in the folder next to this repository,
+    in place of its NuGet packages, for as long as a new package is not published. It is for one
+    developer's machine: the file is not in git (see .gitignore), and so a build on CI, and a build
+    on any machine that does not have the file, uses the packages that the projects name.
+    To use it, make the file (see docs/BUILDING.md), and then run 'dotnet restore'. To stop using it,
+    delete the file and run 'dotnet restore' again.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)Zametek.Maths.Graphs.local.targets"
+          Condition="Exists('$(MSBuildThisFileDirectory)Zametek.Maths.Graphs.local.targets')" />
 </Project>
