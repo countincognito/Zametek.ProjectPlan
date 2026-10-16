@@ -397,9 +397,11 @@ Phase 5 finished on 2026-10-16. All the work is in this repository, on the branc
 
 ### Changes after the first look
 
-The maintainer looked at the docks in the application and asked for four changes. They are in the commits that follow phase 5.
+The maintainer looked at the docks in the application and asked for changes. They are in the commits that follow phase 5.
 
-- **Names.** `ScheduleSimulation*` is now `SimulationChart*`. This is true for the view, the view model, the interface and the tests. Each dock has a folder of its own: `SimulationChartManagement`, `SimulationControlManagement` and `SimulationMetricManagement`.
+- **Names.** `ScheduleSimulation*` is now `SimulationChart*`. This is true for the view, the view model, the interface and the tests. Each dock has a folder of its own: `SimulationChartManagement`, `SimulationManagement` and `SimulationMetricManagement`.
+  The dock "Simulation" first had the names `SimulationControl*`. They are now `SimulationManagement`, `SimulationManagerViewModel`, `ISimulationManagerViewModel` and `SimulationManagerView`, as the names of the other docks have no "Control".
+- **Tab order.** In the default layout, the tab "Simulation Chart" is now before the tab "Scenario Chart". A layout that a person saved keeps its own order until the person resets the layout.
 - **Inputs.** The iterations, the seed and the target finish use the numeric controls of the Activity Manager. The iterations and the target use `NumericIntUpDown`. The seed uses `NumericULongUpDown`, because the seed has 64 bits and an `int` cannot hold it. A limit of the library (`GraphLimits`) is the maximum of the iterations and of the target.
 - **Colours.** An input that a person can change has the background of an editable cell, as in the Activity Manager. The seed has it only when "New seed each run" is off. When that box is on, the seed is read-only and has no background.
 - **The empty chart.** A chart with no result had the light theme at the start and after a reset. This was so also when the theme was dark. The chart that has no result now has the theme of the application, as the other charts do.

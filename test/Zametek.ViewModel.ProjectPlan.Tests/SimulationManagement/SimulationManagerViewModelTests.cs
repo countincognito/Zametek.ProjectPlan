@@ -19,7 +19,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// when a delivery runs. A change of the title is what the scenario manager does when a scenario loads, closes or is
     /// renamed: it changes the setting and arms the title.
     /// </remarks>
-    public class SimulationControlManagerViewModelTests
+    public class SimulationManagerViewModelTests
     {
         private sealed class Harness
             : IDisposable
@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 ISettingService settings,
                 ProjectScenarioManagerViewModel project,
                 SimulationChartManagerViewModel simulation,
-                SimulationControlManagerViewModel control)
+                SimulationManagerViewModel control)
             {
                 m_Core = core;
                 Settings = settings;
@@ -44,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public ISettingService Settings { get; }
 
-            public SimulationControlManagerViewModel Control { get; }
+            public SimulationManagerViewModel Control { get; }
 
             public SimulationChartManagerViewModel Simulation => m_Simulation;
 
@@ -75,7 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     CoreViewModelFixture.CreateUIDispatcher(),
                     NullLogger<SimulationChartManagerViewModel>.Instance);
 
-                var control = new SimulationControlManagerViewModel(simulation, project, settings);
+                var control = new SimulationManagerViewModel(simulation, project, settings);
 
                 return new Harness(core, settings, project, simulation, control);
             }
@@ -155,8 +155,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             harness.Control.ScenarioTitle.ShouldBe("Plan B");
             harness.Control.HasScenarioTitle.ShouldBeTrue();
-            changed.ShouldContain(nameof(SimulationControlManagerViewModel.ScenarioTitle));
-            changed.ShouldContain(nameof(SimulationControlManagerViewModel.HasScenarioTitle));
+            changed.ShouldContain(nameof(SimulationManagerViewModel.ScenarioTitle));
+            changed.ShouldContain(nameof(SimulationManagerViewModel.HasScenarioTitle));
 
             // A project that closes has no scenario, and thus no name.
             harness.ChangeScenarioTitle(string.Empty);

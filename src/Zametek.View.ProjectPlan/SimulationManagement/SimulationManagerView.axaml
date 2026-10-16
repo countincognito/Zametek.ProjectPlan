@@ -7,9 +7,9 @@
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:u="https://irihi.tech/ursa"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
-             x:DataType="vm:SimulationControlManagerViewModel"
+             x:DataType="vm:SimulationManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
-             x:Class="Zametek.View.ProjectPlan.SimulationControlManagerView">
+             x:Class="Zametek.View.ProjectPlan.SimulationManagerView">
 	<UserControl.Styles>
 		<!-- The colour coding of the Activity Manager: an input that a user can change has the background of an editable cell, and an input that a user cannot change has none. -->
 		<Style Selector="Grid.editable">

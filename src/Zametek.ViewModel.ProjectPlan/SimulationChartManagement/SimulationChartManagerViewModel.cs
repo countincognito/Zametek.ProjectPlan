@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
     /// The Monte Carlo simulation of the schedule: it runs the simulation and presents what it found. It is the dock
-    /// "Simulation Chart", and the docks "Simulation" (<see cref="SimulationControlManagerViewModel"/>) and "Simulation
+    /// "Simulation Chart", and the docks "Simulation" (<see cref="SimulationManagerViewModel"/>) and "Simulation
     /// Metrics" (<see cref="SimulationMetricManagerViewModel"/>) are views of the same object, which the three docks share.
     /// </summary>
     /// <remarks>

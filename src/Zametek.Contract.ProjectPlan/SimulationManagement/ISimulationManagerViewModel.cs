@@ -5,7 +5,7 @@ namespace Zametek.Contract.ProjectPlan
     /// name of the scenario that it simulates. The simulation itself belongs to <see cref="ISimulationChartManagerViewModel"/>,
     /// which three docks share (this one, the chart and the metrics).
     /// </summary>
-    public interface ISimulationControlManagerViewModel
+    public interface ISimulationManagerViewModel
         : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         ISimulationChartManagerViewModel Simulation { get; }

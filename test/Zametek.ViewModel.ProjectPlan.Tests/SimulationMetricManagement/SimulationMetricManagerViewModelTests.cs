@@ -77,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void Construction_Given_TheThreeDocks_Then_EachHasAnIdOfItsOwn()
         {
             using Harness harness = Harness.Make();
-            using var control = new SimulationControlManagerViewModel(
+            using var control = new SimulationManagerViewModel(
                 harness.Simulation,
                 DoNothingProxy.Of<IProjectScenarioManagerViewModel>(),
                 CoreViewModelFixture.CreateSettingService());

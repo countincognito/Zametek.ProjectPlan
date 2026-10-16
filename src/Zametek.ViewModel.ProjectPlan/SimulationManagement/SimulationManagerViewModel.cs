@@ -9,8 +9,8 @@ namespace Zametek.ViewModel.ProjectPlan
     /// the status all belong to the shared <see cref="ISimulationChartManagerViewModel"/>, and the view binds to them
     /// through <see cref="Simulation"/>. What it adds is the name of the scenario that a run simulates.
     /// </summary>
-    public class SimulationControlManagerViewModel
-        : ToolViewModelBase, ISimulationControlManagerViewModel
+    public class SimulationManagerViewModel
+        : ToolViewModelBase, ISimulationManagerViewModel
     {
         #region Fields
 
@@ -25,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public SimulationControlManagerViewModel(
+        public SimulationManagerViewModel(
             ISimulationChartManagerViewModel simulationChartManagerViewModel,
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ISettingService settingService)
@@ -44,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region ISimulationControlManagerViewModel Members
+        #region ISimulationManagerViewModel Members
 
         public ISimulationChartManagerViewModel Simulation { get; }
 
