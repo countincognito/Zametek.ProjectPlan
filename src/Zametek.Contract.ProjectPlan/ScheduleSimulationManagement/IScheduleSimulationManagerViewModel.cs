@@ -80,6 +80,10 @@ namespace Zametek.Contract.ProjectPlan
         // starts, and so a caller that cancels at any time, also just before the call, is never left with a run that goes on.
         Task RunSimulationAsync(CancellationToken cancellationToken);
 
+        // The same, with the seed that the scenario has saved, also when "New seed each run" is set: the settings of the
+        // scenario are not changed, and the run repeats. A caller that runs a saved scenario (zpp does) uses this one.
+        Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken);
+
         void CancelSimulation();
 
         // The date on which a project that takes the given number of days finishes, in the working calendar of the plan.
@@ -92,6 +96,11 @@ namespace Zametek.Contract.ProjectPlan
         // panel saves: UTF-8 with a byte order mark. It is an error to ask for more than one file, or for a result that
         // does not exist.
         Task WriteSimulationCsvAsync(Stream stream, SimulationCsvFile file);
+
+        // Presents the result that the scenario holds: the statistics, the tables and the chart. A run does this when it ends,
+        // and the panel when the display settings change. A caller that has no running panel, and wants the statistics of a
+        // result that a project file held, calls it first.
+        void BuildPresentation();
 
         void BuildSimulationChartPlotModel();
     }

@@ -36,118 +36,59 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 () => Program.OptionLongName(@"NotAProperty"));
         }
 
+        // The options of a run that has a simulation to do: the settings are the project's, and so the options hold only
+        // whether to run it, and where the chart and the CSV files go.
         private static Options Simulating(Func<Options, Options>? change = null)
         {
-            var options = new Options { InputFilename = @"a.zpp", Simulate = true };
+            var options = new Options { InputFilename = @"a.zpp", RunSimulation = true };
             return change is null ? options : change(options);
         }
 
         [Fact]
-        public void ValidateOptions_Given_ASimulationWithItsOptionsWithinTheirLimits_Then_Passes()
+        public void ValidateOptions_Given_ARunOfTheSimulationWithItsOutputs_Then_Passes()
         {
             string directory = Path.GetTempPath();
 
             Should.NotThrow(() => Program.ValidateOptions(Simulating()));
-            Should.NotThrow(() => Program.ValidateOptions(Simulating(x => { x.SimulationIterations = 1; x.SimulationSeed = 0; x.SimulationTarget = 0; return x; })));
             Should.NotThrow(() => Program.ValidateOptions(Simulating(x =>
             {
-                x.SimulationIterations = GraphLimits.MaximumSimulationIterations;
-                x.SimulationSeed = ulong.MaxValue;
-                x.SimulationTarget = GraphLimits.MaximumTimeValue;
-                x.SimulationDistribution = DurationDistribution.ModifiedBetaPert;
-                x.SimulationShape = 0.5;
-                x.SimulationChartDirectory = directory;
-                x.SimulationChartSize = [800, 600];
-                x.SimulationCsvDirectory = directory;
+                x.SimulationDirectory = directory;
+                x.SimulationFormat = PlotExport.Png;
+                x.SimulationSize = [800, 600];
                 return x;
             })));
         }
 
-        [Theory]
-        [InlineData(nameof(Options.SimulationIterations))]
-        [InlineData(nameof(Options.SimulationSeed))]
-        [InlineData(nameof(Options.SimulationDistribution))]
-        [InlineData(nameof(Options.SimulationShape))]
-        [InlineData(nameof(Options.SimulationTarget))]
-        [InlineData(nameof(Options.SimulationChartDirectory))]
-        [InlineData(nameof(Options.SimulationChartSize))]
-        [InlineData(nameof(Options.SimulationCsvDirectory))]
-        public void ValidateOptions_Given_ASimulationOptionWithoutSimulate_Then_UsageExceptionNamingBoth(string property)
+        [Fact]
+        public void ValidateOptions_Given_TheOutputsOfASimulationAndNoRun_Then_Passes()
         {
-            var options = new Options { InputFilename = @"a.zpp" };
-
-            switch (property)
+            // A project that holds a result gives its statistics and its outputs without a run, and whether it holds one is
+            // known only when the project is read. The job says so then (see SimulationFailure.NoResult).
+            Should.NotThrow(() => Program.ValidateOptions(new Options
             {
-                case nameof(Options.SimulationIterations): options.SimulationIterations = 100; break;
-                case nameof(Options.SimulationSeed): options.SimulationSeed = 5; break;
-                case nameof(Options.SimulationDistribution): options.SimulationDistribution = DurationDistribution.Normal; break;
-                case nameof(Options.SimulationShape): options.SimulationShape = 5.0; break;
-                case nameof(Options.SimulationTarget): options.SimulationTarget = 50; break;
-                case nameof(Options.SimulationChartDirectory): options.SimulationChartDirectory = Path.GetTempPath(); break;
-                case nameof(Options.SimulationChartSize): options.SimulationChartSize = [10, 10]; break;
-                default: options.SimulationCsvDirectory = Path.GetTempPath(); break;
-            }
-
-            Should.Throw<UsageException>(() => Program.ValidateOptions(options)).Message.ShouldBe(
-                string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithOption, Program.OptionLongName(property), @"--simulate"));
-        }
-
-        [Theory]
-        [InlineData(0)]
-        [InlineData(-1)]
-        [InlineData(GraphLimits.MaximumSimulationIterations + 1)]
-        public void ValidateOptions_Given_IterationsOutOfRange_Then_UsageException(int iterations)
-        {
-            Should.Throw<UsageException>(() => Program.ValidateOptions(Simulating(x => { x.SimulationIterations = iterations; return x; })))
-                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionMustBeBetween, @"--simulation-iterations", 1, GraphLimits.MaximumSimulationIterations));
-        }
-
-        [Theory]
-        [InlineData(-1)]
-        [InlineData(GraphLimits.MaximumTimeValue + 1)]
-        public void ValidateOptions_Given_ATargetOutOfRange_Then_UsageException(int target)
-        {
-            Should.Throw<UsageException>(() => Program.ValidateOptions(Simulating(x => { x.SimulationTarget = target; return x; })))
-                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionMustBeBetween, @"--simulation-target", 0, GraphLimits.MaximumTimeValue));
-        }
-
-        [Theory]
-        [InlineData(0.0)]
-        [InlineData(-3.0)]
-        [InlineData(double.NaN)]
-        [InlineData(double.PositiveInfinity)]
-        public void ValidateOptions_Given_AShapeThatIsNotAboveZero_Then_UsageException(double shape)
-        {
-            Should.Throw<UsageException>(() => Program.ValidateOptions(Simulating(x =>
-            {
-                x.SimulationDistribution = DurationDistribution.ModifiedBetaPert;
-                x.SimulationShape = shape;
-                return x;
-            }))).Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionMustBeAboveZero, @"--simulation-shape"));
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData(DurationDistribution.BetaPert)]
-        [InlineData(DurationDistribution.Triangular)]
-        public void ValidateOptions_Given_AShapeForADistributionThatHasNone_Then_UsageException(DurationDistribution? distribution)
-        {
-            Should.Throw<UsageException>(() => Program.ValidateOptions(Simulating(x =>
-            {
-                x.SimulationDistribution = distribution;
-                x.SimulationShape = 4.0;
-                return x;
-            }))).Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithOptionValue, @"--simulation-shape", @"--simulation-distribution", @"ModifiedBetaPert"));
+                InputFilename = @"a.zpp",
+                SimulationDirectory = Path.GetTempPath(),
+                SimulationSize = [800, 600],
+            }));
         }
 
         [Fact]
-        public void ValidateOptions_Given_ASimulationChartWithoutASizeOrWithoutItsDirectory_Then_UsageExceptionOrNothing()
+        public void ValidateOptions_Given_ASimulationDirectoryWithoutASize_Then_UsageException()
         {
-            Should.Throw<UsageException>(() => Program.ValidateOptions(Simulating(x => { x.SimulationChartDirectory = Path.GetTempPath(); return x; })))
-                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionRequiredWithOption, @"--simulation-chart-size", @"--simulation-chart-directory"));
+            Should.Throw<UsageException>(() => Program.ValidateOptions(Simulating(x => { x.SimulationDirectory = Path.GetTempPath(); return x; })))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionRequiredWithOption, @"--simulation-size", @"--simulation-directory"));
+        }
 
-            // A directory that is not there fails the run before anything is written, as the other directories do.
-            Should.Throw<InvalidOperationException>(() => Program.ValidateOptions(Simulating(x => { x.SimulationCsvDirectory = Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}"); return x; })));
+        [Fact]
+        public void ValidateOptions_Given_ASimulationDirectoryThatIsNotThere_Then_TheRunFailsBeforeAnythingIsWritten()
+        {
+            // As the other directories do.
+            Should.Throw<InvalidOperationException>(() => Program.ValidateOptions(Simulating(x =>
+            {
+                x.SimulationDirectory = Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}");
+                x.SimulationSize = [800, 600];
+                return x;
+            })));
         }
 
         [Fact]
@@ -156,22 +97,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var options = new Options
             {
                 InputFilename = @"a.zpp",
-                Simulate = true,
-                SimulationChartDirectory = @"charts",
-                SimulationChartFormat = PlotExport.Svg,
-                SimulationCsvDirectory = @"csv",
+                RunSimulation = true,
+                SimulationDirectory = @"simulation",
+                SimulationFormat = PlotExport.Svg,
             };
 
             Dictionary<JobOutput, string> filenames = Program.BuildOutputFilenames(options, @"plan");
 
+            // The chart and the CSV files side by side.
             filenames.ShouldBe(new Dictionary<JobOutput, string>
             {
-                [JobOutput.SimulationChart] = Path.Combine(@"charts", @"plan-simulation.svg"),
-                [JobOutput.SimulationStatistics] = Path.Combine(@"csv", @"plan-simulation-statistics.csv"),
-                [JobOutput.SimulationHistogram] = Path.Combine(@"csv", @"plan-simulation-histogram.csv"),
-                [JobOutput.SimulationPaths] = Path.Combine(@"csv", @"plan-simulation-paths.csv"),
-                [JobOutput.SimulationActivities] = Path.Combine(@"csv", @"plan-simulation-activities.csv"),
-                [JobOutput.SimulationIterations] = Path.Combine(@"csv", @"plan-simulation-iterations.csv"),
+                [JobOutput.SimulationChart] = Path.Combine(@"simulation", @"plan-simulation.svg"),
+                [JobOutput.SimulationStatistics] = Path.Combine(@"simulation", @"plan-simulation-statistics.csv"),
+                [JobOutput.SimulationHistogram] = Path.Combine(@"simulation", @"plan-simulation-histogram.csv"),
+                [JobOutput.SimulationPaths] = Path.Combine(@"simulation", @"plan-simulation-paths.csv"),
+                [JobOutput.SimulationActivities] = Path.Combine(@"simulation", @"plan-simulation-activities.csv"),
+                [JobOutput.SimulationIterations] = Path.Combine(@"simulation", @"plan-simulation-iterations.csv"),
             });
         }
 

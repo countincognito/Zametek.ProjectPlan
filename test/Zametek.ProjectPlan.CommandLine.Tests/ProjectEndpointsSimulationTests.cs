@@ -10,8 +10,10 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
     /// <summary>
-    /// Tests for what zpp serve answers when a request asks for a simulation of the schedule: its statistics in the answer,
-    /// its chart and CSV files among the outputs, the limit on its iterations, and that the time of a job stops it.
+    /// Tests for what zpp serve answers about the simulation of the schedule: its statistics in the answer, the chart and the CSV
+    /// files among the outputs, a result that the project holds, the limit on the iterations of a project that the server runs,
+    /// and that the time of a job stops it. The settings of a simulation are the project's, and so each test that needs some
+    /// makes a project that holds them, as zpp saves one with -o.
     /// </summary>
     public class ProjectEndpointsSimulationTests
         : IClassFixture<EngineFixture>
@@ -28,13 +30,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"estimated.zpp"));
         }
 
+        // The estimated plan, saved by a job that has these settings, and has run the simulation if a result is asked for.
+        private async Task<byte[]> SimulatedAsync(
+            SimulationSettingsModel settings,
+            bool withResult = false,
+            byte[]? plan = null)
+        {
+            using var input = new MemoryStream(plan ?? Estimated());
+            var sink = new MemoryJobSink(new BufferedConsole());
+
+            await m_Engine.JobRunner.RunAsync(
+                new JobRequest { Input = input, SaveProject = true, SimulationSettings = settings, RunSimulation = withResult },
+                sink);
+
+            return sink.Outputs.Single(x => x.Output == JobOutput.Project).Content;
+        }
+
         private static async Task<HttpResponseMessage> PostAsync(
             RunningServer server,
             string optionsJson,
+            byte[]? plan = null,
             string query = @"",
             string? accept = null)
         {
-            using var content = RunningServer.CompileContent(Estimated(), @"estimated.zpp");
+            using var content = RunningServer.CompileContent(plan ?? Estimated(), @"estimated.zpp");
             content.Add(new StringContent(optionsJson, System.Text.Encoding.UTF8, @"application/json"), @"options");
             using var request = new HttpRequestMessage(HttpMethod.Post, $@"/v1/projects/compile{query}") { Content = content };
 
@@ -47,11 +66,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_ASimulation_Then_AnswersWithItsStatisticsBetweenTheMetricsAndTheOutputs()
+        public async Task Compile_Given_ARunOfTheSimulation_Then_AnswersWithItsStatisticsBetweenTheMetricsAndTheOutputs()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 1000, Seed = 77, TargetFinishTime = 30, UseRandomSeed = false });
 
-            using HttpResponseMessage response = await PostAsync(server, @"{""simulation"":{""iterations"":1000,""seed"":""77"",""targetFinishDays"":30}}");
+            using HttpResponseMessage response = await PostAsync(server, @"{""runSimulation"":true}", plan);
 
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             string json = await response.Content.ReadAsStringAsync();
@@ -84,7 +104,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_NoSimulation_Then_TheAnswerHasNone()
+        public async Task Compile_Given_NoRunAndNoResultInTheProject_Then_TheAnswerHasNoSimulation()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
 
@@ -95,22 +115,39 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_TheOutputsOfASimulation_Then_AnswersWithEachNamedAsZppNamesIt()
+        public async Task Compile_Given_NoRunAndAProjectThatHoldsAResult_Then_TheAnswerHasTheStatisticsOfTheResult()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 700, Seed = 4, TargetFinishTime = 30, UseRandomSeed = false }, withResult: true);
+
+            using HttpResponseMessage response = await PostAsync(server, @"{}", plan);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            SimulationResponse simulation = compiled.Simulation.ShouldNotBeNull();
+            simulation.Iterations.ShouldBe(700);
+            simulation.Seed.ShouldBe(4UL);
+            simulation.TargetFinishDays.ShouldBe(30);
+            compiled.Outputs.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task Compile_Given_TheOutputOfASimulationAndARun_Then_AnswersWithEachFileNamedAsZppNamesIt()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 300 });
 
             using HttpResponseMessage response = await PostAsync(
                 server,
                 """
                 {
-                    "simulation": { "iterations": 300 },
+                    "runSimulation": true,
                     "outputs": {
-                        "simulationChart": { "format": "png", "width": 400, "height": 300 },
-                        "simulationStatistics": {}, "simulationHistogram": {}, "simulationPaths": {},
-                        "simulationActivities": {}, "simulationIterations": {}
+                        "simulation": { "format": "png", "width": 400, "height": 300 }
                     }
                 }
-                """);
+                """,
+                plan);
 
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
@@ -133,42 +170,76 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_TheSameSimulationTwice_Then_TheSameAnswerByteForByte()
+        public async Task Compile_Given_TheOutputOfASimulationAndAResultThatTheProjectHolds_Then_AnswersWithEachFileButTheIterations()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
-            const string options = """{"simulation":{"iterations":2000,"seed":"5","distribution":"triangular","targetFinishDays":28},"outputs":{"simulationStatistics":{},"simulationIterations":{}}}""";
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 300, Seed = 8, UseRandomSeed = false }, withResult: true);
 
-            using HttpResponseMessage first = await PostAsync(server, options);
-            using HttpResponseMessage second = await PostAsync(server, options);
+            using HttpResponseMessage response = await PostAsync(
+                server,
+                @"{""outputs"":{""simulation"":{""format"":""svg"",""width"":400,""height"":300}}}",
+                plan);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Simulation.ShouldNotBeNull().Iterations.ShouldBe(300);
+
+            // The iterations of a run are not in a project, and so there is no file of them.
+            compiled.Outputs.Select(x => x.Kind).ShouldBe(
+            [
+                JobOutput.SimulationChart, JobOutput.SimulationStatistics, JobOutput.SimulationHistogram,
+                JobOutput.SimulationPaths, JobOutput.SimulationActivities,
+            ]);
+        }
+
+        [Fact]
+        public async Task Compile_Given_TheSameRunTwice_Then_TheSameAnswerByteForByte()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+
+            // The project saves "New seed each run", and the run uses the seed that it saved.
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 2000, Seed = 5, Distribution = DurationDistribution.Triangular, TargetFinishTime = 28, UseRandomSeed = true });
+            const string options = """{"runSimulation":true,"outputs":{"simulation":{"format":"svg","width":300,"height":200}}}""";
+
+            using HttpResponseMessage first = await PostAsync(server, options, plan);
+            using HttpResponseMessage second = await PostAsync(server, options, plan);
 
             (await second.Content.ReadAsByteArrayAsync()).ShouldBe(await first.Content.ReadAsByteArrayAsync());
         }
 
         [Fact]
-        public async Task Compile_Given_AnotherSeed_Then_AnotherSample()
+        public async Task Compile_Given_AnotherSeedInTheProject_Then_AnotherSample()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] one = await SimulatedAsync(new SimulationSettingsModel { Iterations = 2000, Seed = 1 });
+            byte[] two = await SimulatedAsync(new SimulationSettingsModel { Iterations = 2000, Seed = 2 });
 
-            using HttpResponseMessage one = await PostAsync(server, @"{""simulation"":{""iterations"":2000,""seed"":""1""}}");
-            using HttpResponseMessage two = await PostAsync(server, @"{""simulation"":{""iterations"":2000,""seed"":""2""}}");
+            using HttpResponseMessage first = await PostAsync(server, @"{""runSimulation"":true}", one);
+            using HttpResponseMessage second = await PostAsync(server, @"{""runSimulation"":true}", two);
 
-            (await RunningServer.ReadAsync<CompileResponse>(two)).Simulation.ShouldNotBe((await RunningServer.ReadAsync<CompileResponse>(one)).Simulation);
+            (await RunningServer.ReadAsync<CompileResponse>(second)).Simulation.ShouldNotBe((await RunningServer.ReadAsync<CompileResponse>(first)).Simulation);
         }
 
         [Fact]
         public async Task Compile_Given_AZip_Then_HasTheFilesOfTheSimulationAndItsStatisticsInResultJson()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 200 });
 
             using HttpResponseMessage response = await PostAsync(
                 server,
-                @"{""simulation"":{""iterations"":200},""outputs"":{""simulationStatistics"":{},""simulationPaths"":{}}}",
+                @"{""runSimulation"":true,""outputs"":{""simulation"":{""format"":""png"",""width"":200,""height"":100}}}",
+                plan,
                 accept: @"application/zip");
 
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             using var archive = new ZipArchive(new MemoryStream(await response.Content.ReadAsByteArrayAsync()));
             archive.Entries.Select(x => x.FullName).ShouldBe(
-                [@"estimated-simulation-statistics.csv", @"estimated-simulation-paths.csv", @"result.json"]);
+            [
+                @"estimated-simulation.png", @"estimated-simulation-statistics.csv", @"estimated-simulation-histogram.csv",
+                @"estimated-simulation-paths.csv", @"estimated-simulation-activities.csv", @"estimated-simulation-iterations.csv",
+                @"result.json",
+            ]);
 
             using Stream result = archive.GetEntry(@"result.json")!.Open();
             using JsonDocument document = JsonDocument.Parse(result);
@@ -176,48 +247,87 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_MoreIterationsThanTheLimit_Then_422WithTheLimitNamed()
+        public async Task Compile_Given_AProjectWithMoreIterationsThanTheLimitAndARun_Then_422WithTheLimitNamed()
         {
             await using RunningServer server = await RunningServer.StartAsync(
                 m_Engine.JobRunner,
                 new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 500 } });
+            byte[] within = await SimulatedAsync(new SimulationSettingsModel { Iterations = 500 });
+            byte[] over = await SimulatedAsync(new SimulationSettingsModel { Iterations = 501 });
 
-            using HttpResponseMessage within = await PostAsync(server, @"{""simulation"":{""iterations"":500}}");
-            using HttpResponseMessage over = await PostAsync(server, @"{""simulation"":{""iterations"":501}}");
+            using HttpResponseMessage allowed = await PostAsync(server, @"{""runSimulation"":true}", within);
+            using HttpResponseMessage refused = await PostAsync(server, @"{""runSimulation"":true}", over);
 
-            within.StatusCode.ShouldBe(HttpStatusCode.OK);
-            over.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
-            ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(over);
+            allowed.StatusCode.ShouldBe(HttpStatusCode.OK);
+            refused.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(refused);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.ValidationFailed));
             ProblemError error = problem.Errors.ShouldNotBeNull().ShouldHaveSingleItem();
-            error.Pointer.ShouldBe(@"#/options/simulation/iterations");
+            error.Pointer.ShouldBe(@"#/options/runSimulation");
             error.Code.ShouldBe(@"outOfRange");
-            error.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeErrorNumberOutOfRange, 1, 500));
+            error.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_SimulationIterationsAboveLimit, 501, 500));
         }
 
         [Fact]
-        public async Task Compile_Given_NoIterationsAndALimitBelowTheDefault_Then_TheLimitIsRun()
+        public async Task Compile_Given_AProjectWithMoreIterationsThanTheLimitAndNoRun_Then_TheAnswerIsNotLimited()
+        {
+            // The limit is on what a run costs. The statistics of a result that the project already holds cost nothing.
+            await using RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 100 } });
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 300 }, withResult: true);
+
+            using HttpResponseMessage response = await PostAsync(server, @"{}", plan);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            (await RunningServer.ReadAsync<CompileResponse>(response)).Simulation.ShouldNotBeNull().Iterations.ShouldBe(300);
+        }
+
+        [Fact]
+        public async Task Compile_Given_AProjectThatHasNoSettingsAndALimitBelowTheDefault_Then_422BecauseTheDefaultIsTheSettings()
         {
             await using RunningServer server = await RunningServer.StartAsync(
                 m_Engine.JobRunner,
                 new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 700 } });
 
-            using HttpResponseMessage response = await PostAsync(server, @"{""simulation"":{}}");
+            using HttpResponseMessage response = await PostAsync(server, @"{""runSimulation"":true}");
 
-            (await RunningServer.ReadAsync<CompileResponse>(response)).Simulation.ShouldNotBeNull().Iterations.ShouldBe(700);
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            (await RunningServer.ReadAsync<ProblemResponse>(response)).Errors.ShouldNotBeNull().ShouldHaveSingleItem().Detail
+                .ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_SimulationIterationsAboveLimit, new SimulationSettingsModel().Iterations, 700));
         }
 
         [Fact]
-        public async Task Compile_Given_AnOutputOfASimulationAndNoSimulation_Then_422AtTheOutput()
+        public async Task Compile_Given_TheOutputOfASimulationAndNeitherARunNorAResult_Then_422AtTheOutput()
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
 
-            using HttpResponseMessage response = await PostAsync(server, @"{""outputs"":{""simulationPaths"":{}}}");
+            using HttpResponseMessage response = await PostAsync(server, @"{""outputs"":{""simulation"":{""width"":300,""height"":200}}}");
 
             response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
             ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.SimulationNotPossible));
             ProblemError error = problem.Errors.ShouldNotBeNull().ShouldHaveSingleItem();
-            error.Pointer.ShouldBe(@"#/options/outputs/simulationPaths");
-            error.Code.ShouldBe(@"notAllowedWithoutSimulation");
+            error.Pointer.ShouldBe(@"#/options/outputs/simulation");
+            error.Code.ShouldBe(@"noResult");
+            error.Detail.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationOutputsNeedAResult);
+        }
+
+        [Fact]
+        public async Task Compile_Given_ASettingThatARunCannotUse_Then_422AtTheRun()
+        {
+            // A project file that somebody edited by hand: the shape value of the modified beta-PERT distribution is not above 0.
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Distribution = DurationDistribution.ModifiedBetaPert, ModifiedBetaShape = -1.0 });
+
+            using HttpResponseMessage response = await PostAsync(server, @"{""runSimulation"":true}", plan);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.SimulationNotPossible));
+            ProblemError error = problem.Errors.ShouldNotBeNull().ShouldHaveSingleItem();
+            error.Pointer.ShouldBe(@"#/options/runSimulation");
+            error.Code.ShouldBe(@"outOfRange");
         }
 
         [Fact]
@@ -241,11 +351,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 sample = memory.ToArray();
             }
 
+            // The sample, saved with a million iterations as its settings.
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 1_000_000 }, plan: sample);
+
             using var patient = new HttpClient { BaseAddress = server.Client.BaseAddress, Timeout = TimeSpan.FromMinutes(5) };
-            using var content = RunningServer.CompileContent(sample, @"warm-up.zpp");
-            content.Add(
-                new StringContent(@"{""simulation"":{""iterations"":1000000}}", System.Text.Encoding.UTF8, @"application/json"),
-                @"options");
+            using var content = RunningServer.CompileContent(plan, @"warm-up.zpp");
+            content.Add(new StringContent(@"{""runSimulation"":true}", System.Text.Encoding.UTF8, @"application/json"), @"options");
 
             using HttpResponseMessage response = await patient.PostAsync(@"/v1/projects/compile", content);
 

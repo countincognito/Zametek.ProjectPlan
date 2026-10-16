@@ -126,9 +126,6 @@
   <data name="Title_ArrowGraphView" xml:space="preserve">
     <value>Arrow Graph</value>
   </data>
-  <data name="Title_ScheduleSimulation" xml:space="preserve">
-    <value>Schedule Simulation</value>
-  </data>
   <data name="Title_Simulation" xml:space="preserve">
     <value>Simulation</value>
   </data>

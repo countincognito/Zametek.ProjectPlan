@@ -44,14 +44,30 @@ namespace Zametek.Engine.ProjectPlan
 
         public ChartOutputRequest? ScenarioChart { get; init; }
 
-        // The simulation to run once the plan has compiled, if any. Its statistics go into the result. The outputs below
-        // are those of the simulation, and so they need it.
-        public SimulationRequest? Simulation { get; init; }
+        // Whether to run the simulation of the schedule once the plan has compiled. It runs with the settings that the scenario
+        // holds (the iterations, the distribution, its shape value and the target), and always with the seed that the scenario
+        // has saved, also when "New seed each run" is set, so that a run repeats. The result goes to the scenario, and thus a
+        // project that the job saves holds it, and its statistics go into the result of the job. A job that does not run the
+        // simulation still has the statistics of a result that the scenario holds, and makes the outputs below from it.
+        public bool RunSimulation { get; init; }
 
+        // The settings to run with in the place of the scenario's, which the scenario then has. zpp and zpp serve do not set
+        // them: they run with the settings of the plan. A host that must run a simulation of a size that it chooses (the
+        // warm-up of the server) does, and so does a test.
+        public SimulationSettingsModel? SimulationSettings { get; init; }
+
+        // The most iterations that a run of this job may have, when that is fewer than the engine allows. A scenario that has
+        // more is a SimulationException of the failure IterationsAboveLimit, before the plan compiles. It is the limit of a
+        // server.
+        public int? MaximumSimulationIterations { get; init; }
+
+        // JobOutput.SimulationChart, of the result of the scenario: the one that the job made, or else the one that the
+        // scenario held. A job with no result of either kind is a SimulationException of the failure NoResult.
         public ChartOutputRequest? SimulationChart { get; init; }
 
         // JobOutput.SimulationStatistics, SimulationHistogram, SimulationPaths, SimulationActivities and
-        // SimulationIterations: each of the CSV files that is set.
+        // SimulationIterations: each of the CSV files that is set. The iterations of a run are not in a project file, and so
+        // the file SimulationIterations is produced only by a job that ran the simulation, and a job that did not skips it.
         public SimulationCsvFile SimulationCsvFiles { get; init; }
     }
 }

@@ -710,6 +710,18 @@ namespace Zametek.ProjectPlan.CommandLine
                         Detail = detail,
                     });
                     break;
+                case SimulationException simulation:
+                    exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
+
+                    // A project with more iterations than the server runs is a request that the server refuses, as one with a limit
+                    // that is too high is; the others are a job that ran as far as it could, and failed, as zpp does here.
+                    kind = simulation.Failure == SimulationFailure.IterationsAboveLimit
+                        ? ProblemKind.ValidationFailed
+                        : ProblemKind.SimulationNotPossible;
+                    (string pointer, string simulationCode) = DescribeSimulation(simulation);
+                    detail = simulation.Message;
+                    errors.Add(new ProblemError { Pointer = pointer, Code = simulationCode, Detail = simulation.Message });
+                    break;
                 case GraphCompilationTimeoutException:
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
                     kind = ProblemKind.CompilationTimedOut;
@@ -733,6 +745,19 @@ namespace Zametek.ProjectPlan.CommandLine
                     errors.Count > 0 ? errors : null,
                     includeConsole ? ToConsoleResponse(console, exitCode) : null),
                 exitCode);
+        }
+
+        // Where in the request a simulation that cannot be done comes from, and its code. The settings of a run are the project's, and
+        // thus what the caller can change is whether to run it (runSimulation): the project that has too many iterations is run
+        // by a server that allows more, or is not run. The outputs of a simulation come from a result, and a project without one
+        // needs a run.
+        private static (string Pointer, string Code) DescribeSimulation(SimulationException exception)
+        {
+            return exception.Failure switch
+            {
+                SimulationFailure.NoResult => (CompileOptionsHelper.GetPointer(CompileOptionsHelper.GetPointer(CompileOptionsHelper.OptionsPointer, @"outputs"), @"simulation"), ProblemCodes.NoResult),
+                _ => (CompileOptionsHelper.GetPointer(CompileOptionsHelper.OptionsPointer, @"runSimulation"), ProblemCodes.OutOfRange),
+            };
         }
 
         // What a scenario that cannot be selected is, as a code, and what is wrong with it, in the API's words and not zpp's,

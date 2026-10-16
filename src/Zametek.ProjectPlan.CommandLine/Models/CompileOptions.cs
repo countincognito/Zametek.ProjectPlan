@@ -24,9 +24,12 @@ namespace Zametek.ProjectPlan.CommandLine
         // --now
         public string? Now { get; init; }
 
-        // --simulate and --simulation-*: a simulation of the schedule, run once the project has compiled. Its statistics are in
-        // the answer, and it is what the outputs of a simulation are made from. When it is not given, there is none.
-        public SimulationOptions? Simulation { get; init; }
+        // --run-simulation: run the simulation of the schedule once the project has compiled. It runs with the settings that
+        // the project holds (the iterations, the distribution, its shape value and the target), and with the seed that the
+        // project has saved, so that a run repeats; a project with more iterations than the server runs is refused. The
+        // statistics of the result are in the answer, and so are the statistics of a result that the project held when this is
+        // not given. The result is what the outputs of the simulation are made from.
+        public bool RunSimulation { get; init; }
 
         // What the request asks to have produced.
         public OutputsOptions? Outputs { get; init; }

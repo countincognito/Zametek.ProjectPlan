@@ -109,30 +109,32 @@ namespace Zametek.Engine.ProjectPlan
             return hash.ToHashCode();
         }
 
-        // The metrics of the run the view-model has just made, which was asked for as the request says.
+        // The metrics of the result the view-model has, which a run of the job made or the scenario held, with the settings that
+        // the scenario has. A result that a file held was made with the settings that the file saved with it, unless somebody
+        // changed them after that run.
         internal static JobSimulationMetrics From(
             IScheduleSimulationManagerViewModel simulation,
-            SimulationRequest request)
+            SimulationSettingsModel settings)
         {
             ArgumentNullException.ThrowIfNull(simulation);
-            ArgumentNullException.ThrowIfNull(request);
+            ArgumentNullException.ThrowIfNull(settings);
 
             SimulationSummaryModel summary = simulation.Summary ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
             bool hasResult = summary.HasResult;
 
             List<SimulationStatisticModel> statistics =
             [
-                new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = request.Seed.ToString(CultureInfo.CurrentCulture) },
-                new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationDistribution, Value = StringConverters.DurationDistributionValue(request.Distribution) },
+                new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = settings.Seed.ToString(CultureInfo.CurrentCulture) },
+                new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationDistribution, Value = StringConverters.DurationDistributionValue(settings.Distribution) },
                 .. simulation.Statistics,
             ];
 
             return new JobSimulationMetrics
             {
                 Iterations = summary.IterationCount,
-                Seed = request.Seed,
-                Distribution = request.Distribution,
-                ModifiedBetaShape = request.Distribution == DurationDistribution.ModifiedBetaPert ? request.ModifiedBetaShape : null,
+                Seed = settings.Seed,
+                Distribution = settings.Distribution,
+                ModifiedBetaShape = settings.Distribution == DurationDistribution.ModifiedBetaPert ? settings.ModifiedBetaShape : null,
                 ValidIterations = summary.ValidIterationCount,
                 FailedIterations = summary.FailedIterationCount,
                 PlannedFinishDays = summary.PlannedFinishTime,

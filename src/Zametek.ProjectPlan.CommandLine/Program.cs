@@ -210,9 +210,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOutputRequest(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
                 EarnedValueChart = ToChartOutputRequest(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOutputRequest(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
-                Simulation = ToSimulationRequest(options),
-                SimulationChart = ToChartOutputRequest(options.SimulationChartDirectory, options.SimulationChartFormat, options.SimulationChartSize),
-                SimulationCsvFiles = options.SimulationCsvDirectory is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
+                RunSimulation = options.RunSimulation,
+                SimulationChart = ToChartOutputRequest(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
+                SimulationCsvFiles = options.SimulationDirectory is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
             };
 
             // Chart and graph files are named after the file the plan came from,
@@ -291,93 +291,21 @@ namespace Zametek.ProjectPlan.CommandLine
                 OptionLongName(nameof(Options.ScenarioChartDirectory)),
                 OptionLongName(nameof(Options.ScenarioChartSize)));
 
-            ValidateSimulation(options);
+            RequireSize(
+                options.SimulationDirectory,
+                options.SimulationSize,
+                OptionLongName(nameof(Options.SimulationDirectory)),
+                OptionLongName(nameof(Options.SimulationSize)));
 
             // All export directories are checked up front so that a bad path fails
             // the run before any file has been written.
-            RequireDirectory(options.SimulationChartDirectory);
-            RequireDirectory(options.SimulationCsvDirectory);
+            RequireDirectory(options.SimulationDirectory);
             RequireDirectory(options.GanttDirectory);
             RequireDirectory(options.ArrowGraphDirectory);
             RequireDirectory(options.VertexGraphDirectory);
             RequireDirectory(options.ResourceDirectory);
             RequireDirectory(options.EVDirectory);
             RequireDirectory(options.ScenarioChartDirectory);
-        }
-
-        // The simulation's options: they all need --simulate, and the numbers that they take have limits.
-        private static void ValidateSimulation(Options options)
-        {
-            string simulate = OptionLongName(nameof(Options.Simulate));
-            string distribution = OptionLongName(nameof(Options.SimulationDistribution));
-
-            if (!options.Simulate)
-            {
-                (string Property, bool IsGiven)[] given =
-                [
-                    (nameof(Options.SimulationIterations), options.SimulationIterations is not null),
-                    (nameof(Options.SimulationSeed), options.SimulationSeed is not null),
-                    (nameof(Options.SimulationDistribution), options.SimulationDistribution is not null),
-                    (nameof(Options.SimulationShape), options.SimulationShape is not null),
-                    (nameof(Options.SimulationTarget), options.SimulationTarget is not null),
-                    (nameof(Options.SimulationChartDirectory), options.SimulationChartDirectory is not null),
-                    (nameof(Options.SimulationChartSize), options.SimulationChartSize.Any()),
-                    (nameof(Options.SimulationCsvDirectory), options.SimulationCsvDirectory is not null),
-                ];
-
-                foreach ((string property, bool isGiven) in given)
-                {
-                    if (isGiven)
-                    {
-                        throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithOption, OptionLongName(property), simulate));
-                    }
-                }
-
-                return;
-            }
-
-            if (options.SimulationIterations is int iterations
-                && (iterations < 1 || iterations > GraphLimits.MaximumSimulationIterations))
-            {
-                throw new UsageException(string.Format(
-                    Resource.ProjectPlan.Messages.Message_OptionMustBeBetween,
-                    OptionLongName(nameof(Options.SimulationIterations)),
-                    1,
-                    GraphLimits.MaximumSimulationIterations));
-            }
-
-            if (options.SimulationShape is double shape)
-            {
-                if (double.IsNaN(shape) || double.IsInfinity(shape) || shape <= 0.0)
-                {
-                    throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionMustBeAboveZero, OptionLongName(nameof(Options.SimulationShape))));
-                }
-
-                if (options.SimulationDistribution != DurationDistribution.ModifiedBetaPert)
-                {
-                    throw new UsageException(string.Format(
-                        Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithOptionValue,
-                        OptionLongName(nameof(Options.SimulationShape)),
-                        distribution,
-                        DurationDistribution.ModifiedBetaPert));
-                }
-            }
-
-            if (options.SimulationTarget is int target
-                && (target < 0 || target > GraphLimits.MaximumTimeValue))
-            {
-                throw new UsageException(string.Format(
-                    Resource.ProjectPlan.Messages.Message_OptionMustBeBetween,
-                    OptionLongName(nameof(Options.SimulationTarget)),
-                    0,
-                    GraphLimits.MaximumTimeValue));
-            }
-
-            RequireSize(
-                options.SimulationChartDirectory,
-                options.SimulationChartSize,
-                OptionLongName(nameof(Options.SimulationChartDirectory)),
-                OptionLongName(nameof(Options.SimulationChartSize)));
         }
 
         private static void RequireSize(
@@ -443,21 +371,6 @@ namespace Zametek.ProjectPlan.CommandLine
             return new ChartOutputRequest(ToChartImageFormat(format), sizeList[0], sizeList[1]);
         }
 
-        // The simulation the options ask for, when they ask for one. ValidateOptions has checked its numbers.
-        private static SimulationRequest? ToSimulationRequest(Options options)
-        {
-            return options.Simulate
-                ? new SimulationRequest
-                {
-                    Iterations = options.SimulationIterations ?? SimulationRequest.DefaultIterations,
-                    Seed = options.SimulationSeed ?? SimulationRequest.DefaultSeed,
-                    Distribution = options.SimulationDistribution ?? DurationDistribution.BetaPert,
-                    ModifiedBetaShape = options.SimulationShape ?? SimulationRequest.DefaultModifiedBetaShape,
-                    TargetFinishTime = options.SimulationTarget,
-                }
-                : null;
-        }
-
         // A graph the options ask for, when they give its directory.
         private static GraphOutputRequest? ToGraphOutputRequest(
             string? directory,
@@ -512,16 +425,16 @@ namespace Zametek.ProjectPlan.CommandLine
             AddExportFilePath(filenames, JobOutput.ResourceChart, options.ResourceDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, options.ResourceFormat.GetDescription());
             AddExportFilePath(filenames, JobOutput.EarnedValueChart, options.EVDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, options.EVFormat.GetDescription());
             AddExportFilePath(filenames, JobOutput.ScenarioChart, options.ScenarioChartDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, options.ScenarioChartFormat.GetDescription());
-            AddExportFilePath(filenames, JobOutput.SimulationChart, options.SimulationChartDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, options.SimulationChartFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.SimulationChart, options.SimulationDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, options.SimulationFormat.GetDescription());
 
-            // The five CSV files of the simulation, side by side in one directory.
+            // The CSV files of the simulation, in the directory of its chart. The file of the iterations is written only for a run.
             string csv = Resource.ProjectPlan.Filters.Filter_CsvFileExtension;
             string csvSuffix = Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv;
-            AddExportFilePath(filenames, JobOutput.SimulationStatistics, options.SimulationCsvDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, csv);
-            AddExportFilePath(filenames, JobOutput.SimulationHistogram, options.SimulationCsvDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, csv);
-            AddExportFilePath(filenames, JobOutput.SimulationPaths, options.SimulationCsvDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, csv);
-            AddExportFilePath(filenames, JobOutput.SimulationActivities, options.SimulationCsvDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, csv);
-            AddExportFilePath(filenames, JobOutput.SimulationIterations, options.SimulationCsvDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationStatistics, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationHistogram, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationPaths, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationActivities, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationIterations, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, csv);
 
             return filenames;
         }

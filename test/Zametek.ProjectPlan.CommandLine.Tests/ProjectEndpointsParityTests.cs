@@ -80,6 +80,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return path;
         }
 
+        // A copy of a plan that holds the settings of a simulation, and the result of a run if one is asked for, as zpp saves them with
+        // -o: the settings of a simulation are the project's, and a project that has them is made by saving them.
+        private async Task<string> SimulatedPlanAsync(
+            string name,
+            string source,
+            SimulationSettingsModel settings,
+            bool withResult = false)
+        {
+            string path = Path.Combine(m_TempDirectory, $@"{name}.zpp");
+            await using FileStream input = File.OpenRead(source);
+            var sink = new MemoryJobSink(new BufferedConsole());
+
+            await m_Engine.JobRunner.RunAsync(
+                new JobRequest { Input = input, SaveProject = true, SimulationSettings = settings, RunSimulation = withResult },
+                sink);
+
+            await File.WriteAllBytesAsync(path, sink.Outputs.Single(x => x.Output == JobOutput.Project).Content);
+            return path;
+        }
+
         [Fact]
         public async Task Compile_Given_EveryOutputInRasterFormats_Then_DoesWhatZppDoes()
         {
@@ -137,59 +157,84 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_ASimulationAndAllItsOutputs_Then_DoesWhatZppDoes()
+        public async Task Compile_Given_ARunOfTheSimulationAndAllItsOutputs_Then_DoesWhatZppDoes()
         {
-            await ShouldDoWhatZppDoesAsync(AssetPath(@"estimated.zpp"), new CompileOptions
+            string plan = await SimulatedPlanAsync(
+                @"estimated-run",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 1500, Seed = 9, Distribution = DurationDistribution.Triangular, TargetFinishTime = 28, UseRandomSeed = false });
+
+            await ShouldDoWhatZppDoesAsync(plan, new CompileOptions
             {
                 MetricsFormat = MetricsExport.Json,
-                Simulation = new SimulationOptions
-                {
-                    Iterations = 1500,
-                    Seed = 9,
-                    Distribution = DurationDistribution.Triangular,
-                    TargetFinishDays = 28,
-                },
+                Now = c_Now,
+                RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
-                    SimulationChart = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
-                    SimulationStatistics = new CsvOptions(),
-                    SimulationHistogram = new CsvOptions(),
-                    SimulationPaths = new CsvOptions(),
-                    SimulationActivities = new CsvOptions(),
-                    SimulationIterations = new CsvOptions(),
+                    Project = new ProjectOptions(),
+                    Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
                 },
             });
         }
 
         [Fact]
-        public async Task Compile_Given_ASimulationOfAPlanWithResources_Then_DoesWhatZppDoes()
+        public async Task Compile_Given_ARunOfAPlanWithResources_Then_DoesWhatZppDoes()
         {
-            await ShouldDoWhatZppDoesAsync(SamplePath(), new CompileOptions
+            string plan = await SimulatedPlanAsync(
+                @"sample-run",
+                SamplePath(),
+                new SimulationSettingsModel { Iterations = 200, Seed = 123_456_789, Distribution = DurationDistribution.ModifiedBetaPert, ModifiedBetaShape = 6.5 });
+
+            await ShouldDoWhatZppDoesAsync(plan, new CompileOptions
             {
                 MetricsFormat = MetricsExport.Table,
-                Simulation = new SimulationOptions
-                {
-                    Iterations = 200,
-                    Seed = 123_456_789,
-                    Distribution = DurationDistribution.ModifiedBetaPert,
-                    ModifiedBetaShape = 6.5,
-                },
+                RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
-                    SimulationChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
-                    SimulationStatistics = new CsvOptions(),
-                    SimulationHistogram = new CsvOptions(),
-                    SimulationPaths = new CsvOptions(),
-                    SimulationActivities = new CsvOptions(),
-                    SimulationIterations = new CsvOptions(),
+                    Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
                 },
             });
         }
 
         [Fact]
-        public async Task Compile_Given_ASimulationAndNoOutputs_Then_DoesWhatZppDoes()
+        public async Task Compile_Given_ARunAndNoOutputs_Then_DoesWhatZppDoes()
         {
-            await ShouldDoWhatZppDoesAsync(AssetPath(@"estimated.zpp"), new CompileOptions { Simulation = new SimulationOptions() });
+            await ShouldDoWhatZppDoesAsync(AssetPath(@"estimated.zpp"), new CompileOptions { RunSimulation = true });
+        }
+
+        [Fact]
+        public async Task Compile_Given_AProjectThatHoldsAResultAndNoRun_Then_DrawsTheResultAsZppDoes()
+        {
+            // The statistics, and the chart and the four files of the result that the project holds, and no file of the iterations.
+            string plan = await SimulatedPlanAsync(
+                @"estimated-held",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 700, Seed = 3, TargetFinishTime = 30, UseRandomSeed = false },
+                withResult: true);
+
+            await ShouldDoWhatZppDoesAsync(plan, new CompileOptions
+            {
+                MetricsFormat = MetricsExport.Json,
+                Outputs = new OutputsOptions
+                {
+                    Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                },
+            });
+        }
+
+        [Fact]
+        public async Task Compile_Given_TheOutputsOfASimulationAndNeitherARunNorAResult_Then_FailsAsZppDoes()
+        {
+            await ShouldDoWhatZppDoesAsync(
+                AssetPath(@"estimated.zpp"),
+                new CompileOptions
+                {
+                    Outputs = new OutputsOptions
+                    {
+                        Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                    },
+                },
+                HttpStatusCode.UnprocessableEntity);
         }
 
         [Fact]
@@ -447,36 +492,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             AddChart(args, @"ev", outputs.EarnedValueChart, directory);
             AddChart(args, @"scenario-chart", outputs.ScenarioChart, directory);
 
-            if (options.Simulation is SimulationOptions simulation)
+            if (options.RunSimulation)
             {
-                args.AddRange(
-                [
-                    @"--simulate",
-                    @"--simulation-iterations", simulation.Iterations.ToString(CultureInfo.InvariantCulture),
-                    @"--simulation-seed", simulation.Seed.ToString(CultureInfo.InvariantCulture),
-                    @"--simulation-distribution", simulation.Distribution.ToString(),
-                ]);
-
-                if (simulation.ModifiedBetaShape is double shape)
-                {
-                    args.AddRange([@"--simulation-shape", shape.ToString(CultureInfo.InvariantCulture)]);
-                }
-                if (simulation.TargetFinishDays is int target)
-                {
-                    args.AddRange([@"--simulation-target", target.ToString(CultureInfo.InvariantCulture)]);
-                }
+                args.Add(@"--run-simulation");
             }
 
-            AddChart(args, @"simulation-chart", outputs.SimulationChart, directory);
-
-            // zpp writes the five CSV files together.
-            CsvOptions?[] csv = [outputs.SimulationStatistics, outputs.SimulationHistogram, outputs.SimulationPaths, outputs.SimulationActivities, outputs.SimulationIterations];
-            csv.Count(x => x is not null).ShouldBeOneOf(0, csv.Length);
-
-            if (csv[0] is not null)
-            {
-                args.AddRange([@"--simulation-csv-directory", directory]);
-            }
+            // zpp writes the chart of the simulation, and its CSV files beside it, to one directory.
+            AddChart(args, @"simulation", outputs.Simulation, directory);
 
             return [.. args];
         }

@@ -65,8 +65,8 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 (@"broken", broken, EveryOutput),
 
                 // Simulations that draw from the same generator with different seeds: each must keep to its own.
-                (@"estimated-1", estimated, input => EveryOutput(input) with { Simulation = new SimulationRequest { Iterations = 3000, Seed = 1 } }),
-                (@"estimated-2", estimated, input => EveryOutput(input) with { Simulation = new SimulationRequest { Iterations = 3000, Seed = 2, Distribution = DurationDistribution.Triangular } }),
+                (@"estimated-1", estimated, input => EveryOutput(input) with { RunSimulation = true, SimulationSettings = new SimulationSettingsModel { Iterations = 3000, Seed = 1 } }),
+                (@"estimated-2", estimated, input => EveryOutput(input) with { RunSimulation = true, SimulationSettings = new SimulationSettingsModel { Iterations = 3000, Seed = 2, Distribution = DurationDistribution.Triangular } }),
             ];
 
             // Alone: one after another.
@@ -114,7 +114,8 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 ResourceChart = new ChartOutputRequest(ChartImageFormat.Png, 800, 600),
                 EarnedValueChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                 ScenarioChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
-                Simulation = new SimulationRequest { Iterations = 200, Seed = 7, TargetFinishTime = 5 },
+                RunSimulation = true,
+                SimulationSettings = new SimulationSettingsModel { Iterations = 200, Seed = 7, TargetFinishTime = 5 },
                 SimulationChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                 SimulationCsvFiles = SimulationCsvFile.All,
             };

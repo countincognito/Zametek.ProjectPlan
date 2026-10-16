@@ -121,9 +121,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOutputRequest(outputs.ResourceChart),
                 EarnedValueChart = ToChartOutputRequest(outputs.EarnedValueChart),
                 ScenarioChart = ToChartOutputRequest(outputs.ScenarioChart),
-                Simulation = ToSimulationRequest(options.Simulation),
-                SimulationChart = ToChartOutputRequest(outputs.SimulationChart),
-                SimulationCsvFiles = ToSimulationCsvFiles(outputs),
+                RunSimulation = options.RunSimulation,
+                MaximumSimulationIterations = limits.MaxSimulationIterations,
+                SimulationChart = ToChartOutputRequest(outputs.Simulation),
+                SimulationCsvFiles = outputs.Simulation is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
             };
         }
 
@@ -144,12 +145,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOptions(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
                 EarnedValueChart = ToChartOptions(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOptions(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
-                SimulationChart = ToChartOptions(options.SimulationChartDirectory, options.SimulationChartFormat, options.SimulationChartSize),
-                SimulationStatistics = options.SimulationCsvDirectory is not null ? new CsvOptions() : null,
-                SimulationHistogram = options.SimulationCsvDirectory is not null ? new CsvOptions() : null,
-                SimulationPaths = options.SimulationCsvDirectory is not null ? new CsvOptions() : null,
-                SimulationActivities = options.SimulationCsvDirectory is not null ? new CsvOptions() : null,
-                SimulationIterations = options.SimulationCsvDirectory is not null ? new CsvOptions() : null,
+                Simulation = ToChartOptions(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
             };
 
             return new CompileOptions
@@ -159,7 +155,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 MetricsFormat = options.MetricsFormat,
                 CompileTimeout = TimeSpan.FromMilliseconds(options.CompileTimeoutMilliseconds),
                 Now = options.Now,
-                Simulation = options.Simulate ? ToSimulationOptions(options) : null,
+                RunSimulation = options.RunSimulation,
                 Outputs = outputs == new OutputsOptions() ? null : outputs,
             };
         }
@@ -180,12 +176,19 @@ namespace Zametek.ProjectPlan.CommandLine
             AddIf(requested, outputs.ResourceChart, JobOutput.ResourceChart);
             AddIf(requested, outputs.EarnedValueChart, JobOutput.EarnedValueChart);
             AddIf(requested, outputs.ScenarioChart, JobOutput.ScenarioChart);
-            AddIf(requested, outputs.SimulationChart, JobOutput.SimulationChart);
-            AddIf(requested, outputs.SimulationStatistics, JobOutput.SimulationStatistics);
-            AddIf(requested, outputs.SimulationHistogram, JobOutput.SimulationHistogram);
-            AddIf(requested, outputs.SimulationPaths, JobOutput.SimulationPaths);
-            AddIf(requested, outputs.SimulationActivities, JobOutput.SimulationActivities);
-            AddIf(requested, outputs.SimulationIterations, JobOutput.SimulationIterations);
+
+            // One output of a request is a chart and its CSV files. The file of the iterations is there only for a run: a project
+            // does not hold the iterations of the run that made its result.
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationChart);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationStatistics);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationHistogram);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationPaths);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationActivities);
+
+            if (options.RunSimulation)
+            {
+                AddIf(requested, outputs.Simulation, JobOutput.SimulationIterations);
+            }
 
             return requested;
         }
@@ -213,7 +216,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 JobOutput.ResourceChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, outputs.ResourceChart),
                 JobOutput.EarnedValueChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, outputs.EarnedValueChart),
                 JobOutput.ScenarioChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, outputs.ScenarioChart),
-                JobOutput.SimulationChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, outputs.SimulationChart),
+                JobOutput.SimulationChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, outputs.Simulation),
                 JobOutput.SimulationStatistics => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics),
                 JobOutput.SimulationHistogram => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram),
                 JobOutput.SimulationPaths => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths),
@@ -239,13 +242,6 @@ namespace Zametek.ProjectPlan.CommandLine
             return ApiNamingPolicy.Instance.ConvertName(output.ToString());
         }
 
-        // Whether the output is one of a simulation's, which a request can have only with the simulation. They are the
-        // last of the outputs, in the order the job produces them.
-        public static bool IsSimulationOutput(JobOutput output)
-        {
-            return output >= JobOutput.SimulationChart;
-        }
-
         #region Reading
 
         private static CompileOptions? ReadOptions(
@@ -266,8 +262,7 @@ namespace Zametek.ProjectPlan.CommandLine
             MetricsExport metricsFormat = MetricsExport.Markdown;
             TimeSpan? compileTimeout = null;
             string? now = null;
-            SimulationOptions? simulation = null;
-            bool hasSimulation = false;
+            bool runSimulation = false;
             OutputsOptions? outputs = null;
 
             foreach (JsonProperty member in root.EnumerateObject())
@@ -298,9 +293,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     case @"now":
                         now = ReadNow(member.Value, pointer, problems);
                         break;
-                    case @"simulation":
-                        simulation = ReadSimulation(member.Value, pointer, limits, problems);
-                        hasSimulation = member.Value.ValueKind != JsonValueKind.Null;
+                    case @"runSimulation":
+                        runSimulation = ReadBoolean(member.Value, pointer, problems);
                         break;
                     case @"outputs":
                         outputs = ReadOutputs(member.Value, pointer, limits, problems);
@@ -308,21 +302,6 @@ namespace Zametek.ProjectPlan.CommandLine
                     default:
                         problems.AddInvalid(Error(pointer, ProblemCodes.UnknownProperty, Resource.ProjectPlan.Messages.Message_ServeErrorNotKnown));
                         break;
-                }
-            }
-
-            // As zpp's --simulation-chart-directory and --simulation-csv-directory are only valid with --simulate.
-            if (!hasSimulation
-                && outputs is not null)
-            {
-                string outputsPointer = GetPointer(OptionsPointer, @"outputs");
-
-                foreach (JobOutput output in GetRequestedOutputs(new CompileOptions { Outputs = outputs }).Where(IsSimulationOutput))
-                {
-                    problems.AddInvalid(Error(
-                        GetPointer(outputsPointer, GetOutputName(output)),
-                        ProblemCodes.NotAllowedWithoutSimulation,
-                        Resource.ProjectPlan.Messages.Message_ServeErrorOnlyWithSimulation));
                 }
             }
 
@@ -334,7 +313,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     MetricsFormat = metricsFormat,
                     CompileTimeout = compileTimeout,
                     Now = now,
-                    Simulation = simulation,
+                    RunSimulation = runSimulation,
                     Outputs = outputs,
                 }
                 : null;
@@ -365,12 +344,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ChartOptions? resourceChart = null;
             ChartOptions? earnedValueChart = null;
             ChartOptions? scenarioChart = null;
-            ChartOptions? simulationChart = null;
-            CsvOptions? simulationStatistics = null;
-            CsvOptions? simulationHistogram = null;
-            CsvOptions? simulationPaths = null;
-            CsvOptions? simulationActivities = null;
-            CsvOptions? simulationIterations = null;
+            ChartOptions? simulation = null;
 
             foreach (JsonProperty member in value.EnumerateObject())
             {
@@ -402,23 +376,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     case @"scenarioChart":
                         scenarioChart = ReadChart(member.Value, memberPointer, limits, problems);
                         break;
-                    case @"simulationChart":
-                        simulationChart = ReadChart(member.Value, memberPointer, limits, problems);
-                        break;
-                    case @"simulationStatistics":
-                        simulationStatistics = ReadEmptyObject(member.Value, memberPointer, problems) ? new CsvOptions() : null;
-                        break;
-                    case @"simulationHistogram":
-                        simulationHistogram = ReadEmptyObject(member.Value, memberPointer, problems) ? new CsvOptions() : null;
-                        break;
-                    case @"simulationPaths":
-                        simulationPaths = ReadEmptyObject(member.Value, memberPointer, problems) ? new CsvOptions() : null;
-                        break;
-                    case @"simulationActivities":
-                        simulationActivities = ReadEmptyObject(member.Value, memberPointer, problems) ? new CsvOptions() : null;
-                        break;
-                    case @"simulationIterations":
-                        simulationIterations = ReadEmptyObject(member.Value, memberPointer, problems) ? new CsvOptions() : null;
+                    case @"simulation":
+                        simulation = ReadChart(member.Value, memberPointer, limits, problems);
                         break;
                     default:
                         problems.AddInvalid(Error(memberPointer, ProblemCodes.UnknownProperty, Resource.ProjectPlan.Messages.Message_ServeErrorNotKnown));
@@ -436,168 +395,27 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = resourceChart,
                 EarnedValueChart = earnedValueChart,
                 ScenarioChart = scenarioChart,
-                SimulationChart = simulationChart,
-                SimulationStatistics = simulationStatistics,
-                SimulationHistogram = simulationHistogram,
-                SimulationPaths = simulationPaths,
-                SimulationActivities = simulationActivities,
-                SimulationIterations = simulationIterations,
+                Simulation = simulation,
             };
         }
 
-        // The simulation a request asks for: the iterations, from 1 to the server's limit, the seed, which is written as text,
-        // the distribution, its shape value - which only the modified beta-PERT takes - and the target. Without iterations,
-        // the simulation has zpp's default, or the server's limit if that is lower.
-        private static SimulationOptions? ReadSimulation(
-            JsonElement value,
-            string pointer,
-            ServeLimits limits,
-            ProblemCollector problems)
-        {
-            if (value.ValueKind == JsonValueKind.Null)
-            {
-                return null;
-            }
-
-            if (value.ValueKind != JsonValueKind.Object)
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.WrongType, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeAnObject));
-                return null;
-            }
-
-            int? iterations = null;
-            ulong seed = SimulationRequest.DefaultSeed;
-            DurationDistribution distribution = DurationDistribution.BetaPert;
-            double? shape = null;
-            string shapePointer = GetPointer(pointer, @"modifiedBetaShape");
-            int? target = null;
-
-            foreach (JsonProperty member in value.EnumerateObject())
-            {
-                string memberPointer = GetPointer(pointer, member.Name);
-
-                switch (member.Name)
-                {
-                    case @"iterations":
-                        iterations = ReadWholeNumber(member.Value, memberPointer, 1, limits.MaxSimulationIterations, problems);
-                        break;
-                    case @"seed":
-                        seed = ReadSeed(member.Value, memberPointer, problems);
-                        break;
-                    case @"distribution":
-                        distribution = ReadEnum(member.Value, memberPointer, DurationDistribution.BetaPert, problems);
-                        break;
-                    case @"modifiedBetaShape":
-                        shape = ReadShape(member.Value, memberPointer, problems);
-                        break;
-                    case @"targetFinishDays":
-                        target = ReadWholeNumber(member.Value, memberPointer, 0, GraphLimits.MaximumTimeValue, problems);
-                        break;
-                    default:
-                        problems.AddInvalid(Error(memberPointer, ProblemCodes.UnknownProperty, Resource.ProjectPlan.Messages.Message_ServeErrorNotKnown));
-                        break;
-                }
-            }
-
-            // As zpp's --simulation-shape is only valid with the distribution that has one.
-            if (shape is not null
-                && distribution != DurationDistribution.ModifiedBetaPert)
-            {
-                problems.AddInvalid(Error(shapePointer, ProblemCodes.NotAllowed, Resource.ProjectPlan.Messages.Message_ServeErrorShapeOnlyWithModifiedBeta));
-            }
-
-            return new SimulationOptions
-            {
-                Iterations = iterations ?? Math.Min(SimulationRequest.DefaultIterations, limits.MaxSimulationIterations),
-                Seed = seed,
-                Distribution = distribution,
-                ModifiedBetaShape = shape,
-                TargetFinishDays = target,
-            };
-        }
-
-        // A whole number from the least to the most, or none for null.
-        private static int? ReadWholeNumber(
-            JsonElement value,
-            string pointer,
-            int least,
-            int most,
-            ProblemCollector problems)
-        {
-            if (value.ValueKind == JsonValueKind.Null)
-            {
-                return null;
-            }
-
-            if (value.ValueKind != JsonValueKind.Number
-                || !value.TryGetInt32(out int number))
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.WrongType, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeAWholeNumber));
-                return null;
-            }
-
-            if (number < least
-                || number > most)
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.OutOfRange, string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ServeErrorNumberOutOfRange, least, most)));
-                return null;
-            }
-
-            return number;
-        }
-
-        // The seed: a whole number from 0 to 18,446,744,073,709,551,615, written as text.
-        private static ulong ReadSeed(
+        // A member that is true or false; false for null.
+        private static bool ReadBoolean(
             JsonElement value,
             string pointer,
             ProblemCollector problems)
         {
-            if (value.ValueKind == JsonValueKind.Null)
+            switch (value.ValueKind)
             {
-                return SimulationRequest.DefaultSeed;
+                case JsonValueKind.True:
+                    return true;
+                case JsonValueKind.False:
+                case JsonValueKind.Null:
+                    return false;
+                default:
+                    problems.AddInvalid(Error(pointer, ProblemCodes.WrongType, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeABoolean));
+                    return false;
             }
-
-            if (value.ValueKind != JsonValueKind.String)
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.WrongType, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeAWholeNumberAsText));
-                return SimulationRequest.DefaultSeed;
-            }
-
-            if (!ulong.TryParse(value.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed))
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.InvalidFormat, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeASeed));
-                return SimulationRequest.DefaultSeed;
-            }
-
-            return seed;
-        }
-
-        // The shape value of the modified beta-PERT distribution: a number above 0.
-        private static double? ReadShape(
-            JsonElement value,
-            string pointer,
-            ProblemCollector problems)
-        {
-            if (value.ValueKind == JsonValueKind.Null)
-            {
-                return null;
-            }
-
-            if (value.ValueKind != JsonValueKind.Number
-                || !value.TryGetDouble(out double shape)
-                || double.IsInfinity(shape))
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.WrongType, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeANumber));
-                return null;
-            }
-
-            if (shape <= 0.0)
-            {
-                problems.AddInvalid(Error(pointer, ProblemCodes.OutOfRange, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeAboveZero));
-                return null;
-            }
-
-            return shape;
         }
 
         // An output that has no settings: an object, which is empty. Whether it is asked for.
@@ -882,20 +700,6 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The simulation zpp is asked for. What the options leave out is what zpp itself would use, and so the run on a server
-        // draws the same sample as a run here.
-        private static SimulationOptions ToSimulationOptions(Options options)
-        {
-            return new SimulationOptions
-            {
-                Iterations = options.SimulationIterations ?? SimulationRequest.DefaultIterations,
-                Seed = options.SimulationSeed ?? SimulationRequest.DefaultSeed,
-                Distribution = options.SimulationDistribution ?? DurationDistribution.BetaPert,
-                ModifiedBetaShape = options.SimulationShape,
-                TargetFinishDays = options.SimulationTarget,
-            };
-        }
-
         private static ChartOptions? ToChartOptions(
             string? directory,
             PlotExport format,
@@ -931,33 +735,6 @@ namespace Zametek.ProjectPlan.CommandLine
             return graph is null
                 ? null
                 : new GraphOutputRequest(Program.ToGraphExportFormat(graph.Format));
-        }
-
-        private static SimulationRequest? ToSimulationRequest(SimulationOptions? simulation)
-        {
-            return simulation is null
-                ? null
-                : new SimulationRequest
-                {
-                    Iterations = simulation.Iterations,
-                    Seed = simulation.Seed,
-                    Distribution = simulation.Distribution,
-                    ModifiedBetaShape = simulation.ModifiedBetaShape ?? SimulationRequest.DefaultModifiedBetaShape,
-                    TargetFinishTime = simulation.TargetFinishDays,
-                };
-        }
-
-        private static SimulationCsvFile ToSimulationCsvFiles(OutputsOptions outputs)
-        {
-            SimulationCsvFile files = SimulationCsvFile.None;
-
-            files |= outputs.SimulationStatistics is not null ? SimulationCsvFile.Statistics : SimulationCsvFile.None;
-            files |= outputs.SimulationHistogram is not null ? SimulationCsvFile.Histogram : SimulationCsvFile.None;
-            files |= outputs.SimulationPaths is not null ? SimulationCsvFile.Paths : SimulationCsvFile.None;
-            files |= outputs.SimulationActivities is not null ? SimulationCsvFile.Activities : SimulationCsvFile.None;
-            files |= outputs.SimulationIterations is not null ? SimulationCsvFile.Iterations : SimulationCsvFile.None;
-
-            return files;
         }
 
         // The name of a simulation's CSV file: the project's title, the CSV files' suffix and then the file's own.

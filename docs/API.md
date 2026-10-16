@@ -149,10 +149,10 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json`: how the [console](#console) shows the metrics. It has no other effect. |
 | `compileTimeout` | `--compile-timeout` | An ISO 8601 duration, from `PT0.001S` to the limit of the server (`maxCompileTimeout`). Without it, the value is `PT5S` as for `zpp`, or the limit if that is shorter. A request cannot disable the limit, but `zpp` can. |
 | `now` | `--now` | A time with its offset from UTC, for example `2026-10-03T09:00:00+01:00`. The job uses it in place of the clock for each item that it stamps with a time. |
-| `simulation` | `--simulate` | A simulation of the schedule, which the job runs after the project compiles (refer to [Simulation options](#simulation-options)). Without it, there is no simulation. |
+| `runSimulation` | `--run-simulation` | `true` runs the simulation of the schedule after the project compiles (refer to [The simulation](#the-simulation)). The default is `false`. |
 | `outputs` | | What the job produces (refer to the table that follows). |
 
-The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Seven outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The six outputs that start with `simulation` are the outputs of the simulation, and the request must have `simulation` to ask for them. Without it, each of them is a problem (`notAllowedWithoutSimulation`). `zpp` writes the five CSV files with one option, and a request can ask for the files that it wants.
+The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Two outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files, and the answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`).
 
 | Member | Option of zpp | Produces | Settings |
 | ------ | ------------- | -------- | -------- |
@@ -164,12 +164,7 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `resourceChart` | `--resource-*` | The resource chart (`<name>-resource.<format>`) | A chart |
 | `earnedValueChart` | `--ev-*` | The earned value chart (`<name>-ev.<format>`) | A chart |
 | `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`) | A chart |
-| `simulationChart` | `--simulation-chart-*` | The chart of the simulation (`<name>-simulation.<format>`) | A chart |
-| `simulationStatistics` | `--simulation-csv-directory` | The statistics of the finish, as CSV (`<name>-simulation-statistics.csv`) | `{}` |
-| `simulationHistogram` | `--simulation-csv-directory` | The histogram of the finish times, split by critical path (`<name>-simulation-histogram.csv`) | `{}` |
-| `simulationPaths` | `--simulation-csv-directory` | The critical paths (`<name>-simulation-paths.csv`) | `{}` |
-| `simulationActivities` | `--simulation-csv-directory` | How often each activity was critical (`<name>-simulation-activities.csv`) | `{}` |
-| `simulationIterations` | `--simulation-csv-directory` | Every iteration, with its finish time and its critical paths (`<name>-simulation-iterations.csv`) | `{}` |
+| `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
 
 `<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`.
 
@@ -177,17 +172,14 @@ A **chart** is `{ "format": "png", "width": 1600, "height": 900 }`. The `format`
 
 A **graph** is `{ "format": "svg" }`. The `format` is `jpeg` (the default), `png`, `pdf`, `svg`, `graphml` or `dot`. Each option, and each setting of an output, can be `null`. This is the same as if the request does not give it.
 
-#### Simulation options
+#### The simulation
 
-`simulation` is an object, and each of its members is optional. The simulation draws the duration of each activity from its three-point estimate, in each iteration. An activity that has no estimate keeps its duration. The simulation schedules the resources again in each iteration, and it finds the finish and the critical path. The same options on the same project give the same result, whatever the number of threads. The result can differ in the last digit between two kinds of computer, because the functions `Log` and `Pow` do not give the same last bit everywhere.
+The simulation draws the duration of each activity from its three-point estimate, in each iteration. An activity that has no estimate keeps its duration. The simulation schedules the resources again in each iteration, and it finds the finish and the critical path. A request does not give the settings of the simulation. They are the settings that the project holds, which a person sets in the dock "Simulation" of the application, and which `zpp -o` saves: the iterations, the distribution, the shape value of the modified beta-PERT distribution, the seed, whether to draw a new seed each time, and the target finish.
 
-| Member | Option of zpp | Description |
-| ------ | ------------- | ----------- |
-| `iterations` | `--simulation-iterations` | The number of iterations, from 1 to the limit of the server (`maxSimulationIterations`, which is not more than 1000000). Without it, the value is 5000, or the limit if that is lower. |
-| `seed` | `--simulation-seed` | The seed of the random numbers, a whole number from 0 to 18446744073709551615. It is text, for example `"2026"`, because a number that large is not one that every program reads without loss ([REP-7](RESTFUL-API-GUIDE.md#3-representations)). Without it, the value is `"1"`, and thus the same project gives the same result each time. Give another seed to draw another sample. |
-| `distribution` | `--simulation-distribution` | The distribution of the durations: `betaPert` (the default), `modifiedBetaPert`, `triangular`, `normal` or `uniform`. |
-| `modifiedBetaShape` | `--simulation-shape` | A number above 0: the shape value of the modified beta-PERT distribution. Only with the distribution `modifiedBetaPert`. Without it, the value is 4. |
-| `targetFinishDays` | `--simulation-target` | A finish in days from the start of the project, from 0 to 100000. The answer has the share of the iterations that finish by it. |
+- `runSimulation` runs the simulation with those settings. It uses the seed that the project saved, also when the project draws a new seed each time, and thus the same project gives the same result each time. A project that was saved before the simulation has the settings of a new scenario (5000 iterations, the distribution `betaPert`, and the seed 1).
+- The server runs at most `maxSimulationIterations` iterations. A project with more than that, and a request with `runSimulation`, is a problem with the type `validation-failed`, at `#/options/runSimulation`. The settings that a run cannot use (no iterations, or a shape value that is not above 0) are the problem `simulation-not-possible`.
+- A project can hold the result of the last run. Without `runSimulation`, the answer has the [statistics](#simulation) of that result, and `outputs.simulation` makes its chart and its CSV files from it. The iterations of a run are not in the project, and thus there is no file `simulationIterations` for a result that the project held. A request for `outputs.simulation` that has no `runSimulation`, for a project with no result, is the problem `simulation-not-possible`, at `#/options/outputs/simulation`.
+- The limit `maxSimulationIterations` is on what a run costs. A result that the project already holds is given back without it.
 
 ### Answer
 
@@ -205,7 +197,7 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 
 - `metrics` has the [metrics](#metrics) of the project.
 - `outputs` lists each output, in the order in which the job produced them. This is the order of the table above. The list is `[]` when the request asked for no output. `kind` shows which output it is. `fileName` is the name that `zpp` gives to its file. `contentType` is its media type. `content` is the file, in base64.
-- `simulation` has the [statistics](#simulation) of the simulation. It is in the answer only when the request asked for a simulation.
+- `simulation` has the [statistics](#simulation) of the simulation. It is in the answer when the request ran the simulation, or the project holds a result.
 - With `?include=console`, the answer also has `console` (refer to [console](#console)).
 
 With `Accept: application/zip`, the answer is a zip. `Content-Disposition` names it `<name>.zip`. The zip contains each output as a file, with the name that `zpp` gives it. It also contains `result.json`, which is the answer above without the contents of the files. The time of each entry is the time at which the job ran, or the time that `now` gave.
@@ -233,7 +225,7 @@ The answer has each metric of the project, as a number or `null`. The names are 
 
 #### Simulation
 
-The answer has `simulation` when the request asked for a simulation. Like the metrics, it has values and not the text that `zpp` prints, and it does not depend on the culture of the server. Every time is a number of days from the start of the project, with the date on which it falls in the working calendar of the project:
+The answer has `simulation` when the request ran the simulation, or the project holds a result. Like the metrics, it has values and not the text that `zpp` prints, and it does not depend on the culture of the server. Every time is a number of days from the start of the project, with the date on which it falls in the working calendar of the project:
 
 ```json
 "simulation": {
@@ -336,7 +328,7 @@ The problems are the problems of a compile, where they apply.
 - `culture` is the culture in which the server writes numbers and dates. It is an empty string for the invariant culture, which a server on Linux has when nobody sets a culture. `timeZone` is the time zone in which the server writes times. It gives the IANA name, for example `Europe/London`, and not the name that the system uses.
 - `maxJobs` jobs can run at one time, and `maxQueue` more jobs can wait for a free place. The server turns away more requests (`503 busy`).
 - A request with its files has a maximum of `maxUploadMegabytes` megabytes. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
-- A simulation has a maximum of `maxSimulationIterations` iterations. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
+- A project can have a maximum of `maxSimulationIterations` iterations for the server to run its simulation. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
 - The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
@@ -411,7 +403,7 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `invalidFormat` | A value that is not in the format of the member, or JSON that is not valid JSON. |
 | `outOfRange` | A number or a duration outside the limits. |
 | `notAllowedWithImport` | `scenario` with a workbook to import. Only a project has scenarios. |
-| `notAllowedWithoutSimulation` | An output of the simulation, asked for in a request that has no `simulation`. |
+| `noResult` | The outputs of the simulation, asked for from a project that holds no result, in a request that does not run the simulation. |
 | `tooLarge` | A part larger than the limit. |
 | `unsupportedFormat` | A file in a format that the server does not read. |
 | `unreadable` | A file that the server cannot read. |
@@ -535,6 +527,23 @@ A client cannot correct this by a change to what it says. It must correct how it
 }
 ```
 
+#### simulation-not-possible
+
+`422`. The simulation that the request asks for cannot be done with the project. `errors` has `noResult` at `#/options/outputs/simulation` when the request asks for the outputs of the simulation, the project holds no result, and the request does not run the simulation. It has `outOfRange` at `#/options/runSimulation` when the request runs the simulation, and the settings that the project holds are not ones that a run can use. The exit code is 1.
+
+```json
+{
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#simulation-not-possible",
+  "title": "The simulation cannot be done",
+  "status": 422,
+  "detail": "The plan has no simulation result to make the outputs from, and the simulation was not asked to run.",
+  "traceId": "7d31c8a4f2e94b0c9a65d2e17b8f40c3",
+  "errors": [
+    { "pointer": "#/options/outputs/simulation", "code": "noResult", "detail": "The plan has no simulation result to make the outputs from, and the simulation was not asked to run." }
+  ]
+}
+```
+
 #### output-failed
 
 `500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
@@ -620,7 +629,7 @@ The web server itself refuses a request that it cannot read at all. Examples: a 
 | Answer | What zpp does | Exit code |
 | ------ | ------------- | --------- |
 | `200` | Plays back the transcript of the console, and writes each output where its options say. | 0 |
-| `422` `project-not-readable` or `scenario-not-selectable`, and `500` `unexpected-error` | Plays back the console, which has the message on the standard error stream. | 1 |
+| `422` `project-not-readable`, `scenario-not-selectable` or `simulation-not-possible`, and `500` `unexpected-error` | Plays back the console, which has the message on the standard error stream. | 1 |
 | `422` `compilation-failed` | Plays back the console: the report of the compiler. | 3 |
 | `422` `compilation-timed-out` | Plays back the console. | 4 |
 | `500` `output-failed` | Writes the outputs that came, and plays back the console. | 1 |
@@ -714,4 +723,4 @@ This is the first version of the API.
 - The status shows the result. `200` is for a project that compiled and where the job produced each output. `422` is for a project that the server cannot process. `500` is for a server that failed. `503` is for a server that is busy or ran out of time. Each problem is `application/problem+json`, with the id of its request and a list of each error.
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
-- The simulation of the schedule. The option `simulation` of a request, the member `simulation` of an answer, six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`), the code `notAllowedWithoutSimulation`, and the limit `maxSimulationIterations`.
+- The simulation of the schedule. Its settings are the project's. The option `runSimulation` of a request, the member `simulation` of an answer, the output `simulation` of a request, which the answer lists as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`), the problem `simulation-not-possible` and its code `noResult`, and the limit `maxSimulationIterations`.

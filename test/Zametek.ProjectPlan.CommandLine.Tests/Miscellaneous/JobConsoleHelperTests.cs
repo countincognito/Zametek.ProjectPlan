@@ -146,7 +146,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // A row that says what the rest are, and then each statistic as the panel shows it.
             with.Length.ShouldBe(without.Length + 4);
-            with[^4].ShouldContain(Resource.ProjectPlan.Titles.Title_ScheduleSimulation);
+            with[^4].ShouldContain(Resource.ProjectPlan.Titles.Title_SimulationMetrics);
             with[^3].ShouldContain(@"Seed");
             with[^3].ShouldContain(@"18446744073709551615");
             with[^2].ShouldContain(@"Mean");

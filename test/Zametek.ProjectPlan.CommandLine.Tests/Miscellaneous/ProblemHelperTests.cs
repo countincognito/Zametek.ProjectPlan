@@ -30,6 +30,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             { ProblemKind.CompilationFailed, 422 },
             { ProblemKind.CompilationTimedOut, 422 },
             { ProblemKind.ScenarioNotSelectable, 422 },
+            { ProblemKind.SimulationNotPossible, 422 },
             { ProblemKind.OutputFailed, 500 },
             { ProblemKind.UnexpectedError, 500 },
             { ProblemKind.Busy, 503 },

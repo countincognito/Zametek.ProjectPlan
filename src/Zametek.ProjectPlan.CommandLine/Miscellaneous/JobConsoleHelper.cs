@@ -161,7 +161,7 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 // A row of its own says what the rows after it are. A cell of more than about 40 characters wraps in the table,
                 // which a name with a prefix on each row would make of the longest.
-                table.AddRow(Resource.ProjectPlan.Titles.Title_ScheduleSimulation, string.Empty);
+                table.AddRow(Resource.ProjectPlan.Titles.Title_SimulationMetrics, string.Empty);
 
                 foreach (SimulationStatisticModel statistic in simulation.Statistics)
                 {

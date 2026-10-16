@@ -4,9 +4,9 @@ info:
   summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
   description: |
     The HTTP API of `zpp serve`, which starts `zpp` as a web server. Each request carries its project, because the server keeps
-    nothing between requests. The server answers with the metrics of the project, the statistics of a simulation of its schedule if
-    the request asks for one, and the outputs that the request asks for. These outputs are the project file, charts and graphs, an
-    Excel export, and the chart and the CSV files of the simulation.
+    nothing between requests. The server answers with the metrics of the project, the statistics of the simulation of its schedule
+    if the request runs one or the project holds a result, and the outputs that the request asks for. These outputs are the project
+    file, charts and graphs, an Excel export, and the chart and the CSV files of the simulation.
 
     This description is the source of truth for programs. [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
     is the written reference. It has the changelog, the security review and the deviations from the
@@ -66,7 +66,9 @@ paths:
       description: |
         This operation compiles the project in the request. The request can have an Excel workbook instead, which the server imports
         into a new project. The server answers with the metrics of the project and the outputs that the options ask for. If the options
-        ask for a simulation, the server runs it after the project compiles, and the answer has its statistics. The status is `200`
+        run the simulation, the server runs it after the project compiles, with the settings that the project holds, and the answer has
+        its statistics. If they do not, and the project holds the result of an earlier run, the answer has the statistics of that
+        result. The status is `200`
         only when the project compiled and the job produced each output. Each other result is a problem, and its status shows the
         reason.
 
@@ -527,6 +529,7 @@ components:
               - $ref: '#/components/schemas/CompilationFailedProblem'
               - $ref: '#/components/schemas/CompilationTimedOutProblem'
               - $ref: '#/components/schemas/ScenarioNotSelectableProblem'
+              - $ref: '#/components/schemas/SimulationNotPossibleProblem'
           examples:
             validationFailed:
               $ref: '#/components/examples/ValidationFailed'
@@ -538,6 +541,8 @@ components:
               $ref: '#/components/examples/CompilationTimedOut'
             scenarioNotSelectable:
               $ref: '#/components/examples/ScenarioNotSelectable'
+            simulationNotPossible:
+              $ref: '#/components/examples/SimulationNotPossible'
     ServerFailed:
       description: The server failed. `type` shows if the job did not produce an output, or if something happened that nobody expected.
       headers:
@@ -886,6 +891,18 @@ components:
           - pointer: '#/options/scenario'
             code: notFound
             detail: No scenario matches 'Gamma'
+    SimulationNotPossible:
+      summary: The outputs of a simulation, for a project that holds no result, with no run
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#simulation-not-possible
+        title: The simulation cannot be done
+        status: 422
+        detail: The plan has no simulation result to make the outputs from, and the simulation was not asked to run.
+        traceId: 7d31c8a4f2e94b0c9a65d2e17b8f40c3
+        errors:
+          - pointer: '#/options/outputs/simulation'
+            code: noResult
+            detail: The plan has no simulation result to make the outputs from, and the simulation was not asked to run.
     OutputFailed:
       summary: A project that compiled, where the job did not produce the Gantt chart but produced the project file
       value:
@@ -1065,58 +1082,29 @@ components:
           type: [string, 'null']
           format: date-time
           description: A time with its offset from UTC. The job uses it in place of the clock.
-        simulation:
-          oneOf:
-            - $ref: '#/components/schemas/SimulationOptions'
-            - type: 'null'
-          description: A simulation of the schedule, which the job runs after the project compiles. Without it, there is no simulation, and the outputs of a simulation are not allowed.
+        runSimulation:
+          type: [boolean, 'null']
+          default: false
+          description: |
+            Run the simulation of the schedule after the project compiles, as `zpp --run-simulation` does. The run uses the settings that
+            the project holds (the iterations, the distribution, its shape value and the target) and the seed that it has saved, also
+            when it is set to draw a new seed each time, and thus the same project gives the same result each time. A project with more
+            iterations than the `maxSimulationIterations` of the server is a problem with the type `validation-failed`, at this member.
+            Without this member, the server does not run the simulation, and the answer has the statistics of the result that the
+            project holds, if it holds one.
         outputs:
           oneOf:
             - $ref: '#/components/schemas/OutputsOptions'
             - type: 'null'
-    SimulationOptions:
-      description: |
-        A Monte Carlo simulation of the schedule: the options `--simulate` and `--simulation-*` of `zpp`. Each iteration draws a duration
-        for each activity from its three-point estimate, schedules the resources again, and finds the finish and its critical path.
-        The same options on the same project give the same result, whatever the number of threads. Each member can be `null`, which is
-        the same as if the request does not give it.
-      type: object
-      additionalProperties: false
-      properties:
-        iterations:
-          type: [integer, 'null']
-          minimum: 1
-          maximum: 1000000
-          default: 5000
-          description: The number of iterations, from 1 to the `maxSimulationIterations` of the server. Without it, the value is 5000, or the limit if that is lower.
-        seed:
-          type: [string, 'null']
-          pattern: '^[0-9]{1,20}$'
-          default: '1'
-          description: |
-            The seed of the random numbers, a whole number from 0 to 18446744073709551615. It is text, because a number that large is
-            not one that every program reads without loss. Without it, the value is `1`, and the same project gives the same result
-            each time.
-        distribution:
-          type: [string, 'null']
-          enum: [betaPert, modifiedBetaPert, triangular, normal, uniform, null]
-          default: betaPert
-          description: The distribution that the durations are drawn from.
-        modifiedBetaShape:
-          type: [number, 'null']
-          exclusiveMinimum: 0
-          description: The shape value of the modified beta-PERT distribution. Only with the distribution `modifiedBetaPert`. Without it, the value is 4.
-        targetFinishDays:
-          type: [integer, 'null']
-          minimum: 0
-          maximum: 100000
-          description: A finish, in days from the start of the project. The answer has the share of the iterations that finish by it.
     OutputsOptions:
       description: |
         The outputs to produce, in the order in which the job produces them. The job produces an output that the request gives. The
-        outputs that start with `simulation` are those of the simulation, and the request must have `simulation` to ask for them. The
-        CSV files are the statistics of the finish, its histogram split by critical path, the critical paths, how often each activity was
-        critical, and every iteration.
+        output `simulation` is one request for the chart of the simulation and its CSV files, which are the statistics of the finish, its
+        histogram split by critical path, the critical paths, and how often each activity was critical, and, for a run, every
+        iteration. The answer lists each file as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`,
+        `simulationPaths`, `simulationActivities` and `simulationIterations`). They are made from the result of the run of the request
+        (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
+        project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
       type: object
       additionalProperties: false
       properties:
@@ -1136,18 +1124,8 @@ components:
           $ref: '#/components/schemas/ChartOptions'
         scenarioChart:
           $ref: '#/components/schemas/ChartOptions'
-        simulationChart:
+        simulation:
           $ref: '#/components/schemas/ChartOptions'
-        simulationStatistics:
-          $ref: '#/components/schemas/OutputWithoutSettings'
-        simulationHistogram:
-          $ref: '#/components/schemas/OutputWithoutSettings'
-        simulationPaths:
-          $ref: '#/components/schemas/OutputWithoutSettings'
-        simulationActivities:
-          $ref: '#/components/schemas/OutputWithoutSettings'
-        simulationIterations:
-          $ref: '#/components/schemas/OutputWithoutSettings'
     OutputWithoutSettings:
       description: An output with no settings at this time. The request gives it as an empty object, which can carry settings later.
       type: [object, 'null']
@@ -1276,7 +1254,8 @@ components:
         totalMarginAbsolute: { type: [number, 'null'] }
     Simulation:
       description: |
-        What the simulation found. It is in the answer when the request asks for a simulation. Like the metrics, the names are words in
+        What the simulation found. It is in the answer when the request runs the simulation, or the project holds a result. Like the
+        metrics, the names are words in
         `lowerCamelCase`, and the values are numbers and not the text that `zpp` prints. Every time is in days from the start of the
         project, with the date on which it falls in the working calendar of the project. An iteration that the scheduler cannot
         place every activity in is a failed iteration, and it is in none of the statistics. A simulation in which every iteration
@@ -1509,7 +1488,7 @@ components:
           type: integer
           minimum: 1
           maximum: 1000000
-          description: The most iterations that a simulation can run. The `jobTimeout` also stops a simulation that is too slow.
+          description: The most iterations that a simulation of a project can have for the server to run it. The `jobTimeout` also stops a simulation that is too slow.
         jobTimeout:
           $ref: '#/components/schemas/Duration'
           description: The time that a job can use before the server stops it.
@@ -1540,7 +1519,7 @@ components:
                 - invalidFormat
                 - outOfRange
                 - notAllowedWithImport
-                - notAllowedWithoutSimulation
+                - noResult
                 - tooLarge
                 - unsupportedFormat
                 - unreadable
@@ -1644,6 +1623,17 @@ components:
           properties:
             type:
               const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#scenario-not-selectable
+            status:
+              const: 422
+    SimulationNotPossibleProblem:
+      description: The simulation that the request asks for cannot be done with the project. Its settings are not ones that a run can use, or the request asks for the outputs of a simulation, and the project holds no result and the request does not run the simulation.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#simulation-not-possible
             status:
               const: 422
     OutputFailedProblem:

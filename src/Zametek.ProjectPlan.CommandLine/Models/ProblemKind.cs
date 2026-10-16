@@ -23,6 +23,11 @@ namespace Zametek.ProjectPlan.CommandLine
         // The scenario the request named cannot be selected: it is not there, it names several, or it holds no data.
         ScenarioNotSelectable,
 
+        // The simulation that the request asks for cannot be done with the project: the settings that it holds are not ones that a run
+        // can use, or the request asks for the outputs of a simulation, and the project holds no result and the request does not
+        // run the simulation. A project with more iterations than the server runs is not this kind: it is ValidationFailed.
+        SimulationNotPossible,
+
         // The project compiled, and an output it was asked for could not be produced. The outputs that were come with it.
         OutputFailed,
 

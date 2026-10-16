@@ -795,7 +795,19 @@ namespace Zametek.ViewModel.ProjectPlan
             return RunSimulationAsync(CancellationToken.None);
         }
 
-        public async Task RunSimulationAsync(CancellationToken cancellationToken)
+        public Task RunSimulationAsync(CancellationToken cancellationToken)
+        {
+            return RunAsync(cancellationToken, useSavedSeed: false);
+        }
+
+        public Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken)
+        {
+            return RunAsync(cancellationToken, useSavedSeed: true);
+        }
+
+        private async Task RunAsync(
+            CancellationToken cancellationToken,
+            bool useSavedSeed)
         {
             // One run at a time. A second request while a run is in progress does nothing.
             if (Interlocked.CompareExchange(ref m_RunGate, 1, 0) != 0)
@@ -828,7 +840,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 // The seed that the run uses is shown, so that a result the user likes can be made again.
-                ulong seed = UseRandomSeed ? NewSeed() : Seed;
+                // A run that is told to use the saved seed leaves the settings as the scenario has them, "New seed each run" with
+                // them, and so a run of a saved scenario repeats.
+                ulong seed = UseRandomSeed && !useSavedSeed ? NewSeed() : Seed;
                 Seed = seed;
 
                 // The run belongs to the scenario that is open now. If a scenario loads or resets while it goes on, it stops,
@@ -983,7 +997,7 @@ namespace Zametek.ViewModel.ProjectPlan
         // Presents the summary that the view model holds: the statistics as text, the tables and the chart. This
         // runs when a run finishes, and again when the display settings change what the numbers look like. It can
         // run on any thread, and what it makes is handed to the UI thread.
-        private void BuildPresentation()
+        public void BuildPresentation()
         {
             SimulationSummaryModel? summary = Summary;
             m_PresentedSummary = summary;

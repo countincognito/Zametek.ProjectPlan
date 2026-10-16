@@ -69,8 +69,9 @@ namespace Zametek.Engine.ProjectPlan
         /// next step it would take, with an <see cref="OperationCanceledException"/>: a step already under way - reading
         /// the plan, compiling it, producing an output - runs to its end first, and a job that has produced its last
         /// output completes. A simulation is the exception: it stops between two chunks of its iterations, and the job stops
-        /// with it. A request for the outputs of a simulation without the simulation, or for a simulation that cannot run
-        /// with its settings, is an <see cref="ArgumentException"/>.
+        /// with it. The settings of a simulation are the scenario's, and so a request that asks of it what the scenario
+        /// cannot give (its outputs without a result, or a run with more iterations than it may have) is found out only
+        /// after the plan is in, and it is a <see cref="SimulationException"/>.
         /// </summary>
         public async Task<JobResult> RunAsync(
             JobRequest request,
@@ -79,7 +80,6 @@ namespace Zametek.Engine.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(request);
             ArgumentNullException.ThrowIfNull(sink);
-            ValidateSimulation(request);
             cancellationToken.ThrowIfCancellationRequested();
 
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
@@ -198,6 +198,18 @@ namespace Zametek.Engine.ProjectPlan
                 core.BaseTheme = request.BaseTheme;
             }
 
+            // Simulation settings. They are the scenario's, and the request can give others in their place. What the request
+            // asks of the simulation is checked now, before the plan compiles, so that a request that cannot be done fails
+            // at once.
+            {
+                if (request.SimulationSettings is SimulationSettingsModel simulationSettings)
+                {
+                    core.SimulationSettings = simulationSettings;
+                }
+
+                ValidateSimulation(request, core);
+            }
+
             // Compile.
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -227,6 +239,37 @@ namespace Zametek.Engine.ProjectPlan
                 core.BuildNetworkMetrics();
                 core.BuildRiskMetrics();
                 core.BuildFinancialMetrics();
+            }
+
+            // Simulation. A run goes before the project and the scenario are written, so that they hold its result, and before
+            // the other outputs. The outputs of the simulation come last, and the statistics of a result that the scenario
+            // held are there without a run.
+            IScheduleSimulationManagerViewModel? simulation = null;
+            bool simulationRan = false;
+            bool hasSimulationResult = false;
+
+            if (request.RunSimulation)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                simulation = services.GetRequiredService<IScheduleSimulationManagerViewModel>();
+                SimulationSummaryModel? earlier = core.SimulationSummary;
+
+                await simulation.RunSimulationWithSavedSeedAsync(cancellationToken);
+
+                // A run that was cancelled has no result, and the job stops with it. A run that failed has told the dialog
+                // service why, and the result that the scenario had before it is not the result of this job.
+                cancellationToken.ThrowIfCancellationRequested();
+
+                simulationRan = true;
+                hasSimulationResult = core.SimulationSummary is not null
+                    && !ReferenceEquals(core.SimulationSummary, earlier);
+            }
+            else if (core.SimulationSummary is not null)
+            {
+                simulation = services.GetRequiredService<IScheduleSimulationManagerViewModel>();
+                simulation.BuildPresentation();
+                hasSimulationResult = true;
             }
 
             // Project and scenario out. Either one failing stops the job.
@@ -370,50 +413,43 @@ namespace Zametek.Engine.ProjectPlan
                     cancellationToken);
             }
 
-            // Simulation, and its chart and CSV files. It runs last, because it is the slowest step by far.
+            // The chart and the CSV files of the simulation, and its statistics. A result that a run of the job made is the one they
+            // come from, or else the one that the scenario held. A project file does not hold the iterations of a run, and so a
+            // job that did not run the simulation has no file of them.
             JobSimulationMetrics? simulationMetrics = null;
 
-            if (request.Simulation is SimulationRequest simulationRequest)
+            if (simulation is not null
+                && hasSimulationResult)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                simulationMetrics = JobSimulationMetrics.From(simulation, core.SimulationSettings);
 
-                IScheduleSimulationManagerViewModel simulation = services.GetRequiredService<IScheduleSimulationManagerViewModel>();
-
-                await RunSimulationAsync(simulation, simulationRequest, cancellationToken);
-
-                // A run that was cancelled has no result, and the job stops with it. A run that failed has told the
-                // dialog service why, and its outputs are not produced: there is nothing to write them from.
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (simulation.Summary is not null)
+                if (request.SimulationChart is ChartOutputRequest simulationChart)
                 {
-                    simulationMetrics = JobSimulationMetrics.From(simulation, simulationRequest);
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    if (request.SimulationChart is ChartOutputRequest simulationChart)
+                    await WriteChartAsync(
+                        dialogService,
+                        sink,
+                        JobOutput.SimulationChart,
+                        simulationChart,
+                        simulation.BuildSimulationChartPlotModel,
+                        simulation.WriteSimulationChartImageAsync,
+                        cancellationToken);
+                }
+
+                foreach ((SimulationCsvFile file, JobOutput output) in s_SimulationCsvOutputs)
+                {
+                    if (request.SimulationCsvFiles.HasFlag(file)
+                        && (simulationRan || file != SimulationCsvFile.Iterations))
                     {
-                        await WriteChartAsync(
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        await WriteReportedOutputAsync(
                             dialogService,
                             sink,
-                            JobOutput.SimulationChart,
-                            simulationChart,
-                            simulation.BuildSimulationChartPlotModel,
-                            simulation.WriteSimulationChartImageAsync,
+                            output,
+                            stream => simulation.WriteSimulationCsvAsync(stream, file),
                             cancellationToken);
-                    }
-
-                    foreach ((SimulationCsvFile file, JobOutput output) in s_SimulationCsvOutputs)
-                    {
-                        if (request.SimulationCsvFiles.HasFlag(file))
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-
-                            await WriteReportedOutputAsync(
-                                dialogService,
-                                sink,
-                                output,
-                                stream => simulation.WriteSimulationCsvAsync(stream, file),
-                                cancellationToken);
-                        }
                     }
                 }
             }
@@ -429,50 +465,46 @@ namespace Zametek.Engine.ProjectPlan
             };
         }
 
-        // The simulation as the panel runs it, on the settings of the request. The job's token cancels it between two
-        // chunks of its iterations, also when the token is cancelled before the run has begun.
-        private static async Task RunSimulationAsync(
-            IScheduleSimulationManagerViewModel simulation,
-            SimulationRequest request,
-            CancellationToken cancellationToken)
+        // What the request asks of the simulation, checked against the scenario that the job has loaded. A run needs settings that
+        // a run can use, and no more iterations than the request allows. The outputs of a simulation need a result: the run of
+        // the job, or one that the scenario holds.
+        private static void ValidateSimulation(
+            JobRequest request,
+            ICoreViewModel core)
         {
-            simulation.Iterations = request.Iterations;
-            simulation.UseRandomSeed = false;
-            simulation.Seed = request.Seed;
-            simulation.Distribution = request.Distribution;
-            simulation.ModifiedBetaShape = request.ModifiedBetaShape;
-            simulation.TargetFinishTime = request.TargetFinishTime;
-
-            await simulation.RunSimulationAsync(cancellationToken);
-        }
-
-        // The outputs of a simulation need the simulation, and its settings must be ones that it can run with. The callers
-        // check what a user gives them, and so a request that fails here is an error in the caller.
-        private static void ValidateSimulation(JobRequest request)
-        {
-            if (request.Simulation is not SimulationRequest simulation)
+            if (request.RunSimulation)
             {
-                if (request.SimulationChart is not null
-                    || request.SimulationCsvFiles != SimulationCsvFile.None)
+                SimulationSettingsModel settings = core.SimulationSettings;
+
+                if (settings.Iterations < 1
+                    || settings.Iterations > GraphLimits.MaximumSimulationIterations)
                 {
-                    throw new ArgumentException(Resource.ProjectPlan.Messages.Message_SimulationOutputNeedsSimulation, nameof(request));
+                    throw new SimulationException(
+                        string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationIterationsOutOfRange, GraphLimits.MaximumSimulationIterations),
+                        SimulationFailure.InvalidSettings);
+                }
+
+                if (settings.Distribution == DurationDistribution.ModifiedBetaPert
+                    && (double.IsNaN(settings.ModifiedBetaShape) || double.IsInfinity(settings.ModifiedBetaShape) || settings.ModifiedBetaShape <= 0.0))
+                {
+                    throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationShapeOutOfRange, SimulationFailure.InvalidSettings);
+                }
+
+                if (request.MaximumSimulationIterations is int maximum
+                    && settings.Iterations > maximum)
+                {
+                    throw new SimulationException(
+                        string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationIterationsAboveLimit, settings.Iterations, maximum),
+                        SimulationFailure.IterationsAboveLimit);
                 }
 
                 return;
             }
 
-            if (simulation.Iterations < 1
-                || simulation.Iterations > GraphLimits.MaximumSimulationIterations)
+            if ((request.SimulationChart is not null || request.SimulationCsvFiles != SimulationCsvFile.None)
+                && core.SimulationSummary is null)
             {
-                throw new ArgumentException(
-                    string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationIterationsOutOfRange, GraphLimits.MaximumSimulationIterations),
-                    nameof(request));
-            }
-
-            if (simulation.Distribution == DurationDistribution.ModifiedBetaPert
-                && (double.IsNaN(simulation.ModifiedBetaShape) || double.IsInfinity(simulation.ModifiedBetaShape) || simulation.ModifiedBetaShape <= 0.0))
-            {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_SimulationShapeOutOfRange, nameof(request));
+                throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationOutputsNeedAResult, SimulationFailure.NoResult);
             }
         }
 

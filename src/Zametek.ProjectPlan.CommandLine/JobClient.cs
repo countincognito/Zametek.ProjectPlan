@@ -399,15 +399,15 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The exit code zpp ends a run with when the server says the job failed in this way, or null if the kind is not one
         // of a job that ran: a project that does not compile ends as it does here, a compilation out of time too, and a file
-        // or a scenario that cannot be read or selected, an output that cannot be produced, or something unexpected, is a
-        // failure.
+        // or a scenario that cannot be read or selected, a simulation that cannot be done, an output that cannot be produced, or
+        // something unexpected, is a failure.
         private static ExitCode? GetExitCode(ProblemKind kind)
         {
             return kind switch
             {
                 ProblemKind.CompilationFailed => ExitCode.CompilationErrors,
                 ProblemKind.CompilationTimedOut => ExitCode.CompilationTimeout,
-                ProblemKind.ProjectNotReadable or ProblemKind.ScenarioNotSelectable or ProblemKind.OutputFailed or ProblemKind.UnexpectedError => ExitCode.Failure,
+                ProblemKind.ProjectNotReadable or ProblemKind.ScenarioNotSelectable or ProblemKind.SimulationNotPossible or ProblemKind.OutputFailed or ProblemKind.UnexpectedError => ExitCode.Failure,
                 _ => null,
             };
         }

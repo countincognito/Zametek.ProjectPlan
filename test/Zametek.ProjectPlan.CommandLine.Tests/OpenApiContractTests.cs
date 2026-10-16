@@ -172,7 +172,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             const string outputs = @"{""outputs"":{""project"":{},""ganttChart"":{""format"":""png"",""width"":300,""height"":200},""arrowGraph"":{""format"":""svg""}}}";
 
             // Every option, with a value of the kind that it takes - a compile timeout with a fraction of a second - and every output.
-            const string everything = @"{""scenario"":""alpha"",""baseTheme"":""dark"",""metricsFormat"":""json"",""compileTimeout"":""PT1.5S"",""now"":""2026-10-03T09:00:00+01:00"",""simulation"":{""iterations"":200,""seed"":""12345678901234567890"",""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":6.5,""targetFinishDays"":10},""outputs"":{""project"":{},""scenarioExport"":{},""ganttChart"":{""format"":""webp"",""width"":300,""height"":200},""arrowGraph"":{""format"":""graphml""},""vertexGraph"":{""format"":""dot""},""resourceChart"":{""format"":""bmp"",""width"":300,""height"":200},""earnedValueChart"":{""format"":""svg"",""width"":300,""height"":200},""scenarioChart"":{""format"":""jpeg"",""width"":300,""height"":200},""simulationChart"":{""format"":""png"",""width"":300,""height"":200},""simulationStatistics"":{},""simulationHistogram"":{},""simulationPaths"":{},""simulationActivities"":{},""simulationIterations"":{}}}";
+            const string everything = @"{""scenario"":""alpha"",""baseTheme"":""dark"",""metricsFormat"":""json"",""compileTimeout"":""PT1.5S"",""now"":""2026-10-03T09:00:00+01:00"",""runSimulation"":true,""outputs"":{""project"":{},""scenarioExport"":{},""ganttChart"":{""format"":""webp"",""width"":300,""height"":200},""arrowGraph"":{""format"":""graphml""},""vertexGraph"":{""format"":""dot""},""resourceChart"":{""format"":""bmp"",""width"":300,""height"":200},""earnedValueChart"":{""format"":""svg"",""width"":300,""height"":200},""scenarioChart"":{""format"":""jpeg"",""width"":300,""height"":200},""simulation"":{""format"":""png"",""width"":300,""height"":200}}}";
 
             await observations.SendAsync(@"compile", client, Post(@"/v1/projects/compile", Plan()), HttpStatusCode.OK);
             await observations.SendAsync(@"compile, with every option", client, Post(@"/v1/projects/compile", Plan(options: AsTheDescriptionHasIt(everything))), HttpStatusCode.OK);
@@ -195,6 +195,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"compile, a file that is not a project", client, Post(@"/v1/projects/compile", Plan(plan: Encoding.UTF8.GetBytes(@"not a project"))), HttpStatusCode.UnprocessableEntity);
             await observations.SendAsync(@"compile, a project that does not compile", client, Post(@"/v1/projects/compile?include=console", Plan(@"broken-dependency.zpp")), HttpStatusCode.UnprocessableEntity);
             await observations.SendAsync(@"compile, a scenario that is not there", client, Post(@"/v1/projects/compile", Plan(options: @"{""scenario"":""Gamma""}")), HttpStatusCode.UnprocessableEntity);
+            await observations.SendAsync(@"compile, the outputs of a simulation and no result", client, Post(@"/v1/projects/compile", Plan(options: @"{""outputs"":{""simulation"":{""width"":300,""height"":200}}}")), HttpStatusCode.UnprocessableEntity);
             await observations.SendAsync(@"compile, options that are too large", client, Post(@"/v1/projects/compile", Plan(options: $@"{{""scenario"":""{new string('a', CompileOptionsHelper.MaxOptionsBytes)}""}}")), HttpStatusCode.RequestEntityTooLarge);
 
             await observations.SendAsync(@"scenarios", client, Post(@"/v1/projects/scenarios", Plan()), HttpStatusCode.OK);
@@ -559,7 +560,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(1),
                 Now = @"2026-10-03T09:00:00+01:00",
-                Simulation = new SimulationOptions(),
+                RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -570,12 +571,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     ResourceChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
-                    SimulationChart = new ChartOptions { Width = 1, Height = 1 },
-                    SimulationStatistics = new CsvOptions(),
-                    SimulationHistogram = new CsvOptions(),
-                    SimulationPaths = new CsvOptions(),
-                    SimulationActivities = new CsvOptions(),
-                    SimulationIterations = new CsvOptions(),
+                    Simulation = new ChartOptions { Width = 1, Height = 1 },
                 },
             };
 
@@ -583,20 +579,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"OutputsOptions")).ShouldBe(Names(options.Outputs!, read), ignoreOrder: true);
             Names(Schema(@"ChartOptions")).ShouldBe(Names(new ChartOptions { Width = 1, Height = 1 }, read), ignoreOrder: true);
             Names(Schema(@"GraphOptions")).ShouldBe(Names(new GraphOptions(), read), ignoreOrder: true);
-            Names(Schema(@"SimulationOptions")).ShouldBe(Names(options.Simulation!, read), ignoreOrder: true);
             Schema(@"ChartOptions")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe([@"width", @"height"], ignoreOrder: true);
 
             Enumerated(Schema(@"CompileOptions")[@"properties"]![@"baseTheme"]!).ShouldBe([.. Values<BaseTheme>()], ignoreOrder: true);
             Enumerated(Schema(@"CompileOptions")[@"properties"]![@"metricsFormat"]!).ShouldBe([.. Values<MetricsExport>()], ignoreOrder: true);
             Enumerated(Schema(@"ChartOptions")[@"properties"]![@"format"]!).ShouldBe([.. Values<PlotExport>()], ignoreOrder: true);
             Enumerated(Schema(@"GraphOptions")[@"properties"]![@"format"]!).ShouldBe([.. Values<GraphExport>()], ignoreOrder: true);
-            Enumerated(Schema(@"SimulationOptions")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Enumerated(Schema(@"TranscriptEntry")[@"properties"]![@"kind"]!).ShouldBe([.. Values<JobTranscriptKind>()], ignoreOrder: true);
 
             // An output is asked for by the name it is answered with.
             string[] outputs = [.. Values<JobOutput>()];
             Enumerated(Schema(@"Output")[@"properties"]![@"kind"]!).ShouldBe(outputs, ignoreOrder: true);
-            Names(Schema(@"OutputsOptions")).ShouldBe(outputs, ignoreOrder: true);
+
+            // The simulation is one output of a request, and the answer lists its chart and its files as the outputs that it makes.
+            Names(Schema(@"OutputsOptions")).ShouldBe([.. outputs.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation"], ignoreOrder: true);
         }
 
         private static HttpRequestMessage Get(

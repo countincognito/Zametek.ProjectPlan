@@ -1104,6 +1104,59 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ex.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationNoIterations);
         }
 
+        [Fact]
+        public async Task RunSimulationWithSavedSeedAsync_Given_NewSeedEachRun_Then_UsesTheSavedSeedAndLeavesTheSettingsAlone()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = true;
+            panel.Seed = 42;
+
+            await panel.RunSimulationWithSavedSeedAsync(CancellationToken.None);
+            SimulationSummaryModel first = panel.Summary.ShouldNotBeNull();
+            await panel.RunSimulationWithSavedSeedAsync(CancellationToken.None);
+
+            // The seed is the one that is saved, and so the run repeats: "New seed each run" is still on, and the seed is the same.
+            panel.Seed.ShouldBe(42UL);
+            panel.UseRandomSeed.ShouldBeTrue();
+            harness.Core.SimulationSettings.Seed.ShouldBe(42UL);
+            panel.Summary.ShouldNotBeNull().Mean.ShouldBe(first.Mean);
+            panel.Summary.Percentiles.Select(x => x.FinishTime).ShouldBe(first.Percentiles.Select(x => x.FinishTime));
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_NewSeedEachRun_Then_TheSeedOfTheRunIsSaved()
+        {
+            // The run of the panel is not the same: it draws a seed, and shows it, so that a result that is liked can be made again.
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = true;
+            panel.Seed = 42;
+
+            await panel.RunSimulationAsync();
+
+            panel.Seed.ShouldNotBe(42UL);
+            harness.Core.SimulationSettings.Seed.ShouldBe(panel.Seed);
+        }
+
+        [Fact]
+        public async Task BuildPresentation_Given_AResultThatTheScenarioHolds_Then_ThePanelHasTheTablesOfIt()
+        {
+            // A job never starts the panel, and a result that a project file held has no run to present it.
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Statistics.ShouldBeEmpty();
+
+            panel.BuildPresentation();
+
+            panel.Statistics.ShouldNotBeEmpty();
+            panel.Paths.ShouldNotBeEmpty();
+            panel.Activities.ShouldNotBeEmpty();
+            panel.SimulationChartPlotModel.GetPlottables().ShouldNotBeEmpty();
+        }
+
         #endregion
     }
 }
