@@ -430,7 +430,7 @@ namespace Zametek.Engine.ProjectPlan
         }
 
         // The simulation as the panel runs it, on the settings of the request. The job's token cancels it between two
-        // chunks of its iterations.
+        // chunks of its iterations, also when the token is cancelled before the run has begun.
         private static async Task RunSimulationAsync(
             IScheduleSimulationManagerViewModel simulation,
             SimulationRequest request,
@@ -443,8 +443,7 @@ namespace Zametek.Engine.ProjectPlan
             simulation.ModifiedBetaShape = request.ModifiedBetaShape;
             simulation.TargetFinishTime = request.TargetFinishTime;
 
-            using CancellationTokenRegistration registration = cancellationToken.Register(simulation.CancelSimulation);
-            await simulation.RunSimulationAsync();
+            await simulation.RunSimulationAsync(cancellationToken);
         }
 
         // The outputs of a simulation need the simulation, and its settings must be ones that it can run with. The callers

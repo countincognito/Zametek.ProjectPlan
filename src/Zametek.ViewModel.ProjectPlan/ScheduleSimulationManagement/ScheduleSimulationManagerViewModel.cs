@@ -196,7 +196,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ssm => ssm.m_CoreViewModel.HasCompilationErrors,
                     (isRunning, hasErrors) => !isRunning && !hasErrors);
 
-            RunSimulationCommand = ReactiveCommand.CreateFromTask(RunSimulationAsync, canRun);
+            RunSimulationCommand = ReactiveCommand.CreateFromTask(() => RunSimulationAsync(), canRun);
 
             CancelSimulationCommand = ReactiveCommand.Create(
                 CancelSimulation,
@@ -764,7 +764,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ExportCsvFilesCommand { get; }
 
-        public async Task RunSimulationAsync()
+        public Task RunSimulationAsync()
+        {
+            return RunSimulationAsync(CancellationToken.None);
+        }
+
+        public async Task RunSimulationAsync(CancellationToken cancellationToken)
         {
             // One run at a time. A second request while a run is in progress does nothing.
             if (Interlocked.CompareExchange(ref m_RunGate, 1, 0) != 0)
@@ -813,7 +818,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 };
                 int? target = TargetFinishTime;
 
-                cancellation = new CancellationTokenSource();
+                cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 lock (m_Lock)
                 {
                     m_RunCancellation = cancellation;

@@ -455,6 +455,39 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_CancellationJustBeforeTheSimulationBegins_Then_ItDoesNotRunAtAll()
+        {
+            // The window that a cancel was once lost in: after the job has looked at its token, and before the run has made
+            // a token of its own. A run that was not stopped would go on for a million iterations, and would have a result.
+            ScheduleSimulationManagerViewModel? inner = null;
+            using var cancellation = new CancellationTokenSource();
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IScheduleSimulationManagerViewModel>(provider =>
+            {
+                inner = ActivatorUtilities.CreateInstance<ScheduleSimulationManagerViewModel>(provider);
+                IScheduleSimulationManagerViewModel proxy = DispatchProxy.Create<IScheduleSimulationManagerViewModel, CancelsTheJobOnceItRuns>();
+                var cancelling = (CancelsTheJobOnceItRuns)proxy;
+                cancelling.Inner = inner;
+                cancelling.Cancellation = cancellation;
+                cancelling.CancelsBeforeTheRun = true;
+                return proxy;
+            }));
+            var sink = new MemoryJobSink();
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"estimated.zpp",
+                    input => Simulate(input, new SimulationRequest { Iterations = GraphLimits.MaximumSimulationIterations, Seed = 1 }, SimulationCsvFile.All),
+                    sink,
+                    cancellation.Token));
+
+            inner.ShouldNotBeNull().StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
+            inner.Summary.ShouldBeNull();
+            inner.IsRunning.ShouldBeFalse();
+            sink.Outputs.ShouldBeEmpty();
+        }
+
+        [Fact]
         public async Task RunAsync_Given_CancellationWhileTheSimulationRuns_Then_ItStopsBeforeItsLastIterationAndTheJobStopsWithIt()
         {
             ScheduleSimulationManagerViewModel? inner = null;
@@ -490,8 +523,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
             public override DateTimeOffset GetUtcNow() => now;
         }
 
-        // The simulation view model, which cancels the job as soon as its run is going: the job cancels the run through
-        // the token it registered, and not by calling anything of this class.
+        // The simulation view model, which cancels the job as soon as its run is going, or before it has begun.
         public class CancelsTheJobOnceItRuns
             : DispatchProxy
         {
@@ -499,14 +531,26 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
             public CancellationTokenSource Cancellation { get; set; } = null!;
 
+            // Whether the job is cancelled before the run is called, as a cancel that comes just before the run starts.
+            public bool CancelsBeforeTheRun { get; set; }
+
             protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
             {
                 ArgumentNullException.ThrowIfNull(targetMethod);
 
                 if (targetMethod.Name == nameof(IScheduleSimulationManagerViewModel.RunSimulationAsync))
                 {
+                    // The run is called with the token of the job, and nothing else cancels it.
+                    var token = (CancellationToken)args!.Single()!;
+
+                    if (CancelsBeforeTheRun)
+                    {
+                        Cancellation.Cancel();
+                        return Inner.RunSimulationAsync(token);
+                    }
+
                     // The call returns at its first await, with the run going.
-                    Task run = Inner.RunSimulationAsync();
+                    Task run = Inner.RunSimulationAsync(token);
                     SpinWait.SpinUntil(() => Inner.IsRunning, TimeSpan.FromSeconds(10)).ShouldBeTrue();
                     Cancellation.Cancel();
                     return run;

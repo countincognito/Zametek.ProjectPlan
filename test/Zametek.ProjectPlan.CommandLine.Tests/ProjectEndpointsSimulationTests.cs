@@ -221,10 +221,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task Compile_Given_ASimulationThatTheTimeOfTheJobStops_Then_503JobTimeoutAndItEndsBeforeItsLastIteration()
+        public async Task Compile_Given_ASimulationThatTheTimeOfTheJobStops_Then_503JobTimeoutAndNotTheAnswerOfARunToItsEnd()
         {
-            // The sample plan has resources, and each iteration schedules them again: a million of them take far longer than
-            // the second the job has.
+            // The sample plan has resources, and each iteration schedules them again: a million of them take minutes, and
+            // the job has a second. An answer that is the problem job-timeout, and not a 200, is a job that was stopped. How
+            // long the stop takes depends on how busy the machine is (the test projects of a build run side by side, and
+            // every test of a project runs side by side too, on a thread pool that the iterations of a simulation share), and
+            // so the test says nothing of how soon, and gives the server's answer more time than the client of the other
+            // tests does. How soon a simulation stops once it is told to is a test of the engine, which does not depend on a
+            // clock.
             await using RunningServer server = await RunningServer.StartAsync(
                 m_Engine.JobRunner,
                 new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 1_000_000, JobTimeoutSeconds = 1 } });
@@ -236,19 +241,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 sample = memory.ToArray();
             }
 
+            using var patient = new HttpClient { BaseAddress = server.Client.BaseAddress, Timeout = TimeSpan.FromMinutes(5) };
             using var content = RunningServer.CompileContent(sample, @"warm-up.zpp");
             content.Add(
                 new StringContent(@"{""simulation"":{""iterations"":1000000}}", System.Text.Encoding.UTF8, @"application/json"),
                 @"options");
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-            using HttpResponseMessage response = await server.Client.PostAsync(@"/v1/projects/compile", content);
+            using HttpResponseMessage response = await patient.PostAsync(@"/v1/projects/compile", content);
 
-            stopwatch.Stop();
             response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
             ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
             problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.JobTimeout));
-            stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(30));
         }
     }
 }

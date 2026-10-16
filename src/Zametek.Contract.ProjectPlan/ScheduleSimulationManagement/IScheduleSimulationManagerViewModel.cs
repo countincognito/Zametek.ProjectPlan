@@ -76,6 +76,10 @@ namespace Zametek.Contract.ProjectPlan
         // while a run is in progress does nothing.
         Task RunSimulationAsync();
 
+        // The same, and the run also stops when the token is cancelled. A token that is already cancelled stops it before it
+        // starts, and so a caller that cancels at any time, also just before the call, is never left with a run that goes on.
+        Task RunSimulationAsync(CancellationToken cancellationToken);
+
         void CancelSimulation();
 
         // The date on which a project that takes the given number of days finishes, in the working calendar of the plan.

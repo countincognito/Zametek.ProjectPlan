@@ -781,6 +781,41 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunSimulationAsync_Given_ATokenThatIsAlreadyCancelled_Then_DoesNotRunAndSaysSo()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = GraphLimits.MaximumSimulationIterations;
+            using var cancellation = new CancellationTokenSource();
+            await cancellation.CancelAsync();
+
+            await panel.RunSimulationAsync(cancellation.Token);
+
+            panel.IsRunning.ShouldBeFalse();
+            panel.HasResult.ShouldBeFalse();
+            panel.Summary.ShouldBeNull();
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
+            harness.Dialogs.Errors.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_ATokenThatIsCancelledWhileItRuns_Then_StopsBeforeItsLastIteration()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = GraphLimits.MaximumSimulationIterations;
+            using var cancellation = new CancellationTokenSource();
+
+            Task run = panel.RunSimulationAsync(cancellation.Token);
+            await cancellation.CancelAsync();
+            await run;
+
+            panel.IsRunning.ShouldBeFalse();
+            panel.Summary.ShouldBeNull();
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
+        }
+
+        [Fact]
         public async Task Dispose_Given_ARunInProgress_Then_CancelsIt()
         {
             using Harness harness = await Harness.MakeAsync();
