@@ -415,3 +415,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 - [ ] **Count the criticality of the activities with the bits of the library** *(2026-10-16)*
 
   `SimulationAnalyzer` calls `SimulationResult.IsCritical(iteration, activity)` once for each activity and each iteration. For 1,000,000 iterations of a plan of 2,000 activities, that is two thousand million calls. A method of `SimulationResult` that counts the set bits of one activity over the iterations would take a few seconds less. Measure before the change.
+
+- [ ] **Run the schedule simulation in small batches in the web host** *(2026-10-16)*
+
+  The web host has one thread. The panel runs the simulation with `Task.Run`, and the simulator uses `Parallel.For`. On the web host, both run on the one thread, and the UI freezes until the run ends. A run of 5,000 iterations of a plan like the sample plan takes about 5 seconds on one thread.
+
+  Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
