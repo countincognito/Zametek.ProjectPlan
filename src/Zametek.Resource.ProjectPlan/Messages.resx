@@ -168,6 +168,9 @@
   <data name="Message_SimulationNoActivities" xml:space="preserve">
     <value>The plan has no activities to simulate.</value>
   </data>
+  <data name="Message_SimulationNoIterations" xml:space="preserve">
+    <value>The iterations of a run are not in a project file. Run the simulation again to have them.</value>
+  </data>
   <data name="Message_SimulationNoResult" xml:space="preserve">
     <value>There is no simulation result.</value>
   </data>

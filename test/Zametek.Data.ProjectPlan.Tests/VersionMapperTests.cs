@@ -52,6 +52,19 @@ namespace Zametek.Data.ProjectPlan.Tests
             @"$.DependentActivities[].Activity.PessimisticDuration",
         ];
 
+        // The settings of the schedule simulation and its last result arrived in v0.6.2, so no earlier version
+        // holds them. A scenario that comes back from an earlier version has the defaults and no result.
+        private static readonly string[] s_Simulation =
+        [
+            @"$.SimulationSettings.Iterations",
+            @"$.SimulationSettings.Distribution",
+            @"$.SimulationSettings.ModifiedBetaShape",
+            @"$.SimulationSettings.Seed",
+            @"$.SimulationSettings.UseRandomSeed",
+            @"$.SimulationSettings.TargetFinishTime",
+            @"$.SimulationSummary",
+        ];
+
         // A resource's activity trackers record which activity was worked on by id; the
         // name shown beside it is looked up when the plan is loaded rather than stored.
         private const string c_TrackedActivityName =
@@ -170,8 +183,50 @@ namespace Zametek.Data.ProjectPlan.Tests
             // Everything else came across: the only differences are the estimates, which
             // the scenario was never holding in v0.6.1, and the values no version stores.
             ModelReflection
-                .Differences(original, upgraded, StoredScenarioLosses(s_ActivityEstimates))
+                .Differences(original, upgraded, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation]))
                 .ShouldBeEmpty();
+        }
+
+        /// <summary>
+        /// Upgrading from v0.6.1. The simulation is new, so a scenario comes back from v0.6.1 as a new scenario has
+        /// it: the settings are the defaults, and there is no result.
+        /// </summary>
+        [Fact]
+        public void ProjectScenario_UpgradedFromV0_6_1_Then_SimulationHasTheDefaultsAndNoResult()
+        {
+            var mapper = new VersionMapper();
+            ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
+
+            ProjectScenarioModel upgraded =
+                mapper.FromV0_6_2ToCurrent(mapper.FromV0_6_1ToV0_6_2(mapper.FromCurrentToV0_6_1(original)));
+
+            upgraded.SimulationSettings.ShouldBe(new SimulationSettingsModel());
+            upgraded.SimulationSummary.ShouldBeNull();
+        }
+
+        /// <summary>
+        /// The simulation in v0.6.2, spelled out rather than left to the sweep above: every setting comes back as it
+        /// was, and so does the result with the activity ids of its critical paths.
+        /// </summary>
+        [Fact]
+        public void ProjectScenario_RoundTrippedThroughV0_6_2_Then_SimulationSurvivesAsItWas()
+        {
+            var mapper = new VersionMapper();
+            ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
+
+            ProjectScenarioModel roundTripped =
+                mapper.FromV0_6_2ToCurrent(mapper.FromCurrentToV0_6_2(original));
+
+            // Guards the guard: the filled scenario has to be carrying a result with paths, or keeping them would
+            // prove nothing.
+            original.SimulationSummary.ShouldNotBeNull();
+            original.SimulationSummary.Paths.ShouldNotBeEmpty();
+
+            roundTripped.SimulationSettings.ShouldBe(original.SimulationSettings);
+            roundTripped.SimulationSummary.ShouldNotBeNull();
+            roundTripped.SimulationSummary.Paths.Select(x => x.IdLabel)
+                .ShouldBe(original.SimulationSummary.Paths.Select(x => x.IdLabel));
+            roundTripped.SimulationSummary.Bins.Count.ShouldBe(original.SimulationSummary.Bins.Count);
         }
 
         /// <summary>
@@ -211,7 +266,7 @@ namespace Zametek.Data.ProjectPlan.Tests
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
             ModelReflection
-                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses(s_ActivityEstimates))])
+                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation]))])
                 .ShouldBeEmpty();
 
             roundTripped.Version.ShouldBe(@"v0.6.1");
@@ -226,7 +281,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectScenarioModel roundTripped =
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
-            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses(s_ActivityEstimates)).ShouldBeEmpty();
+            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation])).ShouldBeEmpty();
 
             // The graph layouts and the per-resource metrics are what v0.6.1 added, so
             // this is the pair that has to carry them.
@@ -365,7 +420,9 @@ namespace Zametek.Data.ProjectPlan.Tests
             };
 
             ModelReflection
-                .Differences(expected, roundTripped, StoredScenarioLosses(
+                .Differences(expected, roundTripped, StoredScenarioLosses([
+                    // The settings and the result of the simulation arrived in v0.6.2.
+                    .. s_Simulation,
                     // The three estimates of a duration arrived in v0.6.2.
                     @"$.DependentActivities[].Activity.MostLikelyDuration",
                     @"$.DependentActivities[].Activity.OptimisticDuration",
@@ -386,7 +443,7 @@ namespace Zametek.Data.ProjectPlan.Tests
                     @"$.DisplaySettings.VertexGraphEdgeRoutingMode",
                     @"$.DisplaySettings.EarnedValueCombineResources",
                     @"$.DisplaySettings.EarnedValueScaleToOwnPlan",
-                    @"$.DisplaySettings.EarnedValueShowResources"))
+                    @"$.DisplaySettings.EarnedValueShowResources"]))
                 .ShouldBeEmpty();
 
             // Guards the guard: the scenario has to be carrying the things this test

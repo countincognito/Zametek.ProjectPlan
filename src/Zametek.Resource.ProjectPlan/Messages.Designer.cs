@@ -1627,6 +1627,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The iterations of a run are not in a project file. Run the simulation again to have them..
+        /// </summary>
+        public static string Message_SimulationNoIterations {
+            get {
+                return ResourceManager.GetString("Message_SimulationNoIterations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no simulation result..
         /// </summary>
         public static string Message_SimulationNoResult {

@@ -75,6 +75,26 @@ namespace Zametek.Contract.ProjectPlan
 
         List<ResourceMetricsModel> ResourceMetrics { get; }
 
+        /// <summary>
+        /// The settings of the schedule simulation of the scenario. They belong to the scenario, as its display
+        /// settings do: a project file holds them. Setting them marks the scenario as modified, except while a
+        /// scenario loads or resets.
+        /// </summary>
+        SimulationSettingsModel SimulationSettings { get; set; }
+
+        /// <summary>
+        /// What the last run of the simulation found, or null when the scenario has no result. A project file holds
+        /// it, and a result that a file holds is trusted, as the metrics that a file holds are. Setting it marks the
+        /// scenario as modified, except while a scenario loads or resets.
+        /// </summary>
+        SimulationSummaryModel? SimulationSummary { get; set; }
+
+        /// <summary>
+        /// How many times a scenario has been loaded or reset (a project that closes or begins is a reset too). A run
+        /// of the simulation belongs to one scenario, and it stops when this changes. Observe changes only.
+        /// </summary>
+        int ProjectScenarioRevision { get; }
+
         bool HasActivities { get; }
 
         bool HasResources { get; }

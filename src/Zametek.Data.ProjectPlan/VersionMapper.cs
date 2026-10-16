@@ -736,6 +736,8 @@ namespace Zametek.Data.ProjectPlan
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.ArrowGraphLayout))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.VertexGraphLayout))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.ResourceMetrics))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSettings))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSummary))]
         public partial ProjectScenarioModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -848,7 +850,12 @@ namespace Zametek.Data.ProjectPlan
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_1.ProjectScenarioModel FromCurrentToV0_6_1(ProjectScenarioModel src);
+        // The settings of the simulation and its last result are new in v0.6.2, so a v0.6.1 scenario
+        // carries neither: those targets are intentionally left at their defaults (the default settings,
+        // and no result).
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSettings))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSummary))]
         public partial ProjectScenarioModel FromV0_6_1ToCurrent(v0_6_1.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -924,7 +931,8 @@ namespace Zametek.Data.ProjectPlan
 
         // Upgrading from v0.6.1: the estimates are new in v0.6.2, so they are intentionally left
         // null, and an activity follows its Duration. Going the other way drops them, and the
-        // Duration that stays is the one the compiler scheduled.
+        // Duration that stays is the one the compiler scheduled. The scenario gains the settings of the
+        // simulation and its last result in the same way, and loses them going the other way.
         public partial v0_6_2.ActivityModel FromV0_6_1ToV0_6_2(v0_6_1.ActivityModel src);
         public partial v0_6_1.ActivityModel FromV0_6_2ToV0_6_1(v0_6_2.ActivityModel src);
 

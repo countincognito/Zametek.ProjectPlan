@@ -152,6 +152,12 @@ namespace Zametek.Common.ProjectPlan
         /// </summary>
         public string ShortLabel { get; init; } = string.Empty;
 
+        /// <summary>
+        /// The same as <see cref="Label"/> with the ID of each activity in the place of its name: 1 > 3 ~> 7.
+        /// It is short, and a table that has a lot of paths needs that.
+        /// </summary>
+        public string IdLabel { get; init; } = string.Empty;
+
         public bool HasResourceLinks { get; init; }
 
         /// <summary>

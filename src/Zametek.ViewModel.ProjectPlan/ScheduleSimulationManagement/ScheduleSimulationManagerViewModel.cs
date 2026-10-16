@@ -106,15 +106,26 @@ namespace Zametek.ViewModel.ProjectPlan
         // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
         private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
         private IDisposable? m_BuildPresentationSub;
+        private IDisposable? m_SettingsSub;
+        private IDisposable? m_SummarySub;
+        private IDisposable? m_ScenarioSub;
 
         // The run that is in progress, if there is one.
         private int m_RunGate;
         private CancellationTokenSource? m_RunCancellation;
         private long m_LastProgressTicks;
 
-        // What the last run found, and what the CSV files need that the summary does not hold.
+        // What the last run of this session found, and what the CSV files need that the summary does not hold. The
+        // iterations are not in a project file, and so a result that was loaded has none of them: m_ResultSummary is
+        // the summary that m_Result belongs to.
         private SimulationResult<int>? m_Result;
+        private SimulationSummaryModel? m_ResultSummary;
         private IReadOnlyDictionary<int, string> m_ActivityNames = new Dictionary<int, string>();
+
+        // The summary that the tables and the chart show, and the revision of the scenario that the run in progress
+        // belongs to.
+        private SimulationSummaryModel? m_PresentedSummary;
+        private int m_RunScenarioRevision;
 
         #endregion
 
@@ -147,11 +158,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SimulationChartPlotModel = new Plot();
             m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
-            m_Iterations = SimulationSettings.DefaultIterations;
-            m_UseRandomSeed = true;
-            m_Seed = 1;
-            m_Distribution = DurationDistribution.BetaPert;
-            m_ModifiedBetaShape = c_DefaultModifiedBetaShape;
             m_StatusText = Resource.ProjectPlan.Labels.Label_SimulationNoResult;
 
             m_IsBusy = this
@@ -167,7 +173,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, ssm => ssm.HasCompilationErrors);
 
             m_IsModifiedBetaDistribution = this
-                .WhenAnyValue(ssm => ssm.Distribution, (DurationDistribution distribution) => distribution == DurationDistribution.ModifiedBetaPert)
+                .WhenAnyValue(ssm => ssm.m_CoreViewModel.SimulationSettings, (SimulationSettingsModel settings) => settings.Distribution == DurationDistribution.ModifiedBetaPert)
                 .ToProperty(this, ssm => ssm.IsModifiedBetaDistribution);
 
             m_ShowDates = this
@@ -175,7 +181,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, ssm => ssm.ShowDates);
 
             m_HasResult = this
-                .WhenAnyValue(ssm => ssm.Summary, (SimulationSummaryModel? summary) => summary is not null && summary.HasResult)
+                .WhenAnyValue(ssm => ssm.m_CoreViewModel.SimulationSummary, (SimulationSummaryModel? summary) => summary is not null && summary.HasResult)
                 .ToProperty(this, ssm => ssm.HasResult);
 
             // The result belongs to the plan only while the plan has not compiled again.
@@ -527,11 +533,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     summary = Summary;
-                    result = m_Result;
+                    result = ReferenceEquals(m_ResultSummary, summary) ? m_Result : null;
                     names = m_ActivityNames;
                 }
 
-                if (summary is null || result is null)
+                if (summary is null)
                 {
                     return;
                 }
@@ -551,13 +557,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     Path.GetDirectoryName(filename) ?? string.Empty,
                     Path.GetFileNameWithoutExtension(filename));
 
+                // The iterations are not in a project file. A result that was loaded has the four files, and a run in this
+                // session has the fifth too.
                 (string Suffix, SimulationCsvFile File)[] files =
                 [
                     (Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, SimulationCsvFile.Statistics),
                     (Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, SimulationCsvFile.Histogram),
                     (Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, SimulationCsvFile.Paths),
                     (Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, SimulationCsvFile.Activities),
-                    (Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, SimulationCsvFile.Iterations),
+                    .. result is null ? Array.Empty<(string, SimulationCsvFile)>() : [(Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, SimulationCsvFile.Iterations)],
                 ];
 
                 await Task.Run(() =>
@@ -594,7 +602,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Stream stream,
             SimulationCsvFile file,
             SimulationSummaryModel summary,
-            SimulationResult<int> result,
+            SimulationResult<int>? result,
             IReadOnlyDictionary<int, string> names)
         {
             using var writer = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true);
@@ -614,7 +622,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     SimulationCsvWriter.WriteActivities(writer, summary);
                     break;
                 case SimulationCsvFile.Iterations:
-                    SimulationCsvWriter.WriteIterations(writer, result, names);
+                    SimulationCsvWriter.WriteIterations(
+                        writer,
+                        result ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_SimulationNoIterations),
+                        names);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(file), file, null);
@@ -634,60 +645,77 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private int m_Iterations;
+        // The settings are the scenario's, and the core owns them: a project file holds them. A property here reads
+        // them from the core and writes them to it, and says that it changed when the core changes (a scenario that
+        // loads has other settings).
+        private void ChangeSettings(Func<SimulationSettingsModel, SimulationSettingsModel> change, string name)
+        {
+            SimulationSettingsModel before = m_CoreViewModel.SimulationSettings;
+            SimulationSettingsModel after = change(before);
+
+            if (after == before)
+            {
+                return;
+            }
+
+            this.RaisePropertyChanging(name);
+            m_CoreViewModel.SimulationSettings = after;
+            this.RaisePropertyChanged(name);
+        }
+
         public int Iterations
         {
-            get => m_Iterations;
-            set => this.RaiseAndSetIfChanged(ref m_Iterations, value);
+            get => m_CoreViewModel.SimulationSettings.Iterations;
+            set => ChangeSettings(x => x with { Iterations = value }, nameof(Iterations));
         }
 
-        private bool m_UseRandomSeed;
         public bool UseRandomSeed
         {
-            get => m_UseRandomSeed;
-            set => this.RaiseAndSetIfChanged(ref m_UseRandomSeed, value);
+            get => m_CoreViewModel.SimulationSettings.UseRandomSeed;
+            set => ChangeSettings(x => x with { UseRandomSeed = value }, nameof(UseRandomSeed));
         }
 
-        private ulong m_Seed;
         public ulong Seed
         {
-            get => m_Seed;
-            set => this.RaiseAndSetIfChanged(ref m_Seed, value);
+            get => m_CoreViewModel.SimulationSettings.Seed;
+            set => ChangeSettings(x => x with { Seed = value }, nameof(Seed));
         }
 
-        private DurationDistribution m_Distribution;
         public DurationDistribution Distribution
         {
-            get => m_Distribution;
-            set => this.RaiseAndSetIfChanged(ref m_Distribution, value);
+            get => m_CoreViewModel.SimulationSettings.Distribution;
+            set => ChangeSettings(x => x with { Distribution = value }, nameof(Distribution));
         }
 
         private readonly ObservableAsPropertyHelper<bool> m_IsModifiedBetaDistribution;
         public bool IsModifiedBetaDistribution => m_IsModifiedBetaDistribution.Value;
 
-        private double m_ModifiedBetaShape;
         public double ModifiedBetaShape
         {
-            get => m_ModifiedBetaShape;
-            set => this.RaiseAndSetIfChanged(ref m_ModifiedBetaShape, value);
+            get => m_CoreViewModel.SimulationSettings.ModifiedBetaShape;
+            set => ChangeSettings(x => x with { ModifiedBetaShape = value }, nameof(ModifiedBetaShape));
         }
 
-        private int? m_TargetFinishTime;
         public int? TargetFinishTime
         {
-            get => m_TargetFinishTime;
+            get => m_CoreViewModel.SimulationSettings.TargetFinishTime;
             set
             {
-                if (m_TargetFinishTime == value)
-                {
-                    return;
-                }
-
-                this.RaisePropertyChanging();
-                m_TargetFinishTime = value;
-                this.RaisePropertyChanged();
+                ChangeSettings(x => x with { TargetFinishTime = value }, nameof(TargetFinishTime));
                 this.RaisePropertyChanged(nameof(TargetFinishDate));
             }
+        }
+
+        // The settings changed under the panel (a scenario loaded or reset): every property that reads them says so.
+        private void RaiseSettingsChanged()
+        {
+            this.RaisePropertyChanged(nameof(Iterations));
+            this.RaisePropertyChanged(nameof(UseRandomSeed));
+            this.RaisePropertyChanged(nameof(Seed));
+            this.RaisePropertyChanged(nameof(Distribution));
+            this.RaisePropertyChanged(nameof(ModifiedBetaShape));
+            this.RaisePropertyChanged(nameof(TargetFinishTime));
+            this.RaisePropertyChanged(nameof(TargetFinishDate));
         }
 
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
@@ -726,12 +754,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsResultStale;
         public bool IsResultStale => m_IsResultStale.Value;
 
-        private SimulationSummaryModel? m_Summary;
-        public SimulationSummaryModel? Summary
-        {
-            get => m_Summary;
-            private set => this.RaiseAndSetIfChanged(ref m_Summary, value);
-        }
+        // What the last run found, or what the project file held: the scenario's, and the core owns it.
+        public SimulationSummaryModel? Summary => m_CoreViewModel.SimulationSummary;
 
         private IReadOnlyList<SimulationStatisticModel> m_Statistics = [];
         public IReadOnlyList<SimulationStatisticModel> Statistics
@@ -805,6 +829,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 ulong seed = UseRandomSeed ? NewSeed() : Seed;
                 Seed = seed;
 
+                // The run belongs to the scenario that is open now. If a scenario loads or resets while it goes on, it stops,
+                // and what it found is thrown away.
+                int scenarioRevision = m_CoreViewModel.ProjectScenarioRevision;
+                Volatile.Write(ref m_RunScenarioRevision, scenarioRevision);
+
                 var settings = new SimulationSettings
                 {
                     Iterations = Iterations,
@@ -819,10 +848,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 int? target = TargetFinishTime;
 
                 cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                lock (m_Lock)
-                {
-                    m_RunCancellation = cancellation;
-                }
+                Volatile.Write(ref m_RunCancellation, cancellation);
 
                 IsRunning = true;
                 SetStatus(0.0, string.Empty);
@@ -844,14 +870,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 stopwatch.Stop();
                 m_Logger.LogInformation("Simulation: done in {Elapsed}", FormatDuration(stopwatch.Elapsed));
 
+                // The scenario was replaced while the run went on: the result is not the scenario's, and nobody sees it.
+                if (m_CoreViewModel.ProjectScenarioRevision != scenarioRevision)
+                {
+                    throw new OperationCanceledException(token);
+                }
+
                 lock (m_Lock)
                 {
                     m_Result = outcome.Result;
+                    m_ResultSummary = outcome.Summary;
                     m_ActivityNames = outcome.ActivityNames;
+                    m_PresentedSummary = outcome.Summary;
                 }
 
                 ResultRevision = outcome.CompilationOutputRevision;
-                Summary = outcome.Summary;
+                m_CoreViewModel.SimulationSummary = outcome.Summary;
                 BuildPresentation();
 
                 SetStatus(
@@ -875,10 +909,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                lock (m_Lock)
-                {
-                    m_RunCancellation = null;
-                }
+                Volatile.Write(ref m_RunCancellation, null);
                 cancellation?.Dispose();
                 IsRunning = false;
                 Volatile.Write(ref m_RunGate, 0);
@@ -889,10 +920,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             CancellationTokenSource? cancellation;
 
-            lock (m_Lock)
-            {
-                cancellation = m_RunCancellation;
-            }
+            // The core can ask for this while it holds its lock (a scenario resets), and so it takes no lock of its own.
+            cancellation = Volatile.Read(ref m_RunCancellation);
 
             try
             {
@@ -936,11 +965,11 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 summary = Summary;
-                result = m_Result;
+                result = ReferenceEquals(m_ResultSummary, summary) ? m_Result : null;
                 names = m_ActivityNames;
             }
 
-            if (summary is null || result is null)
+            if (summary is null)
             {
                 throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
             }
@@ -955,6 +984,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private void BuildPresentation()
         {
             SimulationSummaryModel? summary = Summary;
+            m_PresentedSummary = summary;
 
             IReadOnlyList<SimulationStatisticModel> statistics = [];
             IReadOnlyList<SimulationPathModel> paths = [];
@@ -1084,6 +1114,75 @@ namespace Zametek.ViewModel.ProjectPlan
                 .MuteWhile(this.WhenAnyValue(ssm => ssm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildPresentation());
+
+            // The settings are the scenario's, and a scenario that loads or resets has other settings.
+            m_SettingsSub = this
+                .WhenAnyValue(ssm => ssm.m_CoreViewModel.SimulationSettings)
+                .MuteWhile(this.WhenAnyValue(ssm => ssm.m_CoreViewModel.IsBulkUpdating))
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ => RaiseSettingsChanged());
+
+            // The result is the scenario's too. One that this panel made is presented already, and it is out of date if
+            // the plan compiled since the run began. One that a file held, or none because the scenario reset, is not
+            // from a run: it is not out of date, because the file is trusted and there is no newer plan to disagree
+            // with, and it is presented unless the pipeline above has presented it already.
+            m_SummarySub = this
+                .WhenAnyValue(ssm => ssm.m_CoreViewModel.SimulationSummary)
+                .Select(summary => ValueTuple.Create(summary)) // A result can be none, and a sequence on a scheduler holds values that are not.
+                .MuteWhile(this.WhenAnyValue(ssm => ssm.m_CoreViewModel.IsBulkUpdating))
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(change =>
+                {
+                    SimulationSummaryModel? summary = change.Item1;
+                    bool isFromRun;
+
+                    lock (m_Lock)
+                    {
+                        isFromRun = summary is not null && ReferenceEquals(summary, m_ResultSummary);
+
+                        if (!isFromRun)
+                        {
+                            // The iterations of a run that the scenario no longer holds are not kept.
+                            m_Result = null;
+                            m_ResultSummary = null;
+                            m_ActivityNames = new Dictionary<int, string>();
+                        }
+                    }
+
+                    if (isFromRun)
+                    {
+                        return;
+                    }
+
+                    ResultRevision = m_CoreViewModel.CompilationOutputRevision;
+
+                    if (!ReferenceEquals(summary, m_PresentedSummary))
+                    {
+                        BuildPresentation();
+                    }
+
+                    m_UiDispatcher.Defer(() =>
+                    {
+                        if (!IsRunning)
+                        {
+                            Progress = 0.0;
+                            StatusText = summary is null ? Resource.ProjectPlan.Labels.Label_SimulationNoResult : string.Empty;
+                        }
+                    });
+                });
+
+            // A run belongs to one scenario. When the scenario loads, resets or closes, the run stops.
+            m_ScenarioSub = this
+                .WhenAnyValue(ssm => ssm.m_CoreViewModel.ProjectScenarioRevision)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(revision =>
+                {
+                    if (Volatile.Read(ref m_RunCancellation) is not null
+                        && Volatile.Read(ref m_RunScenarioRevision) != revision)
+                    {
+                        CancelSimulation();
+                    }
+                });
         }
 
         #endregion
@@ -1094,6 +1193,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_SubscriptionLifetime.Kill();
             m_BuildPresentationSub?.Dispose();
+            m_SettingsSub?.Dispose();
+            m_SummarySub?.Dispose();
+            m_ScenarioSub?.Dispose();
             CancelSimulation();
         }
 

@@ -131,6 +131,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_EffortMetrics = new();
             m_NetworkMetrics = new();
             m_ResourceMetrics = [];
+            m_SimulationSettings = new();
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
@@ -1122,6 +1123,51 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The settings of the schedule simulation and its last result are the scenario's, as the metrics are. The
+        // getters are lock-free: a property chain re-reads them on the thread that raises the change.
+        private SimulationSettingsModel m_SimulationSettings;
+        public SimulationSettingsModel SimulationSettings
+        {
+            get => Volatile.Read(ref m_SimulationSettings);
+            set
+            {
+                ArgumentNullException.ThrowIfNull(value);
+
+                lock (m_Lock)
+                {
+                    if (m_SimulationSettings == value)
+                    {
+                        return;
+                    }
+                    Volatile.Write(ref m_SimulationSettings, value);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private SimulationSummaryModel? m_SimulationSummary;
+        public SimulationSummaryModel? SimulationSummary
+        {
+            get => Volatile.Read(ref m_SimulationSummary);
+            set
+            {
+                lock (m_Lock)
+                {
+                    if (ReferenceEquals(m_SimulationSummary, value))
+                    {
+                        return;
+                    }
+                    Volatile.Write(ref m_SimulationSummary, value);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private int m_ProjectScenarioRevision;
+        public int ProjectScenarioRevision => Volatile.Read(ref m_ProjectScenarioRevision);
+
         private readonly ObservableAsPropertyHelper<bool> m_HasActivities;
         public bool HasActivities => m_HasActivities.Value;
 
@@ -1361,6 +1407,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     Metrics = new();
                     ResourceMetrics = [];
+
+                    // The simulation belongs to the scenario that is gone. A run that is in progress sees the revision
+                    // change, and stops.
+                    SimulationSettings = new();
+                    SimulationSummary = null;
+                    Interlocked.Increment(ref m_ProjectScenarioRevision);
+                    this.RaisePropertyChanged(nameof(ProjectScenarioRevision));
 
                     HasCompilationErrors = false;
                     GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
@@ -1661,6 +1714,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceMetrics = projectScenarioModel.ResourceMetrics;
                     }
 
+                    // The simulation: its settings, and its last result if the file has one. A result that a file holds
+                    // is trusted, as the metrics above are, and thus the file does not say that it is out of date.
+                    SimulationSettings = projectScenarioModel.SimulationSettings;
+                    SimulationSummary = projectScenarioModel.SimulationSummary;
+
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = true;
@@ -1703,6 +1761,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         ResourceMetrics = [.. ResourceMetrics],
+                        SimulationSettings = SimulationSettings,
+                        SimulationSummary = SimulationSummary,
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                         ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
                         VertexGraphLayout = VertexGraphLayout.CloneObject(),

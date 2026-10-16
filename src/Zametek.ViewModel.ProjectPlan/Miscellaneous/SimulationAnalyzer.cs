@@ -184,12 +184,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 int index = rankedPaths[rank];
                 double weight = pathWeights[index];
                 listedWeight += weight;
-                (string label, string shortLabel, bool hasResourceLinks) = DescribePath(result.CriticalPaths[index], activityNames);
+                (string label, string shortLabel, string idLabel, bool hasResourceLinks) = DescribePath(result.CriticalPaths[index], activityNames);
                 pathRows.Add(new SimulationPathModel
                 {
                     Rank = rank + 1,
                     Label = label,
                     ShortLabel = shortLabel,
+                    IdLabel = idLabel,
                     HasResourceLinks = hasResourceLinks,
                     Weight = weight,
                     Share = weight / validCount,
@@ -288,14 +289,14 @@ namespace Zametek.ViewModel.ProjectPlan
             return DescribePath(path, activityNames).Label;
         }
 
-        private static (string Label, string ShortLabel, bool HasResourceLinks) DescribePath(
+        private static (string Label, string ShortLabel, string IdLabel, bool HasResourceLinks) DescribePath(
             CriticalPath<int> path,
             IReadOnlyDictionary<int, string> activityNames)
         {
             IReadOnlyList<CriticalPathStep<int>> steps = path.Steps;
             bool hasResourceLinks = steps.Any(x => x.Link == CriticalPathLink.Resource);
 
-            string Join(IEnumerable<int> indexes)
+            string Join(IEnumerable<int> indexes, Func<int, string> describe)
             {
                 var builder = new StringBuilder();
                 int? previous = null;
@@ -308,20 +309,27 @@ namespace Zametek.ViewModel.ProjectPlan
                             ? (steps[index].Link == CriticalPathLink.Resource ? @" ~> " : @" > ")
                             : @" > … > ");
                     }
-                    builder.Append(NameOf(activityNames, steps[index].ActivityId));
+                    builder.Append(describe(steps[index].ActivityId));
                     previous = index;
                 }
                 return builder.ToString();
             }
 
-            string label = Join(Enumerable.Range(0, steps.Count));
+            string Name(int id) => NameOf(activityNames, id);
+
+            string label = Join(Enumerable.Range(0, steps.Count), Name);
 
             string shortLabel = steps.Count <= c_ShortLabelMaximumSteps
                 ? label
-                : Join(Enumerable.Range(0, c_ShortLabelEnds)
-                    .Concat(Enumerable.Range(steps.Count - c_ShortLabelEnds, c_ShortLabelEnds)));
+                : Join(
+                    Enumerable.Range(0, c_ShortLabelEnds)
+                        .Concat(Enumerable.Range(steps.Count - c_ShortLabelEnds, c_ShortLabelEnds)),
+                    Name);
 
-            return (label, shortLabel, hasResourceLinks);
+            // The ID of an activity takes the place of its name: it is much shorter.
+            string idLabel = Join(Enumerable.Range(0, steps.Count), id => id.ToString(CultureInfo.InvariantCulture));
+
+            return (label, shortLabel, idLabel, hasResourceLinks);
         }
     }
 }

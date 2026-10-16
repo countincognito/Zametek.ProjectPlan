@@ -4,12 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using static Zametek.ViewModel.ProjectPlan.Tests.SequencerScopes;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
@@ -353,13 +355,37 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Core.HasStaleOutputs = false;
             panel.IsResultStale.ShouldBeFalse();
 
-            // A plan that is loaded builds its outputs again, and a new revision of them says that the result is
-            // of the plan that was there before.
-            harness.Core.ProcessProjectScenario(await LoadSampleWithEstimatesAsync(), Guid.NewGuid(), @"Test");
+            // A compile builds the outputs again, and a new revision of them says that the result is of the plan that
+            // was there before. (The core is never started, so the test runs the step that settles the outputs.)
+            typeof(CoreViewModel).GetMethod(@"RunBuildCascade", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(harness.Core, null);
             panel.IsResultStale.ShouldBeTrue();
 
             await panel.RunSimulationAsync();
             panel.IsResultStale.ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task ProcessProjectScenario_Given_AResult_Then_TheScenarioThatLoadsHasNoneAndThePanelIsClear()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+            panel.TargetFinishTime = 40;
+            await panel.RunSimulationAsync();
+            panel.HasResult.ShouldBeTrue();
+
+            harness.Core.ProcessProjectScenario(await LoadSampleWithEstimatesAsync(), Guid.NewGuid(), @"Other");
+
+            // The scenario that loaded is a scenario of its own: its settings are its own, and it has no result.
+            harness.Core.SimulationSummary.ShouldBeNull();
+            harness.Core.SimulationSettings.ShouldBe(new SimulationSettingsModel());
+            panel.Summary.ShouldBeNull();
+            panel.HasResult.ShouldBeFalse();
+            panel.Iterations.ShouldBe(new SimulationSettingsModel().Iterations);
+            panel.TargetFinishTime.ShouldBeNull();
+            panel.UseRandomSeed.ShouldBeTrue();
         }
 
         [Fact]
@@ -829,5 +855,255 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.IsRunning.ShouldBeFalse();
             panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
         }
+
+        #region The simulation as part of the scenario
+
+        // A scenario as a project file holds it after a run: the settings the run used, and what it found.
+        private static async Task<ProjectScenarioModel> MakeScenarioWithAResultAsync()
+        {
+            using Harness source = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = source.Panel;
+            panel.Iterations = c_Iterations;
+            panel.Distribution = DurationDistribution.ModifiedBetaPert;
+            panel.ModifiedBetaShape = 6.0;
+            panel.UseRandomSeed = false;
+            panel.Seed = 11;
+            panel.TargetFinishTime = 40;
+
+            await panel.RunSimulationAsync();
+
+            source.Dialogs.Errors.ShouldBeEmpty();
+            return source.Core.BuildProjectScenario();
+        }
+
+        [Fact]
+        public async Task BuildProjectScenario_Given_TheSettingsAndAResult_Then_TheScenarioHoldsThem()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.Distribution = DurationDistribution.ModifiedBetaPert;
+            panel.ModifiedBetaShape = 6.0;
+            panel.UseRandomSeed = false;
+            panel.Seed = 3;
+            panel.TargetFinishTime = 30;
+            await panel.RunSimulationAsync();
+
+            ProjectScenarioModel scenario = harness.Core.BuildProjectScenario();
+
+            scenario.SimulationSettings.ShouldBe(new SimulationSettingsModel
+            {
+                Iterations = c_Iterations,
+                Distribution = DurationDistribution.ModifiedBetaPert,
+                ModifiedBetaShape = 6.0,
+                Seed = 3,
+                UseRandomSeed = false,
+                TargetFinishTime = 30,
+            });
+            scenario.SimulationSummary.ShouldBeSameAs(panel.Summary);
+            scenario.SimulationSummary.ShouldNotBeNull();
+            scenario.SimulationSummary.TargetFinishTime.ShouldBe(30);
+        }
+
+        [Fact]
+        public async Task BuildProjectScenario_Given_NoRun_Then_TheScenarioHoldsTheDefaultsAndNoResult()
+        {
+            using Harness harness = await Harness.MakeAsync();
+
+            ProjectScenarioModel scenario = harness.Core.BuildProjectScenario();
+
+            scenario.SimulationSettings.ShouldBe(new SimulationSettingsModel());
+            scenario.SimulationSummary.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task SimulationSettings_Given_AChangeOrAResult_Then_TheScenarioIsModifiedAndALoadLeavesItAsItWas()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            harness.Core.IsProjectScenarioUpdated = false;
+
+            // A setting is a part of the scenario, as the display settings are.
+            panel.Iterations = c_Iterations + 1;
+            harness.Core.IsProjectScenarioUpdated.ShouldBeTrue();
+
+            // A result is too.
+            panel.Iterations = c_Iterations;
+            harness.Core.IsProjectScenarioUpdated = false;
+            await panel.RunSimulationAsync();
+            harness.Core.IsProjectScenarioUpdated.ShouldBeTrue();
+
+            // A scenario that loads is as the file has it, and so it is not modified.
+            ProjectScenarioModel saved = harness.Core.BuildProjectScenario();
+            harness.Core.ProcessProjectScenario(saved, Guid.NewGuid(), @"Other");
+            harness.Core.IsProjectScenarioUpdated.ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task ProcessProjectScenario_Given_AScenarioThatHoldsAResult_Then_ThePanelShowsItAsTheScenarioHasItAndItIsNotStale()
+        {
+            ProjectScenarioModel saved = await MakeScenarioWithAResultAsync();
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = await Harness.MakeAsync(saved);
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+
+            // The harness compiles after the load, and a compile is an edit as far as the scenario is concerned. What is
+            // asked here is whether showing the result is one.
+            harness.Core.IsProjectScenarioUpdated = false;
+            panel.StartSubscriptions();
+            Drain(main, pool);
+
+            // The settings are the scenario's.
+            panel.Iterations.ShouldBe(c_Iterations);
+            panel.Distribution.ShouldBe(DurationDistribution.ModifiedBetaPert);
+            panel.ModifiedBetaShape.ShouldBe(6.0);
+            panel.UseRandomSeed.ShouldBeFalse();
+            panel.Seed.ShouldBe(11UL);
+            panel.TargetFinishTime.ShouldBe(40);
+
+            // So is the result, and the tables and the chart show it. A file is trusted: nothing says that the result
+            // is out of date, as nothing says so of the metrics of a file.
+            panel.HasResult.ShouldBeTrue();
+            panel.Summary.ShouldBe(saved.SimulationSummary);
+            panel.Statistics.ShouldNotBeEmpty();
+            panel.Paths.ShouldNotBeEmpty();
+            panel.Activities.ShouldNotBeEmpty();
+            panel.SimulationChartPlotModel.GetPlottables().ShouldNotBeEmpty();
+            panel.IsResultStale.ShouldBeFalse();
+            harness.Core.IsProjectScenarioUpdated.ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task ProcessProjectScenario_Given_AResultOnShowAndAScenarioWithNone_Then_ThePanelsAreClear()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.StartSubscriptions();
+            Drain(main, pool);
+            panel.HasResult.ShouldBeTrue();
+            panel.Statistics.ShouldNotBeEmpty();
+
+            harness.Core.ProcessProjectScenario(await LoadSampleWithEstimatesAsync(), Guid.NewGuid(), @"Other");
+            Drain(main, pool);
+
+            panel.Summary.ShouldBeNull();
+            panel.HasResult.ShouldBeFalse();
+            panel.IsResultStale.ShouldBeFalse();
+            panel.Statistics.ShouldBeEmpty();
+            panel.Paths.ShouldBeEmpty();
+            panel.Activities.ShouldBeEmpty();
+            panel.SimulationChartPlotModel.GetPlottables().ShouldBeEmpty();
+            panel.Progress.ShouldBe(0.0);
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationNoResult);
+            panel.Iterations.ShouldBe(new SimulationSettingsModel().Iterations);
+        }
+
+        [Fact]
+        public async Task ResetProjectScenario_Given_AResult_Then_ThePanelsAreClear()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.StartSubscriptions();
+            Drain(main, pool);
+            panel.HasResult.ShouldBeTrue();
+
+            // A project that is closed resets the scenario.
+            harness.Core.ResetProjectScenario();
+            Drain(main, pool);
+
+            panel.Summary.ShouldBeNull();
+            panel.HasResult.ShouldBeFalse();
+            panel.Statistics.ShouldBeEmpty();
+            panel.SimulationChartPlotModel.GetPlottables().ShouldBeEmpty();
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationNoResult);
+        }
+
+        [Fact]
+        public async Task ProcessProjectScenario_Given_ARunInProgress_Then_TheRunStopsAndLeavesNoResult()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.StartSubscriptions();
+            Drain(main, pool);
+            panel.Iterations = GraphLimits.MaximumSimulationIterations;
+            Task run = panel.RunSimulationAsync();
+            panel.IsRunning.ShouldBeTrue();
+
+            // The scenario that the run belongs to is replaced. The run stops, and what it would have found is nobody's.
+            harness.Core.ProcessProjectScenario(await LoadSampleWithEstimatesAsync(), Guid.NewGuid(), @"Other");
+            Drain(main, pool);
+            await run;
+
+            panel.IsRunning.ShouldBeFalse();
+            panel.Summary.ShouldBeNull();
+            panel.HasResult.ShouldBeFalse();
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
+            harness.Dialogs.Errors.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task ExportCsvFilesCommand_Given_AResultThatAFileHeld_Then_WritesTheFourFilesAndNotTheIterations()
+        {
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.ExportCsvFilesCommand.CanExecute(null).ShouldBeTrue();
+
+            string directory = Path.Combine(Path.GetTempPath(), $@"simulation-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(directory);
+            try
+            {
+                harness.Dialogs.SaveFilename = Path.Combine(directory, @"plan.csv");
+
+                panel.ExportCsvFilesCommand.Execute(null);
+
+                DateTime deadline = DateTime.UtcNow.AddSeconds(60);
+                while (harness.Dialogs.Infos.Count == 0 && harness.Dialogs.Errors.Count == 0 && DateTime.UtcNow < deadline)
+                {
+                    await Task.Delay(20, CancellationToken.None);
+                }
+
+                harness.Dialogs.Errors.ShouldBeEmpty();
+                Directory.GetFiles(directory).Select(Path.GetFileName).Order().ShouldBe(
+                [
+                    "plan-activities.csv",
+                    "plan-histogram.csv",
+                    "plan-paths.csv",
+                    "plan-statistics.csv",
+                ]);
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task WriteSimulationCsvAsync_Given_AResultThatAFileHeld_Then_TheIterationsAreNotThere()
+        {
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            using var stream = new MemoryStream();
+
+            // The other four files come from the summary.
+            await harness.Panel.WriteSimulationCsvAsync(stream, SimulationCsvFile.Statistics);
+            stream.Length.ShouldBeGreaterThan(0);
+
+            using var iterations = new MemoryStream();
+            InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(() => harness.Panel.WriteSimulationCsvAsync(iterations, SimulationCsvFile.Iterations));
+
+            ex.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationNoIterations);
+        }
+
+        #endregion
     }
 }
