@@ -19,6 +19,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private const float c_LineWidth = 2.0f;
         private const double c_BarFill = 0.9;
 
+        // The longest list of names that an entry of the legend shows.
+        private const int c_MaximumLegendNameLength = 28;
+
         public static Plot Build(
             SimulationSummaryModel summary,
             IDateTimeCalculator dateTimeCalculator,
@@ -197,14 +200,22 @@ namespace Zametek.ViewModel.ProjectPlan
             bool isOtherGroup,
             double groupWeight)
         {
-            double share = groupWeight / summary.ValidIterationCount;
-            string text = isOtherGroup
-                ? Resource.ProjectPlan.Labels.Label_SimulationOtherPaths
-                : summary.Paths[group].ShortLabel;
+            string share = (groupWeight / summary.ValidIterationCount).ToString(@"P0", CultureInfo.CurrentCulture);
 
-            string prefix = isOtherGroup ? string.Empty : $@"#{summary.Paths[group].Rank.ToString(CultureInfo.CurrentCulture)} ";
+            if (isOtherGroup)
+            {
+                return $@"{Resource.ProjectPlan.Labels.Label_SimulationOtherPaths} ({share})";
+            }
 
-            return $@"{prefix}{text} ({share.ToString(@"P0", CultureInfo.CurrentCulture)})";
+            // The rank ties an entry of the legend to the row of the same rank in the table of the paths. The names
+            // go in the legend only when they are short: the paths of a plan usually start and end with the same
+            // activities, and a long entry would take most of the room of the chart and tell the reader nothing.
+            SimulationPathModel path = summary.Paths[group];
+            string rank = $@"#{path.Rank.ToString(CultureInfo.CurrentCulture)}";
+
+            return path.ShortLabel.Length <= c_MaximumLegendNameLength
+                ? $@"{rank} {path.ShortLabel} ({share})"
+                : $@"{rank} ({share})";
         }
 
         private static void AddLine(

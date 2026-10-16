@@ -87,6 +87,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
+        // What a bound control shows can only be changed on the UI thread. A run reports its progress from the threads
+        // of the simulation, and the presentation is made on the task pool, and so what they produce is handed to
+        // the UI thread here, in order.
+        private readonly IUIDispatcher m_UiDispatcher;
+
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
@@ -127,6 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
+            m_UiDispatcher = uiDispatcher;
             m_SimulationChartPlotModel = new Plot();
             m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
@@ -277,13 +283,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 ? TimeSpan.FromTicks((long)(elapsed.Ticks * ((1.0 / fraction) - 1.0)))
                 : TimeSpan.Zero;
 
-            Progress = fraction;
-            StatusText = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.ProjectPlan.Labels.Label_SimulationProgress,
-                done,
-                total,
-                FormatDuration(remaining));
+            SetStatus(
+                fraction,
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.ProjectPlan.Labels.Label_SimulationProgress,
+                    done,
+                    total,
+                    FormatDuration(remaining)));
+        }
+
+        // The progress and what it says change together, on the UI thread, and in the order in which they were
+        // reported: the last word of a run (done, or cancelled) must not be overwritten by a report that was still
+        // on its way.
+        private void SetStatus(double progress, string text)
+        {
+            m_UiDispatcher.Defer(() =>
+            {
+                Progress = progress;
+                StatusText = text;
+            });
         }
 
         private static string FormatDuration(TimeSpan duration)
@@ -697,8 +716,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 IsRunning = true;
-                Progress = 0.0;
-                StatusText = string.Empty;
+                SetStatus(0.0, string.Empty);
                 Interlocked.Exchange(ref m_LastProgressTicks, 0);
 
                 var stopwatch = Stopwatch.StartNew();
@@ -719,19 +737,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 Summary = outcome.Summary;
                 BuildPresentation();
 
-                Progress = 1.0;
-                StatusText = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.ProjectPlan.Labels.Label_SimulationDone,
-                    FormatDuration(stopwatch.Elapsed));
+                SetStatus(
+                    1.0,
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.ProjectPlan.Labels.Label_SimulationDone,
+                        FormatDuration(stopwatch.Elapsed)));
             }
             catch (OperationCanceledException)
             {
-                StatusText = Resource.ProjectPlan.Labels.Label_SimulationCancelled;
+                SetStatus(0.0, Resource.ProjectPlan.Labels.Label_SimulationCancelled);
             }
             catch (Exception ex)
             {
-                StatusText = string.Empty;
+                SetStatus(0.0, string.Empty);
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -778,26 +797,32 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         // Presents the summary that the view model holds: the statistics as text, the tables and the chart. This
-        // runs when a run finishes, and again when the display settings change what the numbers look like.
+        // runs when a run finishes, and again when the display settings change what the numbers look like. It can
+        // run on any thread, and what it makes is handed to the UI thread.
         private void BuildPresentation()
         {
             SimulationSummaryModel? summary = Summary;
 
-            if (summary is null)
+            IReadOnlyList<SimulationStatisticModel> statistics = [];
+            IReadOnlyList<SimulationPathModel> paths = [];
+            IReadOnlyList<SimulationActivityCriticalityModel> activities = [];
+
+            if (summary is not null)
             {
-                Statistics = [];
-                Paths = [];
-                Activities = [];
-            }
-            else
-            {
-                Statistics = BuildStatistics(
+                statistics = BuildStatistics(
                     summary,
                     m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     m_CoreViewModel.ProjectStart);
-                Paths = summary.Paths;
-                Activities = summary.Activities;
+                paths = summary.Paths;
+                activities = summary.Activities;
             }
+
+            m_UiDispatcher.Defer(() =>
+            {
+                Statistics = statistics;
+                Paths = paths;
+                Activities = activities;
+            });
 
             BuildSimulationChartPlotModel();
         }
@@ -822,10 +847,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            plotModel ??= new Plot();
-            Plot outgoing = SimulationChartPlotModel;
-            SimulationChartPlotModel = plotModel;
-            m_PlotRetirer.Retire(outgoing);
+            Plot incoming = plotModel ?? new Plot();
+
+            m_UiDispatcher.Defer(() =>
+            {
+                if (m_Disposed)
+                {
+                    incoming.Dispose();
+                    return;
+                }
+
+                Plot outgoing = SimulationChartPlotModel;
+                SimulationChartPlotModel = incoming;
+                m_PlotRetirer.Retire(outgoing);
+            });
         }
 
         private sealed class CallbackProgress

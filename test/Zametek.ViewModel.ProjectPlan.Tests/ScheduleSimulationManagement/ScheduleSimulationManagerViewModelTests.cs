@@ -63,7 +63,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Panel = panel;
             }
 
-            public static async Task<Harness> MakeAsync(ProjectScenarioModel? scenario = null)
+            public static async Task<Harness> MakeAsync(ProjectScenarioModel? scenario = null, IUIDispatcher? dispatcher = null)
             {
                 CoreViewModel core = CoreViewModelFixture.Create();
                 core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
@@ -77,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     dialogs,
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
-                    CoreViewModelFixture.CreateUIDispatcher());
+                    dispatcher ?? CoreViewModelFixture.CreateUIDispatcher());
 
                 return new Harness(core, dialogs, panel);
             }
@@ -156,6 +156,90 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.Activities.ShouldNotBeEmpty();
             panel.SimulationChartPlotModel.GetPlottables().ShouldNotBeEmpty();
             panel.StatusText.ShouldStartWith(Resource.ProjectPlan.Labels.Label_SimulationDone.Split('{')[0]);
+        }
+
+        // A dispatcher that holds what it is given until it is told to run it, as the thread of the UI does.
+        private sealed class QueueingUIDispatcher
+            : IUIDispatcher
+        {
+            private readonly Queue<Action> m_Actions = new();
+            private readonly object m_Lock = new();
+
+            public int Pending
+            {
+                get
+                {
+                    lock (m_Lock)
+                    {
+                        return m_Actions.Count;
+                    }
+                }
+            }
+
+            public Task InvokeAsync(Action action)
+            {
+                action();
+                return Task.CompletedTask;
+            }
+
+            public void Defer(Action action)
+            {
+                lock (m_Lock)
+                {
+                    m_Actions.Enqueue(action);
+                }
+            }
+
+            public void RunAll()
+            {
+                while (true)
+                {
+                    Action action;
+                    lock (m_Lock)
+                    {
+                        if (m_Actions.Count == 0)
+                        {
+                            return;
+                        }
+                        action = m_Actions.Dequeue();
+                    }
+                    action();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_AUIThread_Then_EverythingThatIsBoundIsChangedThereAndInOrder()
+        {
+            // The progress comes from the threads of the simulation, and a control can be changed only on the thread
+            // of the UI. What a run changes for the UI is handed to that thread, and the last word stays the last.
+            var dispatcher = new QueueingUIDispatcher();
+            using Harness harness = await Harness.MakeAsync(dispatcher: dispatcher);
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 6;
+            string before = panel.StatusText;
+            IReadOnlyList<SimulationStatisticModel> statisticsBefore = panel.Statistics;
+            var changed = new List<string>();
+            panel.PropertyChanged += (_, e) => changed.Add(e.PropertyName ?? string.Empty);
+
+            await panel.RunSimulationAsync();
+
+            // The run is over, and none of what the UI shows has changed.
+            panel.HasResult.ShouldBeTrue();
+            dispatcher.Pending.ShouldBeGreaterThan(0);
+            panel.StatusText.ShouldBe(before);
+            panel.Statistics.ShouldBeSameAs(statisticsBefore);
+            changed.ShouldNotContain(nameof(ScheduleSimulationManagerViewModel.StatusText));
+            changed.ShouldNotContain(nameof(ScheduleSimulationManagerViewModel.Progress));
+            changed.ShouldNotContain(nameof(ScheduleSimulationManagerViewModel.Statistics));
+
+            dispatcher.RunAll();
+
+            panel.Progress.ShouldBe(1.0);
+            panel.StatusText.ShouldStartWith(Resource.ProjectPlan.Labels.Label_SimulationDone.Split('{')[0]);
+            panel.Statistics.ShouldNotBeEmpty();
         }
 
         [Fact]
