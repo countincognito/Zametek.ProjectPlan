@@ -4,7 +4,7 @@ This document describes how a change of project state moves through the applicat
 
 > **Transparency note:** Claude AI (Anthropic) worked alongside the maintainer to develop many of the refinements in this document. These refinements are the bulk-update gating, `MuteWhile`, the threading discipline, and the performance rework that they came from. Claude AI also helped to develop this document itself.
 
-Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics. The schedule simulation panel also connects to it, but it is not part of the cascade (rule 13).
+Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics. The schedule simulation also connects to it, but it is not part of the cascade (rule 13). Three docks show it: "Simulation", "Simulation Chart" and "Simulation Metrics".
 
 ---
 
@@ -275,6 +275,10 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     The panel marks a result as stale when `CompilationOutputRevision` is not the revision of the copy, or when `HasStaleOutputs` is true. It never starts a run by itself.
 
+    The core owns the settings of the simulation (`SimulationSettings`) and its last result (`SimulationSummary`), as it owns the metrics. Both belong to the scenario, and the project file holds them. A setter marks the scenario as modified, except while a scenario loads or resets, and a getter takes no lock. `ResetProjectScenario()` puts back the defaults and no result, and it adds one to `ProjectScenarioRevision`. A run records that revision. When it changes, the run stops and its result is thrown away.
+
+    The panel keeps no state of its own for this. Three docks show the one view model, `ScheduleSimulationManagerViewModel`. It is the dock "Simulation Chart". The docks "Simulation" and "Simulation Metrics" are thin view models that hold it. The name of the scenario in the first of them follows `TitleRevision`, as the title bar does. A result that a file holds reaches the panel through a pipeline of its own. The panel decides whether it made a result with `ReferenceEquals`, and not with the pipeline that presents the display settings.
+
 ## 8. `IsBusy` versus `IsBulkUpdating`
 
 They look similar: both use counters, and the application raises both on the outermost transitions. But they have different purposes, and a confusion of them causes bugs that are difficult to find:
@@ -322,7 +326,7 @@ In the scope, the engine resolves each view model and never starts it (§7 rule 
 
 This needs public seams for items that only the reactive pipeline reached before. An example is `IProjectScenarioManagerViewModel.BuildTrackedMetrics()`. The GUI calls it through a subscription, but the engine must call it directly before it builds the scenario chart.
 
-A job can also run the schedule simulation (`JobRequest.Simulation`). The engine does not make a second simulator. It resolves the same panel view model as the desktop (`IScheduleSimulationManagerViewModel`), sets its settings, and calls `RunSimulationAsync()`, with `UseRandomSeed` off, because the request gives the seed. The simulation runs last in the job, after the scenario chart, because it is by far the slowest step. Its statistics go into `JobResult.Simulation`, and its chart and its five CSV files are outputs of the job (`JobOutput.SimulationChart` and the files that follow it). The panel, `zpp` and the server thus make the same numbers in the same way. The engine registers the token of the job with `CancelSimulation()`, and so a simulation stops between two chunks of its iterations. A step that is in progress ends first for every other step, but a simulation is the exception, because it is the one step that can take minutes.
+A job can also run the schedule simulation (`JobRequest.RunSimulation`). The engine does not make a second simulator. It resolves the same panel view model as the desktop (`IScheduleSimulationManagerViewModel`). The settings are those of the scenario that the job loads. The job calls `RunSimulationWithSavedSeedAsync()`, which uses the saved seed and leaves the settings as they are. The job checks what the request asks of the simulation as soon as the plan is read (`SimulationException`). The simulation runs after the compile and before the project and the scenario are written, so that they hold its result. Its statistics go into `JobResult.Simulation`. A job that does not run the simulation still gives the statistics of a result that the scenario holds. It makes the outputs from that result. The chart and the CSV files are outputs of the job (`JobOutput.SimulationChart` and the files that follow it). They come last. The panel, `zpp` and the server thus make the same numbers in the same way. The engine registers the token of the job with `CancelSimulation()`, and so a simulation stops between two chunks of its iterations. A step that is in progress ends first for every other step, but a simulation is the exception, because it is the one step that can take minutes.
 
 Jobs run side by side, and each job produces exactly the same result as when it runs alone. Thus, two rules apply to everything that a job reaches:
 

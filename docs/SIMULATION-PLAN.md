@@ -170,7 +170,7 @@ The team stops after each phase for a review.
 | 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
 | 3 | The desktop panel. Done (not pushed). | This repository |
 | 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. Done (not pushed). | This repository |
-| 5 | The three docks, the title bar, the saving in the file and in Excel, and the new options of `zpp` and the API. Planned in six steps, with the title bar first. | This repository |
+| 5 | The three docks, the title bar, the saving in the file and in Excel, and the new options of `zpp` and the API. Done (not pushed). | This repository |
 
 ## The risks
 
@@ -299,6 +299,8 @@ The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.t
 
 ## Phase 3: the results
 
+Phase 5 changed some of what this section says: the panel is three docks, and the settings are in the project. [Phase 5: the results](#phase-5-the-results) says how.
+
 Phase 3 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`, in the commits `09816b80` (the statistics and the CSV files), `3abf30bd` (the view model and the chart), `0462c5ce` (the UI component and its place in the application) and the commit that holds this section (the target date and the documents). Nothing is pushed.
 
 ### What the application has now
@@ -325,6 +327,8 @@ Phase 3 finished on 2026-10-16. All the work is in this repository, on the branc
 - The criticality table counts each activity in each iteration, one call at a time. This takes seconds for 1,000,000 iterations of a large plan. A method of the library that counts the bits would be faster.
 
 ## Phase 4: the results
+
+Phase 5 changed the options of `zpp` and the API that this section describes. The settings of the simulation are the project's, and `--simulate` is `--run-simulation`. [Phase 5: the results](#phase-5-the-results) says how.
 
 Phase 4 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`, in the commits `8257abbc` (the panel writes one CSV file at a time, tells the date of a finish, and logs its progress), `b6ac8cb8` (the simulation in the engine, the options of `zpp`, and the API of `zpp serve` with its documents and tests), `bd753a3f` (a cancel of a job reaches a simulation that has not begun) and the commit that holds this section. Nothing is pushed.
 
@@ -357,6 +361,45 @@ Phase 4 finished on 2026-10-16. All the work is in this repository, on the branc
 - A client of `zpp --server` sees no progress while the server simulates. The log of the server has it.
 - One job uses all the processors for its iterations. A server that runs many simulations at one time asks the pool for more threads than it has processors. The result does not change, but the jobs slow each other. The limit of iterations and the job time bound the cost.
 - The cancel of `zpp` (Ctrl+C) kills the process and does not cancel the job.
+
+## Phase 5: the results
+
+Phase 5 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`. It has six steps, and each step is a commit: `255c545c` (the title bar), `b6bab7a7` (the settings and the result in the scenario and in the file), `40a9aff2` (the three docks), `6d848a1b` (Excel), `4e98d8fe` (`zpp` and `zpp serve`) and the commit that holds this section. Nothing is pushed.
+
+### What exists now
+
+- **Three docks.** "Simulation" sits beside "Scenarios". It has the name of the scenario, the settings, and the buttons Run Simulation and Cancel Simulation. Fixed at the bottom, it has the progress, the status and the warning for a result that is out of date. "Simulation Chart" has the chart and its menu. "Simulation Metrics" sits beside "Resource Metrics". It has the tabs Statistics, Critical paths and Criticalities, and each tab has "Copy Table" and keeps the layout of its columns. The tab "Critical paths" shows the activity IDs of a path, and its tooltip has the names. One view model, `ScheduleSimulationManagerViewModel`, has the simulation. The other two docks are thin view models that hold it.
+- **The panels follow the scenario.** All three clear when a scenario loads, when a project closes and when a project begins. A run that is in progress stops, and its result is thrown away.
+- **The title bar.** It follows a project that closes or a scenario that loads with no edit. This was a fault that `8c109e7d` caused, and it is on the branch `mc-sim` only.
+- **The scenario holds the simulation.** The core owns the settings (`SimulationSettings`) and the last result (`SimulationSummary`), as it owns the metrics. The project file (v0.6.2, which is not released) holds both. It holds the statistics, the percentiles, the histogram, the critical paths and the criticalities. It does not hold the iterations. A change of a setting, or a new result, marks the scenario as modified. A load does not. A result that a file holds is trusted, as the metrics of a file are.
+- **Excel.** The export has the sheets "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities", and the import reads them. A scenario with the default settings and no result has none of them.
+- **`zpp` and the API.** `--run-simulation` (`runSimulation`) runs the simulation with the settings and the saved seed of the project. A project that holds a result gives it without a run. `--simulation-directory`, `--simulation-format` and `--simulation-size` (the output `simulation`) write the chart and the CSV files side by side. The new problem `simulation-not-possible` is for a simulation that the project cannot give. [COMMAND-LINE](COMMAND-LINE.md#simulate-the-schedule) and [API](API.md) have the details.
+
+### Decisions in phase 5
+
+1. **The core owns it.** The settings and the result belong to the scenario, and not to the panel. A job, the panel and a file then agree.
+2. **A result that a file holds is trusted.** The panel does not say that it is out of date. The metrics of a scenario that a file holds, with the compile off, are the same.
+3. **A saved seed.** A run of a job uses the saved seed, also when the project draws a new seed each time. It leaves the settings as they are. A run of the panel draws a seed and saves it.
+4. **The seed in Excel is text.** A cell holds a whole number exactly up to 2^53 only, and a seed has 64 bits.
+5. **One column for each group of paths, and numbers as numbers.** The histogram has a column for the weight of each group of paths, and not a list in one cell. The import reads a number from its cell. It does not read the text of the cell with the culture of the computer.
+6. **The settings come from the project.** The options for the iterations, the seed, the distribution, the shape value and the target are gone from `zpp` and from the API. Otherwise, each setting has two places.
+7. **A limit is on a run.** A server refuses a run of a project that has more iterations than its limit (`validation-failed`). It gives a result that the project holds without a limit, as that costs nothing.
+8. **A kind of problem of its own.** A simulation that cannot be done is `simulation-not-possible`, and not `validation-failed`. The client then ends as the local run does (exit code 1). The refusal for the limit has no local analogue, and thus it stays a refusal (exit code 5).
+9. **The run goes first.** The simulation runs before the project and the workbook are written, so that they hold its result. Its chart and its files come last in the outputs, as before.
+10. **A failure keeps no old result.** A run that fails does not give the result that the project had before it.
+11. **A seam for a job.** The job has `SimulationSettings` in the place of the settings of the project. The warm-up of the server and the tests use it. The job also has `MaximumSimulationIterations` for the limit of a server.
+
+### Lessons
+
+- A property chain in ReactiveUI (`WhenAnyValue`) drops a value that did not change. This caused the fault of the title bar, and a counter fixed it.
+- Two pipelines that present the same value race. The first version of the pipeline for a result that a file held took it as shown when the pipeline for the display settings had shown it. Then the result looked out of date. A test found it. The pipeline now asks whether the panel made the result.
+- A contract that three documents and the code share needs one commit. The tests of the contract failed whenever one of them was behind.
+
+### What is not done
+
+- Nobody has looked at the three docks in the running application. A headless render of each view looks right. A person must look at them with the real theme, and at the layout of the docks.
+- A saved result does not say which seed, distribution and shape value made it. The statistics that `zpp` prints for a saved result use the settings that the project holds, and a person can change them after the run. [TODO](TODO.md) has an entry.
+- A project does not hold the iterations of a run. The file of the iterations needs a run.
 
 ## Performance work to explore later
 

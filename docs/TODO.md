@@ -408,10 +408,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most.
 
-- [ ] **Save the settings of the simulation panel** *(2026-10-16)*
-
-  The number of iterations, the distribution, the shape value, the seed and the target start again with the application. The other charts keep their settings in the display settings of the scenario. Decide whether the simulation settings belong to the scenario or to the application.
-
 - [ ] **Count the criticality of the activities with the bits of the library** *(2026-10-16)*
 
   `SimulationAnalyzer` calls `SimulationResult.IsCritical(iteration, activity)` once for each activity and each iteration. For 1,000,000 iterations of a plan of 2,000 activities, that is two thousand million calls. A method of `SimulationResult` that counts the set bits of one activity over the iterations would take a few seconds less. Measure before the change.
@@ -422,9 +418,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
 
-- [ ] **Take a date as the target of a simulation in `zpp` and in the API** *(2026-10-16)*
+- [ ] **Keep the seed and the distribution with the result of a simulation** *(2026-10-16)*
 
-  The panel takes the target as a number of days or, when the dates are on display, as a date. `--simulation-target` and `targetFinishDays` take days only. The panel view model already has `TargetFinishDate`, which finds the first finish time on that date or after it with the working calendar of the plan. A job could set it. The open question is the form: a date in the option, or a second member (`targetFinishDate`).
+  A result that a project holds does not say which seed, distribution and shape value made it. The statistics that `zpp` and the API give for it use the settings that the project holds. A person can change the settings after the run and save the project, and then the statistics name a seed that did not make them. Choices: add the three values to the result, in the file and in the Excel sheet "Simulation Statistics". The file format v0.6.2 is not released, and thus it can take them. Or clear the result when a setting changes.
 
 - [ ] **Run the iterations of a job on a share of the processors** *(2026-10-16)*
 

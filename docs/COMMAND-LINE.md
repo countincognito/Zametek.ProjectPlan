@@ -86,9 +86,9 @@ The option `--now` gives the run a time of its own. It includes the offset from 
 
 ## Simulate the schedule
 
-An activity can have three estimates of its duration: an optimistic, a most likely and a pessimistic duration. A Monte Carlo simulation of the schedule draws a duration for each activity from its estimates in each iteration, schedules the resources again, and finds the finish and its critical path. An activity that has no estimates keeps its duration.
+An activity can have three estimates of its duration: an optimistic, a most likely and a pessimistic duration. A Monte Carlo simulation of the schedule draws a duration for each activity from its estimates in each iteration. It schedules the resources again, and it finds the finish and its critical path. An activity that has no estimates keeps its duration.
 
-The settings of the simulation are in the project: the iterations, the distribution, its shape value, the seed, whether to draw a new seed each time, and the target finish. You set them in the dock "Simulation" of the desktop application, and the application saves them with the project, together with the result of the last run. `zpp` does not have options for them. It uses what the input file holds. A file that was saved before the simulation has the settings of a new scenario: 5000 iterations, the distribution `BetaPert`, and the seed 1.
+The settings of the simulation are in the project. They are the iterations, the distribution, its shape value, the seed, whether to draw a new seed each time, and the target finish. You set them in the dock "Simulation" of the desktop application. The application saves them with the project, together with the result of the last run. `zpp` does not have options for them. It uses what the input file holds. A file that was saved before the simulation has the settings of a new scenario: 5000 iterations, the distribution `BetaPert`, and the seed 1.
 
 The option `--run-simulation` runs the simulation after the plan compiles. `zpp` prints the statistics of the finish after the metrics:
 
@@ -96,7 +96,7 @@ The option `--run-simulation` runs the simulation after the plan compiles. `zpp`
 zpp -i plan.zpp --run-simulation
 ```
 
-The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution, the mean and the standard deviation of the finish, the earliest and the latest finish, the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date.
+The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution, the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date.
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
@@ -107,12 +107,12 @@ The statistics are those of the dock "Simulation Metrics" of the desktop applica
 zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --simulation-size 1600:900 --simulation-format png
 ```
 
-- A project that holds the result of an earlier run gives its statistics without `--run-simulation`. `zpp` prints them after the metrics, and `--simulation-directory` draws that result and writes its CSV files. A project does not hold the iterations of a run, and thus a job that does not run the simulation writes no file `-iterations.csv`. `--simulation-directory` for a project that holds no result, without `--run-simulation`, is a failure: `zpp` writes the reason to the standard error stream and exits with code 1.
-- `-o` saves the project with the settings and the result of the run, and `-x` writes them to the Excel workbook (the sheets "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities"). The simulation runs before the project and the workbook are written. A workbook of a plan with the default settings and no result has none of these sheets.
+- A project that holds the result of an earlier run gives its statistics without `--run-simulation`. `zpp` prints them after the metrics, and `--simulation-directory` draws that result and writes its CSV files. A project does not hold the iterations of a run, and thus a job that does not run the simulation writes no file `-iterations.csv`. `--simulation-directory` is a failure for a project that holds no result, without `--run-simulation`. `zpp` writes the reason to the standard error stream and exits with code 1.
+- `-o` saves the project with the settings and the result of the run. `-x` writes them to the Excel workbook, in the sheets "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities". The simulation runs before the project and the workbook are written. A plan with the default settings and no result has none of these sheets.
 - The result does not depend on the number of processors. The iterations run on all of them.
 - An iteration costs about as much as a compilation: less than a millisecond for the sample plan, and about 100 milliseconds for a plan of 1000 activities (measured in phase 0 of the work, refer to the [simulation plan](SIMULATION-PLAN.md)). Large plans with many iterations can take minutes. `--verbose` writes the progress of the simulation to the standard error stream, about every two seconds.
 - With `--metrics-format json`, the statistics are one more object, `Simulation`, after the metrics. It has raw values, as the metrics have. The seed is text, because a seed can be larger than every reader of JSON reads without loss. A date is `yyyy-MM-dd`. A project with no result, and no `--run-simulation`, has the JSON that it had before there was a simulation.
-- Settings that a run cannot use (for example, no iterations, or a shape value that is not above 0), or a simulation that cannot run (for example, for a plan that has no activities), is a failure of the run: `zpp` writes the reason to the standard error stream and exits with code 1. A plan with no activities still has its metrics printed.
+- A run can fail in two ways. The settings of the project can be ones that a run cannot use, for example no iterations or a shape value that is not above 0. Or the simulation cannot run, for example for a plan that has no activities. Then `zpp` writes the reason to the standard error stream and exits with code 1. A plan with no activities still has its metrics printed.
 - `zpp --server` sends the run to the server, and the server limits the iterations of a project that it runs (refer to [Limits](#limits)).
 
 ## Exit codes
