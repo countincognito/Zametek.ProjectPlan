@@ -517,6 +517,93 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.HasResult.ShouldBeTrue();
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(10)]
+        [InlineData(57)]
+        [InlineData(224)]
+        public async Task TargetFinishDate_Given_ATargetInDays_Then_IsTheDateThoseDaysFinishOnAndTheOtherWayRound(int days)
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            var changed = new List<string>();
+            panel.PropertyChanged += (_, e) => changed.Add(e.PropertyName ?? string.Empty);
+
+            panel.TargetFinishTime = days;
+            DateTimeOffset? date = panel.TargetFinishDate;
+
+            date.ShouldNotBeNull();
+            changed.ShouldContain(nameof(ScheduleSimulationManagerViewModel.TargetFinishDate));
+
+            // The date is the one that the statistics show for the same number of days.
+            panel.TargetFinishTime = null;
+            panel.TargetFinishDate.ShouldBeNull();
+            panel.TargetFinishDate = date;
+            panel.TargetFinishTime.ShouldBe(days);
+        }
+
+        [Theory]
+        [InlineData(3)]
+        [InlineData(20)]
+        [InlineData(100)]
+        public async Task TargetFinishDate_Given_ThePlanSkipsTheWeekends_Then_TheDatesAndTheDaysStillMatch(int days)
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            harness.Core.DisplaySettingsViewModel.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            panel.TargetFinishTime = days;
+            DateTimeOffset? date = panel.TargetFinishDate;
+            date.ShouldNotBeNull();
+            panel.TargetFinishTime = null;
+            panel.TargetFinishDate = date;
+
+            // A day that finishes on a working day has its own date, and so it comes back as itself.
+            panel.TargetFinishTime.ShouldBe(days);
+        }
+
+        [Fact]
+        public async Task TargetFinishDate_Given_ADateBeforeTheStartOfThePlan_Then_IsTheFirstDay()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+
+            panel.TargetFinishDate = harness.Core.ProjectStart.AddYears(-3);
+
+            panel.TargetFinishTime.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task ShowDates_Given_TheDisplaySetting_Then_FollowsIt()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            harness.Core.DisplaySettingsViewModel.ShowDates = false;
+            panel.ShowDates.ShouldBeFalse();
+
+            harness.Core.DisplaySettingsViewModel.ShowDates = true;
+
+            panel.ShowDates.ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_DatesOnDisplay_Then_TheStatisticsShowTheDatesAsWell()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            harness.Core.DisplaySettingsViewModel.ShowDates = true;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 8;
+            panel.TargetFinishDate = harness.Core.ProjectStart.AddDays(300);
+
+            await panel.RunSimulationAsync();
+
+            SimulationStatisticModel mean = panel.Statistics.Single(x => x.Name == Resource.ProjectPlan.Labels.Label_SimulationPlannedFinish);
+            mean.Value.ShouldContain("(");
+            panel.Summary!.TargetFinishTime.ShouldNotBeNull();
+        }
+
         [Fact]
         public async Task ExportCsvFilesCommand_Given_AResult_Then_WritesFiveFilesNextToTheNameThatTheUserChose()
         {

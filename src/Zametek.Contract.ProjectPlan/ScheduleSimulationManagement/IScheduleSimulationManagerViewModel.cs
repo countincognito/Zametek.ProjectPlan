@@ -31,6 +31,13 @@ namespace Zametek.Contract.ProjectPlan
         // The finish time, in days from the start of the project, that a run reports the chance of meeting.
         int? TargetFinishTime { get; set; }
 
+        // Whether the dates are on display. Then the target is given as a date, and not as a number of days.
+        bool ShowDates { get; }
+
+        // The date of the finish time that is the target. Setting it sets the finish time of the first day that
+        // finishes on that date or after it.
+        DateTimeOffset? TargetFinishDate { get; set; }
+
         // The state of a run.
 
         bool IsRunning { get; }

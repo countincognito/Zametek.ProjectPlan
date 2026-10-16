@@ -401,3 +401,17 @@ This file lists the maintainer-internal engineering intents that must version wi
   - Keep the behavior and change the tooltip of the drag. It would show the expected duration that the drop gives, and not the dragged length.
 
   **Where.** `GanttChartManagerView.axaml.cs` (the drag), `CoreViewModel.SetActivityDuration` and `ManagedActivityViewModel.Duration`. The test `ActivityEstimatesTests.SetActivityDuration_Given_AnActivityWithNoEstimates_Then_IsTheDurationOfTheActivity` pins the behavior for an activity with no estimates. A new test must pin the choice for an activity with estimates.
+
+- [ ] **Group the critical paths of a simulation in a way that helps for a plan that resources decide** *(2026-10-16)*
+
+  A plan with resources has very many critical paths in a simulation, because the order in which the resources do the work changes from one iteration to the next. For the sample plan, 3,000 iterations give hundreds of distinct paths, and the eight heaviest have 1 % of the weight each. The group "Other paths" has 92 %. The chart is correct, but it does not show the reader what decides the finish.
+
+  Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most.
+
+- [ ] **Save the settings of the simulation panel** *(2026-10-16)*
+
+  The number of iterations, the distribution, the shape value, the seed and the target start again with the application. The other charts keep their settings in the display settings of the scenario. Decide whether the simulation settings belong to the scenario or to the application.
+
+- [ ] **Count the criticality of the activities with the bits of the library** *(2026-10-16)*
+
+  `SimulationAnalyzer` calls `SimulationResult.IsCritical(iteration, activity)` once for each activity and each iteration. For 1,000,000 iterations of a plan of 2,000 activities, that is two thousand million calls. A method of `SimulationResult` that counts the set bits of one activity over the iterations would take a few seconds less. Measure before the change.

@@ -4,7 +4,7 @@ This document describes how a change of project state moves through the applicat
 
 > **Transparency note:** Claude AI (Anthropic) worked alongside the maintainer to develop many of the refinements in this document. These refinements are the bulk-update gating, `MuteWhile`, the threading discipline, and the performance rework that they came from. Claude AI also helped to develop this document itself.
 
-Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics.
+Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics. The schedule simulation panel also connects to it, but it is not part of the cascade (rule 13).
 
 ---
 
@@ -264,6 +264,16 @@ These rules are important. Several of them came from deadlocks and double-build 
     Thus, a view model that nobody starts is inert, but it is still correct. The converse is a trap. An engine must do explicitly each item that it needs a pipeline to deliver, because the pipeline does not deliver it. For this reason, the Gantt and EV selectors take the filter that a plan saves in their constructors. The EV selector always did this. The Gantt selector relied on a delivery to the pool that won its race against the build of the job.
 
     [`UnstartedViewModelTests`](../test/Zametek.Engine.ProjectPlan.Tests/UnstartedViewModelTests.cs) holds both schedulers while a job runs on a real plan. It fails if a view model hands anything to either scheduler. It also fails if the outputs of the job differ from the outputs of the same job when the schedulers are free. [`StartableViewModelTests`](../test/Zametek.Engine.ProjectPlan.Tests/StartableViewModelTests.cs) and the `*StartTests` of the view model tests say this for each view model on its own. They also say the other half: starting a view model starts what it must start, one time, and killing it stops what it started.
+
+13. **A simulation reads a copy of the plan, and it runs outside the build cascade.**
+
+    The schedule simulation takes seconds to minutes. Each iteration schedules the whole plan again, and it costs about as much as a compile. Thus, the simulation panel is not part of the build cascade. It runs only when the user asks.
+
+    [`CaptureSimulationInput()`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) takes the copy, with the same steps as `SnapshotCompiler()` (rule 11). It holds `m_Lock` and then the leaf lock `m_ActivityDataLock`, and it copies the activities in the order of the live graph. It also takes the resources and the work streams that a compile uses, the three estimates and the name of each activity, and `CompilationOutputRevision`. The simulation changes the durations of the copies. It never reads a live activity again, and thus an edit during a run cannot reach it.
+
+    A run reports its progress from the threads of the simulation, and it builds the statistics and the chart on the task pool. A bound control can change only on the UI thread. Thus, the panel hands each change that the UI shows to `IUIDispatcher.Defer`. The dispatcher keeps the order of the changes, and thus the last word of a run (done, or cancelled) cannot be overwritten by a report that was still on its way. A progress bar that is bound to a property that the simulation threads set throws an exception.
+
+    The panel marks a result as stale when `CompilationOutputRevision` is not the revision of the copy, or when `HasStaleOutputs` is true. It never starts a run by itself.
 
 ## 8. `IsBusy` versus `IsBulkUpdating`
 

@@ -147,7 +147,7 @@ The team stops after each phase for a review.
 | 0 | Measure the cost of one iteration. Prototype a lean path. Check the prototype against the reference tool. Decide the default iteration count. | Library and this repository |
 | 1 | The estimates: the new file format, the rules, the grid and the dialog, the imports and the export. | This repository |
 | 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
-| 3 | The desktop panel. | This repository |
+| 3 | The desktop panel. Done (not pushed). | This repository |
 | 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. | This repository |
 
 ## The risks
@@ -274,6 +274,33 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 ### Reading the library source
 
 The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages. Before this work merges, the packages must be published at 3.3.0, and the two package references must change to that version.
+
+## Phase 3: the results
+
+Phase 3 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`, in the commits `09816b80` (the statistics and the CSV files), `3abf30bd` (the view model and the chart), `0462c5ce` (the UI component and its place in the application) and the commit that holds this section (the target date and the documents). Nothing is pushed.
+
+### What the application has now
+
+- **The panel.** "Schedule Simulation" is a tab next to the charts. It has the settings (iterations, distribution, the shape value of the modified beta-PERT, the seed with a box "New seed each run", the target finish, Run and Cancel), a progress bar with the time that is left, a warning when the result is stale, the chart, and three tabs: the statistics, the critical paths and the criticality of the activities.
+- **The statistics.** `SimulationAnalyzer` makes them from the raw result: the mean, the standard deviation, the minimum and the maximum, the percentiles 5, 10, 25, 50, 75, 80, 90, 95 and 99 (nearest rank), the share of the iterations that finish by the target, the histogram (one bin for each day, and wider bins after 100 bins), the table of the 25 heaviest critical paths, and the criticality index of each activity.
+- **The chart.** `SimulationChartBuilder` draws a stacked histogram (the eight heaviest paths and a group for the rest), the S-curve on the axis at the right, and lines at the mean, at P50, P80 and P90, at the planned finish and at the target. A legend entry has the rank of the path, which is the rank of its row in the table, and its share. It has the names of the activities only when they are short.
+- **The CSV files.** One name in the save dialog gives five files: `-statistics`, `-histogram`, `-paths`, `-activities` and `-iterations`.
+- **The copy of the plan.** `CoreViewModel.CaptureSimulationInput()` takes it, with the steps of the snapshot of a compilation (refer to [Architecture](ARCHITECTURE.md), section 7, rule 13).
+
+### Decisions in phase 3
+
+1. **Not in the cascade.** A simulation runs only when the user asks. It copies the plan, runs on the task pool, and never reads a live activity again.
+2. **A stale result.** The panel marks a result as stale when the outputs of the plan have a new revision, or when they no longer match the plan. It never starts a run by itself.
+3. **The seed.** The seed box always shows the seed that the last run used. With "New seed each run" on, the panel makes a new seed for each run. With it off, the panel uses the seed in the box. A user can therefore make a result again.
+4. **The target.** The target is a number of days. When the dates are on display, it is a date, and the panel finds the first finish time that finishes on that date or after it.
+5. **Changes for the UI thread.** A run reports its progress from the threads of the simulation, and a bound control can change only on the UI thread. Everything that a run changes for the UI goes through `IUIDispatcher.Defer`, in order.
+6. **Percentiles and the deviation.** A percentile is the smallest finish time that at least that share of the iterations reach. The standard deviation divides by the number of valid iterations.
+
+### What is not done
+
+- The settings of the panel are not saved in the plan or in the settings of the application. They start again with the application.
+- A plan that resources decide has very many critical paths that are nearly equal. The sample plan has 92 % of its weight in "Other paths" and about 1 % in each of the eight paths that the chart shows. The chart is correct but it says little. [TODO](TODO.md) has an entry for a grouping that is more useful for such plans.
+- The criticality table counts each activity in each iteration, one call at a time. This takes seconds for 1,000,000 iterations of a large plan. A method of the library that counts the bits would be faster.
 
 ## Performance work to explore later
 

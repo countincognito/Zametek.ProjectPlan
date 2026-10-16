@@ -80,7 +80,11 @@
 				<TextBox Width="80"
 						 Height="25"
 						 VerticalContentAlignment="Center"
+						 IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
 						 Text="{Binding Path=TargetFinishTime, Converter={StaticResource nullableIntConverter}, Mode=TwoWay}" />
+				<DatePicker Width="190"
+							IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
+							SelectedDate="{Binding Path=TargetFinishDate, Mode=TwoWay}" />
 			</StackPanel>
 
 			<StackPanel Orientation="Horizontal"
@@ -183,7 +187,7 @@
 							  GridLinesVisibility="All">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationRank}"
-												Width="45"
+												Width="58"
 												Binding="{Binding Path=Rank, Mode=OneWay}" />
 							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationPath}"
 												Width="*"
@@ -212,7 +216,7 @@
 												Width="*"
 												Binding="{Binding Path=Name, Mode=OneWay}" />
 							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationCriticality}"
-												Width="110"
+												Width="135"
 												Binding="{Binding Path=CriticalityIndex, Mode=OneWay, StringFormat=\{0:P1\}}" />
 						</DataGrid.Columns>
 					</DataGrid>

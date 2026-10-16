@@ -159,6 +159,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(ssm => ssm.Distribution, (DurationDistribution distribution) => distribution == DurationDistribution.ModifiedBetaPert)
                 .ToProperty(this, ssm => ssm.IsModifiedBetaDistribution);
 
+            m_ShowDates = this
+                .WhenAnyValue(ssm => ssm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
+                .ToProperty(this, ssm => ssm.ShowDates);
+
             m_HasResult = this
                 .WhenAnyValue(ssm => ssm.Summary, (SimulationSummaryModel? summary) => summary is not null && summary.HasResult)
                 .ToProperty(this, ssm => ssm.HasResult);
@@ -359,6 +363,39 @@ namespace Zametek.ViewModel.ProjectPlan
             IReadOnlyDictionary<int, string> ActivityNames,
             int CompilationOutputRevision);
 
+        // The date on which a project that takes the given days finishes, as the display shows it: the day that the
+        // last of its days ends on, in the working calendar of the settings.
+        private DateTimeOffset FinishDateOf(int days, DateTimeOffset projectStart)
+        {
+            DateTimeOffset finish = m_DateTimeCalculator.AddDays(projectStart, days);
+            return m_DateTimeCalculator.DisplayFinishDate(finish, finish, 1);
+        }
+
+        // The finish time of the first day that finishes on the given date or after it: the inverse of FinishDateOf.
+        // The finish dates never go back as the days go up, and so a search that halves the range finds it.
+        private int DaysOfFinishDate(DateTimeOffset date)
+        {
+            DateTimeOffset projectStart = m_CoreViewModel.ProjectStart;
+            int low = 0;
+            int high = GraphLimits.MaximumTimeValue;
+
+            while (low < high)
+            {
+                int middle = low + ((high - low) / 2);
+
+                if (FinishDateOf(middle, projectStart).Date >= date.Date)
+                {
+                    high = middle;
+                }
+                else
+                {
+                    low = middle + 1;
+                }
+            }
+
+            return low;
+        }
+
         // The finish time as the user reads it: the day number, and the date as well when the dates are on display.
         private string FormatFinish(int days, bool showDates, DateTimeOffset projectStart)
         {
@@ -369,8 +406,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return number;
             }
 
-            DateTimeOffset finish = m_DateTimeCalculator.AddDays(projectStart, days);
-            string date = m_DateTimeCalculator.DisplayFinishDate(finish, finish, 1).ToString(DateTimeCalculator.DateFormat);
+            string date = FinishDateOf(days, projectStart).ToString(DateTimeCalculator.DateFormat);
             return $@"{number} ({date})";
         }
 
@@ -592,7 +628,27 @@ namespace Zametek.ViewModel.ProjectPlan
         public int? TargetFinishTime
         {
             get => m_TargetFinishTime;
-            set => this.RaiseAndSetIfChanged(ref m_TargetFinishTime, value);
+            set
+            {
+                if (m_TargetFinishTime == value)
+                {
+                    return;
+                }
+
+                this.RaisePropertyChanging();
+                m_TargetFinishTime = value;
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged(nameof(TargetFinishDate));
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
+        public bool ShowDates => m_ShowDates.Value;
+
+        public DateTimeOffset? TargetFinishDate
+        {
+            get => TargetFinishTime is int days ? FinishDateOf(days, m_CoreViewModel.ProjectStart) : null;
+            set => TargetFinishTime = value is DateTimeOffset date ? DaysOfFinishDate(date) : null;
         }
 
         private bool m_IsRunning;
@@ -966,6 +1022,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_IsModifiedBetaDistribution?.Dispose();
+                m_ShowDates?.Dispose();
                 m_HasResult?.Dispose();
                 m_IsResultStale?.Dispose();
             }

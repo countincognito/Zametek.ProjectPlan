@@ -36,6 +36,11 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | build cascade | The sequence of the seven `Build*` methods that `RunBuildCascade()` calls after a compile. It makes the arrow graph, the vertex graph, the series for resources and tracking, and the three kinds of metrics. |
 | output | A result that the desktop application, `zpp` or the server makes from a compiled plan. Examples are the metrics, a chart, a graph and an exported plan. |
 | metrics | The numbers that describe a compiled scenario. There are network, risk and financial metrics. |
+| estimates | The three durations of an activity: the optimistic duration (O), the most likely duration (ML) and the pessimistic duration (P). The rule is 0 ≤ O ≤ ML ≤ P. The compiler schedules the expected duration, (O + 4 ML + P) / 6, rounded to the nearest whole day, with halves up. |
+| simulation | A Monte Carlo simulation of the schedule of a plan. Each iteration draws a duration for each activity from its estimates and schedules the plan again, onto its resources. |
+| iteration | One draw and one schedule in a simulation. A simulation has many iterations, and each gives a finish time. |
+| seed | The number that starts the random numbers of a simulation. The same plan, the same settings and the same seed give the same result, for any number of threads. |
+| critical path (of an iteration) | A chain of critical activities in which each activity starts when the one before it finishes. The chain has only the activities that take time. A link is a dependency of the plan, or a resource link. When several chains have the same length, the iteration has several critical paths. |
 | chart | A plot of data, for example the Gantt chart, the earned value chart, the resource chart or the scenario chart. |
 | graph | A diagram of the activities and their dependencies. The arrow graph is activity-on-arrow. The vertex graph is activity-on-vertex. |
 
