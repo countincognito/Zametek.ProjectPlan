@@ -1474,6 +1474,51 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The plan has compilation errors, and cannot be simulated..
+        /// </summary>
+        public static string Message_SimulationCompilationErrors {
+            get {
+                return ResourceManager.GetString("Message_SimulationCompilationErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} files were saved in {1}..
+        /// </summary>
+        public static string Message_SimulationFilesSaved {
+            get {
+                return ResourceManager.GetString("Message_SimulationFilesSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of iterations must be from 1 to {0}..
+        /// </summary>
+        public static string Message_SimulationIterationsOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationIterationsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The plan has no activities to simulate..
+        /// </summary>
+        public static string Message_SimulationNoActivities {
+            get {
+                return ResourceManager.GetString("Message_SimulationNoActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The shape value must be a number above 0..
+        /// </summary>
+        public static string Message_SimulationShapeOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationShapeOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit must be equal or greater than 0.
         /// </summary>
         public static string Message_SlackLimitMustBeEqualOrGreaterThanZero {

@@ -106,6 +106,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -simulation.
+        /// </summary>
+        public static string Suffix_SimulationChart {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -simulation.
+        /// </summary>
+        public static string Suffix_SimulationCsv {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationCsv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -vertex.
         /// </summary>
         public static string Suffix_VertexChart {

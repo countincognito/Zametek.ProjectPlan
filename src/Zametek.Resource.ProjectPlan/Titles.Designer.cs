@@ -313,6 +313,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Schedule Simulation.
+        /// </summary>
+        public static string Title_ScheduleSimulation {
+            get {
+                return ResourceManager.GetString("Title_ScheduleSimulation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tracked.
         /// </summary>
         public static string Title_Tracked {

@@ -2173,6 +2173,73 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public SimulationInputModel CaptureSimulationInput()
+        {
+            lock (m_Lock)
+            {
+                // The resources and the work streams are the ones that a compile uses.
+                var resources = new List<IResource<int, int>>();
+                if (!ResourceSettings.AreDisabled)
+                {
+                    resources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+                }
+
+                List<IWorkStream<int>> workStreams = [.. WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream)];
+
+                List<IDependentActivity<int, int, int>> activities = [];
+                Dictionary<int, DurationEstimate> estimates = [];
+                Dictionary<int, string> names = [];
+
+                // The copies are taken as a compilation takes them (SnapshotCompiler): in the order that the live
+                // graph holds the activities, and in one pass under the activity data lock, so that no activity is
+                // edited part way through being copied. A simulation takes minutes, and it must never see the
+                // live activities again after this.
+                lock (m_ActivityDataLock)
+                {
+                    Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
+
+                    foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
+                    {
+                        if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
+                        {
+                            activities.Add((IDependentActivity<int, int, int>)activity.CloneObject());
+                            estimates[activityId] = EstimatesOf(activity);
+                            names[activityId] = activity.Name ?? string.Empty;
+                        }
+                    }
+                }
+
+                return new SimulationInputModel
+                {
+                    Activities = activities,
+                    Resources = resources,
+                    WorkStreams = workStreams,
+                    Estimates = estimates,
+                    ActivityNames = names,
+                    CompilationOutputRevision = CompilationOutputRevision,
+                };
+            }
+        }
+
+        // The three estimates that an activity has. An activity outside the rule is one that a compile refuses (its
+        // values are over the limit), and a simulation is not started for a plan that a compile refuses.
+        private static DurationEstimate EstimatesOf(IManagedActivityViewModel activity)
+        {
+            (int optimistic, int mostLikely, int pessimistic) = EstimateHelper.Effective(
+                activity.MostLikelyDuration,
+                activity.OwnOptimisticDuration,
+                activity.OwnPessimisticDuration);
+
+            try
+            {
+                return new DurationEstimate(optimistic, mostLikely, pessimistic);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return DurationEstimate.Fixed(Math.Clamp(activity.Duration, 0, GraphLimits.MaximumTimeValue));
+            }
+        }
+
         public void RunCompile()
         {
             CascadeDiagnostics.RecordStackTrace($@"{nameof(CoreViewModel)}.{nameof(RunCompile)} invoked");

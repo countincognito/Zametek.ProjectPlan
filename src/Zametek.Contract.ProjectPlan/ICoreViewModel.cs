@@ -156,6 +156,12 @@ namespace Zametek.Contract.ProjectPlan
         // Takes the optimistic and the pessimistic duration of each of the activities back to its most likely duration.
         void ResetActivityEstimates(IEnumerable<int> activityIds);
 
+        // Copies the plan, as it is at this moment, for a simulation to run on: the activities in the order of the
+        // plan, the resources and the work streams that a compile uses, the three estimates of each activity, and
+        // the revision of the compilation outputs that the plan was at. The copy is independent of the live
+        // activities, and so an edit that is made while the simulation runs cannot reach it.
+        SimulationInputModel CaptureSimulationInput();
+
         void RunCompile();
 
         void RunAutoCompile();
