@@ -1589,6 +1589,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Display settings.
                     DisplaySettingsViewModel.SetValues(projectScenarioImportModel.DisplaySettings);
 
+                    // The simulation: its settings, and its last result if the workbook has one. The result is trusted,
+                    // as the result that a project file holds is.
+                    SimulationSettings = projectScenarioImportModel.SimulationSettings;
+                    SimulationSummary = projectScenarioImportModel.SimulationSummary;
+
                     RunCompile();
 
                     // The internal Build* subscriptions drop their emissions during a

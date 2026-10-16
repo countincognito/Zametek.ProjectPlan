@@ -1223,6 +1223,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 ImportWorksheetResourceTrackers(workbook, resource, dependentActivities);
             }
 
+            (SimulationSettingsModel simulationSettings, SimulationSummaryModel? simulationSummary) =
+                XlsxSimulationSheets.ReadFromWorkbook(workbook);
+
             return new ProjectScenarioImportModel
             {
                 ProjectStart = projectStart,
@@ -1246,7 +1249,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     NonWorkingDayMode = nonWorkingDayMode,
                     HideCost = hideCost,
                     HideBilling = hideBilling,
-                }
+                },
+
+                SimulationSettings = simulationSettings,
+                SimulationSummary = simulationSummary,
             };
         }
 

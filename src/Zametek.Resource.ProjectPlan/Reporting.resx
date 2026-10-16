@@ -159,6 +159,24 @@
   <data name="Reporting_WorksheetActivityTracker" xml:space="preserve">
     <value>Activity Tracker</value>
   </data>
+  <data name="Reporting_WorksheetSimulationCriticalities" xml:space="preserve">
+    <value>Simulation Criticalities</value>
+  </data>
+  <data name="Reporting_WorksheetSimulationHistogram" xml:space="preserve">
+    <value>Simulation Histogram</value>
+  </data>
+  <data name="Reporting_WorksheetSimulationPaths" xml:space="preserve">
+    <value>Simulation Paths</value>
+  </data>
+  <data name="Reporting_WorksheetSimulationPercentiles" xml:space="preserve">
+    <value>Simulation Percentiles</value>
+  </data>
+  <data name="Reporting_WorksheetSimulationSettings" xml:space="preserve">
+    <value>Simulation Settings</value>
+  </data>
+  <data name="Reporting_WorksheetSimulationStatistics" xml:space="preserve">
+    <value>Simulation Statistics</value>
+  </data>
   <data name="Reporting_WorksheetWorkStreams" xml:space="preserve">
     <value>Work Streams</value>
   </data>

@@ -1163,6 +1163,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
+            // The simulation: only a scenario that has settings of its own, or a result, has the sheets.
+            if (XlsxSimulationSheets.HasSimulation(projectScenario))
+            {
+                XlsxSimulationSheets.WriteToWorkbook(
+                    projectScenario,
+                    workbook,
+                    titleStyle);
+            }
+
             // NPOI stamps the workbook with the wall clock twice over: as the time it was created, and as the time
             // each part of the package was last written, as it zips them. Both are stamped here with the
             // calculator's clock instead, so that a workbook written at a given time is the same workbook

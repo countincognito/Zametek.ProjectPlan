@@ -223,6 +223,60 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Simulation Criticalities.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationCriticalities {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationCriticalities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Histogram.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationHistogram {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationHistogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Paths.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationPaths {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Percentiles.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationPercentiles {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationPercentiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Settings.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationSettings {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Statistics.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationStatistics {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationStatistics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Work Streams.
         /// </summary>
         public static string Reporting_WorksheetWorkStreams {
