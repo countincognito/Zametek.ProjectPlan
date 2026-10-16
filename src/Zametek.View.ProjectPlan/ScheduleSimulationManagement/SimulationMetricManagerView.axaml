@@ -1,0 +1,123 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:resources="using:Zametek.Resource.ProjectPlan"
+             xmlns:local="using:Zametek.View.ProjectPlan"
+             xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+             x:DataType="vm:SimulationMetricManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="300"
+             x:Class="Zametek.View.ProjectPlan.SimulationMetricManagerView">
+
+	<!-- The dock "Simulation Metrics": the tables of the result. Each grid has its own name, which is the key of its saved layout. -->
+	<TabControl Name="SimulationMetricsTabs"
+				Margin="7">
+
+		<TabItem Header="{x:Static resources:Labels.Label_SimulationStatistics}">
+			<DataGrid Name="SimulationStatisticsGrid"
+					  Background="Transparent"
+					  AutoGenerateColumns="False"
+					  RowHeight="28"
+					  IsReadOnly="True"
+					  ItemsSource="{Binding Path=Simulation.Statistics, Mode=OneWay}"
+					  SelectionMode="Extended"
+					  CanUserResizeColumns="True"
+					  CanUserSortColumns="False"
+					  GridLinesVisibility="All"
+					  CanUserReorderColumns="True">
+				<DataGrid.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+								  Click="CopyStatisticsTable_Click" />
+					</ContextMenu>
+				</DataGrid.ContextMenu>
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationStatistic}"
+										Width="*"
+										Binding="{Binding Path=Name, Mode=OneWay}" />
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationValue}"
+										Width="150"
+										Binding="{Binding Path=Value, Mode=OneWay}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</TabItem>
+
+		<TabItem Header="{x:Static resources:Labels.Label_SimulationPaths}">
+			<DataGrid Name="SimulationPathsGrid"
+					  Background="Transparent"
+					  AutoGenerateColumns="False"
+					  RowHeight="28"
+					  IsReadOnly="True"
+					  ItemsSource="{Binding Path=Simulation.Paths, Mode=OneWay}"
+					  SelectionMode="Extended"
+					  CanUserResizeColumns="True"
+					  CanUserSortColumns="False"
+					  GridLinesVisibility="All"
+					  CanUserReorderColumns="True">
+				<DataGrid.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+								  Click="CopyPathsTable_Click" />
+					</ContextMenu>
+				</DataGrid.ContextMenu>
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationRank}"
+										Width="58"
+										Binding="{Binding Path=Rank, Mode=OneWay}" />
+
+					<!-- A path is its activity IDs in order, which saves space. The tooltip has the names. -->
+					<DataGridTemplateColumn Header="{x:Static resources:Labels.Label_SimulationPath}"
+											Width="*"
+											CanUserSort="False"
+											IsReadOnly="True">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=IdLabel, Mode=OneWay}"
+										   ToolTip.Tip="{Binding Path=Label, Mode=OneWay}" />
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationShare}"
+										Width="70"
+										Binding="{Binding Path=Share, Mode=OneWay, StringFormat=\{0:P1\}}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</TabItem>
+
+		<TabItem Header="{x:Static resources:Labels.Label_SimulationActivities}">
+			<DataGrid Name="SimulationCriticalitiesGrid"
+					  Background="Transparent"
+					  AutoGenerateColumns="False"
+					  RowHeight="28"
+					  IsReadOnly="True"
+					  ItemsSource="{Binding Path=Simulation.Activities, Mode=OneWay}"
+					  SelectionMode="Extended"
+					  CanUserResizeColumns="True"
+					  CanUserSortColumns="False"
+					  GridLinesVisibility="All"
+					  CanUserReorderColumns="True">
+				<DataGrid.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+								  Click="CopyCriticalitiesTable_Click" />
+					</ContextMenu>
+				</DataGrid.ContextMenu>
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_Id}"
+										Width="55"
+										Binding="{Binding Path=ActivityId, Mode=OneWay}" />
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationActivity}"
+										Width="*"
+										Binding="{Binding Path=Name, Mode=OneWay}" />
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationCriticality}"
+										Width="135"
+										Binding="{Binding Path=CriticalityIndex, Mode=OneWay, StringFormat=\{0:P1\}}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</TabItem>
+	</TabControl>
+</UserControl>

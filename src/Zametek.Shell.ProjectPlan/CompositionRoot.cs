@@ -209,6 +209,14 @@ namespace Zametek.Shell.ProjectPlan
                 .As<IScheduleSimulationManagerViewModel>()
                 .As<ScheduleSimulationManagerViewModel>()
                 .SingleInstance();
+            s_Builder.RegisterType<SimulationControlManagerViewModel>()
+                .As<ISimulationControlManagerViewModel>()
+                .As<SimulationControlManagerViewModel>()
+                .SingleInstance();
+            s_Builder.RegisterType<SimulationMetricManagerViewModel>()
+                .As<ISimulationMetricManagerViewModel>()
+                .As<SimulationMetricManagerViewModel>()
+                .SingleInstance();
             s_Builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
                 .As<MainViewModel>()
@@ -280,6 +288,12 @@ namespace Zametek.Shell.ProjectPlan
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<ScheduleSimulationManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<SimulationControlManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<SimulationMetricManagerView>()
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<MainView>()

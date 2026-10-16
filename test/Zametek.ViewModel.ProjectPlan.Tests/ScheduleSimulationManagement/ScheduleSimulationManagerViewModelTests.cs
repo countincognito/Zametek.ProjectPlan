@@ -94,7 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         // A dialog service that remembers the errors it was asked to show, and answers a save dialog with a file.
-        private sealed class RecordingDialogService
+        internal sealed class RecordingDialogService
             : IDialogService
         {
             public List<string> Errors { get; } = [];

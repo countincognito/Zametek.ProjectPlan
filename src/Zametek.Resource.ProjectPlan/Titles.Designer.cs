@@ -322,6 +322,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Simulation.
+        /// </summary>
+        public static string Title_Simulation {
+            get {
+                return ResourceManager.GetString("Title_Simulation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Chart.
+        /// </summary>
+        public static string Title_SimulationChart {
+            get {
+                return ResourceManager.GetString("Title_SimulationChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Metrics.
+        /// </summary>
+        public static string Title_SimulationMetrics {
+            get {
+                return ResourceManager.GetString("Title_SimulationMetrics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tracked.
         /// </summary>
         public static string Title_Tracked {

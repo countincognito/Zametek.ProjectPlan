@@ -373,7 +373,7 @@
     <value>Metric</value>
   </data>
   <data name="Label_SimulationActivities" xml:space="preserve">
-    <value>Criticality</value>
+    <value>Criticalities</value>
   </data>
   <data name="Label_SimulationActivity" xml:space="preserve">
     <value>Activity</value>
@@ -443,6 +443,9 @@
   </data>
   <data name="Label_SimulationRank" xml:space="preserve">
     <value>#</value>
+  </data>
+  <data name="Label_SimulationScenario" xml:space="preserve">
+    <value>Scenario</value>
   </data>
   <data name="Label_SimulationSeed" xml:space="preserve">
     <value>Seed</value>

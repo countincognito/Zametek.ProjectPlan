@@ -2060,6 +2060,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scenario.
+        /// </summary>
+        public static string Label_SimulationScenario {
+            get {
+                return ResourceManager.GetString("Label_SimulationScenario", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Seed.
         /// </summary>
         public static string Label_SimulationSeed {

@@ -5,223 +5,36 @@
              xmlns:resources="using:Zametek.Resource.ProjectPlan"
              xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-             xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
              x:DataType="vm:ScheduleSimulationManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
              x:Class="Zametek.View.ProjectPlan.ScheduleSimulationManagerView"
              Plot="{Binding Path=SimulationChartPlotModel, Mode=OneWay}">
-	<local:ScottPlotUserControl.Resources>
-		<local:NullableIntConverter x:Key="nullableIntConverter" />
-	</local:ScottPlotUserControl.Resources>
 
-	<Grid Margin="7"
-		  RowDefinitions="Auto,Auto,*">
+	<!-- The dock "Simulation Chart". The settings and the buttons are in the dock "Simulation", and the tables are in the dock "Simulation Metrics". -->
+	<Grid Margin="7">
 
-		<!-- The settings of a run, and the buttons that start and stop it. -->
-		<WrapPanel Grid.Row="0"
-				   Orientation="Horizontal">
+		<!-- ScottPlot PlotView -->
+		<ContentControl x:Name="scottplot"
+						Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+			<ContentControl.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+							  Command="{Binding Path=ResetSimulationChartCommand, Mode=OneWay}" />
 
-			<StackPanel Orientation="Horizontal"
-						Margin="0,0,14,7"
-						IsEnabled="{Binding Path=!IsRunning, Mode=OneWay}">
+					<Separator />
 
-				<TextBlock VerticalAlignment="Center"
-						   Margin="0,0,7,0"
-						   Text="{x:Static resources:Labels.Label_SimulationIterations}" />
-				<TextBox Width="90"
-						 Height="25"
-						 VerticalContentAlignment="Center"
-						 Text="{Binding Path=Iterations, Mode=TwoWay}" />
+					<MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
+							  Click="CopyImage_Click" />
 
-				<TextBlock VerticalAlignment="Center"
-						   Margin="14,0,7,0"
-						   Text="{x:Static resources:Labels.Label_SimulationDistribution}" />
-				<ComboBox Width="170"
-						  Height="25"
-						  VerticalContentAlignment="Center"
-						  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:DurationDistribution}}}"
-						  SelectedItem="{Binding Path=Distribution, Mode=TwoWay}">
-					<ComboBox.ItemTemplate>
-						<DataTemplate>
-							<TextBlock VerticalAlignment="Center"
-									   Classes="displayOnly"
-									   Text="{Binding Converter={x:Static local:StringConverters.DurationDistributionValue}, Mode=OneWay}" />
-						</DataTemplate>
-					</ComboBox.ItemTemplate>
-				</ComboBox>
+					<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+							  Command="{Binding Path=SaveSimulationChartImageFileCommand, Mode=OneWay}" />
 
-				<StackPanel Orientation="Horizontal"
-							IsVisible="{Binding Path=IsModifiedBetaDistribution, Mode=OneWay}">
-					<TextBlock VerticalAlignment="Center"
-							   Margin="14,0,7,0"
-							   Text="{x:Static resources:Labels.Label_SimulationShape}" />
-					<TextBox Width="60"
-							 Height="25"
-							 VerticalContentAlignment="Center"
-							 Text="{Binding Path=ModifiedBetaShape, Mode=TwoWay}" />
-				</StackPanel>
+					<Separator />
 
-				<TextBlock VerticalAlignment="Center"
-						   Margin="14,0,7,0"
-						   Text="{x:Static resources:Labels.Label_SimulationSeed}" />
-				<TextBox Width="170"
-						 Height="25"
-						 VerticalContentAlignment="Center"
-						 IsReadOnly="{Binding Path=UseRandomSeed, Mode=OneWay}"
-						 Text="{Binding Path=Seed, Mode=TwoWay}" />
-				<CheckBox Margin="7,0,0,0"
-						  VerticalAlignment="Center"
-						  IsChecked="{Binding Path=UseRandomSeed, Mode=TwoWay}"
-						  Content="{x:Static resources:Labels.Label_SimulationRandomSeed}" />
-
-				<TextBlock VerticalAlignment="Center"
-						   Margin="14,0,7,0"
-						   Text="{x:Static resources:Labels.Label_SimulationTarget}" />
-				<TextBox Width="80"
-						 Height="25"
-						 VerticalContentAlignment="Center"
-						 IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
-						 Text="{Binding Path=TargetFinishTime, Converter={StaticResource nullableIntConverter}, Mode=TwoWay}" />
-				<DatePicker Width="190"
-							IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
-							SelectedDate="{Binding Path=TargetFinishDate, Mode=TwoWay}" />
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal"
-						Margin="0,0,0,7">
-				<Button Height="25"
-						Margin="0,0,7,0"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RunSimulationCommand, Mode=OneWay}"
-						Content="{x:Static resources:Menus.Menu_RunSimulation}" />
-				<Button Height="25"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=CancelSimulationCommand, Mode=OneWay}"
-						Content="{x:Static resources:Menus.Menu_CancelSimulation}" />
-			</StackPanel>
-		</WrapPanel>
-
-		<!-- The progress of a run, what it said last, and whether the result still belongs to the plan. -->
-		<DockPanel Grid.Row="1"
-				   Margin="0,0,0,7">
-			<ProgressBar DockPanel.Dock="Left"
-						 Width="220"
-						 Height="14"
-						 Minimum="0"
-						 Maximum="1"
-						 VerticalAlignment="Center"
-						 Value="{Binding Path=Progress, Mode=OneWay}"
-						 IsVisible="{Binding Path=IsRunning, Mode=OneWay}" />
-			<TextBlock DockPanel.Dock="Right"
-					   VerticalAlignment="Center"
-					   FontWeight="Bold"
-					   Text="{x:Static resources:Labels.Label_SimulationStale}"
-					   IsVisible="{Binding Path=IsResultStale, Mode=OneWay}" />
-			<TextBlock Margin="7,0,14,0"
-					   VerticalAlignment="Center"
-					   Text="{Binding Path=StatusText, Mode=OneWay}" />
-		</DockPanel>
-
-		<!-- The chart on the left, and the numbers on the right. -->
-		<Grid Grid.Row="2"
-			  ColumnDefinitions="*,7,420">
-
-			<!-- ScottPlot PlotView -->
-			<ContentControl x:Name="scottplot"
-							Grid.Column="0"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
-				<ContentControl.ContextMenu>
-					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								  Command="{Binding Path=ResetSimulationChartCommand, Mode=OneWay}" />
-
-						<Separator />
-
-						<MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
-								  Click="CopyImage_Click" />
-
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveSimulationChartImageFileCommand, Mode=OneWay}" />
-
-						<Separator />
-
-						<MenuItem Header="{x:Static resources:Menus.Menu_ExportCsvFiles}"
-								  Command="{Binding Path=ExportCsvFilesCommand, Mode=OneWay}" />
-					</ContextMenu>
-				</ContentControl.ContextMenu>
-			</ContentControl>
-
-			<GridSplitter Grid.Column="1"
-						  ResizeDirection="Columns"
-						  Background="Transparent" />
-
-			<TabControl Grid.Column="2">
-				<TabItem Header="{x:Static resources:Labels.Label_SimulationStatistics}">
-					<DataGrid Background="Transparent"
-							  AutoGenerateColumns="False"
-							  RowHeight="28"
-							  IsReadOnly="True"
-							  ItemsSource="{Binding Path=Statistics, Mode=OneWay}"
-							  CanUserResizeColumns="True"
-							  CanUserSortColumns="False"
-							  GridLinesVisibility="All">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationStatistic}"
-												Width="*"
-												Binding="{Binding Path=Name, Mode=OneWay}" />
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationValue}"
-												Width="150"
-												Binding="{Binding Path=Value, Mode=OneWay}" />
-						</DataGrid.Columns>
-					</DataGrid>
-				</TabItem>
-
-				<TabItem Header="{x:Static resources:Labels.Label_SimulationPaths}">
-					<DataGrid Background="Transparent"
-							  AutoGenerateColumns="False"
-							  RowHeight="28"
-							  IsReadOnly="True"
-							  ItemsSource="{Binding Path=Paths, Mode=OneWay}"
-							  CanUserResizeColumns="True"
-							  CanUserSortColumns="False"
-							  GridLinesVisibility="All">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationRank}"
-												Width="58"
-												Binding="{Binding Path=Rank, Mode=OneWay}" />
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationPath}"
-												Width="*"
-												Binding="{Binding Path=Label, Mode=OneWay}" />
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationShare}"
-												Width="70"
-												Binding="{Binding Path=Share, Mode=OneWay, StringFormat=\{0:P1\}}" />
-						</DataGrid.Columns>
-					</DataGrid>
-				</TabItem>
-
-				<TabItem Header="{x:Static resources:Labels.Label_SimulationActivities}">
-					<DataGrid Background="Transparent"
-							  AutoGenerateColumns="False"
-							  RowHeight="28"
-							  IsReadOnly="True"
-							  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
-							  CanUserResizeColumns="True"
-							  CanUserSortColumns="False"
-							  GridLinesVisibility="All">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_Id}"
-												Width="55"
-												Binding="{Binding Path=ActivityId, Mode=OneWay}" />
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationActivity}"
-												Width="*"
-												Binding="{Binding Path=Name, Mode=OneWay}" />
-							<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationCriticality}"
-												Width="135"
-												Binding="{Binding Path=CriticalityIndex, Mode=OneWay, StringFormat=\{0:P1\}}" />
-						</DataGrid.Columns>
-					</DataGrid>
-				</TabItem>
-			</TabControl>
-		</Grid>
+					<MenuItem Header="{x:Static resources:Menus.Menu_ExportCsvFiles}"
+							  Command="{Binding Path=ExportCsvFilesCommand, Mode=OneWay}" />
+				</ContextMenu>
+			</ContentControl.ContextMenu>
+		</ContentControl>
 	</Grid>
 </local:ScottPlotUserControl>

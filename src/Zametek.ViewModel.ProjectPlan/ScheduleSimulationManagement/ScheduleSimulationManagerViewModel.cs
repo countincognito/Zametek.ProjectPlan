@@ -17,7 +17,9 @@ using RxVoid = ReactiveUI.Primitives.RxVoid;
 namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
-    /// The panel that runs a Monte Carlo simulation of the schedule and shows what it found.
+    /// The Monte Carlo simulation of the schedule: it runs the simulation and presents what it found. It is the dock
+    /// "Simulation Chart", and the docks "Simulation" (<see cref="SimulationControlManagerViewModel"/>) and "Simulation
+    /// Metrics" (<see cref="SimulationMetricManagerViewModel"/>) are views of the same object, which the three docks share.
     /// </summary>
     /// <remarks>
     /// The panel is not part of the build cascade. A simulation costs about as much as a compile for each
@@ -220,8 +222,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 ExportCsvFilesCommand = exportCsvFilesCommand;
             }
 
-            Id = Resource.ProjectPlan.Titles.Title_ScheduleSimulation;
-            Title = Resource.ProjectPlan.Titles.Title_ScheduleSimulation;
+            Id = Resource.ProjectPlan.Titles.Title_SimulationChart;
+            Title = Resource.ProjectPlan.Titles.Title_SimulationChart;
         }
 
         #endregion
@@ -579,7 +581,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
                 await m_DialogService.ShowInfoAsync(
-                    Resource.ProjectPlan.Titles.Title_ScheduleSimulation,
+                    Resource.ProjectPlan.Titles.Title_SimulationChart,
                     string.Empty,
                     string.Format(
                         CultureInfo.CurrentCulture,
