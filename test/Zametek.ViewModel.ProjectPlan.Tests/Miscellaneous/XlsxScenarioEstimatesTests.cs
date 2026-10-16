@@ -1,3 +1,5 @@
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -56,6 +58,65 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void Export_Given_ActivitiesWithEstimates_Then_TheWorkbookHasTheExpectedDurationAndTheStandardDeviationOfEach()
+        {
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(3) with
+            {
+                DependentActivities =
+                [
+                    // (4 + 40 + 10) / 6 = 9, and (10 - 4) / 6 = 1.
+                    Activity(1, duration: 9, mostLikely: 10, optimistic: 4, pessimistic: null),
+                    // No estimates: the expected duration is the duration, and there is no spread.
+                    Activity(2, duration: 6, mostLikely: null, optimistic: null, pessimistic: null),
+                    // (4 + 40 + 22 + 3) / 6 = 11 (a half goes up), and (22 - 4) / 6 = 3.
+                    Activity(3, duration: 11, mostLikely: 10, optimistic: 4, pessimistic: 22),
+                ],
+            };
+            var calculator = new DateTimeCalculator(s_Clock);
+            using var stream = new MemoryStream();
+            new XlsxScenarioFileExporter(calculator)
+                .ExportProjectScenarioXlsxFile(scenario, new ResourceSeriesSetModel(), new TrackingSeriesSetModel(), showDates: false, stream);
+
+            stream.Position = 0;
+            using var workbook = new XSSFWorkbook(stream);
+            ISheet sheet = Enumerable.Range(0, workbook.NumberOfSheets)
+                .Select(workbook.GetSheetAt)
+                .Single(x => HeaderOf(x).Contains(@"ExpectedDuration"));
+            List<string> header = HeaderOf(sheet);
+
+            // The columns sit with the estimates that they come from.
+            header.IndexOf(@"ExpectedDuration").ShouldBe(header.IndexOf(@"PessimisticDuration") + 1);
+            header.IndexOf(@"StandardDeviation").ShouldBe(header.IndexOf(@"ExpectedDuration") + 1);
+
+            var rows = Enumerable.Range(1, 3)
+                .Select(sheet.GetRow)
+                .ToDictionary(
+                    x => (int)x.GetCell(header.IndexOf(nameof(ActivityModel.Id))).NumericCellValue,
+                    x => (
+                        Expected: x.GetCell(header.IndexOf(@"ExpectedDuration")).NumericCellValue,
+                        StandardDeviation: x.GetCell(header.IndexOf(@"StandardDeviation")).NumericCellValue));
+
+            rows[1].ShouldBe((9.0, 1.0));
+            rows[2].ShouldBe((6.0, 0.0));
+            rows[3].ShouldBe((11.0, 3.0));
+        }
+
+        [Fact]
+        public void Import_Given_AWorkbookThatHasTheComputedColumns_Then_TheyAreIgnored()
+        {
+            // The two columns are for the reader. A workbook that is exported with them and imported
+            // again gives the same activities as one that never had them.
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(1) with
+            {
+                DependentActivities = [Activity(1, duration: 9, mostLikely: 10, optimistic: 4, pessimistic: null)],
+            };
+
+            ActivityModel imported = RoundTrip(scenario).Single();
+
+            Shape(imported).ShouldBe((9, 10, 4, (int?)null));
+        }
+
+        [Fact]
         public void Import_Given_AnImportedActivity_Then_TheApplicationSchedulesItsExpectedDuration()
         {
             // The whole way through: the workbook, the import, and the activity that the application builds.
@@ -89,6 +150,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     PessimisticDuration = pessimistic,
                 },
             };
+
+        // The titles of the first row of a sheet, in the order of its columns.
+        private static List<string> HeaderOf(ISheet sheet) =>
+            [.. Enumerable.Range(0, sheet.GetRow(0)?.LastCellNum ?? 0).Select(i => sheet.GetRow(0).GetCell(i)?.ToString() ?? string.Empty)];
 
         private static (int Duration, int? MostLikely, int? Optimistic, int? Pessimistic) Shape(ActivityModel activity) =>
             (activity.Duration, activity.MostLikelyDuration, activity.OptimisticDuration, activity.PessimisticDuration);

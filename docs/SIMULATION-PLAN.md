@@ -104,7 +104,7 @@ The maintainer made these decisions on 2026-10-15.
 How a managed activity behaves, as built:
 
 - The activity writes the most likely duration, the two estimates that the user gave, and `Duration` together, under one lock. A compilation therefore never copies a mix of two edits.
-- Setting `Duration` sets the most likely duration. The Gantt chart sets a duration when a user drags the end of a bar, and so it sets the most likely duration too. An activity with estimates of its own then shows the expected duration. This can differ from the length that the user dragged to.
+- Setting `Duration` sets the most likely duration. The Gantt chart sets a duration when a user drags the end of a bar, and so it sets the most likely duration too. An activity with estimates of its own then shows the expected duration. This can differ from the length that the user dragged to. The maintainer wants to decide this again later (refer to the entry in [TODO](TODO.md)).
 - A value outside the rule is limited to the nearest value inside it, and the activity reports an error for that property. A milestone (a most likely duration of 0) has an optimistic and a pessimistic duration of 0.
 - When the most likely duration moves past an optimistic or pessimistic duration that the user gave, that duration moves to it. A value that the user did not give follows the most likely duration.
 - An activity that is made from a model takes its estimates from the model, and it works its `Duration` out from them. When a model's `Duration` and its estimates disagree, the estimates win.

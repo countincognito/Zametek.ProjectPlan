@@ -37,6 +37,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
             ];
 
+        // Two columns that the grid shows and the model does not hold. They are worked out from the
+        // estimates by the rules of the grid (EstimateHelper), for the person who reads the workbook,
+        // and the import ignores them: the estimates are what it reads.
+        //
+        // The expected duration is the Duration, which is the duration that was scheduled, and the
+        // workbook has it as a column of its own so that it sits with the estimates that it comes from.
+        private const string c_ExpectedDurationColumnTitle = @"ExpectedDuration";
+
+        private const string c_StandardDeviationColumnTitle = @"StandardDeviation";
+
+        private static readonly IReadOnlyDictionary<string, Func<ActivityModel, object?>> s_ActivityComputedColumns =
+            new Dictionary<string, Func<ActivityModel, object?>>
+            {
+                [c_ExpectedDurationColumnTitle] = static x =>
+                {
+                    (int optimistic, int mostLikely, int pessimistic) = EstimatesOf(x);
+                    return EstimateHelper.ExpectedDuration(optimistic, mostLikely, pessimistic);
+                },
+                [c_StandardDeviationColumnTitle] = static x =>
+                {
+                    (int optimistic, _, int pessimistic) = EstimatesOf(x);
+                    return EstimateHelper.StandardDeviation(optimistic, pessimistic);
+                },
+            };
+
+        private static (int Optimistic, int MostLikely, int Pessimistic) EstimatesOf(ActivityModel activity) =>
+            EstimateHelper.Effective(activity.MostLikelyDuration ?? activity.Duration, activity.OptimisticDuration, activity.PessimisticDuration);
+
         private static readonly IList<string> s_ActivityColumnTitles =
             [
                 nameof(ActivityModel.Id),
@@ -54,6 +82,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(ActivityModel.MostLikelyDuration),
                 nameof(ActivityModel.OptimisticDuration),
                 nameof(ActivityModel.PessimisticDuration),
+                c_ExpectedDurationColumnTitle,
+                c_StandardDeviationColumnTitle,
                 nameof(ActivityModel.FreeSlack),
                 nameof(ActivityModel.TotalSlack),
                 nameof(ActivityModel.EarliestStartTime),
@@ -510,6 +540,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (string columnTitle in s_ActivityColumnTitles)
                     {
                         ICell cell = row.CreateCell(columnIndex);
+
+                        if (s_ActivityComputedColumns.TryGetValue(columnTitle, out Func<ActivityModel, object?>? compute))
+                        {
+                            AddToCell(compute(activity), cell, dateTimeCellStyle);
+                            columnIndex++;
+                            continue;
+                        }
+
                         PropertyInfo? propertyInfo = activityPropertyInfoLookup[columnTitle];
 
                         if (propertyInfo is not null)

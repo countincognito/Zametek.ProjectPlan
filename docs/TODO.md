@@ -385,3 +385,19 @@ This file lists the maintainer-internal engineering intents that must version wi
   1. Add [oasdiff](https://github.com/oasdiff/oasdiff) to CI. It runs `breaking` on `docs/openapi.yaml` against the file in the latest release tag. Thus, a change that breaks a client fails the build, and nobody needs to notice it. `OpenApiContractTests` hold the description to the server, and Spectral holds it to the rules of the guide. But nothing holds it to its past.
   2. Give `info.version` of the description and the heading `Unreleased` of the changelog the version of the release.
   3. Decide if the `type` URIs must point to a copy that cannot move. They point to the copy of API.md on the `develop` branch now. A copy in a release tag, or a page that nobody renames, can be this copy. A client that stored a type must never find that its address is dead.
+
+- [ ] **Decide what dragging the end of a bar on the Gantt chart does to an activity that has estimates** *(2026-10-16, from the review of phase 1 of the simulation work)*
+
+  A user drags the end of a bar to change the duration of an activity. The chart calls `CoreViewModel.SetActivityDuration`, and this sets the most likely duration (ML) of the activity. This is what every caller that sets a duration means. For an activity that has no estimates of its own, it is the same as before.
+
+  An activity can have an optimistic duration (O) or a pessimistic duration (P) of its own. Then the bar shows the expected duration, (O + 4 ML + P) / 6 rounded to a whole day. This can differ from the length that the user dragged to. The maintainer was not sure about this behavior. There was no better solution at the time, and thus the behavior stayed as it is.
+
+  **Choices to consider.**
+
+  - Set ML so that the expected duration is as near as possible to the dragged length. The value of ML would be (6 × length − O − P) / 4, limited to the range from O to P. Rounding and the limits mean that the bar can still miss the dragged length.
+  - Keep ML and move O and P by the same amount as the drag. The spread stays the same, and the expected duration follows the drag exactly.
+  - Make O and P follow ML again, so that the bar has exactly the dragged length. The user loses the estimates that they gave, and thus this needs a warning, or an undo.
+  - Let the drag change an activity with no estimates of its own only. A bar of an activity with estimates would show the expected duration, and a drag would do nothing.
+  - Keep the behavior and change the tooltip of the drag. It would show the expected duration that the drop gives, and not the dragged length.
+
+  **Where.** `GanttChartManagerView.axaml.cs` (the drag), `CoreViewModel.SetActivityDuration` and `ManagedActivityViewModel.Duration`. The test `ActivityEstimatesTests.SetActivityDuration_Given_AnActivityWithNoEstimates_Then_IsTheDurationOfTheActivity` pins the behavior for an activity with no estimates. A new test must pin the choice for an activity with estimates.
