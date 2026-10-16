@@ -394,6 +394,7 @@ Phase 5 finished on 2026-10-16. All the work is in this repository, on the branc
 - A property chain in ReactiveUI (`WhenAnyValue`) drops a value that did not change. This caused the fault of the title bar, and a counter fixed it.
 - Two pipelines that present the same value race. The first version of the pipeline for a result that a file held took it as shown when the pipeline for the display settings had shown it. Then the result looked out of date. A test found it. The pipeline now asks whether the panel made the result.
 - A contract that three documents and the code share needs one commit. The tests of the contract failed whenever one of them was behind.
+- The state of a command is an event on the thread that changed it. A project closes on the task pool, and it cleared the result there. The menu item "Export CSV Files" of the chart was open, and it threw an exception about the thread. The Run and Cancel buttons had the same fault. `ForTheUiThread` in the panel now hands the state of each command to the dispatcher. Two tests failed before the fix and pass after it.
 
 ### Changes after the first look
 

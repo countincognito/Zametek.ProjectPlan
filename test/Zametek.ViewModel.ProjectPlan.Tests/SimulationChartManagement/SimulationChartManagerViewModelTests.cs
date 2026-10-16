@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -242,6 +243,93 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     action();
                 }
             }
+        }
+
+        [Fact]
+        public async Task ExportCsvFilesCommand_Given_TheResultIsClearedOnAnotherThread_Then_TheMenuItemIsToldOnTheUiThread()
+        {
+            // A project closes on a thread of the task pool, and it clears the result there. A menu item that is open handles
+            // CanExecuteChanged, and it is owned by the UI thread: it threw "The calling thread cannot access this object
+            // because a different thread owns it". The state of the command goes to the dispatcher, and the command raises
+            // the event there.
+            var dispatcher = new QueueingUIDispatcher();
+            using Harness harness = await Harness.MakeAsync(dispatcher: dispatcher);
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            await panel.RunSimulationAsync();
+            dispatcher.RunAll();
+            ICommand command = panel.ExportCsvFilesCommand;
+            command.CanExecute(null).ShouldBeTrue();
+            var raisedOn = new List<int>();
+            command.CanExecuteChanged += (_, _) =>
+            {
+                lock (raisedOn)
+                {
+                    raisedOn.Add(Environment.CurrentManagedThreadId);
+                }
+            };
+
+            await Task.Run(harness.Core.ResetProjectScenario);
+
+            panel.HasResult.ShouldBeFalse();
+            lock (raisedOn)
+            {
+                raisedOn.ShouldBeEmpty();
+            }
+            dispatcher.Pending.ShouldBeGreaterThan(0);
+
+            int uiThread = Environment.CurrentManagedThreadId;
+            dispatcher.RunAll();
+
+            lock (raisedOn)
+            {
+                raisedOn.ShouldNotBeEmpty();
+                raisedOn.ShouldAllBe(x => x == uiThread);
+            }
+            command.CanExecute(null).ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_ARunOnAnotherThread_Then_TheButtonsAreToldOnTheUiThread()
+        {
+            // The same for the buttons of the dock "Simulation": a run that starts and ends on a thread of the pool changes
+            // IsRunning there, and with it what the buttons Run and Cancel can do.
+            var dispatcher = new QueueingUIDispatcher();
+            using Harness harness = await Harness.MakeAsync(dispatcher: dispatcher);
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            dispatcher.RunAll();
+            var raisedOn = new List<int>();
+
+            void Record(object? sender, EventArgs e)
+            {
+                lock (raisedOn)
+                {
+                    raisedOn.Add(Environment.CurrentManagedThreadId);
+                }
+            }
+
+            panel.RunSimulationCommand.CanExecuteChanged += Record;
+            panel.CancelSimulationCommand.CanExecuteChanged += Record;
+
+            await Task.Run(() => panel.RunSimulationAsync());
+
+            lock (raisedOn)
+            {
+                raisedOn.ShouldBeEmpty();
+            }
+
+            int uiThread = Environment.CurrentManagedThreadId;
+            dispatcher.RunAll();
+
+            lock (raisedOn)
+            {
+                raisedOn.ShouldAllBe(x => x == uiThread);
+            }
+
+            // The run is over: Run can run and Cancel cannot.
+            panel.RunSimulationCommand.CanExecute(null).ShouldBeTrue();
+            panel.CancelSimulationCommand.CanExecute(null).ShouldBeFalse();
         }
 
         [Fact]

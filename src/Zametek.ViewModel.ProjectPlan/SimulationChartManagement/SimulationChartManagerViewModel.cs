@@ -198,17 +198,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // The commands come after the properties that they observe: a command reads them as soon as it is made.
             // A plan with no activities is told to the user when they ask, and not by a button that does nothing.
-            IObservable<bool> canRun = this
+            // What a command can do reaches it through the dispatcher: see ForTheUiThread.
+            IObservable<bool> canRun = ForTheUiThread(this
                 .WhenAnyValue(
                     ssm => ssm.IsRunning,
                     ssm => ssm.m_CoreViewModel.HasCompilationErrors,
-                    (isRunning, hasErrors) => !isRunning && !hasErrors);
+                    (isRunning, hasErrors) => !isRunning && !hasErrors));
 
             RunSimulationCommand = ReactiveCommand.CreateFromTask(() => RunSimulationAsync(), canRun);
 
             CancelSimulationCommand = ReactiveCommand.Create(
                 CancelSimulation,
-                this.WhenAnyValue(ssm => ssm.IsRunning));
+                ForTheUiThread(this.WhenAnyValue(ssm => ssm.IsRunning)));
 
             ResetSimulationChartCommand = ReactiveCommand.Create(ResetSimulationChart);
 
@@ -218,7 +219,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             {
-                ReactiveCommand<RxVoid, RxVoid> exportCsvFilesCommand = ReactiveCommand.CreateFromTask(ExportCsvFilesAsync, this.WhenAnyValue(ssm => ssm.HasResult));
+                ReactiveCommand<RxVoid, RxVoid> exportCsvFilesCommand = ReactiveCommand.CreateFromTask(ExportCsvFilesAsync, ForTheUiThread(this.WhenAnyValue(ssm => ssm.HasResult)));
                 ExportCsvFilesCommand = exportCsvFilesCommand;
             }
 
@@ -259,6 +260,20 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        // A command tells the button or the menu item that handles it when it can or cannot run, and it does so on the
+        // thread that changed what it observes. A button and a menu item belong to the UI thread, and the core changes
+        // the result and the compilation errors on other threads (a project closes on the task pool). This hands each
+        // state to the dispatcher, which runs it on the UI thread on the desktop and inline in a job, and in the order
+        // that the states came.
+        private IObservable<bool> ForTheUiThread(IObservable<bool> state)
+        {
+            return Observable.Create<bool>(observer =>
+                state.Subscribe(
+                    value => m_UiDispatcher.Defer(() => observer.OnNext(value)),
+                    observer.OnError,
+                    observer.OnCompleted));
+        }
 
         private static ulong NewSeed()
         {
