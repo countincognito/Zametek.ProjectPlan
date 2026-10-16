@@ -84,6 +84,38 @@ A run takes its times from the clock:
 
 The option `--now` gives the run a time of its own. It includes the offset from UTC, for example `--now 2026-09-27T12:00:00+01:00`, or `Z` for UTC itself. Thus, the same command writes the same files at any time. An import is the exception: it gives new ids to the plan that it creates, each time. In all cases, `zpp` shows the times in the time zone of the computer. Thus, two computers write the same times only if they have the same time zone.
 
+## Simulate the schedule
+
+An activity can have three estimates of its duration: an optimistic, a most likely and a pessimistic duration. The option `--simulate` runs a Monte Carlo simulation of the schedule after the plan compiles. Each iteration draws a duration for each activity from its estimates, schedules the resources again, and finds the finish and its critical path. An activity that has no estimates keeps its duration. `zpp` prints the statistics of the finish after the metrics:
+
+```
+zpp -i plan.zpp --simulate --simulation-target 120
+```
+
+The statistics are those that the panel Schedule Simulation of the desktop application shows. They are the seed and the distribution, the mean and the standard deviation of the finish, the earliest and the latest finish, the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date.
+
+| Option | Default | Description |
+| ------ | ------- | ----------- |
+| `--simulate` | | Runs the simulation. Each other option of the simulation needs it, and `zpp` refuses them without it (exit code 2). |
+| `--simulation-iterations` | 5000 | The number of iterations, from 1 to 1000000. |
+| `--simulation-seed` | 1 | The seed of the random numbers, from 0 to 18446744073709551615. The same seed gives the same result each time. |
+| `--simulation-distribution` | `BetaPert` | The distribution of the durations: `BetaPert`, `ModifiedBetaPert`, `Triangular`, `Normal` or `Uniform`. |
+| `--simulation-shape` | 4 | A number above 0: the shape value of the modified beta-PERT distribution. Only with `--simulation-distribution ModifiedBetaPert`. |
+| `--simulation-target` | | A finish in days from the start of the project, from 0 to 100000. The statistics then include the chance of a finish by it. |
+| `--simulation-chart-directory`, `--simulation-chart-format`, `--simulation-chart-size` | | The chart of the simulation: a stacked histogram of the finish times, split by critical path, with the S-curve and lines at the mean, at the 50th, 80th and 90th percentiles, at the plan and at the target (`<name>-simulation.<format>`). It is like the other charts. |
+| `--simulation-csv-directory` | | Five CSV files in the directory: `<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`. They are the files that the panel saves. |
+
+```
+zpp -i plan.zpp --simulate --simulation-iterations 20000 --simulation-seed 2026 --simulation-chart-directory out --simulation-chart-size 1600:900 --simulation-chart-format png --simulation-csv-directory out
+```
+
+- The seed is 1 when you give none, and the panel draws a new seed for each run. `zpp` repeats: a script gets the same statistics each time until the plan changes. Give another seed to draw another sample. The panel shows the seed of its last run, and `--simulation-seed` makes that result again.
+- The result does not depend on the number of processors. The iterations run on all of them.
+- An iteration costs about as much as a compilation: less than a millisecond for the sample plan, and about 100 milliseconds for a plan of 1000 activities (measured in phase 0 of the work, refer to the [simulation plan](SIMULATION-PLAN.md)). Large plans with many iterations can take minutes. `--verbose` writes the progress of the simulation to the standard error stream, about every two seconds.
+- With `--metrics-format json`, the statistics are one more object, `Simulation`, after the metrics. It has raw values, as the metrics have. The seed is text, because a seed can be larger than every reader of JSON reads without loss. A date is `yyyy-MM-dd`. Without `--simulate`, the JSON is what it was before there was a simulation.
+- A simulation that cannot run, for example for a plan that has no activities, is a failure of the run: `zpp` writes the reason to the standard error stream, still prints the metrics, and exits with code 1.
+- `zpp --server` sends the simulation to the server, and the server limits its iterations (refer to [Limits](#limits)).
+
 ## Exit codes
 
 The exit codes are a contract for scripts and CI gates. The test suite `Zametek.ProjectPlan.CommandLine.Tests` makes sure that they stay the same:
@@ -97,7 +129,7 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 | 4 | A compilation used more time than `--compile-timeout` gives, and `zpp` cancelled it |
 | 5 | `zpp` sent the run to a server, and the server did not run it (refer to [Send runs to a server](#send-runs-to-a-server)) |
 
-A chart or graph can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
+A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
 
 ## zpp as a server
 
@@ -147,7 +179,7 @@ To compile a plan, send a `multipart/form-data` POST to `/v1/projects/compile`. 
 curl -F project=@plan.zpp http://localhost:9770/v1/projects/compile
 ```
 
-The answer is JSON. It contains the metrics of the plan and the outputs that the request asked for. The request names the outputs in its options. The options are JSON in a part named `options`. They are the options of `zpp`, with the same names, values and defaults, but without the paths.
+The answer is JSON. It contains the metrics of the plan, the statistics of a simulation if the request asked for one, and the outputs that the request asked for. The request names the outputs in its options. The options are JSON in a part named `options`. They are the options of `zpp`, with the same names, values and defaults, but without the paths.
 
 `zpp` writes an output to the file or directory that it receives. The request asks for the output instead, and the answer carries it in base64:
 
@@ -202,6 +234,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | Jobs that wait for another job to finish | Twice the jobs at once | `--max-queue` | `MaxQueue` |
 | Largest request, in MB | 50 | `--max-upload` | `MaxUploadMegabytes` |
 | Largest chart, in pixels | 5000 x 5000 | `--max-chart-size <width>:<height>` | `MaxChartWidth`, `MaxChartHeight` |
+| Iterations of a simulation | 100000 (the maximum is 1000000) | `--max-simulation-iterations` | `MaxSimulationIterations` |
 | Time of a job, in seconds | 120 | `--job-timeout` | `JobTimeoutSeconds` |
 | Compile timeout of a job, in milliseconds | 60000 | `--max-compile-timeout` | `MaxCompileTimeoutMilliseconds` |
 
@@ -220,7 +253,7 @@ Each way overrides the one before it. The server reads the file one time, when i
 }
 ```
 
-`GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The server checks the time of a job between the steps of the job. Thus, a step that is in progress, such as a compile or the drawing of a chart, ends first. A job cannot disable its compile timeout, but `zpp` can.
+`GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The server checks the time of a job between the steps of the job. Thus, a step that is in progress, such as a compile or the drawing of a chart, ends first. A simulation is the exception: it stops between two groups of its iterations, and the job stops with it. Each iteration schedules the resources again, and it costs about as much as a compilation. Thus, the time of a job (`--job-timeout`) is the limit for a simulation of a large plan, and the limit for the iterations is the limit for a simulation of a small plan. A job cannot disable its compile timeout, but `zpp` can.
 
 ### Other computers
 

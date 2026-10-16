@@ -3,6 +3,7 @@ using Shouldly;
 using System.Reflection;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -31,6 +32,77 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             Parsed<Options> parsed = Parse(args).ShouldBeOfType<Parsed<Options>>();
             return parsed.Value;
+        }
+
+        [Fact]
+        public void Parse_Given_NoSimulationOptions_Then_NoSimulationAndNothingForItToDefaultTo()
+        {
+            Options options = ParsedValue(@"-i", @"a.zpp");
+
+            options.Simulate.ShouldBeFalse();
+            options.SimulationIterations.ShouldBeNull();
+            options.SimulationSeed.ShouldBeNull();
+            options.SimulationDistribution.ShouldBeNull();
+            options.SimulationShape.ShouldBeNull();
+            options.SimulationTarget.ShouldBeNull();
+            options.SimulationChartDirectory.ShouldBeNull();
+            options.SimulationChartFormat.ShouldBe(PlotExport.Jpeg);
+            options.SimulationChartSize.ShouldBeEmpty();
+            options.SimulationCsvDirectory.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Parse_Given_EverySimulationOption_Then_Each()
+        {
+            Options options = ParsedValue(
+                @"-i", @"a.zpp",
+                @"--simulate",
+                @"--simulation-iterations", @"20000",
+                @"--simulation-seed", @"18446744073709551615",
+                @"--simulation-distribution", @"modifiedbetapert",
+                @"--simulation-shape", @"6.5",
+                @"--simulation-target", @"120",
+                @"--simulation-chart-directory", @"charts",
+                @"--simulation-chart-format", @"png",
+                @"--simulation-chart-size", @"800:600",
+                @"--simulation-csv-directory", @"csv");
+
+            options.Simulate.ShouldBeTrue();
+            options.SimulationIterations.ShouldBe(20_000);
+            options.SimulationSeed.ShouldBe(ulong.MaxValue);
+            options.SimulationDistribution.ShouldBe(DurationDistribution.ModifiedBetaPert);
+            options.SimulationShape.ShouldBe(6.5);
+            options.SimulationTarget.ShouldBe(120);
+            options.SimulationChartDirectory.ShouldBe(@"charts");
+            options.SimulationChartFormat.ShouldBe(PlotExport.Png);
+            options.SimulationChartSize.ShouldBe([800, 600]);
+            options.SimulationCsvDirectory.ShouldBe(@"csv");
+        }
+
+        [Theory]
+        [InlineData(@"BetaPert", DurationDistribution.BetaPert)]
+        [InlineData(@"modifiedBetaPert", DurationDistribution.ModifiedBetaPert)]
+        [InlineData(@"TRIANGULAR", DurationDistribution.Triangular)]
+        [InlineData(@"normal", DurationDistribution.Normal)]
+        [InlineData(@"Uniform", DurationDistribution.Uniform)]
+        public void Parse_Given_ADistributionInAnyCase_Then_Parses(string value, DurationDistribution expected)
+        {
+            ParsedValue(@"-i", @"a.zpp", @"--simulate", @"--simulation-distribution", value).SimulationDistribution.ShouldBe(expected);
+        }
+
+        [Theory]
+        [InlineData(@"--simulation-iterations", @"many")]
+        [InlineData(@"--simulation-iterations", @"1.5")]
+        [InlineData(@"--simulation-seed", @"-1")]
+        [InlineData(@"--simulation-seed", @"18446744073709551616")]
+        [InlineData(@"--simulation-seed", @"x")]
+        [InlineData(@"--simulation-distribution", @"gamma")]
+        [InlineData(@"--simulation-shape", @"wide")]
+        [InlineData(@"--simulation-target", @"soon")]
+        [InlineData(@"--simulation-chart-size", @"800")]
+        public void Parse_Given_ASimulationOptionWithAValueItDoesNotTake_Then_Fails(string option, string value)
+        {
+            Parse(@"-i", @"a.zpp", @"--simulate", option, value).ShouldBeOfType<NotParsed<Options>>();
         }
 
         [Fact]

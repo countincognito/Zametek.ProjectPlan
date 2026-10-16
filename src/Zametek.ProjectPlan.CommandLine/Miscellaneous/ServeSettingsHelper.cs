@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System.Globalization;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -358,6 +359,8 @@ namespace Zametek.ProjectPlan.CommandLine
             RequireAtLeast(limits.MaxUploadMegabytes, 1, nameof(ServeLimits.MaxUploadMegabytes), nameof(ServeOptions.MaxUploadMegabytes));
             RequireAtLeast(limits.MaxChartWidth, 1, nameof(ServeLimits.MaxChartWidth), nameof(ServeOptions.MaxChartSize));
             RequireAtLeast(limits.MaxChartHeight, 1, nameof(ServeLimits.MaxChartHeight), nameof(ServeOptions.MaxChartSize));
+            RequireAtLeast(limits.MaxSimulationIterations, 1, nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations));
+            RequireAtMost(limits.MaxSimulationIterations, GraphLimits.MaximumSimulationIterations, nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations));
             RequireAtLeast(limits.JobTimeoutSeconds, 1, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
             RequireAtLeast(limits.MaxCompileTimeoutMilliseconds, 1, nameof(ServeLimits.MaxCompileTimeoutMilliseconds), nameof(ServeOptions.MaxCompileTimeoutMilliseconds));
 
@@ -384,6 +387,7 @@ namespace Zametek.ProjectPlan.CommandLine
             Add(values, nameof(ServeLimits.MaxJobs), options.MaxJobs);
             Add(values, nameof(ServeLimits.MaxQueue), options.MaxQueue);
             Add(values, nameof(ServeLimits.MaxUploadMegabytes), options.MaxUploadMegabytes);
+            Add(values, nameof(ServeLimits.MaxSimulationIterations), options.MaxSimulationIterations);
             Add(values, nameof(ServeLimits.JobTimeoutSeconds), options.JobTimeoutSeconds);
             Add(values, nameof(ServeLimits.MaxCompileTimeoutMilliseconds), options.MaxCompileTimeoutMilliseconds);
 
@@ -422,6 +426,22 @@ namespace Zametek.ProjectPlan.CommandLine
                     limitName,
                     OptionLongName(optionPropertyName),
                     minimum));
+            }
+        }
+
+        private static void RequireAtMost(
+            int value,
+            int maximum,
+            string limitName,
+            string optionPropertyName)
+        {
+            if (value > maximum)
+            {
+                throw new UsageException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeLimitTooHigh,
+                    limitName,
+                    OptionLongName(optionPropertyName),
+                    maximum));
             }
         }
 

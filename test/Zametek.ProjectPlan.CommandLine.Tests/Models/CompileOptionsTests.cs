@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -23,6 +24,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [@"metricsFormat"] = [@"metrics-format"],
             [@"compileTimeout"] = [@"compile-timeout"],
             [@"now"] = [@"now"],
+            [@"simulation"] = [@"simulate", @"simulation-iterations", @"simulation-seed", @"simulation-distribution", @"simulation-shape", @"simulation-target"],
             [@"outputs.project"] = [@"output"],
             [@"outputs.scenarioExport"] = [@"export"],
             [@"outputs.ganttChart"] = [@"gantt-directory", @"gantt-format", @"gantt-size"],
@@ -31,7 +33,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [@"outputs.resourceChart"] = [@"resource-directory", @"resource-format", @"resource-size"],
             [@"outputs.earnedValueChart"] = [@"ev-directory", @"ev-format", @"ev-size"],
             [@"outputs.scenarioChart"] = [@"scenario-chart-directory", @"scenario-chart-format", @"scenario-chart-size"],
+            [@"outputs.simulationChart"] = [@"simulation-chart-directory", @"simulation-chart-format", @"simulation-chart-size"],
+
+            // zpp writes the five CSV files with one option, and a request asks for each of them.
+            [@"outputs.simulationStatistics"] = [s_CsvDirectory],
+            [@"outputs.simulationHistogram"] = [s_CsvDirectory],
+            [@"outputs.simulationPaths"] = [s_CsvDirectory],
+            [@"outputs.simulationActivities"] = [s_CsvDirectory],
+            [@"outputs.simulationIterations"] = [s_CsvDirectory],
         };
+
+        private const string s_CsvDirectory = @"simulation-csv-directory";
 
         // The options of zpp's that a request does not carry: the plan is its own part, a listing is its own endpoint, the
         // log is the server's, and where to run is the client's.
@@ -52,6 +64,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(3),
                 Now = @"2026-10-02T09:00:00+01:00",
+                Simulation = new SimulationOptions
+                {
+                    Iterations = 10_000,
+                    Seed = 18_446_744_073_709_551_615UL,
+                    Distribution = DurationDistribution.ModifiedBetaPert,
+                    ModifiedBetaShape = 6.5,
+                    TargetFinishDays = 120,
+                },
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -62,11 +82,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     ResourceChart = new ChartOptions { Format = PlotExport.Svg, Width = 640, Height = 480 },
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Webp, Width = 320, Height = 240 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Bmp, Width = 100, Height = 50 },
+                    SimulationChart = new ChartOptions { Format = PlotExport.Png, Width = 400, Height = 300 },
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
                 },
             });
 
             json.ShouldBe(
-                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50}}}""");
+                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","simulation":{"iterations":10000,"seed":"18446744073709551615","distribution":"modifiedBetaPert","modifiedBetaShape":6.5,"targetFinishDays":120},"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulationChart":{"format":"png","width":400,"height":300},"simulationStatistics":{},"simulationHistogram":{},"simulationPaths":{},"simulationActivities":{},"simulationIterations":{}}}""");
+        }
+
+        [Fact]
+        public void Serialize_Given_ASimulationOfTheDefaults_Then_WritesTheSeedAndTheIterationsAndNothingElse()
+        {
+            // A seed of 0 is not the default, and so it is written even so: the client leaves out what is default.
+            Serialize(new CompileOptions { Simulation = new SimulationOptions() }).ShouldBe(@"{""simulation"":{""iterations"":5000,""seed"":""1""}}");
+            Serialize(new CompileOptions { Simulation = new SimulationOptions { Seed = 0, TargetFinishDays = 0 } })
+                .ShouldBe(@"{""simulation"":{""iterations"":5000,""seed"":""0"",""targetFinishDays"":0}}");
         }
 
         [Fact]
@@ -139,7 +174,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             unaccounted.ShouldBeEmpty();
             s_NotSent.Except(LongNames()).ShouldBeEmpty();
-            carried.Distinct().Count().ShouldBe(carried.Length);
+
+            // An option stands for one member, but for the one that asks for the five files at once.
+            carried.Where(x => x != s_CsvDirectory).Distinct().Count().ShouldBe(carried.Count(x => x != s_CsvDirectory));
         }
 
         [Fact]

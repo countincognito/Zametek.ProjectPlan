@@ -1,5 +1,7 @@
 using ConsoleTables;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -11,7 +13,8 @@ namespace Zametek.ProjectPlan.CommandLine
     internal static class JobConsoleHelper
     {
         // Prints what a job that ran to its end leaves on stdout - the compiler's output when the plan did not compile,
-        // and otherwise its metrics, in the format asked for - and returns the exit code the run ends with.
+        // and otherwise its metrics, in the format asked for, with the statistics of its simulation after them if it ran
+        // one - and returns the exit code the run ends with.
         public static async Task<ExitCode> WriteResultAsync(
             IJobConsole console,
             JobResult result,
@@ -35,14 +38,14 @@ namespace Zametek.ProjectPlan.CommandLine
                     case MetricsExport.Json:
                         // Machine output: undecorated, no colours, no leading
                         // blank line, so it can be piped straight into a parser.
-                        await console.WriteLineAsync(BuildMetricsJson(metrics));
+                        await console.WriteLineAsync(BuildMetricsJson(metrics, result.Simulation));
                         break;
                     case MetricsExport.Table:
-                        await console.DisplayAsync(BuildMetricsTable(metrics).ToString(), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsTable(metrics, result.Simulation).ToString(), hasErrors: false);
                         break;
                     case MetricsExport.Markdown:
                     default:
-                        await console.DisplayAsync(BuildMetricsTable(metrics).ToMarkDownString(), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsTable(metrics, result.Simulation).ToMarkDownString(), hasErrors: false);
                         break;
                 }
             }
@@ -111,8 +114,11 @@ namespace Zametek.ProjectPlan.CommandLine
         }
 
         // The metrics as a table, which prints as a table or as Markdown. This and the builders below are internal
-        // rather than private so the test assembly can build the text it expects a run to print.
-        internal static ConsoleTable BuildMetricsTable(JobMetrics metrics)
+        // rather than private so the test assembly can build the text it expects a run to print. The statistics of a
+        // simulation, if there was one, are the rows after the metrics, as the panel shows them.
+        internal static ConsoleTable BuildMetricsTable(
+            JobMetrics metrics,
+            JobSimulationMetrics? simulation = null)
         {
             var table = new ConsoleTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
 
@@ -151,6 +157,18 @@ namespace Zametek.ProjectPlan.CommandLine
             table.AddRow(Resource.ProjectPlan.Labels.Label_OtherMargin, $@"{metrics.OtherMarginAbsolute:F2}{metrics.DisplayOtherMargin}");
             table.AddRow(Resource.ProjectPlan.Labels.Label_TotalMargin, $@"{metrics.TotalMarginAbsolute:F2}{metrics.DisplayTotalMargin}");
 
+            if (simulation is not null)
+            {
+                // A row of its own says what the rows after it are. A cell of more than about 40 characters wraps in the table,
+                // which a name with a prefix on each row would make of the longest.
+                table.AddRow(Resource.ProjectPlan.Titles.Title_ScheduleSimulation, string.Empty);
+
+                foreach (SimulationStatisticModel statistic in simulation.Statistics)
+                {
+                    table.AddRow(statistic.Name, statistic.Value);
+                }
+            }
+
             table.Configure(x =>
             {
                 x.NumberAlignment = Alignment.Left;
@@ -160,7 +178,13 @@ namespace Zametek.ProjectPlan.CommandLine
             return table;
         }
 
-        internal static string BuildMetricsJson(JobMetrics metrics)
+        // The metrics as JSON. When the job ran a simulation, its statistics follow as one more object, Simulation: raw values,
+        // as the metrics are, with the seed written as text - as the API writes it - because a seed can be larger than
+        // every reader of JSON reads without loss, and the dates as yyyy-MM-dd. Without a simulation the text is what it
+        // was before there was one.
+        internal static string BuildMetricsJson(
+            JobMetrics metrics,
+            JobSimulationMetrics? simulation = null)
         {
             // Raw values rather than display strings wherever the contract offers
             // them: JSON numbers are culture-invariant by construction, and the
@@ -206,7 +230,44 @@ namespace Zametek.ProjectPlan.CommandLine
 
             // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
             // left in the text is indentation.
-            return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
+            if (simulation is null)
+            {
+                return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
+            }
+
+            JObject json = JObject.FromObject(output);
+            json[@"Simulation"] = JObject.FromObject(BuildSimulationJson(simulation));
+            return NewLineHelper.NormalizeNewLines(json.ToString(Formatting.Indented));
+        }
+
+        private static object BuildSimulationJson(JobSimulationMetrics simulation)
+        {
+            return new
+            {
+                simulation.Iterations,
+                simulation.ValidIterations,
+                simulation.FailedIterations,
+                Seed = simulation.Seed.ToString(CultureInfo.InvariantCulture),
+                Distribution = simulation.Distribution.ToString(),
+                simulation.ModifiedBetaShape,
+                simulation.PlannedFinishDays,
+                PlannedFinishDate = Date(simulation.PlannedFinishDate),
+                simulation.MeanDays,
+                simulation.StandardDeviationDays,
+                simulation.EarliestFinishDays,
+                EarliestFinishDate = Date(simulation.EarliestFinishDate),
+                simulation.LatestFinishDays,
+                LatestFinishDate = Date(simulation.LatestFinishDate),
+                Percentiles = simulation.Percentiles.Select(x => new { x.Percentile, x.FinishDays, FinishDate = Date(x.FinishDate) }).ToArray(),
+                simulation.TargetFinishDays,
+                TargetFinishDate = Date(simulation.TargetFinishDate),
+                simulation.TargetProbability,
+            };
+        }
+
+        private static string? Date(DateOnly? date)
+        {
+            return date?.ToString(@"yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
 
         internal static ConsoleTable BuildScenarioTable(IEnumerable<ScenarioSummary> scenarios)

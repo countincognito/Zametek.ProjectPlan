@@ -4,8 +4,9 @@ info:
   summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
   description: |
     The HTTP API of `zpp serve`, which starts `zpp` as a web server. Each request carries its project, because the server keeps
-    nothing between requests. The server answers with the metrics of the project and the outputs that the request asks for. These
-    outputs are the project file, charts and graphs, and an Excel export.
+    nothing between requests. The server answers with the metrics of the project, the statistics of a simulation of its schedule if
+    the request asks for one, and the outputs that the request asks for. These outputs are the project file, charts and graphs, an
+    Excel export, and the chart and the CSV files of the simulation.
 
     This description is the source of truth for programs. [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
     is the written reference. It has the changelog, the security review and the deviations from the
@@ -64,8 +65,9 @@ paths:
       summary: Compile a project
       description: |
         This operation compiles the project in the request. The request can have an Excel workbook instead, which the server imports
-        into a new project. The server answers with the metrics of the project and the outputs that the options ask for. The status is
-        `200` only when the project compiled and the job produced each output. Each other result is a problem, and its status shows the
+        into a new project. The server answers with the metrics of the project and the outputs that the options ask for. If the options
+        ask for a simulation, the server runs it after the project compiles, and the answer has its statistics. The status is `200`
+        only when the project compiled and the job produced each output. Each other result is a problem, and its status shows the
         reason.
 
         With `Accept: application/zip`, the answer is a zip. It contains each output as a file, with the name that `zpp` gives it. It also
@@ -107,6 +109,8 @@ paths:
                   $ref: '#/components/examples/CompiledProject'
                 compiledWithOutputs:
                   $ref: '#/components/examples/CompiledProjectWithOutputs'
+                compiledWithSimulation:
+                  $ref: '#/components/examples/CompiledProjectWithSimulation'
             application/zip:
               schema:
                 type: string
@@ -695,6 +699,77 @@ components:
             fileName: two-scenarios-gantt.png
             contentType: image/png
             content: iVBORw0KGgo=
+    CompiledProjectWithSimulation:
+      summary: A project that compiled, with the statistics of its simulation and the statistics file (its content shortened)
+      value:
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        simulation:
+          iterations: 5000
+          validIterations: 5000
+          failedIterations: 0
+          seed: '1'
+          distribution: betaPert
+          modifiedBetaShape: null
+          plannedFinishDays: 26
+          plannedFinishDate: '2024-01-27'
+          meanDays: 26.4
+          standardDeviationDays: 3.1
+          earliestFinishDays: 17
+          earliestFinishDate: '2024-01-18'
+          latestFinishDays: 41
+          latestFinishDate: '2024-02-11'
+          percentiles:
+            - { percentile: 5, finishDays: 21, finishDate: '2024-01-22' }
+            - { percentile: 10, finishDays: 22, finishDate: '2024-01-23' }
+            - { percentile: 25, finishDays: 24, finishDate: '2024-01-25' }
+            - { percentile: 50, finishDays: 26, finishDate: '2024-01-27' }
+            - { percentile: 75, finishDays: 28, finishDate: '2024-01-29' }
+            - { percentile: 80, finishDays: 29, finishDate: '2024-01-30' }
+            - { percentile: 90, finishDays: 31, finishDate: '2024-02-01' }
+            - { percentile: 95, finishDays: 33, finishDate: '2024-02-03' }
+            - { percentile: 99, finishDays: 37, finishDate: '2024-02-07' }
+          targetFinishDays: 30
+          targetFinishDate: '2024-01-31'
+          targetProbability: 0.86
+        outputs:
+          - kind: simulationStatistics
+            fileName: two-scenarios-simulation-statistics.csv
+            contentType: text/csv
+            content: 77u/U3RhdGlzdGljLFZhbHVlCg==
     TwoScenarios:
       summary: The scenarios of a project
       value:
@@ -719,6 +794,7 @@ components:
           maxUploadMegabytes: 50
           maxChartWidth: 5000
           maxChartHeight: 5000
+          maxSimulationIterations: 100000
           jobTimeout: PT2M
           maxCompileTimeout: PT1M
     MalformedRequest:
@@ -989,12 +1065,58 @@ components:
           type: [string, 'null']
           format: date-time
           description: A time with its offset from UTC. The job uses it in place of the clock.
+        simulation:
+          oneOf:
+            - $ref: '#/components/schemas/SimulationOptions'
+            - type: 'null'
+          description: A simulation of the schedule, which the job runs after the project compiles. Without it, there is no simulation, and the outputs of a simulation are not allowed.
         outputs:
           oneOf:
             - $ref: '#/components/schemas/OutputsOptions'
             - type: 'null'
+    SimulationOptions:
+      description: |
+        A Monte Carlo simulation of the schedule: the options `--simulate` and `--simulation-*` of `zpp`. Each iteration draws a duration
+        for each activity from its three-point estimate, schedules the resources again, and finds the finish and its critical path.
+        The same options on the same project give the same result, whatever the number of threads. Each member can be `null`, which is
+        the same as if the request does not give it.
+      type: object
+      additionalProperties: false
+      properties:
+        iterations:
+          type: [integer, 'null']
+          minimum: 1
+          maximum: 1000000
+          default: 5000
+          description: The number of iterations, from 1 to the `maxSimulationIterations` of the server. Without it, the value is 5000, or the limit if that is lower.
+        seed:
+          type: [string, 'null']
+          pattern: '^[0-9]{1,20}$'
+          default: '1'
+          description: |
+            The seed of the random numbers, a whole number from 0 to 18446744073709551615. It is text, because a number that large is
+            not one that every program reads without loss. Without it, the value is `1`, and the same project gives the same result
+            each time.
+        distribution:
+          type: [string, 'null']
+          enum: [betaPert, modifiedBetaPert, triangular, normal, uniform, null]
+          default: betaPert
+          description: The distribution that the durations are drawn from.
+        modifiedBetaShape:
+          type: [number, 'null']
+          exclusiveMinimum: 0
+          description: The shape value of the modified beta-PERT distribution. Only with the distribution `modifiedBetaPert`. Without it, the value is 4.
+        targetFinishDays:
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
+          description: A finish, in days from the start of the project. The answer has the share of the iterations that finish by it.
     OutputsOptions:
-      description: The outputs to produce, in the order in which the job produces them. The job produces an output that the request gives.
+      description: |
+        The outputs to produce, in the order in which the job produces them. The job produces an output that the request gives. The
+        outputs that start with `simulation` are those of the simulation, and the request must have `simulation` to ask for them. The
+        CSV files are the statistics of the finish, its histogram split by critical path, the critical paths, how often each activity was
+        critical, and every iteration.
       type: object
       additionalProperties: false
       properties:
@@ -1014,6 +1136,18 @@ components:
           $ref: '#/components/schemas/ChartOptions'
         scenarioChart:
           $ref: '#/components/schemas/ChartOptions'
+        simulationChart:
+          $ref: '#/components/schemas/ChartOptions'
+        simulationStatistics:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        simulationHistogram:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        simulationPaths:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        simulationActivities:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        simulationIterations:
+          $ref: '#/components/schemas/OutputWithoutSettings'
     OutputWithoutSettings:
       description: An output with no settings at this time. The request gives it as an empty object, which can carry settings later.
       type: [object, 'null']
@@ -1049,6 +1183,8 @@ components:
       properties:
         metrics:
           $ref: '#/components/schemas/Metrics'
+        simulation:
+          $ref: '#/components/schemas/Simulation'
         outputs:
           type: array
           items:
@@ -1138,13 +1274,124 @@ components:
         indirectMarginAbsolute: { type: [number, 'null'] }
         otherMarginAbsolute: { type: [number, 'null'] }
         totalMarginAbsolute: { type: [number, 'null'] }
+    Simulation:
+      description: |
+        What the simulation found. It is in the answer when the request asks for a simulation. Like the metrics, the names are words in
+        `lowerCamelCase`, and the values are numbers and not the text that `zpp` prints. Every time is in days from the start of the
+        project, with the date on which it falls in the working calendar of the project. An iteration that the scheduler cannot
+        place every activity in is a failed iteration, and it is in none of the statistics. A simulation in which every iteration
+        fails has no statistics, and thus `null` values for them.
+      type: object
+      required:
+        - iterations
+        - validIterations
+        - failedIterations
+        - seed
+        - distribution
+        - modifiedBetaShape
+        - plannedFinishDays
+        - plannedFinishDate
+        - meanDays
+        - standardDeviationDays
+        - earliestFinishDays
+        - earliestFinishDate
+        - latestFinishDays
+        - latestFinishDate
+        - percentiles
+        - targetFinishDays
+        - targetFinishDate
+        - targetProbability
+      properties:
+        iterations:
+          type: integer
+          description: The number of iterations that the simulation ran, with the failed ones.
+        validIterations:
+          type: integer
+          description: The number of iterations that gave a finish. Each statistic uses these.
+        failedIterations:
+          type: integer
+        seed:
+          type: string
+          pattern: '^[0-9]{1,20}$'
+          description: The seed that the simulation used, as text.
+        distribution:
+          type: string
+          enum: [betaPert, modifiedBetaPert, triangular, normal, uniform]
+        modifiedBetaShape:
+          type: [number, 'null']
+          description: The shape value that the simulation used. Only the distribution `modifiedBetaPert` has one.
+        plannedFinishDays:
+          type: integer
+          description: The finish of the project as it stands, with the expected duration of each activity.
+        plannedFinishDate:
+          type: string
+          format: date
+        meanDays:
+          type: [number, 'null']
+        standardDeviationDays:
+          type: [number, 'null']
+          description: The deviation of the population, which divides by the number of valid iterations.
+        earliestFinishDays:
+          type: [integer, 'null']
+        earliestFinishDate:
+          type: [string, 'null']
+          format: date
+        latestFinishDays:
+          type: [integer, 'null']
+        latestFinishDate:
+          type: [string, 'null']
+          format: date
+        percentiles:
+          type: array
+          description: The 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. The array is empty when the simulation has no statistics.
+          items:
+            $ref: '#/components/schemas/SimulationPercentile'
+        targetFinishDays:
+          type: [integer, 'null']
+          description: The target that the request gave.
+        targetFinishDate:
+          type: [string, 'null']
+          format: date
+        targetProbability:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: The share of the valid iterations that finish by the target, from 0 to 1.
+    SimulationPercentile:
+      type: object
+      required: [percentile, finishDays, finishDate]
+      properties:
+        percentile:
+          type: integer
+          minimum: 1
+          maximum: 99
+        finishDays:
+          type: integer
+          description: The smallest finish that at least this share of the valid iterations reach (the nearest rank).
+        finishDate:
+          type: string
+          format: date
     Output:
       type: object
       required: [kind, fileName, contentType]
       properties:
         kind:
           type: string
-          enum: [project, scenarioExport, ganttChart, arrowGraph, vertexGraph, resourceChart, earnedValueChart, scenarioChart]
+          enum:
+            - project
+            - scenarioExport
+            - ganttChart
+            - arrowGraph
+            - vertexGraph
+            - resourceChart
+            - earnedValueChart
+            - scenarioChart
+            - simulationChart
+            - simulationStatistics
+            - simulationHistogram
+            - simulationPaths
+            - simulationActivities
+            - simulationIterations
         fileName:
           type: string
           description: The name that `zpp` gives to the file.
@@ -1238,7 +1485,7 @@ components:
           $ref: '#/components/schemas/Limits'
     Limits:
       type: object
-      required: [maxJobs, maxQueue, maxUploadMegabytes, maxChartWidth, maxChartHeight, jobTimeout, maxCompileTimeout]
+      required: [maxJobs, maxQueue, maxUploadMegabytes, maxChartWidth, maxChartHeight, maxSimulationIterations, jobTimeout, maxCompileTimeout]
       properties:
         maxJobs:
           type: integer
@@ -1258,6 +1505,11 @@ components:
         maxChartHeight:
           type: integer
           minimum: 1
+        maxSimulationIterations:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: The most iterations that a simulation can run. The `jobTimeout` also stops a simulation that is too slow.
         jobTimeout:
           $ref: '#/components/schemas/Duration'
           description: The time that a job can use before the server stops it.
@@ -1288,6 +1540,7 @@ components:
                 - invalidFormat
                 - outOfRange
                 - notAllowedWithImport
+                - notAllowedWithoutSimulation
                 - tooLarge
                 - unsupportedFormat
                 - unreadable
@@ -1394,7 +1647,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics and the outputs that the job produced.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, and the outputs that the job produced.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1405,6 +1658,8 @@ components:
               const: 500
             metrics:
               $ref: '#/components/schemas/Metrics'
+            simulation:
+              $ref: '#/components/schemas/Simulation'
             outputs:
               type: array
               items:

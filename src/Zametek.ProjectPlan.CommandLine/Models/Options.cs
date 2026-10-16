@@ -1,5 +1,6 @@
 using CommandLine;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -39,6 +40,16 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ScenarioChartDirectoryLongName = "scenario-chart-directory";
         private const string c_ScenarioChartFormatLongName = "scenario-chart-format";
         private const string c_ScenarioChartSizeLongName = "scenario-chart-size";
+        private const string c_SimulateLongName = "simulate";
+        private const string c_SimulationIterationsLongName = "simulation-iterations";
+        private const string c_SimulationSeedLongName = "simulation-seed";
+        private const string c_SimulationDistributionLongName = "simulation-distribution";
+        private const string c_SimulationShapeLongName = "simulation-shape";
+        private const string c_SimulationTargetLongName = "simulation-target";
+        private const string c_SimulationChartDirectoryLongName = "simulation-chart-directory";
+        private const string c_SimulationChartFormatLongName = "simulation-chart-format";
+        private const string c_SimulationChartSizeLongName = "simulation-chart-size";
+        private const string c_SimulationCsvDirectoryLongName = "simulation-csv-directory";
         private const string c_ServerLongName = "server";
         private const string c_LocalLongName = "local";
         private const string c_ApiKeyFileLongName = "api-key-file";
@@ -52,6 +63,8 @@ namespace Zametek.ProjectPlan.CommandLine
             @"      Compile a project, print its metrics, and write what the options ask for.",
             @"  zpp -m <file> [options]",
             @"      The same, for a plan imported from .mpp, .xml or .xlsx.",
+            @"  zpp -i <file.zpp> --simulate [options]",
+            @"      The same, with a Monte Carlo simulation of the schedule.",
             @"  zpp -i <file.zpp> --server <address> [options]",
             @"      The same, run on a server started with zpp serve.",
             @"  zpp serve [options]",
@@ -156,6 +169,40 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_ScenarioChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Scenario chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> ScenarioChartSize { get; set; } = [];
+
+
+
+        [Option(c_SimulateLongName, HelpText = "Run a Monte Carlo simulation of the schedule once the plan has compiled, and print its statistics after the metrics. Each iteration draws the duration of each activity from its estimates, schedules the resources again, and finds the finish. The same options give the same result each time")]
+        public bool Simulate { get; set; } = default;
+
+        [Option(c_SimulationIterationsLongName, HelpText = "Iterations of the simulation, from 1 to 1000000 (defaults to 5000; only valid with --" + c_SimulateLongName + ")")]
+        public int? SimulationIterations { get; set; } = default;
+
+        [Option(c_SimulationSeedLongName, HelpText = "Seed of the random numbers, from 0 to 18446744073709551615 (defaults to 1, so that a run repeats; give another to draw another sample; only valid with --" + c_SimulateLongName + ")")]
+        public ulong? SimulationSeed { get; set; } = default;
+
+        [Option(c_SimulationDistributionLongName, HelpText = "Distribution of the durations (BetaPert|ModifiedBetaPert|Triangular|Normal|Uniform; defaults to BetaPert; only valid with --" + c_SimulateLongName + ")")]
+        public DurationDistribution? SimulationDistribution { get; set; } = default;
+
+        [Option(c_SimulationShapeLongName, HelpText = "Shape value of the modified beta-PERT distribution, above 0 (defaults to 4; only valid with --" + c_SimulationDistributionLongName + " ModifiedBetaPert)")]
+        public double? SimulationShape { get; set; } = default;
+
+        [Option(c_SimulationTargetLongName, HelpText = "Finish, in days from the start of the project, whose chance of being met the statistics give (only valid with --" + c_SimulateLongName + ")")]
+        public int? SimulationTarget { get; set; } = default;
+
+
+
+        [Option(c_SimulationChartDirectoryLongName, HelpText = "Simulation chart output file directory (only valid with --" + c_SimulateLongName + ")")]
+        public string? SimulationChartDirectory { get; set; } = default;
+
+        [Option(c_SimulationChartFormatLongName, Default = PlotExport.Jpeg, HelpText = "Simulation chart format (Jpeg|Png|Bmp|Webp|Svg)")]
+        public PlotExport SimulationChartFormat { get; set; } = default;
+
+        [Option(c_SimulationChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Simulation chart dimensions in pixels (<width>:<height>)")]
+        public IEnumerable<int> SimulationChartSize { get; set; } = [];
+
+        [Option(c_SimulationCsvDirectoryLongName, HelpText = "Directory for the CSV files of the simulation: its statistics, histogram, critical paths, activities and iterations (only valid with --" + c_SimulateLongName + ")")]
+        public string? SimulationCsvDirectory { get; set; } = default;
 
 
 

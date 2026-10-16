@@ -49,6 +49,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             options.MaxQueue.ShouldBeNull();
             options.MaxUploadMegabytes.ShouldBeNull();
             options.MaxChartSize.ShouldBeEmpty();
+            options.MaxSimulationIterations.ShouldBeNull();
             options.JobTimeoutSeconds.ShouldBeNull();
             options.MaxCompileTimeoutMilliseconds.ShouldBeNull();
         }
@@ -122,6 +123,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"--max-queue", @"3",
                 @"--max-upload", @"4",
                 @"--max-chart-size", @"600:400",
+                @"--max-simulation-iterations", @"2500",
                 @"--job-timeout", @"5",
                 @"--max-compile-timeout", @"6000");
 
@@ -129,6 +131,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             options.MaxQueue.ShouldBe(3);
             options.MaxUploadMegabytes.ShouldBe(4);
             options.MaxChartSize.ShouldBe([600, 400]);
+            options.MaxSimulationIterations.ShouldBe(2500);
             options.JobTimeoutSeconds.ShouldBe(5);
             options.MaxCompileTimeoutMilliseconds.ShouldBe(6000);
         }

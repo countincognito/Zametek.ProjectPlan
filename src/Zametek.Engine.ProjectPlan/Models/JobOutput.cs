@@ -10,6 +10,12 @@ namespace Zametek.Engine.ProjectPlan
         VertexGraph,
         ResourceChart,
         EarnedValueChart,
-        ScenarioChart
+        ScenarioChart,
+        SimulationChart,
+        SimulationStatistics,
+        SimulationHistogram,
+        SimulationPaths,
+        SimulationActivities,
+        SimulationIterations
     }
 }

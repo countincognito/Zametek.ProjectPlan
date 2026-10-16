@@ -2,13 +2,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
     // Warms zpp serve up before it says it is ready: it runs the sample plan it carries through every output - first in
-    // raster formats, then in vector ones - so that the first jobs the server is sent do not pay for loading and
-    // compiling what every job uses. Until it has, /health/ready says the server is not ready. If it fails, the server
-    // stays not ready, and its log says why.
+    // raster formats, then in vector ones - and through a simulation of its schedule, so that the first jobs the server is
+    // sent do not pay for loading and compiling what every job uses. Until it has, /health/ready says the server is not
+    // ready. If it fails, the server stays not ready, and its log says why.
     internal class WarmUpService
         : BackgroundService
     {
@@ -16,6 +17,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The sample, as the project file embeds it.
         private const string c_SampleResourceName = @"warm-up.zpp";
+
+        // The iterations of the simulation it warms up with: enough to run every chunk path and all the threads, and no more.
+        private const int c_WarmUpIterations = 200;
 
         private readonly JobRunner m_JobRunner;
         private readonly ServeLimits m_Limits;
@@ -50,6 +54,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [
             new CompileOptions
             {
+                Simulation = new SimulationOptions { Iterations = c_WarmUpIterations },
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -60,11 +65,18 @@ namespace Zametek.ProjectPlan.CommandLine
                     ResourceChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                    SimulationChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
                 },
             },
             new CompileOptions
             {
                 MetricsFormat = MetricsExport.Json,
+                Simulation = new SimulationOptions { Iterations = c_WarmUpIterations, Distribution = DurationDistribution.Triangular },
                 Outputs = new OutputsOptions
                 {
                     GanttChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
@@ -73,6 +85,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     ResourceChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    SimulationChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
                 },
             },
         ];

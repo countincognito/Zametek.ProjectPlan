@@ -23,6 +23,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // How long a job may run. A job that runs past it stops before its next step, as a cancelled job does.
         public int JobTimeoutSeconds { get; init; } = 120;
 
+        // The most iterations a simulation may be asked to run. Each schedules the resources again, which costs about as much
+        // as a compilation, and so it is also the job's time limit (JobTimeoutSeconds) that stops a simulation that is too long.
+        public int MaxSimulationIterations { get; init; } = 100_000;
+
         // The longest a job may let its compilation run. Unlike zpp's, a job's compilation cannot run without a limit.
         public int MaxCompileTimeoutMilliseconds { get; init; } = 60_000;
     }

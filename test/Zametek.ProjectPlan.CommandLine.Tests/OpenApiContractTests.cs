@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -171,7 +172,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             const string outputs = @"{""outputs"":{""project"":{},""ganttChart"":{""format"":""png"",""width"":300,""height"":200},""arrowGraph"":{""format"":""svg""}}}";
 
             // Every option, with a value of the kind that it takes - a compile timeout with a fraction of a second - and every output.
-            const string everything = @"{""scenario"":""alpha"",""baseTheme"":""dark"",""metricsFormat"":""json"",""compileTimeout"":""PT1.5S"",""now"":""2026-10-03T09:00:00+01:00"",""outputs"":{""project"":{},""scenarioExport"":{},""ganttChart"":{""format"":""webp"",""width"":300,""height"":200},""arrowGraph"":{""format"":""graphml""},""vertexGraph"":{""format"":""dot""},""resourceChart"":{""format"":""bmp"",""width"":300,""height"":200},""earnedValueChart"":{""format"":""svg"",""width"":300,""height"":200},""scenarioChart"":{""format"":""jpeg"",""width"":300,""height"":200}}}";
+            const string everything = @"{""scenario"":""alpha"",""baseTheme"":""dark"",""metricsFormat"":""json"",""compileTimeout"":""PT1.5S"",""now"":""2026-10-03T09:00:00+01:00"",""simulation"":{""iterations"":200,""seed"":""12345678901234567890"",""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":6.5,""targetFinishDays"":10},""outputs"":{""project"":{},""scenarioExport"":{},""ganttChart"":{""format"":""webp"",""width"":300,""height"":200},""arrowGraph"":{""format"":""graphml""},""vertexGraph"":{""format"":""dot""},""resourceChart"":{""format"":""bmp"",""width"":300,""height"":200},""earnedValueChart"":{""format"":""svg"",""width"":300,""height"":200},""scenarioChart"":{""format"":""jpeg"",""width"":300,""height"":200},""simulationChart"":{""format"":""png"",""width"":300,""height"":200},""simulationStatistics"":{},""simulationHistogram"":{},""simulationPaths"":{},""simulationActivities"":{},""simulationIterations"":{}}}";
 
             await observations.SendAsync(@"compile", client, Post(@"/v1/projects/compile", Plan()), HttpStatusCode.OK);
             await observations.SendAsync(@"compile, with every option", client, Post(@"/v1/projects/compile", Plan(options: AsTheDescriptionHasIt(everything))), HttpStatusCode.OK);
@@ -521,18 +522,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var console = new ConsoleResponse(0, string.Empty, string.Empty, [transcript]);
             var output = new OutputResponse(JobOutput.Project, @"plan.zpp", @"application/json", [1]);
             var error = new ProblemError { Pointer = @"#/project", Parameter = @"include", Code = @"unreadable", Detail = @"d" };
-            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Console = console };
+            var simulation = new SimulationResponse { Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))] };
+            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
 
             Names(Schema(@"Console")).ShouldBe(Names(console, written), ignoreOrder: true);
             Names(Schema(@"TranscriptEntry")).ShouldBe(Names(transcript, written), ignoreOrder: true);
             Names(Schema(@"Output")).ShouldBe(Names(output, written), ignoreOrder: true);
+            Names(Schema(@"Simulation")).ShouldBe(Names(simulation, written), ignoreOrder: true);
+            Schema(@"Simulation")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(simulation, written), ignoreOrder: true);
+            Names(Schema(@"SimulationPercentile")).ShouldBe(Names(simulation.Percentiles[0], written), ignoreOrder: true);
+            Enumerated(Schema(@"Simulation")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Names(Schema(@"ProblemError")).ShouldBe(Names(error, written), ignoreOrder: true);
             Names(Schema(@"Limits")).ShouldBe(Names(limits, written), ignoreOrder: true);
             Names(Schema(@"InfoResponse")).ShouldBe(Names(new InfoResponse(@"v", @"c", @"z", limits), written), ignoreOrder: true);
             Names(Schema(@"Scenario")).ShouldBe(Names(new ScenarioSummary(@"p", Guid.Empty, true, true), written), ignoreOrder: true);
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
-            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, [output], console), written), ignoreOrder: true);
+            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [output], console), written), ignoreOrder: true);
 
             // A problem is the members every one has, and those of the kind that has more.
             string[] problemNames = [.. Names(Schema(@"Problem")), .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject()).Where(x => x is not (@"type" or @"status"))];
@@ -553,6 +559,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(1),
                 Now = @"2026-10-03T09:00:00+01:00",
+                Simulation = new SimulationOptions(),
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -563,6 +570,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     ResourceChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
+                    SimulationChart = new ChartOptions { Width = 1, Height = 1 },
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
                 },
             };
 
@@ -570,12 +583,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"OutputsOptions")).ShouldBe(Names(options.Outputs!, read), ignoreOrder: true);
             Names(Schema(@"ChartOptions")).ShouldBe(Names(new ChartOptions { Width = 1, Height = 1 }, read), ignoreOrder: true);
             Names(Schema(@"GraphOptions")).ShouldBe(Names(new GraphOptions(), read), ignoreOrder: true);
+            Names(Schema(@"SimulationOptions")).ShouldBe(Names(options.Simulation!, read), ignoreOrder: true);
             Schema(@"ChartOptions")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe([@"width", @"height"], ignoreOrder: true);
 
             Enumerated(Schema(@"CompileOptions")[@"properties"]![@"baseTheme"]!).ShouldBe([.. Values<BaseTheme>()], ignoreOrder: true);
             Enumerated(Schema(@"CompileOptions")[@"properties"]![@"metricsFormat"]!).ShouldBe([.. Values<MetricsExport>()], ignoreOrder: true);
             Enumerated(Schema(@"ChartOptions")[@"properties"]![@"format"]!).ShouldBe([.. Values<PlotExport>()], ignoreOrder: true);
             Enumerated(Schema(@"GraphOptions")[@"properties"]![@"format"]!).ShouldBe([.. Values<GraphExport>()], ignoreOrder: true);
+            Enumerated(Schema(@"SimulationOptions")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Enumerated(Schema(@"TranscriptEntry")[@"properties"]![@"kind"]!).ShouldBe([.. Values<JobTranscriptKind>()], ignoreOrder: true);
 
             // An output is asked for by the name it is answered with.

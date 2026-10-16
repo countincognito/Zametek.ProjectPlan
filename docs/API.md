@@ -12,7 +12,7 @@ The API has four operations, all under `/v1`. The table that follows lists them:
 
 | Operation | Description |
 | --------- | ----------- |
-| [`POST /v1/projects/compile`](#compile-a-project) | This operation compiles the project in the request. It answers with the metrics of the project and the outputs (files) that the request asks for. |
+| [`POST /v1/projects/compile`](#compile-a-project) | This operation compiles the project in the request. It answers with the metrics of the project, the statistics of a simulation of its schedule if the request asks for one, and the outputs (files) that the request asks for. |
 | [`POST /v1/projects/scenarios`](#list-a-projects-scenarios) | This operation lists the scenarios of the project in the request. |
 | [`GET /v1/info`](#ask-what-the-server-is) | This operation gives information about the server: its version, culture, time zone and limits. |
 | [`GET /v1/openapi`](#fetch-the-description) | This operation gives the description of this API, `openapi.yaml`, for programs. It needs no API key. |
@@ -50,6 +50,18 @@ curl -s -F project=@plan.zpp -F "options=@options.json;type=application/json" -H
 ```
 
 `plan.zip` contains `plan.zpp`, `plan-gantt.png` and `plan-arrow.svg`, each with the name that `zpp` gives it. It also contains `result.json`, which is the JSON answer without the contents of the files. Without `Accept: application/zip`, the answer is JSON. Then each file is in the `outputs` list, as base64 in its `content`.
+
+To simulate the schedule of the project, add `simulation` to the options. The answer then has the [statistics](#simulation) of the simulation, and the options can ask for its chart and CSV files in `outputs`:
+
+```json
+{
+  "simulation": { "iterations": 10000, "seed": "2026", "targetFinishDays": 120 },
+  "outputs": {
+    "simulationChart": { "format": "png", "width": 1600, "height": 900 },
+    "simulationStatistics": {}
+  }
+}
+```
 
 A project that does not compile gets a [problem](#problems) and not an answer. The status is `422`, and the problem lists each error of the compiler. `curl --fail-with-body` makes the command fail in this case. The exit code is 22, and `curl` prints the problem. Thus, you can use the command as a gate in a build:
 
@@ -99,6 +111,7 @@ On this computer, the server can listen on plain HTTP, on a Unix domain socket, 
 
 - The size of a request and of a chart
 - The time of a job and of a compilation
+- The number of iterations of a simulation
 - The number of jobs at one time and the number of jobs that wait.
 
 A request beyond a limit gets a problem that names the limit.
@@ -136,9 +149,10 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json`: how the [console](#console) shows the metrics. It has no other effect. |
 | `compileTimeout` | `--compile-timeout` | An ISO 8601 duration, from `PT0.001S` to the limit of the server (`maxCompileTimeout`). Without it, the value is `PT5S` as for `zpp`, or the limit if that is shorter. A request cannot disable the limit, but `zpp` can. |
 | `now` | `--now` | A time with its offset from UTC, for example `2026-10-03T09:00:00+01:00`. The job uses it in place of the clock for each item that it stamps with a time. |
+| `simulation` | `--simulate` | A simulation of the schedule, which the job runs after the project compiles (refer to [Simulation options](#simulation-options)). Without it, there is no simulation. |
 | `outputs` | | What the job produces (refer to the table that follows). |
 
-The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Two outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request.
+The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Seven outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The six outputs that start with `simulation` are the outputs of the simulation, and the request must have `simulation` to ask for them. Without it, each of them is a problem (`notAllowedWithoutSimulation`). `zpp` writes the five CSV files with one option, and a request can ask for the files that it wants.
 
 | Member | Option of zpp | Produces | Settings |
 | ------ | ------------- | -------- | -------- |
@@ -150,12 +164,30 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `resourceChart` | `--resource-*` | The resource chart (`<name>-resource.<format>`) | A chart |
 | `earnedValueChart` | `--ev-*` | The earned value chart (`<name>-ev.<format>`) | A chart |
 | `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`) | A chart |
+| `simulationChart` | `--simulation-chart-*` | The chart of the simulation (`<name>-simulation.<format>`) | A chart |
+| `simulationStatistics` | `--simulation-csv-directory` | The statistics of the finish, as CSV (`<name>-simulation-statistics.csv`) | `{}` |
+| `simulationHistogram` | `--simulation-csv-directory` | The histogram of the finish times, split by critical path (`<name>-simulation-histogram.csv`) | `{}` |
+| `simulationPaths` | `--simulation-csv-directory` | The critical paths (`<name>-simulation-paths.csv`) | `{}` |
+| `simulationActivities` | `--simulation-csv-directory` | How often each activity was critical (`<name>-simulation-activities.csv`) | `{}` |
+| `simulationIterations` | `--simulation-csv-directory` | Every iteration, with its finish time and its critical paths (`<name>-simulation-iterations.csv`) | `{}` |
 
 `<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`.
 
 A **chart** is `{ "format": "png", "width": 1600, "height": 900 }`. The `format` is `jpeg` (the default), `png`, `bmp`, `webp` or `svg`. The size is in pixels, from 1 to the chart limit of the server, and the request must give it.
 
 A **graph** is `{ "format": "svg" }`. The `format` is `jpeg` (the default), `png`, `pdf`, `svg`, `graphml` or `dot`. Each option, and each setting of an output, can be `null`. This is the same as if the request does not give it.
+
+#### Simulation options
+
+`simulation` is an object, and each of its members is optional. The simulation draws the duration of each activity from its three-point estimate, in each iteration. An activity that has no estimate keeps its duration. The simulation schedules the resources again in each iteration, and it finds the finish and the critical path. The same options on the same project give the same result, whatever the number of threads. The result can differ in the last digit between two kinds of computer, because the functions `Log` and `Pow` do not give the same last bit everywhere.
+
+| Member | Option of zpp | Description |
+| ------ | ------------- | ----------- |
+| `iterations` | `--simulation-iterations` | The number of iterations, from 1 to the limit of the server (`maxSimulationIterations`, which is not more than 1000000). Without it, the value is 5000, or the limit if that is lower. |
+| `seed` | `--simulation-seed` | The seed of the random numbers, a whole number from 0 to 18446744073709551615. It is text, for example `"2026"`, because a number that large is not one that every program reads without loss ([REP-7](RESTFUL-API-GUIDE.md#3-representations)). Without it, the value is `"1"`, and thus the same project gives the same result each time. Give another seed to draw another sample. |
+| `distribution` | `--simulation-distribution` | The distribution of the durations: `betaPert` (the default), `modifiedBetaPert`, `triangular`, `normal` or `uniform`. |
+| `modifiedBetaShape` | `--simulation-shape` | A number above 0: the shape value of the modified beta-PERT distribution. Only with the distribution `modifiedBetaPert`. Without it, the value is 4. |
+| `targetFinishDays` | `--simulation-target` | A finish in days from the start of the project, from 0 to 100000. The answer has the share of the iterations that finish by it. |
 
 ### Answer
 
@@ -173,6 +205,7 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 
 - `metrics` has the [metrics](#metrics) of the project.
 - `outputs` lists each output, in the order in which the job produced them. This is the order of the table above. The list is `[]` when the request asked for no output. `kind` shows which output it is. `fileName` is the name that `zpp` gives to its file. `contentType` is its media type. `content` is the file, in base64.
+- `simulation` has the [statistics](#simulation) of the simulation. It is in the answer only when the request asked for a simulation.
 - With `?include=console`, the answer also has `console` (refer to [console](#console)).
 
 With `Accept: application/zip`, the answer is a zip. `Content-Disposition` names it `<name>.zip`. The zip contains each output as a file, with the name that `zpp` gives it. It also contains `result.json`, which is the answer above without the contents of the files. The time of each entry is the time at which the job ran, or the time that `now` gave.
@@ -197,6 +230,45 @@ The answer has each metric of the project, as a number or `null`. The names are 
 | `directMarginAbsolute`, `indirectMarginAbsolute`, `otherMarginAbsolute`, `totalMarginAbsolute` | The margins, as amounts. |
 
 `zpp --metrics-format json` writes the metrics in the form of the first release, for example `ActivityRisk` and a `ProjectFinish` that is text. It continues to do so. These metrics belong to the command line, and the metrics of this API are different.
+
+#### Simulation
+
+The answer has `simulation` when the request asked for a simulation. Like the metrics, it has values and not the text that `zpp` prints, and it does not depend on the culture of the server. Every time is a number of days from the start of the project, with the date on which it falls in the working calendar of the project:
+
+```json
+"simulation": {
+  "iterations": 5000,
+  "validIterations": 5000,
+  "failedIterations": 0,
+  "seed": "1",
+  "distribution": "betaPert",
+  "modifiedBetaShape": null,
+  "plannedFinishDays": 26,
+  "plannedFinishDate": "2024-01-27",
+  "meanDays": 26.4,
+  "standardDeviationDays": 3.1,
+  "earliestFinishDays": 17,
+  "earliestFinishDate": "2024-01-18",
+  "latestFinishDays": 41,
+  "latestFinishDate": "2024-02-11",
+  "percentiles": [
+    { "percentile": 5, "finishDays": 21, "finishDate": "2024-01-22" },
+    ...
+  ],
+  "targetFinishDays": 30,
+  "targetFinishDate": "2024-01-31",
+  "targetProbability": 0.86
+}
+```
+
+- `iterations` is the number that the simulation ran. An iteration fails when the scheduler cannot place each activity. `failedIterations` counts these, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
+- `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`.
+- `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
+- `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.
+- `percentiles` lists the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. A percentile is the smallest finish that at least that share of the valid iterations reach.
+- `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the request gave a target. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
+
+The panel of the application, `zpp` and this API make these numbers in the same way. Refer to the [simulation plan](SIMULATION-PLAN.md) for how the simulation works.
 
 #### Console
 
@@ -254,6 +326,7 @@ The problems are the problems of a compile, where they apply.
     "maxUploadMegabytes": 50,
     "maxChartWidth": 5000,
     "maxChartHeight": 5000,
+    "maxSimulationIterations": 100000,
     "jobTimeout": "PT2M",
     "maxCompileTimeout": "PT1M"
   }
@@ -263,7 +336,8 @@ The problems are the problems of a compile, where they apply.
 - `culture` is the culture in which the server writes numbers and dates. It is an empty string for the invariant culture, which a server on Linux has when nobody sets a culture. `timeZone` is the time zone in which the server writes times. It gives the IANA name, for example `Europe/London`, and not the name that the system uses.
 - `maxJobs` jobs can run at one time, and `maxQueue` more jobs can wait for a free place. The server turns away more requests (`503 busy`).
 - A request with its files has a maximum of `maxUploadMegabytes` megabytes. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
-- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
+- A simulation has a maximum of `maxSimulationIterations` iterations. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
+- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
 `OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, and it is `GET, HEAD, OPTIONS` for `/v1/info` and `/v1/openapi`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi`.
@@ -337,6 +411,7 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `invalidFormat` | A value that is not in the format of the member, or JSON that is not valid JSON. |
 | `outOfRange` | A number or a duration outside the limits. |
 | `notAllowedWithImport` | `scenario` with a workbook to import. Only a project has scenarios. |
+| `notAllowedWithoutSimulation` | An output of the simulation, asked for in a request that has no `simulation`. |
 | `tooLarge` | A part larger than the limit. |
 | `unsupportedFormat` | A file in a format that the server does not read. |
 | `unreadable` | A file that the server cannot read. |
@@ -379,6 +454,7 @@ A client cannot correct this by a change to what it says. It must correct how it
 - A part is missing, the request gives a part twice, or a part is not known.
 - An option is not known, it has an incorrect type, it is not one of its values, or it is out of range.
 - The request gives `scenario` with `import`.
+- The request gives an output of the simulation, but no `simulation`, or a shape value for a distribution that has none.
 - A file has no name.
 
 `errors` has each problem.
@@ -461,7 +537,7 @@ A client cannot correct this by a change to what it says. It must correct how it
 
 #### output-failed
 
-`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. The exit code is 1.
+`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
 
 ```json
 {
@@ -510,7 +586,7 @@ A client cannot correct this by a change to what it says. It must correct how it
 
 #### job-timeout
 
-`503`, with `Retry-After: 5`. The job used more time than the server allows for a job (`jobTimeout` in `/v1/info`), and the server stopped it. The status is `503` and not `504`, because the own limit of the server stopped the job. The [RESTful API Guide](RESTFUL-API-GUIDE.md) gives this rule ([RL-5](RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection)). Do not send the request again without a change, because the job reaches the time limit again. Make the job smaller: use fewer outputs or smaller charts.
+`503`, with `Retry-After: 5`. The job used more time than the server allows for a job (`jobTimeout` in `/v1/info`), and the server stopped it. The status is `503` and not `504`, because the own limit of the server stopped the job. The [RESTful API Guide](RESTFUL-API-GUIDE.md) gives this rule ([RL-5](RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection)). Do not send the request again without a change, because the job reaches the time limit again. Make the job smaller: use fewer outputs, smaller charts, or fewer iterations in the simulation.
 
 ```json
 {
@@ -603,7 +679,7 @@ This table compares the OWASP API Security Top 10 (2023) with the API in its pre
 | API1 Broken object level authorization | The server stores nothing, and thus it has no objects to authorize. A request is about the project that it carries. |
 | API2 Broken authentication | The API has one shared key. It has a minimum of 32 characters, and the client sends it as a bearer token. The server keeps it as a hash and compares it in constant time. Beyond this computer, TLS protects it. The server logs refusals without the key. A Unix domain socket belongs to the user alone. |
 | API3 Broken object property level authorization | The server checks each member of a request. It refuses a member that it does not know, and thus a request cannot assign a property that it must not assign. The answer holds only what the operation produces. |
-| API4 Unrestricted resource consumption | The server limits the size of a request, the size and the depth of its `options`, and the size of a chart. It also limits the time of a job and of a compilation, and the number of jobs that run at one time and that wait. It turns away the other requests with `Retry-After`. |
+| API4 Unrestricted resource consumption | The server limits the size of a request, the size and the depth of its `options`, and the size of a chart. It also limits the iterations of a simulation, the time of a job and of a compilation, and the number of jobs that run at one time and that wait. It turns away the other requests with `Retry-After`. |
 | API5 Broken function level authorization | The API has one role. Whoever has the key can use each operation. The health endpoints need no key, because they show only if the server is ready. The description of the API needs no key, because it is the description of the repository. |
 | API6 Unrestricted access to sensitive business flows | The operations calculate from what they receive, and they keep nothing. The limits restrict what one client can ask for. |
 | API7 Server side request forgery | The server never fetches a URL, because nothing in a request names a URL. |
@@ -638,3 +714,4 @@ This is the first version of the API.
 - The status shows the result. `200` is for a project that compiled and where the job produced each output. `422` is for a project that the server cannot process. `500` is for a server that failed. `503` is for a server that is busy or ran out of time. Each problem is `application/problem+json`, with the id of its request and a list of each error.
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
+- The simulation of the schedule. The option `simulation` of a request, the member `simulation` of an answer, six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`), the code `notAllowedWithoutSimulation`, and the limit `maxSimulationIterations`.

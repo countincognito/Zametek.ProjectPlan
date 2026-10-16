@@ -24,6 +24,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // --now
         public string? Now { get; init; }
 
+        // --simulate and --simulation-*: a simulation of the schedule, run once the project has compiled. Its statistics are in
+        // the answer, and it is what the outputs of a simulation are made from. When it is not given, there is none.
+        public SimulationOptions? Simulation { get; init; }
+
         // What the request asks to have produced.
         public OutputsOptions? Outputs { get; init; }
     }

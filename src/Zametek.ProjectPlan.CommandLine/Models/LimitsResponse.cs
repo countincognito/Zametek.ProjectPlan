@@ -9,6 +9,7 @@ namespace Zametek.ProjectPlan.CommandLine
         int MaxUploadMegabytes,
         int MaxChartWidth,
         int MaxChartHeight,
+        int MaxSimulationIterations,
         TimeSpan JobTimeout,
         TimeSpan MaxCompileTimeout)
     {
@@ -22,6 +23,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 limits.MaxUploadMegabytes,
                 limits.MaxChartWidth,
                 limits.MaxChartHeight,
+                limits.MaxSimulationIterations,
                 TimeSpan.FromSeconds(limits.JobTimeoutSeconds),
                 TimeSpan.FromMilliseconds(limits.MaxCompileTimeoutMilliseconds));
         }

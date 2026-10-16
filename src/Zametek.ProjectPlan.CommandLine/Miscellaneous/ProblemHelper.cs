@@ -113,7 +113,8 @@ namespace Zametek.ProjectPlan.CommandLine
             IReadOnlyList<ProblemError>? errors = null,
             ConsoleResponse? console = null,
             MetricsResponse? metrics = null,
-            IReadOnlyList<OutputResponse>? outputs = null)
+            IReadOnlyList<OutputResponse>? outputs = null,
+            SimulationResponse? simulation = null)
         {
             ArgumentNullException.ThrowIfNull(context);
 
@@ -126,6 +127,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 TraceId = RequestIdHelper.Get(context),
                 Errors = errors,
                 Metrics = metrics,
+                Simulation = simulation,
                 Outputs = outputs,
                 Console = console,
             };

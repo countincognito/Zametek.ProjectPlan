@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
@@ -133,6 +134,62 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     VertexGraph = new GraphOptions { Format = GraphExport.Svg },
                 },
             });
+        }
+
+        [Fact]
+        public async Task Compile_Given_ASimulationAndAllItsOutputs_Then_DoesWhatZppDoes()
+        {
+            await ShouldDoWhatZppDoesAsync(AssetPath(@"estimated.zpp"), new CompileOptions
+            {
+                MetricsFormat = MetricsExport.Json,
+                Simulation = new SimulationOptions
+                {
+                    Iterations = 1500,
+                    Seed = 9,
+                    Distribution = DurationDistribution.Triangular,
+                    TargetFinishDays = 28,
+                },
+                Outputs = new OutputsOptions
+                {
+                    SimulationChart = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
+                },
+            });
+        }
+
+        [Fact]
+        public async Task Compile_Given_ASimulationOfAPlanWithResources_Then_DoesWhatZppDoes()
+        {
+            await ShouldDoWhatZppDoesAsync(SamplePath(), new CompileOptions
+            {
+                MetricsFormat = MetricsExport.Table,
+                Simulation = new SimulationOptions
+                {
+                    Iterations = 200,
+                    Seed = 123_456_789,
+                    Distribution = DurationDistribution.ModifiedBetaPert,
+                    ModifiedBetaShape = 6.5,
+                },
+                Outputs = new OutputsOptions
+                {
+                    SimulationChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
+                },
+            });
+        }
+
+        [Fact]
+        public async Task Compile_Given_ASimulationAndNoOutputs_Then_DoesWhatZppDoes()
+        {
+            await ShouldDoWhatZppDoesAsync(AssetPath(@"estimated.zpp"), new CompileOptions { Simulation = new SimulationOptions() });
         }
 
         [Fact]
@@ -389,6 +446,37 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             AddChart(args, @"resource", outputs.ResourceChart, directory);
             AddChart(args, @"ev", outputs.EarnedValueChart, directory);
             AddChart(args, @"scenario-chart", outputs.ScenarioChart, directory);
+
+            if (options.Simulation is SimulationOptions simulation)
+            {
+                args.AddRange(
+                [
+                    @"--simulate",
+                    @"--simulation-iterations", simulation.Iterations.ToString(CultureInfo.InvariantCulture),
+                    @"--simulation-seed", simulation.Seed.ToString(CultureInfo.InvariantCulture),
+                    @"--simulation-distribution", simulation.Distribution.ToString(),
+                ]);
+
+                if (simulation.ModifiedBetaShape is double shape)
+                {
+                    args.AddRange([@"--simulation-shape", shape.ToString(CultureInfo.InvariantCulture)]);
+                }
+                if (simulation.TargetFinishDays is int target)
+                {
+                    args.AddRange([@"--simulation-target", target.ToString(CultureInfo.InvariantCulture)]);
+                }
+            }
+
+            AddChart(args, @"simulation-chart", outputs.SimulationChart, directory);
+
+            // zpp writes the five CSV files together.
+            CsvOptions?[] csv = [outputs.SimulationStatistics, outputs.SimulationHistogram, outputs.SimulationPaths, outputs.SimulationActivities, outputs.SimulationIterations];
+            csv.Count(x => x is not null).ShouldBeOneOf(0, csv.Length);
+
+            if (csv[0] is not null)
+            {
+                args.AddRange([@"--simulation-csv-directory", directory]);
+            }
 
             return [.. args];
         }

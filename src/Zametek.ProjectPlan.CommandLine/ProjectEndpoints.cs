@@ -16,14 +16,14 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     // zpp serve's API. A request to compile a project - POST /v1/projects/compile - comes as multipart/form-data: the
     // project as a file named project, as zpp's --input takes it, or named import, as its --import does, with the options as
-    // JSON in a part named options (see CompileOptions). It is answered with the project's metrics and the outputs it
-    // produced (see CompileResponse): as JSON, or - when the request accepts application/zip - as a zip of the outputs, with
-    // the rest in result.json. Asked to include the console, it also says what zpp would have printed and exited with.
-    // POST /v1/projects/scenarios lists a project's scenarios, as --list-scenarios does, GET /v1/info says what the server
-    // is, and GET /v1/openapi gives the description of the API. What cannot be answered is a problem (see ProblemResponse),
-    // with the status that says why: a request that
-    // cannot be understood is 400, one whose content is not valid, or whose project cannot be processed, is 422, and
-    // whatever the server did not expect, or cannot do now, is 500 or 503.
+    // JSON in a part named options (see CompileOptions). It is answered with the project's metrics, what its simulation
+    // found if the request asked for one, and the outputs it produced (see CompileResponse): as JSON, or - when the request
+    // accepts application/zip - as a zip of the outputs, with the rest in result.json. Asked to include the console, it
+    // also says what zpp would have printed and exited with. POST /v1/projects/scenarios lists a project's scenarios, as
+    // --list-scenarios does, GET /v1/info says what the server is, and GET /v1/openapi gives the description of the API.
+    // What cannot be answered is a problem (see ProblemResponse), with the status that says why: a request that cannot be
+    // understood is 400, one whose content is not valid, or whose project cannot be processed, is 422, and whatever the
+    // server did not expect, or cannot do now, is 500 or 503.
     internal class ProjectEndpoints
     {
         #region Fields
@@ -371,6 +371,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             var response = new CompileResponse(
                 MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
+                result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
                 outputs,
                 consoleResponse);
 
@@ -813,7 +814,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     errors.Count > 0 ? errors : null,
                     console,
                     MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
-                    outputs),
+                    outputs,
+                    result.Simulation is null ? null : SimulationResponse.From(result.Simulation)),
                 exitCode);
         }
 

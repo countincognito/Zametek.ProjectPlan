@@ -17,6 +17,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_MaxQueueLongName = "max-queue";
         private const string c_MaxUploadLongName = "max-upload";
         private const string c_MaxChartSizeLongName = "max-chart-size";
+        private const string c_MaxSimulationIterationsLongName = "max-simulation-iterations";
         private const string c_JobTimeoutLongName = "job-timeout";
         private const string c_MaxCompileTimeoutLongName = "max-compile-timeout";
         private const string c_BehindTlsProxyLongName = "behind-tls-proxy";
@@ -78,6 +79,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_MaxChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Largest chart, in pixels (<width>:<height> - defaults to 5000:5000)")]
         public IEnumerable<int> MaxChartSize { get; set; } = [];
+
+        [Option(c_MaxSimulationIterationsLongName, HelpText = "Most iterations a simulation may be asked to run (defaults to 100000, and cannot be above 1000000) - the job's time limit stops a simulation that is too slow")]
+        public int? MaxSimulationIterations { get; set; } = default;
 
         [Option(c_JobTimeoutLongName, HelpText = "Seconds a job may run before it is stopped (defaults to 120)")]
         public int? JobTimeoutSeconds { get; set; } = default;

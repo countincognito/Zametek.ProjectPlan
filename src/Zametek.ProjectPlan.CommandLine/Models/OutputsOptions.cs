@@ -27,5 +27,21 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // --scenario-chart-*
         public ChartOptions? ScenarioChart { get; init; }
+
+        // --simulation-chart-*: the chart of the simulation. This and the CSV files that follow are only valid with a
+        // simulation.
+        public ChartOptions? SimulationChart { get; init; }
+
+        // --simulation-csv-directory writes these five files: the statistics of the finish, its histogram split by critical
+        // path, the critical paths, how often each activity was critical, and every iteration.
+        public CsvOptions? SimulationStatistics { get; init; }
+
+        public CsvOptions? SimulationHistogram { get; init; }
+
+        public CsvOptions? SimulationPaths { get; init; }
+
+        public CsvOptions? SimulationActivities { get; init; }
+
+        public CsvOptions? SimulationIterations { get; init; }
     }
 }

@@ -116,6 +116,82 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Run_Given_ASimulationAndAllItsOutputs_Then_DoesWhatZppDoesHere()
+        {
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", AssetPath(@"estimated.zpp"),
+                @"--metrics-format", @"json",
+                @"--simulate", @"--simulation-iterations", @"1500", @"--simulation-seed", @"9",
+                @"--simulation-distribution", @"Triangular", @"--simulation-target", @"28",
+                @"--simulation-chart-directory", directory, @"--simulation-chart-format", @"png", @"--simulation-chart-size", @"640:480",
+                @"--simulation-csv-directory", directory,
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ASimulationOfAPlanWithResourcesAndTableMetrics_Then_DoesWhatZppDoesHere()
+        {
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", SamplePath(),
+                @"--metrics-format", @"table",
+                @"--simulate", @"--simulation-iterations", @"200",
+                @"--simulation-distribution", @"ModifiedBetaPert", @"--simulation-shape", @"6.5",
+                @"--simulation-chart-directory", directory, @"--simulation-chart-format", @"svg", @"--simulation-chart-size", @"800:600",
+                @"--simulation-csv-directory", directory,
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ASimulationWithTheDefaultsAndMarkdownMetrics_Then_DoesWhatZppDoesHere()
+        {
+            await ShouldDoWhatZppDoesHereAsync(directory => [@"-i", AssetPath(@"estimated.zpp"), @"--simulate"]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ASeedOfZero_Then_DoesWhatZppDoesHere()
+        {
+            // The client leaves out what is default, and zero is not the seed that is.
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", AssetPath(@"estimated.zpp"),
+                @"--metrics-format", @"json",
+                @"--simulate", @"--simulation-seed", @"0", @"--simulation-iterations", @"800", @"--simulation-target", @"0",
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ASimulationChartThatCannotBeWrittenHere_Then_ReportsItAndWritesTheFilesAfterIt()
+        {
+            await ShouldDoWhatZppDoesHereAsync(
+                directory =>
+                [
+                    @"-i", AssetPath(@"estimated.zpp"),
+                    @"--simulate", @"--simulation-iterations", @"300",
+                    @"--simulation-chart-directory", directory, @"--simulation-chart-format", @"png", @"--simulation-chart-size", @"640:480",
+                    @"--simulation-csv-directory", directory,
+                ],
+                directory => Directory.CreateDirectory(Path.Combine(directory, @"estimated-simulation.png")),
+                expectedExitCode: ExitCode.Failure);
+        }
+
+        [Fact]
+        public async Task Run_Given_MoreIterationsThanTheServerRuns_Then_ServerFailureWithTheReason()
+        {
+            await using RunningServer limited = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 100 } });
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync(
+                [@"-i", AssetPath(@"estimated.zpp"), @"--simulate", @"--simulation-iterations", @"101", @"--server", limited.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            error.ShouldContain(@"#/options/simulation/iterations");
+            error.ShouldContain(string.Format(Resource.ProjectPlan.Messages.Message_ServeErrorNumberOutOfRange, 1, 100));
+        }
+
+        [Fact]
         public async Task Run_Given_TableMetricsAndJpegGraphs_Then_DoesWhatZppDoesHere()
         {
             await ShouldDoWhatZppDoesHereAsync(directory =>

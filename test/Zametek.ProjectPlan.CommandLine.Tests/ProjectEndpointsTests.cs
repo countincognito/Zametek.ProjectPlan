@@ -233,7 +233,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                         GanttChart = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
                         ScenarioExport = new ScenarioExportOptions(),
                         Project = new ProjectOptions(),
+                        SimulationChart = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
+                        SimulationStatistics = new CsvOptions(),
+                        SimulationHistogram = new CsvOptions(),
+                        SimulationPaths = new CsvOptions(),
+                        SimulationActivities = new CsvOptions(),
+                        SimulationIterations = new CsvOptions(),
                     },
+                    Simulation = new SimulationOptions { Iterations = 50 },
                 });
 
             CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
@@ -248,6 +255,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"image/svg+xml",
                 @"image/svg+xml",
                 @"image/svg+xml",
+                @"image/svg+xml",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
             ]);
         }
 

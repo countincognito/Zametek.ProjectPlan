@@ -3,6 +3,7 @@ using Shouldly;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
@@ -17,6 +18,34 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// </summary>
     public class JobConsoleHelperTests
     {
+        private static readonly JobSimulationMetrics s_Simulation = new()
+        {
+            Iterations = 5000,
+            Seed = 18_446_744_073_709_551_615UL,
+            Distribution = DurationDistribution.ModifiedBetaPert,
+            ModifiedBetaShape = 6.5,
+            ValidIterations = 4990,
+            FailedIterations = 10,
+            PlannedFinishDays = 26,
+            PlannedFinishDate = new DateOnly(2024, 1, 27),
+            MeanDays = 26.4,
+            StandardDeviationDays = 3.1,
+            EarliestFinishDays = 17,
+            EarliestFinishDate = new DateOnly(2024, 1, 18),
+            LatestFinishDays = 41,
+            LatestFinishDate = new DateOnly(2024, 2, 11),
+            Percentiles = [new JobSimulationPercentile(50, 26, new DateOnly(2024, 1, 27)), new JobSimulationPercentile(80, 29, new DateOnly(2024, 1, 30))],
+            TargetFinishDays = 30,
+            TargetFinishDate = new DateOnly(2024, 1, 31),
+            TargetProbability = 0.86,
+            Statistics =
+            [
+                new SimulationStatisticModel { Name = @"Seed", Value = @"18446744073709551615" },
+                new SimulationStatisticModel { Name = @"Mean", Value = @"26.4" },
+                new SimulationStatisticModel { Name = @"P80", Value = @"29" },
+            ],
+        };
+
         private static readonly JobMetrics s_Metrics = new()
         {
             ActivityRisk = 0.25,
@@ -85,6 +114,101 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             exitCode.ShouldBe(ExitCode.Success);
             console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.Display(JobConsoleHelper.BuildMetricsTable(s_Metrics).ToMarkDownString(), hasErrors: false));
+        }
+
+        [Fact]
+        public async Task WriteResultAsync_Given_ASimulation_Then_TheStatisticsFollowTheMetricsInEachFormat()
+        {
+            var result = new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation };
+
+            foreach (MetricsExport format in Enum.GetValues<MetricsExport>())
+            {
+                var console = new RecordingJobConsole();
+
+                ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(console, result, format);
+
+                exitCode.ShouldBe(ExitCode.Success);
+                string expected = format switch
+                {
+                    MetricsExport.Json => JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation),
+                    MetricsExport.Table => JobConsoleHelper.BuildMetricsTable(s_Metrics, s_Simulation).ToString(),
+                    _ => JobConsoleHelper.BuildMetricsTable(s_Metrics, s_Simulation).ToMarkDownString(),
+                };
+                console.Calls.ShouldHaveSingleItem().Text.ShouldBe(expected, format.ToString());
+            }
+        }
+
+        [Fact]
+        public void BuildMetricsTable_Given_ASimulation_Then_ItsStatisticsAreTheRowsAfterTheMetrics()
+        {
+            string[] without = JobConsoleHelper.BuildMetricsTable(s_Metrics).ToMarkDownString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            string[] with = JobConsoleHelper.BuildMetricsTable(s_Metrics, s_Simulation).ToMarkDownString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            // A row that says what the rest are, and then each statistic as the panel shows it.
+            with.Length.ShouldBe(without.Length + 4);
+            with[^4].ShouldContain(Resource.ProjectPlan.Titles.Title_ScheduleSimulation);
+            with[^3].ShouldContain(@"Seed");
+            with[^3].ShouldContain(@"18446744073709551615");
+            with[^2].ShouldContain(@"Mean");
+            with[^1].ShouldContain(@"P80");
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_NoSimulation_Then_TheTextItWasBeforeThereWasOne()
+        {
+            JobConsoleHelper.BuildMetricsJson(s_Metrics, null).ShouldBe(JobConsoleHelper.BuildMetricsJson(s_Metrics));
+            JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics)).ContainsKey(@"Simulation").ShouldBeFalse();
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_ASimulation_Then_ItsValuesFollowTheMetricsInAnObjectOfTheirOwn()
+        {
+            string json = JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation);
+            JObject all = JObject.Parse(json);
+
+            // What the metrics were is what they are, and the simulation comes after them.
+            all.Properties().Select(x => x.Name).Last().ShouldBe(@"Simulation");
+            JobConsoleHelper.BuildMetricsJson(s_Metrics).ShouldNotBe(json);
+            all[@"TotalCost"]!.Value<double>().ShouldBe(1234.5);
+
+            var simulation = (JObject)all[@"Simulation"]!;
+            simulation.Properties().Select(x => x.Name).ShouldBe(
+            [
+                @"Iterations", @"ValidIterations", @"FailedIterations", @"Seed", @"Distribution", @"ModifiedBetaShape",
+                @"PlannedFinishDays", @"PlannedFinishDate", @"MeanDays", @"StandardDeviationDays",
+                @"EarliestFinishDays", @"EarliestFinishDate", @"LatestFinishDays", @"LatestFinishDate",
+                @"Percentiles", @"TargetFinishDays", @"TargetFinishDate", @"TargetProbability",
+            ]);
+
+            // A seed can be larger than every reader reads without loss, and so it is text.
+            simulation[@"Seed"]!.Type.ShouldBe(JTokenType.String);
+            simulation[@"Seed"]!.Value<string>().ShouldBe(@"18446744073709551615");
+            simulation[@"Distribution"]!.Value<string>().ShouldBe(@"ModifiedBetaPert");
+            simulation[@"ModifiedBetaShape"]!.Value<double>().ShouldBe(6.5);
+            simulation[@"Iterations"]!.Value<int>().ShouldBe(5000);
+            simulation[@"ValidIterations"]!.Value<int>().ShouldBe(4990);
+            simulation[@"PlannedFinishDate"]!.Type.ShouldBe(JTokenType.String);
+            simulation[@"PlannedFinishDate"]!.Value<string>().ShouldBe(@"2024-01-27");
+            simulation[@"MeanDays"]!.Value<double>().ShouldBe(26.4);
+            simulation[@"TargetProbability"]!.Value<double>().ShouldBe(0.86);
+            ((JArray)simulation[@"Percentiles"]!).Select(x => x[@"Percentile"]!.Value<int>()).ShouldBe([50, 80]);
+            ((JArray)simulation[@"Percentiles"]!)[1][@"FinishDate"]!.Value<string>().ShouldBe(@"2024-01-30");
+
+            // The text ends its lines with \n, and so does the text of the metrics without a simulation.
+            json.ShouldNotContain('\r');
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_ASimulationWithNoStatistics_Then_NullsAreWrittenAsTheMetricsWriteThem()
+        {
+            var empty = new JobSimulationMetrics { Iterations = 10, ValidIterations = 0, FailedIterations = 10, PlannedFinishDate = new DateOnly(2024, 1, 6) };
+
+            var simulation = (JObject)JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, empty))[@"Simulation"]!;
+
+            simulation[@"MeanDays"]!.Type.ShouldBe(JTokenType.Null);
+            simulation[@"EarliestFinishDate"]!.Type.ShouldBe(JTokenType.Null);
+            simulation[@"TargetProbability"]!.Type.ShouldBe(JTokenType.Null);
+            ((JArray)simulation[@"Percentiles"]!).ShouldBeEmpty();
         }
 
         [Fact]

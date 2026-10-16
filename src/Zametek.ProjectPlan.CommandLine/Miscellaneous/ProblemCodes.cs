@@ -25,6 +25,9 @@ namespace Zametek.ProjectPlan.CommandLine
         // An option that is only valid with a project sent as a project.
         public const string NotAllowedWithImport = @"notAllowedWithImport";
 
+        // An output of a simulation, asked for without the simulation.
+        public const string NotAllowedWithoutSimulation = @"notAllowedWithoutSimulation";
+
         // A part that is larger than the limit.
         public const string TooLarge = @"tooLarge";
 

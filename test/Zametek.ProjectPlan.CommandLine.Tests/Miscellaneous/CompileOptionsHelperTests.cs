@@ -4,6 +4,7 @@ using System.Text.Json;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
@@ -228,6 +229,283 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Read_Given_ASimulationAndItsOutputs_Then_ReadsEachAndNoProblems()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(
+                """
+                {
+                    "simulation": {
+                        "iterations": 20000,
+                        "seed": "18446744073709551615",
+                        "distribution": "modifiedBetaPert",
+                        "modifiedBetaShape": 6.5,
+                        "targetFinishDays": 120
+                    },
+                    "outputs": {
+                        "simulationChart": { "format": "svg", "width": 640, "height": 480 },
+                        "simulationStatistics": {},
+                        "simulationHistogram": {},
+                        "simulationPaths": {},
+                        "simulationActivities": {},
+                        "simulationIterations": {}
+                    }
+                }
+                """);
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldBe(new CompileOptions
+            {
+                Simulation = new SimulationOptions
+                {
+                    Iterations = 20_000,
+                    Seed = ulong.MaxValue,
+                    Distribution = DurationDistribution.ModifiedBetaPert,
+                    ModifiedBetaShape = 6.5,
+                    TargetFinishDays = 120,
+                },
+                Outputs = new OutputsOptions
+                {
+                    SimulationChart = new ChartOptions { Format = PlotExport.Svg, Width = 640, Height = 480 },
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
+                },
+            });
+        }
+
+        [Fact]
+        public void Read_Given_ASimulationWithNoMembers_Then_ZppsDefaults()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""simulation"":{}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            SimulationOptions simulation = options.ShouldNotBeNull().Simulation.ShouldNotBeNull();
+            simulation.ShouldBe(new SimulationOptions());
+            simulation.Iterations.ShouldBe(5000);
+            simulation.Seed.ShouldBe(1UL);
+            simulation.Distribution.ShouldBe(DurationDistribution.BetaPert);
+            simulation.ModifiedBetaShape.ShouldBeNull();
+            simulation.TargetFinishDays.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Read_Given_ASimulationThatIsNullOrWithNullMembers_Then_AsIfTheyWereNotGiven()
+        {
+            Read(@"{""simulation"":null}").Options.ShouldBe(new CompileOptions());
+
+            (CompileOptions? options, ProblemCollector problems) = Read(
+                @"{""simulation"":{""iterations"":null,""seed"":null,""distribution"":null,""modifiedBetaShape"":null,""targetFinishDays"":null}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull().Simulation.ShouldBe(new SimulationOptions());
+        }
+
+        [Fact]
+        public void Read_Given_ASimulationWithoutIterationsOnAServerWithALowerLimit_Then_TheLimit()
+        {
+            var problems = new ProblemCollector();
+
+            CompileOptions? options = CompileOptionsHelper.Read(@"{""simulation"":{}}", isImport: false, s_Limits with { MaxSimulationIterations = 1200 }, problems);
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull().Simulation.ShouldNotBeNull().Iterations.ShouldBe(1200);
+        }
+
+        [Fact]
+        public void Read_Given_TheOutputsOfASimulationThatAreNull_Then_NoneAreAskedForAndNoSimulationIsNeeded()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(
+                @"{""outputs"":{""simulationChart"":null,""simulationStatistics"":null,""simulationHistogram"":null,""simulationPaths"":null,""simulationActivities"":null,""simulationIterations"":null}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            CompileOptionsHelper.GetRequestedOutputs(options.ShouldNotBeNull()).ShouldBeEmpty();
+        }
+
+        public static TheoryData<string, string[]> InvalidSimulations => new()
+        {
+            // Not an object, and what is not known.
+            { @"{""simulation"":[]}", [@"#/options/simulation wrongType"] },
+            { @"{""simulation"":5}", [@"#/options/simulation wrongType"] },
+            { @"{""simulation"":{""runs"":5}}", [@"#/options/simulation/runs unknownProperty"] },
+
+            // The iterations: a whole number from 1 to the server's limit, which is 100000 here.
+            { @"{""simulation"":{""iterations"":0}}", [@"#/options/simulation/iterations outOfRange"] },
+            { @"{""simulation"":{""iterations"":-5}}", [@"#/options/simulation/iterations outOfRange"] },
+            { @"{""simulation"":{""iterations"":100001}}", [@"#/options/simulation/iterations outOfRange"] },
+            { @"{""simulation"":{""iterations"":1.5}}", [@"#/options/simulation/iterations wrongType"] },
+            { @"{""simulation"":{""iterations"":""5000""}}", [@"#/options/simulation/iterations wrongType"] },
+
+            // The seed: a whole number from 0 to 18446744073709551615, written as text.
+            { @"{""simulation"":{""seed"":7}}", [@"#/options/simulation/seed wrongType"] },
+            { @"{""simulation"":{""seed"":true}}", [@"#/options/simulation/seed wrongType"] },
+            { @"{""simulation"":{""seed"":""18446744073709551616""}}", [@"#/options/simulation/seed invalidFormat"] },
+            { @"{""simulation"":{""seed"":""-1""}}", [@"#/options/simulation/seed invalidFormat"] },
+            { @"{""simulation"":{""seed"":""1.5""}}", [@"#/options/simulation/seed invalidFormat"] },
+            { @"{""simulation"":{""seed"":"" 1""}}", [@"#/options/simulation/seed invalidFormat"] },
+            { @"{""simulation"":{""seed"":""0x10""}}", [@"#/options/simulation/seed invalidFormat"] },
+            { @"{""simulation"":{""seed"":""""}}", [@"#/options/simulation/seed invalidFormat"] },
+
+            // The distribution: the API's names, as they are written.
+            { @"{""simulation"":{""distribution"":""gamma""}}", [@"#/options/simulation/distribution notAllowed"] },
+            { @"{""simulation"":{""distribution"":""BetaPert""}}", [@"#/options/simulation/distribution notAllowed"] },
+            { @"{""simulation"":{""distribution"":2}}", [@"#/options/simulation/distribution wrongType"] },
+
+            // The shape value: above 0, and only for the distribution that has one.
+            { @"{""simulation"":{""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":0}}", [@"#/options/simulation/modifiedBetaShape outOfRange"] },
+            { @"{""simulation"":{""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":-2}}", [@"#/options/simulation/modifiedBetaShape outOfRange"] },
+            { @"{""simulation"":{""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":""4""}}", [@"#/options/simulation/modifiedBetaShape wrongType"] },
+            { @"{""simulation"":{""modifiedBetaShape"":4}}", [@"#/options/simulation/modifiedBetaShape notAllowed"] },
+            { @"{""simulation"":{""distribution"":""triangular"",""modifiedBetaShape"":4}}", [@"#/options/simulation/modifiedBetaShape notAllowed"] },
+
+            // The target: from 0 to the longest a project can be.
+            { @"{""simulation"":{""targetFinishDays"":-1}}", [@"#/options/simulation/targetFinishDays outOfRange"] },
+            { @"{""simulation"":{""targetFinishDays"":100001}}", [@"#/options/simulation/targetFinishDays outOfRange"] },
+            { @"{""simulation"":{""targetFinishDays"":10.5}}", [@"#/options/simulation/targetFinishDays wrongType"] },
+
+            // The outputs of a simulation need the simulation: each that is asked for is a problem, at the output.
+            { @"{""outputs"":{""simulationChart"":{""width"":10,""height"":10}}}", [@"#/options/outputs/simulationChart notAllowedWithoutSimulation"] },
+            {
+                @"{""simulation"":null,""outputs"":{""simulationStatistics"":{},""simulationIterations"":{}}}",
+                [@"#/options/outputs/simulationStatistics notAllowedWithoutSimulation", @"#/options/outputs/simulationIterations notAllowedWithoutSimulation"]
+            },
+            { @"{""outputs"":{""project"":{},""simulationPaths"":{}}}", [@"#/options/outputs/simulationPaths notAllowedWithoutSimulation"] },
+
+            // A chart of a simulation needs its size too, and the csv files take no setting.
+            { @"{""simulation"":{},""outputs"":{""simulationChart"":{}}}", [@"#/options/outputs/simulationChart/width required", @"#/options/outputs/simulationChart/height required"] },
+            { @"{""simulation"":{},""outputs"":{""simulationChart"":{""width"":1001,""height"":10}}}", [@"#/options/outputs/simulationChart/width outOfRange"] },
+            { @"{""simulation"":{},""outputs"":{""simulationHistogram"":{""x"":1}}}", [@"#/options/outputs/simulationHistogram/x unknownProperty"] },
+            { @"{""simulation"":{},""outputs"":{""simulationActivities"":true}}", [@"#/options/outputs/simulationActivities wrongType"] },
+
+            // Every problem, in the order the members are written.
+            {
+                @"{""simulation"":{""iterations"":0,""seed"":5,""colour"":1,""distribution"":""triangular"",""modifiedBetaShape"":1}}",
+                [
+                    @"#/options/simulation/iterations outOfRange",
+                    @"#/options/simulation/seed wrongType",
+                    @"#/options/simulation/colour unknownProperty",
+                    @"#/options/simulation/modifiedBetaShape notAllowed",
+                ]
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(InvalidSimulations))]
+        public void Read_Given_ASimulationThatIsNotValid_Then_NoOptionsAndEachProblemListedWhereItIs(string json, string[] expected)
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(json);
+
+            options.ShouldBeNull();
+            Where(problems).ShouldBe(expected);
+            problems.IsMalformed.ShouldBeFalse();
+            problems.Errors.ShouldAllBe(x => x.Parameter == null && !string.IsNullOrWhiteSpace(x.Detail));
+        }
+
+        [Theory]
+        [InlineData(@"{""simulation"":{""iterations"":1}}")]
+        [InlineData(@"{""simulation"":{""iterations"":100000}}")]
+        [InlineData(@"{""simulation"":{""seed"":""0""}}")]
+        [InlineData(@"{""simulation"":{""seed"":""18446744073709551615""}}")]
+        [InlineData(@"{""simulation"":{""targetFinishDays"":0}}")]
+        [InlineData(@"{""simulation"":{""targetFinishDays"":100000}}")]
+        [InlineData(@"{""simulation"":{""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":0.001}}")]
+        [InlineData(@"{""simulation"":{""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":null}}")]
+        public void Read_Given_ASimulationAtTheEdgesOfWhatIsValid_Then_ReadsIt(string json)
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(json);
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull().Simulation.ShouldNotBeNull();
+        }
+
+        [Fact]
+        public void Read_Given_ProblemsWithTheSimulation_Then_TheDetailsNameTheLimits()
+        {
+            (_, ProblemCollector problems) = Read(@"{""simulation"":{""iterations"":0,""seed"":""x"",""distribution"":""modifiedBetaPert"",""modifiedBetaShape"":0,""targetFinishDays"":-1}}");
+
+            problems.Errors.Select(x => x.Detail).ShouldBe(
+            [
+                string.Format(Resource.ProjectPlan.Messages.Message_ServeErrorNumberOutOfRange, 1, 100_000),
+                Resource.ProjectPlan.Messages.Message_ServeErrorMustBeASeed,
+                Resource.ProjectPlan.Messages.Message_ServeErrorMustBeAboveZero,
+                string.Format(Resource.ProjectPlan.Messages.Message_ServeErrorNumberOutOfRange, 0, 100_000),
+            ]);
+        }
+
+        [Fact]
+        public void ToJobRequest_Given_ASimulationAndItsOutputs_Then_AsksForThemAsZppDoes()
+        {
+            using var input = new MemoryStream();
+            var options = new CompileOptions
+            {
+                Simulation = new SimulationOptions
+                {
+                    Iterations = 777,
+                    Seed = 0,
+                    Distribution = DurationDistribution.ModifiedBetaPert,
+                    ModifiedBetaShape = 6.0,
+                    TargetFinishDays = 33,
+                },
+                Outputs = new OutputsOptions
+                {
+                    SimulationChart = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                    SimulationPaths = new CsvOptions(),
+                    SimulationIterations = new CsvOptions(),
+                },
+            };
+
+            JobRequest request = CompileOptionsHelper.ToJobRequest(options, input, null, s_Limits);
+
+            request.Simulation.ShouldBe(new SimulationRequest
+            {
+                Iterations = 777,
+                Seed = 0,
+                Distribution = DurationDistribution.ModifiedBetaPert,
+                ModifiedBetaShape = 6.0,
+                TargetFinishTime = 33,
+            });
+            request.SimulationChart.ShouldBe(new ChartOutputRequest(ChartImageFormat.Png, 640, 480));
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.Paths | SimulationCsvFile.Iterations);
+        }
+
+        [Fact]
+        public void ToJobRequest_Given_ASimulationWithoutAShapeValue_Then_TheUsualFour()
+        {
+            using var input = new MemoryStream();
+
+            JobRequest request = CompileOptionsHelper.ToJobRequest(new CompileOptions { Simulation = new SimulationOptions() }, input, null, s_Limits);
+
+            request.Simulation.ShouldNotBeNull().ModifiedBetaShape.ShouldBe(4.0);
+            request.Simulation.Seed.ShouldBe(1UL);
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.None);
+        }
+
+        [Fact]
+        public void BuildOutputFilename_Given_TheOutputsOfASimulation_Then_TheNameThePanelAndZppGiveThem()
+        {
+            var options = new CompileOptions { Outputs = new OutputsOptions { SimulationChart = new ChartOptions { Format = PlotExport.Webp, Width = 1, Height = 1 } } };
+
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationChart, options, @"plan").ShouldBe(@"plan-simulation.webp");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationChart, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation.jpeg");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationStatistics, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-statistics.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationHistogram, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-histogram.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationPaths, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-paths.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationActivities, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-activities.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationIterations, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-iterations.csv");
+        }
+
+        [Fact]
+        public void IsSimulationOutput_Given_EachOutput_Then_TrueForTheLastSixOnly()
+        {
+            Enum.GetValues<JobOutput>().Where(CompileOptionsHelper.IsSimulationOutput).ShouldBe(
+            [
+                JobOutput.SimulationChart, JobOutput.SimulationStatistics, JobOutput.SimulationHistogram,
+                JobOutput.SimulationPaths, JobOutput.SimulationActivities, JobOutput.SimulationIterations,
+            ]);
+        }
+
+        [Fact]
         public void Read_Given_ASizeAtTheLimitsAndOnePixelOver_Then_ReadsTheFormerAndRefusesTheLatter()
         {
             Read(@"{""outputs"":{""ganttChart"":{""width"":1000,""height"":800}}}").Options.ShouldNotBeNull();
@@ -432,6 +710,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             request.ResourceChart.ShouldBeNull();
             request.EarnedValueChart.ShouldBeNull();
             request.ScenarioChart.ShouldBeNull();
+            request.Simulation.ShouldBeNull();
+            request.SimulationChart.ShouldBeNull();
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.None);
         }
 
         [Fact]
@@ -441,6 +722,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 Outputs = new OutputsOptions
                 {
+                    SimulationIterations = new CsvOptions(),
+                    SimulationActivities = new CsvOptions(),
+                    SimulationPaths = new CsvOptions(),
+                    SimulationHistogram = new CsvOptions(),
+                    SimulationStatistics = new CsvOptions(),
+                    SimulationChart = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ResourceChart = new ChartOptions { Width = 1, Height = 1 },
@@ -486,6 +773,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             names.ShouldBe(
             [
                 @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart", @"scenarioChart",
+                @"simulationChart", @"simulationStatistics", @"simulationHistogram", @"simulationPaths", @"simulationActivities", @"simulationIterations",
             ]);
 
             // Each is a member of the outputs a request asks for, and each member is one of them.
@@ -556,6 +844,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"plan-arrow.pdf", @"application/pdf")]
         [InlineData(@"plan-arrow.graphml", @"application/graphml+xml")]
         [InlineData(@"plan-arrow.dot", @"text/vnd.graphviz")]
+        [InlineData(@"plan-simulation-statistics.csv", @"text/csv")]
         [InlineData(@"plan-ARROW.DOT", @"text/vnd.graphviz")]
         [InlineData(@"plan.unknown", @"application/octet-stream")]
         [InlineData(@"plan", @"application/octet-stream")]

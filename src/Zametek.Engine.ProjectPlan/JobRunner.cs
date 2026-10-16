@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Engine.ProjectPlan
 {
@@ -12,6 +14,16 @@ namespace Zametek.Engine.ProjectPlan
     public class JobRunner
     {
         #region Fields
+
+        // The CSV files of a simulation, each with the output it is, in the order the job produces them.
+        private static readonly (SimulationCsvFile File, JobOutput Output)[] s_SimulationCsvOutputs =
+        [
+            (SimulationCsvFile.Statistics, JobOutput.SimulationStatistics),
+            (SimulationCsvFile.Histogram, JobOutput.SimulationHistogram),
+            (SimulationCsvFile.Paths, JobOutput.SimulationPaths),
+            (SimulationCsvFile.Activities, JobOutput.SimulationActivities),
+            (SimulationCsvFile.Iterations, JobOutput.SimulationIterations),
+        ];
 
         private readonly IServiceScopeFactory m_ScopeFactory;
 
@@ -56,7 +68,9 @@ namespace Zametek.Engine.ProjectPlan
         /// and whatever the sink stored before that stays where it is. Cancelling the token stops the job before the
         /// next step it would take, with an <see cref="OperationCanceledException"/>: a step already under way - reading
         /// the plan, compiling it, producing an output - runs to its end first, and a job that has produced its last
-        /// output completes.
+        /// output completes. A simulation is the exception: it stops between two chunks of its iterations, and the job stops
+        /// with it. A request for the outputs of a simulation without the simulation, or for a simulation that cannot run
+        /// with its settings, is an <see cref="ArgumentException"/>.
         /// </summary>
         public async Task<JobResult> RunAsync(
             JobRequest request,
@@ -65,6 +79,7 @@ namespace Zametek.Engine.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(request);
             ArgumentNullException.ThrowIfNull(sink);
+            ValidateSimulation(request);
             cancellationToken.ThrowIfCancellationRequested();
 
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
@@ -355,6 +370,54 @@ namespace Zametek.Engine.ProjectPlan
                     cancellationToken);
             }
 
+            // Simulation, and its chart and CSV files. It runs last, because it is the slowest step by far.
+            JobSimulationMetrics? simulationMetrics = null;
+
+            if (request.Simulation is SimulationRequest simulationRequest)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                IScheduleSimulationManagerViewModel simulation = services.GetRequiredService<IScheduleSimulationManagerViewModel>();
+
+                await RunSimulationAsync(simulation, simulationRequest, cancellationToken);
+
+                // A run that was cancelled has no result, and the job stops with it. A run that failed has told the
+                // dialog service why, and its outputs are not produced: there is nothing to write them from.
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (simulation.Summary is not null)
+                {
+                    simulationMetrics = JobSimulationMetrics.From(simulation, simulationRequest);
+
+                    if (request.SimulationChart is ChartOutputRequest simulationChart)
+                    {
+                        await WriteChartAsync(
+                            dialogService,
+                            sink,
+                            JobOutput.SimulationChart,
+                            simulationChart,
+                            simulation.BuildSimulationChartPlotModel,
+                            simulation.WriteSimulationChartImageAsync,
+                            cancellationToken);
+                    }
+
+                    foreach ((SimulationCsvFile file, JobOutput output) in s_SimulationCsvOutputs)
+                    {
+                        if (request.SimulationCsvFiles.HasFlag(file))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            await WriteReportedOutputAsync(
+                                dialogService,
+                                sink,
+                                output,
+                                stream => simulation.WriteSimulationCsvAsync(stream, file),
+                                cancellationToken);
+                        }
+                    }
+                }
+            }
+
             // A chart or graph export that fails does not throw: WriteReportedOutputAsync
             // reports the failure through the dialog service, as the desktop does. The
             // remaining outputs have still been produced, but the job as a whole has failed.
@@ -362,7 +425,56 @@ namespace Zametek.Engine.ProjectPlan
             {
                 Status = dialogService.HasShownErrors ? JobStatus.CompletedWithErrors : JobStatus.Succeeded,
                 Metrics = JobMetrics.From(metrics),
+                Simulation = simulationMetrics,
             };
+        }
+
+        // The simulation as the panel runs it, on the settings of the request. The job's token cancels it between two
+        // chunks of its iterations.
+        private static async Task RunSimulationAsync(
+            IScheduleSimulationManagerViewModel simulation,
+            SimulationRequest request,
+            CancellationToken cancellationToken)
+        {
+            simulation.Iterations = request.Iterations;
+            simulation.UseRandomSeed = false;
+            simulation.Seed = request.Seed;
+            simulation.Distribution = request.Distribution;
+            simulation.ModifiedBetaShape = request.ModifiedBetaShape;
+            simulation.TargetFinishTime = request.TargetFinishTime;
+
+            using CancellationTokenRegistration registration = cancellationToken.Register(simulation.CancelSimulation);
+            await simulation.RunSimulationAsync();
+        }
+
+        // The outputs of a simulation need the simulation, and its settings must be ones that it can run with. The callers
+        // check what a user gives them, and so a request that fails here is an error in the caller.
+        private static void ValidateSimulation(JobRequest request)
+        {
+            if (request.Simulation is not SimulationRequest simulation)
+            {
+                if (request.SimulationChart is not null
+                    || request.SimulationCsvFiles != SimulationCsvFile.None)
+                {
+                    throw new ArgumentException(Resource.ProjectPlan.Messages.Message_SimulationOutputNeedsSimulation, nameof(request));
+                }
+
+                return;
+            }
+
+            if (simulation.Iterations < 1
+                || simulation.Iterations > GraphLimits.MaximumSimulationIterations)
+            {
+                throw new ArgumentException(
+                    string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationIterationsOutOfRange, GraphLimits.MaximumSimulationIterations),
+                    nameof(request));
+            }
+
+            if (simulation.Distribution == DurationDistribution.ModifiedBetaPert
+                && (double.IsNaN(simulation.ModifiedBetaShape) || double.IsInfinity(simulation.ModifiedBetaShape) || simulation.ModifiedBetaShape <= 0.0))
+            {
+                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_SimulationShapeOutOfRange, nameof(request));
+            }
         }
 
         private static async Task WriteChartAsync(

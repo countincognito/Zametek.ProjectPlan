@@ -43,5 +43,15 @@ namespace Zametek.Engine.ProjectPlan
         public ChartOutputRequest? EarnedValueChart { get; init; }
 
         public ChartOutputRequest? ScenarioChart { get; init; }
+
+        // The simulation to run once the plan has compiled, if any. Its statistics go into the result. The outputs below
+        // are those of the simulation, and so they need it.
+        public SimulationRequest? Simulation { get; init; }
+
+        public ChartOutputRequest? SimulationChart { get; init; }
+
+        // JobOutput.SimulationStatistics, SimulationHistogram, SimulationPaths, SimulationActivities and
+        // SimulationIterations: each of the CSV files that is set.
+        public SimulationCsvFile SimulationCsvFiles { get; init; }
     }
 }
