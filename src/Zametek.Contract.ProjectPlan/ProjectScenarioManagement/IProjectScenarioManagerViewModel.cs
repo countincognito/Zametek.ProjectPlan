@@ -9,7 +9,12 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
+        // Arms the title: it is made again from the settings every time this is set, whatever it was set to before.
         ReadyToRevise IsReadyToReviseTitle { get; set; }
+
+        // How many times the title has been armed. A value that does not change raises no event in WhenAnyValue, and so
+        // a flag that is already Yes cannot say that it was armed again. This one changes each time.
+        int TitleRevision { get; }
 
         ReadyToRevise IsReadyToReviseTrackedMetrics { get; set; }
 
