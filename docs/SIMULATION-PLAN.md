@@ -138,6 +138,27 @@ An optimistic duration of 0 on an activity that takes time is allowed. A draw ca
 - A change to the API changes [openapi.yaml](openapi.yaml), [API.md](API.md) and the contract tests in the same commit.
 - The parity tests compare the output of `zpp` and of the server for the simulation, byte for byte.
 
+### The panels, the saving and the command line (phase 5)
+
+The maintainer asked for these changes after they used the panel of phase 3. The decisions in the answers of the maintainer are part of the plan.
+
+- **Names.** The panel "Schedule Simulation" becomes "Simulation Chart".
+- **Three docks.**
+  - "Simulation" sits beside "Scenarios" by default. It has the name of the scenario that the simulation uses, the settings (the iterations, the distribution, the shape value for the modified beta-PERT, the seed, "New seed each run" and the target finish), the buttons Run Simulation and Cancel Simulation, and the progress bar with the time that remains. The progress and the warning for a result that is stale are fixed at the bottom.
+  - "Simulation Chart" keeps its place and its menu (Reset, Copy Image, Save As and Export CSV Files).
+  - "Simulation Metrics" sits beside "Resource Metrics" by default. It has the tabs "Statistics", "Critical paths" and "Criticalities". Each tab has "Copy Table" and keeps the layout of its columns, as "Resource Metrics" does. The tab "Critical paths" shows each path as activity IDs, in the order of the path, to save space. A tooltip has the names. The CSV files and the legend of the chart keep the names.
+  - A saved dock layout does not have the new docks, and thus the application uses the default layout once.
+- **The panels follow the scenario.** All three panels clear and reset when a scenario loads, when a project closes and when a new project starts, as the other panels do. A run that is in progress stops.
+- **The title bar.** The title did not reset when a project closes or loads. A change to the project settings was necessary. The cause is the commit `8c109e7d`, which stopped the title pipeline from clearing its trigger. A value that does not change raises no event. A new test shows the fault, and the fix comes first.
+- **Saving.** The scenario file holds the settings of the simulation (the iterations, the distribution, the shape value, the seed, "New seed each run" and the target) and, when it exists, the last result. The result has the statistics, the percentiles, the histogram, the critical paths and the criticalities. The histogram makes the chart possible after a load. The file does not hold the iterations. The core owns the data, as it owns `Metrics`, and the file format v0_6_2 has the members, because v0_6_2 is not released.
+  - A result that a file holds is trusted. The application does the same with the metrics of a scenario that a file holds when the compile is off.
+  - A change to a setting or a new result marks the scenario as changed. A load does not.
+  - The Excel export has the sheets for the settings, the statistics, the histogram, the critical paths and the criticalities. The import reads them.
+- **The command line.** `--simulate` becomes `--run-simulation`, and `zpp` does not run a simulation by default. The settings come from the input file. The seed is the saved seed, also when "New seed each run" is on, and thus a run repeats. The options for the iterations, the seed, the distribution, the shape value, the target and the CSV directory go. `--simulation-directory`, `--simulation-format` and `--simulation-size` stay for the outputs. The directory has the chart and the CSV files side by side.
+  - When the input file has a saved result and `--run-simulation` is not present, `zpp` prints the statistics of the saved result after the metrics, and `--simulation-directory` draws it.
+  - `-o` saves the settings and the result.
+- **The API.** It follows `zpp`. The options object `simulation` becomes `runSimulation`. One output, `simulation`, takes a format and a size. The answer lists the chart and the CSV files as outputs, one for each file. The answer has `simulation` for the statistics of a run or of a saved result. A file with more iterations than the limit of the server is a problem with status 422.
+
 ## The phases
 
 The team stops after each phase for a review.
@@ -149,6 +170,7 @@ The team stops after each phase for a review.
 | 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
 | 3 | The desktop panel. Done (not pushed). | This repository |
 | 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. Done (not pushed). | This repository |
+| 5 | The three docks, the title bar, the saving in the file and in Excel, and the new options of `zpp` and the API. Planned in six steps, with the title bar first. | This repository |
 
 ## The risks
 
