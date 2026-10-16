@@ -148,7 +148,7 @@ The team stops after each phase for a review.
 | 1 | The estimates: the new file format, the rules, the grid and the dialog, the imports and the export. | This repository |
 | 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
 | 3 | The desktop panel. Done (not pushed). | This repository |
-| 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. | This repository |
+| 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. Done (not pushed). | This repository |
 
 ## The risks
 
@@ -301,6 +301,40 @@ Phase 3 finished on 2026-10-16. All the work is in this repository, on the branc
 - The settings of the panel are not saved in the plan or in the settings of the application. They start again with the application.
 - A plan that resources decide has very many critical paths that are nearly equal. The sample plan has 92 % of its weight in "Other paths" and about 1 % in each of the eight paths that the chart shows. The chart is correct but it says little. [TODO](TODO.md) has an entry for a grouping that is more useful for such plans.
 - The criticality table counts each activity in each iteration, one call at a time. This takes seconds for 1,000,000 iterations of a large plan. A method of the library that counts the bits would be faster.
+
+## Phase 4: the results
+
+Phase 4 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`, in the commits `8257abbc` (the panel writes one CSV file at a time, tells the date of a finish, and logs its progress), `b6ac8cb8` (the simulation in the engine, the options of `zpp`, and the API of `zpp serve` with its documents and tests), `bd753a3f` (a cancel of a job reaches a simulation that has not begun) and the commit that holds this section. Nothing is pushed.
+
+### What exists now
+
+- **The engine.** `JobRequest.Simulation` (a `SimulationRequest`) asks for a simulation. The job resolves the same panel view model as the desktop, sets its settings, and runs it after the scenario chart. The statistics are in `JobResult.Simulation`. The chart and the five CSV files are the last six values of `JobOutput`, in this order: `SimulationChart`, `SimulationStatistics`, `SimulationHistogram`, `SimulationPaths`, `SimulationActivities`, `SimulationIterations`. The job token cancels a simulation between two chunks of its iterations.
+- **The options of `zpp`.** `--simulate` runs the simulation. The options `--simulation-iterations`, `--simulation-seed`, `--simulation-distribution`, `--simulation-shape` and `--simulation-target` set it, and `--simulation-chart-directory`, `--simulation-chart-format`, `--simulation-chart-size` and `--simulation-csv-directory` write its outputs. Each of them needs `--simulate` (exit code 2 without it). [COMMAND-LINE](COMMAND-LINE.md#simulate-the-schedule) has the table.
+- **The metrics.** After the metrics, `zpp` prints a row "Schedule Simulation" and then the statistics as the panel shows them (the seed, the distribution, the mean, the standard deviation, the earliest and latest finish, the percentiles, the chance of the target). With `--metrics-format json`, a `Simulation` object follows the metrics, with raw values. Without `--simulate`, the output is what it was.
+- **The API.** The option `simulation`, six outputs (`simulationChart` and the five CSV files), the member `simulation` of an answer (and of the problem `output-failed`), the code `notAllowedWithoutSimulation`, and the limit `maxSimulationIterations`. The server option is `--max-simulation-iterations`. [openapi.yaml](openapi.yaml), [API.md](API.md) and the contract tests changed in the same commit.
+- **The parity.** The tests run `zpp`, the server and `zpp --server` on the same plans and options, with the sample plan (it has resources) and a plan with estimates (`estimated.zpp`). They compare the exit code, the text and each file, byte for byte.
+
+### Decisions in phase 4
+
+1. **One simulator.** A job does not have a simulator of its own. It drives the panel view model, and thus the panel, `zpp` and the server make the same numbers in the same way.
+2. **A fixed seed.** The seed is 1 when nothing gives it. The panel draws a new seed for each run, but `zpp` and the API repeat, as everything else of `zpp` does. A user who wants another sample gives another seed. The seed of the last run of the panel makes that result again.
+3. **The seed is text in JSON.** The seed can be any whole number up to 18446744073709551615, and the guide says that an integer that can be larger than 2^53 - 1 must be a string ([REP-7](RESTFUL-API-GUIDE.md#3-representations)). The API reads and writes it as text, and so does the JSON of `zpp`. The client always sends the seed, because a seed of 0 is not the default and the client leaves out what is default.
+4. **The statistics are beside the metrics.** In the API, `simulation` is a member of the answer and not of `metrics`: the metrics are the metrics of the compiled plan, and a simulation has settings of its own. In the output of `zpp`, the statistics follow the metrics. This leaves the contract of `metrics` and the JSON of the first release as they were.
+5. **A strict rule for the options.** `zpp` refuses each option of the simulation that has no `--simulate`, and the API refuses each output of the simulation that has no `simulation`. A silent ignore would hide a typing error. The shape value is valid only with the modified beta-PERT distribution.
+6. **One output for each file in the API, and one directory in `zpp`.** The API is exact: a request asks for the files that it wants. `zpp` writes the five files with one option, as the panel does with one name.
+7. **The limits.** The server limits the iterations (`MaxSimulationIterations`, 100000 by default, at most 1000000). The time of a job (`JobTimeoutSeconds`) limits a simulation of a large plan, and the simulation stops between two chunks of its iterations. A request with no iterations on a server whose limit is lower than 5000 gets the limit.
+8. **Progress is in the log.** A run of `zpp` or of a server has no progress bar. The panel view model writes the settings, the progress (about every two seconds) and the time to the log, at the information level. `--verbose` shows these lines.
+9. **The header row.** The table of the metrics wraps a cell of more than about 40 characters. A name with a prefix on each row made the longest row wrap, and thus the table has one row, "Schedule Simulation", before the statistics.
+10. **The target is in days.** `--simulation-target` and `targetFinishDays` are whole days from the start of the project. The panel also takes a date.
+11. **A cancel is never lost.** The first version of the engine registered `CancelSimulation()` with the token of the job. That call does nothing when the run has not yet made its own token, and so a cancel in that window (the time limit of a job, for example) let the simulation run to its end. The run now takes the token of the job and links it to its own (`RunSimulationAsync(CancellationToken)`). The hook found this: a test of the time limit failed one time in three. Its other cause was a bound of 30 seconds on the answer, which the test projects of a build, running side by side, can exceed. The test now asks for the problem `job-timeout` and no more, and a test of the engine, with no clock, says that the run stops.
+
+### What is not done
+
+- A target as a date for `zpp` and the API.
+- `zpp` cannot write only some of the CSV files. The API can.
+- A client of `zpp --server` sees no progress while the server simulates. The log of the server has it.
+- One job uses all the processors for its iterations. A server that runs many simulations at one time asks the pool for more threads than it has processors. The result does not change, but the jobs slow each other. The limit of iterations and the job time bound the cost.
+- The cancel of `zpp` (Ctrl+C) kills the process and does not cancel the job.
 
 ## Performance work to explore later
 

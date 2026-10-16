@@ -421,3 +421,19 @@ This file lists the maintainer-internal engineering intents that must version wi
   The web host has one thread. The panel runs the simulation with `Task.Run`, and the simulator uses `Parallel.For`. On the web host, both run on the one thread, and the UI freezes until the run ends. A run of 5,000 iterations of a plan like the sample plan takes about 5 seconds on one thread.
 
   Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
+
+- [ ] **Take a date as the target of a simulation in `zpp` and in the API** *(2026-10-16)*
+
+  The panel takes the target as a number of days or, when the dates are on display, as a date. `--simulation-target` and `targetFinishDays` take days only. The panel view model already has `TargetFinishDate`, which finds the first finish time on that date or after it with the working calendar of the plan. A job could set it. The open question is the form: a date in the option, or a second member (`targetFinishDate`).
+
+- [ ] **Run the iterations of a job on a share of the processors** *(2026-10-16)*
+
+  `SimulationSettings.MaxDegreeOfParallelism` is -1 (all the processors) in the panel and in each job. A server with `MaxJobs` jobs that all simulate asks the pool for several times its processors. The result does not change with the number of threads, and thus a server could give each job `processors / MaxJobs`. Measure before the change.
+
+- [ ] **Let a client of `zpp --server` see the progress of a simulation** *(2026-10-16)*
+
+  The server writes the progress to its log, and the client waits without a sign. A simulation of a large plan can take minutes. The API has no operation for a job that is in progress (ASY-1 is a deviation of the API), and so the choices are a response that streams, or a job that the client can ask about. Both change the API.
+
+- [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
+
+  `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.
