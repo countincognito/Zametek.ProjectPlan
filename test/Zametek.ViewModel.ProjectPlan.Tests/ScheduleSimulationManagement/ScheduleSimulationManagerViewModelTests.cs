@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -77,7 +78,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     dialogs,
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
-                    dispatcher ?? CoreViewModelFixture.CreateUIDispatcher());
+                    dispatcher ?? CoreViewModelFixture.CreateUIDispatcher(),
+                    NullLogger<ScheduleSimulationManagerViewModel>.Instance);
 
                 return new Harness(core, dialogs, panel);
             }
@@ -646,6 +648,120 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 Directory.Delete(directory, recursive: true);
             }
+        }
+
+        [Theory]
+        [InlineData(SimulationCsvFile.Statistics, "Statistic,Value")]
+        [InlineData(SimulationCsvFile.Histogram, "FirstFinishTime,LastFinishTime,Count,Share,CumulativeShare")]
+        [InlineData(SimulationCsvFile.Paths, "Rank,Path,HasResourceLinks,Iterations,Share")]
+        [InlineData(SimulationCsvFile.Activities, "ActivityId,Name,CriticalIterations,CriticalityIndex")]
+        [InlineData(SimulationCsvFile.Iterations, "Iteration,FinishTime,CriticalPaths")]
+        public async Task WriteSimulationCsvAsync_Given_AResult_Then_WritesTheFileWithTheByteOrderMarkTheDialogGives(SimulationCsvFile file, string header)
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 4;
+            await panel.RunSimulationAsync();
+
+            using var stream = new MemoryStream();
+            await panel.WriteSimulationCsvAsync(stream, file);
+
+            byte[] bytes = stream.ToArray();
+            bytes.Take(3).ShouldBe([(byte)0xEF, (byte)0xBB, (byte)0xBF]);
+            System.Text.Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3).Split('\n')[0].ShouldStartWith(header);
+        }
+
+        [Fact]
+        public async Task WriteSimulationCsvAsync_Given_ARun_Then_TheSameBytesAsTheFilesOfTheExport()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 4;
+            await panel.RunSimulationAsync();
+
+            string directory = Path.Combine(Path.GetTempPath(), $@"simulation-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(directory);
+            try
+            {
+                harness.Dialogs.SaveFilename = Path.Combine(directory, @"plan.csv");
+                panel.ExportCsvFilesCommand.Execute(null);
+
+                DateTime deadline = DateTime.UtcNow.AddSeconds(60);
+                while (harness.Dialogs.Infos.Count == 0 && harness.Dialogs.Errors.Count == 0 && DateTime.UtcNow < deadline)
+                {
+                    await Task.Delay(20, CancellationToken.None);
+                }
+
+                foreach ((SimulationCsvFile file, string suffix) in new[]
+                {
+                    (SimulationCsvFile.Statistics, Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics),
+                    (SimulationCsvFile.Histogram, Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram),
+                    (SimulationCsvFile.Paths, Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths),
+                    (SimulationCsvFile.Activities, Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities),
+                    (SimulationCsvFile.Iterations, Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations),
+                })
+                {
+                    using var stream = new MemoryStream();
+                    await panel.WriteSimulationCsvAsync(stream, file);
+
+                    stream.ToArray().ShouldBe(File.ReadAllBytes(Path.Combine(directory, $@"plan{suffix}.csv")), file.ToString());
+                }
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task WriteSimulationCsvAsync_Given_NoResult_Then_Throws()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            using var stream = new MemoryStream();
+
+            InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(() => harness.Panel.WriteSimulationCsvAsync(stream, SimulationCsvFile.Statistics));
+
+            ex.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
+            stream.Length.ShouldBe(0);
+        }
+
+        [Theory]
+        [InlineData(SimulationCsvFile.None)]
+        [InlineData(SimulationCsvFile.Statistics | SimulationCsvFile.Paths)]
+        [InlineData(SimulationCsvFile.All)]
+        [InlineData((SimulationCsvFile)64)]
+        public async Task WriteSimulationCsvAsync_Given_NotExactlyOneFile_Then_Throws(SimulationCsvFile file)
+        {
+            using Harness harness = await Harness.MakeAsync();
+            harness.Panel.Iterations = c_Iterations;
+            await harness.Panel.RunSimulationAsync();
+            using var stream = new MemoryStream();
+
+            await Should.ThrowAsync<ArgumentOutOfRangeException>(() => harness.Panel.WriteSimulationCsvAsync(stream, file));
+
+            stream.Length.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task GetFinishDate_Given_ADayCount_Then_TheDateTheDisplayShowsForIt()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            harness.Core.DisplaySettingsViewModel.ShowDates = true;
+            ScheduleSimulationManagerViewModel panel = harness.Panel;
+
+            // The date a target of that many days is shown as, and the days that a date gives back.
+            DateOnly date = panel.GetFinishDate(40);
+            panel.TargetFinishDate = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+
+            // Days that a calendar with weekends skipped gives the same date are the same target, so it is the first of them.
+            int days = panel.TargetFinishTime.ShouldNotBeNull();
+            days.ShouldBeLessThanOrEqualTo(40);
+            panel.GetFinishDate(days).ShouldBe(date);
+            panel.GetFinishDate(0).ShouldBeLessThanOrEqualTo(date);
         }
 
         [Fact]

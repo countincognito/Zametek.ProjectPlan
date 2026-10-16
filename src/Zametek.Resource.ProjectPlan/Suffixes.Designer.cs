@@ -106,6 +106,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -activities.
+        /// </summary>
+        public static string Suffix_SimulationActivities {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -simulation.
         /// </summary>
         public static string Suffix_SimulationChart {
@@ -120,6 +129,42 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Suffix_SimulationCsv {
             get {
                 return ResourceManager.GetString("Suffix_SimulationCsv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -histogram.
+        /// </summary>
+        public static string Suffix_SimulationHistogram {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationHistogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -iterations.
+        /// </summary>
+        public static string Suffix_SimulationIterations {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationIterations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -paths.
+        /// </summary>
+        public static string Suffix_SimulationPaths {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -statistics.
+        /// </summary>
+        public static string Suffix_SimulationStatistics {
+            get {
+                return ResourceManager.GetString("Suffix_SimulationStatistics", resourceCulture);
             }
         }
         

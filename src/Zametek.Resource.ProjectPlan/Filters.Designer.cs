@@ -79,6 +79,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to csv.
+        /// </summary>
+        public static string Filter_CsvFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_CsvFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to *.csv.
         /// </summary>
         public static string Filter_CsvFilePattern {

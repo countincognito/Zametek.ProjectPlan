@@ -1,4 +1,5 @@
 using Avalonia;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ScottPlot;
 using System.Diagnostics;
@@ -81,6 +82,10 @@ namespace Zametek.ViewModel.ProjectPlan
         // The progress is reported at most this often, in ticks of the stopwatch.
         private static readonly long s_ProgressInterval = Stopwatch.Frequency / 10;
 
+        // The progress is written to the log at most this often. The log is how a run of zpp, or of a server, which has no
+        // progress bar, shows that it has not stopped.
+        private static readonly long s_LogInterval = 2 * Stopwatch.Frequency;
+
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
@@ -91,6 +96,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // of the simulation, and the presentation is made on the task pool, and so what they produce is handed to
         // the UI thread here, in order.
         private readonly IUIDispatcher m_UiDispatcher;
+
+        private readonly ILogger<ScheduleSimulationManagerViewModel> m_Logger;
+        private long m_LastLogTicks;
 
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
@@ -118,7 +126,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
             IScottPlotImageExporter scottPlotImageExporter,
-            IUIDispatcher uiDispatcher)
+            IUIDispatcher uiDispatcher,
+            ILogger<ScheduleSimulationManagerViewModel> logger)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
@@ -126,6 +135,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             ArgumentNullException.ThrowIfNull(uiDispatcher);
+            ArgumentNullException.ThrowIfNull(logger);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -133,6 +143,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_UiDispatcher = uiDispatcher;
+            m_Logger = logger;
             m_SimulationChartPlotModel = new Plot();
             m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
@@ -287,14 +298,23 @@ namespace Zametek.ViewModel.ProjectPlan
                 ? TimeSpan.FromTicks((long)(elapsed.Ticks * ((1.0 / fraction) - 1.0)))
                 : TimeSpan.Zero;
 
-            SetStatus(
-                fraction,
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.ProjectPlan.Labels.Label_SimulationProgress,
-                    done,
-                    total,
-                    FormatDuration(remaining)));
+            string text = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Labels.Label_SimulationProgress,
+                done,
+                total,
+                FormatDuration(remaining));
+
+            SetStatus(fraction, text);
+
+            // Rarely, and not at the end, which the log says in its own words.
+            long lastLog = Interlocked.Read(ref m_LastLogTicks);
+            if (done < total
+                && now - lastLog >= s_LogInterval
+                && Interlocked.CompareExchange(ref m_LastLogTicks, now, lastLog) == lastLog)
+            {
+                m_Logger.LogInformation("Simulation: {Progress}", text);
+            }
         }
 
         // The progress and what it says change together, on the UI thread, and in the order in which they were
@@ -531,27 +551,22 @@ namespace Zametek.ViewModel.ProjectPlan
                     Path.GetDirectoryName(filename) ?? string.Empty,
                     Path.GetFileNameWithoutExtension(filename));
 
-                (string Word, Action<TextWriter> Write)[] files =
+                (string Suffix, SimulationCsvFile File)[] files =
                 [
-                    (@"statistics", writer => SimulationCsvWriter.WriteStatistics(writer, summary)),
-                    (@"histogram", writer => SimulationCsvWriter.WriteHistogram(writer, summary)),
-                    (@"paths", writer => SimulationCsvWriter.WritePaths(writer, summary)),
-                    (@"activities", writer => SimulationCsvWriter.WriteActivities(writer, summary)),
-                    (@"iterations", writer => SimulationCsvWriter.WriteIterations(writer, result, names)),
+                    (Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, SimulationCsvFile.Statistics),
+                    (Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, SimulationCsvFile.Histogram),
+                    (Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, SimulationCsvFile.Paths),
+                    (Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, SimulationCsvFile.Activities),
+                    (Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, SimulationCsvFile.Iterations),
                 ];
 
                 await Task.Run(() =>
                 {
-                    foreach ((string word, Action<TextWriter> write) in files)
+                    foreach ((string suffix, SimulationCsvFile file) in files)
                     {
                         FileStreamHelper.Save(
-                            $@"{baseName}-{word}.csv",
-                            stream =>
-                            {
-                                // A byte order mark, so that Excel reads the names of the activities as UTF-8.
-                                using var writer = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true);
-                                write(writer);
-                            });
+                            $@"{baseName}{suffix}.csv",
+                            stream => WriteCsv(stream, file, summary, result, names));
                     }
                 });
 
@@ -570,6 +585,39 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
+            }
+        }
+
+        // One CSV file, as the panel saves it. A byte order mark leads, so that Excel reads the names of the activities as
+        // UTF-8.
+        private static void WriteCsv(
+            Stream stream,
+            SimulationCsvFile file,
+            SimulationSummaryModel summary,
+            SimulationResult<int> result,
+            IReadOnlyDictionary<int, string> names)
+        {
+            using var writer = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true);
+
+            switch (file)
+            {
+                case SimulationCsvFile.Statistics:
+                    SimulationCsvWriter.WriteStatistics(writer, summary);
+                    break;
+                case SimulationCsvFile.Histogram:
+                    SimulationCsvWriter.WriteHistogram(writer, summary);
+                    break;
+                case SimulationCsvFile.Paths:
+                    SimulationCsvWriter.WritePaths(writer, summary);
+                    break;
+                case SimulationCsvFile.Activities:
+                    SimulationCsvWriter.WriteActivities(writer, summary);
+                    break;
+                case SimulationCsvFile.Iterations:
+                    SimulationCsvWriter.WriteIterations(writer, result, names);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(file), file, null);
             }
         }
 
@@ -775,13 +823,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 SetStatus(0.0, string.Empty);
                 Interlocked.Exchange(ref m_LastProgressTicks, 0);
 
+                m_Logger.LogInformation(
+                    "Simulation: {Iterations} iterations, seed {Seed}, {Distribution}",
+                    settings.Iterations,
+                    settings.Seed,
+                    settings.Distribution);
+
                 var stopwatch = Stopwatch.StartNew();
+                Interlocked.Exchange(ref m_LastLogTicks, Stopwatch.GetTimestamp());
                 var progress = new CallbackProgress(done => ReportProgress(done, settings.Iterations, stopwatch));
                 CancellationToken token = cancellation.Token;
 
                 SimulationOutcome outcome = await Task.Run(() => Simulate(settings, target, progress, token), token);
 
                 stopwatch.Stop();
+                m_Logger.LogInformation("Simulation: done in {Elapsed}", FormatDuration(stopwatch.Elapsed));
 
                 lock (m_Lock)
                 {
@@ -843,6 +899,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public DateOnly GetFinishDate(int finishTime)
+        {
+            return DateOnly.FromDateTime(FinishDateOf(finishTime, m_CoreViewModel.ProjectStart).DateTime);
+        }
+
         public async Task WriteSimulationChartImageAsync(
             Stream stream,
             ChartImageFormat format,
@@ -850,6 +911,37 @@ namespace Zametek.ViewModel.ProjectPlan
             int height)
         {
             await m_ScottPlotImageExporter.WritePlotImageAsync(SimulationChartPlotModel, stream, format, width, height);
+        }
+
+        public Task WriteSimulationCsvAsync(
+            Stream stream,
+            SimulationCsvFile file)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+
+            if (file is not (SimulationCsvFile.Statistics or SimulationCsvFile.Histogram or SimulationCsvFile.Paths or SimulationCsvFile.Activities or SimulationCsvFile.Iterations))
+            {
+                throw new ArgumentOutOfRangeException(nameof(file), file, null);
+            }
+
+            SimulationSummaryModel? summary;
+            SimulationResult<int>? result;
+            IReadOnlyDictionary<int, string> names;
+
+            lock (m_Lock)
+            {
+                summary = Summary;
+                result = m_Result;
+                names = m_ActivityNames;
+            }
+
+            if (summary is null || result is null)
+            {
+                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
+            }
+
+            WriteCsv(stream, file, summary, result, names);
+            return Task.CompletedTask;
         }
 
         // Presents the summary that the view model holds: the statistics as text, the tables and the chart. This

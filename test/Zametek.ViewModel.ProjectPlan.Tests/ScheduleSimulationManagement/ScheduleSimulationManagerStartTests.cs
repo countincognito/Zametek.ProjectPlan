@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
 using Xunit;
@@ -38,7 +39,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     CoreViewModelFixture.CreateDialogService(),
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
-                    CoreViewModelFixture.CreateUIDispatcher());
+                    CoreViewModelFixture.CreateUIDispatcher(),
+                    NullLogger<ScheduleSimulationManagerViewModel>.Instance);
 
                 return new Harness(core, panel);
             }

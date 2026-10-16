@@ -601,11 +601,56 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must be a number above 0..
+        /// </summary>
+        public static string Message_OptionMustBeAboveZero {
+            get {
+                return ResourceManager.GetString("Message_OptionMustBeAboveZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be at least {1}..
+        /// </summary>
+        public static string Message_OptionMustBeAtLeast {
+            get {
+                return ResourceManager.GetString("Message_OptionMustBeAtLeast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be from {1} to {2}..
+        /// </summary>
+        public static string Message_OptionMustBeBetween {
+            get {
+                return ResourceManager.GetString("Message_OptionMustBeBetween", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} needs a value..
         /// </summary>
         public static string Message_OptionNeedsValue {
             get {
                 return ResourceManager.GetString("Message_OptionNeedsValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid with {1}..
+        /// </summary>
+        public static string Message_OptionOnlyValidWithOption {
+            get {
+                return ResourceManager.GetString("Message_OptionOnlyValidWithOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid with {1} {2}..
+        /// </summary>
+        public static string Message_OptionOnlyValidWithOptionValue {
+            get {
+                return ResourceManager.GetString("Message_OptionOnlyValidWithOptionValue", resourceCulture);
             }
         }
         
@@ -790,6 +835,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to must be above 0.
+        /// </summary>
+        public static string Message_ServeErrorMustBeAboveZero {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAboveZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to must be a date and time with its offset from UTC, such as 2026-10-03T09:00:00+01:00.
         /// </summary>
         public static string Message_ServeErrorMustBeADateTimeWithOffset {
@@ -826,6 +880,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to must be a number.
+        /// </summary>
+        public static string Message_ServeErrorMustBeANumber {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeANumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a whole number from 0 to 18446744073709551615, written as text.
+        /// </summary>
+        public static string Message_ServeErrorMustBeASeed {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeASeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to must be a string.
         /// </summary>
         public static string Message_ServeErrorMustBeAString {
@@ -840,6 +912,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeErrorMustBeAWholeNumber {
             get {
                 return ResourceManager.GetString("Message_ServeErrorMustBeAWholeNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a whole number, written as text.
+        /// </summary>
+        public static string Message_ServeErrorMustBeAWholeNumberAsText {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAWholeNumberAsText", resourceCulture);
             }
         }
         
@@ -889,11 +970,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to must be from {0} to {1}.
+        /// </summary>
+        public static string Message_ServeErrorNumberOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorNumberOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to is only valid with a project sent as &apos;project&apos;.
         /// </summary>
         public static string Message_ServeErrorOnlyWithProject {
             get {
                 return ResourceManager.GetString("Message_ServeErrorOnlyWithProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is only valid with a simulation (give 'simulation').
+        /// </summary>
+        public static string Message_ServeErrorOnlyWithSimulation {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorOnlyWithSimulation", resourceCulture);
             }
         }
         
@@ -970,6 +1069,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to is only valid with the distribution modifiedBetaPert.
+        /// </summary>
+        public static string Message_ServeErrorShapeOnlyWithModifiedBeta {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorShapeOnlyWithModifiedBeta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} needs a certificate: use {1}..
         /// </summary>
         public static string Message_ServeHttpsNeedsCertificate {
@@ -984,6 +1092,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeJobTimedOut {
             get {
                 return ResourceManager.GetString("Message_ServeJobTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}) must be at most {2}..
+        /// </summary>
+        public static string Message_ServeLimitTooHigh {
+            get {
+                return ResourceManager.GetString("Message_ServeLimitTooHigh", resourceCulture);
             }
         }
         
@@ -1506,6 +1623,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_SimulationNoActivities {
             get {
                 return ResourceManager.GetString("Message_SimulationNoActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no simulation result..
+        /// </summary>
+        public static string Message_SimulationNoResult {
+            get {
+                return ResourceManager.GetString("Message_SimulationNoResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The outputs of a simulation need a simulation..
+        /// </summary>
+        public static string Message_SimulationOutputNeedsSimulation {
+            get {
+                return ResourceManager.GetString("Message_SimulationOutputNeedsSimulation", resourceCulture);
             }
         }
         

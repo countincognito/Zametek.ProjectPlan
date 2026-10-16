@@ -78,8 +78,16 @@ namespace Zametek.Contract.ProjectPlan
 
         void CancelSimulation();
 
+        // The date on which a project that takes the given number of days finishes, in the working calendar of the plan.
+        DateOnly GetFinishDate(int finishTime);
+
         // Writes the chart to the stream at the given size. The caller owns the stream, which is left open.
         Task WriteSimulationChartImageAsync(Stream stream, ChartImageFormat format, int width, int height);
+
+        // Writes one of the CSV files of the last result to the stream, which is left open. The file is the one that the
+        // panel saves: UTF-8 with a byte order mark. It is an error to ask for more than one file, or for a result that
+        // does not exist.
+        Task WriteSimulationCsvAsync(Stream stream, SimulationCsvFile file);
 
         void BuildSimulationChartPlotModel();
     }
