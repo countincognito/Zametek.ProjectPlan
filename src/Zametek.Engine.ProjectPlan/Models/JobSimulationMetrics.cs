@@ -113,7 +113,7 @@ namespace Zametek.Engine.ProjectPlan
         // the scenario has. A result that a file held was made with the settings that the file saved with it, unless somebody
         // changed them after that run.
         internal static JobSimulationMetrics From(
-            IScheduleSimulationManagerViewModel simulation,
+            ISimulationChartManagerViewModel simulation,
             SimulationSettingsModel settings)
         {
             ArgumentNullException.ThrowIfNull(simulation);

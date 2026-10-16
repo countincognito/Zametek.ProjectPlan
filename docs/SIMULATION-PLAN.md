@@ -368,7 +368,7 @@ Phase 5 finished on 2026-10-16. All the work is in this repository, on the branc
 
 ### What exists now
 
-- **Three docks.** "Simulation" sits beside "Scenarios". It has the name of the scenario, the settings, and the buttons Run Simulation and Cancel Simulation. Fixed at the bottom, it has the progress, the status and the warning for a result that is out of date. "Simulation Chart" has the chart and its menu. "Simulation Metrics" sits beside "Resource Metrics". It has the tabs Statistics, Critical paths and Criticalities, and each tab has "Copy Table" and keeps the layout of its columns. The tab "Critical paths" shows the activity IDs of a path, and its tooltip has the names. One view model, `ScheduleSimulationManagerViewModel`, has the simulation. The other two docks are thin view models that hold it.
+- **Three docks.** "Simulation" sits beside "Scenarios". It has the name of the scenario, the settings, and the buttons Run Simulation and Cancel Simulation. Fixed at the bottom, it has the progress, the status and the warning for a result that is out of date. "Simulation Chart" has the chart and its menu. "Simulation Metrics" sits beside "Resource Metrics". It has the tabs Statistics, Critical paths and Criticalities, and each tab has "Copy Table" and keeps the layout of its columns. The tab "Critical paths" shows the activity IDs of a path, and its tooltip has the names. One view model, `SimulationChartManagerViewModel`, has the simulation. The other two docks are thin view models that hold it.
 - **The panels follow the scenario.** All three clear when a scenario loads, when a project closes and when a project begins. A run that is in progress stops, and its result is thrown away.
 - **The title bar.** It follows a project that closes or a scenario that loads with no edit. This was a fault that `8c109e7d` caused, and it is on the branch `mc-sim` only.
 - **The scenario holds the simulation.** The core owns the settings (`SimulationSettings`) and the last result (`SimulationSummary`), as it owns the metrics. The project file (v0.6.2, which is not released) holds both. It holds the statistics, the percentiles, the histogram, the critical paths and the criticalities. It does not hold the iterations. A change of a setting, or a new result, marks the scenario as modified. A load does not. A result that a file holds is trusted, as the metrics of a file are.
@@ -394,6 +394,15 @@ Phase 5 finished on 2026-10-16. All the work is in this repository, on the branc
 - A property chain in ReactiveUI (`WhenAnyValue`) drops a value that did not change. This caused the fault of the title bar, and a counter fixed it.
 - Two pipelines that present the same value race. The first version of the pipeline for a result that a file held took it as shown when the pipeline for the display settings had shown it. Then the result looked out of date. A test found it. The pipeline now asks whether the panel made the result.
 - A contract that three documents and the code share needs one commit. The tests of the contract failed whenever one of them was behind.
+
+### Changes after the first look
+
+The maintainer looked at the docks in the application and asked for four changes. They are in the commits that follow phase 5.
+
+- **Names.** `ScheduleSimulation*` is now `SimulationChart*`. This is true for the view, the view model, the interface and the tests. Each dock has a folder of its own: `SimulationChartManagement`, `SimulationControlManagement` and `SimulationMetricManagement`.
+- **Inputs.** The iterations, the seed and the target finish use the numeric controls of the Activity Manager. The iterations and the target use `NumericIntUpDown`. The seed uses `NumericULongUpDown`, because the seed has 64 bits and an `int` cannot hold it. A limit of the library (`GraphLimits`) is the maximum of the iterations and of the target.
+- **Colours.** An input that a person can change has the background of an editable cell, as in the Activity Manager. The seed has it only when "New seed each run" is off. When that box is on, the seed is read-only and has no background.
+- **The empty chart.** A chart with no result had the light theme at the start and after a reset. This was so also when the theme was dark. The chart that has no result now has the theme of the application, as the other charts do.
 
 ### What is not done
 

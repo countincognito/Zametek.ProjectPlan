@@ -4,7 +4,7 @@ using Zametek.Maths.Graphs;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IScheduleSimulationManagerViewModel
+    public interface ISimulationChartManagerViewModel
         : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }

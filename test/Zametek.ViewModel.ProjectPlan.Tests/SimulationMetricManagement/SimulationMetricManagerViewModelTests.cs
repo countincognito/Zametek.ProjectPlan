@@ -16,12 +16,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             : IDisposable
         {
             private readonly CoreViewModel m_Core;
-            private readonly ScheduleSimulationManagerViewModel m_Simulation;
+            private readonly SimulationChartManagerViewModel m_Simulation;
 
             private Harness(
                 CoreViewModel core,
-                ScheduleSimulationManagerViewModel simulation,
-                ScheduleSimulationManagerViewModelTests.RecordingDialogService dialogs,
+                SimulationChartManagerViewModel simulation,
+                SimulationChartManagerViewModelTests.RecordingDialogService dialogs,
                 SimulationMetricManagerViewModel metrics)
             {
                 m_Core = core;
@@ -30,25 +30,25 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Metrics = metrics;
             }
 
-            public ScheduleSimulationManagerViewModelTests.RecordingDialogService Dialogs { get; }
+            public SimulationChartManagerViewModelTests.RecordingDialogService Dialogs { get; }
 
-            public ScheduleSimulationManagerViewModel Simulation => m_Simulation;
+            public SimulationChartManagerViewModel Simulation => m_Simulation;
 
             public SimulationMetricManagerViewModel Metrics { get; }
 
             public static Harness Make()
             {
                 (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
-                var dialogs = new ScheduleSimulationManagerViewModelTests.RecordingDialogService();
+                var dialogs = new SimulationChartManagerViewModelTests.RecordingDialogService();
 
-                var simulation = new ScheduleSimulationManagerViewModel(
+                var simulation = new SimulationChartManagerViewModel(
                     core,
                     settings,
                     dialogs,
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
                     CoreViewModelFixture.CreateUIDispatcher(),
-                    NullLogger<ScheduleSimulationManagerViewModel>.Instance);
+                    NullLogger<SimulationChartManagerViewModel>.Instance);
 
                 var metrics = new SimulationMetricManagerViewModel(simulation, dialogs);
 

@@ -29,7 +29,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
             typeof(IResourceChartManagerViewModel),
             typeof(IEarnedValueChartManagerViewModel),
             typeof(IScenarioChartManagerViewModel),
-            typeof(IScheduleSimulationManagerViewModel),
+            typeof(ISimulationChartManagerViewModel),
             typeof(IArrowGraphManagerViewModel),
             typeof(IVertexGraphManagerViewModel),
         };

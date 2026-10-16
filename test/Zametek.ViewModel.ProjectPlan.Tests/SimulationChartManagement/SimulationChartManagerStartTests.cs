@@ -15,16 +15,16 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// says when a delivery runs. The core under the panel is never started, so what is counted is the panel's own.
     /// A change to the project start stands in for whatever the user does to change how the result is shown.
     /// </remarks>
-    public class ScheduleSimulationManagerStartTests
+    public class SimulationChartManagerStartTests
     {
         private sealed class Harness
             : IDisposable
         {
             private readonly CoreViewModel m_Core;
 
-            public ScheduleSimulationManagerViewModel Panel { get; }
+            public SimulationChartManagerViewModel Panel { get; }
 
-            private Harness(CoreViewModel core, ScheduleSimulationManagerViewModel panel)
+            private Harness(CoreViewModel core, SimulationChartManagerViewModel panel)
             {
                 m_Core = core;
                 Panel = panel;
@@ -33,14 +33,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             public static Harness Make()
             {
                 CoreViewModel core = CoreViewModelFixture.Create();
-                var panel = new ScheduleSimulationManagerViewModel(
+                var panel = new SimulationChartManagerViewModel(
                     core,
                     CoreViewModelFixture.CreateSettingService(),
                     CoreViewModelFixture.CreateDialogService(),
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
                     CoreViewModelFixture.CreateUIDispatcher(),
-                    NullLogger<ScheduleSimulationManagerViewModel>.Instance);
+                    NullLogger<SimulationChartManagerViewModel>.Instance);
 
                 return new Harness(core, panel);
             }

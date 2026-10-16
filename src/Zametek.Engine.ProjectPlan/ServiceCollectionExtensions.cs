@@ -64,7 +64,7 @@ namespace Zametek.Engine.ProjectPlan
             services.AddScoped<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
             services.AddScoped<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
             services.AddScoped<IScenarioChartManagerViewModel, ScenarioChartManagerViewModel>();
-            services.AddScoped<IScheduleSimulationManagerViewModel, ScheduleSimulationManagerViewModel>();
+            services.AddScoped<ISimulationChartManagerViewModel, SimulationChartManagerViewModel>();
             services.AddScoped<IMetricManagerViewModel, MetricManagerViewModel>();
             services.AddScoped<IOutputManagerViewModel, OutputManagerViewModel>();
 

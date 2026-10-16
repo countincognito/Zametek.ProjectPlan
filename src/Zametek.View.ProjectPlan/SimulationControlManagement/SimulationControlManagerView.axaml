@@ -5,13 +5,17 @@
              xmlns:resources="using:Zametek.Resource.ProjectPlan"
              xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+             xmlns:u="https://irihi.tech/ursa"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
              x:DataType="vm:SimulationControlManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
              x:Class="Zametek.View.ProjectPlan.SimulationControlManagerView">
-	<UserControl.Resources>
-		<local:NullableIntConverter x:Key="nullableIntConverter" />
-	</UserControl.Resources>
+	<UserControl.Styles>
+		<!-- The colour coding of the Activity Manager: an input that a user can change has the background of an editable cell, and an input that a user cannot change has none. -->
+		<Style Selector="Grid.editable">
+			<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
+		</Style>
+	</UserControl.Styles>
 
 	<!-- The dock "Simulation": the scenario, the settings of a run and the buttons that start and stop it. The progress is fixed at the bottom. -->
 	<DockPanel Margin="7"
@@ -52,54 +56,78 @@
 
 					<StackPanel Spacing="2">
 						<TextBlock Text="{x:Static resources:Labels.Label_SimulationIterations}" />
-						<TextBox HorizontalAlignment="Stretch"
-								 VerticalContentAlignment="Center"
-								 Text="{Binding Path=Simulation.Iterations, Mode=TwoWay}" />
+						<Grid Classes="editable">
+							<u:NumericIntUpDown Value="{Binding Path=Simulation.Iterations, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="1"
+												Maximum="{x:Static zmg:GraphLimits.MaximumSimulationIterations}"/>
+						</Grid>
 					</StackPanel>
 
 					<StackPanel Spacing="2">
 						<TextBlock Text="{x:Static resources:Labels.Label_SimulationDistribution}" />
-						<ComboBox HorizontalAlignment="Stretch"
-								  VerticalContentAlignment="Center"
-								  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:DurationDistribution}}}"
-								  SelectedItem="{Binding Path=Simulation.Distribution, Mode=TwoWay}">
-							<ComboBox.ItemTemplate>
-								<DataTemplate>
-									<TextBlock VerticalAlignment="Center"
-											   Classes="displayOnly"
-											   Text="{Binding Converter={x:Static local:StringConverters.DurationDistributionValue}, Mode=OneWay}" />
-								</DataTemplate>
-							</ComboBox.ItemTemplate>
-						</ComboBox>
+						<Grid Classes="editable">
+							<ComboBox HorizontalAlignment="Stretch"
+									  VerticalContentAlignment="Center"
+									  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:DurationDistribution}}}"
+									  SelectedItem="{Binding Path=Simulation.Distribution, Mode=TwoWay}">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock VerticalAlignment="Center"
+												   Classes="displayOnly"
+												   Text="{Binding Converter={x:Static local:StringConverters.DurationDistributionValue}, Mode=OneWay}" />
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+						</Grid>
 					</StackPanel>
 
 					<StackPanel Spacing="2"
 								IsVisible="{Binding Path=Simulation.IsModifiedBetaDistribution, Mode=OneWay}">
 						<TextBlock Text="{x:Static resources:Labels.Label_SimulationShape}" />
-						<TextBox HorizontalAlignment="Stretch"
-								 VerticalContentAlignment="Center"
-								 Text="{Binding Path=Simulation.ModifiedBetaShape, Mode=TwoWay}" />
+						<Grid Classes="editable">
+							<TextBox HorizontalAlignment="Stretch"
+									 VerticalContentAlignment="Center"
+									 Text="{Binding Path=Simulation.ModifiedBetaShape, Mode=TwoWay}" />
+						</Grid>
 					</StackPanel>
 
+					<!-- The seed can be changed only when "New seed each run" is off. A run that draws its own seed shows the seed that it drew. -->
 					<StackPanel Spacing="2">
 						<TextBlock Text="{x:Static resources:Labels.Label_SimulationSeed}" />
-						<TextBox HorizontalAlignment="Stretch"
-								 VerticalContentAlignment="Center"
-								 IsReadOnly="{Binding Path=Simulation.UseRandomSeed, Mode=OneWay}"
-								 Text="{Binding Path=Simulation.Seed, Mode=TwoWay}" />
+						<Grid Classes.editable="{Binding Path=!Simulation.UseRandomSeed, Mode=OneWay}">
+							<u:NumericULongUpDown Value="{Binding Path=Simulation.Seed, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												  IsReadOnly="{Binding Path=Simulation.UseRandomSeed, Mode=OneWay}"
+												  VerticalAlignment="Center"
+												  ShowButtonSpinner="False"
+												  Focusable="True"
+												  Margin="0"
+												  Padding="0"/>
+						</Grid>
 						<CheckBox IsChecked="{Binding Path=Simulation.UseRandomSeed, Mode=TwoWay}"
 								  Content="{x:Static resources:Labels.Label_SimulationRandomSeed}" />
 					</StackPanel>
 
 					<StackPanel Spacing="2">
 						<TextBlock Text="{x:Static resources:Labels.Label_SimulationTarget}" />
-						<TextBox HorizontalAlignment="Stretch"
-								 VerticalContentAlignment="Center"
-								 IsVisible="{Binding Path=!Simulation.ShowDates, Mode=OneWay}"
-								 Text="{Binding Path=Simulation.TargetFinishTime, Converter={StaticResource nullableIntConverter}, Mode=TwoWay}" />
-						<DatePicker HorizontalAlignment="Stretch"
-									IsVisible="{Binding Path=Simulation.ShowDates, Mode=OneWay}"
-									SelectedDate="{Binding Path=Simulation.TargetFinishDate, Mode=TwoWay}" />
+						<Grid Classes="editable">
+							<u:NumericIntUpDown IsVisible="{Binding Path=!Simulation.ShowDates, Mode=OneWay}"
+												Value="{Binding Path=Simulation.TargetFinishTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="0"
+												Maximum="{x:Static zmg:GraphLimits.MaximumTimeValue}"/>
+							<DatePicker IsVisible="{Binding Path=Simulation.ShowDates, Mode=OneWay}"
+										HorizontalAlignment="Stretch"
+										SelectedDate="{Binding Path=Simulation.TargetFinishDate, Mode=TwoWay}"/>
+						</Grid>
 					</StackPanel>
 				</StackPanel>
 

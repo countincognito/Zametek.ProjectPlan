@@ -24,7 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// changed). The sample plan of the application has no estimates, so a copy of it is given an optimistic
     /// duration of 0.75 and a pessimistic duration of 1.6 times its duration.
     /// </remarks>
-    public class ScheduleSimulationManagerViewModelTests
+    public class SimulationChartManagerViewModelTests
     {
         private const int c_Iterations = 200;
 
@@ -57,31 +57,32 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public RecordingDialogService Dialogs { get; }
 
-            public ScheduleSimulationManagerViewModel Panel { get; }
+            public SimulationChartManagerViewModel Panel { get; }
 
-            private Harness(CoreViewModel core, RecordingDialogService dialogs, ScheduleSimulationManagerViewModel panel)
+            private Harness(CoreViewModel core, RecordingDialogService dialogs, SimulationChartManagerViewModel panel)
             {
                 Core = core;
                 Dialogs = dialogs;
                 Panel = panel;
             }
 
-            public static async Task<Harness> MakeAsync(ProjectScenarioModel? scenario = null, IUIDispatcher? dispatcher = null)
+            public static async Task<Harness> MakeAsync(ProjectScenarioModel? scenario = null, IUIDispatcher? dispatcher = null, BaseTheme baseTheme = BaseTheme.Light)
             {
                 CoreViewModel core = CoreViewModelFixture.Create();
+                core.BaseTheme = baseTheme;
                 core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
                 core.ProcessProjectScenario(scenario ?? await LoadSampleWithEstimatesAsync(), Guid.NewGuid(), @"Test");
                 core.RunCompile();
 
                 var dialogs = new RecordingDialogService();
-                var panel = new ScheduleSimulationManagerViewModel(
+                var panel = new SimulationChartManagerViewModel(
                     core,
                     CoreViewModelFixture.CreateSettingService(),
                     dialogs,
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
                     dispatcher ?? CoreViewModelFixture.CreateUIDispatcher(),
-                    NullLogger<ScheduleSimulationManagerViewModel>.Instance);
+                    NullLogger<SimulationChartManagerViewModel>.Instance);
 
                 return new Harness(core, dialogs, panel);
             }
@@ -139,7 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_ACompiledPlan_Then_HasAResultThatTheTablesAndTheChartShow()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 7;
@@ -160,6 +161,37 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.Activities.ShouldNotBeEmpty();
             panel.SimulationChartPlotModel.GetPlottables().ShouldNotBeEmpty();
             panel.StatusText.ShouldStartWith(Resource.ProjectPlan.Labels.Label_SimulationDone.Split('{')[0]);
+        }
+
+        [Theory]
+        [InlineData(BaseTheme.Light)]
+        [InlineData(BaseTheme.Dark)]
+        public async Task SimulationChartPlotModel_Given_NoResultYet_Then_HasTheBackgroundOfTheTheme(BaseTheme theme)
+        {
+            // The first chart that the panel shows is one that was made before any result: it must have the theme already.
+            using Harness harness = await Harness.MakeAsync(baseTheme: theme);
+            var expected = theme == BaseTheme.Dark ? ColorHelper.ScottPlotDarkThemeBackgroundColor : ColorHelper.ScottPlotLightThemeBackgroundColor;
+
+            harness.Panel.HasResult.ShouldBeFalse();
+            harness.Panel.SimulationChartPlotModel.GetPlottables().ShouldBeEmpty();
+            harness.Panel.SimulationChartPlotModel.FigureBackground.Color.ShouldBe(expected);
+        }
+
+        [Theory]
+        [InlineData(BaseTheme.Light)]
+        [InlineData(BaseTheme.Dark)]
+        public async Task BuildSimulationChartPlotModel_Given_NoResult_Then_BuildsAnEmptyChartWithTheBackgroundOfTheTheme(BaseTheme theme)
+        {
+            using Harness harness = await Harness.MakeAsync(baseTheme: theme);
+            var expected = theme == BaseTheme.Dark ? ColorHelper.ScottPlotDarkThemeBackgroundColor : ColorHelper.ScottPlotLightThemeBackgroundColor;
+            ScottPlot.Plot before = harness.Panel.SimulationChartPlotModel;
+
+            harness.Panel.BuildSimulationChartPlotModel();
+
+            // A new chart took the place of the first, and it has the theme as well.
+            harness.Panel.SimulationChartPlotModel.ShouldNotBeSameAs(before);
+            harness.Panel.SimulationChartPlotModel.GetPlottables().ShouldBeEmpty();
+            harness.Panel.SimulationChartPlotModel.FigureBackground.Color.ShouldBe(expected);
         }
 
         // A dispatcher that holds what it is given until it is told to run it, as the thread of the UI does.
@@ -219,7 +251,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // of the UI. What a run changes for the UI is handed to that thread, and the last word stays the last.
             var dispatcher = new QueueingUIDispatcher();
             using Harness harness = await Harness.MakeAsync(dispatcher: dispatcher);
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 6;
@@ -235,9 +267,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             dispatcher.Pending.ShouldBeGreaterThan(0);
             panel.StatusText.ShouldBe(before);
             panel.Statistics.ShouldBeSameAs(statisticsBefore);
-            changed.ShouldNotContain(nameof(ScheduleSimulationManagerViewModel.StatusText));
-            changed.ShouldNotContain(nameof(ScheduleSimulationManagerViewModel.Progress));
-            changed.ShouldNotContain(nameof(ScheduleSimulationManagerViewModel.Statistics));
+            changed.ShouldNotContain(nameof(SimulationChartManagerViewModel.StatusText));
+            changed.ShouldNotContain(nameof(SimulationChartManagerViewModel.Progress));
+            changed.ShouldNotContain(nameof(SimulationChartManagerViewModel.Statistics));
 
             dispatcher.RunAll();
 
@@ -250,7 +282,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_TheSameSeedTwice_Then_GivesTheSameResult()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 11;
@@ -270,7 +302,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_ARandomSeed_Then_ShowsTheSeedItUsedAndThatSeedRepeatsTheResult()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = true;
             panel.Seed = 0;
@@ -294,7 +326,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_ATarget_Then_TheStatisticsHaveTheChanceOfMeetingIt()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 3;
@@ -310,7 +342,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_TheModifiedBetaDistribution_Then_UsesItsShapeValue()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 5;
@@ -338,7 +370,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_APlanThatCompilesAgain_Then_TheResultIsStaleUntilItRunsAgain()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 1;
@@ -368,7 +400,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task ProcessProjectScenario_Given_AResult_Then_TheScenarioThatLoadsHasNoneAndThePanelIsClear()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 5;
@@ -392,7 +424,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_AnEditAndACompile_Then_TheNextRunUsesTheEditedPlan()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 9;
@@ -416,7 +448,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task CancelSimulation_Given_ARunInProgress_Then_StopsItAndKeepsTheEarlierResult()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 2;
@@ -440,7 +472,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_ARunInProgress_Then_AnotherRunDoesNothing()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = GraphLimits.MaximumSimulationIterations;
 
             Task first = panel.RunSimulationAsync();
@@ -461,7 +493,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_AnIterationCountOutOfRange_Then_ReportsItAndRunsNothing(int iterations)
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = iterations;
 
             await panel.RunSimulationAsync();
@@ -478,7 +510,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_AShapeValueThatIsNotAboveZero_Then_ReportsItAndRunsNothing(double shape)
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.Distribution = DurationDistribution.ModifiedBetaPert;
             panel.ModifiedBetaShape = shape;
@@ -528,7 +560,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationCommand_Given_ACompiledPlan_Then_CanRunAndRunsTheSimulation()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.CancelSimulationCommand.CanExecute(null).ShouldBeFalse();
 
@@ -553,7 +585,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task TargetFinishDate_Given_ATargetInDays_Then_IsTheDateThoseDaysFinishOnAndTheOtherWayRound(int days)
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             var changed = new List<string>();
             panel.PropertyChanged += (_, e) => changed.Add(e.PropertyName ?? string.Empty);
 
@@ -561,7 +593,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             DateTimeOffset? date = panel.TargetFinishDate;
 
             date.ShouldNotBeNull();
-            changed.ShouldContain(nameof(ScheduleSimulationManagerViewModel.TargetFinishDate));
+            changed.ShouldContain(nameof(SimulationChartManagerViewModel.TargetFinishDate));
 
             // The date is the one that the statistics show for the same number of days.
             panel.TargetFinishTime = null;
@@ -577,7 +609,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task TargetFinishDate_Given_ThePlanSkipsTheWeekends_Then_TheDatesAndTheDaysStillMatch(int days)
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             harness.Core.DisplaySettingsViewModel.NonWorkingDayMode = NonWorkingDayMode.Weekends;
 
             panel.TargetFinishTime = days;
@@ -594,7 +626,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task TargetFinishDate_Given_ADateBeforeTheStartOfThePlan_Then_IsTheFirstDay()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
 
             panel.TargetFinishDate = harness.Core.ProjectStart.AddYears(-3);
 
@@ -605,7 +637,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task ShowDates_Given_TheDisplaySetting_Then_FollowsIt()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             harness.Core.DisplaySettingsViewModel.ShowDates = false;
             panel.ShowDates.ShouldBeFalse();
 
@@ -618,7 +650,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_DatesOnDisplay_Then_TheStatisticsShowTheDatesAsWell()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             harness.Core.DisplaySettingsViewModel.ShowDates = true;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
@@ -636,7 +668,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task ExportCsvFilesCommand_Given_AResult_Then_WritesFiveFilesNextToTheNameThatTheUserChose()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 4;
@@ -685,7 +717,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task WriteSimulationCsvAsync_Given_AResult_Then_WritesTheFileWithTheByteOrderMarkTheDialogGives(SimulationCsvFile file, string header)
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 4;
@@ -703,7 +735,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task WriteSimulationCsvAsync_Given_ARun_Then_TheSameBytesAsTheFilesOfTheExport()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             panel.Seed = 4;
@@ -777,7 +809,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             using Harness harness = await Harness.MakeAsync();
             harness.Core.DisplaySettingsViewModel.ShowDates = true;
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
 
             // The date a target of that many days is shown as, and the days that a date gives back.
             DateOnly date = panel.GetFinishDate(40);
@@ -794,7 +826,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task WriteSimulationChartImageAsync_Given_AResult_Then_WritesAnImage()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
             await panel.RunSimulationAsync();
@@ -810,7 +842,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_ATokenThatIsAlreadyCancelled_Then_DoesNotRunAndSaysSo()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = GraphLimits.MaximumSimulationIterations;
             using var cancellation = new CancellationTokenSource();
             await cancellation.CancelAsync();
@@ -828,7 +860,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationAsync_Given_ATokenThatIsCancelledWhileItRuns_Then_StopsBeforeItsLastIteration()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = GraphLimits.MaximumSimulationIterations;
             using var cancellation = new CancellationTokenSource();
 
@@ -845,7 +877,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task Dispose_Given_ARunInProgress_Then_CancelsIt()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = GraphLimits.MaximumSimulationIterations;
             Task run = panel.RunSimulationAsync();
 
@@ -862,7 +894,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static async Task<ProjectScenarioModel> MakeScenarioWithAResultAsync()
         {
             using Harness source = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = source.Panel;
+            SimulationChartManagerViewModel panel = source.Panel;
             panel.Iterations = c_Iterations;
             panel.Distribution = DurationDistribution.ModifiedBetaPert;
             panel.ModifiedBetaShape = 6.0;
@@ -880,7 +912,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task BuildProjectScenario_Given_TheSettingsAndAResult_Then_TheScenarioHoldsThem()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.Distribution = DurationDistribution.ModifiedBetaPert;
             panel.ModifiedBetaShape = 6.0;
@@ -920,7 +952,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task SimulationSettings_Given_AChangeOrAResult_Then_TheScenarioIsModifiedAndALoadLeavesItAsItWas()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             harness.Core.IsProjectScenarioUpdated = false;
 
             // A setting is a part of the scenario, as the display settings are.
@@ -947,7 +979,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using Harness harness = await Harness.MakeAsync(saved);
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
 
             // The harness compiles after the load, and a compile is an edit as far as the scenario is concerned. What is
             // asked here is whether showing the result is one.
@@ -982,7 +1014,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.StartSubscriptions();
             Drain(main, pool);
             panel.HasResult.ShouldBeTrue();
@@ -1010,7 +1042,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.StartSubscriptions();
             Drain(main, pool);
             panel.HasResult.ShouldBeTrue();
@@ -1033,7 +1065,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.StartSubscriptions();
             Drain(main, pool);
             panel.Iterations = GraphLimits.MaximumSimulationIterations;
@@ -1056,7 +1088,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task ExportCsvFilesCommand_Given_AResultThatAFileHeld_Then_WritesTheFourFilesAndNotTheIterations()
         {
             using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.ExportCsvFilesCommand.CanExecute(null).ShouldBeTrue();
 
             string directory = Path.Combine(Path.GetTempPath(), $@"simulation-{Guid.NewGuid():N}");
@@ -1108,7 +1140,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public async Task RunSimulationWithSavedSeedAsync_Given_NewSeedEachRun_Then_UsesTheSavedSeedAndLeavesTheSettingsAlone()
         {
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = true;
             panel.Seed = 42;
@@ -1130,7 +1162,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             // The run of the panel is not the same: it draws a seed, and shows it, so that a result that is liked can be made again.
             using Harness harness = await Harness.MakeAsync();
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = true;
             panel.Seed = 42;
@@ -1146,7 +1178,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             // A job never starts the panel, and a result that a project file held has no run to present it.
             using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
-            ScheduleSimulationManagerViewModel panel = harness.Panel;
+            SimulationChartManagerViewModel panel = harness.Panel;
             panel.Statistics.ShouldBeEmpty();
 
             panel.BuildPresentation();

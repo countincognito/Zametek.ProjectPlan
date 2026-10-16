@@ -244,7 +244,7 @@ namespace Zametek.Engine.ProjectPlan
             // Simulation. A run goes before the project and the scenario are written, so that they hold its result, and before
             // the other outputs. The outputs of the simulation come last, and the statistics of a result that the scenario
             // held are there without a run.
-            IScheduleSimulationManagerViewModel? simulation = null;
+            ISimulationChartManagerViewModel? simulation = null;
             bool simulationRan = false;
             bool hasSimulationResult = false;
 
@@ -252,7 +252,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                simulation = services.GetRequiredService<IScheduleSimulationManagerViewModel>();
+                simulation = services.GetRequiredService<ISimulationChartManagerViewModel>();
                 SimulationSummaryModel? earlier = core.SimulationSummary;
 
                 await simulation.RunSimulationWithSavedSeedAsync(cancellationToken);
@@ -267,7 +267,7 @@ namespace Zametek.Engine.ProjectPlan
             }
             else if (core.SimulationSummary is not null)
             {
-                simulation = services.GetRequiredService<IScheduleSimulationManagerViewModel>();
+                simulation = services.GetRequiredService<ISimulationChartManagerViewModel>();
                 simulation.BuildPresentation();
                 hasSimulationResult = true;
             }

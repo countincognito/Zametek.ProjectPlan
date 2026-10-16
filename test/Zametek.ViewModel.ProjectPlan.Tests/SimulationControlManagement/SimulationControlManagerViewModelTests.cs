@@ -26,13 +26,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             private readonly CoreViewModel m_Core;
             private readonly ProjectScenarioManagerViewModel m_Project;
-            private readonly ScheduleSimulationManagerViewModel m_Simulation;
+            private readonly SimulationChartManagerViewModel m_Simulation;
 
             private Harness(
                 CoreViewModel core,
                 ISettingService settings,
                 ProjectScenarioManagerViewModel project,
-                ScheduleSimulationManagerViewModel simulation,
+                SimulationChartManagerViewModel simulation,
                 SimulationControlManagerViewModel control)
             {
                 m_Core = core;
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public SimulationControlManagerViewModel Control { get; }
 
-            public ScheduleSimulationManagerViewModel Simulation => m_Simulation;
+            public SimulationChartManagerViewModel Simulation => m_Simulation;
 
             public static Harness Make(string scenarioTitle = "")
             {
@@ -66,14 +66,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     calculator,
                     CoreViewModelFixture.CreateUIDispatcher());
 
-                var simulation = new ScheduleSimulationManagerViewModel(
+                var simulation = new SimulationChartManagerViewModel(
                     core,
                     settings,
                     dialogs,
                     calculator,
                     new ScottPlotImageExporter(),
                     CoreViewModelFixture.CreateUIDispatcher(),
-                    NullLogger<ScheduleSimulationManagerViewModel>.Instance);
+                    NullLogger<SimulationChartManagerViewModel>.Instance);
 
                 var control = new SimulationControlManagerViewModel(simulation, project, settings);
 

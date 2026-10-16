@@ -711,12 +711,12 @@ namespace Zametek.Engine.ProjectPlan.Tests
         {
             // The window that a cancel was once lost in: after the job has looked at its token, and before the run has made
             // a token of its own. A run that was not stopped would go on for a million iterations, and would have a result.
-            ScheduleSimulationManagerViewModel? inner = null;
+            SimulationChartManagerViewModel? inner = null;
             using var cancellation = new CancellationTokenSource();
-            await using ServiceProvider services = BuildServices(x => x.AddScoped<IScheduleSimulationManagerViewModel>(provider =>
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<ISimulationChartManagerViewModel>(provider =>
             {
-                inner = ActivatorUtilities.CreateInstance<ScheduleSimulationManagerViewModel>(provider);
-                IScheduleSimulationManagerViewModel proxy = DispatchProxy.Create<IScheduleSimulationManagerViewModel, CancelsTheJobOnceItRuns>();
+                inner = ActivatorUtilities.CreateInstance<SimulationChartManagerViewModel>(provider);
+                ISimulationChartManagerViewModel proxy = DispatchProxy.Create<ISimulationChartManagerViewModel, CancelsTheJobOnceItRuns>();
                 var cancelling = (CancelsTheJobOnceItRuns)proxy;
                 cancelling.Inner = inner;
                 cancelling.Cancellation = cancellation;
@@ -742,12 +742,12 @@ namespace Zametek.Engine.ProjectPlan.Tests
         [Fact]
         public async Task RunAsync_Given_CancellationWhileTheSimulationRuns_Then_ItStopsBeforeItsLastIterationAndTheJobStopsWithIt()
         {
-            ScheduleSimulationManagerViewModel? inner = null;
+            SimulationChartManagerViewModel? inner = null;
             using var cancellation = new CancellationTokenSource();
-            await using ServiceProvider services = BuildServices(x => x.AddScoped<IScheduleSimulationManagerViewModel>(provider =>
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<ISimulationChartManagerViewModel>(provider =>
             {
-                inner = ActivatorUtilities.CreateInstance<ScheduleSimulationManagerViewModel>(provider);
-                IScheduleSimulationManagerViewModel proxy = DispatchProxy.Create<IScheduleSimulationManagerViewModel, CancelsTheJobOnceItRuns>();
+                inner = ActivatorUtilities.CreateInstance<SimulationChartManagerViewModel>(provider);
+                ISimulationChartManagerViewModel proxy = DispatchProxy.Create<ISimulationChartManagerViewModel, CancelsTheJobOnceItRuns>();
                 var cancelling = (CancelsTheJobOnceItRuns)proxy;
                 cancelling.Inner = inner;
                 cancelling.Cancellation = cancellation;
@@ -780,7 +780,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
         public class CancelsTheJobOnceItRuns
             : DispatchProxy
         {
-            public IScheduleSimulationManagerViewModel Inner { get; set; } = null!;
+            public ISimulationChartManagerViewModel Inner { get; set; } = null!;
 
             public CancellationTokenSource Cancellation { get; set; } = null!;
 
@@ -791,7 +791,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
             {
                 ArgumentNullException.ThrowIfNull(targetMethod);
 
-                if (targetMethod.Name == nameof(IScheduleSimulationManagerViewModel.RunSimulationWithSavedSeedAsync))
+                if (targetMethod.Name == nameof(ISimulationChartManagerViewModel.RunSimulationWithSavedSeedAsync))
                 {
                     // The run is called with the token of the job, and nothing else cancels it.
                     var token = (CancellationToken)args!.Single()!;

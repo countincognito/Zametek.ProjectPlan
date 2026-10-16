@@ -5,9 +5,9 @@
              xmlns:resources="using:Zametek.Resource.ProjectPlan"
              xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-             x:DataType="vm:ScheduleSimulationManagerViewModel"
+             x:DataType="vm:SimulationChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
-             x:Class="Zametek.View.ProjectPlan.ScheduleSimulationManagerView"
+             x:Class="Zametek.View.ProjectPlan.SimulationChartManagerView"
              Plot="{Binding Path=SimulationChartPlotModel, Mode=OneWay}">
 
 	<!-- The dock "Simulation Chart". The settings and the buttons are in the dock "Simulation", and the tables are in the dock "Simulation Metrics". -->

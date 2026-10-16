@@ -28,8 +28,8 @@ namespace Zametek.ViewModel.ProjectPlan
     /// ARCHITECTURE section 7), runs on the task pool, and never touches the live activities again. The result
     /// is marked as stale when the plan compiles again, and the user runs it again if they want it.
     /// </remarks>
-    public class ScheduleSimulationManagerViewModel
-        : ToolViewModelBase, IScheduleSimulationManagerViewModel, IScottPlotViewModel
+    public class SimulationChartManagerViewModel
+        : ToolViewModelBase, ISimulationChartManagerViewModel, IScottPlotViewModel
     {
         #region Fields
 
@@ -99,7 +99,7 @@ namespace Zametek.ViewModel.ProjectPlan
         // the UI thread here, in order.
         private readonly IUIDispatcher m_UiDispatcher;
 
-        private readonly ILogger<ScheduleSimulationManagerViewModel> m_Logger;
+        private readonly ILogger<SimulationChartManagerViewModel> m_Logger;
         private long m_LastLogTicks;
 
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
@@ -133,14 +133,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ScheduleSimulationManagerViewModel(
+        public SimulationChartManagerViewModel(
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
             IScottPlotImageExporter scottPlotImageExporter,
             IUIDispatcher uiDispatcher,
-            ILogger<ScheduleSimulationManagerViewModel> logger)
+            ILogger<SimulationChartManagerViewModel> logger)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
@@ -157,7 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_UiDispatcher = uiDispatcher;
             m_Logger = logger;
-            m_SimulationChartPlotModel = new Plot();
+            m_SimulationChartPlotModel = BuildEmptyPlotModel(coreViewModel.BaseTheme);
             m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
             m_StatusText = Resource.ProjectPlan.Labels.Label_SimulationNoResult;
@@ -636,7 +636,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IScheduleSimulationManagerViewModel Members
+        #region ISimulationChartManagerViewModel Members
 
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
         public bool IsBusy => m_IsBusy.Value;
@@ -1028,7 +1028,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildSimulationChartPlotModel()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(ScheduleSimulationManagerViewModel)}.{nameof(BuildSimulationChartPlotModel)}");
+            CascadeDiagnostics.RecordBuild($@"{nameof(SimulationChartManagerViewModel)}.{nameof(BuildSimulationChartPlotModel)}");
             Plot? plotModel = null;
 
             lock (m_Lock)
@@ -1046,7 +1046,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            Plot incoming = plotModel ?? new Plot();
+            // A chart without a result has the theme too: the chart shows it at the start and after a reset.
+            Plot incoming = plotModel ?? BuildEmptyPlotModel(m_CoreViewModel.BaseTheme);
 
             m_UiDispatcher.Defer(() =>
             {
@@ -1060,6 +1061,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 SimulationChartPlotModel = incoming;
                 m_PlotRetirer.Retire(outgoing);
             });
+        }
+
+        private static Plot BuildEmptyPlotModel(BaseTheme baseTheme)
+        {
+            var plotModel = new Plot();
+            plotModel.HideGrid();
+            return plotModel.SetBaseTheme(baseTheme);
         }
 
         private sealed class CallbackProgress

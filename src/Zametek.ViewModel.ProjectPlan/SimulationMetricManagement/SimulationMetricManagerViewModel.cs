@@ -4,7 +4,7 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
     /// The dock "Simulation Metrics". It is a display-only panel: the tables of the result belong to the shared
-    /// <see cref="IScheduleSimulationManagerViewModel"/>, and the view binds to them through <see cref="Simulation"/>.
+    /// <see cref="ISimulationChartManagerViewModel"/>, and the view binds to them through <see cref="Simulation"/>.
     /// </summary>
     public class SimulationMetricManagerViewModel
         : ToolViewModelBase, ISimulationMetricManagerViewModel
@@ -18,12 +18,12 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public SimulationMetricManagerViewModel(
-            IScheduleSimulationManagerViewModel scheduleSimulationManagerViewModel,
+            ISimulationChartManagerViewModel simulationChartManagerViewModel,
             IDialogService dialogService)
         {
-            ArgumentNullException.ThrowIfNull(scheduleSimulationManagerViewModel);
+            ArgumentNullException.ThrowIfNull(simulationChartManagerViewModel);
             ArgumentNullException.ThrowIfNull(dialogService);
-            Simulation = scheduleSimulationManagerViewModel;
+            Simulation = simulationChartManagerViewModel;
             m_DialogService = dialogService;
 
             Id = Resource.ProjectPlan.Titles.Title_SimulationMetrics;
@@ -34,7 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region ISimulationMetricManagerViewModel Members
 
-        public IScheduleSimulationManagerViewModel Simulation { get; }
+        public ISimulationChartManagerViewModel Simulation { get; }
 
         public Task ReportErrorAsync(string message)
         {

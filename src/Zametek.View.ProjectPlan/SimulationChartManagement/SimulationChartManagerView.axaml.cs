@@ -2,10 +2,10 @@ using Avalonia.Interactivity;
 
 namespace Zametek.View.ProjectPlan
 {
-    public partial class ScheduleSimulationManagerView
+    public partial class SimulationChartManagerView
         : ScottPlotUserControl
     {
-        public ScheduleSimulationManagerView()
+        public SimulationChartManagerView()
         {
             InitializeComponent();
             InitializePlotContainer(scottplot);

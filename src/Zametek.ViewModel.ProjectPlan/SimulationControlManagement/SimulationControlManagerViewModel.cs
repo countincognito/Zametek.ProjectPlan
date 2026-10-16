@@ -6,7 +6,7 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
     /// The dock "Simulation". It has no logic of its own for the simulation: the settings, the buttons, the progress and
-    /// the status all belong to the shared <see cref="IScheduleSimulationManagerViewModel"/>, and the view binds to them
+    /// the status all belong to the shared <see cref="ISimulationChartManagerViewModel"/>, and the view binds to them
     /// through <see cref="Simulation"/>. What it adds is the name of the scenario that a run simulates.
     /// </summary>
     public class SimulationControlManagerViewModel
@@ -26,14 +26,14 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public SimulationControlManagerViewModel(
-            IScheduleSimulationManagerViewModel scheduleSimulationManagerViewModel,
+            ISimulationChartManagerViewModel simulationChartManagerViewModel,
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ISettingService settingService)
         {
-            ArgumentNullException.ThrowIfNull(scheduleSimulationManagerViewModel);
+            ArgumentNullException.ThrowIfNull(simulationChartManagerViewModel);
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
-            Simulation = scheduleSimulationManagerViewModel;
+            Simulation = simulationChartManagerViewModel;
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_SettingService = settingService;
             m_ScenarioTitle = settingService.ScenarioTitle;
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region ISimulationControlManagerViewModel Members
 
-        public IScheduleSimulationManagerViewModel Simulation { get; }
+        public ISimulationChartManagerViewModel Simulation { get; }
 
         private string m_ScenarioTitle;
         public string ScenarioTitle
