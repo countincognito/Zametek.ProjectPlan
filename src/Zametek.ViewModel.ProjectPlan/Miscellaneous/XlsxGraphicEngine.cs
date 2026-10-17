@@ -6,14 +6,16 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
     /// The graphic engine that the library of the workbooks is given. The library measures text and pictures with an engine
-    /// of its own that needs the fonts of the system (it takes one that it has not got from the system when a font is not
-    /// there, and fails when that one is not there either, as it is not in a container, or in the browser). The workbooks of
-    /// the application are never fitted to their text, and no picture of them is drawn, so the engine here measures nothing
-    /// and gives the measures of a cell of the default font of Excel (Calibri 11 point, at 96 dots to the inch) instead.
+    /// of its own, which looks for the fonts of the system the first time it is used. The workbooks of the application are
+    /// never fitted to their text, and no picture of them is drawn, so the engine here measures nothing and gives the measures
+    /// of a cell of the default font of Excel (Calibri 11 point, at 96 dots to the inch) instead.
     /// </summary>
     /// <remarks>
     /// The library asks it only once, when it reads a workbook, for the width of a digit, to turn the widths of the columns
-    /// of the file into the unit that it uses. Nothing that the importer reads depends on the answer.
+    /// of the file into the unit that it uses. Nothing that the importer reads depends on the answer. The engine is not needed
+    /// for a workbook to be read (the engine of the library reads it on Windows, on Linux with no fonts at all, and in the
+    /// browser), but it saves the search of the fonts, which is about 0.2 seconds in the first read of a process, and it makes
+    /// the reading independent of the fonts of the machine.
     /// </remarks>
     internal sealed class XlsxGraphicEngine : IXLGraphicEngine
     {

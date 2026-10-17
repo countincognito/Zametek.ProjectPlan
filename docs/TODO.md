@@ -157,7 +157,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
      Treat the channel as UNVERIFIED. Do not treat it as broken. The first step is to open the developer console against a running browser head and see if the startup line is there. The result matters either way. A web app with logging that goes nowhere reports a failure as a blank canvas and nothing else.
   6. **Prune what a browser cannot use.** Remove `Process.Start` in `UriHelper` (use the own navigation of the browser). Remove the file-writing thread of `PerfTelemetry`. Hide the MS Project import from the UI, so that it does not reach `UnavailableMicrosoftProjectFileImporter`.
-  7. **Check `System.Drawing.Common`.** `Zametek.ViewModel.ProjectPlan` has a direct `PackageReference` to it. Nothing appears to use it, and it throws on any platform other than Windows. If nothing uses it, delete it.
 
 - [ ] **Decide how to host and deploy the web app** *(2026-08-21)*
 
