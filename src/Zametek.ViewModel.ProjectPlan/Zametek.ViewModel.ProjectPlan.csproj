@@ -45,7 +45,7 @@
     <!-- Held at 12.0.0.13, the last release on Svg.Skia 5.1.1: later ones require Svg.Skia 5.2, and with it
          SkiaSharp 4 (see Svg.Skia in Zametek.Graphs.Avalonia.csproj). -->
     <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.13" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="3.2.0" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="3.3.0" />
   </ItemGroup>
 
   <ItemGroup>
