@@ -378,11 +378,16 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             SimulationInputModel input = m_CoreViewModel.CaptureSimulationInput();
 
-            var simulator = new ScheduleSimulator<int, int, int>(
-                input.Activities,
+            // The plan is scheduled with the builder of the application, which is the builder that a compile uses. A
+            // simulation then schedules in the same way as the compile does, also when the builder has other engines.
+            // The activities are copies of the ones that a compile takes (see CaptureSimulationInput), so they have
+            // the activity type of the application.
+            var simulator = new ScheduleSimulator<int, int, int, IDependentActivity>(
+                input.Activities.Cast<IDependentActivity>(),
                 input.Resources,
                 input.WorkStreams,
-                input.Estimates);
+                input.Estimates,
+                VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder);
 
             if (simulator.CompilationErrors.Count > 0)
             {
