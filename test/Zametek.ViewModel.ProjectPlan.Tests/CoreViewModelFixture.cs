@@ -58,9 +58,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// Builds a core as <see cref="Create"/> does, and hands back the settings service it was built over, for a
         /// test that builds something else over the same one - as the application does.
         /// </summary>
-        public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService()
+        public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService(
+            IProjectScenarioFileImport? projectScenarioFileImport = null)
         {
-            (CoreViewModel coreViewModel, ISettingService settingService) = Build(AppSettingsModel.DefaultCompilationTimeoutMilliseconds);
+            (CoreViewModel coreViewModel, ISettingService settingService) = Build(
+                AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+                projectScenarioFileImport: projectScenarioFileImport);
 
             coreViewModel.AutoCompile = false;
             return (coreViewModel, settingService);
@@ -118,7 +121,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         private static (CoreViewModel CoreViewModel, ISettingService SettingService) Build(
             int compilationTimeoutMilliseconds,
-            TimeProvider? clock = null)
+            TimeProvider? clock = null,
+            IProjectScenarioFileImport? projectScenarioFileImport = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -130,7 +134,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             var dateTimeCalculator = new DateTimeCalculator(clock ?? TimeProvider.System);
 
             var coreViewModel = new CoreViewModel(
-                new TestProjectScenarioFileImport(),
+                projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
                 new TestProjectScenarioFileExport(),
                 settingService,
                 dateTimeCalculator,

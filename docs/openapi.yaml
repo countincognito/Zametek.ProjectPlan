@@ -535,6 +535,8 @@ components:
               $ref: '#/components/examples/ValidationFailed'
             projectNotReadable:
               $ref: '#/components/examples/ProjectNotReadable'
+            projectNotReadableWorkbook:
+              $ref: '#/components/examples/ProjectNotReadableWorkbook'
             compilationFailed:
               $ref: '#/components/examples/CompilationFailed'
             compilationTimedOut:
@@ -857,6 +859,21 @@ components:
           transcript:
             - kind: errorLine
               text: "Unexpected character encountered while parsing value: P. Path '', line 0, position 0."
+    ProjectNotReadableWorkbook:
+      summary: A workbook to import, with two cells that are not numbers
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable
+        title: The project could not be read
+        status: 422
+        detail: 'The import was cancelled and nothing was changed. Problems found in the file: 2.'
+        traceId: 8f1c0f3b3a5b4f0f8ad1c9c5a0f2b7e4
+        errors:
+          - pointer: '#/import'
+            code: notAWholeNumber
+            detail: 'Activities!C2 (Duration, Design the wall): "soon" is not a whole number.'
+          - pointer: '#/import'
+            code: notAWholeNumber
+            detail: 'Activities!C3 (Duration, Build the wall): "later" is not a whole number.'
     CompilationFailed:
       summary: A project with an activity that depends on an activity that does not exist
       value:
@@ -1523,6 +1540,20 @@ components:
                 - tooLarge
                 - unsupportedFormat
                 - unreadable
+                - noKnownSheet
+                - missingHeader
+                - missingColumn
+                - duplicateColumn
+                - missingValue
+                - duplicateId
+                - unknownActivity
+                - excelError
+                - notAWholeNumber
+                - notANumber
+                - notTrueOrFalse
+                - notADate
+                - notAChoice
+                - notAColor
                 - notFound
                 - ambiguous
                 - hasNoData
@@ -1583,7 +1614,11 @@ components:
             status:
               const: 422
     ProjectNotReadableProblem:
-      description: The server cannot read the file that the request sends as the project or as the workbook to import.
+      description: |
+        The server cannot read the file that the request sends as the project or as the workbook to import. A workbook that has
+        problems in its cells is read in full and not imported: `errors` has one error for each problem, at `#/import`, up to 100.
+        The `detail` of each error gives the place of the problem (the sheet and the cell, the title of the column, and the name
+        of the row) and says what is wrong. The `detail` of the problem gives the number of problems.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object

@@ -35,6 +35,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Make a workbook by its XML alone, as the tests of the view models do: the tests of the problems of an import need one with bad cells. -->
+    <Compile Include="..\Zametek.ViewModel.ProjectPlan.Tests\Miscellaneous\XlsxPackageBuilder.cs" Link="Miscellaneous\XlsxPackageBuilder.cs" />
+    <Compile Include="..\Zametek.ViewModel.ProjectPlan.Tests\Miscellaneous\XlsxPackageReader.cs" Link="Miscellaneous\XlsxPackageReader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The description of the API, its reference and the guide they follow: OpenApiContractTests hold the server to them. -->
     <Content Include="..\..\docs\openapi.yaml" Link="Docs\openapi.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

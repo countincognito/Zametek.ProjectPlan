@@ -255,22 +255,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         /// <summary>
         /// Reads what the workbook holds of the simulation. A sheet that is not there, a column that is not there, and a
-        /// cell that is not a value that it can read all give the default: the settings are the defaults and the result is
-        /// none. A workbook that has the settings and not the statistics has no result, because a result is more than the
-        /// lists.
+        /// cell that is blank all give the default: the settings are the defaults and the result is none. A workbook that
+        /// has the settings and not the statistics has no result, because a result is more than the lists. A cell that
+        /// holds something that is not a value of its kind is a problem, and is reported (see <see cref="ImportRow"/>).
         /// </summary>
-        public static (SimulationSettingsModel Settings, SimulationSummaryModel? Summary) ReadFromWorkbook(XSSFWorkbook? workbook)
+        public static (SimulationSettingsModel Settings, SimulationSummaryModel? Summary) ReadFromWorkbook(XlsxWorkbookReader reader)
         {
-            return workbook is null
-                ? (new SimulationSettingsModel(), null)
-                : (ReadSettings(workbook), ReadSummary(workbook));
+            ArgumentNullException.ThrowIfNull(reader);
+
+            return (ReadSettings(reader), ReadSummary(reader));
         }
 
-        private static SimulationSettingsModel ReadSettings(XSSFWorkbook workbook)
+        private static SimulationSettingsModel ReadSettings(XlsxWorkbookReader reader)
         {
             var settings = new SimulationSettingsModel();
-            SheetTable? table = SheetTable.Open(workbook, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings);
-            SheetRow? row = table?.Rows.FirstOrDefault();
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings, s_SettingsColumnTitles);
+            ImportRow? row = table?.Rows.FirstOrDefault();
 
             if (row is null)
             {
@@ -280,7 +280,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return settings with
             {
                 Iterations = row.Int(nameof(SimulationSettingsModel.Iterations)) ?? settings.Iterations,
-                Distribution = row.Enum<DurationDistribution>(nameof(SimulationSettingsModel.Distribution)) ?? settings.Distribution,
+                Distribution = row.Option<DurationDistribution>(nameof(SimulationSettingsModel.Distribution)) ?? settings.Distribution,
                 ModifiedBetaShape = row.Double(nameof(SimulationSettingsModel.ModifiedBetaShape)) ?? settings.ModifiedBetaShape,
                 Seed = row.ULong(nameof(SimulationSettingsModel.Seed)) ?? settings.Seed,
                 UseRandomSeed = row.Bool(nameof(SimulationSettingsModel.UseRandomSeed)) ?? settings.UseRandomSeed,
@@ -288,10 +288,10 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static SimulationSummaryModel? ReadSummary(XSSFWorkbook workbook)
+        private static SimulationSummaryModel? ReadSummary(XlsxWorkbookReader reader)
         {
-            SheetTable? statistics = SheetTable.Open(workbook, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics);
-            SheetRow? row = statistics?.Rows.FirstOrDefault();
+            ImportTable? statistics = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics, s_StatisticsColumnTitles);
+            ImportRow? row = statistics?.Rows.FirstOrDefault();
 
             if (row is null)
             {
@@ -321,7 +321,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 Percentiles =
                 [
-                    .. ReadRows(workbook, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles).Select(x => new SimulationPercentileModel
+                    .. ReadRows(reader, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles, s_PercentileColumnTitles).Select(x => new SimulationPercentileModel
                     {
                         Percentile = x.Int(nameof(SimulationPercentileModel.Percentile)) ?? 0,
                         FinishTime = x.Int(nameof(SimulationPercentileModel.FinishTime)) ?? 0,
@@ -329,7 +329,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ],
                 Bins =
                 [
-                    .. ReadRows(workbook, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram).Select(x => new SimulationHistogramBinModel
+                    .. ReadRows(reader, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram, s_HistogramColumnTitles).Select(x => new SimulationHistogramBinModel
                     {
                         FirstFinishTime = x.Int(nameof(SimulationHistogramBinModel.FirstFinishTime)) ?? 0,
                         LastFinishTime = x.Int(nameof(SimulationHistogramBinModel.LastFinishTime)) ?? 0,
@@ -340,7 +340,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ],
                 Paths =
                 [
-                    .. ReadRows(workbook, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths).Select(x => new SimulationPathModel
+                    .. ReadRows(reader, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths, s_PathColumnTitles).Select(x => new SimulationPathModel
                     {
                         Rank = x.Int(nameof(SimulationPathModel.Rank)) ?? 0,
                         Label = x.Text(nameof(SimulationPathModel.Label)) ?? string.Empty,
@@ -353,7 +353,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ],
                 Activities =
                 [
-                    .. ReadRows(workbook, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities).Select(x => new SimulationActivityCriticalityModel
+                    .. ReadRows(reader, Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities, s_CriticalityColumnTitles).Select(x => new SimulationActivityCriticalityModel
                     {
                         ActivityId = x.Int(nameof(SimulationActivityCriticalityModel.ActivityId)) ?? 0,
                         Name = x.Text(nameof(SimulationActivityCriticalityModel.Name)) ?? string.Empty,
@@ -364,18 +364,19 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static IEnumerable<SheetRow> ReadRows(
-            XSSFWorkbook workbook,
-            string sheetTitle) =>
-            SheetTable.Open(workbook, sheetTitle)?.Rows ?? [];
+        private static IEnumerable<ImportRow> ReadRows(
+            XlsxWorkbookReader reader,
+            string sheetTitle,
+            IReadOnlyList<string> knownTitles) =>
+            reader.Table(sheetTitle, knownTitles)?.Rows ?? [];
 
         // The weights are in the columns PathGroupWeight1, PathGroupWeight2 and so on, in the order of the number. The list
         // ends at the first column that has no number.
-        private static List<double> ReadPathGroupWeights(SheetRow row)
+        private static List<double> ReadPathGroupWeights(ImportRow row)
         {
             List<double> weights = [];
 
-            foreach (string column in row.ColumnTitles
+            foreach (string column in row.Table.Titles
                 .Where(x => x.StartsWith(c_PathGroupWeightColumnPrefix, StringComparison.Ordinal))
                 .Select(x => (Title: x, Number: int.TryParse(x.AsSpan(c_PathGroupWeightColumnPrefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out int number) ? number : -1))
                 .Where(x => x.Number >= 0)
@@ -393,208 +394,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return weights;
-        }
-
-        // A sheet of the workbook: the titles of its columns, and the rows under them. A row that has no cell at all is not
-        // a row.
-        private sealed class SheetTable
-        {
-            private readonly Dictionary<string, int> m_ColumnIndexes;
-            private readonly IReadOnlyList<string> m_ColumnTitles;
-            private readonly ISheet m_Sheet;
-
-            private SheetTable(
-                ISheet sheet,
-                IReadOnlyList<string> columnTitles)
-            {
-                m_Sheet = sheet;
-                m_ColumnTitles = columnTitles;
-                m_ColumnIndexes = [];
-
-                for (int i = 0; i < columnTitles.Count; i++)
-                {
-                    m_ColumnIndexes.TryAdd(columnTitles[i], i);
-                }
-            }
-
-            public static SheetTable? Open(
-                XSSFWorkbook workbook,
-                string sheetTitle)
-            {
-                ISheet? sheet = workbook.GetSheet(sheetTitle);
-                IRow? titleRow = sheet?.GetRow(0);
-
-                if (sheet is null
-                    || titleRow is null)
-                {
-                    return null;
-                }
-
-                List<string> titles = [];
-
-                for (int i = 0; i < titleRow.LastCellNum; i++)
-                {
-                    titles.Add(titleRow.GetCell(i)?.ToString()?.Trim() ?? string.Empty);
-                }
-
-                return new SheetTable(sheet, titles);
-            }
-
-            public IEnumerable<SheetRow> Rows
-            {
-                get
-                {
-                    for (int i = m_Sheet.FirstRowNum + 1; i <= m_Sheet.LastRowNum; i++)
-                    {
-                        IRow? row = m_Sheet.GetRow(i);
-
-                        if (row is null
-                            || row.Cells.Count == 0
-                            || row.Cells.All(x => x.CellType == CellType.Blank))
-                        {
-                            continue;
-                        }
-
-                        yield return new SheetRow(row, m_ColumnIndexes, m_ColumnTitles);
-                    }
-                }
-            }
-        }
-
-        // A row of a sheet, read by the title of the column. Each read gives null for a column that is not there and for a
-        // cell that has no value of the kind that was asked for. A number is read from a number cell, or from text that
-        // holds a number in the invariant culture.
-        private sealed class SheetRow
-        {
-            private readonly IRow m_Row;
-            private readonly IReadOnlyDictionary<string, int> m_ColumnIndexes;
-
-            public SheetRow(
-                IRow row,
-                IReadOnlyDictionary<string, int> columnIndexes,
-                IReadOnlyList<string> columnTitles)
-            {
-                m_Row = row;
-                m_ColumnIndexes = columnIndexes;
-                ColumnTitles = columnTitles;
-            }
-
-            public IReadOnlyList<string> ColumnTitles { get; }
-
-            private ICell? CellOf(string column) =>
-                m_ColumnIndexes.TryGetValue(column, out int index)
-                    ? m_Row.GetCell(index)
-                    : null;
-
-            // A cell that holds the result of a formula is read as the result.
-            private static CellType TypeOf(ICell cell) =>
-                cell.CellType == CellType.Formula
-                    ? cell.CachedFormulaResultType
-                    : cell.CellType;
-
-            public string? Text(string column)
-            {
-                ICell? cell = CellOf(column);
-
-                if (cell is null)
-                {
-                    return null;
-                }
-
-                return TypeOf(cell) switch
-                {
-                    CellType.String => cell.StringCellValue,
-                    CellType.Numeric => cell.NumericCellValue.ToString(@"R", CultureInfo.InvariantCulture),
-                    CellType.Boolean => cell.BooleanCellValue.ToString(),
-                    _ => null,
-                };
-            }
-
-            public double? Double(string column)
-            {
-                ICell? cell = CellOf(column);
-
-                if (cell is null)
-                {
-                    return null;
-                }
-
-                double? value = TypeOf(cell) switch
-                {
-                    CellType.Numeric => cell.NumericCellValue,
-                    CellType.String when double.TryParse(cell.StringCellValue, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed) => parsed,
-                    _ => null,
-                };
-
-                return value is double number && double.IsFinite(number)
-                    ? number
-                    : null;
-            }
-
-            public int? Int(string column)
-            {
-                double? value = Double(column);
-
-                return value is double number
-                    && number == Math.Floor(number)
-                    && number >= int.MinValue
-                    && number <= int.MaxValue
-                        ? (int)number
-                        : null;
-            }
-
-            public ulong? ULong(string column)
-            {
-                ICell? cell = CellOf(column);
-
-                if (cell is null)
-                {
-                    return null;
-                }
-
-                switch (TypeOf(cell))
-                {
-                    case CellType.String when ulong.TryParse(cell.StringCellValue, NumberStyles.None, CultureInfo.InvariantCulture, out ulong parsed):
-                        return parsed;
-                    case CellType.Numeric:
-                        // A cell holds a whole number exactly only up to 2^53.
-                        double number = cell.NumericCellValue;
-                        return number >= 0.0 && number <= 9007199254740992.0 && number == Math.Floor(number)
-                            ? (ulong)number
-                            : null;
-                    default:
-                        return null;
-                }
-            }
-
-            public bool? Bool(string column)
-            {
-                ICell? cell = CellOf(column);
-
-                if (cell is null)
-                {
-                    return null;
-                }
-
-                return TypeOf(cell) switch
-                {
-                    CellType.Boolean => cell.BooleanCellValue,
-                    CellType.String when bool.TryParse(cell.StringCellValue, out bool parsed) => parsed,
-                    _ => null,
-                };
-            }
-
-            public T? Enum<T>(string column)
-                where T : struct, Enum
-            {
-                string? text = Text(column);
-
-                return text is not null
-                    && System.Enum.TryParse(text.Trim(), ignoreCase: true, out T parsed)
-                    && System.Enum.IsDefined(parsed)
-                        ? parsed
-                        : null;
-            }
         }
 
         #endregion

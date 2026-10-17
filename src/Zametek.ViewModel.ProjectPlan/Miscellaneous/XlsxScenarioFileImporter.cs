@@ -1,32 +1,45 @@
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
-using System.Data;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
+    /// <summary>
+    /// Reads a scenario from a workbook, in the form that the exporter writes it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The titles of the columns are the structure of a sheet: a column is read by its title, and a title that the importer
+    /// does not know is left alone, as a sheet that it does not know is, and thus a workbook that has more than the importer
+    /// reads is a workbook that can be imported. A column that is not there gives the values that it gives when its cells are
+    /// blank.
+    /// </para>
+    /// <para>
+    /// The import takes all of a workbook or none of it. It reads the whole workbook, whatever it finds, collects each cell and
+    /// each sheet that it cannot read (see <see cref="ImportIssue"/>), and then, if it has collected any,
+    /// throws a <see cref="ScenarioImportException"/> that holds them. A blank cell is not a problem (the value is not
+    /// given), and a cell that holds something that is not the kind of value of its column is.
+    /// </para>
+    /// </remarks>
     public class XlsxScenarioFileImporter
         : IXlsxScenarioFileImporter
     {
         #region Fields
 
-        private static readonly IList<string> s_GeneralColumnTitles =
+        private static readonly IReadOnlyList<string> s_GeneralColumnTitles =
         [
             nameof(ProjectScenarioImportModel.ProjectStart),
             nameof(ProjectScenarioImportModel.Today)
         ];
 
-        private static readonly IList<string> s_ResourceSettingsColumnTitles =
+        private static readonly IReadOnlyList<string> s_ResourceSettingsColumnTitles =
         [
             nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitCost),
             nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitBilling),
             nameof(ProjectScenarioImportModel.ResourceSettings.AreDisabled)
         ];
 
-        private static readonly IList<string> s_DisplaySettingsColumnTitles =
+        private static readonly IReadOnlyList<string> s_DisplaySettingsColumnTitles =
         [
             nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
             nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
@@ -35,7 +48,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
         ];
 
-        private static readonly IList<string> s_ActivityColumnTitles =
+        private static readonly IReadOnlyList<string> s_ActivityColumnTitles =
         [
             nameof(ActivityModel.Id),
             nameof(ActivityModel.DisplayOrder),
@@ -59,16 +72,12 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.MaximumLatestFinishDateTime),
             nameof(ActivityModel.OverrideColor),
             nameof(ActivityModel.ColorFormat),
-            nameof(ActivityModel.Notes)
-        ];
-
-        private static readonly IList<string> s_DependentActivityColumnTitles =
-        [
+            nameof(ActivityModel.Notes),
             nameof(DependentActivityModel.Dependencies),
             nameof(DependentActivityModel.PlanningDependencies)
         ];
 
-        private static readonly IList<string> s_ResourceColumnTitles =
+        private static readonly IReadOnlyList<string> s_ResourceColumnTitles =
         [
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
@@ -87,7 +96,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.ColorFormat)
         ];
 
-        private static readonly IList<string> s_ActivitySeverityColumnTitles =
+        private static readonly IReadOnlyList<string> s_ActivitySeverityColumnTitles =
         [
             nameof(ActivitySeverityModel.SlackLimit),
             nameof(ActivitySeverityModel.CriticalityWeight),
@@ -95,7 +104,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivitySeverityModel.ColorFormat)
         ];
 
-        private static readonly IList<string> s_WorkStreamColumnTitles =
+        private static readonly IReadOnlyList<string> s_WorkStreamColumnTitles =
         [
             nameof(WorkStreamModel.Id),
             nameof(WorkStreamModel.Name),
@@ -104,13 +113,20 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(WorkStreamModel.ColorFormat)
         ];
 
-        private static readonly IList<string> s_HolidayColumnTitles =
+        private static readonly IReadOnlyList<string> s_HolidayColumnTitles =
         [
             nameof(HolidayModel.Id),
             nameof(HolidayModel.Name),
             nameof(HolidayModel.StartDateTime),
             nameof(HolidayModel.RecurrencePattern),
             nameof(HolidayModel.Notes)
+        ];
+
+        // The sheets of the trackers have one column that is read by its title, the Id. The columns after it are the times, and
+        // their titles are the times (or the days that they are, when the workbook shows dates).
+        private static readonly IReadOnlyList<string> s_TrackerColumnTitles =
+        [
+            nameof(ActivityModel.Id)
         ];
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -129,897 +145,390 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Members
 
-        private static DataTable SheetToDataTable(ISheet sheet)
+        // Says that the Id of a row is the Id of an earlier row, if it is. The row that has the Id again is not kept: the
+        // import fails, and the list of problems says where each of the two is.
+        private static bool IsNewId(
+            ImportRow row,
+            int idIndex,
+            int id,
+            Dictionary<int, int> firstRowOfId)
         {
-            ArgumentNullException.ThrowIfNull(sheet);
-            DataTable dtTable = new();
-            IRow titleRow = sheet.GetRow(0);
-            int cellCount = titleRow.LastCellNum;
-
-            for (int i = 0; i < cellCount; i++)
+            if (firstRowOfId.TryGetValue(id, out int firstRow))
             {
-                ICell cell = titleRow.GetCell(i);
-
-                if (cell is null || string.IsNullOrWhiteSpace(cell.ToString()))
-                {
-                    cellCount = i;
-                    break;
-                }
-
-                dtTable.Columns.Add(cell.ToString());
+                row.Report(idIndex, ImportIssueCodes.DuplicateId, ImportIssueText.DuplicateId(id, firstRow));
+                return false;
             }
 
-            List<string> rowList = [];
-            for (int i = sheet.FirstRowNum + 1; i <= sheet.LastRowNum; i++)
-            {
-                IRow row = sheet.GetRow(i);
-                if (row is null
-                    || row.Cells.All(d => d.CellType == CellType.Blank))
-                {
-                    continue;
-                }
-                for (int j = row.FirstCellNum; j < cellCount; j++)
-                {
-                    ICell cell = row.GetCell(j);
-                    string content = cell?.ToString() ?? string.Empty;
-                    rowList.Add(content);
-                }
-                if (rowList.Count > 0)
-                {
-                    dtTable.Rows.Add([.. rowList]);
-                }
-                rowList.Clear();
-            }
-
-            return dtTable;
+            firstRowOfId.Add(id, row.Number);
+            return true;
         }
 
-        private static Dictionary<int, DependentActivityModel> ImportWorksheetActivities(XSSFWorkbook? workbook)
+        // The activities that are on the sheet of activities. The second value says whether the sheet has been read without a
+        // problem: only then do the trackers know that an activity that is not in the list is an activity that the workbook does
+        // not have, and not one that could not be read.
+        private static (Dictionary<int, DependentActivityModel> Activities, bool IsComplete) ImportWorksheetActivities(
+            XlsxWorkbookReader reader,
+            ImportIssueCollector issues)
         {
             Dictionary<int, DependentActivityModel> dependentActivities = [];
-            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities);
-            if (sheet is not null)
+            int issueCount = issues.Count;
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities, s_ActivityColumnTitles);
+
+            if (table is null)
             {
-                DataTable dtTable = SheetToDataTable(sheet);
-                DataColumnCollection columns = dtTable.Columns;
+                return (dependentActivities, false);
+            }
 
-                // Check columns.
-                var activityColumnNames = new List<string>();
-                var dependentActivityColumnNames = new List<string>();
+            if (!table.RequireColumn(nameof(ActivityModel.Id)))
+            {
+                return (dependentActivities, false);
+            }
 
-                foreach (string title in s_ActivityColumnTitles)
+            int idIndex = table.IndexOf(nameof(ActivityModel.Id)).GetValueOrDefault();
+            Dictionary<int, int> firstRowOfId = [];
+
+            foreach (ImportRow row in table.Rows)
+            {
+                int? id = row.RequiredId(nameof(ActivityModel.Id));
+
+                // A blank cell, or a workbook with no such column, is an estimate that was not given.
+                // It follows the one before it, and the activity is then exactly what the Duration says.
+                var activity = new ActivityModel
                 {
-                    if (columns.Contains(title))
-                    {
-                        activityColumnNames.Add(title);
-                    }
-                }
-                foreach (string title in s_DependentActivityColumnTitles)
+                    Id = id.GetValueOrDefault(),
+                    DisplayOrder = row.Int(nameof(ActivityModel.DisplayOrder)) ?? 0,
+                    Name = row.Text(nameof(ActivityModel.Name)) ?? string.Empty,
+                    TargetWorkStreams = row.Ids(nameof(ActivityModel.TargetWorkStreams)),
+                    TargetResources = row.Ids(nameof(ActivityModel.TargetResources)),
+                    TargetResourceOperator = row.Option<LogicalOperator>(nameof(ActivityModel.TargetResourceOperator)) ?? LogicalOperator.AND,
+                    HasNoCost = row.Bool(nameof(ActivityModel.HasNoCost)) ?? false,
+                    HasNoBilling = row.Bool(nameof(ActivityModel.HasNoBilling)) ?? false,
+                    HasNoEffort = row.Bool(nameof(ActivityModel.HasNoEffort)) ?? false,
+                    HasNoRisk = row.Bool(nameof(ActivityModel.HasNoRisk)) ?? false,
+                    Duration = row.Int(nameof(ActivityModel.Duration)) ?? 0,
+                    MostLikelyDuration = row.Int(nameof(ActivityModel.MostLikelyDuration)),
+                    OptimisticDuration = row.Int(nameof(ActivityModel.OptimisticDuration)),
+                    PessimisticDuration = row.Int(nameof(ActivityModel.PessimisticDuration)),
+                    MinimumFreeSlack = row.Int(nameof(ActivityModel.MinimumFreeSlack)),
+                    MinimumEarliestStartTime = row.Int(nameof(ActivityModel.MinimumEarliestStartTime)),
+                    MinimumEarliestStartDateTime = ToOffset(row.Date(nameof(ActivityModel.MinimumEarliestStartDateTime))),
+                    MaximumLatestFinishTime = row.Int(nameof(ActivityModel.MaximumLatestFinishTime)),
+                    MaximumLatestFinishDateTime = ToOffset(row.Date(nameof(ActivityModel.MaximumLatestFinishDateTime))),
+                    OverrideColor = row.Bool(nameof(ActivityModel.OverrideColor)) ?? false,
+                    ColorFormat = row.Color(nameof(ActivityModel.ColorFormat)) ?? ColorHelper.None(),
+                    Notes = row.Text(nameof(ActivityModel.Notes)) ?? string.Empty,
+                };
+
+                List<int> dependencies = row.Ids(nameof(DependentActivityModel.Dependencies));
+                List<int> planningDependencies = row.Ids(nameof(DependentActivityModel.PlanningDependencies));
+
+                if (id is int idValue
+                    && IsNewId(row, idIndex, idValue, firstRowOfId))
                 {
-                    if (columns.Contains(title))
+                    dependentActivities[idValue] = new DependentActivityModel
                     {
-                        dependentActivityColumnNames.Add(title);
-                    }
-                }
-
-                foreach (DataRow row in dtTable.Rows)
-                {
-                    int? id = 0;
-                    int? displayOrder = 0;
-                    string name = string.Empty;
-                    List<int> targetWorkStreams = [];
-                    List<int> targetResources = [];
-                    var targetResourceOperator = LogicalOperator.AND;
-                    bool hasNoCost = false;
-                    bool hasNoBilling = false;
-                    bool hasNoEffort = false;
-                    bool hasNoRisk = false;
-                    int duration = 0;
-                    // A blank cell, or a workbook with no such column, is an estimate that was not given.
-                    // It follows the one before it, and the activity is then exactly what the Duration says.
-                    int? mostLikelyDuration = null;
-                    int? optimisticDuration = null;
-                    int? pessimisticDuration = null;
-                    int? minimumFreeSlack = null;
-                    int? minimumEarliestStartTime = null;
-                    DateTimeOffset? minimumEarliestStartDateTime = null;
-                    int? maximumLatestFinishTime = null;
-                    DateTimeOffset? maximumLatestFinishDateTime = null;
-                    bool overrideColor = false;
-                    ColorFormatModel colorFormat = ColorHelper.None();
-                    string notes = string.Empty;
-                    List<int> dependencies = [];
-                    List<int> planningDependencies = [];
-
-                    foreach (string columnName in activityColumnNames)
-                    {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(ActivityModel.Id),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        id = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.DisplayOrder),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        displayOrder = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.Name),
-                                colName => name = row[colName]?.ToString() ?? string.Empty)
-                            .Case(nameof(ActivityModel.TargetWorkStreams),
-                                colName =>
-                                {
-                                    string targetWorkStreamsString = row[colName]?.ToString() ?? string.Empty;
-                                    foreach (string targetWorkStream in targetWorkStreamsString.Split(DependenciesStringValidationRule.Separator))
-                                    {
-                                        if (int.TryParse(targetWorkStream, out int output))
-                                        {
-                                            targetWorkStreams.Add(output);
-                                        }
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.TargetResources),
-                                colName =>
-                                {
-                                    string targetResourcesString = row[colName]?.ToString() ?? string.Empty;
-                                    foreach (string targetResource in targetResourcesString.Split(DependenciesStringValidationRule.Separator))
-                                    {
-                                        if (int.TryParse(targetResource, out int output))
-                                        {
-                                            targetResources.Add(output);
-                                        }
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.TargetResourceOperator),
-                                colName => targetResourceOperator = row[colName]?.ToString().GetValueFromDescription<LogicalOperator>() ?? default)
-                            .Case(nameof(ActivityModel.HasNoCost),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        hasNoCost = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.HasNoBilling),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        hasNoBilling = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.HasNoEffort),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        hasNoEffort = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.HasNoRisk),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        hasNoRisk = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.Duration),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        duration = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.MostLikelyDuration),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        mostLikelyDuration = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.OptimisticDuration),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        optimisticDuration = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.PessimisticDuration),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        pessimisticDuration = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.MinimumFreeSlack),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        minimumFreeSlack = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.MinimumEarliestStartTime),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        minimumEarliestStartTime = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.MinimumEarliestStartDateTime),
-                                colName =>
-                                {
-                                    if (DateTime.TryParse(row[colName]?.ToString(), out DateTime output))
-                                    {
-                                        minimumEarliestStartDateTime = new DateTimeOffset(output);
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.MaximumLatestFinishTime),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        maximumLatestFinishTime = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.MaximumLatestFinishDateTime),
-                                colName =>
-                                {
-                                    if (DateTime.TryParse(row[colName]?.ToString(), out DateTime output))
-                                    {
-                                        maximumLatestFinishDateTime = new DateTimeOffset(output);
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.OverrideColor),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        overrideColor = output;
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.ColorFormat),
-                                colName =>
-                                {
-                                    string? hexCode = row[colName]?.ToString();
-                                    if (!string.IsNullOrWhiteSpace(hexCode))
-                                    {
-                                        colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
-                                    }
-                                })
-                            .Case(nameof(ActivityModel.Notes),
-                                colName => notes = row[colName]?.ToString() ?? string.Empty);
-                    }
-                    foreach (string columnName in dependentActivityColumnNames)
-                    {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(DependentActivityModel.Dependencies),
-                                colName =>
-                                {
-                                    string dependenciesString = row[colName]?.ToString() ?? string.Empty;
-                                    foreach (string dependency in dependenciesString.Split(DependenciesStringValidationRule.Separator))
-                                    {
-                                        if (int.TryParse(dependency, out int output))
-                                        {
-                                            dependencies.Add(output);
-                                        }
-                                    }
-                                })
-                            .Case(nameof(DependentActivityModel.PlanningDependencies),
-                                colName =>
-                                {
-                                    string planningDependenciesString = row[colName]?.ToString() ?? string.Empty;
-                                    foreach (string planningDependency in planningDependenciesString.Split(DependenciesStringValidationRule.Separator))
-                                    {
-                                        if (int.TryParse(planningDependency, out int output))
-                                        {
-                                            planningDependencies.Add(output);
-                                        }
-                                    }
-                                }); ;
-                    }
-
-                    if (id is not null)
-                    {
-                        int idVal = id.GetValueOrDefault();
-                        int displayOrderVal = displayOrder.GetValueOrDefault();
-                        dependentActivities[idVal] = new DependentActivityModel
-                        {
-                            Activity = new ActivityModel
-                            {
-                                Id = idVal,
-                                DisplayOrder = displayOrderVal,
-                                Name = name,
-                                TargetWorkStreams = targetWorkStreams,
-                                TargetResources = targetResources,
-                                TargetResourceOperator = targetResourceOperator,
-                                HasNoCost = hasNoCost,
-                                HasNoBilling = hasNoBilling,
-                                HasNoEffort = hasNoEffort,
-                                HasNoRisk = hasNoRisk,
-                                Duration = duration,
-                                MostLikelyDuration = mostLikelyDuration,
-                                OptimisticDuration = optimisticDuration,
-                                PessimisticDuration = pessimisticDuration,
-                                MinimumFreeSlack = minimumFreeSlack,
-                                MinimumEarliestStartTime = minimumEarliestStartTime,
-                                MinimumEarliestStartDateTime = minimumEarliestStartDateTime,
-                                MaximumLatestFinishTime = maximumLatestFinishTime,
-                                MaximumLatestFinishDateTime = maximumLatestFinishDateTime,
-                                OverrideColor = overrideColor,
-                                ColorFormat = colorFormat,
-                                Notes = notes
-                            },
-                            Dependencies = dependencies,
-                            PlanningDependencies = planningDependencies
-                        };
-                    }
+                        Activity = activity,
+                        Dependencies = dependencies,
+                        PlanningDependencies = planningDependencies
+                    };
                 }
             }
-            return dependentActivities;
+
+            return (dependentActivities, issues.Count == issueCount);
         }
 
-        private static Dictionary<int, ResourceModel> ImportWorksheetResources(XSSFWorkbook? workbook)
+        private static DateTimeOffset? ToOffset(DateTime? date) =>
+            date is DateTime value
+                ? new DateTimeOffset(value)
+                : null;
+
+        private static Dictionary<int, ResourceModel> ImportWorksheetResources(XlsxWorkbookReader reader)
         {
             Dictionary<int, ResourceModel> resources = [];
-            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResources);
-            if (sheet is not null)
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetResources, s_ResourceColumnTitles);
+
+            if (table is null
+                || !table.RequireColumn(nameof(ResourceModel.Id)))
             {
-                DataTable dtTable = SheetToDataTable(sheet);
-                DataColumnCollection columns = dtTable.Columns;
+                return resources;
+            }
 
-                // Check columns.
-                var columnNames = new List<string>();
+            int idIndex = table.IndexOf(nameof(ResourceModel.Id)).GetValueOrDefault();
+            Dictionary<int, int> firstRowOfId = [];
 
-                foreach (string title in s_ResourceColumnTitles)
+            foreach (ImportRow row in table.Rows)
+            {
+                int? id = row.RequiredId(nameof(ResourceModel.Id));
+
+                var resource = new ResourceModel
                 {
-                    if (columns.Contains(title))
-                    {
-                        columnNames.Add(title);
-                    }
-                }
+                    Id = id.GetValueOrDefault(),
+                    Name = row.Text(nameof(ResourceModel.Name)) ?? string.Empty,
+                    Notes = row.Text(nameof(ResourceModel.Notes)) ?? string.Empty,
+                    IsExplicitTarget = row.Bool(nameof(ResourceModel.IsExplicitTarget)) ?? false,
+                    IsInactive = row.Bool(nameof(ResourceModel.IsInactive)) ?? false,
+                    ActivityAllocationType = row.Option<ActivityAllocationType>(nameof(ResourceModel.ActivityAllocationType)) ?? ActivityAllocationType.Direct,
+                    InterActivityAllocationType = row.Option<InterActivityAllocationType>(nameof(ResourceModel.InterActivityAllocationType)) ?? InterActivityAllocationType.None,
+                    InterActivityPhases = row.Ids(nameof(ResourceModel.InterActivityPhases)),
+                    UnitCost = row.Double(nameof(ResourceModel.UnitCost)) ?? 0.0,
+                    UnitBilling = row.Double(nameof(ResourceModel.UnitBilling)) ?? 0.0,
+                    FixedCost = row.Double(nameof(ResourceModel.FixedCost)) ?? 0.0,
+                    FixedBilling = row.Double(nameof(ResourceModel.FixedBilling)) ?? 0.0,
+                    DisplayOrder = row.Int(nameof(ResourceModel.DisplayOrder)) ?? 0,
+                    AllocationOrder = row.Int(nameof(ResourceModel.AllocationOrder)) ?? 0,
+                    ColorFormat = row.Color(nameof(ResourceModel.ColorFormat)) ?? ColorHelper.None(),
+                };
 
-                foreach (DataRow row in dtTable.Rows)
+                if (id is int idValue
+                    && IsNewId(row, idIndex, idValue, firstRowOfId))
                 {
-                    int? id = 0;
-                    string name = string.Empty;
-                    string notes = string.Empty;
-                    bool isExplicitTarget = false;
-                    bool isInactive = false;
-                    List<int> interActivityPhases = [];
-                    ActivityAllocationType activityAllocationType = ActivityAllocationType.Direct;
-                    InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
-                    double unitCost = 0.0;
-                    double unitBilling = 0.0;
-                    double fixedCost = 0.0;
-                    double fixedBilling = 0.0;
-                    int displayOrder = 0;
-                    int allocationOrder = 0;
-                    ColorFormatModel colorFormat = ColorHelper.None();
-
-                    foreach (string columnName in columnNames)
-                    {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(ResourceModel.Id),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        id = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.Name),
-                                colName => name = row[colName]?.ToString() ?? string.Empty)
-                            .Case(nameof(ResourceModel.Notes),
-                                colName => notes = row[colName]?.ToString() ?? string.Empty)
-                            .Case(nameof(ResourceModel.IsExplicitTarget),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        isExplicitTarget = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.IsInactive),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        isInactive = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.InterActivityPhases),
-                                colName =>
-                                {
-                                    string interActivityPhasesString = row[colName]?.ToString() ?? string.Empty;
-                                    foreach (string interActivityPhase in interActivityPhasesString.Split(DependenciesStringValidationRule.Separator))
-                                    {
-                                        if (int.TryParse(interActivityPhase, out int output))
-                                        {
-                                            interActivityPhases.Add(output);
-                                        }
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.ActivityAllocationType),
-                                colName => activityAllocationType = row[colName]?.ToString().GetValueFromDescription<ActivityAllocationType>() ?? default)
-                            .Case(nameof(ResourceModel.InterActivityAllocationType),
-                                colName => interActivityAllocationType = row[colName]?.ToString().GetValueFromDescription<InterActivityAllocationType>() ?? default)
-                            .Case(nameof(ResourceModel.UnitCost),
-                                colName =>
-                                {
-                                    if (double.TryParse(row[colName]?.ToString(), out double output))
-                                    {
-                                        unitCost = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.UnitBilling),
-                                colName =>
-                                {
-                                    if (double.TryParse(row[colName]?.ToString(), out double output))
-                                    {
-                                        unitBilling = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.FixedCost),
-                                colName =>
-                                {
-                                    if (double.TryParse(row[colName]?.ToString(), out double output))
-                                    {
-                                        fixedCost = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.FixedBilling),
-                                colName =>
-                                {
-                                    if (double.TryParse(row[colName]?.ToString(), out double output))
-                                    {
-                                        fixedBilling = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.DisplayOrder),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        displayOrder = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.AllocationOrder),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        allocationOrder = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.ColorFormat),
-                                colName =>
-                                {
-                                    string? hexCode = row[colName]?.ToString();
-                                    if (!string.IsNullOrWhiteSpace(hexCode))
-                                    {
-                                        colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
-                                    }
-                                });
-                    }
-
-                    if (id is not null)
-                    {
-                        int idVal = id.GetValueOrDefault();
-                        resources[idVal] = new ResourceModel
-                        {
-                            Id = idVal,
-                            Name = name,
-                            Notes = notes,
-                            IsExplicitTarget = isExplicitTarget,
-                            IsInactive = isInactive,
-                            ActivityAllocationType = activityAllocationType,
-                            InterActivityAllocationType = interActivityAllocationType,
-                            InterActivityPhases = interActivityPhases,
-                            UnitCost = unitCost,
-                            UnitBilling = unitBilling,
-                            FixedCost = fixedCost,
-                            FixedBilling = fixedBilling,
-                            DisplayOrder = displayOrder,
-                            AllocationOrder = allocationOrder,
-                            ColorFormat = colorFormat
-                        };
-                    }
+                    resources[idValue] = resource;
                 }
             }
+
             return resources;
         }
 
-        private static List<ActivitySeverityModel> ImportWorksheetActivitySeverities(XSSFWorkbook? workbook)
+        private static List<ActivitySeverityModel> ImportWorksheetActivitySeverities(XlsxWorkbookReader reader)
         {
             List<ActivitySeverityModel> activitySeverities = [];
-            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities);
-            if (sheet is not null)
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities, s_ActivitySeverityColumnTitles);
+
+            if (table is null)
             {
-                DataTable dtTable = SheetToDataTable(sheet);
-                DataColumnCollection columns = dtTable.Columns;
-
-                // Check columns.
-                var columnNames = new List<string>();
-
-                foreach (string title in s_ActivitySeverityColumnTitles)
-                {
-                    if (columns.Contains(title))
-                    {
-                        columnNames.Add(title);
-                    }
-                }
-
-                foreach (DataRow row in dtTable.Rows)
-                {
-                    int slackLimit = 0;
-                    double criticalityWeight = 0.0;
-                    double fibonacciWeight = 0.0;
-                    ColorFormatModel colorFormat = ColorHelper.None();
-
-                    foreach (string columnName in columnNames)
-                    {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(ActivitySeverityModel.SlackLimit),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        slackLimit = output;
-                                    }
-                                })
-                            .Case(nameof(ActivitySeverityModel.CriticalityWeight),
-                                colName =>
-                                {
-                                    if (double.TryParse(row[colName]?.ToString(), out double output))
-                                    {
-                                        criticalityWeight = output;
-                                    }
-                                })
-                            .Case(nameof(ActivitySeverityModel.FibonacciWeight),
-                                colName =>
-                                {
-                                    if (double.TryParse(row[colName]?.ToString(), out double output))
-                                    {
-                                        fibonacciWeight = output;
-                                    }
-                                })
-                            .Case(nameof(ResourceModel.ColorFormat),
-                                colName =>
-                                {
-                                    string? hexCode = row[colName]?.ToString();
-                                    if (!string.IsNullOrWhiteSpace(hexCode))
-                                    {
-                                        colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
-                                    }
-                                });
-                    }
-
-                    activitySeverities.Add(new ActivitySeverityModel
-                    {
-                        SlackLimit = slackLimit,
-                        CriticalityWeight = criticalityWeight,
-                        FibonacciWeight = fibonacciWeight,
-                        ColorFormat = colorFormat
-                    });
-                }
+                return activitySeverities;
             }
+
+            foreach (ImportRow row in table.Rows)
+            {
+                activitySeverities.Add(new ActivitySeverityModel
+                {
+                    SlackLimit = row.Int(nameof(ActivitySeverityModel.SlackLimit)) ?? 0,
+                    CriticalityWeight = row.Double(nameof(ActivitySeverityModel.CriticalityWeight)) ?? 0.0,
+                    FibonacciWeight = row.Double(nameof(ActivitySeverityModel.FibonacciWeight)) ?? 0.0,
+                    ColorFormat = row.Color(nameof(ActivitySeverityModel.ColorFormat)) ?? ColorHelper.None(),
+                });
+            }
+
             return activitySeverities;
         }
 
-        private static Dictionary<int, WorkStreamModel> ImportWorksheetWorkStreams(XSSFWorkbook? workbook)
+        private static Dictionary<int, WorkStreamModel> ImportWorksheetWorkStreams(XlsxWorkbookReader reader)
         {
             Dictionary<int, WorkStreamModel> workStreams = [];
-            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams);
-            if (sheet is not null)
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams, s_WorkStreamColumnTitles);
+
+            if (table is null
+                || !table.RequireColumn(nameof(WorkStreamModel.Id)))
             {
-                DataTable dtTable = SheetToDataTable(sheet);
-                DataColumnCollection columns = dtTable.Columns;
+                return workStreams;
+            }
 
-                // Check columns.
-                var columnNames = new List<string>();
+            int idIndex = table.IndexOf(nameof(WorkStreamModel.Id)).GetValueOrDefault();
+            Dictionary<int, int> firstRowOfId = [];
 
-                foreach (string title in s_WorkStreamColumnTitles)
+            foreach (ImportRow row in table.Rows)
+            {
+                int? id = row.RequiredId(nameof(WorkStreamModel.Id));
+
+                var workStream = new WorkStreamModel
                 {
-                    if (columns.Contains(title))
-                    {
-                        columnNames.Add(title);
-                    }
-                }
+                    Id = id.GetValueOrDefault(),
+                    Name = row.Text(nameof(WorkStreamModel.Name)) ?? string.Empty,
+                    IsPhase = row.Bool(nameof(WorkStreamModel.IsPhase)) ?? false,
+                    DisplayOrder = row.Int(nameof(WorkStreamModel.DisplayOrder)) ?? 0,
+                    ColorFormat = row.Color(nameof(WorkStreamModel.ColorFormat)) ?? ColorHelper.None(),
+                };
 
-                foreach (DataRow row in dtTable.Rows)
+                if (id is int idValue
+                    && IsNewId(row, idIndex, idValue, firstRowOfId))
                 {
-                    int? id = 0;
-                    string name = string.Empty;
-                    bool isPhase = false;
-                    int displayOrder = 0;
-                    ColorFormatModel colorFormat = ColorHelper.None();
-
-                    foreach (string columnName in columnNames)
-                    {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(WorkStreamModel.Id),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        id = output;
-                                    }
-                                })
-                            .Case(nameof(WorkStreamModel.Name),
-                                colName => name = row[colName]?.ToString() ?? string.Empty)
-                            .Case(nameof(WorkStreamModel.IsPhase),
-                                colName =>
-                                {
-                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
-                                    {
-                                        isPhase = output;
-                                    }
-                                })
-                            .Case(nameof(WorkStreamModel.DisplayOrder),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        displayOrder = output;
-                                    }
-                                })
-                            .Case(nameof(WorkStreamModel.ColorFormat),
-                                colName =>
-                                {
-                                    string? hexCode = row[colName]?.ToString();
-                                    if (!string.IsNullOrWhiteSpace(hexCode))
-                                    {
-                                        colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
-                                    }
-                                });
-                    }
-
-                    if (id is not null)
-                    {
-                        int idVal = id.GetValueOrDefault();
-                        workStreams[idVal] = new WorkStreamModel
-                        {
-                            Id = idVal,
-                            Name = name,
-                            IsPhase = isPhase,
-                            DisplayOrder = displayOrder,
-                            ColorFormat = colorFormat
-                        };
-                    }
+                    workStreams[idValue] = workStream;
                 }
             }
+
             return workStreams;
         }
 
-        private static Dictionary<int, HolidayModel> ImportWorksheetHolidays(XSSFWorkbook? workbook)
+        private static Dictionary<int, HolidayModel> ImportWorksheetHolidays(XlsxWorkbookReader reader)
         {
             Dictionary<int, HolidayModel> holidays = [];
-            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetHolidays);
-            if (sheet is not null)
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetHolidays, s_HolidayColumnTitles);
+
+            if (table is null
+                || !table.RequireColumn(nameof(HolidayModel.Id)))
             {
-                DataTable dtTable = SheetToDataTable(sheet);
-                DataColumnCollection columns = dtTable.Columns;
+                return holidays;
+            }
 
-                // Check columns.
-                var columnNames = new List<string>();
+            int idIndex = table.IndexOf(nameof(HolidayModel.Id)).GetValueOrDefault();
+            Dictionary<int, int> firstRowOfId = [];
 
-                foreach (string title in s_HolidayColumnTitles)
+            foreach (ImportRow row in table.Rows)
+            {
+                int? id = row.RequiredId(nameof(HolidayModel.Id));
+
+                var holiday = new HolidayModel
                 {
-                    if (columns.Contains(title))
-                    {
-                        columnNames.Add(title);
-                    }
-                }
+                    Id = id.GetValueOrDefault(),
+                    Name = row.Text(nameof(HolidayModel.Name)) ?? string.Empty,
+                    StartDateTime = ToOffset(row.Date(nameof(HolidayModel.StartDateTime))),
+                    RecurrencePattern = row.Text(nameof(HolidayModel.RecurrencePattern)) ?? string.Empty,
+                    Notes = row.Text(nameof(HolidayModel.Notes)) ?? string.Empty,
+                };
 
-                foreach (DataRow row in dtTable.Rows)
+                if (id is int idValue
+                    && IsNewId(row, idIndex, idValue, firstRowOfId))
                 {
-                    int? id = 0;
-                    string name = string.Empty;
-                    DateTimeOffset? startDateTime = null;
-                    string recurrencePatterm = string.Empty;
-                    string notes = string.Empty;
-
-                    foreach (string columnName in columnNames)
-                    {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(HolidayModel.Id),
-                                colName =>
-                                {
-                                    if (int.TryParse(row[colName]?.ToString(), out int output))
-                                    {
-                                        id = output;
-                                    }
-                                })
-                            .Case(nameof(HolidayModel.Name),
-                                colName => name = row[colName]?.ToString() ?? string.Empty)
-                            .Case(nameof(HolidayModel.StartDateTime),
-                                colName =>
-                                {
-                                    if (DateTime.TryParse(row[colName]?.ToString(), out DateTime output))
-                                    {
-                                        startDateTime = new DateTimeOffset(output);
-                                    }
-                                })
-                            .Case(nameof(HolidayModel.RecurrencePattern),
-                                colName => recurrencePatterm = row[colName]?.ToString() ?? string.Empty)
-                            .Case(nameof(HolidayModel.Notes),
-                                colName => notes = row[colName]?.ToString() ?? string.Empty);
-                    }
-
-                    if (id is not null)
-                    {
-                        int idVal = id.GetValueOrDefault();
-                        holidays[idVal] = new HolidayModel
-                        {
-                            Id = idVal,
-                            Name = name,
-                            StartDateTime = startDateTime,
-                            RecurrencePattern = recurrencePatterm,
-                            Notes = notes,
-                        };
-                    }
+                    holidays[idValue] = holiday;
                 }
             }
+
             return holidays;
         }
 
-        private static IDictionary<int, DependentActivityModel> ImportWorksheetActivityTrackers(
-            XSSFWorkbook? workbook,
-            IDictionary<int, DependentActivityModel> dependentActivityLookup)
+        // The sheet of a tracker: a row for each activity, with the Id in the column titled Id, and a percentage in each column
+        // after it. The time of a percentage is the place of its column after the Id: the first is time 0.
+        // A row for an Id that the workbook does not have as an activity is a problem, when the activities were read in full.
+        private static void ImportTrackerRows(
+            ImportTable table,
+            IDictionary<int, DependentActivityModel> dependentActivityLookup,
+            bool areActivitiesComplete,
+            Action<DependentActivityModel, ImportRow, int> readRow)
         {
-            ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker);
-            if (percentageCompleteSheet is not null)
+            if (!table.RequireColumn(nameof(ActivityModel.Id)))
             {
-                DataTable percentageCompleteTable = SheetToDataTable(percentageCompleteSheet);
-                int percentageCompleteColumnCount = percentageCompleteTable.Columns.Count;
-                int percentageCompleteRowCount = percentageCompleteTable.Rows.Count;
+                return;
+            }
 
-                for (int rowIndex = 0; rowIndex < percentageCompleteRowCount; rowIndex++)
+            int idIndex = table.IndexOf(nameof(ActivityModel.Id)).GetValueOrDefault();
+            Dictionary<int, int> firstRowOfId = [];
+
+            foreach (ImportRow row in table.Rows)
+            {
+                int? id = row.RequiredId(nameof(ActivityModel.Id));
+
+                if (id is not int idValue
+                    || !IsNewId(row, idIndex, idValue, firstRowOfId))
                 {
-                    DataRow percentageCompleteRow = percentageCompleteTable.Rows[rowIndex];
+                    continue;
+                }
 
-                    // Check IDs.
-                    int columnIndex = 0;
-                    int? percentageCompleteId = null;
-                    {
-                        if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
-                        {
-                            percentageCompleteId = output;
-                        }
-                    }
-
-                    if (percentageCompleteId.HasValue
-                        && dependentActivityLookup.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
-                    {
-                        dependentActivity.Activity.Trackers.Clear();
-
-                        for (columnIndex = 1; columnIndex < percentageCompleteColumnCount; columnIndex++)
-                        {
-                            int percentageComplete = 0;
-
-                            if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
-                            {
-                                percentageComplete = output;
-                            }
-
-                            if (percentageComplete > 0)
-                            {
-                                int trackerIndex = columnIndex - 1;
-                                dependentActivity.Activity.Trackers.Add(new ActivityTrackerModel
-                                {
-                                    Time = trackerIndex,
-                                    ActivityId = dependentActivity.Activity.Id,
-                                    PercentageComplete = percentageComplete
-                                });
-                            }
-                        }
-                    }
+                if (dependentActivityLookup.TryGetValue(idValue, out DependentActivityModel? dependentActivity))
+                {
+                    readRow(dependentActivity, row, idIndex);
+                }
+                else if (areActivitiesComplete)
+                {
+                    row.Report(idIndex, ImportIssueCodes.UnknownActivity, ImportIssueText.UnknownActivity(idValue));
                 }
             }
-            return dependentActivityLookup;
         }
 
-        private static ResourceModel ImportWorksheetResourceTrackers(
-            XSSFWorkbook? workbook,
-            ResourceModel resource,
-            IDictionary<int, DependentActivityModel> dependentActivityLookup)
+        private static void ImportWorksheetActivityTrackers(
+            XlsxWorkbookReader reader,
+            IDictionary<int, DependentActivityModel> dependentActivityLookup,
+            bool areActivitiesComplete)
         {
-            int resourceId = resource.Id;
-            ISheet? percentageWorkedSheet = workbook?.GetSheet($@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resourceId})");
-            if (percentageWorkedSheet is not null)
+            ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker, s_TrackerColumnTitles);
+
+            if (table is null)
             {
-                resource.Trackers.Clear();
-
-                DataTable percentageWorkedTable = SheetToDataTable(percentageWorkedSheet);
-                int percentageWorkedColumnCount = percentageWorkedTable.Columns.Count;
-                int percentageWorkedRowCount = percentageWorkedTable.Rows.Count;
-
-                // Create a lookup dictionary for each time entry.
-                Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
-
-                for (int rowIndex = 0; rowIndex < percentageWorkedRowCount; rowIndex++)
-                {
-                    DataRow percentageWorkedRow = percentageWorkedTable.Rows[rowIndex];
-
-                    // Check IDs.
-                    int columnIndex = 0;
-                    int? percentageWorkedId = null;
-                    {
-                        if (int.TryParse(percentageWorkedRow[columnIndex]?.ToString(), out int output))
-                        {
-                            percentageWorkedId = output;
-                        }
-                    }
-
-                    if (percentageWorkedId.HasValue
-                        && dependentActivityLookup.TryGetValue(percentageWorkedId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
-                    {
-                        int activityId = dependentActivity.Activity.Id;
-                        string activityName = dependentActivity.Activity.Name;
-
-                        for (columnIndex = 1; columnIndex < percentageWorkedColumnCount; columnIndex++)
-                        {
-                            int percentageWorked = 0;
-
-                            if (int.TryParse(percentageWorkedRow[columnIndex]?.ToString(), out int output))
-                            {
-                                percentageWorked = output;
-                            }
-
-                            if (percentageWorked > 0)
-                            {
-                                int time = columnIndex - 1;
-
-                                if (!resourceTrackerLookup.TryGetValue(time, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
-                                {
-                                    trackerLookup = [];
-                                    resourceTrackerLookup.Add(time, trackerLookup);
-                                }
-
-                                if (!trackerLookup.TryGetValue(activityId, out _))
-                                {
-                                    var tracker = new ResourceActivityTrackerModel
-                                    {
-                                        Time = time,
-                                        ResourceId = resourceId,
-                                        ActivityId = activityId,
-                                        ActivityName = activityName,
-                                        PercentageWorked = percentageWorked,
-                                    };
-                                    trackerLookup.Add(activityId, tracker);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                foreach (KeyValuePair<int, Dictionary<int, ResourceActivityTrackerModel>> kvp in resourceTrackerLookup)
-                {
-                    var tracker = new ResourceTrackerModel
-                    {
-                        Time = kvp.Key,
-                        ResourceId = resourceId,
-                    };
-                    tracker.ActivityTrackers.AddRange(kvp.Value.Values);
-
-                    resource.Trackers.Add(tracker);
-                }
+                return;
             }
 
-            return resource;
+            ImportTrackerRows(
+                table,
+                dependentActivityLookup,
+                areActivitiesComplete,
+                (dependentActivity, row, idIndex) =>
+                {
+                    dependentActivity.Activity.Trackers.Clear();
+
+                    for (int columnIndex = idIndex + 1; columnIndex < table.Titles.Count; columnIndex++)
+                    {
+                        int percentageComplete = row.IntAt(columnIndex) ?? 0;
+
+                        if (percentageComplete > 0)
+                        {
+                            dependentActivity.Activity.Trackers.Add(new ActivityTrackerModel
+                            {
+                                Time = columnIndex - idIndex - 1,
+                                ActivityId = dependentActivity.Activity.Id,
+                                PercentageComplete = percentageComplete
+                            });
+                        }
+                    }
+                });
+        }
+
+        private static void ImportWorksheetResourceTrackers(
+            XlsxWorkbookReader reader,
+            ResourceModel resource,
+            IDictionary<int, DependentActivityModel> dependentActivityLookup,
+            bool areActivitiesComplete)
+        {
+            int resourceId = resource.Id;
+            ImportTable? table = reader.Table($@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resourceId})", s_TrackerColumnTitles);
+
+            if (table is null)
+            {
+                return;
+            }
+
+            resource.Trackers.Clear();
+
+            // Create a lookup dictionary for each time entry.
+            Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
+
+            ImportTrackerRows(
+                table,
+                dependentActivityLookup,
+                areActivitiesComplete,
+                (dependentActivity, row, idIndex) =>
+                {
+                    int activityId = dependentActivity.Activity.Id;
+                    string activityName = dependentActivity.Activity.Name;
+
+                    for (int columnIndex = idIndex + 1; columnIndex < table.Titles.Count; columnIndex++)
+                    {
+                        int percentageWorked = row.IntAt(columnIndex) ?? 0;
+
+                        if (percentageWorked > 0)
+                        {
+                            int time = columnIndex - idIndex - 1;
+
+                            if (!resourceTrackerLookup.TryGetValue(time, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
+                            {
+                                trackerLookup = [];
+                                resourceTrackerLookup.Add(time, trackerLookup);
+                            }
+
+                            trackerLookup.TryAdd(
+                                activityId,
+                                new ResourceActivityTrackerModel
+                                {
+                                    Time = time,
+                                    ResourceId = resourceId,
+                                    ActivityId = activityId,
+                                    ActivityName = activityName,
+                                    PercentageWorked = percentageWorked,
+                                });
+                        }
+                    }
+                });
+
+            foreach (KeyValuePair<int, Dictionary<int, ResourceActivityTrackerModel>> kvp in resourceTrackerLookup)
+            {
+                var tracker = new ResourceTrackerModel
+                {
+                    Time = kvp.Key,
+                    ResourceId = resourceId,
+                };
+                tracker.ActivityTrackers.AddRange(kvp.Value.Values);
+
+                resource.Trackers.Add(tracker);
+            }
         }
 
         #endregion
@@ -1030,59 +539,19 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(stream);
 
-            // NPOI closes the stream it reads a workbook from, and this one belongs to the caller, so the workbook is
-            // read from a copy.
-            using var copy = new MemoryStream();
-            stream.CopyTo(copy);
-            copy.Position = 0;
-
-            var workbook = new XSSFWorkbook(copy);
+            var issues = new ImportIssueCollector();
+            XlsxWorkbookReader reader = XlsxWorkbookReader.Open(stream, issues);
             DateTimeOffset projectStart = m_DateTimeCalculator.GetLocalToday();
             DateTimeOffset today = projectStart;
 
             {
-                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
-                if (sheet is not null)
+                ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral, s_GeneralColumnTitles);
+
+                foreach (ImportRow row in table?.Rows ?? [])
                 {
-                    DataTable dtTable = SheetToDataTable(sheet);
-                    DataColumnCollection columns = dtTable.Columns;
-
-                    // Check columns.
-                    var columnNames = new List<string>();
-
-                    foreach (string title in s_GeneralColumnTitles)
-                    {
-                        if (columns.Contains(title))
-                        {
-                            columnNames.Add(title);
-                        }
-                    }
-
-                    foreach (DataRow row in dtTable.Rows)
-                    {
-                        foreach (string columnName in columnNames)
-                        {
-                            columnName.ValueSwitchOn()
-                                .Case(nameof(ProjectScenarioImportModel.ProjectStart),
-                                    name =>
-                                    {
-                                        if (DateTimeOffset.TryParse(row[name]?.ToString(), out DateTimeOffset output))
-                                        {
-                                            projectStart = output;
-                                        }
-                                    })
-                                .Case(nameof(ProjectScenarioImportModel.Today),
-                                    name =>
-                                    {
-                                        if (DateTimeOffset.TryParse(row[name]?.ToString(), out DateTimeOffset output))
-                                        {
-                                            today = output;
-                                        }
-                                    });
-                        }
-                    }
+                    projectStart = row.DateOffset(nameof(ProjectScenarioImportModel.ProjectStart)) ?? projectStart;
+                    today = row.DateOffset(nameof(ProjectScenarioImportModel.Today)) ?? today;
                 }
-
             }
 
             bool showDates = false;
@@ -1092,64 +561,15 @@ namespace Zametek.ViewModel.ProjectPlan
             bool hideBilling = false;
 
             {
-                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings);
-                if (sheet is not null)
+                ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings, s_DisplaySettingsColumnTitles);
+
+                foreach (ImportRow row in table?.Rows ?? [])
                 {
-                    DataTable dtTable = SheetToDataTable(sheet);
-                    DataColumnCollection columns = dtTable.Columns;
-
-                    // Check columns.
-                    var columnNames = new List<string>();
-
-                    foreach (string title in s_DisplaySettingsColumnTitles)
-                    {
-                        if (columns.Contains(title))
-                        {
-                            columnNames.Add(title);
-                        }
-                    }
-
-                    foreach (DataRow row in dtTable.Rows)
-                    {
-                        foreach (string columnName in columnNames)
-                        {
-                            columnName.ValueSwitchOn()
-                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.ShowDates),
-                                    name =>
-                                    {
-                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
-                                        {
-                                            showDates = output;
-                                        }
-                                    })
-                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.UseClassicDates),
-                                    name =>
-                                    {
-                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
-                                        {
-                                            useClassicDates = output;
-                                        }
-                                    })
-                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.NonWorkingDayMode),
-                                    name => nonWorkingDayMode = row[name]?.ToString().GetValueFromDescription<NonWorkingDayMode>() ?? default)
-                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.HideCost),
-                                    name =>
-                                    {
-                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
-                                        {
-                                            hideCost = output;
-                                        }
-                                    })
-                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.HideBilling),
-                                    name =>
-                                    {
-                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
-                                        {
-                                            hideBilling = output;
-                                        }
-                                    });
-                        }
-                    }
+                    showDates = row.Bool(nameof(ProjectScenarioModel.DisplaySettings.ShowDates)) ?? showDates;
+                    useClassicDates = row.Bool(nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates)) ?? useClassicDates;
+                    nonWorkingDayMode = row.Option<NonWorkingDayMode>(nameof(ProjectScenarioModel.DisplaySettings.NonWorkingDayMode)) ?? nonWorkingDayMode;
+                    hideCost = row.Bool(nameof(ProjectScenarioModel.DisplaySettings.HideCost)) ?? hideCost;
+                    hideBilling = row.Bool(nameof(ProjectScenarioModel.DisplaySettings.HideBilling)) ?? hideBilling;
                 }
             }
 
@@ -1158,73 +578,44 @@ namespace Zametek.ViewModel.ProjectPlan
             bool areDisabled = false;
 
             {
+                ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceSettings, s_ResourceSettingsColumnTitles);
 
-                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceSettings);
-                if (sheet is not null)
+                foreach (ImportRow row in table?.Rows ?? [])
                 {
-                    DataTable dtTable = SheetToDataTable(sheet);
-                    DataColumnCollection columns = dtTable.Columns;
-
-                    // Check columns.
-                    var columnNames = new List<string>();
-
-                    foreach (string title in s_ResourceSettingsColumnTitles)
-                    {
-                        if (columns.Contains(title))
-                        {
-                            columnNames.Add(title);
-                        }
-                    }
-
-                    foreach (DataRow row in dtTable.Rows)
-                    {
-                        foreach (string columnName in columnNames)
-                        {
-                            columnName.ValueSwitchOn()
-                                .Case(nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitCost),
-                                    name =>
-                                    {
-                                        if (double.TryParse(row[name]?.ToString(), out double output))
-                                        {
-                                            defaultUnitCost = output;
-                                        }
-                                    })
-                                .Case(nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitBilling),
-                                    name =>
-                                    {
-                                        if (double.TryParse(row[name]?.ToString(), out double output))
-                                        {
-                                            defaultUnitBilling = output;
-                                        }
-                                    })
-                                .Case(nameof(ProjectScenarioImportModel.ResourceSettings.AreDisabled),
-                                    name =>
-                                    {
-                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
-                                        {
-                                            areDisabled = output;
-                                        }
-                                    });
-                        }
-                    }
+                    defaultUnitCost = row.Double(nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitCost)) ?? defaultUnitCost;
+                    defaultUnitBilling = row.Double(nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitBilling)) ?? defaultUnitBilling;
+                    areDisabled = row.Bool(nameof(ProjectScenarioImportModel.ResourceSettings.AreDisabled)) ?? areDisabled;
                 }
             }
 
-            IDictionary<int, DependentActivityModel> dependentActivities = ImportWorksheetActivities(workbook);
-            IDictionary<int, ResourceModel> resources = ImportWorksheetResources(workbook);
-            IList<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(workbook);
-            IDictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(workbook);
-            IDictionary<int, HolidayModel> holidays = ImportWorksheetHolidays(workbook);
+            (Dictionary<int, DependentActivityModel> dependentActivities, bool areActivitiesComplete) = ImportWorksheetActivities(reader, issues);
+            Dictionary<int, ResourceModel> resources = ImportWorksheetResources(reader);
+            List<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(reader);
+            Dictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(reader);
+            Dictionary<int, HolidayModel> holidays = ImportWorksheetHolidays(reader);
 
-            dependentActivities = ImportWorksheetActivityTrackers(workbook, dependentActivities);
+            ImportWorksheetActivityTrackers(reader, dependentActivities, areActivitiesComplete);
 
             foreach (ResourceModel resource in resources.Values)
             {
-                ImportWorksheetResourceTrackers(workbook, resource, dependentActivities);
+                ImportWorksheetResourceTrackers(reader, resource, dependentActivities, areActivitiesComplete);
             }
 
             (SimulationSettingsModel simulationSettings, SimulationSummaryModel? simulationSummary) =
-                XlsxSimulationSheets.ReadFromWorkbook(workbook);
+                XlsxSimulationSheets.ReadFromWorkbook(reader);
+
+            // A workbook with none of the sheets that the import reads is not a workbook of this application, and an import of
+            // it would give an empty plan and no word of why.
+            if (!reader.HasFoundASheet)
+            {
+                issues.Add(new ImportIssue
+                {
+                    Code = ImportIssueCodes.NoKnownSheet,
+                    Message = ImportIssueText.NoKnownSheet(),
+                });
+            }
+
+            issues.ThrowIfAny();
 
             return new ProjectScenarioImportModel
             {

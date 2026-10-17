@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -import-problems.
+        /// </summary>
+        public static string Suffix_ImportProblems {
+            get {
+                return ResourceManager.GetString("Suffix_ImportProblems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -resource.
         /// </summary>
         public static string Suffix_ResourceChart {

@@ -7,6 +7,7 @@ using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan.Tests;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -315,6 +316,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             string workbook = Path.Combine(m_TempDirectory, @"not-a-workbook.xlsx");
             await File.WriteAllTextAsync(workbook, @"This is not a workbook.");
+
+            await ShouldDoWhatZppDoesAsync(workbook, new CompileOptions(), HttpStatusCode.UnprocessableEntity, isImport: true);
+        }
+
+        [Fact]
+        public async Task Compile_Given_AWorkbookWithProblems_Then_DoesWhatZppDoes()
+        {
+            string workbook = Path.Combine(m_TempDirectory, @"problems.xlsx");
+            await File.WriteAllBytesAsync(
+                workbook,
+                new XlsxPackageBuilder()
+                    .Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities, s => s
+                        .Row(1, ("A", XlsxCellSpec.TitleOf(@"Id")), ("B", XlsxCellSpec.TitleOf(@"Duration")))
+                        .Row(2, ("A", XlsxCellSpec.NumberOf(1.0)), ("B", XlsxCellSpec.TextOf(@"soon")))
+                        .Row(3, ("A", XlsxCellSpec.NumberOf(2.0)), ("B", XlsxCellSpec.TextOf(@"later"))))
+                    .Build());
 
             await ShouldDoWhatZppDoesAsync(workbook, new CompileOptions(), HttpStatusCode.UnprocessableEntity, isImport: true);
         }

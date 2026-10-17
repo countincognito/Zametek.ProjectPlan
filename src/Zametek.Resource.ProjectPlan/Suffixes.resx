@@ -156,4 +156,7 @@
   <data name="Suffix_ScenarioChart" xml:space="preserve">
     <value>-scenario</value>
   </data>
+  <data name="Suffix_ImportProblems" xml:space="preserve">
+    <value>-import-problems</value>
+  </data>
 </root>

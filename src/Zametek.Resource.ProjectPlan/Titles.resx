@@ -225,4 +225,7 @@
   <data name="Title_Current" xml:space="preserve">
     <value>Current</value>
   </data>
+  <data name="Title_ImportProblems" xml:space="preserve">
+    <value>Import problems</value>
+  </data>
 </root>

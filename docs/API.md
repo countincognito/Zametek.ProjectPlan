@@ -407,6 +407,9 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `tooLarge` | A part larger than the limit. |
 | `unsupportedFormat` | A file in a format that the server does not read. |
 | `unreadable` | A file that the server cannot read. |
+| `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn` | The shape of a workbook to import: it has none of the sheets that the import reads, a sheet has no row of titles, a sheet that has rows has no column `Id`, or two columns have a title that the import reads. |
+| `missingValue`, `duplicateId`, `unknownActivity` | The rows of a workbook to import: an `Id` is blank, an `Id` is the `Id` of an earlier row of the sheet, or a row of a tracker sheet is for an activity that the workbook does not have. |
+| `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. |
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
 
@@ -489,6 +492,22 @@ A client cannot correct this by a change to what it says. It must correct how it
       { "kind": "errorLine", "text": "Unexpected character encountered while parsing value: P. Path '', line 0, position 0." }
     ]
   }
+}
+```
+
+A workbook to import can have problems in its cells. The server reads the whole workbook, imports nothing, and answers with this same kind of problem. `errors` has one error for each problem, at `#/import`, up to 100. The `code` of an error is one of the codes for the cells of a workbook (see the table of the [codes](#codes)). The `detail` of an error gives the place of the problem (the sheet and the cell, then the title of the column and the name of the row in brackets) and says what is wrong. The `detail` of the problem gives the number of problems. If the workbook has more than 100, the `detail` of the problem also says that only the first 100 are listed, and the console ends with the number of the others. A file that is not a workbook at all is not a problem of this type: its answer is the one above, with the code `unreadable`. This is the answer to a workbook with two cells of text in a column of numbers:
+
+```json
+{
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable",
+  "title": "The project could not be read",
+  "status": 422,
+  "detail": "The import was cancelled and nothing was changed. Problems found in the file: 2.",
+  "traceId": "8f1c0f3b3a5b4f0f8ad1c9c5a0f2b7e4",
+  "errors": [
+    { "pointer": "#/import", "code": "notAWholeNumber", "detail": "Activities!C2 (Duration, Design the wall): \"soon\" is not a whole number." },
+    { "pointer": "#/import", "code": "notAWholeNumber", "detail": "Activities!C3 (Duration, Build the wall): \"later\" is not a whole number." }
+  ]
 }
 ```
 
@@ -723,4 +742,5 @@ This is the first version of the API.
 - The status shows the result. `200` is for a project that compiled and where the job produced each output. `422` is for a project that the server cannot process. `500` is for a server that failed. `503` is for a server that is busy or ran out of time. Each problem is `application/problem+json`, with the id of its request and a list of each error.
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
+- The import of a workbook is all or nothing. A workbook with problems in its cells gives a `project-not-readable` problem with one error for each problem (up to 100), at `#/import`, and the codes `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn`, `missingValue`, `duplicateId`, `unknownActivity`, `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice` and `notAColor`.
 - The simulation of the schedule. Its settings are the project's. A request has the option `runSimulation` and the output `simulation`. The answer has the member `simulation`, and it lists the output as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). There is a problem, `simulation-not-possible`, with the code `noResult`, and a limit, `maxSimulationIterations`.

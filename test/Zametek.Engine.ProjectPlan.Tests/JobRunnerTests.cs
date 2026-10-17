@@ -257,6 +257,42 @@ namespace Zametek.Engine.ProjectPlan.Tests
             ex.InnerException.ShouldBeSameAs(failure);
         }
 
+        // A workbook that has problems in its cells is not imported. The job says so as it says a file that it cannot read, and the
+        // exception that it throws holds the problems, so that a host can say where each is.
+        [Fact]
+        public async Task RunAsync_Given_AWorkbookWithProblems_Then_ThrowsProjectNotReadableThatHoldsTheProblems()
+        {
+            var failure = new ScenarioImportException(
+                @"The workbook has problems.",
+                [new ImportIssue { Code = ImportIssueCodes.NotANumber, Message = @"Not a number.", Sheet = @"Resources", Row = 2, Column = 3 }],
+                5);
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FailingProjectScenarioFileImport(failure)));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx }));
+
+            ex.Message.ShouldBe(failure.Message);
+            ex.ImportProblems.ShouldBeSameAs(failure);
+            ex.ImportProblems.TotalCount.ShouldBe(5);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AReaderThatFailsForAnotherReason_Then_ThereAreNoProblemsOfCellsInTheException()
+        {
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FailingProjectScenarioFileImport(new InvalidDataException(@"Damaged."))));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx }));
+
+            ex.ImportProblems.ShouldBeNull();
+        }
+
         [Theory]
         [InlineData(typeof(OperationCanceledException))]
         [InlineData(typeof(OutOfMemoryException))]

@@ -1,0 +1,3094 @@
+{
+  "ProjectStart": "2026-01-05T00:00:00",
+  "Today": "2026-01-19T00:00:00",
+  "DependentActivities": [
+    {
+      "Activity": {
+        "Id": 1,
+        "DisplayOrder": 0,
+        "Name": "Start",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 2,
+        "DisplayOrder": 1,
+        "Name": "Requirements & Architecture",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          13,
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 25,
+        "MostLikelyDuration": 25,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": [
+          {
+            "Time": 0,
+            "ActivityId": 2,
+            "PercentageComplete": 5
+          },
+          {
+            "Time": 1,
+            "ActivityId": 2,
+            "PercentageComplete": 10
+          },
+          {
+            "Time": 2,
+            "ActivityId": 2,
+            "PercentageComplete": 15
+          },
+          {
+            "Time": 3,
+            "ActivityId": 2,
+            "PercentageComplete": 20
+          },
+          {
+            "Time": 4,
+            "ActivityId": 2,
+            "PercentageComplete": 25
+          }
+        ]
+      },
+      "Dependencies": [
+        1
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 3,
+        "DisplayOrder": 2,
+        "Name": "Project Planning",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          13,
+          14,
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        2
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 4,
+        "DisplayOrder": 3,
+        "Name": "Management Education",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          13,
+          14,
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        3
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 5,
+        "DisplayOrder": 4,
+        "Name": "SDP Review",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          13,
+          14,
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        2,
+        4
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 6,
+        "DisplayOrder": 5,
+        "Name": "UX Design",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          2
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 7,
+        "DisplayOrder": 6,
+        "Name": "Dev Training",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        5
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 8,
+        "DisplayOrder": 7,
+        "Name": "Test Plan",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          3
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 25,
+        "MostLikelyDuration": 25,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 9,
+        "DisplayOrder": 8,
+        "Name": "Test Harness",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          3
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 25,
+        "MostLikelyDuration": 25,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        8
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 10,
+        "DisplayOrder": 9,
+        "Name": "CM and setup",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          12
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 19,
+        "MostLikelyDuration": 19,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        5
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 11,
+        "DisplayOrder": 10,
+        "Name": "UI Design",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          2
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 20,
+        "MostLikelyDuration": 20,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        6
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 12,
+        "DisplayOrder": 11,
+        "Name": "Manual",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          13
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 20,
+        "MostLikelyDuration": 20,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        11
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 13,
+        "DisplayOrder": 12,
+        "Name": "Logging",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 14,
+        "DisplayOrder": 13,
+        "Name": "Message Bus",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 15,
+        "DisplayOrder": 14,
+        "Name": "Security",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 20,
+        "MostLikelyDuration": 20,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 16,
+        "DisplayOrder": 15,
+        "Name": "Metrics DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15,
+        42
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 17,
+        "DisplayOrder": 16,
+        "Name": "Members DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15,
+        21,
+        42
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 18,
+        "DisplayOrder": 17,
+        "Name": "Portfolios DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15,
+        17,
+        42
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 19,
+        "DisplayOrder": 18,
+        "Name": "Profiles DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15,
+        18,
+        42
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 20,
+        "DisplayOrder": 19,
+        "Name": "Workflows Repository",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        14,
+        42
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 21,
+        "DisplayOrder": 20,
+        "Name": "Regulations DB",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 5,
+        "MostLikelyDuration": 5,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15,
+        42
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 22,
+        "DisplayOrder": 21,
+        "Name": "Data Migration",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        17,
+        18,
+        19,
+        21,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 23,
+        "DisplayOrder": 22,
+        "Name": "Metrics Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 24,
+        "DisplayOrder": 23,
+        "Name": "Members Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        17,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 25,
+        "DisplayOrder": 24,
+        "Name": "Portfolios Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        18,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 26,
+        "DisplayOrder": 25,
+        "Name": "Profiles Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        19,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 27,
+        "DisplayOrder": 26,
+        "Name": "Workflows Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 20,
+        "MostLikelyDuration": 20,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        20,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 28,
+        "DisplayOrder": 27,
+        "Name": "Regulations Access",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        21,
+        43
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 29,
+        "DisplayOrder": 28,
+        "Name": "Regulations Engine ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 30,
+        "MostLikelyDuration": 30,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        28,
+        44
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 30,
+        "DisplayOrder": 29,
+        "Name": "Search Engine ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        24,
+        25,
+        44
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 31,
+        "DisplayOrder": 30,
+        "Name": "Analysis Engine",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        25,
+        26,
+        29,
+        44
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 32,
+        "DisplayOrder": 31,
+        "Name": "Abstract Manager",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 30,
+        "MostLikelyDuration": 30,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        27,
+        44
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 33,
+        "DisplayOrder": 32,
+        "Name": "Membership Manager ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        23,
+        24,
+        29,
+        32,
+        44,
+        45
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 34,
+        "DisplayOrder": 33,
+        "Name": "Market Manager",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        25,
+        30,
+        31,
+        32,
+        44,
+        45
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 35,
+        "DisplayOrder": 34,
+        "Name": "Performance Manager",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        32,
+        45
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 36,
+        "DisplayOrder": 35,
+        "Name": "Investor Portal",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        11,
+        33,
+        34,
+        35,
+        46
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 37,
+        "DisplayOrder": 36,
+        "Name": "Investee Portal",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 15,
+        "MostLikelyDuration": 15,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        11,
+        33,
+        34,
+        35,
+        46
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 38,
+        "DisplayOrder": 37,
+        "Name": "Mobile App",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 25,
+        "MostLikelyDuration": 25,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        11,
+        33,
+        34,
+        35,
+        46
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 39,
+        "DisplayOrder": 38,
+        "Name": "Manual Polishing",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          13
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        36,
+        37,
+        38
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 40,
+        "DisplayOrder": 39,
+        "Name": "System Testing",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          10,
+          11
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        9,
+        36,
+        37,
+        38
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 41,
+        "DisplayOrder": 40,
+        "Name": "System Rollout",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 10,
+        "MostLikelyDuration": 10,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        12,
+        22,
+        39,
+        40
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 42,
+        "DisplayOrder": 41,
+        "Name": "iFX Milestone",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 43,
+        "DisplayOrder": 42,
+        "Name": "DB Milestone",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 44,
+        "DisplayOrder": 43,
+        "Name": "Access Milestone",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 45,
+        "DisplayOrder": 44,
+        "Name": "Engine Milestone",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        30,
+        31,
+        32
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    },
+    {
+      "Activity": {
+        "Id": 46,
+        "DisplayOrder": 45,
+        "Name": "Manager Milestone",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [],
+        "TargetResourceOperator": "AND",
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "HasNoBilling": false,
+        "HasNoEffort": false,
+        "HasNoRisk": false,
+        "Duration": 0,
+        "MostLikelyDuration": 0,
+        "OptimisticDuration": null,
+        "PessimisticDuration": null,
+        "FreeSlack": null,
+        "TotalSlack": null,
+        "EarliestStartTime": null,
+        "LatestStartTime": null,
+        "EarliestFinishTime": null,
+        "LatestFinishTime": null,
+        "MinimumFreeSlack": null,
+        "MinimumEarliestStartTime": null,
+        "MinimumEarliestStartDateTime": null,
+        "MaximumLatestFinishTime": null,
+        "MaximumLatestFinishDateTime": null,
+        "OverrideColor": false,
+        "ColorFormat": {
+          "A": 0,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      "Dependencies": [
+        33,
+        34,
+        35
+      ],
+      "PlanningDependencies": [],
+      "ResourceDependencies": [],
+      "Successors": []
+    }
+  ],
+  "ResourceSettings": {
+    "Resources": [
+      {
+        "Id": 1,
+        "DisplayOrder": 14,
+        "Name": "DBA",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Other",
+        "InterActivityAllocationType": "None",
+        "UnitCost": 700.0,
+        "UnitBilling": 700.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 0,
+          "B": 255
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 2,
+        "DisplayOrder": 13,
+        "Name": "UX",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Other",
+        "InterActivityAllocationType": "None",
+        "UnitCost": 650.0,
+        "UnitBilling": 650.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 138,
+          "G": 43,
+          "B": 226
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 3,
+        "DisplayOrder": 12,
+        "Name": "TE",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 650.0,
+        "UnitBilling": 650.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 144,
+          "G": 238,
+          "B": 144
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 4,
+        "DisplayOrder": 11,
+        "Name": "DEV6",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 600.0,
+        "UnitBilling": 600.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 6,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 5,
+        "DisplayOrder": 10,
+        "Name": "DEV5",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 600.0,
+        "UnitBilling": 600.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 5,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 6,
+        "DisplayOrder": 9,
+        "Name": "DEV4",
+        "Notes": "",
+        "IsExplicitTarget": false,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 600.0,
+        "UnitBilling": 600.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 4,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 7,
+        "DisplayOrder": 8,
+        "Name": "DEV3",
+        "Notes": "",
+        "IsExplicitTarget": false,
+        "IsInactive": false,
+        "ActivityAllocationType": "Indirect",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 600.0,
+        "UnitBilling": 600.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 3,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 8,
+        "DisplayOrder": 7,
+        "Name": "DEV2",
+        "Notes": "",
+        "IsExplicitTarget": false,
+        "IsInactive": false,
+        "ActivityAllocationType": "Indirect",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 700.0,
+        "UnitBilling": 700.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 2,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 9,
+        "DisplayOrder": 6,
+        "Name": "DEV1",
+        "Notes": "",
+        "IsExplicitTarget": false,
+        "IsInactive": false,
+        "ActivityAllocationType": "Indirect",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 750.0,
+        "UnitBilling": 750.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 1,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 10,
+        "DisplayOrder": 5,
+        "Name": "QA2",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Indirect",
+        "InterActivityAllocationType": "Direct",
+        "UnitCost": 600.0,
+        "UnitBilling": 600.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 206,
+          "B": 209
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 11,
+        "DisplayOrder": 4,
+        "Name": "QA1",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Indirect",
+        "UnitCost": 600.0,
+        "UnitBilling": 600.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [
+          1
+        ],
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 206,
+          "B": 209
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 12,
+        "DisplayOrder": 3,
+        "Name": "CM",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Indirect",
+        "UnitCost": 650.0,
+        "UnitBilling": 650.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [
+          1
+        ],
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 139,
+          "B": 139
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 13,
+        "DisplayOrder": 2,
+        "Name": "PO",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Indirect",
+        "UnitCost": 1000.0,
+        "UnitBilling": 1000.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 220,
+          "G": 20,
+          "B": 60
+        },
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 13,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 13,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 13,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 13,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 13,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 13,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 13,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 13,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 13,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 13,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 14,
+        "DisplayOrder": 1,
+        "Name": "PM",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Indirect",
+        "UnitCost": 1000.0,
+        "UnitBilling": 1000.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 165,
+          "B": 0
+        },
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 14,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 14,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 14,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 14,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 14,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 14,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 14,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 14,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 14,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 14,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 15,
+        "DisplayOrder": 0,
+        "Name": "ARC",
+        "Notes": "",
+        "IsExplicitTarget": true,
+        "IsInactive": false,
+        "ActivityAllocationType": "Direct",
+        "InterActivityAllocationType": "Indirect",
+        "UnitCost": 1000.0,
+        "UnitBilling": 1000.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
+        "AllocationOrder": 0,
+        "InterActivityPhases": [],
+        "ColorFormat": {
+          "A": 255,
+          "R": 154,
+          "G": 205,
+          "B": 50
+        },
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 15,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 15,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 90
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 15,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 15,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 15,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 15,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 15,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 15,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 15,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 15,
+                "ActivityId": 2,
+                "ActivityName": "Requirements & Architecture",
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "DefaultUnitCost": 1.0,
+    "DefaultUnitBilling": 1.0,
+    "AreDisabled": false
+  },
+  "ActivitySeverities": [
+    {
+      "SlackLimit": 0,
+      "CriticalityWeight": 4.0,
+      "FibonacciWeight": 4.23606797749979,
+      "ColorFormat": {
+        "A": 255,
+        "R": 0,
+        "G": 0,
+        "B": 0
+      }
+    },
+    {
+      "SlackLimit": 10,
+      "CriticalityWeight": 3.0,
+      "FibonacciWeight": 2.618033988749895,
+      "ColorFormat": {
+        "A": 255,
+        "R": 255,
+        "G": 0,
+        "B": 0
+      }
+    },
+    {
+      "SlackLimit": 25,
+      "CriticalityWeight": 2.0,
+      "FibonacciWeight": 1.618033988749895,
+      "ColorFormat": {
+        "A": 255,
+        "R": 255,
+        "G": 215,
+        "B": 0
+      }
+    },
+    {
+      "SlackLimit": 2147483647,
+      "CriticalityWeight": 1.0,
+      "FibonacciWeight": 1.0,
+      "ColorFormat": {
+        "A": 255,
+        "R": 0,
+        "G": 128,
+        "B": 0
+      }
+    }
+  ],
+  "WorkStreams": [
+    {
+      "Id": 1,
+      "Name": "Development",
+      "IsPhase": true,
+      "DisplayOrder": 0,
+      "ColorFormat": {
+        "A": 255,
+        "R": 78,
+        "G": 193,
+        "B": 20
+      }
+    }
+  ],
+  "Holidays": [
+    {
+      "Id": 1,
+      "Name": "Weekends",
+      "Notes": "",
+      "StartDateTime": null,
+      "RecurrencePattern": "FREQ=WEEKLY;BYDAY=SA,SU"
+    },
+    {
+      "Id": 2,
+      "Name": "Christmas Day",
+      "Notes": "",
+      "StartDateTime": null,
+      "RecurrencePattern": "FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25"
+    }
+  ],
+  "DisplaySettings": {
+    "ShowDates": false,
+    "UseClassicDates": false,
+    "NonWorkingDayMode": "Weekends",
+    "HideCost": false,
+    "HideBilling": false,
+    "ArrowGraphShowNames": false,
+    "VertexGraphShowNames": false,
+    "ArrowGraphEdgeRoutingMode": "None",
+    "VertexGraphEdgeRoutingMode": "None",
+    "GanttChartGroupByMode": "None",
+    "GanttChartAnnotationStyle": "None",
+    "GanttChartShowGroupLabels": false,
+    "GanttChartShowProjectFinish": false,
+    "GanttChartShowTracking": false,
+    "GanttChartShowToday": false,
+    "GanttChartShowMilestones": false,
+    "GanttChartShowSlack": false,
+    "GanttChartShowNonWorkingDays": false,
+    "GanttChartShowConnections": [],
+    "ResourceChartAllocationMode": "Resource",
+    "ResourceChartScheduleMode": "Combined",
+    "ResourceChartDisplayStyle": "Slanted",
+    "ResourceChartShowToday": false,
+    "ResourceChartShowMilestones": false,
+    "EarnedValueShowProjections": false,
+    "EarnedValueShowToday": false,
+    "EarnedValueShowMilestones": false,
+    "EarnedValueCombineResources": false,
+    "EarnedValueScaleToOwnPlan": false,
+    "EarnedValueShowResources": []
+  },
+  "SimulationSettings": {
+    "Iterations": 1234,
+    "Distribution": "ModifiedBetaPert",
+    "ModifiedBetaShape": 6.5,
+    "Seed": 18446744073709551612,
+    "UseRandomSeed": false,
+    "TargetFinishTime": 77
+  },
+  "SimulationSummary": {
+    "IterationCount": 1234,
+    "ValidIterationCount": 1200,
+    "FailedIterationCount": 34,
+    "PlannedFinishTime": 60,
+    "TargetFinishTime": 77,
+    "TargetProbability": 0.875,
+    "Mean": 66.25,
+    "StandardDeviation": 4.5,
+    "Minimum": 50,
+    "Maximum": 90,
+    "Percentiles": [
+      {
+        "Percentile": 50,
+        "FinishTime": 66
+      },
+      {
+        "Percentile": 90,
+        "FinishTime": 73
+      }
+    ],
+    "BinWidth": 2,
+    "Bins": [
+      {
+        "FirstFinishTime": 50,
+        "LastFinishTime": 51,
+        "Count": 10,
+        "CumulativeShare": 0.25,
+        "PathGroupWeights": [
+          6.5,
+          3.5,
+          0.30000000000000004
+        ]
+      },
+      {
+        "FirstFinishTime": 52,
+        "LastFinishTime": 53,
+        "Count": 30,
+        "CumulativeShare": 1.0,
+        "PathGroupWeights": [
+          20.0,
+          10.0,
+          0.0
+        ]
+      }
+    ],
+    "Paths": [
+      {
+        "Rank": 1,
+        "Label": "Design > Build ~> Test",
+        "ShortLabel": "Design > Build ~> Test",
+        "IdLabel": "1 > 3 ~> 7",
+        "HasResourceLinks": true,
+        "Weight": 700.5,
+        "Share": 0.5837
+      },
+      {
+        "Rank": 2,
+        "Label": "Design > Test",
+        "ShortLabel": "Design > Test",
+        "IdLabel": "1 > 7",
+        "HasResourceLinks": false,
+        "Weight": 300.0,
+        "Share": 0.25
+      }
+    ],
+    "ChartPathCount": 2,
+    "OtherPathsWeight": 199.5,
+    "Activities": [
+      {
+        "ActivityId": 1,
+        "Name": "Design",
+        "CriticalIterationCount": 1200,
+        "CriticalityIndex": 1.0
+      },
+      {
+        "ActivityId": 3,
+        "Name": "Build, with a comma",
+        "CriticalIterationCount": 700,
+        "CriticalityIndex": 0.5833
+      }
+    ],
+    "HasResult": true
+  }
+}

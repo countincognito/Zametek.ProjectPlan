@@ -1360,7 +1360,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await ProjectScenarioImportAsync(filename);
+                    try
+                    {
+                        await ProjectScenarioImportAsync(filename);
+                    }
+                    catch (ScenarioImportException ex)
+                    {
+                        // The file was read in full and found to have problems, and nothing of it was imported. The open
+                        // project is as it was, and so it is not reset, as it is for a failure that may have left it half loaded.
+                        m_Logger.LogError(ex, "Failed to import scenario: {ProblemCount} problems in {ImportFile}", ex.TotalCount, filename);
+                        await ImportProblemsPresenter.ShowAsync(m_DialogService, ex, filename, directory);
+                        return;
+                    }
+
                     await RunAutoCompileAsync();
                 }
             }

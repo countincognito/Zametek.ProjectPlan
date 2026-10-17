@@ -1,5 +1,3 @@
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -84,39 +82,38 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void Export_Given_TheDefaultSettingsAndNoResult_Then_TheWorkbookHasNoSheetOfTheSimulation()
         {
             // The workbook that every plan gave before the simulation: nothing is new in it.
-            using XSSFWorkbook workbook = Open(Export(Scenario()));
+            XlsxBook workbook = XlsxPackageReader.Read(Export(Scenario()));
 
-            SheetNames(workbook).ShouldNotContain(x => x.StartsWith(@"Simulation", StringComparison.Ordinal));
+            workbook.SheetNames.ShouldNotContain(x => x.StartsWith(@"Simulation", StringComparison.Ordinal));
         }
 
         [Fact]
         public void Export_Given_ASettingThatIsNotTheDefault_Then_TheWorkbookHasTheSettingsSheetAndNoResult()
         {
-            using XSSFWorkbook workbook = Open(Export(Scenario(Settings())));
+            XlsxBook workbook = XlsxPackageReader.Read(Export(Scenario(Settings())));
 
-            SheetNames(workbook).Where(x => x.StartsWith(@"Simulation", StringComparison.Ordinal)).ShouldBe(
+            workbook.SheetNames.Where(x => x.StartsWith(@"Simulation", StringComparison.Ordinal)).ShouldBe(
                 [Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings]);
 
-            ISheet sheet = workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings);
-            HeaderOf(sheet).ShouldBe(["Iterations", "Distribution", "ModifiedBetaShape", "Seed", "UseRandomSeed", "TargetFinishTime"]);
-            IRow row = sheet.GetRow(1);
-            row.GetCell(0).NumericCellValue.ShouldBe(1234.0);
-            row.GetCell(1).StringCellValue.ShouldBe(nameof(DurationDistribution.ModifiedBetaPert));
-            row.GetCell(2).NumericCellValue.ShouldBe(6.5);
+            XlsxSheet sheet = workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings)!;
+            sheet.Header().ShouldBe(["Iterations", "Distribution", "ModifiedBetaShape", "Seed", "UseRandomSeed", "TargetFinishTime"]);
+            sheet.Cell(@"A2")!.Number.ShouldBe(1234.0);
+            sheet.Cell(@"B2")!.Text.ShouldBe(nameof(DurationDistribution.ModifiedBetaPert));
+            sheet.Cell(@"C2")!.Number.ShouldBe(6.5);
 
             // The seed is text, because a cell holds only 53 bits of a whole number.
-            row.GetCell(3).CellType.ShouldBe(CellType.String);
-            row.GetCell(3).StringCellValue.ShouldBe((ulong.MaxValue - 3).ToString(CultureInfo.InvariantCulture));
-            row.GetCell(4).BooleanCellValue.ShouldBeFalse();
-            row.GetCell(5).NumericCellValue.ShouldBe(77.0);
+            sheet.Cell(@"D2")!.Kind.ShouldBe(XlsxCellKind.Text);
+            sheet.Cell(@"D2")!.Text.ShouldBe((ulong.MaxValue - 3).ToString(CultureInfo.InvariantCulture));
+            sheet.Cell(@"E2")!.Boolean.ShouldBeFalse();
+            sheet.Cell(@"F2")!.Number.ShouldBe(77.0);
         }
 
         [Fact]
         public void Export_Given_AResult_Then_TheWorkbookHasTheSheetsOfTheSimulationWithTheirColumns()
         {
-            using XSSFWorkbook workbook = Open(Export(Scenario(Settings(), Summary())));
+            XlsxBook workbook = XlsxPackageReader.Read(Export(Scenario(Settings(), Summary())));
 
-            SheetNames(workbook).Where(x => x.StartsWith(@"Simulation", StringComparison.Ordinal)).ShouldBe(
+            workbook.SheetNames.Where(x => x.StartsWith(@"Simulation", StringComparison.Ordinal)).ShouldBe(
             [
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics,
@@ -126,19 +123,19 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities,
             ]);
 
-            HeaderOf(workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles)).ShouldBe(["Percentile", "FinishTime"]);
-            HeaderOf(workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram)).ShouldBe(
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles)!.Header().ShouldBe(["Percentile", "FinishTime"]);
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram)!.Header().ShouldBe(
                 ["FirstFinishTime", "LastFinishTime", "Count", "CumulativeShare", "PathGroupWeight1", "PathGroupWeight2", "PathGroupWeight3"]);
-            HeaderOf(workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths)).ShouldBe(
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths)!.Header().ShouldBe(
                 ["Rank", "Label", "ShortLabel", "IdLabel", "HasResourceLinks", "Weight", "Share"]);
-            HeaderOf(workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities)).ShouldBe(
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities)!.Header().ShouldBe(
                 ["ActivityId", "Name", "CriticalIterationCount", "CriticalityIndex"]);
 
-            // One row for each item of a list, under the titles.
-            workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles).LastRowNum.ShouldBe(2);
-            workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram).LastRowNum.ShouldBe(2);
-            workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths).LastRowNum.ShouldBe(2);
-            workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities).LastRowNum.ShouldBe(2);
+            // One row for each item of a list, under the titles: the titles are row 1, and there are two items in each list.
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles)!.LastRow.ShouldBe(3);
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram)!.LastRow.ShouldBe(3);
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths)!.LastRow.ShouldBe(3);
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities)!.LastRow.ShouldBe(3);
         }
 
         [Fact]
@@ -244,9 +241,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void Import_Given_TheSettingsAndNoStatistics_Then_TheSettingsAreKeptAndThereIsNoResult()
         {
             // A result is more than its lists: without the statistics there is none.
-            byte[] bytes = Edit(
+            byte[] bytes = XlsxPackageEditor.Edit(
                 Export(Scenario(Settings(), Summary())),
-                workbook => workbook.RemoveSheetAt(workbook.GetSheetIndex(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics)));
+                workbook => workbook.RemoveSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics));
 
             ProjectScenarioImportModel import = Import(bytes);
 
@@ -257,13 +254,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Import_Given_TheStatisticsAndNoLists_Then_TheResultHasTheStatisticsAndNoRows()
         {
-            byte[] bytes = Edit(
+            byte[] bytes = XlsxPackageEditor.Edit(
                 Export(Scenario(Settings(), Summary())),
-                workbook =>
-                {
-                    workbook.RemoveSheetAt(workbook.GetSheetIndex(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram));
-                    workbook.RemoveSheetAt(workbook.GetSheetIndex(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths));
-                });
+                workbook => workbook
+                    .RemoveSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram)
+                    .RemoveSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths));
 
             SimulationSummaryModel? summary = Import(bytes).SimulationSummary;
 
@@ -275,28 +270,27 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             summary.Activities.Count.ShouldBe(2);
         }
 
+        // A cell that holds no value of its kind is a problem, and the import is cancelled: each such cell is in the exception, and
+        // the cells that can be read are not.
         [Fact]
-        public void Import_Given_ACellThatHoldsNoValueOfItsKind_Then_ThatSettingIsTheDefaultAndTheOthersAreRead()
+        public void Import_Given_ACellThatHoldsNoValueOfItsKind_Then_TheImportIsCancelledWithAProblemForEachSuchCell()
         {
-            byte[] bytes = Edit(
+            string sheet = Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings;
+            byte[] bytes = XlsxPackageEditor.Edit(
                 Export(Scenario(Settings())),
-                workbook =>
-                {
-                    IRow row = workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings).GetRow(1);
-                    row.GetCell(0).SetCellValue(@"many");          // Iterations
-                    row.GetCell(1).SetCellValue(@"NotADistribution"); // Distribution
-                    row.GetCell(3).SetCellValue(@"-5");            // Seed
-                });
+                workbook => workbook
+                    .SetText(sheet, @"A2", @"many")             // Iterations
+                    .SetText(sheet, @"B2", @"NotADistribution") // Distribution
+                    .SetText(sheet, @"D2", @"-5"));             // Seed
 
-            SimulationSettingsModel settings = Import(bytes).SimulationSettings;
+            ScenarioImportException failure = Should.Throw<ScenarioImportException>(() => Import(bytes));
 
-            SimulationSettingsModel defaults = new();
-            settings.Iterations.ShouldBe(defaults.Iterations);
-            settings.Distribution.ShouldBe(defaults.Distribution);
-            settings.Seed.ShouldBe(defaults.Seed);
-            settings.ModifiedBetaShape.ShouldBe(6.5);
-            settings.UseRandomSeed.ShouldBeFalse();
-            settings.TargetFinishTime.ShouldBe(77);
+            failure.Issues.Select(x => (x.Code, x.Sheet, x.Cell, x.Value)).ShouldBe(
+            [
+                (ImportIssueCodes.NotAWholeNumber, sheet, @"A2", @"many"),
+                (ImportIssueCodes.NotAChoice, sheet, @"B2", @"NotADistribution"),
+                (ImportIssueCodes.NotAWholeNumber, sheet, @"D2", @"-5"),
+            ]);
         }
 
         [Fact]
@@ -354,26 +348,6 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var stream = new MemoryStream(workbook);
             return new XlsxScenarioFileImporter(new DateTimeCalculator(s_Clock)).ImportProjectScenarioXlsxFile(stream);
         }
-
-        private static XSSFWorkbook Open(byte[] workbook) => new(new MemoryStream(workbook));
-
-        // Opens the workbook, changes it, and writes it again, as a person does who works on it in Excel.
-        private static byte[] Edit(byte[] workbook, Action<XSSFWorkbook> change)
-        {
-            using XSSFWorkbook opened = Open(workbook);
-            change(opened);
-
-            using var output = new MemoryStream();
-            opened.Write(output, leaveOpen: true);
-            return output.ToArray();
-        }
-
-        private static List<string> SheetNames(IWorkbook workbook) =>
-            [.. Enumerable.Range(0, workbook.NumberOfSheets).Select(workbook.GetSheetName)];
-
-        // The titles of the first row of a sheet, in the order of its columns.
-        private static List<string> HeaderOf(ISheet sheet) =>
-            [.. Enumerable.Range(0, sheet.GetRow(0)?.LastCellNum ?? 0).Select(i => sheet.GetRow(0).GetCell(i)?.ToString() ?? string.Empty)];
 
         #endregion
     }

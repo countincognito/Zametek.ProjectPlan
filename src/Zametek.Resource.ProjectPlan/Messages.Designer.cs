@@ -412,6 +412,177 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The title "{0}" is also the title of column {1}..
+        /// </summary>
+        public static string Message_ImportDuplicateColumn {
+            get {
+                return ResourceManager.GetString("Message_ImportDuplicateColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Id {0} is also the Id of row {1}..
+        /// </summary>
+        public static string Message_ImportDuplicateId {
+            get {
+                return ResourceManager.GetString("Message_ImportDuplicateId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cell holds the Excel error {0}..
+        /// </summary>
+        public static string Message_ImportExcelError {
+            get {
+                return ResourceManager.GetString("Message_ImportExcelError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The first {0} are listed..
+        /// </summary>
+        public static string Message_ImportFirstProblemsListed {
+            get {
+                return ResourceManager.GetString("Message_ImportFirstProblemsListed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sheet has no column with the title "{0}"..
+        /// </summary>
+        public static string Message_ImportMissingColumn {
+            get {
+                return ResourceManager.GetString("Message_ImportMissingColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sheet has no row of titles..
+        /// </summary>
+        public static string Message_ImportMissingHeader {
+            get {
+                return ResourceManager.GetString("Message_ImportMissingHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cell is blank, but this column needs a value..
+        /// </summary>
+        public static string Message_ImportMissingValue {
+            get {
+                return ResourceManager.GetString("Message_ImportMissingValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to And {0} more..
+        /// </summary>
+        public static string Message_ImportMoreProblems {
+            get {
+                return ResourceManager.GetString("Message_ImportMoreProblems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook has none of the sheets that the import reads..
+        /// </summary>
+        public static string Message_ImportNoKnownSheet {
+            get {
+                return ResourceManager.GetString("Message_ImportNoKnownSheet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not one of these choices: {1}..
+        /// </summary>
+        public static string Message_ImportNotAChoice {
+            get {
+                return ResourceManager.GetString("Message_ImportNotAChoice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a color in the form #RRGGBB or #RRGGBBAA..
+        /// </summary>
+        public static string Message_ImportNotAColor {
+            get {
+                return ResourceManager.GetString("Message_ImportNotAColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a date..
+        /// </summary>
+        public static string Message_ImportNotADate {
+            get {
+                return ResourceManager.GetString("Message_ImportNotADate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a number..
+        /// </summary>
+        public static string Message_ImportNotANumber {
+            get {
+                return ResourceManager.GetString("Message_ImportNotANumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a whole number..
+        /// </summary>
+        public static string Message_ImportNotAWholeNumber {
+            get {
+                return ResourceManager.GetString("Message_ImportNotAWholeNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not TRUE or FALSE..
+        /// </summary>
+        public static string Message_ImportNotTrueOrFalse {
+            get {
+                return ResourceManager.GetString("Message_ImportNotTrueOrFalse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The import was cancelled and nothing was changed. Problems found in the file: {0}..
+        /// </summary>
+        public static string Message_ImportProblemsFound {
+            get {
+                return ResourceManager.GetString("Message_ImportProblemsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to save a report of all {0} problems?.
+        /// </summary>
+        public static string Message_ImportSaveReport {
+            get {
+                return ResourceManager.GetString("Message_ImportSaveReport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook has no activity with the Id {0}..
+        /// </summary>
+        public static string Message_ImportUnknownActivity {
+            get {
+                return ResourceManager.GetString("Message_ImportUnknownActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file cannot be read as a workbook. {0}.
+        /// </summary>
+        public static string Message_ImportUnreadableWorkbook {
+            get {
+                return ResourceManager.GetString("Message_ImportUnreadableWorkbook", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid Frequency value: &apos;{0}&apos;.
         /// </summary>
         public static string Message_InvalidFrequencyValue {

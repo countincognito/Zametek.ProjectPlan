@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 
@@ -15,8 +14,6 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     // however often, and wherever, it is done.
     public class XlsxScenarioFileExporterTests
     {
-        private static readonly XNamespace s_DcTerms = @"http://purl.org/dc/terms/";
-
         [Fact]
         public async Task Export_Given_AClock_Then_TheWorkbookIsStampedWithItsTime()
         {
@@ -27,7 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             using var archive = new ZipArchive(new MemoryStream(workbook), ZipArchiveMode.Read);
             archive.Entries.Select(x => x.LastWriteTime.DateTime).Distinct().ShouldBe([new DateTime(2001, 2, 3, 4, 5, 6)]);
-            ReadCreated(archive).ShouldBe(@"2001-02-03T04:05:06Z");
+            XlsxPackageReader.Read(workbook).Created.ShouldBe(new DateTime(2001, 2, 3, 4, 5, 6, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -41,7 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // A zip holds the local clock time; the workbook's properties hold UTC.
             using var archive = new ZipArchive(new MemoryStream(workbook), ZipArchiveMode.Read);
             archive.Entries.Select(x => x.LastWriteTime.DateTime).Distinct().ShouldBe([new DateTime(2001, 2, 3, 9, 35, 6)]);
-            ReadCreated(archive).ShouldBe(@"2001-02-03T04:05:06Z");
+            XlsxPackageReader.Read(workbook).Created.ShouldBe(new DateTime(2001, 2, 3, 4, 5, 6, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -67,7 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var archive = new ZipArchive(new MemoryStream(workbook), ZipArchiveMode.Read);
             archive.Entries.Select(x => x.LastWriteTime.DateTime).Distinct().ShouldBe(
                 [new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond)]);
-            ReadCreated(archive).ShouldBe($@"{year:D4}-{month:D2}-{day:D2}T00:00:00Z");
+            XlsxPackageReader.Read(workbook).Created.ShouldBe(new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc));
         }
 
         private static byte[] Export(ProjectScenarioModel scenario, TimeProvider clock)
@@ -76,12 +73,6 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var stream = new MemoryStream();
             exporter.ExportProjectScenarioXlsxFile(scenario, new ResourceSeriesSetModel(), new TrackingSeriesSetModel(), showDates: false, stream);
             return stream.ToArray();
-        }
-
-        private static string ReadCreated(ZipArchive archive)
-        {
-            using Stream core = archive.GetEntry(@"docProps/core.xml")!.Open();
-            return XDocument.Load(core).Descendants(s_DcTerms + @"created").Single().Value;
         }
     }
 }

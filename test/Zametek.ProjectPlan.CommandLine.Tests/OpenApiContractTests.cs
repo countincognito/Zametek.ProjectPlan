@@ -468,7 +468,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void Codes_Given_TheCode_Then_TheDescriptionAndTheReferenceListEachOne()
         {
-            string[] codes = [.. typeof(ProblemCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral).Select(x => (string)x.GetRawConstantValue()!)];
+            string[] codes =
+            [
+                .. typeof(ProblemCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral).Select(x => (string)x.GetRawConstantValue()!),
+
+                // The kinds of problem in the cells of a workbook are codes of the errors of a problem too. The code of a file that is not a
+                // workbook at all is not one of them: that file has the code unreadable, as a file that is not a project has.
+                .. typeof(ImportIssueCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral && x.Name != nameof(ImportIssueCodes.UnreadableWorkbook)).Select(x => (string)x.GetRawConstantValue()!),
+            ];
             codes.ShouldNotBeEmpty();
 
             JsonArray anyOf = Schema(@"ProblemError")[@"properties"]![@"code"]![@"anyOf"]!.AsArray();

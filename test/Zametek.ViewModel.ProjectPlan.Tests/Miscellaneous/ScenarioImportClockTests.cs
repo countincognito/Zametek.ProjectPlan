@@ -1,4 +1,3 @@
-using NPOI.XSSF.UserModel;
 using Shouldly;
 using System;
 using System.IO;
@@ -35,10 +34,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void ImportProjectScenarioXlsxFile_Given_AWorkbookWithoutDates_Then_ItStartsOnTheClocksDay()
         {
-            // No General sheet, so the workbook says neither when the plan starts nor what day it is.
-            using var workbook = new MemoryStream();
-            new XSSFWorkbook().Write(workbook, leaveOpen: true);
-            workbook.Position = 0;
+            // A General sheet with the titles and no dates, so the workbook says neither when the plan starts nor what day it is.
+            using var workbook = new MemoryStream(
+                new XlsxPackageBuilder()
+                    .Sheet(
+                        Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral,
+                        s => s.Row(1, ("A", XlsxCellSpec.TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))), ("B", XlsxCellSpec.TitleOf(nameof(ProjectScenarioImportModel.Today)))))
+                    .Build());
 
             ProjectScenarioImportModel imported = new XlsxScenarioFileImporter(new DateTimeCalculator(s_Clock))
                 .ImportProjectScenarioXlsxFile(workbook);

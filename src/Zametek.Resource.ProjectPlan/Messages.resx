@@ -720,4 +720,61 @@
   <data name="Message_ServePlainHttpBesideTls" xml:space="preserve">
     <value>{0} is plain http and {1} is https, and other machines can reach both: a client could use the one that is not protected. Listen beyond this machine on one kind of address.</value>
   </data>
+  <data name="Message_ImportNotAWholeNumber" xml:space="preserve">
+    <value>"{0}" is not a whole number.</value>
+  </data>
+  <data name="Message_ImportNotANumber" xml:space="preserve">
+    <value>"{0}" is not a number.</value>
+  </data>
+  <data name="Message_ImportNotTrueOrFalse" xml:space="preserve">
+    <value>"{0}" is not TRUE or FALSE.</value>
+  </data>
+  <data name="Message_ImportNotADate" xml:space="preserve">
+    <value>"{0}" is not a date.</value>
+  </data>
+  <data name="Message_ImportNotAChoice" xml:space="preserve">
+    <value>"{0}" is not one of these choices: {1}.</value>
+  </data>
+  <data name="Message_ImportNotAColor" xml:space="preserve">
+    <value>"{0}" is not a color in the form #RRGGBB or #RRGGBBAA.</value>
+  </data>
+  <data name="Message_ImportExcelError" xml:space="preserve">
+    <value>The cell holds the Excel error {0}.</value>
+  </data>
+  <data name="Message_ImportMissingValue" xml:space="preserve">
+    <value>The cell is blank, but this column needs a value.</value>
+  </data>
+  <data name="Message_ImportDuplicateId" xml:space="preserve">
+    <value>The Id {0} is also the Id of row {1}.</value>
+  </data>
+  <data name="Message_ImportUnknownActivity" xml:space="preserve">
+    <value>The workbook has no activity with the Id {0}.</value>
+  </data>
+  <data name="Message_ImportMissingColumn" xml:space="preserve">
+    <value>The sheet has no column with the title "{0}".</value>
+  </data>
+  <data name="Message_ImportDuplicateColumn" xml:space="preserve">
+    <value>The title "{0}" is also the title of column {1}.</value>
+  </data>
+  <data name="Message_ImportMissingHeader" xml:space="preserve">
+    <value>The sheet has no row of titles.</value>
+  </data>
+  <data name="Message_ImportNoKnownSheet" xml:space="preserve">
+    <value>The workbook has none of the sheets that the import reads.</value>
+  </data>
+  <data name="Message_ImportUnreadableWorkbook" xml:space="preserve">
+    <value>The file cannot be read as a workbook. {0}</value>
+  </data>
+  <data name="Message_ImportProblemsFound" xml:space="preserve">
+    <value>The import was cancelled and nothing was changed. Problems found in the file: {0}.</value>
+  </data>
+  <data name="Message_ImportMoreProblems" xml:space="preserve">
+    <value>And {0} more.</value>
+  </data>
+  <data name="Message_ImportSaveReport" xml:space="preserve">
+    <value>Do you want to save a report of all {0} problems?</value>
+  </data>
+  <data name="Message_ImportFirstProblemsListed" xml:space="preserve">
+    <value>The first {0} are listed.</value>
+  </data>
 </root>

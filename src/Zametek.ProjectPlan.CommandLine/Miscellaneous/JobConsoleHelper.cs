@@ -59,16 +59,29 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // Prints, on stderr, why a run stopped on an exception, and returns the exit code the run ends with: a
         // compilation that ran out of time has its own, and anything else is a failure. A scenario the job could not
-        // select is described in zpp's words rather than the engine's.
+        // select is described in zpp's words rather than the engine's. A workbook that has problems in its cells is said one
+        // problem to a line, with the place of each, up to maximumImportProblems lines (the service that returns the console
+        // of a job keeps it short).
         public static async Task<ExitCode> WriteFailureAsync(
             IJobConsole console,
-            Exception exception)
+            Exception exception,
+            int maximumImportProblems = int.MaxValue)
         {
             ArgumentNullException.ThrowIfNull(console);
             ArgumentNullException.ThrowIfNull(exception);
 
             switch (exception)
             {
+                case ProjectNotReadableException { ImportProblems: ScenarioImportException import }:
+                    // A line at a time, as every other message of zpp is written, so that the line ends are the platform's.
+                    await console.WriteErrorLineAsync(ImportIssueText.BuildHeader(import.TotalCount));
+
+                    foreach (string line in ImportIssueText.ListLines(import.Issues, import.TotalCount, maximumImportProblems))
+                    {
+                        await console.WriteErrorLineAsync(line);
+                    }
+
+                    return ExitCode.Failure;
                 case ScenarioSelectionException ex:
                     await console.WriteErrorLineAsync(BuildScenarioSelectionMessage(ex));
                     return ExitCode.Failure;

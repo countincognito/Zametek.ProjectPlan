@@ -56,6 +56,18 @@ Import a plan from Microsoft Project or Excel, and convert it to a plan file:
 zpp -m plan.mpp -o plan.zpp
 ```
 
+The import of an Excel workbook is all or nothing. `zpp` reads the whole workbook and collects each problem in its cells. If it finds one or more, it imports nothing and exits with code 1. It writes the problems to the standard error stream, one in each line. Each line gives the place of the problem (the sheet and the cell), the title of the column and the name of the row, and then it says what is wrong:
+
+```
+The import was cancelled and nothing was changed. Problems found in the file: 2.
+Activities!C2 (Duration, Design the wall): "soon" is not a whole number.
+Activities!C3 (Duration, Build the wall): "later" is not a whole number.
+```
+
+A blank cell is not a problem. It gives the default of its column. A cell is a problem when it holds a value that is not of the kind of its column. Examples are text in a column of numbers, a number in a column of true and false values, and an error of Excel such as `#N/A`. A row is also a problem when its `Id` is blank or is the `Id` of an earlier row, and when a row of a tracker sheet is for an activity that the workbook does not have. A column or a sheet that `zpp` does not know is not a problem: `zpp` does not read it. Thus, you can add columns and sheets to a workbook that `zpp` exported, and import it again. `zpp` keeps the first 10000 problems and counts the others. The last line says how many there are.
+
+A formula is its result, and a date cell is its date. A number that you type as text is read as the culture of the computer writes numbers, and without a thousands separator: in a culture where a comma is the decimal mark, `1,5` is 1.5 and `1.5` is a problem.
+
 For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
 
 `zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle.

@@ -163,6 +163,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static ColorFormatModel HtmlHexCodeToColorFormat(string input)
         {
+            return TryHtmlHexCodeToColorFormat(input, out ColorFormatModel color)
+                ? color
+                : None();
+        }
+
+        // Whether the input is a color in the form #RRGGBB or #RRGGBBAA. If it is not, the color is None.
+        public static bool TryHtmlHexCodeToColorFormat(string input, out ColorFormatModel color)
+        {
             MatchCollection matches = s_HtmlHexMatch.Matches(input);
 
             if (matches.Count > 0
@@ -173,27 +181,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (bytes.Length == 3)
                 {
-                    return new ColorFormatModel
+                    color = new ColorFormatModel
                     {
                         R = bytes[0],
                         G = bytes[1],
                         B = bytes[2],
                         A = byte.MaxValue
                     };
+                    return true;
                 }
                 else if (bytes.Length == 4)
                 {
-                    return new ColorFormatModel
+                    color = new ColorFormatModel
                     {
                         R = bytes[0],
                         G = bytes[1],
                         B = bytes[2],
                         A = bytes[3]
                     };
+                    return true;
                 }
             }
 
-            return None();
+            color = None();
+            return false;
         }
 
         public static string BytesToHtmlHexCode(byte r, byte g, byte b)

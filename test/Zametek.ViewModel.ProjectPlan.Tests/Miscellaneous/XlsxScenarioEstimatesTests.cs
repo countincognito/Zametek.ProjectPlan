@@ -1,5 +1,3 @@
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -77,24 +75,20 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             new XlsxScenarioFileExporter(calculator)
                 .ExportProjectScenarioXlsxFile(scenario, new ResourceSeriesSetModel(), new TrackingSeriesSetModel(), showDates: false, stream);
 
-            stream.Position = 0;
-            using var workbook = new XSSFWorkbook(stream);
-            ISheet sheet = Enumerable.Range(0, workbook.NumberOfSheets)
-                .Select(workbook.GetSheetAt)
-                .Single(x => HeaderOf(x).Contains(@"ExpectedDuration"));
-            List<string> header = HeaderOf(sheet);
+            XlsxSheet sheet = XlsxPackageReader.Read(stream.ToArray()).Sheets.Single(x => x.Header().Contains(@"ExpectedDuration"));
+            List<string> header = [.. sheet.Header()];
 
             // The columns sit with the estimates that they come from.
             header.IndexOf(@"ExpectedDuration").ShouldBe(header.IndexOf(@"PessimisticDuration") + 1);
             header.IndexOf(@"StandardDeviation").ShouldBe(header.IndexOf(@"ExpectedDuration") + 1);
 
-            var rows = Enumerable.Range(1, 3)
-                .Select(sheet.GetRow)
+            // The rows under the titles: row 2 of the sheet is the first of the activities.
+            var rows = Enumerable.Range(2, 3)
                 .ToDictionary(
-                    x => (int)x.GetCell(header.IndexOf(nameof(ActivityModel.Id))).NumericCellValue,
-                    x => (
-                        Expected: x.GetCell(header.IndexOf(@"ExpectedDuration")).NumericCellValue,
-                        StandardDeviation: x.GetCell(header.IndexOf(@"StandardDeviation")).NumericCellValue));
+                    row => (int)sheet.Cell(row, header.IndexOf(nameof(ActivityModel.Id)) + 1)!.Number,
+                    row => (
+                        Expected: sheet.Cell(row, header.IndexOf(@"ExpectedDuration") + 1)!.Number,
+                        StandardDeviation: sheet.Cell(row, header.IndexOf(@"StandardDeviation") + 1)!.Number));
 
             rows[1].ShouldBe((9.0, 1.0));
             rows[2].ShouldBe((6.0, 0.0));
@@ -150,10 +144,6 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     PessimisticDuration = pessimistic,
                 },
             };
-
-        // The titles of the first row of a sheet, in the order of its columns.
-        private static List<string> HeaderOf(ISheet sheet) =>
-            [.. Enumerable.Range(0, sheet.GetRow(0)?.LastCellNum ?? 0).Select(i => sheet.GetRow(0).GetCell(i)?.ToString() ?? string.Empty)];
 
         private static (int Duration, int? MostLikely, int? Optimistic, int? Pessimistic) Shape(ActivityModel activity) =>
             (activity.Duration, activity.MostLikelyDuration, activity.OptimisticDuration, activity.PessimisticDuration);

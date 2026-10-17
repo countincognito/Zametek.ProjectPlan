@@ -31,6 +31,10 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ProjectPart = @"project";
         private const string c_ImportPart = @"import";
         private const string c_OptionsPart = @"options";
+
+        // The most problems of a workbook that a response lists, in its errors and in its console. A workbook can have thousands,
+        // and a response is not the place for them: the total is said, and the caller has the file to look at.
+        private const int c_MaximumImportProblems = 100;
         private const string c_IncludeParameter = @"include";
         private const string c_ConsoleInclusion = @"console";
         private const string c_JsonMediaType = @"application/json";
@@ -691,6 +695,18 @@ namespace Zametek.ProjectPlan.CommandLine
 
             switch (exception)
             {
+                // A workbook that has problems in its cells: each problem is an error. A file that is not a workbook at all is the one
+                // problem that is not in a cell, and the answer to it is the one that a file that is not a project has.
+                case ProjectNotReadableException { ImportProblems: ScenarioImportException { Issues: not [{ Code: ImportIssueCodes.UnreadableWorkbook }] } import }:
+                    exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception, c_MaximumImportProblems);
+                    kind = ProblemKind.ProjectNotReadable;
+                    detail = import.TotalCount > c_MaximumImportProblems
+                        ? $@"{ImportIssueText.BuildHeader(import.TotalCount)} {ImportIssueText.BuildListed(c_MaximumImportProblems)}"
+                        : ImportIssueText.BuildHeader(import.TotalCount);
+
+                    // Each problem is an error with the code of its kind and the place in the sheets in its words.
+                    errors.AddRange(import.Issues.Take(c_MaximumImportProblems).Select(x => PartError(part, x.Code, ImportIssueText.Describe(x))));
+                    break;
                 case ProjectNotReadableException:
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
                     kind = ProblemKind.ProjectNotReadable;

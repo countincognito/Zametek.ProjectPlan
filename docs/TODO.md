@@ -430,6 +430,18 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The server writes the progress to its log, and the client waits without a sign. A simulation of a large plan can take minutes. The API has no operation for a job that is in progress (ASY-1 is a deviation of the API), and so the choices are a response that streams, or a job that the client can ask about. Both change the API.
 
+- [ ] **Show the problems of an import in a window of their own** *(2026-10-17)*
+
+  The desktop shows the first ten problems of a workbook in an error, and it offers to save a CSV report of all of them (`ImportProblemsPresenter`). A window with a grid (sheet, cell, column, row, value, message), with the buttons "Save report" and "Copy", is easier to use when a workbook has hundreds of problems. `ScenarioImportException.Issues` already holds all that the window needs.
+
+- [ ] **Write the report of the import problems from `zpp`** *(2026-10-17)*
+
+  `zpp` writes one line for each problem to the standard error stream, and a server lists the first 100. An option like `--import-report <file>` can write the same CSV report as the desktop (`ImportIssueText.WriteReport`). The server can return it as an output of the job.
+
+- [ ] **Report the problems of an MS Project import in the same way** *(2026-10-17)*
+
+  The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The generic catch of `MainViewModel.ImportProjectScenarioFileAsync` then resets the open project. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way, and the open project stays as it is. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
+
 - [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
 
   `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.
