@@ -78,6 +78,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_VertexGraphCompiler = vertexGraphCompiler;
             m_DataLock = dataLock;
 
+            NormaliseEstimates();
+
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
             RefreshResourceSelector();
@@ -267,6 +269,82 @@ namespace Zametek.ViewModel.ProjectPlan
             Validate(MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, input);
         }
 
+        /// <summary>
+        /// The one place where the estimates change. It moves the values that the rule asks to be
+        /// moved, works out the duration that follows from them, checks that duration against the
+        /// constraints, writes the four values together, and then announces them.
+        /// </summary>
+        /// <remarks>
+        /// The four values are written under the leaf lock as one, so a compilation that takes its
+        /// copy of the activity never sees a most likely duration of one edit with the duration of
+        /// another. They are announced after the lock is released (ARCHITECTURE section 7 rules 6
+        /// and 11).
+        /// </remarks>
+        private void ApplyEstimates(int mostLikely, int? ownOptimistic, int? ownPessimistic)
+        {
+            (int? optimistic, int? pessimistic) = EstimateHelper.PullToMostLikely(mostLikely, ownOptimistic, ownPessimistic);
+            (int effectiveOptimistic, int effectiveMostLikely, int effectivePessimistic) =
+                EstimateHelper.Effective(mostLikely, optimistic, pessimistic);
+            int duration = EstimateHelper.ExpectedDuration(effectiveOptimistic, effectiveMostLikely, effectivePessimistic);
+
+            ValidateDuration(duration);
+
+            lock (m_DataLock)
+            {
+                DependentActivity.MostLikelyDuration = effectiveMostLikely;
+                DependentActivity.OwnOptimisticDuration = optimistic;
+                DependentActivity.OwnPessimisticDuration = pessimistic;
+                DependentActivity.Duration = duration;
+            }
+
+            this.RaisePropertyChanged(nameof(MostLikelyDuration));
+            this.RaisePropertyChanged(nameof(OwnOptimisticDuration));
+            this.RaisePropertyChanged(nameof(OwnPessimisticDuration));
+            this.RaisePropertyChanged(nameof(OptimisticDuration));
+            this.RaisePropertyChanged(nameof(PessimisticDuration));
+            this.RaisePropertyChanged(nameof(StandardDeviation));
+            this.RaisePropertyChanged(nameof(HasOwnEstimates));
+            this.RaisePropertyChanged(nameof(Duration));
+            this.RaisePropertyChanged(nameof(IsDummy));
+            this.RaisePropertyChanged(nameof(IsCritical));
+            this.RaisePropertyChanged(nameof(EarliestFinishTime));
+            this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
+            this.RaisePropertyChanged(nameof(LatestStartTime));
+            this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
+            this.RaisePropertyChanged(nameof(TotalSlack));
+            this.RaisePropertyChanged(nameof(InterferingSlack));
+        }
+
+        /// <summary>
+        /// Brings the estimates of an activity that has just been made inside the rule, and its
+        /// duration into line with them. The activity comes from a file, an import, a paste or a
+        /// test, and it is only as consistent as its source. A model with no estimates is the
+        /// common case, and for it this changes nothing: the duration is the most likely duration.
+        /// </summary>
+        /// <remarks>
+        /// It announces nothing and checks nothing against the constraints: nobody is listening
+        /// yet, and the constraints are not checked for the values that a plan was saved with
+        /// either.
+        /// </remarks>
+        private void NormaliseEstimates()
+        {
+            lock (m_DataLock)
+            {
+                int mostLikely = Math.Max(0, DependentActivity.MostLikelyDuration);
+                (int? optimistic, int? pessimistic) = EstimateHelper.PullToMostLikely(
+                    mostLikely,
+                    DependentActivity.OwnOptimisticDuration,
+                    DependentActivity.OwnPessimisticDuration);
+                (int effectiveOptimistic, _, int effectivePessimistic) =
+                    EstimateHelper.Effective(mostLikely, optimistic, pessimistic);
+
+                DependentActivity.MostLikelyDuration = mostLikely;
+                DependentActivity.OwnOptimisticDuration = optimistic;
+                DependentActivity.OwnPessimisticDuration = pessimistic;
+                DependentActivity.Duration = EstimateHelper.ExpectedDuration(effectiveOptimistic, mostLikely, effectivePessimistic);
+            }
+        }
+
         private void ValidateMinimumFreeSlack(int? input)
         {
             Validate(input, MinimumEarliestStartTime, MaximumLatestFinishTime, Duration);
@@ -289,6 +367,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int duration)
         {
             ClearErrors(nameof(Duration));
+            ClearErrors(nameof(MostLikelyDuration));
             ClearErrors(nameof(MinimumFreeSlack));
             ClearErrors(nameof(MinimumEarliestStartTime));
             ClearErrors(nameof(MinimumEarliestStartDateTime));
@@ -300,6 +379,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (errorMessage is not null)
                 {
                     SetError(nameof(Duration), errorMessage);
+                    SetError(nameof(MostLikelyDuration), errorMessage);
                     SetError(nameof(MinimumEarliestStartTime), errorMessage);
                     SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
                     SetError(nameof(MaximumLatestFinishTime), errorMessage);
@@ -665,32 +745,106 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        /// <summary>
+        /// The duration that the compiler schedules: the PERT expected duration of the estimates,
+        /// rounded to a whole day. For an activity that has no estimates of its own it is the most
+        /// likely duration.
+        /// </summary>
+        /// <remarks>
+        /// Setting it sets the most likely duration, which is what a caller that sets a duration
+        /// means. The duration that the activity then has is the one that its estimates give, and
+        /// that is the value that was set only when the activity has no estimates of its own.
+        /// </remarks>
         public int Duration
         {
             get => DependentActivity.Duration;
+            set => MostLikelyDuration = value;
+        }
+
+        /// <summary>
+        /// The duration that the user expects the activity to take most often. A value that moves
+        /// past an optimistic or a pessimistic duration that the user gave moves that duration to
+        /// the same value.
+        /// </summary>
+        public int MostLikelyDuration
+        {
+            get => DependentActivity.MostLikelyDuration;
+            set => ApplyEstimates(Math.Max(0, value), OwnOptimisticDuration, OwnPessimisticDuration);
+        }
+
+        public int? OwnOptimisticDuration
+        {
+            get => DependentActivity.OwnOptimisticDuration;
+            set => ApplyEstimates(MostLikelyDuration, value, OwnPessimisticDuration);
+        }
+
+        public int? OwnPessimisticDuration
+        {
+            get => DependentActivity.OwnPessimisticDuration;
+            set => ApplyEstimates(MostLikelyDuration, OwnOptimisticDuration, value);
+        }
+
+        public int OptimisticDuration
+        {
+            get => EstimateHelper.Effective(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration).Optimistic;
             set
             {
-                if (value < 0)
+                ClearErrors(nameof(OptimisticDuration));
+
+                int mostLikely = MostLikelyDuration;
+                int limited = Math.Clamp(value, 0, mostLikely);
+                if (limited != value)
                 {
-                    value = 0;
+                    SetError(
+                        nameof(OptimisticDuration),
+                        mostLikely == 0
+                            ? Resource.ProjectPlan.Labels.Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero
+                            : Resource.ProjectPlan.Labels.Label_OptimisticMustBeBetweenZeroAndMostLikely);
                 }
 
-                ValidateDuration(value);
-
-                lock (m_DataLock)
-                {
-                    DependentActivity.Duration = value;
-                }
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(IsDummy));
-                this.RaisePropertyChanged(nameof(IsCritical));
-                this.RaisePropertyChanged(nameof(EarliestFinishTime));
-                this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
-                this.RaisePropertyChanged(nameof(LatestStartTime));
-                this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
-                this.RaisePropertyChanged(nameof(TotalSlack));
-                this.RaisePropertyChanged(nameof(InterferingSlack));
+                ApplyEstimates(mostLikely, limited, OwnPessimisticDuration);
             }
+        }
+
+        public int PessimisticDuration
+        {
+            get => EstimateHelper.Effective(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration).Pessimistic;
+            set
+            {
+                ClearErrors(nameof(PessimisticDuration));
+
+                int mostLikely = MostLikelyDuration;
+                int limited = mostLikely == 0 ? 0 : Math.Max(value, mostLikely);
+                if (limited != value)
+                {
+                    SetError(
+                        nameof(PessimisticDuration),
+                        mostLikely == 0
+                            ? Resource.ProjectPlan.Labels.Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero
+                            : Resource.ProjectPlan.Labels.Label_PessimisticMustBeGreaterThanOrEqualToMostLikely);
+                }
+
+                ApplyEstimates(mostLikely, OwnOptimisticDuration, limited);
+            }
+        }
+
+        public double StandardDeviation
+        {
+            get
+            {
+                (int optimistic, _, int pessimistic) =
+                    EstimateHelper.Effective(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration);
+                return EstimateHelper.StandardDeviation(optimistic, pessimistic);
+            }
+        }
+
+        public bool HasOwnEstimates => OwnOptimisticDuration.HasValue || OwnPessimisticDuration.HasValue;
+
+        public void ResetEstimates()
+        {
+            ClearErrors(nameof(OptimisticDuration));
+            ClearErrors(nameof(PessimisticDuration));
+            ApplyEstimates(MostLikelyDuration, null, null);
         }
 
         public int? TotalSlack => DependentActivity.TotalSlack;
@@ -1061,6 +1215,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 HasNoEffort = HasNoEffort,
                 HasNoRisk = HasNoRisk,
                 Duration = Duration,
+                MostLikelyDuration = MostLikelyDuration,
+                OptimisticDuration = OwnOptimisticDuration,
+                PessimisticDuration = OwnPessimisticDuration,
                 FreeSlack = FreeSlack,
                 TotalSlack = TotalSlack,
                 EarliestStartTime = EarliestStartTime,

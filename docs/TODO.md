@@ -157,7 +157,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
      Treat the channel as UNVERIFIED. Do not treat it as broken. The first step is to open the developer console against a running browser head and see if the startup line is there. The result matters either way. A web app with logging that goes nowhere reports a failure as a blank canvas and nothing else.
   6. **Prune what a browser cannot use.** Remove `Process.Start` in `UriHelper` (use the own navigation of the browser). Remove the file-writing thread of `PerfTelemetry`. Hide the MS Project import from the UI, so that it does not reach `UnavailableMicrosoftProjectFileImporter`.
-  7. **Check `System.Drawing.Common`.** `Zametek.ViewModel.ProjectPlan` has a direct `PackageReference` to it. Nothing appears to use it, and it throws on any platform other than Windows. If nothing uses it, delete it.
 
 - [ ] **Decide how to host and deploy the web app** *(2026-08-21)*
 
@@ -385,3 +384,69 @@ This file lists the maintainer-internal engineering intents that must version wi
   1. Add [oasdiff](https://github.com/oasdiff/oasdiff) to CI. It runs `breaking` on `docs/openapi.yaml` against the file in the latest release tag. Thus, a change that breaks a client fails the build, and nobody needs to notice it. `OpenApiContractTests` hold the description to the server, and Spectral holds it to the rules of the guide. But nothing holds it to its past.
   2. Give `info.version` of the description and the heading `Unreleased` of the changelog the version of the release.
   3. Decide if the `type` URIs must point to a copy that cannot move. They point to the copy of API.md on the `develop` branch now. A copy in a release tag, or a page that nobody renames, can be this copy. A client that stored a type must never find that its address is dead.
+
+- [ ] **Decide what dragging the end of a bar on the Gantt chart does to an activity that has estimates** *(2026-10-16, from the review of phase 1 of the simulation work)*
+
+  A user drags the end of a bar to change the duration of an activity. The chart calls `CoreViewModel.SetActivityDuration`, and this sets the most likely duration (ML) of the activity. This is what every caller that sets a duration means. For an activity that has no estimates of its own, it is the same as before.
+
+  An activity can have an optimistic duration (O) or a pessimistic duration (P) of its own. Then the bar shows the expected duration, (O + 4 ML + P) / 6 rounded to a whole day. This can differ from the length that the user dragged to. The maintainer was not sure about this behavior. There was no better solution at the time, and thus the behavior stayed as it is.
+
+  **Choices to consider.**
+
+  - Set ML so that the expected duration is as near as possible to the dragged length. The value of ML would be (6 × length − O − P) / 4, limited to the range from O to P. Rounding and the limits mean that the bar can still miss the dragged length.
+  - Keep ML and move O and P by the same amount as the drag. The spread stays the same, and the expected duration follows the drag exactly.
+  - Make O and P follow ML again, so that the bar has exactly the dragged length. The user loses the estimates that they gave, and thus this needs a warning, or an undo.
+  - Let the drag change an activity with no estimates of its own only. A bar of an activity with estimates would show the expected duration, and a drag would do nothing.
+  - Keep the behavior and change the tooltip of the drag. It would show the expected duration that the drop gives, and not the dragged length.
+
+  **Where.** `GanttChartManagerView.axaml.cs` (the drag), `CoreViewModel.SetActivityDuration` and `ManagedActivityViewModel.Duration`. The test `ActivityEstimatesTests.SetActivityDuration_Given_AnActivityWithNoEstimates_Then_IsTheDurationOfTheActivity` pins the behavior for an activity with no estimates. A new test must pin the choice for an activity with estimates.
+
+- [ ] **Group the critical paths of a simulation in a way that helps for a plan that resources decide** *(2026-10-16)*
+
+  A plan with resources has very many critical paths in a simulation, because the order in which the resources do the work changes from one iteration to the next. For the sample plan, 3,000 iterations give hundreds of distinct paths, and the eight heaviest have 1 % of the weight each. The group "Other paths" has 92 %. The chart is correct, but it does not show the reader what decides the finish.
+
+  Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most.
+
+- [ ] **Count the criticality of the activities with the bits of the library** *(2026-10-16)*
+
+  `SimulationAnalyzer` calls `SimulationResult.IsCritical(iteration, activity)` once for each activity and each iteration. For 1,000,000 iterations of a plan of 2,000 activities, that is two thousand million calls. A method of `SimulationResult` that counts the set bits of one activity over the iterations would take a few seconds less. Measure before the change.
+
+- [ ] **Run the schedule simulation in small batches in the web host** *(2026-10-16)*
+
+  The web host has one thread. The panel runs the simulation with `Task.Run`, and the simulator uses `Parallel.For`. On the web host, both run on the one thread, and the UI freezes until the run ends. A run of 5,000 iterations of a plan like the sample plan takes about 5 seconds on one thread.
+
+  Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
+
+- [ ] **Keep the seed and the distribution with the result of a simulation** *(2026-10-16)*
+
+  A result that a project holds does not say which seed, distribution and shape value made it. The statistics that `zpp` and the API give for it use the settings that the project holds. A person can change the settings after the run and save the project, and then the statistics name a seed that did not make them. Choices: add the three values to the result, in the file and in the Excel sheet "Simulation Statistics". The file format v0.6.2 is not released, and thus it can take them. Or clear the result when a setting changes.
+
+- [ ] **Run the iterations of a job on a share of the processors** *(2026-10-16)*
+
+  `SimulationSettings.MaxDegreeOfParallelism` is -1 (all the processors) in the panel and in each job. A server with `MaxJobs` jobs that all simulate asks the pool for several times its processors. The result does not change with the number of threads, and thus a server could give each job `processors / MaxJobs`. Measure before the change.
+
+- [ ] **Let a client of `zpp --server` see the progress of a simulation** *(2026-10-16)*
+
+  The server writes the progress to its log, and the client waits without a sign. A simulation of a large plan can take minutes. The API has no operation for a job that is in progress (ASY-1 is a deviation of the API), and so the choices are a response that streams, or a job that the client can ask about. Both change the API.
+
+- [ ] **Show the problems of an import in a window of their own** *(2026-10-17)*
+
+  The desktop shows the first ten problems of a workbook in an error, and it offers to save a CSV report of all of them (`ImportProblemsPresenter`). A window with a grid (sheet, cell, column, row, value, message), with the buttons "Save report" and "Copy", is easier to use when a workbook has hundreds of problems. `ScenarioImportException.Issues` already holds all that the window needs.
+
+- [ ] **Write the report of the import problems from `zpp`** *(2026-10-17)*
+
+  `zpp` writes one line for each problem to the standard error stream, and a server lists the first 100. An option like `--import-report <file>` can write the same CSV report as the desktop (`ImportIssueText.WriteReport`). The server can return it as an output of the job.
+
+- [ ] **Report the problems of an MS Project import in the same way** *(2026-10-17)*
+
+  The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The generic catch of `MainViewModel.ImportProjectScenarioFileAsync` then resets the open project. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way, and the open project stays as it is. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
+
+- [ ] **Say where a bad date is in a workbook that counts from 1904** *(2026-10-17)*
+
+  ClosedXML converts a number that has the format of a date while it loads a workbook that counts its dates from 1904. Old Excel for the Mac makes such workbooks. A number that no calendar has then makes the whole file unreadable. The message is "Not a legal OleAut date." In a normal workbook, the reader finds the cell and reports `notADate`.
+
+  One fix is to find the cell in the file when the load fails with this message, and to report it. Another fix is to read the cells of such a workbook without the date conversion of the library.
+
+- [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
+
+  `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.

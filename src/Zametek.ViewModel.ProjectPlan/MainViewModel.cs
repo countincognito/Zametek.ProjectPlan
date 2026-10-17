@@ -1360,7 +1360,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await ProjectScenarioImportAsync(filename);
+                    try
+                    {
+                        await ProjectScenarioImportAsync(filename);
+                    }
+                    catch (ScenarioImportException ex)
+                    {
+                        // The file was read in full and found to have problems, and nothing of it was imported. The open
+                        // project is as it was, and so it is not reset, as it is for a failure that may have left it half loaded.
+                        m_Logger.LogError(ex, "Failed to import scenario: {ProblemCount} problems in {ImportFile}", ex.TotalCount, filename);
+                        await ImportProblemsPresenter.ShowAsync(m_DialogService, ex, filename, directory);
+                        return;
+                    }
+
                     await RunAutoCompileAsync();
                 }
             }
@@ -1550,28 +1562,25 @@ namespace Zametek.ViewModel.ProjectPlan
                 return;
             }
 
-            // IsReadyToReviseTitle is an edge trigger, not a level: its setter raises
-            // unconditionally (see the enum-instead-of-bool note on its declaration), so
-            // every arm site fires this chain whether or not the value changed, and the
-            // flag is deliberately never cleared - exactly as IsReadyToReviseTrackedMetrics
-            // behaves in the same class. It used to be cleared from inside the selector
-            // below, which made a projection mutate one of its own two inputs and so
-            // re-enter the chain it belongs to; it terminated only by virtue of
-            // ReactiveUI collapsing the second, same-valued raise, which is the very
-            // behaviour these enums exist to work around. Nothing else reads the flag,
-            // so dropping the write removes the re-entrancy outright. The condition
-            // below is consequently always true once anything has armed it, which is
-            // correct: the title is recomputed from live setting-service state every
-            // time either input is raised, and can never go stale.
+            // Arming the title is an edge, not a level, and the chain follows a counter,
+            // TitleRevision, that every arm increments. IsReadyToReviseTitle cannot be the
+            // input: a WhenAnyValue chain drops a value that has not changed, and the flag
+            // is never cleared, so once it was Yes every later arm was lost, and a project
+            // that was closed or loaded without an edit kept its old title until an edit
+            // changed ProjectHasChanges. (The flag used to be cleared from inside the
+            // selector, which made a projection mutate one of its own inputs and so
+            // re-enter the chain it belongs to. A counter has no such write.) The title is
+            // recomputed from live setting-service state every time either input is
+            // raised, and can never go stale.
             m_ProjectTitleUpdateSub = this
                 .WhenAnyValue(
                     main => main.ProjectHasChanges,
-                    main => main.m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle,
-                    (projectHasChanges, isReadyToReviseTitle) =>
+                    main => main.m_ProjectScenarioManagerViewModel.TitleRevision,
+                    (projectHasChanges, titleRevision) =>
                     {
                         string newTitle = ProjectTitle;
 
-                        if (isReadyToReviseTitle == ReadyToRevise.Yes
+                        if (titleRevision > 0
                             || projectHasChanges)
                         {
                             string projectTitle = m_SettingService.ProjectTitle;

@@ -19,11 +19,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MaxUploadMegabytes = 11,
                 MaxChartWidth = 1500,
                 MaxChartHeight = 900,
+                MaxSimulationIterations = 25_000,
                 JobTimeoutSeconds = 90,
                 MaxCompileTimeoutMilliseconds = 2500,
             });
 
-            response.ShouldBe(new LimitsResponse(3, 7, 11, 1500, 900, TimeSpan.FromSeconds(90), TimeSpan.FromMilliseconds(2500)));
+            response.ShouldBe(new LimitsResponse(3, 7, 11, 1500, 900, 25_000, TimeSpan.FromSeconds(90), TimeSpan.FromMilliseconds(2500)));
         }
 
         [Fact]
@@ -34,7 +35,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 JobJsonHelper.ServerOptions);
 
             json.ShouldBe(
-                @"{""maxJobs"":4,""maxQueue"":8,""maxUploadMegabytes"":50,""maxChartWidth"":5000,""maxChartHeight"":5000,""jobTimeout"":""PT2M"",""maxCompileTimeout"":""PT1M""}");
+                @"{""maxJobs"":4,""maxQueue"":8,""maxUploadMegabytes"":50,""maxChartWidth"":5000,""maxChartHeight"":5000,""maxSimulationIterations"":100000,""jobTimeout"":""PT2M"",""maxCompileTimeout"":""PT1M""}");
         }
 
         [Fact]

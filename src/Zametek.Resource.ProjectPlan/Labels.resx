@@ -273,6 +273,9 @@
   <data name="Label_End" xml:space="preserve">
     <value>End</value>
   </data>
+  <data name="Label_ExpectedDuration" xml:space="preserve">
+    <value>Expected</value>
+  </data>
   <data name="Label_FibonacciRisk" xml:space="preserve">
     <value>Fibonacci Risk</value>
   </data>
@@ -336,6 +339,24 @@
   <data name="Label_IsPhase" xml:space="preserve">
     <value>Phase</value>
   </data>
+  <data name="Label_MostLikelyDuration" xml:space="preserve">
+    <value>Most Likely</value>
+  </data>
+  <data name="Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero" xml:space="preserve">
+    <value>Optimistic and Pessimistic must be 0 when Most Likely is 0</value>
+  </data>
+  <data name="Label_OptimisticDuration" xml:space="preserve">
+    <value>Optimistic</value>
+  </data>
+  <data name="Label_OptimisticMustBeBetweenZeroAndMostLikely" xml:space="preserve">
+    <value>Optimistic must be between 0 and Most Likely</value>
+  </data>
+  <data name="Label_PessimisticDuration" xml:space="preserve">
+    <value>Pessimistic</value>
+  </data>
+  <data name="Label_PessimisticMustBeGreaterThanOrEqualToMostLikely" xml:space="preserve">
+    <value>Pessimistic must be &gt;= Most Likely</value>
+  </data>
   <data name="Label_ShowGroupLabels" xml:space="preserve">
     <value>Show Group Labels</value>
   </data>
@@ -350,6 +371,117 @@
   </data>
   <data name="Label_Metric" xml:space="preserve">
     <value>Metric</value>
+  </data>
+  <data name="Label_SimulationActivities" xml:space="preserve">
+    <value>Criticalities</value>
+  </data>
+  <data name="Label_SimulationActivity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Label_SimulationCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Label_SimulationCriticality" xml:space="preserve">
+    <value>Criticality index</value>
+  </data>
+  <data name="Label_SimulationCumulativeAxisTitle" xml:space="preserve">
+    <value>Cumulative probability (%)</value>
+  </data>
+  <data name="Label_SimulationDistribution" xml:space="preserve">
+    <value>Distribution</value>
+  </data>
+  <data name="Label_SimulationDone" xml:space="preserve">
+    <value>Done in {0}</value>
+  </data>
+  <data name="Label_SimulationEarliest" xml:space="preserve">
+    <value>Earliest</value>
+  </data>
+  <data name="Label_SimulationFailedIterations" xml:space="preserve">
+    <value>Failed iterations</value>
+  </data>
+  <data name="Label_SimulationIterationCount" xml:space="preserve">
+    <value>Iterations (valid)</value>
+  </data>
+  <data name="Label_SimulationIterations" xml:space="preserve">
+    <value>Iterations</value>
+  </data>
+  <data name="Label_SimulationIterationsAxisTitle" xml:space="preserve">
+    <value>Iterations</value>
+  </data>
+  <data name="Label_SimulationLatest" xml:space="preserve">
+    <value>Latest</value>
+  </data>
+  <data name="Label_SimulationMean" xml:space="preserve">
+    <value>Mean</value>
+  </data>
+  <data name="Label_SimulationNoResult" xml:space="preserve">
+    <value>No simulation has run yet.</value>
+  </data>
+  <data name="Label_SimulationOtherPaths" xml:space="preserve">
+    <value>Other paths</value>
+  </data>
+  <data name="Label_SimulationPath" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Label_SimulationPaths" xml:space="preserve">
+    <value>Critical paths</value>
+  </data>
+  <data name="Label_SimulationPercentile" xml:space="preserve">
+    <value>P{0}</value>
+  </data>
+  <data name="Label_SimulationPlannedFinish" xml:space="preserve">
+    <value>Planned finish</value>
+  </data>
+  <data name="Label_SimulationPlannedLine" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Label_SimulationProgress" xml:space="preserve">
+    <value>{0} of {1} iterations, about {2} left</value>
+  </data>
+  <data name="Label_SimulationRandomSeed" xml:space="preserve">
+    <value>New seed each run</value>
+  </data>
+  <data name="Label_SimulationRank" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="Label_SimulationScenario" xml:space="preserve">
+    <value>Scenario</value>
+  </data>
+  <data name="Label_SimulationSeed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Label_SimulationShape" xml:space="preserve">
+    <value>Shape</value>
+  </data>
+  <data name="Label_SimulationShare" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  <data name="Label_SimulationStale" xml:space="preserve">
+    <value>The plan has changed since this simulation ran. Run it again.</value>
+  </data>
+  <data name="Label_SimulationStandardDeviation" xml:space="preserve">
+    <value>Standard deviation</value>
+  </data>
+  <data name="Label_SimulationStatistic" xml:space="preserve">
+    <value>Statistic</value>
+  </data>
+  <data name="Label_SimulationStatistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="Label_SimulationTarget" xml:space="preserve">
+    <value>Target finish</value>
+  </data>
+  <data name="Label_SimulationTargetLine" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="Label_SimulationTargetProbability" xml:space="preserve">
+    <value>Chance of finishing by the target</value>
+  </data>
+  <data name="Label_SimulationValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Label_StandardDeviation" xml:space="preserve">
+    <value>Std Dev</value>
   </data>
   <data name="Label_Value" xml:space="preserve">
     <value>Value</value>

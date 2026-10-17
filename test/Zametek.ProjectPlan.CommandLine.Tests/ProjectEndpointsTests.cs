@@ -223,6 +223,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             using HttpResponseMessage response = await PostAsync(
                 new CompileOptions
                 {
+                    RunSimulation = true,
                     Outputs = new OutputsOptions
                     {
                         ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
@@ -233,6 +234,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                         GanttChart = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
                         ScenarioExport = new ScenarioExportOptions(),
                         Project = new ProjectOptions(),
+                        Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
                     },
                 });
 
@@ -248,6 +250,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"image/svg+xml",
                 @"image/svg+xml",
                 @"image/svg+xml",
+                @"image/svg+xml",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
             ]);
         }
 

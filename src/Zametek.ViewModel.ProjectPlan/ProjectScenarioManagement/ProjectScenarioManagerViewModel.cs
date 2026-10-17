@@ -1885,6 +1885,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private ReadyToRevise m_IsReadyToReviseTitle;
 
         // This should always be the last thing altered in order to trigger a check.
+        //
+        // Setting it arms the title, and nothing clears it. The value cannot say that it was armed again, because a
+        // WhenAnyValue chain drops a value that has not changed: once it is Yes, the next Yes is lost. That is why a project
+        // that was closed or loaded without an edit kept its old title. TitleRevision is what the title follows.
         public ReadyToRevise IsReadyToReviseTitle
         {
             get => m_IsReadyToReviseTitle;
@@ -1892,8 +1896,15 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_IsReadyToReviseTitle = value;
                 this.RaisePropertyChanged();
+
+                Interlocked.Increment(ref m_TitleRevision);
+                this.RaisePropertyChanged(nameof(TitleRevision));
             }
         }
+
+        // This getter must remain lock-free: a property chain re-reads it on the thread that raises the change.
+        private int m_TitleRevision;
+        public int TitleRevision => Volatile.Read(ref m_TitleRevision);
 
         // We need to use an enum because raised changes on bools aren't always captured.
         // https://github.com/reactiveui/ReactiveUI/issues/3846

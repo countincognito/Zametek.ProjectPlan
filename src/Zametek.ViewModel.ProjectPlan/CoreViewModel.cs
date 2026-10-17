@@ -131,6 +131,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_EffortMetrics = new();
             m_NetworkMetrics = new();
             m_ResourceMetrics = [];
+            m_SimulationSettings = new();
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
@@ -1122,6 +1123,51 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The settings of the schedule simulation and its last result are the scenario's, as the metrics are. The
+        // getters are lock-free: a property chain re-reads them on the thread that raises the change.
+        private SimulationSettingsModel m_SimulationSettings;
+        public SimulationSettingsModel SimulationSettings
+        {
+            get => Volatile.Read(ref m_SimulationSettings);
+            set
+            {
+                ArgumentNullException.ThrowIfNull(value);
+
+                lock (m_Lock)
+                {
+                    if (m_SimulationSettings == value)
+                    {
+                        return;
+                    }
+                    Volatile.Write(ref m_SimulationSettings, value);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private SimulationSummaryModel? m_SimulationSummary;
+        public SimulationSummaryModel? SimulationSummary
+        {
+            get => Volatile.Read(ref m_SimulationSummary);
+            set
+            {
+                lock (m_Lock)
+                {
+                    if (ReferenceEquals(m_SimulationSummary, value))
+                    {
+                        return;
+                    }
+                    Volatile.Write(ref m_SimulationSummary, value);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private int m_ProjectScenarioRevision;
+        public int ProjectScenarioRevision => Volatile.Read(ref m_ProjectScenarioRevision);
+
         private readonly ObservableAsPropertyHelper<bool> m_HasActivities;
         public bool HasActivities => m_HasActivities.Value;
 
@@ -1362,6 +1408,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     Metrics = new();
                     ResourceMetrics = [];
 
+                    // The simulation belongs to the scenario that is gone. A run that is in progress sees the revision
+                    // change, and stops.
+                    SimulationSettings = new();
+                    SimulationSummary = null;
+                    Interlocked.Increment(ref m_ProjectScenarioRevision);
+                    this.RaisePropertyChanged(nameof(ProjectScenarioRevision));
+
                     HasCompilationErrors = false;
                     GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
 
@@ -1536,6 +1589,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Display settings.
                     DisplaySettingsViewModel.SetValues(projectScenarioImportModel.DisplaySettings);
 
+                    // The simulation: its settings, and its last result if the workbook has one. The result is trusted,
+                    // as the result that a project file holds is.
+                    SimulationSettings = projectScenarioImportModel.SimulationSettings;
+                    SimulationSummary = projectScenarioImportModel.SimulationSummary;
+
                     RunCompile();
 
                     // The internal Build* subscriptions drop their emissions during a
@@ -1661,6 +1719,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceMetrics = projectScenarioModel.ResourceMetrics;
                     }
 
+                    // The simulation: its settings, and its last result if the file has one. A result that a file holds
+                    // is trusted, as the metrics above are, and thus the file does not say that it is out of date.
+                    SimulationSettings = projectScenarioModel.SimulationSettings;
+                    SimulationSummary = projectScenarioModel.SimulationSummary;
+
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = true;
@@ -1703,6 +1766,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         ResourceMetrics = [.. ResourceMetrics],
+                        SimulationSettings = SimulationSettings,
+                        SimulationSummary = SimulationSummary,
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                         ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
                         VertexGraphLayout = VertexGraphLayout.CloneObject(),
@@ -2136,6 +2201,107 @@ namespace Zametek.ViewModel.ProjectPlan
             finally
             {
                 EndBusy();
+            }
+        }
+
+        public void ResetActivityEstimates(IEnumerable<int> activityIds)
+        {
+            ArgumentNullException.ThrowIfNull(activityIds);
+
+            try
+            {
+                lock (m_Lock)
+                {
+                    BeginBusy();
+                    HashSet<int> ids = [.. activityIds];
+
+                    foreach (IManagedActivityViewModel activity in RawActivities.Where(x => ids.Contains(x.Id)))
+                    {
+                        // An activity whose estimates all follow its most likely duration has nothing to
+                        // reset, and an edit that changed nothing must not mark the plan as updated.
+                        if (!activity.HasOwnEstimates
+                            || activity is not IEditableObject editable)
+                        {
+                            continue;
+                        }
+
+                        editable.BeginEdit();
+                        activity.ResetEstimates();
+                        editable.EndEdit();
+                        IsProjectScenarioUpdated = true;
+                    }
+                }
+            }
+            finally
+            {
+                EndBusy();
+            }
+        }
+
+        public SimulationInputModel CaptureSimulationInput()
+        {
+            lock (m_Lock)
+            {
+                // The resources and the work streams are the ones that a compile uses.
+                var resources = new List<IResource<int, int>>();
+                if (!ResourceSettings.AreDisabled)
+                {
+                    resources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+                }
+
+                List<IWorkStream<int>> workStreams = [.. WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream)];
+
+                List<IDependentActivity<int, int, int>> activities = [];
+                Dictionary<int, DurationEstimate> estimates = [];
+                Dictionary<int, string> names = [];
+
+                // The copies are taken as a compilation takes them (SnapshotCompiler): in the order that the live
+                // graph holds the activities, and in one pass under the activity data lock, so that no activity is
+                // edited part way through being copied. A simulation takes minutes, and it must never see the
+                // live activities again after this.
+                lock (m_ActivityDataLock)
+                {
+                    Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
+
+                    foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
+                    {
+                        if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
+                        {
+                            activities.Add((IDependentActivity<int, int, int>)activity.CloneObject());
+                            estimates[activityId] = EstimatesOf(activity);
+                            names[activityId] = activity.Name ?? string.Empty;
+                        }
+                    }
+                }
+
+                return new SimulationInputModel
+                {
+                    Activities = activities,
+                    Resources = resources,
+                    WorkStreams = workStreams,
+                    Estimates = estimates,
+                    ActivityNames = names,
+                    CompilationOutputRevision = CompilationOutputRevision,
+                };
+            }
+        }
+
+        // The three estimates that an activity has. An activity outside the rule is one that a compile refuses (its
+        // values are over the limit), and a simulation is not started for a plan that a compile refuses.
+        private static DurationEstimate EstimatesOf(IManagedActivityViewModel activity)
+        {
+            (int optimistic, int mostLikely, int pessimistic) = EstimateHelper.Effective(
+                activity.MostLikelyDuration,
+                activity.OwnOptimisticDuration,
+                activity.OwnPessimisticDuration);
+
+            try
+            {
+                return new DurationEstimate(optimistic, mostLikely, pessimistic);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return DurationEstimate.Fixed(Math.Clamp(activity.Duration, 0, GraphLimits.MaximumTimeValue));
             }
         }
 

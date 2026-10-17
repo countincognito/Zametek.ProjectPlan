@@ -120,6 +120,27 @@
   <data name="Suffix_ArrowChart" xml:space="preserve">
     <value>-arrow</value>
   </data>
+  <data name="Suffix_SimulationActivities" xml:space="preserve">
+    <value>-activities</value>
+  </data>
+  <data name="Suffix_SimulationChart" xml:space="preserve">
+    <value>-simulation</value>
+  </data>
+  <data name="Suffix_SimulationCsv" xml:space="preserve">
+    <value>-simulation</value>
+  </data>
+  <data name="Suffix_SimulationHistogram" xml:space="preserve">
+    <value>-histogram</value>
+  </data>
+  <data name="Suffix_SimulationIterations" xml:space="preserve">
+    <value>-iterations</value>
+  </data>
+  <data name="Suffix_SimulationPaths" xml:space="preserve">
+    <value>-paths</value>
+  </data>
+  <data name="Suffix_SimulationStatistics" xml:space="preserve">
+    <value>-statistics</value>
+  </data>
   <data name="Suffix_VertexChart" xml:space="preserve">
     <value>-vertex</value>
   </data>
@@ -134,5 +155,8 @@
   </data>
   <data name="Suffix_ScenarioChart" xml:space="preserve">
     <value>-scenario</value>
+  </data>
+  <data name="Suffix_ImportProblems" xml:space="preserve">
+    <value>-import-problems</value>
   </data>
 </root>

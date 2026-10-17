@@ -16,14 +16,14 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     // zpp serve's API. A request to compile a project - POST /v1/projects/compile - comes as multipart/form-data: the
     // project as a file named project, as zpp's --input takes it, or named import, as its --import does, with the options as
-    // JSON in a part named options (see CompileOptions). It is answered with the project's metrics and the outputs it
-    // produced (see CompileResponse): as JSON, or - when the request accepts application/zip - as a zip of the outputs, with
-    // the rest in result.json. Asked to include the console, it also says what zpp would have printed and exited with.
-    // POST /v1/projects/scenarios lists a project's scenarios, as --list-scenarios does, GET /v1/info says what the server
-    // is, and GET /v1/openapi gives the description of the API. What cannot be answered is a problem (see ProblemResponse),
-    // with the status that says why: a request that
-    // cannot be understood is 400, one whose content is not valid, or whose project cannot be processed, is 422, and
-    // whatever the server did not expect, or cannot do now, is 500 or 503.
+    // JSON in a part named options (see CompileOptions). It is answered with the project's metrics, what its simulation
+    // found if the request asked for one, and the outputs it produced (see CompileResponse): as JSON, or - when the request
+    // accepts application/zip - as a zip of the outputs, with the rest in result.json. Asked to include the console, it
+    // also says what zpp would have printed and exited with. POST /v1/projects/scenarios lists a project's scenarios, as
+    // --list-scenarios does, GET /v1/info says what the server is, and GET /v1/openapi gives the description of the API.
+    // What cannot be answered is a problem (see ProblemResponse), with the status that says why: a request that cannot be
+    // understood is 400, one whose content is not valid, or whose project cannot be processed, is 422, and whatever the
+    // server did not expect, or cannot do now, is 500 or 503.
     internal class ProjectEndpoints
     {
         #region Fields
@@ -31,6 +31,10 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ProjectPart = @"project";
         private const string c_ImportPart = @"import";
         private const string c_OptionsPart = @"options";
+
+        // The most problems of a workbook that a response lists, in its errors and in its console. A workbook can have thousands,
+        // and a response is not the place for them: the total is said, and the caller has the file to look at.
+        private const int c_MaximumImportProblems = 100;
         private const string c_IncludeParameter = @"include";
         private const string c_ConsoleInclusion = @"console";
         private const string c_JsonMediaType = @"application/json";
@@ -371,6 +375,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             var response = new CompileResponse(
                 MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
+                result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
                 outputs,
                 consoleResponse);
 
@@ -690,6 +695,18 @@ namespace Zametek.ProjectPlan.CommandLine
 
             switch (exception)
             {
+                // A workbook that has problems in its cells: each problem is an error. A file that is not a workbook at all is the one
+                // problem that is not in a cell, and the answer to it is the one that a file that is not a project has.
+                case ProjectNotReadableException { ImportProblems: ScenarioImportException { Issues: not [{ Code: ImportIssueCodes.UnreadableWorkbook }] } import }:
+                    exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception, c_MaximumImportProblems);
+                    kind = ProblemKind.ProjectNotReadable;
+                    detail = import.TotalCount > c_MaximumImportProblems
+                        ? $@"{ImportIssueText.BuildHeader(import.TotalCount)} {ImportIssueText.BuildListed(c_MaximumImportProblems)}"
+                        : ImportIssueText.BuildHeader(import.TotalCount);
+
+                    // Each problem is an error with the code of its kind and the place in the sheets in its words.
+                    errors.AddRange(import.Issues.Take(c_MaximumImportProblems).Select(x => PartError(part, x.Code, ImportIssueText.Describe(x))));
+                    break;
                 case ProjectNotReadableException:
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
                     kind = ProblemKind.ProjectNotReadable;
@@ -708,6 +725,18 @@ namespace Zametek.ProjectPlan.CommandLine
                         Code = code,
                         Detail = detail,
                     });
+                    break;
+                case SimulationException simulation:
+                    exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
+
+                    // A project with more iterations than the server runs is a request that the server refuses, as one with a limit
+                    // that is too high is; the others are a job that ran as far as it could, and failed, as zpp does here.
+                    kind = simulation.Failure == SimulationFailure.IterationsAboveLimit
+                        ? ProblemKind.ValidationFailed
+                        : ProblemKind.SimulationNotPossible;
+                    (string pointer, string simulationCode) = DescribeSimulation(simulation);
+                    detail = simulation.Message;
+                    errors.Add(new ProblemError { Pointer = pointer, Code = simulationCode, Detail = simulation.Message });
                     break;
                 case GraphCompilationTimeoutException:
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
@@ -732,6 +761,19 @@ namespace Zametek.ProjectPlan.CommandLine
                     errors.Count > 0 ? errors : null,
                     includeConsole ? ToConsoleResponse(console, exitCode) : null),
                 exitCode);
+        }
+
+        // Where in the request a simulation that cannot be done comes from, and its code. The settings of a run are the project's, and
+        // thus what the caller can change is whether to run it (runSimulation): the project that has too many iterations is run
+        // by a server that allows more, or is not run. The outputs of a simulation come from a result, and a project without one
+        // needs a run.
+        private static (string Pointer, string Code) DescribeSimulation(SimulationException exception)
+        {
+            return exception.Failure switch
+            {
+                SimulationFailure.NoResult => (CompileOptionsHelper.GetPointer(CompileOptionsHelper.GetPointer(CompileOptionsHelper.OptionsPointer, @"outputs"), @"simulation"), ProblemCodes.NoResult),
+                _ => (CompileOptionsHelper.GetPointer(CompileOptionsHelper.OptionsPointer, @"runSimulation"), ProblemCodes.OutOfRange),
+            };
         }
 
         // What a scenario that cannot be selected is, as a code, and what is wrong with it, in the API's words and not zpp's,
@@ -813,7 +855,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     errors.Count > 0 ? errors : null,
                     console,
                     MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
-                    outputs),
+                    outputs,
+                    result.Simulation is null ? null : SimulationResponse.From(result.Simulation)),
                 exitCode);
         }
 

@@ -126,6 +126,15 @@
   <data name="Title_ArrowGraphView" xml:space="preserve">
     <value>Arrow Graph</value>
   </data>
+  <data name="Title_Simulation" xml:space="preserve">
+    <value>Simulation</value>
+  </data>
+  <data name="Title_SimulationChart" xml:space="preserve">
+    <value>Simulation Chart</value>
+  </data>
+  <data name="Title_SimulationMetrics" xml:space="preserve">
+    <value>Simulation Metrics</value>
+  </data>
   <data name="Title_VertexGraphView" xml:space="preserve">
     <value>Vertex Graph</value>
   </data>
@@ -215,5 +224,8 @@
   </data>
   <data name="Title_Current" xml:space="preserve">
     <value>Current</value>
+  </data>
+  <data name="Title_ImportProblems" xml:space="preserve">
+    <value>Import problems</value>
   </data>
 </root>

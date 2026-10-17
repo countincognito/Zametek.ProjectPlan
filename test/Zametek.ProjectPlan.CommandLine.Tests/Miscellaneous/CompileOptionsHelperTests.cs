@@ -4,6 +4,7 @@ using System.Text.Json;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
@@ -228,6 +229,186 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Read_Given_ARunOfTheSimulationAndItsOutput_Then_ReadsBothAndNoProblems()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(
+                """
+                {
+                    "runSimulation": true,
+                    "outputs": {
+                        "simulation": { "format": "svg", "width": 640, "height": 480 }
+                    }
+                }
+                """);
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldBe(new CompileOptions
+            {
+                RunSimulation = true,
+                Outputs = new OutputsOptions
+                {
+                    Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 640, Height = 480 },
+                },
+            });
+        }
+
+        [Theory]
+        [InlineData(@"{}")]
+        [InlineData(@"{""runSimulation"":false}")]
+        [InlineData(@"{""runSimulation"":null}")]
+        public void Read_Given_NoRunOfTheSimulation_Then_ThereIsNone(string json)
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(json);
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull().RunSimulation.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void Read_Given_TheOutputOfASimulationAndNoRun_Then_ReadsItBecauseAProjectMayHoldAResult()
+        {
+            // Whether the project holds a result is known only when the job has read it (see SimulationFailure.NoResult).
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""outputs"":{""simulation"":{""width"":800,""height"":600}}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull().RunSimulation.ShouldBeFalse();
+            options.Outputs.ShouldNotBeNull().Simulation.ShouldBe(new ChartOptions { Format = PlotExport.Jpeg, Width = 800, Height = 600 });
+        }
+
+        [Fact]
+        public void Read_Given_TheOutputOfASimulationThatIsNull_Then_NoneIsAskedFor()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""outputs"":{""simulation"":null}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            CompileOptionsHelper.GetRequestedOutputs(options.ShouldNotBeNull()).ShouldBeEmpty();
+        }
+
+        public static TheoryData<string, string[]> InvalidSimulations => new()
+        {
+            // The run is true or false.
+            { @"{""runSimulation"":""true""}", [@"#/options/runSimulation wrongType"] },
+            { @"{""runSimulation"":1}", [@"#/options/runSimulation wrongType"] },
+            { @"{""runSimulation"":{}}", [@"#/options/runSimulation wrongType"] },
+            { @"{""runSimulation"":[true]}", [@"#/options/runSimulation wrongType"] },
+
+            // The settings of a run are the project's. A request does not give them, and the members of zpp's earlier options
+            // are not known.
+            { @"{""simulation"":{}}", [@"#/options/simulation unknownProperty"] },
+            { @"{""simulation"":{""iterations"":5000}}", [@"#/options/simulation unknownProperty"] },
+
+            // The outputs of a simulation are one output, with a size.
+            { @"{""outputs"":{""simulationChart"":{""width"":10,""height"":10}}}", [@"#/options/outputs/simulationChart unknownProperty"] },
+            { @"{""outputs"":{""simulationStatistics"":{}}}", [@"#/options/outputs/simulationStatistics unknownProperty"] },
+            { @"{""outputs"":{""simulationIterations"":{}}}", [@"#/options/outputs/simulationIterations unknownProperty"] },
+            { @"{""outputs"":{""simulation"":{}}}", [@"#/options/outputs/simulation/width required", @"#/options/outputs/simulation/height required"] },
+            { @"{""outputs"":{""simulation"":{""width"":1001,""height"":10}}}", [@"#/options/outputs/simulation/width outOfRange"] },
+            { @"{""outputs"":{""simulation"":{""width"":10,""height"":801}}}", [@"#/options/outputs/simulation/height outOfRange"] },
+            { @"{""outputs"":{""simulation"":true}}", [@"#/options/outputs/simulation wrongType"] },
+            { @"{""outputs"":{""simulation"":{""format"":""gif"",""width"":1,""height"":1}}}", [@"#/options/outputs/simulation/format notAllowed"] },
+            { @"{""outputs"":{""simulation"":{""width"":1,""height"":1,""csv"":true}}}", [@"#/options/outputs/simulation/csv unknownProperty"] },
+
+            // Every problem is listed, and each where it is.
+            {
+                @"{""runSimulation"":""x"",""outputs"":{""simulation"":{""x"":1}}}",
+                [
+                    @"#/options/runSimulation wrongType",
+                    @"#/options/outputs/simulation/x unknownProperty",
+                    @"#/options/outputs/simulation/width required",
+                    @"#/options/outputs/simulation/height required",
+                ]
+            },
+        };
+
+        [Theory]
+        [MemberData(nameof(InvalidSimulations))]
+        public void Read_Given_ASimulationThatIsNotValid_Then_NoOptionsAndEachProblemListedWhereItIs(string json, string[] expected)
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(json);
+
+            options.ShouldBeNull();
+            Where(problems).ShouldBe(expected);
+            problems.IsMalformed.ShouldBeFalse();
+            problems.Errors.ShouldAllBe(x => x.Parameter == null && !string.IsNullOrWhiteSpace(x.Detail));
+        }
+
+        [Theory]
+        [InlineData(@"{""runSimulation"":true}")]
+        [InlineData(@"{""runSimulation"":true,""outputs"":{""simulation"":{""width"":1000,""height"":800}}}")]
+        [InlineData(@"{""runSimulation"":false,""outputs"":{""simulation"":{""format"":""png"",""width"":1,""height"":1}}}")]
+        public void Read_Given_ASimulationAtTheEdgesOfWhatIsValid_Then_ReadsIt(string json)
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(json);
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull();
+        }
+
+        [Fact]
+        public void ToJobRequest_Given_ARunOfTheSimulationAndItsOutput_Then_AsksForThemAsZppDoes()
+        {
+            using var input = new MemoryStream();
+            var options = new CompileOptions
+            {
+                RunSimulation = true,
+                Outputs = new OutputsOptions
+                {
+                    Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                },
+            };
+
+            JobRequest request = CompileOptionsHelper.ToJobRequest(options, input, null, s_Limits);
+
+            // The settings are the project's, and a server runs no more iterations than its limit.
+            request.RunSimulation.ShouldBeTrue();
+            request.SimulationSettings.ShouldBeNull();
+            request.MaximumSimulationIterations.ShouldBe(s_Limits.MaxSimulationIterations);
+            request.SimulationChart.ShouldBe(new ChartOutputRequest(ChartImageFormat.Png, 640, 480));
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.All);
+        }
+
+        [Fact]
+        public void ToJobRequest_Given_TheOutputOfASimulationAndNoRun_Then_AsksForTheFilesOfTheResultTheProjectHolds()
+        {
+            using var input = new MemoryStream();
+            var options = new CompileOptions { Outputs = new OutputsOptions { Simulation = new ChartOptions { Width = 1, Height = 1 } } };
+
+            JobRequest request = CompileOptionsHelper.ToJobRequest(options, input, null, s_Limits);
+
+            request.RunSimulation.ShouldBeFalse();
+            request.SimulationChart.ShouldNotBeNull();
+
+            // All of the files are asked for, and the job leaves out the one that a project cannot hold.
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.All);
+        }
+
+        [Fact]
+        public void ToJobRequest_Given_NoSimulation_Then_NeitherARunNorItsOutputs()
+        {
+            using var input = new MemoryStream();
+
+            JobRequest request = CompileOptionsHelper.ToJobRequest(new CompileOptions(), input, null, s_Limits);
+
+            request.RunSimulation.ShouldBeFalse();
+            request.SimulationChart.ShouldBeNull();
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.None);
+        }
+
+        [Fact]
+        public void BuildOutputFilename_Given_TheOutputsOfASimulation_Then_TheNameThePanelAndZppGiveThem()
+        {
+            var options = new CompileOptions { Outputs = new OutputsOptions { Simulation = new ChartOptions { Format = PlotExport.Webp, Width = 1, Height = 1 } } };
+
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationChart, options, @"plan").ShouldBe(@"plan-simulation.webp");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationChart, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation.jpeg");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationStatistics, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-statistics.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationHistogram, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-histogram.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationPaths, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-paths.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationActivities, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-activities.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationIterations, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation-iterations.csv");
+        }
+
+        [Fact]
         public void Read_Given_ASizeAtTheLimitsAndOnePixelOver_Then_ReadsTheFormerAndRefusesTheLatter()
         {
             Read(@"{""outputs"":{""ganttChart"":{""width"":1000,""height"":800}}}").Options.ShouldNotBeNull();
@@ -371,16 +552,18 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 ResourceChart = new ChartOutputRequest(ChartImageFormat.Svg, 640, 480),
                 EarnedValueChart = new ChartOutputRequest(ChartImageFormat.Webp, 320, 240),
                 ScenarioChart = new ChartOutputRequest(ChartImageFormat.Bmp, 100, 50),
+                MaximumSimulationIterations = s_Limits.MaxSimulationIterations,
             });
         }
 
         [Fact]
-        public void ToJobRequest_Given_NoOptions_Then_ZppsDefaults()
+        public void ToJobRequest_Given_NoOptions_Then_ZppsDefaultsAndTheLimitOfTheServer()
         {
             using var input = new MemoryStream();
 
+            // A server runs the simulation of a project only up to its limit, which a request that runs none does not reach.
             CompileOptionsHelper.ToJobRequest(new CompileOptions(), input, null, new ServeLimits())
-                .ShouldBe(new JobRequest { Input = input });
+                .ShouldBe(new JobRequest { Input = input, MaximumSimulationIterations = new ServeLimits().MaxSimulationIterations });
         }
 
         [Fact]
@@ -432,6 +615,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             request.ResourceChart.ShouldBeNull();
             request.EarnedValueChart.ShouldBeNull();
             request.ScenarioChart.ShouldBeNull();
+            request.RunSimulation.ShouldBeFalse();
+            request.SimulationChart.ShouldBeNull();
+            request.SimulationCsvFiles.ShouldBe(SimulationCsvFile.None);
         }
 
         [Fact]
@@ -439,8 +625,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             var options = new CompileOptions
             {
+                RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
+                    Simulation = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ResourceChart = new ChartOptions { Width = 1, Height = 1 },
@@ -453,6 +641,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             };
 
             CompileOptionsHelper.GetRequestedOutputs(options).ShouldBe(Enum.GetValues<JobOutput>());
+        }
+
+        [Fact]
+        public void GetRequestedOutputs_Given_ASimulationOutputAndNoRun_Then_EveryFileButTheIterations()
+        {
+            // The iterations of a run are not in a project, and so a result that a project held has no file of them.
+            var options = new CompileOptions { Outputs = new OutputsOptions { Simulation = new ChartOptions { Width = 1, Height = 1 } } };
+
+            CompileOptionsHelper.GetRequestedOutputs(options).ShouldBe(
+            [
+                JobOutput.SimulationChart, JobOutput.SimulationStatistics, JobOutput.SimulationHistogram,
+                JobOutput.SimulationPaths, JobOutput.SimulationActivities,
+            ]);
+            CompileOptionsHelper.GetRequestedOutputs(options with { RunSimulation = true }).ShouldBe(
+            [
+                JobOutput.SimulationChart, JobOutput.SimulationStatistics, JobOutput.SimulationHistogram,
+                JobOutput.SimulationPaths, JobOutput.SimulationActivities, JobOutput.SimulationIterations,
+            ]);
         }
 
         [Fact]
@@ -486,13 +692,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             names.ShouldBe(
             [
                 @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart", @"scenarioChart",
+                @"simulationChart", @"simulationStatistics", @"simulationHistogram", @"simulationPaths", @"simulationActivities", @"simulationIterations",
             ]);
 
-            // Each is a member of the outputs a request asks for, and each member is one of them.
+            // Each output but those of the simulation is a member of the outputs a request asks for, and each member is one of them.
+            // The simulation is one member: its chart and its files are the outputs that it makes.
             string[] members = [.. typeof(OutputsOptions).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(x => ApiNamingPolicy.Instance.ConvertName(x.Name))];
 
-            members.ShouldBe(names);
+            members.ShouldBe([.. names.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation"]);
         }
 
         [Theory]
@@ -556,6 +764,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"plan-arrow.pdf", @"application/pdf")]
         [InlineData(@"plan-arrow.graphml", @"application/graphml+xml")]
         [InlineData(@"plan-arrow.dot", @"text/vnd.graphviz")]
+        [InlineData(@"plan-simulation-statistics.csv", @"text/csv")]
         [InlineData(@"plan-ARROW.DOT", @"text/vnd.graphviz")]
         [InlineData(@"plan.unknown", @"application/octet-stream")]
         [InlineData(@"plan", @"application/octet-stream")]

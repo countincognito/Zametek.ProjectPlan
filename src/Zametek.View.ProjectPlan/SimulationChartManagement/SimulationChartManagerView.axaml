@@ -1,0 +1,40 @@
+<local:ScottPlotUserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:resources="using:Zametek.Resource.ProjectPlan"
+             xmlns:local="using:Zametek.View.ProjectPlan"
+             xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+             x:DataType="vm:SimulationChartManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="600"
+             x:Class="Zametek.View.ProjectPlan.SimulationChartManagerView"
+             Plot="{Binding Path=SimulationChartPlotModel, Mode=OneWay}">
+
+	<!-- The dock "Simulation Chart". The settings and the buttons are in the dock "Simulation", and the tables are in the dock "Simulation Metrics". -->
+	<Grid Margin="7">
+
+		<!-- ScottPlot PlotView -->
+		<ContentControl x:Name="scottplot"
+						Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+			<ContentControl.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+							  Command="{Binding Path=ResetSimulationChartCommand, Mode=OneWay}" />
+
+					<Separator />
+
+					<MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
+							  Click="CopyImage_Click" />
+
+					<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+							  Command="{Binding Path=SaveSimulationChartImageFileCommand, Mode=OneWay}" />
+
+					<Separator />
+
+					<MenuItem Header="{x:Static resources:Menus.Menu_ExportCsvFiles}"
+							  Command="{Binding Path=ExportCsvFilesCommand, Mode=OneWay}" />
+				</ContextMenu>
+			</ContentControl.ContextMenu>
+		</ContentControl>
+	</Grid>
+</local:ScottPlotUserControl>

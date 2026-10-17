@@ -1,5 +1,6 @@
 using CommandLine;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -39,6 +40,10 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ScenarioChartDirectoryLongName = "scenario-chart-directory";
         private const string c_ScenarioChartFormatLongName = "scenario-chart-format";
         private const string c_ScenarioChartSizeLongName = "scenario-chart-size";
+        private const string c_RunSimulationLongName = "run-simulation";
+        private const string c_SimulationDirectoryLongName = "simulation-directory";
+        private const string c_SimulationFormatLongName = "simulation-format";
+        private const string c_SimulationSizeLongName = "simulation-size";
         private const string c_ServerLongName = "server";
         private const string c_LocalLongName = "local";
         private const string c_ApiKeyFileLongName = "api-key-file";
@@ -52,6 +57,8 @@ namespace Zametek.ProjectPlan.CommandLine
             @"      Compile a project, print its metrics, and write what the options ask for.",
             @"  zpp -m <file> [options]",
             @"      The same, for a plan imported from .mpp, .xml or .xlsx.",
+            @"  zpp -i <file.zpp> --run-simulation [options]",
+            @"      The same, with a Monte Carlo simulation of the schedule.",
             @"  zpp -i <file.zpp> --server <address> [options]",
             @"      The same, run on a server started with zpp serve.",
             @"  zpp serve [options]",
@@ -156,6 +163,22 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_ScenarioChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Scenario chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> ScenarioChartSize { get; set; } = [];
+
+
+
+        [Option(c_RunSimulationLongName, HelpText = "Run a Monte Carlo simulation of the schedule once the plan has compiled, and print its statistics after the metrics. Each iteration draws the duration of each activity from its estimates, schedules the resources again, and finds the finish. The settings are the ones that the input file holds (the iterations, the distribution, its shape value and the target), and the seed is the one that it has saved, also when it is to draw a new seed each time, so that a run repeats. The result is saved with --" + c_OutputLongName + ". Without this option, the statistics of a result that the input file holds are printed")]
+        public bool RunSimulation { get; set; } = default;
+
+
+
+        [Option(c_SimulationDirectoryLongName, HelpText = "Simulation output file directory: the chart, and the CSV files of the statistics, the histogram, the critical paths, the activities and, for a run, the iterations. They come from the result of the run, or else from the result that the input file holds")]
+        public string? SimulationDirectory { get; set; } = default;
+
+        [Option(c_SimulationFormatLongName, Default = PlotExport.Jpeg, HelpText = "Simulation chart format (Jpeg|Png|Bmp|Webp|Svg)")]
+        public PlotExport SimulationFormat { get; set; } = default;
+
+        [Option(c_SimulationSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Simulation chart dimensions in pixels (<width>:<height>)")]
+        public IEnumerable<int> SimulationSize { get; set; } = [];
 
 
 

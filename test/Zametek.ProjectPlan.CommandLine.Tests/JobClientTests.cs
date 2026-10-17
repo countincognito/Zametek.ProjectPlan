@@ -542,6 +542,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             { ProblemKind.CompilationTimedOut, ExitCode.CompilationTimeout },
             { ProblemKind.ProjectNotReadable, ExitCode.Failure },
             { ProblemKind.ScenarioNotSelectable, ExitCode.Failure },
+            { ProblemKind.SimulationNotPossible, ExitCode.Failure },
             { ProblemKind.OutputFailed, ExitCode.Failure },
             { ProblemKind.UnexpectedError, ExitCode.Failure },
         };
@@ -596,6 +597,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Theory]
         [InlineData(ProblemKind.CompilationFailed)]
         [InlineData(ProblemKind.ScenarioNotSelectable)]
+        [InlineData(ProblemKind.SimulationNotPossible)]
         [InlineData(ProblemKind.UnexpectedError)]
         public async Task Run_Given_AProblemOfAJobThatRanAndNoConsole_Then_ServerFailureWithItsReason(ProblemKind kind)
         {

@@ -4,12 +4,12 @@ using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.IO.Compression;
 using System.Text;
-using System.Xml.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan.Tests;
 
 namespace Zametek.Engine.ProjectPlan.Tests
 {
@@ -96,6 +96,10 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 ResourceChart = new ChartOutputRequest(ChartImageFormat.Png, 800, 600),
                 EarnedValueChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                 ScenarioChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
+                RunSimulation = true,
+                SimulationSettings = new SimulationSettingsModel { Iterations = 200, Seed = 7, TargetFinishTime = 5 },
+                SimulationChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
+                SimulationCsvFiles = SimulationCsvFile.All,
             };
         }
 
@@ -251,6 +255,42 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
             ex.Message.ShouldBe(failure.Message);
             ex.InnerException.ShouldBeSameAs(failure);
+        }
+
+        // A workbook that has problems in its cells is not imported. The job says so as it says a file that it cannot read, and the
+        // exception that it throws holds the problems, so that a host can say where each is.
+        [Fact]
+        public async Task RunAsync_Given_AWorkbookWithProblems_Then_ThrowsProjectNotReadableThatHoldsTheProblems()
+        {
+            var failure = new ScenarioImportException(
+                @"The workbook has problems.",
+                [new ImportIssue { Code = ImportIssueCodes.NotANumber, Message = @"Not a number.", Sheet = @"Resources", Row = 2, Column = 3 }],
+                5);
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FailingProjectScenarioFileImport(failure)));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx }));
+
+            ex.Message.ShouldBe(failure.Message);
+            ex.ImportProblems.ShouldBeSameAs(failure);
+            ex.ImportProblems.TotalCount.ShouldBe(5);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AReaderThatFailsForAnotherReason_Then_ThereAreNoProblemsOfCellsInTheException()
+        {
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FailingProjectScenarioFileImport(new InvalidDataException(@"Damaged."))));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx }));
+
+            ex.ImportProblems.ShouldBeNull();
         }
 
         [Theory]
@@ -431,11 +471,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
             // ...and the workbook it exported was created then, every part of it written then as the host's clock
             // tells it (a zip holds only the local time, to two seconds).
             using var workbook = new ZipArchive(new MemoryStream(sink[JobOutput.ScenarioExport]), ZipArchiveMode.Read);
-            using (Stream core = workbook.GetEntry(@"docProps/core.xml")!.Open())
-            {
-                XDocument.Load(core).Descendants(XNamespace.Get(@"http://purl.org/dc/terms/") + @"created").Single().Value
-                    .ShouldBe(@"2001-02-03T09:05:06Z");
-            }
+            XlsxPackageReader.Read(sink[JobOutput.ScenarioExport]).Created.ShouldBe(new DateTime(2001, 2, 3, 9, 5, 6, DateTimeKind.Utc));
             workbook.Entries.Select(x => x.LastWriteTime.DateTime).Distinct()
                 .ShouldBe([TimeZoneInfo.ConvertTime(now, TimeZoneInfo.Local).DateTime]);
         }

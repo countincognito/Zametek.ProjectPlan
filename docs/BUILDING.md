@@ -32,6 +32,19 @@ The host gives these services to `CompositionRoot.Configure` as an Autofac modul
 
 This is not applicable to `zpp`. It has no UI components, and it uses the engine instead. The engine registers all the services that a job uses.
 
+## Build with the source of Zametek.Maths.Graphs
+
+The projects `Zametek.Common.ProjectPlan` and `Zametek.ViewModel.ProjectPlan` use the NuGet packages `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`. Sometimes a change needs a version of the library that nobody has published yet. The schedule simulation was in this state, because it lives in the library.
+
+In this case, a developer can build against the source of the library. The library must be in the folder next to this repository (`../Zametek.Maths.Graphs`). These steps use the source of the library in place of the packages:
+
+1. Make the file `Zametek.Maths.Graphs.local.targets` in the root of this repository. The file has an `ItemGroup` for each of the two projects. Each `ItemGroup` removes the `PackageReference` and adds a `ProjectReference` to the project of the library under `..\Zametek.Maths.Graphs\dotnet\src`.
+2. Run `dotnet restore Zametek.ProjectPlan.slnf`. The commit hook builds with `--no-restore`, and thus it needs this step after each change to the file.
+
+The file `Directory.Build.targets` imports the local file only when the file exists, and `.gitignore` lists it. Thus, a build on CI, and a build on a machine that has no such file, uses the packages. To go back to the packages, delete the file and restore again.
+
+This is only a way to develop. Before a change that needs a new library version can merge, the maintainer must publish the packages and change the two `PackageReference` versions.
+
 ## Git hooks (Husky.Net)
 
 This repository uses [Husky.Net](https://alirezanet.github.io/Husky.Net/) to operate a pre-commit hook. The file `.config/dotnet-tools.json` sets the version of the tool. The installation is automatic: before each restore, `Directory.Build.targets` starts `dotnet tool restore` and `dotnet husky install`. Thus, a standard `dotnet restore` or `dotnet build` installs the hooks. To install the hooks manually, enter these commands:

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -23,6 +24,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [@"metricsFormat"] = [@"metrics-format"],
             [@"compileTimeout"] = [@"compile-timeout"],
             [@"now"] = [@"now"],
+            [@"runSimulation"] = [@"run-simulation"],
             [@"outputs.project"] = [@"output"],
             [@"outputs.scenarioExport"] = [@"export"],
             [@"outputs.ganttChart"] = [@"gantt-directory", @"gantt-format", @"gantt-size"],
@@ -31,6 +33,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [@"outputs.resourceChart"] = [@"resource-directory", @"resource-format", @"resource-size"],
             [@"outputs.earnedValueChart"] = [@"ev-directory", @"ev-format", @"ev-size"],
             [@"outputs.scenarioChart"] = [@"scenario-chart-directory", @"scenario-chart-format", @"scenario-chart-size"],
+
+            // The chart of the simulation and its CSV files go to one directory, and a request asks for them with one output.
+            [@"outputs.simulation"] = [@"simulation-directory", @"simulation-format", @"simulation-size"],
         };
 
         // The options of zpp's that a request does not carry: the plan is its own part, a listing is its own endpoint, the
@@ -52,6 +57,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(3),
                 Now = @"2026-10-02T09:00:00+01:00",
+                RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -62,11 +68,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     ResourceChart = new ChartOptions { Format = PlotExport.Svg, Width = 640, Height = 480 },
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Webp, Width = 320, Height = 240 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Bmp, Width = 100, Height = 50 },
+                    Simulation = new ChartOptions { Format = PlotExport.Png, Width = 400, Height = 300 },
                 },
             });
 
             json.ShouldBe(
-                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50}}}""");
+                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulation":{"format":"png","width":400,"height":300}}}""");
+        }
+
+        [Fact]
+        public void Serialize_Given_ARunOfTheSimulation_Then_WritesItAndNothingOfItsSettings()
+        {
+            // The settings of a run are the project's, and a request does not carry them.
+            Serialize(new CompileOptions { RunSimulation = true }).ShouldBe(@"{""runSimulation"":true}");
+            Serialize(new CompileOptions { RunSimulation = false }).ShouldBe(@"{}");
+        }
+
+        [Fact]
+        public void Serialize_Given_TheOutputOfASimulation_Then_WritesItsFormatAndSizeAndNoFileOfTheCsvFiles()
+        {
+            Serialize(new CompileOptions { Outputs = new OutputsOptions { Simulation = new ChartOptions { Width = 640, Height = 480 } } })
+                .ShouldBe(@"{""outputs"":{""simulation"":{""width"":640,""height"":480}}}");
         }
 
         [Fact]
@@ -139,6 +161,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             unaccounted.ShouldBeEmpty();
             s_NotSent.Except(LongNames()).ShouldBeEmpty();
+
+            // An option stands for one member, and no two members stand for the same option.
             carried.Distinct().Count().ShouldBe(carried.Length);
         }
 

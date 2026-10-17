@@ -6,6 +6,24 @@ namespace Zametek.Contract.ProjectPlan
     public interface IManagedActivityViewModel
         : IDependentActivity, IDisposable, INotifyPropertyChanged, IStartSubscriptions, IKillSubscriptions, IMuteEdits
     {
+        // The optimistic and the pessimistic duration that the activity has: the ones the user gave
+        // it, and where the user gave none, its most likely duration. The rule is
+        // 0 <= O <= ML <= P, and 0 and 0 when ML is 0. A value outside the rule is moved to the
+        // nearest one inside it, and the activity reports an error for that property.
+        int OptimisticDuration { get; set; }
+
+        int PessimisticDuration { get; set; }
+
+        // The PERT standard deviation of the estimates, (P - O) / 6.
+        double StandardDeviation { get; }
+
+        // Whether the user gave the activity an optimistic or a pessimistic duration of its own.
+        bool HasOwnEstimates { get; }
+
+        // Takes the optimistic and the pessimistic duration back to the most likely duration, so
+        // that they follow it again.
+        void ResetEstimates();
+
         bool IsIsolated { get; }
 
         bool IsCompiled { get; }

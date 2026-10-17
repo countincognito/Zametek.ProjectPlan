@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Reflection;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -209,6 +210,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOutputRequest(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
                 EarnedValueChart = ToChartOutputRequest(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOutputRequest(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
+                RunSimulation = options.RunSimulation,
+                SimulationChart = ToChartOutputRequest(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
+                SimulationCsvFiles = options.SimulationDirectory is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
             };
 
             // Chart and graph files are named after the file the plan came from,
@@ -287,8 +291,15 @@ namespace Zametek.ProjectPlan.CommandLine
                 OptionLongName(nameof(Options.ScenarioChartDirectory)),
                 OptionLongName(nameof(Options.ScenarioChartSize)));
 
+            RequireSize(
+                options.SimulationDirectory,
+                options.SimulationSize,
+                OptionLongName(nameof(Options.SimulationDirectory)),
+                OptionLongName(nameof(Options.SimulationSize)));
+
             // All export directories are checked up front so that a bad path fails
             // the run before any file has been written.
+            RequireDirectory(options.SimulationDirectory);
             RequireDirectory(options.GanttDirectory);
             RequireDirectory(options.ArrowGraphDirectory);
             RequireDirectory(options.VertexGraphDirectory);
@@ -414,6 +425,16 @@ namespace Zametek.ProjectPlan.CommandLine
             AddExportFilePath(filenames, JobOutput.ResourceChart, options.ResourceDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, options.ResourceFormat.GetDescription());
             AddExportFilePath(filenames, JobOutput.EarnedValueChart, options.EVDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, options.EVFormat.GetDescription());
             AddExportFilePath(filenames, JobOutput.ScenarioChart, options.ScenarioChartDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, options.ScenarioChartFormat.GetDescription());
+            AddExportFilePath(filenames, JobOutput.SimulationChart, options.SimulationDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, options.SimulationFormat.GetDescription());
+
+            // The CSV files of the simulation, in the directory of its chart. The file of the iterations is written only for a run.
+            string csv = Resource.ProjectPlan.Filters.Filter_CsvFileExtension;
+            string csvSuffix = Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv;
+            AddExportFilePath(filenames, JobOutput.SimulationStatistics, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationHistogram, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationPaths, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationActivities, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, csv);
+            AddExportFilePath(filenames, JobOutput.SimulationIterations, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, csv);
 
             return filenames;
         }

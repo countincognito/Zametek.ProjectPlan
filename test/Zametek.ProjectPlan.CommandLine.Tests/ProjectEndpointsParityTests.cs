@@ -5,7 +5,9 @@ using System.Text.RegularExpressions;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan.Tests;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -79,6 +81,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return path;
         }
 
+        // A copy of a plan that holds the settings of a simulation, and the result of a run if one is asked for, as zpp saves them with
+        // -o: the settings of a simulation are the project's, and a project that has them is made by saving them.
+        private async Task<string> SimulatedPlanAsync(
+            string name,
+            string source,
+            SimulationSettingsModel settings,
+            bool withResult = false)
+        {
+            string path = Path.Combine(m_TempDirectory, $@"{name}.zpp");
+            await using FileStream input = File.OpenRead(source);
+            var sink = new MemoryJobSink(new BufferedConsole());
+
+            await m_Engine.JobRunner.RunAsync(
+                new JobRequest { Input = input, SaveProject = true, SimulationSettings = settings, RunSimulation = withResult },
+                sink);
+
+            await File.WriteAllBytesAsync(path, sink.Outputs.Single(x => x.Output == JobOutput.Project).Content);
+            return path;
+        }
+
         [Fact]
         public async Task Compile_Given_EveryOutputInRasterFormats_Then_DoesWhatZppDoes()
         {
@@ -133,6 +155,87 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     VertexGraph = new GraphOptions { Format = GraphExport.Svg },
                 },
             });
+        }
+
+        [Fact]
+        public async Task Compile_Given_ARunOfTheSimulationAndAllItsOutputs_Then_DoesWhatZppDoes()
+        {
+            string plan = await SimulatedPlanAsync(
+                @"estimated-run",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 1500, Seed = 9, Distribution = DurationDistribution.Triangular, TargetFinishTime = 28, UseRandomSeed = false });
+
+            await ShouldDoWhatZppDoesAsync(plan, new CompileOptions
+            {
+                MetricsFormat = MetricsExport.Json,
+                Now = c_Now,
+                RunSimulation = true,
+                Outputs = new OutputsOptions
+                {
+                    Project = new ProjectOptions(),
+                    Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                },
+            });
+        }
+
+        [Fact]
+        public async Task Compile_Given_ARunOfAPlanWithResources_Then_DoesWhatZppDoes()
+        {
+            string plan = await SimulatedPlanAsync(
+                @"sample-run",
+                SamplePath(),
+                new SimulationSettingsModel { Iterations = 200, Seed = 123_456_789, Distribution = DurationDistribution.ModifiedBetaPert, ModifiedBetaShape = 6.5 });
+
+            await ShouldDoWhatZppDoesAsync(plan, new CompileOptions
+            {
+                MetricsFormat = MetricsExport.Table,
+                RunSimulation = true,
+                Outputs = new OutputsOptions
+                {
+                    Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                },
+            });
+        }
+
+        [Fact]
+        public async Task Compile_Given_ARunAndNoOutputs_Then_DoesWhatZppDoes()
+        {
+            await ShouldDoWhatZppDoesAsync(AssetPath(@"estimated.zpp"), new CompileOptions { RunSimulation = true });
+        }
+
+        [Fact]
+        public async Task Compile_Given_AProjectThatHoldsAResultAndNoRun_Then_DrawsTheResultAsZppDoes()
+        {
+            // The statistics, and the chart and the four files of the result that the project holds, and no file of the iterations.
+            string plan = await SimulatedPlanAsync(
+                @"estimated-held",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 700, Seed = 3, TargetFinishTime = 30, UseRandomSeed = false },
+                withResult: true);
+
+            await ShouldDoWhatZppDoesAsync(plan, new CompileOptions
+            {
+                MetricsFormat = MetricsExport.Json,
+                Outputs = new OutputsOptions
+                {
+                    Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                },
+            });
+        }
+
+        [Fact]
+        public async Task Compile_Given_TheOutputsOfASimulationAndNeitherARunNorAResult_Then_FailsAsZppDoes()
+        {
+            await ShouldDoWhatZppDoesAsync(
+                AssetPath(@"estimated.zpp"),
+                new CompileOptions
+                {
+                    Outputs = new OutputsOptions
+                    {
+                        Simulation = new ChartOptions { Format = PlotExport.Png, Width = 640, Height = 480 },
+                    },
+                },
+                HttpStatusCode.UnprocessableEntity);
         }
 
         [Fact]
@@ -213,6 +316,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             string workbook = Path.Combine(m_TempDirectory, @"not-a-workbook.xlsx");
             await File.WriteAllTextAsync(workbook, @"This is not a workbook.");
+
+            await ShouldDoWhatZppDoesAsync(workbook, new CompileOptions(), HttpStatusCode.UnprocessableEntity, isImport: true);
+        }
+
+        [Fact]
+        public async Task Compile_Given_AWorkbookWithProblems_Then_DoesWhatZppDoes()
+        {
+            string workbook = Path.Combine(m_TempDirectory, @"problems.xlsx");
+            await File.WriteAllBytesAsync(
+                workbook,
+                new XlsxPackageBuilder()
+                    .Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities, s => s
+                        .Row(1, ("A", XlsxCellSpec.TitleOf(@"Id")), ("B", XlsxCellSpec.TitleOf(@"Duration")))
+                        .Row(2, ("A", XlsxCellSpec.NumberOf(1.0)), ("B", XlsxCellSpec.TextOf(@"soon")))
+                        .Row(3, ("A", XlsxCellSpec.NumberOf(2.0)), ("B", XlsxCellSpec.TextOf(@"later"))))
+                    .Build());
 
             await ShouldDoWhatZppDoesAsync(workbook, new CompileOptions(), HttpStatusCode.UnprocessableEntity, isImport: true);
         }
@@ -389,6 +508,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             AddChart(args, @"resource", outputs.ResourceChart, directory);
             AddChart(args, @"ev", outputs.EarnedValueChart, directory);
             AddChart(args, @"scenario-chart", outputs.ScenarioChart, directory);
+
+            if (options.RunSimulation)
+            {
+                args.Add(@"--run-simulation");
+            }
+
+            // zpp writes the chart of the simulation, and its CSV files beside it, to one directory.
+            AddChart(args, @"simulation", outputs.Simulation, directory);
 
             return [.. args];
         }

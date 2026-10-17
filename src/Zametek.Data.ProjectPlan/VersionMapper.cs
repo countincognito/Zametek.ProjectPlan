@@ -736,6 +736,8 @@ namespace Zametek.Data.ProjectPlan
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.ArrowGraphLayout))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.VertexGraphLayout))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.ResourceMetrics))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSettings))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSummary))]
         public partial ProjectScenarioModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -848,7 +850,12 @@ namespace Zametek.Data.ProjectPlan
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_1.ProjectScenarioModel FromCurrentToV0_6_1(ProjectScenarioModel src);
+        // The settings of the simulation and its last result are new in v0.6.2, so a v0.6.1 scenario
+        // carries neither: those targets are intentionally left at their defaults (the default settings,
+        // and no result).
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSettings))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSummary))]
         public partial ProjectScenarioModel FromV0_6_1ToCurrent(v0_6_1.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -883,5 +890,59 @@ namespace Zametek.Data.ProjectPlan
         // timeout are new in v0.6.1, so they are intentionally left at their defaults (the
         // default cap, an empty list and the default timeout).
         public partial v0_6_1.AppSettingsModel FromV0_6_0ToV0_6_1(v0_6_0.AppSettingsModel src);
+
+
+        // ---------------------------------------------------------------------
+        // v0.6.2 <-> Current and v0.6.1
+        // ---------------------------------------------------------------------
+
+        // v0.6.2 changes only the activities: it adds the three estimates of a duration. Its project,
+        // scenario, scenario file, dependent activity and activity models mirror the Current models
+        // 1:1, so the Current<->v0.6.2 pairs opt into Target-required mapping to flag any future drift.
+        // Everything else a scenario holds is still the model of the version that last changed it,
+        // and the mappings for those are the ones above.
+        //
+        // The activity pair is required in one direction only. The Current activity also holds three
+        // values that no stored version holds (the total slack, the latest start time and the earliest
+        // finish time), because the compiler works them out again on load.
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ActivityModel FromCurrentToV0_6_2(ActivityModel src);
+        public partial ActivityModel FromV0_6_2ToCurrent(v0_6_2.ActivityModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.DependentActivityModel FromCurrentToV0_6_2(DependentActivityModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial DependentActivityModel FromV0_6_2ToCurrent(v0_6_2.DependentActivityModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ProjectModel FromCurrentToV0_6_2(ProjectModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectModel FromV0_6_2ToCurrent(v0_6_2.ProjectModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ProjectScenarioModel FromCurrentToV0_6_2(ProjectScenarioModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectScenarioModel FromV0_6_2ToCurrent(v0_6_2.ProjectScenarioModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ProjectScenarioFileModel FromCurrentToV0_6_2(ProjectScenarioFileModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectScenarioFileModel FromV0_6_2ToCurrent(v0_6_2.ProjectScenarioFileModel src);
+
+        // Upgrading from v0.6.1: the estimates are new in v0.6.2, so they are intentionally left
+        // null, and an activity follows its Duration. Going the other way drops them, and the
+        // Duration that stays is the one the compiler scheduled. The scenario gains the settings of the
+        // simulation and its last result in the same way, and loses them going the other way.
+        public partial v0_6_2.ActivityModel FromV0_6_1ToV0_6_2(v0_6_1.ActivityModel src);
+        public partial v0_6_1.ActivityModel FromV0_6_2ToV0_6_1(v0_6_2.ActivityModel src);
+
+        public partial v0_6_2.DependentActivityModel FromV0_6_1ToV0_6_2(v0_6_1.DependentActivityModel src);
+        public partial v0_6_1.DependentActivityModel FromV0_6_2ToV0_6_1(v0_6_2.DependentActivityModel src);
+
+        public partial v0_6_2.ProjectScenarioModel FromV0_6_1ToV0_6_2(v0_6_1.ProjectScenarioModel src);
+        public partial v0_6_1.ProjectScenarioModel FromV0_6_2ToV0_6_1(v0_6_2.ProjectScenarioModel src);
+
+        public partial v0_6_2.ProjectScenarioFileModel FromV0_6_1ToV0_6_2(v0_6_1.ProjectScenarioFileModel src);
+        public partial v0_6_1.ProjectScenarioFileModel FromV0_6_2ToV0_6_1(v0_6_2.ProjectScenarioFileModel src);
     }
 }

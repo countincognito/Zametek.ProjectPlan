@@ -19,6 +19,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
+        public static readonly Func<DurationDistribution, string> DurationDistributionValue =
+            new(
+                x => x switch
+                {
+                    DurationDistribution.BetaPert => Enums.Enum_DurationDistribution_BetaPert,
+                    DurationDistribution.ModifiedBetaPert => Enums.Enum_DurationDistribution_ModifiedBetaPert,
+                    DurationDistribution.Triangular => Enums.Enum_DurationDistribution_Triangular,
+                    DurationDistribution.Normal => Enums.Enum_DurationDistribution_Normal,
+                    DurationDistribution.Uniform => Enums.Enum_DurationDistribution_Uniform,
+                    _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                });
+
         public static readonly Func<ActivityAllocationType, string> ActivityAllocationTypeValue =
             new(
                 x => x switch

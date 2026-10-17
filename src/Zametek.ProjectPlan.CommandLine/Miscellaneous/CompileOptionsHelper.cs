@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ProjectPlan.CommandLine
@@ -34,6 +35,7 @@ namespace Zametek.ProjectPlan.CommandLine
             [Resource.ProjectPlan.Filters.Filter_PdfFileExtension] = @"application/pdf",
             [Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension] = @"application/graphml+xml",
             [Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension] = @"text/vnd.graphviz",
+            [Resource.ProjectPlan.Filters.Filter_CsvFileExtension] = @"text/csv",
         };
 
         // A pointer to a member of what a pointer points to, as RFC 6901 writes it - ~ and / in the name escaped - in URI
@@ -119,6 +121,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOutputRequest(outputs.ResourceChart),
                 EarnedValueChart = ToChartOutputRequest(outputs.EarnedValueChart),
                 ScenarioChart = ToChartOutputRequest(outputs.ScenarioChart),
+                RunSimulation = options.RunSimulation,
+                MaximumSimulationIterations = limits.MaxSimulationIterations,
+                SimulationChart = ToChartOutputRequest(outputs.Simulation),
+                SimulationCsvFiles = outputs.Simulation is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
             };
         }
 
@@ -139,6 +145,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOptions(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
                 EarnedValueChart = ToChartOptions(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOptions(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
+                Simulation = ToChartOptions(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
             };
 
             return new CompileOptions
@@ -148,6 +155,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 MetricsFormat = options.MetricsFormat,
                 CompileTimeout = TimeSpan.FromMilliseconds(options.CompileTimeoutMilliseconds),
                 Now = options.Now,
+                RunSimulation = options.RunSimulation,
                 Outputs = outputs == new OutputsOptions() ? null : outputs,
             };
         }
@@ -168,6 +176,19 @@ namespace Zametek.ProjectPlan.CommandLine
             AddIf(requested, outputs.ResourceChart, JobOutput.ResourceChart);
             AddIf(requested, outputs.EarnedValueChart, JobOutput.EarnedValueChart);
             AddIf(requested, outputs.ScenarioChart, JobOutput.ScenarioChart);
+
+            // One output of a request is a chart and its CSV files. The file of the iterations is there only for a run: a project
+            // does not hold the iterations of the run that made its result.
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationChart);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationStatistics);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationHistogram);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationPaths);
+            AddIf(requested, outputs.Simulation, JobOutput.SimulationActivities);
+
+            if (options.RunSimulation)
+            {
+                AddIf(requested, outputs.Simulation, JobOutput.SimulationIterations);
+            }
 
             return requested;
         }
@@ -195,6 +216,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 JobOutput.ResourceChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, outputs.ResourceChart),
                 JobOutput.EarnedValueChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, outputs.EarnedValueChart),
                 JobOutput.ScenarioChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, outputs.ScenarioChart),
+                JobOutput.SimulationChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, outputs.Simulation),
+                JobOutput.SimulationStatistics => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics),
+                JobOutput.SimulationHistogram => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram),
+                JobOutput.SimulationPaths => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths),
+                JobOutput.SimulationActivities => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities),
+                JobOutput.SimulationIterations => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations),
                 _ => throw new ArgumentOutOfRangeException(nameof(output), output, null),
             };
         }
@@ -235,6 +262,7 @@ namespace Zametek.ProjectPlan.CommandLine
             MetricsExport metricsFormat = MetricsExport.Markdown;
             TimeSpan? compileTimeout = null;
             string? now = null;
+            bool runSimulation = false;
             OutputsOptions? outputs = null;
 
             foreach (JsonProperty member in root.EnumerateObject())
@@ -265,6 +293,9 @@ namespace Zametek.ProjectPlan.CommandLine
                     case @"now":
                         now = ReadNow(member.Value, pointer, problems);
                         break;
+                    case @"runSimulation":
+                        runSimulation = ReadBoolean(member.Value, pointer, problems);
+                        break;
                     case @"outputs":
                         outputs = ReadOutputs(member.Value, pointer, limits, problems);
                         break;
@@ -282,6 +313,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     MetricsFormat = metricsFormat,
                     CompileTimeout = compileTimeout,
                     Now = now,
+                    RunSimulation = runSimulation,
                     Outputs = outputs,
                 }
                 : null;
@@ -312,6 +344,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ChartOptions? resourceChart = null;
             ChartOptions? earnedValueChart = null;
             ChartOptions? scenarioChart = null;
+            ChartOptions? simulation = null;
 
             foreach (JsonProperty member in value.EnumerateObject())
             {
@@ -343,6 +376,9 @@ namespace Zametek.ProjectPlan.CommandLine
                     case @"scenarioChart":
                         scenarioChart = ReadChart(member.Value, memberPointer, limits, problems);
                         break;
+                    case @"simulation":
+                        simulation = ReadChart(member.Value, memberPointer, limits, problems);
+                        break;
                     default:
                         problems.AddInvalid(Error(memberPointer, ProblemCodes.UnknownProperty, Resource.ProjectPlan.Messages.Message_ServeErrorNotKnown));
                         break;
@@ -359,7 +395,27 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = resourceChart,
                 EarnedValueChart = earnedValueChart,
                 ScenarioChart = scenarioChart,
+                Simulation = simulation,
             };
+        }
+
+        // A member that is true or false; false for null.
+        private static bool ReadBoolean(
+            JsonElement value,
+            string pointer,
+            ProblemCollector problems)
+        {
+            switch (value.ValueKind)
+            {
+                case JsonValueKind.True:
+                    return true;
+                case JsonValueKind.False:
+                case JsonValueKind.Null:
+                    return false;
+                default:
+                    problems.AddInvalid(Error(pointer, ProblemCodes.WrongType, Resource.ProjectPlan.Messages.Message_ServeErrorMustBeABoolean));
+                    return false;
+            }
         }
 
         // An output that has no settings: an object, which is empty. Whether it is asked for.
@@ -679,6 +735,17 @@ namespace Zametek.ProjectPlan.CommandLine
             return graph is null
                 ? null
                 : new GraphOutputRequest(Program.ToGraphExportFormat(graph.Format));
+        }
+
+        // The name of a simulation's CSV file: the project's title, the CSV files' suffix and then the file's own.
+        private static string CsvFilename(
+            string projectTitle,
+            string suffix)
+        {
+            return Program.BuildExportFilename(
+                projectTitle,
+                Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv + suffix,
+                Resource.ProjectPlan.Filters.Filter_CsvFileExtension);
         }
 
         private static string ChartFilename(

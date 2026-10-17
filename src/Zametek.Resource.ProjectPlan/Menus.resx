@@ -123,6 +123,9 @@
   <data name="Menu_AutoCompile" xml:space="preserve">
     <value>Auto Compile</value>
   </data>
+  <data name="Menu_CancelSimulation" xml:space="preserve">
+    <value>Cancel Simulation</value>
+  </data>
   <data name="Menu_ClearRecentlyOpened" xml:space="preserve">
     <value>_Clear Recently Opened...</value>
   </data>
@@ -146,6 +149,9 @@
   </data>
   <data name="Menu_Export" xml:space="preserve">
     <value>_Export...</value>
+  </data>
+  <data name="Menu_ExportCsvFiles" xml:space="preserve">
+    <value>Export CSV Files...</value>
   </data>
   <data name="Menu_File" xml:space="preserve">
     <value>_File</value>
@@ -176,6 +182,12 @@
   </data>
   <data name="Menu_Reset" xml:space="preserve">
     <value>Reset</value>
+  </data>
+  <data name="Menu_ResetEstimates" xml:space="preserve">
+    <value>Reset Estimates</value>
+  </data>
+  <data name="Menu_RunSimulation" xml:space="preserve">
+    <value>Run Simulation</value>
   </data>
   <data name="Menu_Save" xml:space="preserve">
     <value>_Save</value>

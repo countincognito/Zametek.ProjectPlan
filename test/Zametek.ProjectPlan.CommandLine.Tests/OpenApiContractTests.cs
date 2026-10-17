@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -171,7 +172,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             const string outputs = @"{""outputs"":{""project"":{},""ganttChart"":{""format"":""png"",""width"":300,""height"":200},""arrowGraph"":{""format"":""svg""}}}";
 
             // Every option, with a value of the kind that it takes - a compile timeout with a fraction of a second - and every output.
-            const string everything = @"{""scenario"":""alpha"",""baseTheme"":""dark"",""metricsFormat"":""json"",""compileTimeout"":""PT1.5S"",""now"":""2026-10-03T09:00:00+01:00"",""outputs"":{""project"":{},""scenarioExport"":{},""ganttChart"":{""format"":""webp"",""width"":300,""height"":200},""arrowGraph"":{""format"":""graphml""},""vertexGraph"":{""format"":""dot""},""resourceChart"":{""format"":""bmp"",""width"":300,""height"":200},""earnedValueChart"":{""format"":""svg"",""width"":300,""height"":200},""scenarioChart"":{""format"":""jpeg"",""width"":300,""height"":200}}}";
+            const string everything = @"{""scenario"":""alpha"",""baseTheme"":""dark"",""metricsFormat"":""json"",""compileTimeout"":""PT1.5S"",""now"":""2026-10-03T09:00:00+01:00"",""runSimulation"":true,""outputs"":{""project"":{},""scenarioExport"":{},""ganttChart"":{""format"":""webp"",""width"":300,""height"":200},""arrowGraph"":{""format"":""graphml""},""vertexGraph"":{""format"":""dot""},""resourceChart"":{""format"":""bmp"",""width"":300,""height"":200},""earnedValueChart"":{""format"":""svg"",""width"":300,""height"":200},""scenarioChart"":{""format"":""jpeg"",""width"":300,""height"":200},""simulation"":{""format"":""png"",""width"":300,""height"":200}}}";
 
             await observations.SendAsync(@"compile", client, Post(@"/v1/projects/compile", Plan()), HttpStatusCode.OK);
             await observations.SendAsync(@"compile, with every option", client, Post(@"/v1/projects/compile", Plan(options: AsTheDescriptionHasIt(everything))), HttpStatusCode.OK);
@@ -194,6 +195,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"compile, a file that is not a project", client, Post(@"/v1/projects/compile", Plan(plan: Encoding.UTF8.GetBytes(@"not a project"))), HttpStatusCode.UnprocessableEntity);
             await observations.SendAsync(@"compile, a project that does not compile", client, Post(@"/v1/projects/compile?include=console", Plan(@"broken-dependency.zpp")), HttpStatusCode.UnprocessableEntity);
             await observations.SendAsync(@"compile, a scenario that is not there", client, Post(@"/v1/projects/compile", Plan(options: @"{""scenario"":""Gamma""}")), HttpStatusCode.UnprocessableEntity);
+            await observations.SendAsync(@"compile, the outputs of a simulation and no result", client, Post(@"/v1/projects/compile", Plan(options: @"{""outputs"":{""simulation"":{""width"":300,""height"":200}}}")), HttpStatusCode.UnprocessableEntity);
             await observations.SendAsync(@"compile, options that are too large", client, Post(@"/v1/projects/compile", Plan(options: $@"{{""scenario"":""{new string('a', CompileOptionsHelper.MaxOptionsBytes)}""}}")), HttpStatusCode.RequestEntityTooLarge);
 
             await observations.SendAsync(@"scenarios", client, Post(@"/v1/projects/scenarios", Plan()), HttpStatusCode.OK);
@@ -466,7 +468,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void Codes_Given_TheCode_Then_TheDescriptionAndTheReferenceListEachOne()
         {
-            string[] codes = [.. typeof(ProblemCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral).Select(x => (string)x.GetRawConstantValue()!)];
+            string[] codes =
+            [
+                .. typeof(ProblemCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral).Select(x => (string)x.GetRawConstantValue()!),
+
+                // The kinds of problem in the cells of a workbook are codes of the errors of a problem too. The code of a file that is not a
+                // workbook at all is not one of them: that file has the code unreadable, as a file that is not a project has.
+                .. typeof(ImportIssueCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral && x.Name != nameof(ImportIssueCodes.UnreadableWorkbook)).Select(x => (string)x.GetRawConstantValue()!),
+            ];
             codes.ShouldNotBeEmpty();
 
             JsonArray anyOf = Schema(@"ProblemError")[@"properties"]![@"code"]![@"anyOf"]!.AsArray();
@@ -521,18 +530,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var console = new ConsoleResponse(0, string.Empty, string.Empty, [transcript]);
             var output = new OutputResponse(JobOutput.Project, @"plan.zpp", @"application/json", [1]);
             var error = new ProblemError { Pointer = @"#/project", Parameter = @"include", Code = @"unreadable", Detail = @"d" };
-            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Console = console };
+            var simulation = new SimulationResponse { Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))] };
+            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
 
             Names(Schema(@"Console")).ShouldBe(Names(console, written), ignoreOrder: true);
             Names(Schema(@"TranscriptEntry")).ShouldBe(Names(transcript, written), ignoreOrder: true);
             Names(Schema(@"Output")).ShouldBe(Names(output, written), ignoreOrder: true);
+            Names(Schema(@"Simulation")).ShouldBe(Names(simulation, written), ignoreOrder: true);
+            Schema(@"Simulation")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(simulation, written), ignoreOrder: true);
+            Names(Schema(@"SimulationPercentile")).ShouldBe(Names(simulation.Percentiles[0], written), ignoreOrder: true);
+            Enumerated(Schema(@"Simulation")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Names(Schema(@"ProblemError")).ShouldBe(Names(error, written), ignoreOrder: true);
             Names(Schema(@"Limits")).ShouldBe(Names(limits, written), ignoreOrder: true);
             Names(Schema(@"InfoResponse")).ShouldBe(Names(new InfoResponse(@"v", @"c", @"z", limits), written), ignoreOrder: true);
             Names(Schema(@"Scenario")).ShouldBe(Names(new ScenarioSummary(@"p", Guid.Empty, true, true), written), ignoreOrder: true);
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
-            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, [output], console), written), ignoreOrder: true);
+            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [output], console), written), ignoreOrder: true);
 
             // A problem is the members every one has, and those of the kind that has more.
             string[] problemNames = [.. Names(Schema(@"Problem")), .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject()).Where(x => x is not (@"type" or @"status"))];
@@ -553,6 +567,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(1),
                 Now = @"2026-10-03T09:00:00+01:00",
+                RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -563,6 +578,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     ResourceChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
+                    Simulation = new ChartOptions { Width = 1, Height = 1 },
                 },
             };
 
@@ -581,7 +597,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // An output is asked for by the name it is answered with.
             string[] outputs = [.. Values<JobOutput>()];
             Enumerated(Schema(@"Output")[@"properties"]![@"kind"]!).ShouldBe(outputs, ignoreOrder: true);
-            Names(Schema(@"OutputsOptions")).ShouldBe(outputs, ignoreOrder: true);
+
+            // The simulation is one output of a request, and the answer lists its chart and its files as the outputs that it makes.
+            Names(Schema(@"OutputsOptions")).ShouldBe([.. outputs.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation"], ignoreOrder: true);
         }
 
         private static HttpRequestMessage Get(

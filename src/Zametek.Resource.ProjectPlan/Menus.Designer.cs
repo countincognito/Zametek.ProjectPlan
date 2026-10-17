@@ -97,6 +97,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel Simulation.
+        /// </summary>
+        public static string Menu_CancelSimulation {
+            get {
+                return ResourceManager.GetString("Menu_CancelSimulation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compile.
         /// </summary>
         public static string Menu_Compile {
@@ -147,6 +156,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Menu_Export {
             get {
                 return ResourceManager.GetString("Menu_Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export CSV Files....
+        /// </summary>
+        public static string Menu_ExportCsvFiles {
+            get {
+                return ResourceManager.GetString("Menu_ExportCsvFiles", resourceCulture);
             }
         }
         
@@ -318,6 +336,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Menu_SaveAs {
             get {
                 return ResourceManager.GetString("Menu_SaveAs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset Estimates.
+        /// </summary>
+        public static string Menu_ResetEstimates {
+            get {
+                return ResourceManager.GetString("Menu_ResetEstimates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run Simulation.
+        /// </summary>
+        public static string Menu_RunSimulation {
+            get {
+                return ResourceManager.GetString("Menu_RunSimulation", resourceCulture);
             }
         }
         

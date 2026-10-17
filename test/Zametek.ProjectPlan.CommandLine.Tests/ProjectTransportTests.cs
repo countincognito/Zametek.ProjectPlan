@@ -127,7 +127,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             document.RootElement.EnumerateObject().Select(x => x.Name).ShouldBe([@"version", @"culture", @"timeZone", @"limits"]);
             document.RootElement.GetProperty(@"timeZone").GetString().ShouldBe(TimeZoneHelper.GetIanaId(TimeZoneInfo.Local));
             document.RootElement.GetProperty(@"limits").EnumerateObject().Select(x => x.Name)
-                .ShouldBe([@"maxJobs", @"maxQueue", @"maxUploadMegabytes", @"maxChartWidth", @"maxChartHeight", @"jobTimeout", @"maxCompileTimeout"]);
+                .ShouldBe([@"maxJobs", @"maxQueue", @"maxUploadMegabytes", @"maxChartWidth", @"maxChartHeight", @"maxSimulationIterations", @"jobTimeout", @"maxCompileTimeout"]);
 
             InfoResponse info = await RunningServer.ReadAsync<InfoResponse>(response);
             info.Limits.ShouldBe(LimitsResponse.From(s_Limits));

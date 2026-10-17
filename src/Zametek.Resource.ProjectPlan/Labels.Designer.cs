@@ -799,6 +799,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected.
+        /// </summary>
+        public static string Label_ExpectedDuration {
+            get {
+                return ResourceManager.GetString("Label_ExpectedDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fibonacci Risk.
         /// </summary>
         public static string Label_FibonacciRisk {
@@ -1205,6 +1214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Most Likely.
+        /// </summary>
+        public static string Label_MostLikelyDuration {
+            get {
+                return ResourceManager.GetString("Label_MostLikelyDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
         public static string Label_Name {
@@ -1264,6 +1282,33 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_On {
             get {
                 return ResourceManager.GetString("Label_On", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimistic and Pessimistic must be 0 when Most Likely is 0.
+        /// </summary>
+        public static string Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero {
+            get {
+                return ResourceManager.GetString("Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimistic.
+        /// </summary>
+        public static string Label_OptimisticDuration {
+            get {
+                return ResourceManager.GetString("Label_OptimisticDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimistic must be between 0 and Most Likely.
+        /// </summary>
+        public static string Label_OptimisticMustBeBetweenZeroAndMostLikely {
+            get {
+                return ResourceManager.GetString("Label_OptimisticMustBeBetweenZeroAndMostLikely", resourceCulture);
             }
         }
         
@@ -1345,6 +1390,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_PercentageCompleted {
             get {
                 return ResourceManager.GetString("Label_PercentageCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pessimistic.
+        /// </summary>
+        public static string Label_PessimisticDuration {
+            get {
+                return ResourceManager.GetString("Label_PessimisticDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pessimistic must be &gt;= Most Likely.
+        /// </summary>
+        public static string Label_PessimisticMustBeGreaterThanOrEqualToMostLikely {
+            get {
+                return ResourceManager.GetString("Label_PessimisticMustBeGreaterThanOrEqualToMostLikely", resourceCulture);
             }
         }
         
@@ -1781,11 +1844,344 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Criticality.
+        /// </summary>
+        public static string Label_SimulationActivities {
+            get {
+                return ResourceManager.GetString("Label_SimulationActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Activity.
+        /// </summary>
+        public static string Label_SimulationActivity {
+            get {
+                return ResourceManager.GetString("Label_SimulationActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelled.
+        /// </summary>
+        public static string Label_SimulationCancelled {
+            get {
+                return ResourceManager.GetString("Label_SimulationCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Criticality index.
+        /// </summary>
+        public static string Label_SimulationCriticality {
+            get {
+                return ResourceManager.GetString("Label_SimulationCriticality", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cumulative probability (%).
+        /// </summary>
+        public static string Label_SimulationCumulativeAxisTitle {
+            get {
+                return ResourceManager.GetString("Label_SimulationCumulativeAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Distribution.
+        /// </summary>
+        public static string Label_SimulationDistribution {
+            get {
+                return ResourceManager.GetString("Label_SimulationDistribution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Done in {0}.
+        /// </summary>
+        public static string Label_SimulationDone {
+            get {
+                return ResourceManager.GetString("Label_SimulationDone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Earliest.
+        /// </summary>
+        public static string Label_SimulationEarliest {
+            get {
+                return ResourceManager.GetString("Label_SimulationEarliest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed iterations.
+        /// </summary>
+        public static string Label_SimulationFailedIterations {
+            get {
+                return ResourceManager.GetString("Label_SimulationFailedIterations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Iterations (valid).
+        /// </summary>
+        public static string Label_SimulationIterationCount {
+            get {
+                return ResourceManager.GetString("Label_SimulationIterationCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Iterations.
+        /// </summary>
+        public static string Label_SimulationIterations {
+            get {
+                return ResourceManager.GetString("Label_SimulationIterations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Iterations.
+        /// </summary>
+        public static string Label_SimulationIterationsAxisTitle {
+            get {
+                return ResourceManager.GetString("Label_SimulationIterationsAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Latest.
+        /// </summary>
+        public static string Label_SimulationLatest {
+            get {
+                return ResourceManager.GetString("Label_SimulationLatest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean.
+        /// </summary>
+        public static string Label_SimulationMean {
+            get {
+                return ResourceManager.GetString("Label_SimulationMean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No simulation has run yet..
+        /// </summary>
+        public static string Label_SimulationNoResult {
+            get {
+                return ResourceManager.GetString("Label_SimulationNoResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other paths.
+        /// </summary>
+        public static string Label_SimulationOtherPaths {
+            get {
+                return ResourceManager.GetString("Label_SimulationOtherPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path.
+        /// </summary>
+        public static string Label_SimulationPath {
+            get {
+                return ResourceManager.GetString("Label_SimulationPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Critical paths.
+        /// </summary>
+        public static string Label_SimulationPaths {
+            get {
+                return ResourceManager.GetString("Label_SimulationPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to P{0}.
+        /// </summary>
+        public static string Label_SimulationPercentile {
+            get {
+                return ResourceManager.GetString("Label_SimulationPercentile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Planned finish.
+        /// </summary>
+        public static string Label_SimulationPlannedFinish {
+            get {
+                return ResourceManager.GetString("Label_SimulationPlannedFinish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plan.
+        /// </summary>
+        public static string Label_SimulationPlannedLine {
+            get {
+                return ResourceManager.GetString("Label_SimulationPlannedLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} iterations, about {2} left.
+        /// </summary>
+        public static string Label_SimulationProgress {
+            get {
+                return ResourceManager.GetString("Label_SimulationProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New seed each run.
+        /// </summary>
+        public static string Label_SimulationRandomSeed {
+            get {
+                return ResourceManager.GetString("Label_SimulationRandomSeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #.
+        /// </summary>
+        public static string Label_SimulationRank {
+            get {
+                return ResourceManager.GetString("Label_SimulationRank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scenario.
+        /// </summary>
+        public static string Label_SimulationScenario {
+            get {
+                return ResourceManager.GetString("Label_SimulationScenario", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Seed.
+        /// </summary>
+        public static string Label_SimulationSeed {
+            get {
+                return ResourceManager.GetString("Label_SimulationSeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shape.
+        /// </summary>
+        public static string Label_SimulationShape {
+            get {
+                return ResourceManager.GetString("Label_SimulationShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Share.
+        /// </summary>
+        public static string Label_SimulationShare {
+            get {
+                return ResourceManager.GetString("Label_SimulationShare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The plan has changed since this simulation ran. Run it again..
+        /// </summary>
+        public static string Label_SimulationStale {
+            get {
+                return ResourceManager.GetString("Label_SimulationStale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard deviation.
+        /// </summary>
+        public static string Label_SimulationStandardDeviation {
+            get {
+                return ResourceManager.GetString("Label_SimulationStandardDeviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Statistic.
+        /// </summary>
+        public static string Label_SimulationStatistic {
+            get {
+                return ResourceManager.GetString("Label_SimulationStatistic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Statistics.
+        /// </summary>
+        public static string Label_SimulationStatistics {
+            get {
+                return ResourceManager.GetString("Label_SimulationStatistics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target finish.
+        /// </summary>
+        public static string Label_SimulationTarget {
+            get {
+                return ResourceManager.GetString("Label_SimulationTarget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target.
+        /// </summary>
+        public static string Label_SimulationTargetLine {
+            get {
+                return ResourceManager.GetString("Label_SimulationTargetLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chance of finishing by the target.
+        /// </summary>
+        public static string Label_SimulationTargetProbability {
+            get {
+                return ResourceManager.GetString("Label_SimulationTargetProbability", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string Label_SimulationValue {
+            get {
+                return ResourceManager.GetString("Label_SimulationValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit.
         /// </summary>
         public static string Label_SlackLimit {
             get {
                 return ResourceManager.GetString("Label_SlackLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Std Dev.
+        /// </summary>
+        public static string Label_StandardDeviation {
+            get {
+                return ResourceManager.GetString("Label_StandardDeviation", resourceCulture);
             }
         }
         

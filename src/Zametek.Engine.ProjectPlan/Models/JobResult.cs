@@ -14,6 +14,10 @@ namespace Zametek.Engine.ProjectPlan
         // The compiled plan's metrics, taken once every output had been produced. A plan that did not compile has none.
         public JobMetrics? Metrics { get; init; }
 
+        // What the simulation found, when the job ran one and it gave a result: the request asked for it, and it did not
+        // fail.
+        public JobSimulationMetrics? Simulation { get; init; }
+
         // Two results are equal when they say the same thing: a record would compare the list of errors by reference,
         // not by what is in it.
         public virtual bool Equals(JobResult? other)
@@ -22,7 +26,8 @@ namespace Zametek.Engine.ProjectPlan
                 && Status == other.Status
                 && CompilationOutput == other.CompilationOutput
                 && CompilationErrors.SequenceEqual(other.CompilationErrors)
-                && Equals(Metrics, other.Metrics);
+                && Equals(Metrics, other.Metrics)
+                && Equals(Simulation, other.Simulation);
         }
 
         public override int GetHashCode()
@@ -31,6 +36,7 @@ namespace Zametek.Engine.ProjectPlan
             hash.Add(Status);
             hash.Add(CompilationOutput);
             hash.Add(Metrics);
+            hash.Add(Simulation);
 
             foreach (JobCompilationError error in CompilationErrors)
             {

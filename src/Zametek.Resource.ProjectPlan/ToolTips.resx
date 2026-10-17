@@ -144,6 +144,9 @@
   <data name="ToolTip_EarliestStartTime" xml:space="preserve">
     <value>Earliest Start Time</value>
   </data>
+  <data name="ToolTip_ExpectedDuration" xml:space="preserve">
+    <value>Expected duration, (O + 4 ML + P) / 6 rounded to a whole day. This is the duration that is scheduled</value>
+  </data>
   <data name="ToolTip_FibonacciWeight" xml:space="preserve">
     <value>Fibonacci Weight</value>
   </data>
@@ -201,6 +204,15 @@
   <data name="ToolTip_ActivityNotes" xml:space="preserve">
     <value>Notes</value>
   </data>
+  <data name="ToolTip_MostLikelyDuration" xml:space="preserve">
+    <value>Most likely duration (ML)</value>
+  </data>
+  <data name="ToolTip_OptimisticDuration" xml:space="preserve">
+    <value>Optimistic duration (O). It follows the most likely duration until you edit it</value>
+  </data>
+  <data name="ToolTip_PessimisticDuration" xml:space="preserve">
+    <value>Pessimistic duration (P). It follows the most likely duration until you edit it</value>
+  </data>
   <data name="ToolTip_ResourceNotes" xml:space="preserve">
     <value>Notes</value>
   </data>
@@ -212,6 +224,9 @@
   </data>
   <data name="ToolTip_SlackLimit" xml:space="preserve">
     <value>Slack Limit</value>
+  </data>
+  <data name="ToolTip_StandardDeviation" xml:space="preserve">
+    <value>Standard deviation of the duration, (P - O) / 6</value>
   </data>
   <data name="ToolTip_TargetResourceOperator" xml:space="preserve">
     <value>Resource Operator</value>

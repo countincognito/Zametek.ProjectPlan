@@ -112,6 +112,13 @@ namespace Zametek.ViewModel.ProjectPlan
         // DependentActivityModel <-> DependentActivity
         // --------------------------------------------------------------------
 
+        // The activity holds the optimistic and pessimistic durations that the user gave it as
+        // OwnOptimisticDuration and OwnPessimisticDuration, and the model holds them as
+        // OptimisticDuration and PessimisticDuration. The names are not the same here, so
+        // nothing maps them unless a mapping says so. This mapper ignores a target member that it
+        // cannot find in the source, and the result would be a plan that loses its estimates.
+        [MapProperty(nameof(DependentActivity.OwnOptimisticDuration), nameof(ActivityModel.OptimisticDuration))]
+        [MapProperty(nameof(DependentActivity.OwnPessimisticDuration), nameof(ActivityModel.PessimisticDuration))]
         public partial ActivityModel ToActivityModel(DependentActivity src);
 
         // DependentActivityModel -> DependentActivity
@@ -143,8 +150,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     maximumLatestFinishTime: src.Activity.MaximumLatestFinishTime,
                     overrideColor: src.Activity.OverrideColor,
                     colorFormat: src.Activity.ColorFormat,
-                    trackers: src.Activity.Trackers
+                    trackers: src.Activity.Trackers,
+                    mostLikelyDuration: MostLikelyOrDuration(src.Activity),
+                    ownOptimisticDuration: src.Activity.OptimisticDuration,
+                    ownPessimisticDuration: src.Activity.PessimisticDuration
                 );
+
+        // A model with no most likely duration is an activity with no estimates, and its most likely
+        // duration is the Duration that it has. That is the model of a file from before the estimates,
+        // of an import, and of any caller that sets only the Duration. It must not become zero.
+        private static int MostLikelyOrDuration(ActivityModel src)
+            => src.MostLikelyDuration ?? src.Duration;
 
         // DependentActivity -> DependentActivityModel
         public DependentActivityModel ToDependentActivityModel(DependentActivity src)
@@ -169,6 +185,12 @@ namespace Zametek.ViewModel.ProjectPlan
         // The view model's Trackers are its tracker set's, ordered by time, and are
         // copied across like any other collection. This used to be done by hand
         // afterwards, back when the mapping could not carry them at all.
+        //
+        // The view model has an OptimisticDuration and a PessimisticDuration of its own, which are
+        // the values that the activity has (they follow ML), and the model holds the values that the
+        // user gave (null where the user gave none). So these two are named, as for DependentActivity.
+        [MapProperty(nameof(ManagedActivityViewModel.OwnOptimisticDuration), nameof(ActivityModel.OptimisticDuration))]
+        [MapProperty(nameof(ManagedActivityViewModel.OwnPessimisticDuration), nameof(ActivityModel.PessimisticDuration))]
         public partial ActivityModel ToActivityModel(ManagedActivityViewModel src);
 
         public DependentActivityModel ToDependentActivityModel(ManagedActivityViewModel src)
@@ -311,6 +333,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Edges, Nodes, Graphs
         // --------------------------------------------------------------------
 
+        [MapProperty(nameof(ActivityModel.OptimisticDuration), nameof(DependentActivity.OwnOptimisticDuration))]
+        [MapProperty(nameof(ActivityModel.PessimisticDuration), nameof(DependentActivity.OwnPessimisticDuration))]
+        [MapPropertyFromSource(nameof(DependentActivity.MostLikelyDuration), Use = nameof(MostLikelyOrDuration))]
         public partial DependentActivity ToDependentActivity(ActivityModel src);
 
         public Edge<int, IDependentActivity> ToActivityEdge(ActivityEdgeModel src)

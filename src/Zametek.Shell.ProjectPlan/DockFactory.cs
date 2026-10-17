@@ -26,6 +26,9 @@ namespace Zametek.Shell.ProjectPlan
         private readonly IDockable m_GanttChartManagerViewModel;
         private readonly IDockable m_EarnedValueChartManagerViewModel;
         private readonly IDockable m_ScenarioChartManagerViewModel;
+        private readonly IDockable m_SimulationChartManagerViewModel;
+        private readonly IDockable m_SimulationManagerViewModel;
+        private readonly IDockable m_SimulationMetricManagerViewModel;
         private readonly IDockable m_GraphSettingsManagerViewModel;
         private readonly IDockable m_ResourceSettingsManagerViewModel;
         private readonly IDockable m_ResourceMetricManagerViewModel;
@@ -45,6 +48,9 @@ namespace Zametek.Shell.ProjectPlan
             IGanttChartManagerViewModel ganttChartManagerViewModel,
             IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
             IScenarioChartManagerViewModel scenarioChartManagerViewModel,
+            ISimulationChartManagerViewModel simulationChartManagerViewModel,
+            ISimulationManagerViewModel simulationManagerViewModel,
+            ISimulationMetricManagerViewModel simulationMetricManagerViewModel,
             IGraphSettingsManagerViewModel graphSettingsManagerViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             IResourceMetricManagerViewModel resourceMetricManagerViewModel,
@@ -63,6 +69,9 @@ namespace Zametek.Shell.ProjectPlan
             m_GanttChartManagerViewModel = ganttChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(ganttChartManagerViewModel));
             m_EarnedValueChartManagerViewModel = earnedValueChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(earnedValueChartManagerViewModel));
             m_ScenarioChartManagerViewModel = scenarioChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(scenarioChartManagerViewModel));
+            m_SimulationChartManagerViewModel = simulationChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(simulationChartManagerViewModel));
+            m_SimulationManagerViewModel = simulationManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(simulationManagerViewModel));
+            m_SimulationMetricManagerViewModel = simulationMetricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(simulationMetricManagerViewModel));
             m_GraphSettingsManagerViewModel = graphSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(graphSettingsManagerViewModel));
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
             m_ResourceMetricManagerViewModel = resourceMetricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceMetricManagerViewModel));
@@ -212,6 +221,21 @@ namespace Zametek.Shell.ProjectPlan
                 m_ScenarioChartManagerViewModel.CanPin = true;
             }
             {
+                m_SimulationChartManagerViewModel.CanClose = false;
+                m_SimulationChartManagerViewModel.CanFloat = true;
+                m_SimulationChartManagerViewModel.CanPin = true;
+            }
+            {
+                m_SimulationManagerViewModel.CanClose = false;
+                m_SimulationManagerViewModel.CanFloat = true;
+                m_SimulationManagerViewModel.CanPin = true;
+            }
+            {
+                m_SimulationMetricManagerViewModel.CanClose = false;
+                m_SimulationMetricManagerViewModel.CanFloat = true;
+                m_SimulationMetricManagerViewModel.CanPin = true;
+            }
+            {
                 m_GraphSettingsManagerViewModel.CanClose = false;
                 m_GraphSettingsManagerViewModel.CanFloat = true;
                 m_GraphSettingsManagerViewModel.CanPin = true;
@@ -269,7 +293,8 @@ namespace Zametek.Shell.ProjectPlan
                                 CanPin = false,
                                 IsCollapsable = false,
                                 VisibleDockables = CreateList(
-                                    m_ProjectScenarioManagerViewModel),
+                                    m_ProjectScenarioManagerViewModel,
+                                    m_SimulationManagerViewModel),
                                 Alignment = Alignment.Top,
                                 GripMode = GripMode.Visible
                             },
@@ -295,6 +320,7 @@ namespace Zametek.Shell.ProjectPlan
                                     m_VertexGraphManagerViewModel,
                                     m_ResourceChartManagerViewModel,
                                     m_EarnedValueChartManagerViewModel,
+                                    m_SimulationChartManagerViewModel,
                                     m_ScenarioChartManagerViewModel),
                                 Alignment = Alignment.Top,
                                 GripMode = GripMode.Visible
@@ -347,6 +373,7 @@ namespace Zametek.Shell.ProjectPlan
                                 VisibleDockables = CreateList(
                                     m_ResourceSettingsManagerViewModel,
                                     m_ResourceMetricManagerViewModel,
+                                    m_SimulationMetricManagerViewModel,
                                     m_GraphSettingsManagerViewModel,
                                     m_WorkStreamSettingsManagerViewModel,
                                     m_HolidaySettingsManagerViewModel),

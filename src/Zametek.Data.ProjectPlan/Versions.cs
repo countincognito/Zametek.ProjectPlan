@@ -17,8 +17,9 @@
         public const string v0_5_0 = @"v0.5.0";
         public const string v0_6_0 = @"v0.6.0";
         public const string v0_6_1 = @"v0.6.1";
+        public const string v0_6_2 = @"v0.6.2";
 
-        public const string ProjectLatest = v0_6_1;
+        public const string ProjectLatest = v0_6_2;
         public const string AppSettingsLatest = v0_6_1;
     }
 }

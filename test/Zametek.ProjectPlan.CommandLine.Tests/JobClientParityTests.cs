@@ -1,6 +1,9 @@
 using Shouldly;
 using System.Text.RegularExpressions;
 using Xunit;
+using Zametek.Common.ProjectPlan;
+using Zametek.Engine.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -79,6 +82,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return path;
         }
 
+        // A copy of a plan that holds the settings of a simulation, and the result of a run if one is asked for, as zpp saves them with
+        // -o: the settings of a simulation are the project's, and a project that has them is made by saving them.
+        private async Task<string> SimulatedPlanAsync(
+            string name,
+            string source,
+            SimulationSettingsModel settings,
+            bool withResult = false)
+        {
+            string path = Path.Combine(m_TempDirectory, $@"{name}.zpp");
+            await using FileStream input = File.OpenRead(source);
+            var sink = new MemoryJobSink(new BufferedConsole());
+
+            await m_Engine.JobRunner.RunAsync(
+                new JobRequest { Input = input, SaveProject = true, SimulationSettings = settings, RunSimulation = withResult },
+                sink);
+
+            await File.WriteAllBytesAsync(path, sink.Outputs.Single(x => x.Output == JobOutput.Project).Content);
+            return path;
+        }
+
         [Fact]
         public async Task Run_Given_EveryOutputInRasterFormats_Then_DoesWhatZppDoesHere()
         {
@@ -113,6 +136,136 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"--ev-directory", directory, @"--ev-format", @"svg", @"--ev-size", @"800:600",
                 @"--scenario-chart-directory", directory, @"--scenario-chart-format", @"svg", @"--scenario-chart-size", @"800:600",
             ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ARunOfTheSimulationAndAllItsOutputs_Then_DoesWhatZppDoesHere()
+        {
+            string plan = await SimulatedPlanAsync(
+                @"estimated-run",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 1500, Seed = 9, Distribution = DurationDistribution.Triangular, TargetFinishTime = 28, UseRandomSeed = false });
+
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", plan,
+                @"-o", Path.Combine(directory, @"saved.zpp"),
+                @"--metrics-format", @"json",
+                @"--now", c_Now,
+                @"--run-simulation",
+                @"--simulation-directory", directory, @"--simulation-format", @"png", @"--simulation-size", @"640:480",
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ARunOfAPlanWithResourcesAndTableMetrics_Then_DoesWhatZppDoesHere()
+        {
+            string plan = await SimulatedPlanAsync(
+                @"sample-run",
+                SamplePath(),
+                new SimulationSettingsModel { Iterations = 200, Distribution = DurationDistribution.ModifiedBetaPert, ModifiedBetaShape = 6.5 });
+
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", plan,
+                @"--metrics-format", @"table",
+                @"--run-simulation",
+                @"--simulation-directory", directory, @"--simulation-format", @"svg", @"--simulation-size", @"800:600",
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ARunOfAPlanThatHasNoSettingsAndMarkdownMetrics_Then_DoesWhatZppDoesHere()
+        {
+            await ShouldDoWhatZppDoesHereAsync(directory => [@"-i", AssetPath(@"estimated.zpp"), @"--run-simulation"]);
+        }
+
+        [Fact]
+        public async Task Run_Given_APlanThatHoldsAResultAndNoRun_Then_DrawsTheResultAsZppDoesHere()
+        {
+            // The statistics of the result that the project holds, and its chart and its four files: no file of the iterations.
+            string plan = await SimulatedPlanAsync(
+                @"estimated-held",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 700, Seed = 3, TargetFinishTime = 30, UseRandomSeed = false },
+                withResult: true);
+
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", plan,
+                @"--metrics-format", @"json",
+                @"--simulation-directory", directory, @"--simulation-format", @"png", @"--simulation-size", @"640:480",
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ASeedThatIsSavedAndNewSeedEachRun_Then_BothDoWhatZppDoesHere()
+        {
+            // The seed that the project has saved is the seed of the run, and the server uses it too.
+            string plan = await SimulatedPlanAsync(
+                @"estimated-seed",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 800, Seed = 0, TargetFinishTime = 0, UseRandomSeed = true });
+
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", plan,
+                @"--metrics-format", @"json",
+                @"--run-simulation",
+            ]);
+        }
+
+        [Fact]
+        public async Task Run_Given_ASimulationChartThatCannotBeWrittenHere_Then_ReportsItAndWritesTheFilesAfterIt()
+        {
+            string plan = await SimulatedPlanAsync(
+                @"estimated-chart",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 300 });
+
+            await ShouldDoWhatZppDoesHereAsync(
+                directory =>
+                [
+                    @"-i", plan,
+                    @"--run-simulation",
+                    @"--simulation-directory", directory, @"--simulation-format", @"png", @"--simulation-size", @"640:480",
+                ],
+                directory => Directory.CreateDirectory(Path.Combine(directory, @"estimated-chart-simulation.png")),
+                expectedExitCode: ExitCode.Failure);
+        }
+
+        [Fact]
+        public async Task Run_Given_TheOutputsOfASimulationAndNeitherARunNorAResult_Then_FailsAsZppDoesHere()
+        {
+            // Both say so with the same text, and neither writes a file.
+            await ShouldDoWhatZppDoesHereAsync(
+                directory =>
+                [
+                    @"-i", AssetPath(@"estimated.zpp"),
+                    @"--simulation-directory", directory, @"--simulation-size", @"640:480",
+                ],
+                expectedExitCode: ExitCode.Failure);
+        }
+
+        [Fact]
+        public async Task Run_Given_MoreIterationsThanTheServerRuns_Then_ServerFailureWithTheReason()
+        {
+            string plan = await SimulatedPlanAsync(@"estimated-many", AssetPath(@"estimated.zpp"), new SimulationSettingsModel { Iterations = 101 });
+
+            await using RunningServer limited = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 100 } });
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync([@"-i", plan, @"--run-simulation", @"--server", limited.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            error.ShouldContain(@"#/options/runSimulation");
+            error.ShouldContain(string.Format(Resource.ProjectPlan.Messages.Message_SimulationIterationsAboveLimit, 101, 100));
+
+            // The limit is on what a run costs: the same server draws the result that the project holds, which costs nothing.
+            string held = await SimulatedPlanAsync(@"estimated-held-many", AssetPath(@"estimated.zpp"), new SimulationSettingsModel { Iterations = 101 }, withResult: true);
+            (int heldExitCode, _, _) = await ZppMain.RunCapturedAsync([@"-i", held, @"--server", limited.Address]);
+            heldExitCode.ShouldBe((int)ExitCode.Success);
         }
 
         [Fact]

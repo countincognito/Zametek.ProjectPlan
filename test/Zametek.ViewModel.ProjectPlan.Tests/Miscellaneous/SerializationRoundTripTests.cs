@@ -4,11 +4,13 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
@@ -174,7 +176,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using MemoryStream stream = await SaveToStreamAsync(model);
 
             JObject json = JObject.Parse(ReadAllText(stream));
-            json["Version"]!.ToString().ShouldBe(Versions.v0_6_1);
+            json["Version"]!.ToString().ShouldBe(Versions.v0_6_2);
         }
 
         [Fact]
@@ -257,7 +259,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             ProjectModel loaded = await RoundTripAsync(original);
 
-            loaded.Version.ShouldBe(Versions.v0_6_1);
+            loaded.Version.ShouldBe(Versions.v0_6_2);
         }
 
         [Fact]
@@ -357,7 +359,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ProjectModel loaded1 = await RoundTripAsync(original);
             ProjectModel loaded2 = await RoundTripAsync(loaded1);
 
-            loaded2.Version.ShouldBe(Versions.v0_6_1);
+            loaded2.Version.ShouldBe(Versions.v0_6_2);
         }
 
         [Fact]
@@ -370,6 +372,212 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             loaded2.Nodes.Count.ShouldBe(original.Nodes.Count);
         }
+
+        [Fact]
+        public async Task RoundTrip_Preserves_TheEstimatesOfADuration()
+        {
+            // Three activities, one in each shape that a plan can hold: all three
+            // estimates, a most likely duration alone, and no estimates at all.
+            ProjectModel original = WithActivities(
+                BuildMinimalProjectModel(),
+                new ActivityModel { Id = 1, Duration = 6, MostLikelyDuration = 5, OptimisticDuration = 3, PessimisticDuration = 12 },
+                new ActivityModel { Id = 2, Duration = 4, MostLikelyDuration = 4 },
+                new ActivityModel { Id = 3, Duration = 7 });
+
+            using MemoryStream stream = await SaveToStreamAsync(original);
+            JObject json = JObject.Parse(ReadAllText(stream));
+            var written = (JArray)json["Files"]![0]!["Scenario"]!["DependentActivities"]!;
+
+            // A member that is null is not written, so an activity with no estimates
+            // looks in the file as it did in the version before them.
+            written[0]["Activity"]!["MostLikelyDuration"]!.Value<int>().ShouldBe(5);
+            written[0]["Activity"]!["OptimisticDuration"]!.Value<int>().ShouldBe(3);
+            written[0]["Activity"]!["PessimisticDuration"]!.Value<int>().ShouldBe(12);
+            written[1]["Activity"]!["OptimisticDuration"].ShouldBeNull();
+            written[2]["Activity"]!["MostLikelyDuration"].ShouldBeNull();
+
+            stream.Position = 0;
+            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(stream);
+
+            List<ActivityModel> activities = [.. loaded.Files[0].Scenario.DependentActivities.Select(x => x.Activity)];
+            (activities[0].Duration, activities[0].MostLikelyDuration, activities[0].OptimisticDuration, activities[0].PessimisticDuration)
+                .ShouldBe((6, 5, 3, 12));
+            (activities[1].Duration, activities[1].MostLikelyDuration, activities[1].OptimisticDuration, activities[1].PessimisticDuration)
+                .ShouldBe((4, 4, (int?)null, (int?)null));
+            (activities[2].Duration, activities[2].MostLikelyDuration, activities[2].OptimisticDuration, activities[2].PessimisticDuration)
+                .ShouldBe((7, (int?)null, (int?)null, (int?)null));
+        }
+
+        [Fact]
+        public async Task OpenProject_Given_AV0_6_1File_Then_ItOpensAsV0_6_2WithTheSameDurationsAndNoEstimates()
+        {
+            // The file of every plan that exists today. It has no estimates, and its Duration
+            // is the duration that was scheduled, which must stay the duration.
+            ProjectModel current = WithActivities(
+                BuildMinimalProjectModel(),
+                new ActivityModel { Id = 1, Duration = 6 },
+                new ActivityModel { Id = 2, Duration = 0 });
+            Data.ProjectPlan.v0_6_1.ProjectModel stored = new VersionMapper().FromCurrentToV0_6_1(current);
+            stored.Version.ShouldBe(Versions.v0_6_1);
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(stored)));
+            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(stream);
+
+            loaded.Version.ShouldBe(Versions.v0_6_2);
+            List<ActivityModel> activities = [.. loaded.Files[0].Scenario.DependentActivities.Select(x => x.Activity)];
+            activities.Select(x => x.Duration).ShouldBe([6, 0]);
+            activities.ShouldAllBe(x => x.MostLikelyDuration == null
+                && x.OptimisticDuration == null
+                && x.PessimisticDuration == null);
+        }
+
+        #endregion
+
+        #region The simulation
+
+        // A scenario that holds the settings of a simulation and what it found: every member has a value of its own,
+        // so that one that is not carried across shows.
+        private static ProjectModel BuildProjectModelWithASimulation()
+        {
+            ProjectModel project = BuildMinimalProjectModel();
+
+            return project with
+            {
+                Files =
+                [
+                    project.Files[0] with
+                    {
+                        Scenario = project.Files[0].Scenario with
+                        {
+                            SimulationSettings = new SimulationSettingsModel
+                            {
+                                Iterations = 1234,
+                                Distribution = DurationDistribution.ModifiedBetaPert,
+                                ModifiedBetaShape = 6.5,
+                                Seed = ulong.MaxValue - 3,
+                                UseRandomSeed = false,
+                                TargetFinishTime = 77,
+                            },
+                            SimulationSummary = new SimulationSummaryModel
+                            {
+                                IterationCount = 1234,
+                                ValidIterationCount = 1200,
+                                FailedIterationCount = 34,
+                                PlannedFinishTime = 60,
+                                TargetFinishTime = 77,
+                                TargetProbability = 0.875,
+                                Mean = 66.25,
+                                StandardDeviation = 4.5,
+                                Minimum = 50,
+                                Maximum = 90,
+                                Percentiles = [new SimulationPercentileModel { Percentile = 50, FinishTime = 66 }, new SimulationPercentileModel { Percentile = 90, FinishTime = 73 }],
+                                BinWidth = 2,
+                                Bins =
+                                [
+                                    new SimulationHistogramBinModel { FirstFinishTime = 50, LastFinishTime = 51, Count = 10, CumulativeShare = 0.25, PathGroupWeights = [6.5, 3.5, 0.0] },
+                                    new SimulationHistogramBinModel { FirstFinishTime = 52, LastFinishTime = 53, Count = 30, CumulativeShare = 1.0, PathGroupWeights = [20.0, 10.0, 0.0] },
+                                ],
+                                Paths =
+                                [
+                                    new SimulationPathModel { Rank = 1, Label = "Design > Build ~> Test", ShortLabel = "Design > Build ~> Test", IdLabel = "1 > 3 ~> 7", HasResourceLinks = true, Weight = 700.5, Share = 0.5837 },
+                                    new SimulationPathModel { Rank = 2, Label = "Design > Test", ShortLabel = "Design > Test", IdLabel = "1 > 7", HasResourceLinks = false, Weight = 300.0, Share = 0.25 },
+                                ],
+                                ChartPathCount = 2,
+                                OtherPathsWeight = 199.5,
+                                Activities =
+                                [
+                                    new SimulationActivityCriticalityModel { ActivityId = 1, Name = "Design", CriticalIterationCount = 1200, CriticalityIndex = 1.0 },
+                                    new SimulationActivityCriticalityModel { ActivityId = 3, Name = "Build", CriticalIterationCount = 700, CriticalityIndex = 0.5833 },
+                                ],
+                            },
+                        },
+                    },
+                ],
+            };
+        }
+
+        [Fact]
+        public async Task RoundTrip_Preserves_TheSettingsOfTheSimulation()
+        {
+            ProjectModel original = BuildProjectModelWithASimulation();
+
+            ProjectModel loaded = await RoundTripAsync(original);
+
+            loaded.Files[0].Scenario.SimulationSettings.ShouldBe(original.Files[0].Scenario.SimulationSettings);
+        }
+
+        [Fact]
+        public async Task RoundTrip_Preserves_WhatTheSimulationFound()
+        {
+            ProjectModel original = BuildProjectModelWithASimulation();
+            SimulationSummaryModel expected = original.Files[0].Scenario.SimulationSummary!;
+
+            ProjectModel loaded = await RoundTripAsync(original);
+
+            SimulationSummaryModel summary = loaded.Files[0].Scenario.SimulationSummary.ShouldNotBeNull();
+            (summary.IterationCount, summary.ValidIterationCount, summary.FailedIterationCount, summary.PlannedFinishTime, summary.TargetFinishTime, summary.TargetProbability)
+                .ShouldBe((1234, 1200, 34, 60, 77, 0.875));
+            (summary.Mean, summary.StandardDeviation, summary.Minimum, summary.Maximum, summary.BinWidth, summary.ChartPathCount, summary.OtherPathsWeight)
+                .ShouldBe((66.25, 4.5, 50, 90, 2, 2, 199.5));
+            summary.Percentiles.ShouldBe(expected.Percentiles);
+            summary.Paths.ShouldBe(expected.Paths);
+            summary.Activities.ShouldBe(expected.Activities);
+            summary.Bins.Select(x => (x.FirstFinishTime, x.LastFinishTime, x.Count, x.CumulativeShare))
+                .ShouldBe(expected.Bins.Select(x => (x.FirstFinishTime, x.LastFinishTime, x.Count, x.CumulativeShare)));
+            summary.Bins.Select(x => string.Join(",", x.PathGroupWeights)).ShouldBe(expected.Bins.Select(x => string.Join(",", x.PathGroupWeights)));
+
+            // The critical paths as activity ids are the ones the Critical paths table shows, and a file holds them.
+            summary.Paths.Select(x => x.IdLabel).ShouldBe(["1 > 3 ~> 7", "1 > 7"]);
+        }
+
+        [Fact]
+        public async Task RoundTrip_Given_NoSimulationResult_Then_TheFileHoldsNoneAndTheSettingsAreTheDefaults()
+        {
+            using MemoryStream stream = await SaveToStreamAsync(BuildMinimalProjectModel());
+
+            // A result that is null is not written.
+            JObject json = JObject.Parse(ReadAllText(stream));
+            json["Files"]![0]!["Scenario"]!["SimulationSummary"].ShouldBeNull();
+
+            stream.Position = 0;
+            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(stream);
+
+            ProjectScenarioModel scenario = loaded.Files[0].Scenario;
+            scenario.SimulationSummary.ShouldBeNull();
+            scenario.SimulationSettings.ShouldBe(new SimulationSettingsModel());
+        }
+
+        [Fact]
+        public async Task SaveProject_Given_ASimulation_Then_TheSeedIsAFullWidthNumberInTheFile()
+        {
+            // The seed is 64 bits wide, and a reader that holds numbers as doubles would lose the end of it. It is
+            // written as the number it is, and read as the number it is.
+            ProjectModel original = BuildProjectModelWithASimulation();
+
+            using MemoryStream stream = await SaveToStreamAsync(original);
+
+            JObject json = JObject.Parse(ReadAllText(stream));
+            json["Files"]![0]!["Scenario"]!["SimulationSettings"]!["Seed"]!.ToString().ShouldBe((ulong.MaxValue - 3).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        #endregion
+
+        #region Helpers for the estimates
+
+        private static ProjectModel WithActivities(ProjectModel project, params ActivityModel[] activities) =>
+            project with
+            {
+                Files =
+                [
+                    project.Files[0] with
+                    {
+                        Scenario = project.Files[0].Scenario with
+                        {
+                            DependentActivities = [.. activities.Select(x => new DependentActivityModel { Activity = x })],
+                        },
+                    },
+                ],
+            };
 
         #endregion
     }

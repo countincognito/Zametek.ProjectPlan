@@ -28,6 +28,12 @@
     <Content Include="TestFiles\sample_mspdi.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestFiles\Xlsx\**\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\docs\assets\sample.xlsx" Link="TestFiles\Xlsx\docs-sample.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 	<ItemGroup>

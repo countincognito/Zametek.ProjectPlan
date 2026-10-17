@@ -121,6 +121,10 @@ namespace Zametek.Engine.ProjectPlan.Tests
                     ResourceChart = new ChartOutputRequest(ChartImageFormat.Png, 800, 600),
                     EarnedValueChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                     ScenarioChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
+                    RunSimulation = true,
+                    SimulationSettings = new SimulationSettingsModel { Iterations = 200, Seed = 7, TargetFinishTime = 100 },
+                    SimulationChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
+                    SimulationCsvFiles = SimulationCsvFile.All,
                 },
                 sink);
             return (result, sink);

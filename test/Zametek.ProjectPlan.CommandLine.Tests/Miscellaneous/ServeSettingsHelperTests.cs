@@ -64,6 +64,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             settings.Limits.MaxUploadMegabytes.ShouldBe(50);
             settings.Limits.MaxChartWidth.ShouldBe(5000);
             settings.Limits.MaxChartHeight.ShouldBe(5000);
+            settings.Limits.MaxSimulationIterations.ShouldBe(100_000);
             settings.Limits.JobTimeoutSeconds.ShouldBe(120);
             settings.Limits.MaxCompileTimeoutMilliseconds.ShouldBe(60_000);
         }
@@ -203,6 +204,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"{ ""MaxUploadMegabytes"": 0 }", nameof(ServeLimits.MaxUploadMegabytes), nameof(ServeOptions.MaxUploadMegabytes), 1)]
         [InlineData(@"{ ""MaxChartWidth"": 0 }", nameof(ServeLimits.MaxChartWidth), nameof(ServeOptions.MaxChartSize), 1)]
         [InlineData(@"{ ""MaxChartHeight"": 0 }", nameof(ServeLimits.MaxChartHeight), nameof(ServeOptions.MaxChartSize), 1)]
+        [InlineData(@"{ ""MaxSimulationIterations"": 0 }", nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations), 1)]
         [InlineData(@"{ ""JobTimeoutSeconds"": 0 }", nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds), 1)]
         [InlineData(@"{ ""MaxCompileTimeoutMilliseconds"": 0 }", nameof(ServeLimits.MaxCompileTimeoutMilliseconds), nameof(ServeOptions.MaxCompileTimeoutMilliseconds), 1)]
         public void Resolve_Given_ALimitTooLow_Then_UsageException(
@@ -213,6 +215,25 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             Should.Throw<UsageException>(() => Resolve(settingsJson: settingsJson))
                 .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeLimitTooLow, limitName, Option(optionPropertyName), minimum));
+        }
+
+        [Fact]
+        public void Resolve_Given_TheIterationsOfASimulation_Then_ThatLimit()
+        {
+            Resolve(new ServeOptions { MaxSimulationIterations = 2500 }).Limits.MaxSimulationIterations.ShouldBe(2500);
+            Resolve(settingsJson: @"{ ""MaxSimulationIterations"": 3000 }").Limits.MaxSimulationIterations.ShouldBe(3000);
+            Resolve(new ServeOptions { MaxSimulationIterations = 1_000_000 }).Limits.MaxSimulationIterations.ShouldBe(1_000_000);
+        }
+
+        [Fact]
+        public void Resolve_Given_MoreIterationsThanTheLibraryRuns_Then_UsageException()
+        {
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { MaxSimulationIterations = 1_000_001 }))
+                .Message.ShouldBe(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeLimitTooHigh,
+                    nameof(ServeLimits.MaxSimulationIterations),
+                    Option(nameof(ServeOptions.MaxSimulationIterations)),
+                    1_000_000));
         }
 
         [Fact]

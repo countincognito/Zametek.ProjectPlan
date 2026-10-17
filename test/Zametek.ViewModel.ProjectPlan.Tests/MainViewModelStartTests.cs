@@ -4,6 +4,7 @@ using Shouldly;
 using System;
 using System.Reflection;
 using Xunit;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using static Zametek.ViewModel.ProjectPlan.Tests.SequencerScopes;
 
@@ -86,6 +87,73 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Main.ProjectTitle.ShouldStartWith("*");
         }
 
+        [Fact]
+        public void Title_Given_AProjectThatIsClosedWithNoEdit_Then_TheTitleIsTheTitleOfNoProject()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = Harness.Make();
+            harness.Main.StartSubscriptions();
+            Drain(main, pool);
+            harness.Settings.SetProjectFilePath(@"C:\plans\plan.zpp", bindTitleToFilename: true);
+            harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
+            Drain(main, pool);
+            harness.Main.ProjectTitle.ShouldStartWith(@"plan - ");
+
+            // No edit has been made, and so the project does not change: the title follows the close all the same.
+            harness.Project.ResetProject();
+            Drain(main, pool);
+
+            harness.Main.ProjectTitle.ShouldStartWith($@"{Resource.ProjectPlan.Titles.Title_UntitledProject} - ");
+        }
+
+        [Fact]
+        public void Title_Given_AScenarioThatIsLoadedWithNoEdit_Then_TheTitleNamesTheScenario()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = Harness.Make();
+            harness.Main.StartSubscriptions();
+            Drain(main, pool);
+            harness.Settings.SetProjectFilePath(@"C:\plans\plan.zpp", bindTitleToFilename: true);
+            harness.Settings.SetProjectScenarioTitle(@"Alpha");
+            harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
+            Drain(main, pool);
+            harness.Main.ProjectTitle.ShouldContain(@" - Alpha - ");
+
+            harness.Settings.SetProjectScenarioTitle(@"Beta");
+            harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
+            Drain(main, pool);
+
+            harness.Main.ProjectTitle.ShouldContain(@" - Beta - ");
+            harness.Main.ProjectTitle.ShouldNotStartWith(@"*");
+        }
+
+        [Fact]
+        public void Title_Given_AProjectThatIsLoadedAfterOneWithEdits_Then_TheStarGoesAndTheTitleIsTheNewOne()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = Harness.Make();
+            harness.Main.StartSubscriptions();
+            Drain(main, pool);
+            harness.Settings.SetProjectFilePath(@"C:\plans\first.zpp", bindTitleToFilename: true);
+            harness.Core.IsProjectScenarioUpdated = true;
+            Drain(main, pool);
+            harness.Main.ProjectTitle.ShouldStartWith(@"*first - ");
+
+            // A load clears the edits and names the new project, in that order: the title is made of both.
+            harness.Settings.SetProjectFilePath(@"C:\plans\second.zpp", bindTitleToFilename: true);
+            harness.Core.IsProjectScenarioUpdated = false;
+            harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
+            Drain(main, pool);
+
+            harness.Main.ProjectTitle.ShouldStartWith(@"second - ");
+        }
+
         // A main view model over a core and a project manager, with the dock, the files and the services a test never
         // reaches stood in for by objects that do nothing.
         private sealed class Harness
@@ -93,14 +161,19 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             private readonly ProjectScenarioManagerViewModel m_Project;
 
-            private Harness(CoreViewModel core, ProjectScenarioManagerViewModel project, MainViewModel main)
+            private Harness(CoreViewModel core, ISettingService settings, ProjectScenarioManagerViewModel project, MainViewModel main)
             {
                 Core = core;
+                Settings = settings;
                 m_Project = project;
                 Main = main;
             }
 
             public CoreViewModel Core { get; }
+
+            public ISettingService Settings { get; }
+
+            public ProjectScenarioManagerViewModel Project => m_Project;
 
             public MainViewModel Main { get; }
 
@@ -128,7 +201,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     DoNothingProxy.Of<IServiceProvider>(),
                     NullLogger<MainViewModel>.Instance);
 
-                return new Harness(core, project, main);
+                return new Harness(core, settings, project, main);
             }
 
             public void Dispose()

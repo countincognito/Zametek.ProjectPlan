@@ -3,6 +3,7 @@ using Shouldly;
 using System.Reflection;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
 {
@@ -31,6 +32,62 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             Parsed<Options> parsed = Parse(args).ShouldBeOfType<Parsed<Options>>();
             return parsed.Value;
+        }
+
+        [Fact]
+        public void Parse_Given_NoSimulationOptions_Then_NoRunAndNoOutputs()
+        {
+            Options options = ParsedValue(@"-i", @"a.zpp");
+
+            options.RunSimulation.ShouldBeFalse();
+            options.SimulationDirectory.ShouldBeNull();
+            options.SimulationFormat.ShouldBe(PlotExport.Jpeg);
+            options.SimulationSize.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void Parse_Given_EverySimulationOption_Then_Each()
+        {
+            Options options = ParsedValue(
+                @"-i", @"a.zpp",
+                @"--run-simulation",
+                @"--simulation-directory", @"simulation",
+                @"--simulation-format", @"png",
+                @"--simulation-size", @"800:600");
+
+            options.RunSimulation.ShouldBeTrue();
+            options.SimulationDirectory.ShouldBe(@"simulation");
+            options.SimulationFormat.ShouldBe(PlotExport.Png);
+            options.SimulationSize.ShouldBe([800, 600]);
+        }
+
+        [Theory]
+        [InlineData(@"--simulate")]
+        [InlineData(@"--simulation-iterations")]
+        [InlineData(@"--simulation-seed")]
+        [InlineData(@"--simulation-distribution")]
+        [InlineData(@"--simulation-shape")]
+        [InlineData(@"--simulation-target")]
+        [InlineData(@"--simulation-chart-directory")]
+        [InlineData(@"--simulation-chart-format")]
+        [InlineData(@"--simulation-chart-size")]
+        [InlineData(@"--simulation-csv-directory")]
+        public void Parse_Given_AnOptionOfTheSimulationThatIsNotOneAnyMore_Then_Fails(string option)
+        {
+            // The settings of a run are the project's, and the chart and the CSV files go to one directory.
+            Parse(@"-i", @"a.zpp", option, @"5").ShouldBeOfType<NotParsed<Options>>();
+        }
+
+        [Fact]
+        public void Parse_Given_ASimulationSizeThatIsNotTwoValues_Then_Fails()
+        {
+            Parse(@"-i", @"a.zpp", @"--simulation-directory", @"d", @"--simulation-size", @"800").ShouldBeOfType<NotParsed<Options>>();
+        }
+
+        [Fact]
+        public void Parse_Given_ASimulationFormatThatIsNotOneOfTheCharts_Then_Fails()
+        {
+            Parse(@"-i", @"a.zpp", @"--simulation-directory", @"d", @"--simulation-format", @"gif").ShouldBeOfType<NotParsed<Options>>();
         }
 
         [Fact]

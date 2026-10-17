@@ -205,6 +205,18 @@ namespace Zametek.Shell.ProjectPlan
                 .As<IScenarioChartManagerViewModel>()
                 .As<ScenarioChartManagerViewModel>()
                 .SingleInstance();
+            s_Builder.RegisterType<SimulationChartManagerViewModel>()
+                .As<ISimulationChartManagerViewModel>()
+                .As<SimulationChartManagerViewModel>()
+                .SingleInstance();
+            s_Builder.RegisterType<SimulationManagerViewModel>()
+                .As<ISimulationManagerViewModel>()
+                .As<SimulationManagerViewModel>()
+                .SingleInstance();
+            s_Builder.RegisterType<SimulationMetricManagerViewModel>()
+                .As<ISimulationMetricManagerViewModel>()
+                .As<SimulationMetricManagerViewModel>()
+                .SingleInstance();
             s_Builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
                 .As<MainViewModel>()
@@ -273,6 +285,15 @@ namespace Zametek.Shell.ProjectPlan
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<ScenarioChartManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<SimulationChartManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<SimulationManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<SimulationMetricManagerView>()
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<MainView>()
