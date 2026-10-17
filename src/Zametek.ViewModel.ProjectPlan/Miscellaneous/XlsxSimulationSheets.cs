@@ -1,5 +1,3 @@
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -102,18 +100,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static void WriteToWorkbook(
             ProjectScenarioModel projectScenario,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle)
+            XlsxWorkbookWriter workbook)
         {
             ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
 
             SimulationSettingsModel settings = projectScenario.SimulationSettings;
 
             WriteSheet(
                 workbook,
-                titleStyle,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings,
                 s_SettingsColumnTitles,
                 [[settings.Iterations, settings.Distribution, settings.ModifiedBetaShape, settings.Seed, settings.UseRandomSeed, settings.TargetFinishTime]]);
@@ -127,7 +122,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteSheet(
                 workbook,
-                titleStyle,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics,
                 s_StatisticsColumnTitles,
                 [
@@ -150,7 +144,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteSheet(
                 workbook,
-                titleStyle,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles,
                 s_PercentileColumnTitles,
                 [.. summary.Percentiles.Select(x => new object?[] { x.Percentile, x.FinishTime })]);
@@ -159,7 +152,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteSheet(
                 workbook,
-                titleStyle,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram,
                 [.. s_HistogramColumnTitles, .. Enumerable.Range(1, groupCount).Select(x => $@"{c_PathGroupWeightColumnPrefix}{x}")],
                 [
@@ -175,74 +167,70 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteSheet(
                 workbook,
-                titleStyle,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths,
                 s_PathColumnTitles,
                 [.. summary.Paths.Select(x => new object?[] { x.Rank, x.Label, x.ShortLabel, x.IdLabel, x.HasResourceLinks, x.Weight, x.Share })]);
 
             WriteSheet(
                 workbook,
-                titleStyle,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities,
                 s_CriticalityColumnTitles,
                 [.. summary.Activities.Select(x => new object?[] { x.ActivityId, x.Name, x.CriticalIterationCount, x.CriticalityIndex })]);
         }
 
         private static void WriteSheet(
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle,
+            XlsxWorkbookWriter workbook,
             string sheetTitle,
             IReadOnlyList<string> columnTitles,
             IReadOnlyList<object?[]> rows)
         {
-            ISheet sheet = workbook.CreateSheet(sheetTitle);
-            IRow titleRow = sheet.CreateRow(0);
+            XlsxSheetWriter sheet = workbook.AddSheet(sheetTitle);
 
             for (int columnIndex = 0; columnIndex < columnTitles.Count; columnIndex++)
             {
-                ICell cell = titleRow.CreateCell(columnIndex);
-                cell.CellStyle = titleStyle;
-                cell.SetCellValue(columnTitles[columnIndex]);
+                sheet.Text(0, columnIndex, columnTitles[columnIndex], XlsxCellStyle.Title);
             }
 
             for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
             {
-                IRow row = sheet.CreateRow(rowIndex + 1);
                 object?[] values = rows[rowIndex];
 
                 for (int columnIndex = 0; columnIndex < values.Length; columnIndex++)
                 {
-                    SetCellValue(row.CreateCell(columnIndex), values[columnIndex]);
+                    SetCellValue(sheet, rowIndex + 1, columnIndex, values[columnIndex]);
                 }
             }
         }
 
         // A value that is not there is a blank cell. The seed is text, as the remarks of the class say.
         private static void SetCellValue(
-            ICell cell,
+            XlsxSheetWriter sheet,
+            int row,
+            int column,
             object? value)
         {
             switch (value)
             {
                 case null:
+                    sheet.Blank(row, column);
                     break;
                 case string text:
-                    cell.SetCellValue(text);
+                    sheet.Text(row, column, text);
                     break;
                 case bool flag:
-                    cell.SetCellValue(flag);
+                    sheet.Boolean(row, column, flag);
                     break;
                 case int number:
-                    cell.SetCellValue((double)number);
+                    sheet.Number(row, column, number);
                     break;
                 case double number:
-                    cell.SetCellValue(number);
+                    sheet.Number(row, column, number);
                     break;
                 case ulong seed:
-                    cell.SetCellValue(seed.ToString(CultureInfo.InvariantCulture));
+                    sheet.Text(row, column, seed.ToString(CultureInfo.InvariantCulture));
                     break;
                 case Enum choice:
-                    cell.SetCellValue(choice.ToString());
+                    sheet.Text(row, column, choice.ToString());
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(value), value, null);

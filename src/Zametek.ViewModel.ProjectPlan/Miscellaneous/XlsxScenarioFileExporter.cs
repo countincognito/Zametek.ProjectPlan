@@ -1,8 +1,5 @@
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using System.Collections;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Reflection;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -178,350 +175,233 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        // Restamps every part of a zipped package as last written at the given time. A zip holds the local clock time
-        // it was given, to the nearest two seconds and only between 1980 and 2107, so a time outside that is held at
-        // the nearer end. Updating an entry's time rewrites its headers but not its compressed data.
-        private static void StampEntries(MemoryStream package, DateTimeOffset localNow)
-        {
-            DateTimeOffset earliest = new(1980, 1, 1, 0, 0, 0, localNow.Offset);
-            DateTimeOffset latest = new(2107, 12, 31, 23, 59, 58, localNow.Offset);
-            DateTimeOffset lastWriteTime = localNow < earliest ? earliest : localNow > latest ? latest : localNow;
-
-            package.Position = 0;
-            using var archive = new ZipArchive(package, ZipArchiveMode.Update, leaveOpen: true);
-            foreach (ZipArchiveEntry entry in archive.Entries)
-            {
-                entry.LastWriteTime = lastWriteTime;
-            }
-        }
+        // What it takes to make a date of a time: a time in a sheet is a number of days from the start of the project, and a
+        // workbook that shows dates has the date of the day in its place.
+        private sealed record DatesFromStart(
+            bool ShowDates,
+            DateTimeOffset ProjectStart,
+            IDateTimeCalculator DateTimeCalculator);
 
         private static void DateFromProjectStart(
+            XlsxSheetWriter sheet,
+            int row,
+            int column,
             int time,
-            ICell cell,
-            ICellStyle dateTimeStyle,
-            bool showDates,
-            DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)
+            XlsxCellStyle style,
+            XlsxCellStyle dateStyle,
+            DatesFromStart datesFromStart)
         {
-            ArgumentNullException.ThrowIfNull(cell);
-            ArgumentNullException.ThrowIfNull(dateTimeStyle);
-            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            if (showDates)
+            if (datesFromStart.ShowDates)
             {
-                cell.CellStyle = dateTimeStyle;
-                cell.SetCellValue(dateTimeCalculator.AddDays(projectStart, time).DateTime);
+                sheet.Date(row, column, datesFromStart.DateTimeCalculator.AddDays(datesFromStart.ProjectStart, time).DateTime, dateStyle);
             }
             else
             {
-                cell.SetCellValue(time);
+                sheet.Number(row, column, time, style);
             }
         }
 
-        private static TypeSwitch<object?> AddDateFromProjectStartCase(
-            TypeSwitch<object?> typeSwitch,
-            ICell cell,
-            ICellStyle dateTimeStyle,
-            bool showDates,
-            DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)
-        {
-            ArgumentNullException.ThrowIfNull(typeSwitch);
-            ArgumentNullException.ThrowIfNull(cell);
-            ArgumentNullException.ThrowIfNull(dateTimeStyle);
-            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            return typeSwitch.Case<int>(time => DateFromProjectStart(time, cell, dateTimeStyle, showDates, projectStart, dateTimeCalculator));
-        }
-
-        private static Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? GetActivityAppendDateFromProjectStartCaseFunc(
+        private static DatesFromStart? GetActivityDatesFromStart(
             string columnTitle,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? output = null;
 
-            TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
-                AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
-
-            columnTitle.ValueSwitchOn()
-                .Case(nameof(ActivityModel.EarliestStartTime), _ => output = appendCaseCheck)
-                .Case(nameof(ActivityModel.LatestStartTime), _ => output = appendCaseCheck)
-                .Case(nameof(ActivityModel.EarliestFinishTime), _ => output = appendCaseCheck)
-                .Case(nameof(ActivityModel.LatestFinishTime), _ => output = appendCaseCheck);
-
-            return output;
+            return columnTitle is nameof(ActivityModel.EarliestStartTime)
+                or nameof(ActivityModel.LatestStartTime)
+                or nameof(ActivityModel.EarliestFinishTime)
+                or nameof(ActivityModel.LatestFinishTime)
+                    ? new DatesFromStart(showDates, projectStart, dateTimeCalculator)
+                    : null;
         }
 
-        private static Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? GetTrackingPointAppendDateFromProjectStartCaseFunc(
+        private static DatesFromStart? GetTrackingPointDatesFromStart(
             string columnTitle,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? output = null;
 
-            TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
-                AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
-
-            columnTitle.ValueSwitchOn()
-                .Case(nameof(TrackingPointModel.Time), _ => output = appendCaseCheck);
-
-            return output;
+            return columnTitle is nameof(TrackingPointModel.Time)
+                ? new DatesFromStart(showDates, projectStart, dateTimeCalculator)
+                : null;
         }
 
+        // Writes a value into a cell, as what it is. A time (a whole number) in a column that has dates from the start is a date
+        // when the workbook shows dates.
+        //
+        // style is the look of the cell, and dateStyle is the look that a date has, which replaces it.
         private static void AddToCell(
             object? content,
-            ICell cell,
-            ICellStyle dateTimeStyle,
-            Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? appendCaseCheck = null)
+            XlsxSheetWriter sheet,
+            int row,
+            int column,
+            XlsxCellStyle style = XlsxCellStyle.Plain,
+            XlsxCellStyle dateStyle = XlsxCellStyle.Date,
+            DatesFromStart? datesFromStart = null)
         {
-            ArgumentNullException.ThrowIfNull(cell);
-            ArgumentNullException.ThrowIfNull(dateTimeStyle);
-            TypeSwitch<object?> typeSwitch = content.TypeSwitchOn();
+            ArgumentNullException.ThrowIfNull(sheet);
 
-            if (appendCaseCheck is not null)
+            if (datesFromStart is not null
+                && content is int time)
             {
-                typeSwitch = appendCaseCheck(typeSwitch, cell, dateTimeStyle);
+                DateFromProjectStart(sheet, row, column, time, style, dateStyle, datesFromStart);
+                return;
             }
 
-            typeSwitch
-                .Case<string>(x => cell.SetCellValue(x))
-                .Case<int>(x => cell.SetCellValue(x))
-                .Case<double>(x => cell.SetCellValue(x))
-                .Case<bool>(x => cell.SetCellValue(x))
-                .Case<ColorFormatModel>(x =>
-                {
-                    cell.SetCellValue(ColorHelper.ColorFormatToHtmlHexCode(x));
-                })
-                .Case<DateTime>(x =>
-                {
-                    cell.CellStyle = dateTimeStyle;
-                    cell.SetCellValue(x);
-                })
-                .Case<DateTimeOffset>(x =>
-                {
-                    cell.CellStyle = dateTimeStyle;
-                    cell.SetCellValue(x.DateTime);
-                })
-                .Case<IEnumerable>(x =>
-                {
-                    cell.SetCellValue(string.Join(DependenciesStringValidationRule.Separator, x.Cast<object>().Select(y => y.ToString())));
-                })
-                .Default(x => cell.SetCellValue(x?.ToString()));
+            switch (content)
+            {
+                case string x:
+                    sheet.Text(row, column, x, style);
+                    break;
+                case int x:
+                    sheet.Number(row, column, x, style);
+                    break;
+                case double x:
+                    sheet.Number(row, column, x, style);
+                    break;
+                case bool x:
+                    sheet.Boolean(row, column, x, style);
+                    break;
+                case ColorFormatModel x:
+                    sheet.Text(row, column, ColorHelper.ColorFormatToHtmlHexCode(x), style);
+                    break;
+                case DateTime x:
+                    sheet.Date(row, column, x, dateStyle);
+                    break;
+                case DateTimeOffset x:
+                    sheet.Date(row, column, x.DateTime, dateStyle);
+                    break;
+                case IEnumerable x:
+                    sheet.Text(row, column, string.Join(DependenciesStringValidationRule.Separator, x.Cast<object>().Select(y => y.ToString())), style);
+                    break;
+                default:
+                    sheet.Text(row, column, content?.ToString(), style);
+                    break;
+            }
+        }
+
+        // The row of titles of a sheet.
+        private static void WriteTitles(
+            XlsxSheetWriter sheet,
+            IEnumerable<string> columnTitles)
+        {
+            int titleColumnIndex = 0;
+
+            foreach (string columnTitle in columnTitles)
+            {
+                AddToCell(columnTitle, sheet, 0, titleColumnIndex, XlsxCellStyle.Title);
+                titleColumnIndex++;
+            }
         }
 
         private static void WriteGeneralToWorkbook(
             ProjectScenarioModel projectScenario,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle)
+            XlsxWorkbookWriter workbook)
         {
             ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
+            XlsxSheetWriter sheet = workbook.AddSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral, dateStyles);
 
-            int rowIndex = 0;
+            WriteTitles(sheet, s_GeneralColumnTitles);
 
+            int columnIndex = 0;
+
+            foreach (string columnTitle in s_GeneralColumnTitles)
             {
-                int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
+                columnTitle.ValueSwitchOn()
+                    .Case(nameof(ProjectScenarioModel.ProjectStart),
+                        colName => AddToCell(projectScenario.ProjectStart, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.Today),
+                        colName => AddToCell(projectScenario.Today, sheet, 1, columnIndex));
 
-                foreach (string columnTitle in s_GeneralColumnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-
-                rowIndex++;
-            }
-            {
-                Type activityType = typeof(ProjectScenarioModel);
-                PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-                var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
-
-                IRow row = sheet.CreateRow(rowIndex);
-                int columnIndex = 0;
-
-                foreach (string columnTitle in s_GeneralColumnTitles)
-                {
-                    ICell cell = row.CreateCell(columnIndex);
-
-                    columnTitle.ValueSwitchOn()
-                        .Case(nameof(ProjectScenarioModel.ProjectStart),
-                            colName => AddToCell(projectScenario.ProjectStart, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.Today),
-                            colName => AddToCell(projectScenario.Today, cell, dateTimeCellStyle));
-
-                    columnIndex++;
-                }
-
-                rowIndex++;
+                columnIndex++;
             }
         }
 
         private static void WriteDisplaySettingsToWorkbook(
             ProjectScenarioModel projectScenario,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle)
+            XlsxWorkbookWriter workbook)
         {
             ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings);
+            XlsxSheetWriter sheet = workbook.AddSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings, dateStyles);
 
-            int rowIndex = 0;
+            WriteTitles(sheet, s_DisplaySettingsColumnTitles);
 
+            int columnIndex = 0;
+
+            foreach (string columnTitle in s_DisplaySettingsColumnTitles)
             {
-                int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
+                columnTitle.ValueSwitchOn()
+                    .Case(nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
+                        colName => AddToCell(projectScenario.DisplaySettings.ShowDates, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
+                        colName => AddToCell(projectScenario.DisplaySettings.UseClassicDates, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.DisplaySettings.NonWorkingDayMode),
+                        colName => AddToCell(projectScenario.DisplaySettings.NonWorkingDayMode, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.DisplaySettings.HideCost),
+                        colName => AddToCell(projectScenario.DisplaySettings.HideCost, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
+                        colName => AddToCell(projectScenario.DisplaySettings.HideBilling, sheet, 1, columnIndex));
 
-                foreach (string columnTitle in s_DisplaySettingsColumnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-
-                rowIndex++;
-            }
-            {
-                Type activityType = typeof(ProjectScenarioModel);
-                PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-                var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
-
-                IRow row = sheet.CreateRow(rowIndex);
-                int columnIndex = 0;
-
-                foreach (string columnTitle in s_DisplaySettingsColumnTitles)
-                {
-                    ICell cell = row.CreateCell(columnIndex);
-
-                    columnTitle.ValueSwitchOn()
-                        .Case(nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
-                            colName => AddToCell(projectScenario.DisplaySettings.ShowDates, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
-                            colName => AddToCell(projectScenario.DisplaySettings.UseClassicDates, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.DisplaySettings.NonWorkingDayMode),
-                            colName => AddToCell(projectScenario.DisplaySettings.NonWorkingDayMode, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.DisplaySettings.HideCost),
-                            colName => AddToCell(projectScenario.DisplaySettings.HideCost, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
-                            colName => AddToCell(projectScenario.DisplaySettings.HideBilling, cell, dateTimeCellStyle));
-
-                    columnIndex++;
-                }
-
-                rowIndex++;
+                columnIndex++;
             }
         }
 
         private static void WriteResourceSettingsToWorkbook(
             ProjectScenarioModel projectScenario,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle)
+            XlsxWorkbookWriter workbook)
         {
             ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceSettings);
+            XlsxSheetWriter sheet = workbook.AddSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceSettings, dateStyles);
 
-            int rowIndex = 0;
+            WriteTitles(sheet, s_ResourceSettingsColumnTitles);
 
+            int columnIndex = 0;
+
+            foreach (string columnTitle in s_ResourceSettingsColumnTitles)
             {
-                int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
+                columnTitle.ValueSwitchOn()
+                    .Case(nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitCost),
+                        colName => AddToCell(projectScenario.ResourceSettings.DefaultUnitCost, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitBilling),
+                        colName => AddToCell(projectScenario.ResourceSettings.DefaultUnitBilling, sheet, 1, columnIndex))
+                    .Case(nameof(ProjectScenarioModel.ResourceSettings.AreDisabled),
+                        colName => AddToCell(projectScenario.ResourceSettings.AreDisabled, sheet, 1, columnIndex));
 
-                foreach (string columnTitle in s_ResourceSettingsColumnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-
-                rowIndex++;
-            }
-            {
-                Type activityType = typeof(ProjectScenarioModel);
-                PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-                var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
-
-                IRow row = sheet.CreateRow(rowIndex);
-                int columnIndex = 0;
-
-                foreach (string columnTitle in s_ResourceSettingsColumnTitles)
-                {
-                    ICell cell = row.CreateCell(columnIndex);
-
-                    columnTitle.ValueSwitchOn()
-                        .Case(nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitCost),
-                            colName => AddToCell(projectScenario.ResourceSettings.DefaultUnitCost, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitBilling),
-                            colName => AddToCell(projectScenario.ResourceSettings.DefaultUnitBilling, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.ResourceSettings.AreDisabled),
-                            colName => AddToCell(projectScenario.ResourceSettings.AreDisabled, cell, dateTimeCellStyle)); ;
-
-                    columnIndex++;
-                }
-
-                rowIndex++;
+                columnIndex++;
             }
         }
 
         private static void WriteActivitiesToWorkbook(
             IEnumerable<DependentActivityModel> dependentActivities,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle,
+            XlsxWorkbookWriter workbook,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities);
+            XlsxSheetWriter sheet = workbook.AddSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities, dateStyles);
 
-            int rowIndex = 0;
+            WriteTitles(sheet, [.. s_ActivityColumnTitles, .. s_DependentActivityColumnTitles]);
 
-            {
-                int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
+            int rowIndex = 1;
 
-                foreach (string columnTitle in s_ActivityColumnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-                foreach (string columnTitle in s_DependentActivityColumnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-
-                rowIndex++;
-            }
             {
                 Type activityType = typeof(ActivityModel);
                 PropertyInfo[] activityPropertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
@@ -533,17 +413,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (DependentActivityModel dependentActivity in dependentActivities)
                 {
-                    IRow row = sheet.CreateRow(rowIndex);
                     int columnIndex = 0;
                     ActivityModel activity = dependentActivity.Activity;
 
                     foreach (string columnTitle in s_ActivityColumnTitles)
                     {
-                        ICell cell = row.CreateCell(columnIndex);
-
                         if (s_ActivityComputedColumns.TryGetValue(columnTitle, out Func<ActivityModel, object?>? compute))
                         {
-                            AddToCell(compute(activity), cell, dateTimeCellStyle);
+                            AddToCell(compute(activity), sheet, rowIndex, columnIndex);
                             columnIndex++;
                             continue;
                         }
@@ -555,21 +432,21 @@ namespace Zametek.ViewModel.ProjectPlan
                             object? content = propertyInfo.GetValue(activity);
                             AddToCell(
                                 content,
-                                cell,
-                                dateTimeCellStyle,
-                                GetActivityAppendDateFromProjectStartCaseFunc(columnTitle, showDates, projectStart, dateTimeCalculator));
+                                sheet,
+                                rowIndex,
+                                columnIndex,
+                                datesFromStart: GetActivityDatesFromStart(columnTitle, showDates, projectStart, dateTimeCalculator));
                         }
                         columnIndex++;
                     }
                     foreach (string columnTitle in s_DependentActivityColumnTitles)
                     {
-                        ICell cell = row.CreateCell(columnIndex);
                         PropertyInfo? propertyInfo = dependentActivityPropertyInfoLookup[columnTitle];
 
                         if (propertyInfo is not null)
                         {
                             object? content = propertyInfo.GetValue(dependentActivity);
-                            AddToCell(content, cell, dateTimeCellStyle);
+                            AddToCell(content, sheet, rowIndex, columnIndex);
                         }
                         columnIndex++;
                     }
@@ -583,34 +460,19 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<T> items,
             IEnumerable<string> columnTitles,
             string sheetTitle,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle)
+            XlsxWorkbookWriter workbook)
         {
             ArgumentNullException.ThrowIfNull(items);
             ArgumentNullException.ThrowIfNull(columnTitles);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(sheetTitle);
+            XlsxSheetWriter sheet = workbook.AddSheet(sheetTitle, dateStyles);
 
-            int rowIndex = 0;
+            WriteTitles(sheet, columnTitles);
 
-            {
-                int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
+            int rowIndex = 1;
 
-                foreach (string columnTitle in columnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-
-                rowIndex++;
-            }
             {
                 Type itemType = typeof(T);
                 PropertyInfo[] propertyInfos = itemType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
@@ -618,18 +480,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (T item in items)
                 {
-                    IRow row = sheet.CreateRow(rowIndex);
                     int columnIndex = 0;
 
                     foreach (string columnTitle in columnTitles)
                     {
-                        ICell cell = row.CreateCell(columnIndex);
                         PropertyInfo? propertyInfo = propertyInfoLookup[columnTitle];
 
                         if (propertyInfo is not null)
                         {
                             object? content = propertyInfo.GetValue(item);
-                            AddToCell(content, cell, dateTimeCellStyle);
+                            AddToCell(content, sheet, rowIndex, columnIndex);
                         }
                         columnIndex++;
                     }
@@ -639,12 +499,31 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The cells of a row of the sheet of a tracker that hold times: a number from the start of the project (or a date, when the
+        // workbook shows dates), in the look of a title.
+        private static void WriteTrackerTitles(
+            XlsxSheetWriter sheet,
+            int endTime,
+            DatesFromStart datesFromStart)
+        {
+            int titleColumnIndex = 0;
+
+            // Title row (Activity ID column).
+            AddToCell(nameof(ActivityModel.Id), sheet, 0, titleColumnIndex, XlsxCellStyle.Title, XlsxCellStyle.TitleDate);
+            titleColumnIndex++;
+
+            for (int i = 0; i <= endTime; i++)
+            {
+                AddToCell(i, sheet, 0, titleColumnIndex, XlsxCellStyle.Title, XlsxCellStyle.TitleDate, datesFromStart);
+                titleColumnIndex++;
+            }
+        }
+
         private static void WriteActivityTrackersToWorkbook<T>(
             IEnumerable<ActivityModel> activities,
             Func<ActivityTrackerModel, T> trackerFunc,
             string sheetTitle,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle,
+            XlsxWorkbookWriter workbook,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
@@ -652,16 +531,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(trackerFunc);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat, includeTitleDate: true);
 
-            ICellStyle dateTimeTitleCellStyle = workbook.CreateCellStyle();
-            dateTimeTitleCellStyle.CloneStyleFrom(titleStyle);
-            dateTimeTitleCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
-
-            ISheet sheet = workbook.CreateSheet(sheetTitle);
+            XlsxSheetWriter sheet = workbook.AddSheet(sheetTitle, dateStyles);
 
             int rowIndex = 0;
             int endTime = 0;
@@ -687,39 +560,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             {
-                int titleColumnIndex = 0;
-                TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
-                    AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
-
-                IRow titleRow = sheet.CreateRow(rowIndex);
-
-                // Title row (Activity ID column).
-                ICell iDCell = titleRow.CreateCell(titleColumnIndex);
-                iDCell.CellStyle = titleStyle;
-                AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
-                titleColumnIndex++;
-
-                for (int i = 0; i <= endTime; i++)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(i, cell, dateTimeTitleCellStyle, appendCaseCheck);
-                    titleColumnIndex++;
-                }
+                WriteTrackerTitles(sheet, endTime, new DatesFromStart(showDates, projectStart, dateTimeCalculator));
                 rowIndex++;
             }
             {
                 // Activity Trackers.
                 foreach (ActivityModel activity in activities)
                 {
-                    IRow row = sheet.CreateRow(rowIndex);
                     int columnIndex = 0;
                     int activityId = activity.Id;
 
                     // Activity Id.
-                    ICell iDCell = row.CreateCell(columnIndex);
-                    iDCell.CellStyle = titleStyle;
-                    AddToCell(activityId, iDCell, dateTimeCellStyle);
+                    AddToCell(activityId, sheet, rowIndex, columnIndex, XlsxCellStyle.Title);
                     columnIndex++;
 
                     // Create a lookup dictionary for each time entry.
@@ -738,8 +590,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (activityTrackerLookup.TryGetValue(i, out ActivityTrackerModel? activityTracker))
                         {
-                            ICell cell = row.CreateCell(columnIndex);
-                            AddToCell(trackerFunc(activityTracker), cell, dateTimeCellStyle);
+                            AddToCell(trackerFunc(activityTracker), sheet, rowIndex, columnIndex);
                         }
 
                         columnIndex++;
@@ -753,8 +604,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static void WriteResourceTrackersToWorkbook(
             IEnumerable<ActivityModel> activities,
             IEnumerable<ResourceModel> resources,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle,
+            XlsxWorkbookWriter workbook,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
@@ -762,14 +612,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resources);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
-
-            ICellStyle dateTimeTitleCellStyle = workbook.CreateCellStyle();
-            dateTimeTitleCellStyle.CloneStyleFrom(titleStyle);
-            dateTimeTitleCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat, includeTitleDate: true);
 
             int plannedEndTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
@@ -781,7 +625,7 @@ namespace Zametek.ViewModel.ProjectPlan
             foreach (ResourceModel resource in resources.OrderBy(x => x.Id))
             {
                 string sheetTitle = $@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resource.Id})";
-                ISheet sheet = workbook.CreateSheet(sheetTitle);
+                XlsxSheetWriter sheet = workbook.AddSheet(sheetTitle, dateStyles);
                 int rowIndex = 0;
                 int endTime = 0;
 
@@ -800,25 +644,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 {
-                    int titleColumnIndex = 0;
-                    TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
-                        AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
-
-                    IRow titleRow = sheet.CreateRow(rowIndex);
-
-                    // Title row (Activity ID column).
-                    ICell iDCell = titleRow.CreateCell(titleColumnIndex);
-                    iDCell.CellStyle = titleStyle;
-                    AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
-                    titleColumnIndex++;
-
-                    for (int i = 0; i <= endTime; i++)
-                    {
-                        ICell cell = titleRow.CreateCell(titleColumnIndex);
-                        cell.CellStyle = titleStyle;
-                        AddToCell(i, cell, dateTimeTitleCellStyle, appendCaseCheck);
-                        titleColumnIndex++;
-                    }
+                    WriteTrackerTitles(sheet, endTime, new DatesFromStart(showDates, projectStart, dateTimeCalculator));
                     rowIndex++;
                 }
                 {
@@ -838,13 +664,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Now cycle through the activities
                     foreach (int activityId in activityIds)
                     {
-                        IRow row = sheet.CreateRow(rowIndex);
                         int columnIndex = 0;
 
                         // Activity Id.
-                        ICell iDCell = row.CreateCell(columnIndex);
-                        iDCell.CellStyle = titleStyle;
-                        AddToCell(activityId, iDCell, dateTimeCellStyle);
+                        AddToCell(activityId, sheet, rowIndex, columnIndex, XlsxCellStyle.Title);
                         columnIndex++;
 
                         // Tracker values.
@@ -854,8 +677,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 if (trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? activityTracker))
                                 {
-                                    ICell cell = row.CreateCell(columnIndex);
-                                    AddToCell(activityTracker.PercentageWorked, cell, dateTimeCellStyle);
+                                    AddToCell(activityTracker.PercentageWorked, sheet, rowIndex, columnIndex);
                                 }
                             }
 
@@ -873,8 +695,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Func<ResourceSeriesModel, int> resourceAllocationCountFunc,
             Func<ResourceSeriesModel, int, T> resourceSeriesFunc,
             string sheetTitle,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle,
+            XlsxWorkbookWriter workbook,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
@@ -883,12 +704,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceAllocationCountFunc);
             ArgumentNullException.ThrowIfNull(resourceSeriesFunc);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(sheetTitle);
+            XlsxSheetWriter sheet = workbook.AddSheet(sheetTitle, dateStyles);
 
             IEnumerable<ResourceSeriesModel> combinedResourceSeries = resourceSeriesSet.Combined.OrderBy(x => x.DisplayOrder);
 
@@ -899,44 +718,38 @@ namespace Zametek.ViewModel.ProjectPlan
 
             {
                 int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
 
-                ICell timeCell = titleRow.CreateCell(titleColumnIndex);
-                timeCell.CellStyle = titleStyle;
-                AddToCell(Resource.ProjectPlan.Reporting.Reporting_Time, timeCell, dateTimeCellStyle);
+                AddToCell(Resource.ProjectPlan.Reporting.Reporting_Time, sheet, rowIndex, titleColumnIndex, XlsxCellStyle.Title);
                 titleColumnIndex++;
 
                 foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
                 {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(resourceSeries.Title, cell, dateTimeCellStyle);
+                    AddToCell(resourceSeries.Title, sheet, rowIndex, titleColumnIndex, XlsxCellStyle.Title);
                     titleColumnIndex++;
                 }
 
                 rowIndex++;
             }
             {
+                var datesFromStart = new DatesFromStart(showDates, projectStart, dateTimeCalculator);
+
                 // Pivot the series values.
                 for (int timeIndex = 0; timeIndex < valueCount; timeIndex++)
                 {
-                    IRow row = sheet.CreateRow(rowIndex);
                     int columnIndex = 0;
 
                     // Time.
-                    ICell timeCell = row.CreateCell(columnIndex);
-                    timeCell.CellStyle = titleStyle;
-                    DateFromProjectStart(timeIndex, timeCell, dateTimeCellStyle, showDates, projectStart, dateTimeCalculator);
+                    DateFromProjectStart(sheet, rowIndex, columnIndex, timeIndex, XlsxCellStyle.Title, XlsxCellStyle.Date, datesFromStart);
                     columnIndex++;
 
                     // Values.
                     foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
                     {
-                        ICell cell = row.CreateCell(columnIndex);
                         AddToCell(
                             resourceSeriesFunc(resourceSeries, timeIndex),
-                            cell,
-                            dateTimeCellStyle);
+                            sheet,
+                            rowIndex,
+                            columnIndex);
                         columnIndex++;
                     }
 
@@ -948,37 +761,22 @@ namespace Zametek.ViewModel.ProjectPlan
         private static void WriteEarnedValueChartToWorkbook(
             IEnumerable<TrackingPointModel> trackingPoints,
             string sheetTitle,
-            XSSFWorkbook workbook,
-            ICellStyle titleStyle,
+            XlsxWorkbookWriter workbook,
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(trackingPoints);
             ArgumentNullException.ThrowIfNull(workbook);
-            ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
-            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+            XlsxDateStyles dateStyles = workbook.CreateDateStyles(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(sheetTitle);
+            XlsxSheetWriter sheet = workbook.AddSheet(sheetTitle, dateStyles);
 
-            int rowIndex = 0;
+            WriteTitles(sheet, s_TrackingPointColumnTitles);
 
-            {
-                int titleColumnIndex = 0;
-                IRow titleRow = sheet.CreateRow(rowIndex);
+            int rowIndex = 1;
 
-                foreach (string columnTitle in s_TrackingPointColumnTitles)
-                {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(columnTitle, cell, dateTimeCellStyle);
-                    titleColumnIndex++;
-                }
-
-                rowIndex++;
-            }
             {
                 Type activityType = typeof(TrackingPointModel);
                 PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
@@ -986,12 +784,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (TrackingPointModel trackingPoint in trackingPoints)
                 {
-                    IRow row = sheet.CreateRow(rowIndex);
                     int columnIndex = 0;
 
                     foreach (string columnTitle in s_TrackingPointColumnTitles)
                     {
-                        ICell cell = row.CreateCell(columnIndex);
                         PropertyInfo? propertyInfo = propertyInfoLookup[columnTitle];
 
                         if (propertyInfo is not null)
@@ -999,9 +795,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             object? content = propertyInfo.GetValue(trackingPoint);
                             AddToCell(
                                 content,
-                                cell,
-                                dateTimeCellStyle,
-                                GetTrackingPointAppendDateFromProjectStartCaseFunc(columnTitle, showDates, projectStart, dateTimeCalculator));
+                                sheet,
+                                rowIndex,
+                                columnIndex,
+                                datesFromStart: GetTrackingPointDatesFromStart(columnTitle, showDates, projectStart, dateTimeCalculator));
                         }
                         columnIndex++;
                     }
@@ -1024,34 +821,23 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(stream);
 
-            var workbook = new XSSFWorkbook();
-            IFont titleFont = workbook.CreateFont();
-
-            titleFont.IsBold = true;
-            titleFont.FontHeightInPoints = 12;
-
-            ICellStyle titleStyle = workbook.CreateCellStyle();
-            titleStyle.SetFont(titleFont);
+            var workbook = new XlsxWorkbookWriter();
 
             WriteGeneralToWorkbook(
                 projectScenario,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteDisplaySettingsToWorkbook(
                 projectScenario,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteResourceSettingsToWorkbook(
                 projectScenario,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteActivitiesToWorkbook(
                 projectScenario.DependentActivities,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1060,36 +846,31 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.ResourceSettings.Resources,
                 s_ResourceColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResources,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteItemsToWorkbook(
                 projectScenario.GraphSettings.ActivitySeverities,
                 s_ActivitySeverityColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteItemsToWorkbook(
                 projectScenario.WorkStreamSettings.WorkStreams,
                 s_WorkStreamColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteItemsToWorkbook(
                 projectScenario.HolidaySettings.Holidays,
                 s_HolidayColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetHolidays,
-                workbook,
-                titleStyle);
+                workbook);
 
             WriteActivityTrackersToWorkbook(
                 projectScenario.DependentActivities.Select(x => x.Activity),
                 tracker => tracker.PercentageComplete,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1098,7 +879,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.DependentActivities.Select(x => x.Activity),
                 projectScenario.ResourceSettings.Resources,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1109,7 +889,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.ResourceAllocation[timeIndex],
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartActivity,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1120,7 +899,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.CostAllocation[timeIndex] ? resourceSeries.UnitCost : 0.0,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCost,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1131,7 +909,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.EffortAllocation[timeIndex],
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartEffort,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1140,7 +917,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 trackingSeriesSet.Plan,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetEarnedValueChartPlan,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1149,7 +925,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 trackingSeriesSet.Effort,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetEarnedValueChartEffort,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1158,7 +933,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 trackingSeriesSet.Progress,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetEarnedValueChartProgress,
                 workbook,
-                titleStyle,
                 showDates,
                 projectScenario.ProjectStart,
                 m_DateTimeCalculator);
@@ -1168,24 +942,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 XlsxSimulationSheets.WriteToWorkbook(
                     projectScenario,
-                    workbook,
-                    titleStyle);
+                    workbook);
             }
 
-            // NPOI stamps the workbook with the wall clock twice over: as the time it was created, and as the time
-            // each part of the package was last written, as it zips them. Both are stamped here with the
-            // calculator's clock instead, so that a workbook written at a given time is the same workbook
-            // wherever and however it is written - which means zipping it to memory first, to restamp the parts.
-            DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
-            workbook.GetProperties().CoreProperties.Created = localNow.UtcDateTime;
-
-            using var package = new MemoryStream();
-            workbook.Write(package, leaveOpen: true);
-            StampEntries(package, localNow);
-
-            // The caller owns the stream, so it is left open.
-            package.Position = 0;
-            package.CopyTo(stream);
+            // The workbook is stamped with the calculator's clock and not the wall clock (see XlsxWorkbookWriter.Save).
+            workbook.Save(stream, m_DateTimeCalculator.GetLocalNow());
         }
 
         #endregion

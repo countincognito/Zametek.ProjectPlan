@@ -215,6 +215,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 [XlsxCellKind.Boolean, XlsxCellKind.Boolean, XlsxCellKind.Text, XlsxCellKind.Boolean, XlsxCellKind.Boolean]);
         }
 
+        // A date of the plan is the day that it shows: a start in the zone +10 is the day it is there, and not the day it is in UTC.
+        [Fact]
+        public void Export_Given_DatesWithAnOffsetFromUtc_Then_TheCellsHoldTheTimeOnTheClockOfTheDate()
+        {
+            var scenario = new ProjectScenarioModel
+            {
+                ProjectStart = new DateTimeOffset(2026, 3, 9, 0, 0, 0, TimeSpan.FromHours(10)),
+                Today = new DateTimeOffset(2026, 3, 12, 0, 0, 0, TimeSpan.FromHours(-7)),
+            };
+
+            XlsxSheet general = Sheet(
+                XlsxPackageReader.Read(XlsxSampleExport.Export(scenario, new ResourceSeriesSetModel(), new TrackingSeriesSetModel(), showDates: false)),
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
+
+            DateTime.FromOADate(general.Cell(@"A2")!.Number).ShouldBe(new DateTime(2026, 3, 9));
+            DateTime.FromOADate(general.Cell(@"B2")!.Number).ShouldBe(new DateTime(2026, 3, 12));
+        }
+
         [Fact]
         public async Task Export_Given_TheSample_Then_ADecimalNumberIsANumberAndNotText()
         {
