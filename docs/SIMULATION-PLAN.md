@@ -380,7 +380,7 @@ Phase 5 finished on 2026-10-16. All the work is in this repository, on the branc
 1. **The core owns it.** The settings and the result belong to the scenario, and not to the panel. A job, the panel and a file then agree.
 2. **A result that a file holds is trusted.** The panel does not say that it is out of date. The metrics of a scenario that a file holds, with the compile off, are the same.
 3. **A saved seed.** A run of a job uses the saved seed, also when the project draws a new seed each time. It leaves the settings as they are. A run of the panel draws a seed and saves it.
-4. **The seed in Excel is text.** A cell holds a whole number exactly up to 2^53 only, and a seed has 64 bits.
+4. **The seed in Excel is text.** A cell keeps a number to 15 digits only, as Excel does, and a seed has up to 20 digits.
 5. **One column for each group of paths, and numbers as numbers.** The histogram has a column for the weight of each group of paths, and not a list in one cell. The import reads a number from its cell. It does not read the text of the cell with the culture of the computer.
 6. **The settings come from the project.** The options for the iterations, the seed, the distribution, the shape value and the target are gone from `zpp` and from the API. Otherwise, each setting has two places.
 7. **A limit is on a run.** A server refuses a run of a project that has more iterations than its limit (`validation-failed`). It gives a result that the project holds without a limit, as that costs nothing.

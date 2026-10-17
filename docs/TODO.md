@@ -441,6 +441,12 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The generic catch of `MainViewModel.ImportProjectScenarioFileAsync` then resets the open project. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way, and the open project stays as it is. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
 
+- [ ] **Say where a bad date is in a workbook that counts from 1904** *(2026-10-17)*
+
+  ClosedXML converts a number that has the format of a date while it loads a workbook that counts its dates from 1904. Old Excel for the Mac makes such workbooks. A number that no calendar has then makes the whole file unreadable. The message is "Not a legal OleAut date." In a normal workbook, the reader finds the cell and reports `notADate`.
+
+  One fix is to find the cell in the file when the load fails with this message, and to report it. Another fix is to read the cells of such a workbook without the date conversion of the library.
+
 - [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
 
   `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.
