@@ -23,6 +23,9 @@
     <!-- The charts' font (see ChartFonts): referenced here, rather than only by the views, so that it
          ships with every head that draws charts - the headless CLI included. -->
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+    <!-- Reads and writes the workbooks of Excel (see XlsxWorkbookReader and XlsxWorkbookWriter). It needs no font of the system,
+         because the engine of XlsxGraphicEngine is the one it is given. -->
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
     <!-- DynamicData is explicit because ReactiveUI 24+ no longer ships it transitively. DynamicData
          and Dock.Model.ReactiveUI both still hard-depend on System.Reactive (as of 2026-08); once
          both go Rx-free, examine removing System.Reactive from the solution entirely (the

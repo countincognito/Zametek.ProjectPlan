@@ -164,9 +164,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             summary.Bins.Select(x => (x.FirstFinishTime, x.LastFinishTime, x.Count, x.CumulativeShare))
                 .ShouldBe(expected.Bins.Select(x => (x.FirstFinishTime, x.LastFinishTime, x.Count, x.CumulativeShare)));
 
-            // Each weight is the very double that was written, and not a rounded one.
-            summary.Bins[0].PathGroupWeights.ShouldBe([6.5, 3.5, 0.1 + 0.2]);
-            summary.Bins[1].PathGroupWeights.ShouldBe([20.0, 10.0, 0.0]);
+            // A workbook keeps a number to 15 digits, as Excel does, so that 0.1 + 0.2 (0.30000000000000004) comes back as 0.3.
+            summary.Bins[0].PathGroupWeights.ShouldBe([6.5, 3.5, 0.1 + 0.2], 1e-15);
+            summary.Bins[1].PathGroupWeights.ShouldBe([20.0, 10.0, 0.0], 1e-15);
+            summary.Bins[0].PathGroupWeights[2].ShouldBe(0.3);
 
             // The critical paths as activity ids are what the Critical paths table shows, and a workbook has them.
             summary.Paths.Select(x => x.IdLabel).ShouldBe(["1 > 3 ~> 7", "1 > 7"]);
@@ -224,7 +225,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             import.SimulationSettings.ShouldBe(Settings());
             import.SimulationSummary!.Mean.ShouldBe(66.25);
-            import.SimulationSummary.Bins[0].PathGroupWeights[2].ShouldBe(0.1 + 0.2);
+            import.SimulationSummary.Bins[0].PathGroupWeights[2].ShouldBe(0.3);
             import.SimulationSummary.Paths[0].Share.ShouldBe(0.5837);
         }
 

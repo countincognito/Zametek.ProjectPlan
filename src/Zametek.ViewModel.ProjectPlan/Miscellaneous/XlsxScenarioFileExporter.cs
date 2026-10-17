@@ -821,7 +821,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(stream);
 
-            var workbook = new XlsxWorkbookWriter();
+            using var workbook = new XlsxWorkbookWriter();
 
             WriteGeneralToWorkbook(
                 projectScenario,

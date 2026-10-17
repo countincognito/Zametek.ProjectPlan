@@ -4,12 +4,12 @@ using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.IO.Compression;
 using System.Text;
-using System.Xml.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan.Tests;
 
 namespace Zametek.Engine.ProjectPlan.Tests
 {
@@ -471,11 +471,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
             // ...and the workbook it exported was created then, every part of it written then as the host's clock
             // tells it (a zip holds only the local time, to two seconds).
             using var workbook = new ZipArchive(new MemoryStream(sink[JobOutput.ScenarioExport]), ZipArchiveMode.Read);
-            using (Stream core = workbook.GetEntry(@"docProps/core.xml")!.Open())
-            {
-                XDocument.Load(core).Descendants(XNamespace.Get(@"http://purl.org/dc/terms/") + @"created").Single().Value
-                    .ShouldBe(@"2001-02-03T09:05:06Z");
-            }
+            XlsxPackageReader.Read(sink[JobOutput.ScenarioExport]).Created.ShouldBe(new DateTime(2001, 2, 3, 9, 5, 6, DateTimeKind.Utc));
             workbook.Entries.Select(x => x.LastWriteTime.DateTime).Distinct()
                 .ShouldBe([TimeZoneInfo.ConvertTime(now, TimeZoneInfo.Local).DateTime]);
         }

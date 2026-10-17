@@ -540,7 +540,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(stream);
 
             var issues = new ImportIssueCollector();
-            XlsxWorkbookReader reader = XlsxWorkbookReader.Open(stream, issues);
+            using XlsxWorkbookReader reader = XlsxWorkbookReader.Open(stream, issues);
             DateTimeOffset projectStart = m_DateTimeCalculator.GetLocalToday();
             DateTimeOffset today = projectStart;
 

@@ -1,6 +1,4 @@
-using NPOI.SS.UserModel;
-using NPOI.SS.Util;
-using NPOI.XSSF.UserModel;
+using ClosedXML.Excel;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -10,13 +8,16 @@ namespace Zametek.ViewModel.ProjectPlan
     /// the file: what the importer asks of a workbook is a sheet by its name, and what it gets is a table of cells that each
     /// hold a value of one kind.
     /// </summary>
-    internal sealed class XlsxWorkbookReader
+    internal sealed class XlsxWorkbookReader : IDisposable
     {
-        private readonly XSSFWorkbook m_Workbook;
+        // The error that Excel shows for a formula it cannot work out.
+        private const string c_UnworkableFormula = @"#VALUE!";
+
+        private readonly XLWorkbook m_Workbook;
         private readonly ImportIssueCollector m_Issues;
 
         private XlsxWorkbookReader(
-            XSSFWorkbook workbook,
+            XLWorkbook workbook,
             ImportIssueCollector issues)
         {
             m_Workbook = workbook;
@@ -30,8 +31,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool HasFoundASheet { get; private set; }
 
         /// <summary>
-        /// Opens the workbook that the stream holds. A file that cannot be read as a workbook is the one problem that the
-        /// import reports at once, because there is nothing in it to look for more.
+        /// Opens the workbook that the stream holds, and leaves the stream open. A file that cannot be read as a workbook is
+        /// the one problem that the import reports at once, because there is nothing in it to look for more.
         /// </summary>
         public static XlsxWorkbookReader Open(
             Stream stream,
@@ -42,13 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             try
             {
-                // The library closes the stream that it reads a workbook from, and this one belongs to the caller, so the
-                // workbook is read from a copy.
-                using var copy = new MemoryStream();
-                stream.CopyTo(copy);
-                copy.Position = 0;
-
-                return new XlsxWorkbookReader(new XSSFWorkbook(copy), issues);
+                return new XlsxWorkbookReader(new XLWorkbook(stream, XlsxGraphicEngine.CreateLoadOptions()), issues);
             }
             catch (Exception ex) when (ex is not (OperationCanceledException or OutOfMemoryException))
             {
@@ -62,6 +57,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void Dispose() => m_Workbook.Dispose();
+
         /// <summary>
         /// The table of the sheet with this name (the case of the letters does not matter), or null when there is no such sheet,
         /// or when it has no row of titles, which is reported.
@@ -74,9 +71,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(sheetName);
             ArgumentNullException.ThrowIfNull(knownTitles);
-            ISheet? sheet = m_Workbook.GetSheet(sheetName);
 
-            if (sheet is null)
+            if (!m_Workbook.TryGetWorksheet(sheetName, out IXLWorksheet? sheet))
             {
                 return null;
             }
@@ -85,20 +81,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // The titles are the cells of the first row, up to the first one that is blank.
             List<ImportCell> header = [];
+            int lastTitle = sheet.Row(1).LastCellUsed(XLCellsUsedOptions.Contents)?.Address.ColumnNumber ?? 0;
 
-            if (sheet.GetRow(0) is IRow titleRow)
+            for (int column = 1; column <= lastTitle; column++)
             {
-                for (int i = 0; i < titleRow.LastCellNum; i++)
+                ImportCell cell = Convert(sheet.Cell(1, column));
+
+                if (cell.IsEmpty)
                 {
-                    ImportCell cell = Convert(titleRow.GetCell(i));
-
-                    if (cell.IsEmpty)
-                    {
-                        break;
-                    }
-
-                    header.Add(cell);
+                    break;
                 }
+
+                header.Add(cell);
             }
 
             if (header.Count == 0)
@@ -107,75 +101,97 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Code = ImportIssueCodes.MissingHeader,
                     Message = ImportIssueText.MissingHeader(),
-                    Sheet = sheet.SheetName,
+                    Sheet = sheet.Name,
                 });
 
                 return null;
             }
 
-            return ImportTable.Create(sheet.SheetName, header, Rows(sheet, header.Count), knownTitles, m_Issues);
+            return ImportTable.Create(sheet.Name, header, Rows(sheet, header.Count), knownTitles, m_Issues);
         }
 
         // The rows under the titles that hold a value in a column that has a title. Each cell is the one in its column, so that
-        // a cell that is not there (Excel leaves out the cells that are empty) is a blank cell and no other cell moves.
+        // a cell that is not there (Excel leaves out the cells that are empty) is a blank cell and no other cell moves. The
+        // rows and the columns are counted from 1 in the library, as they are in the sheet.
         private static IEnumerable<(int Number, ImportCell[] Cells)> Rows(
-            ISheet sheet,
+            IXLWorksheet sheet,
             int width)
         {
-            for (int i = 1; i <= sheet.LastRowNum; i++)
+            int lastRow = sheet.LastRowUsed(XLCellsUsedOptions.Contents)?.RowNumber() ?? 0;
+
+            for (int row = 2; row <= lastRow; row++)
             {
-                IRow? row = sheet.GetRow(i);
-
-                if (row is null)
-                {
-                    continue;
-                }
-
                 var cells = new ImportCell[width];
                 bool hasValue = false;
 
-                for (int j = 0; j < width; j++)
+                for (int column = 0; column < width; column++)
                 {
-                    cells[j] = Convert(row.GetCell(j));
-                    hasValue |= !cells[j].IsEmpty;
+                    cells[column] = Convert(sheet.Cell(row, column + 1));
+                    hasValue |= !cells[column].IsEmpty;
                 }
 
                 if (hasValue)
                 {
-                    yield return (i + 1, cells);
+                    yield return (row, cells);
                 }
             }
         }
 
-        // A cell that holds a formula holds the result that the file keeps of it.
-        private static ImportCell Convert(ICell? cell)
+        // A cell that holds a formula holds the result that the file keeps of it (or, when the file keeps none, the result
+        // that the library works out).
+        private static ImportCell Convert(IXLCell cell)
         {
-            if (cell is null)
+            XLCellValue value;
+
+            try
             {
-                return ImportCell.Blank;
+                value = cell.Value;
+            }
+            catch (Exception ex) when (ex is not (OperationCanceledException or OutOfMemoryException))
+            {
+                // A formula that the library cannot work out (it has a function that the library does not know, or it
+                // refers to itself) has no result to read.
+                return ImportCell.OfError(c_UnworkableFormula);
             }
 
-            CellType type = cell.CellType == CellType.Formula
-                ? cell.CachedFormulaResultType
-                : cell.CellType;
-
-            switch (type)
+            switch (value.Type)
             {
-                case CellType.String:
-                    return ImportCell.OfText(cell.StringCellValue);
-                case CellType.Boolean:
-                    return ImportCell.OfBoolean(cell.BooleanCellValue);
-                case CellType.Numeric:
-                    double number = cell.NumericCellValue;
-
-                    // A number with the format of a date is a date, if it is one that a calendar has.
-                    return DateUtil.IsCellDateFormatted(cell) && DateUtil.IsValidExcelDate(number)
-                        ? ImportCell.OfDate(DateUtil.GetJavaDate(number, cell.Sheet.Workbook is XSSFWorkbook workbook && workbook.IsDate1904()))
-                        : ImportCell.OfNumber(number);
-                case CellType.Error:
-                    return ImportCell.OfError(FormulaError.ForInt(cell.ErrorCellValue).String);
+                case XLDataType.Text:
+                    return ImportCell.OfText(value.GetText());
+                case XLDataType.Boolean:
+                    return ImportCell.OfBoolean(value.GetBoolean());
+                case XLDataType.Number:
+                    return ImportCell.OfNumber(value.GetNumber());
+                case XLDataType.DateTime:
+                    return ToDate(value);
+                case XLDataType.TimeSpan:
+                    // A time of the day (or an amount of time) is not a date.
+                    return ImportCell.OfNumber(value.GetUnifiedNumber());
+                case XLDataType.Error:
+                    return ImportCell.OfError(value.ToString());
                 default:
                     return ImportCell.Blank;
+            }
+        }
+
+        // A number with the format of a date is a date, if it is one that a calendar has: that is not so for a number before
+        // the first day (a negative one) or for one past the last day of the year 9999.
+        private static ImportCell ToDate(XLCellValue value)
+        {
+            double number = value.GetUnifiedNumber();
+
+            if (number < 0.0)
+            {
+                return ImportCell.OfNumber(number);
+            }
+
+            try
+            {
+                return ImportCell.OfDate(value.GetDateTime());
+            }
+            catch (ArgumentException)
+            {
+                return ImportCell.OfNumber(number);
             }
         }
     }

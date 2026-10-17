@@ -96,10 +96,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
     internal sealed class XlsxBook
     {
-        public XlsxBook(IReadOnlyList<XlsxSheet> sheets, DateTime? created)
+        public XlsxBook(IReadOnlyList<XlsxSheet> sheets, DateTime? created, DateTime? modified)
         {
             Sheets = sheets;
             Created = created;
+            Modified = modified;
         }
 
         public IReadOnlyList<XlsxSheet> Sheets { get; }
@@ -108,6 +109,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         // The time that the properties of the workbook say it was created, in UTC.
         public DateTime? Created { get; }
+
+        // The time that the properties of the workbook say it was last modified, in UTC.
+        public DateTime? Modified { get; }
 
         // As a spreadsheet looks a sheet up: not by case.
         public XlsxSheet? Sheet(string name) =>
@@ -232,7 +236,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 sheets.Add(new XlsxSheet(name, ReadCells(worksheet, sharedStrings, styles)));
             }
 
-            return new XlsxBook(sheets, ReadCreated(archive));
+            return new XlsxBook(sheets, ReadProperty(archive, @"created"), ReadProperty(archive, @"modified"));
         }
 
         private static string TextOf(XElement element) =>
@@ -309,7 +313,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             return [.. cells.OrderBy(x => x.Row).ThenBy(x => x.Column)];
         }
 
-        private static DateTime? ReadCreated(ZipArchive archive)
+        private static DateTime? ReadProperty(ZipArchive archive, string name)
         {
             // The properties of a workbook are in a part that _rels/.rels names. One library calls it docProps/core.xml,
             // and another gives it a name of its own.
@@ -335,10 +339,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
 
             using Stream properties = part.Open();
-            string? created = XDocument.Load(properties).Descendants(s_DcTerms + @"created").FirstOrDefault()?.Value;
-            return created is null
+            string? time = XDocument.Load(properties).Descendants(s_DcTerms + name).FirstOrDefault()?.Value;
+            return time is null
                 ? null
-                : DateTime.Parse(created, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+                : DateTime.Parse(time, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
         }
 
         private sealed class Styles

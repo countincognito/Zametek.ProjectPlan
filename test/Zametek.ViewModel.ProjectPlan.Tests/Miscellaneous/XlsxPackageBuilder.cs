@@ -22,7 +22,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         bool Boolean = false,
         string? Formula = null,
         bool Inline = false,
-        bool Bold = false)
+        bool Bold = false,
+        bool Time = false)
     {
         public static XlsxCellSpec TextOf(string text) => new(XlsxCellKind.Text, Text: text);
 
@@ -32,7 +33,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public static XlsxCellSpec BooleanOf(bool value) => new(XlsxCellKind.Boolean, Boolean: value);
 
-        public static XlsxCellSpec DateOf(DateTime date) => new(XlsxCellKind.Date, Number: date.ToOADate());
+        public static XlsxCellSpec DateOf(DateTime date) => DateSerialOf(date.ToOADate());
+
+        // A number with the format of a date, whatever the number is (it need not be a date that a calendar has).
+        public static XlsxCellSpec DateSerialOf(double serial) => new(XlsxCellKind.Date, Number: serial);
+
+        // A number with the format of a time of the day: a part of a day.
+        public static XlsxCellSpec TimeOf(double part) => new(XlsxCellKind.Number, Number: part, Time: true);
 
         public static XlsxCellSpec ErrorOf(string error) => new(XlsxCellKind.Error, Text: error);
 
@@ -41,6 +48,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         // A formula, and the text that the file keeps as its result.
         public static XlsxCellSpec FormulaText(string formula, string result) => new(XlsxCellKind.Text, Text: result, Formula: formula);
+
+        // A formula with no result kept, as a program that is not Excel may write one.
+        public static XlsxCellSpec FormulaOnly(string formula) => new(XlsxCellKind.Blank, Formula: formula);
 
         // A cell that has a look and no value, as Excel keeps one that a person formatted and left empty.
         public static XlsxCellSpec StyledBlank() => new(XlsxCellKind.Blank, Bold: true);
@@ -123,10 +133,21 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// </summary>
     internal sealed class XlsxPackageBuilder
     {
-        // The formats of the styles that a cell can have: 0 is General, 1 is bold, and 2 is a date.
+        // The formats of the styles that a cell can have: 0 is General, 1 is bold, 2 is a date and 3 is a time of the day.
         private const string c_DateFormat = @"dd/mm/yyyy";
+        private const string c_TimeFormat = @"hh:mm";
 
         private readonly List<XlsxSheetSpec> m_Sheets = [];
+        private bool m_Uses1904DateSystem;
+
+        /// <summary>
+        /// Counts the dates of the workbook from 1904, as the workbooks of old Excel for the Mac do.
+        /// </summary>
+        public XlsxPackageBuilder Use1904DateSystem()
+        {
+            m_Uses1904DateSystem = true;
+            return this;
+        }
 
         public XlsxPackageBuilder Sheet(string name, Action<XlsxSheetSpec> fill)
         {
@@ -206,11 +227,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
                 Add(@"[Content_Types].xml", contentTypes.ToString());
                 Add(@"_rels/.rels", @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships""><Relationship Id=""rId1"" Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""xl/workbook.xml""/></Relationships>");
-                Add(@"xl/workbook.xml", $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><workbook xmlns=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""><sheets>{workbookSheets}</sheets></workbook>");
+                Add(@"xl/workbook.xml", $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><workbook xmlns=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">{(m_Uses1904DateSystem ? @"<workbookPr date1904=""1""/>" : string.Empty)}<sheets>{workbookSheets}</sheets></workbook>");
                 Add(@"xl/_rels/workbook.xml.rels", relationships.ToString());
                 Add(
                     @"xl/styles.xml",
-                    $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><styleSheet xmlns=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><numFmts count=""1""><numFmt numFmtId=""164"" formatCode=""{c_DateFormat}""/></numFmts><fonts count=""2""><font><sz val=""11""/><name val=""Calibri""/></font><font><b/><sz val=""12""/><name val=""Calibri""/></font></fonts><fills count=""2""><fill><patternFill patternType=""none""/></fill><fill><patternFill patternType=""gray125""/></fill></fills><borders count=""1""><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count=""1""><xf numFmtId=""0"" fontId=""0"" fillId=""0"" borderId=""0""/></cellStyleXfs><cellXfs count=""3""><xf numFmtId=""0"" fontId=""0"" fillId=""0"" borderId=""0"" xfId=""0""/><xf numFmtId=""0"" fontId=""1"" fillId=""0"" borderId=""0"" xfId=""0"" applyFont=""1""/><xf numFmtId=""164"" fontId=""0"" fillId=""0"" borderId=""0"" xfId=""0"" applyNumberFormat=""1""/></cellXfs></styleSheet>");
+                    $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><styleSheet xmlns=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><numFmts count=""2""><numFmt numFmtId=""164"" formatCode=""{c_DateFormat}""/><numFmt numFmtId=""165"" formatCode=""{c_TimeFormat}""/></numFmts><fonts count=""2""><font><sz val=""11""/><name val=""Calibri""/></font><font><b/><sz val=""12""/><name val=""Calibri""/></font></fonts><fills count=""2""><fill><patternFill patternType=""none""/></fill><fill><patternFill patternType=""gray125""/></fill></fills><borders count=""1""><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count=""1""><xf numFmtId=""0"" fontId=""0"" fillId=""0"" borderId=""0""/></cellStyleXfs><cellXfs count=""4""><xf numFmtId=""0"" fontId=""0"" fillId=""0"" borderId=""0"" xfId=""0""/><xf numFmtId=""0"" fontId=""1"" fillId=""0"" borderId=""0"" xfId=""0"" applyFont=""1""/><xf numFmtId=""164"" fontId=""0"" fillId=""0"" borderId=""0"" xfId=""0"" applyNumberFormat=""1""/><xf numFmtId=""165"" fontId=""0"" fillId=""0"" borderId=""0"" xfId=""0"" applyNumberFormat=""1""/></cellXfs></styleSheet>");
                 Add(
                     @"xl/sharedStrings.xml",
                     $@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><sst xmlns=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" count=""{shared.Count}"" uniqueCount=""{shared.Count}"">{string.Concat(shared.Select(x => $@"<si><t xml:space=""preserve"">{SecurityElement.Escape(x)}</t></si>"))}</sst>");
@@ -233,13 +254,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 XlsxCellKind.Text =>
                     $@"<c r=""{reference}"" t=""s"" s=""{(cell.Bold ? 1 : 0)}""><v>{sharedIndex(cell.Text)}</v></c>",
                 XlsxCellKind.Number =>
-                    $@"<c r=""{reference}"">{formula}<v>{number}</v></c>",
+                    $@"<c r=""{reference}""{(cell.Time ? @" s=""3""" : string.Empty)}>{formula}<v>{number}</v></c>",
                 XlsxCellKind.Date =>
                     $@"<c r=""{reference}"" s=""2""><v>{number}</v></c>",
                 XlsxCellKind.Boolean =>
                     $@"<c r=""{reference}"" t=""b""><v>{(cell.Boolean ? 1 : 0)}</v></c>",
                 XlsxCellKind.Error =>
                     $@"<c r=""{reference}"" t=""e""><v>{SecurityElement.Escape(cell.Text)}</v></c>",
+                XlsxCellKind.Blank when cell.Formula is not null =>
+                    $@"<c r=""{reference}"">{formula}</c>",
                 XlsxCellKind.Blank =>
                     $@"<c r=""{reference}"" s=""{(cell.Bold ? 1 : 0)}""/>",
                 _ => throw new ArgumentOutOfRangeException(nameof(cell), cell, null),

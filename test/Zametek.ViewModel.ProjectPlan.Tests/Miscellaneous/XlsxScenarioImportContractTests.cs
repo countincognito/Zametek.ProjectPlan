@@ -42,6 +42,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 @"error" => ErrorOf(value),
                 @"formula-number" => FormulaNumber(value.Split('=')[0], double.Parse(value.Split('=')[1], CultureInfo.InvariantCulture)),
                 @"formula-text" => FormulaText(value.Split('=')[0], value.Split('=')[1]),
+                @"formula-only" => FormulaOnly(value),
+                @"date-serial" => DateSerialOf(double.Parse(value, CultureInfo.InvariantCulture)),
+                @"time" => TimeOf(double.Parse(value, CultureInfo.InvariantCulture)),
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
             };
 
@@ -112,6 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(@"shared", @" 5 ", 5)]            // The spaces around a number are allowed.
         [InlineData(@"inline", @"5", 5)]
         [InlineData(@"formula-number", @"2+3=5", 5)]  // A formula is its result, the one that the file keeps.
+        [InlineData(@"formula-only", @"2+3", 5)]      // A formula that the file keeps no result of is worked out.
         [InlineData(@"blank", @"", 0)]                // A cell with no value gives the default of the column.
         [InlineData(@"missing", @"", 0)]
         public void Import_Given_ACellInAColumnOfWholeNumbers_Then_ItIsTheWholeNumberThatItHolds(string kind, string value, int expected)
@@ -131,6 +135,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(@"bool", @"true", @"TRUE", ImportIssueCodes.NotAWholeNumber)]
         [InlineData(@"date", @"2026-10-17", @"2026-10-17", ImportIssueCodes.NotAWholeNumber)]
         [InlineData(@"error", @"#N/A", @"#N/A", ImportIssueCodes.ExcelError)]
+        [InlineData(@"formula-only", @"SUM(", @"#VALUE!", ImportIssueCodes.ExcelError)]   // A formula that cannot be worked out is an error of Excel.
+        [InlineData(@"formula-only", @"1/0", @"#DIV/0!", ImportIssueCodes.ExcelError)]
         public void Import_Given_ACellInAColumnOfWholeNumbersThatHoldsSomethingElse_Then_TheImportIsCancelledAtThatCell(string kind, string value, string shown, string code)
         {
             ImportIssue issue = ActivityIssue(nameof(ActivityModel.Duration), Cell(kind, value));
@@ -299,11 +305,50 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(@"shared", @"not a date", @"not a date")]
         [InlineData(@"number", @"46312", @"46312")]
         [InlineData(@"bool", @"true", @"TRUE")]
+        [InlineData(@"date-serial", @"3000000", @"3000000")]   // A number with the format of a date that no calendar has: past the year 9999,
+        [InlineData(@"date-serial", @"-5", @"-5")]             // or before the first day of Excel.
+        [InlineData(@"time", @"0.5", @"0.5")]                  // A time of the day is not a date.
         public void Import_Given_ACellInAColumnOfDatesThatHoldsSomethingElse_Then_TheImportIsCancelledAtThatCell(string kind, string value, string shown)
         {
             ImportIssue issue = ActivityIssue(nameof(ActivityModel.MinimumEarliestStartDateTime), Cell(kind, value));
 
             (issue.Code, issue.Cell, issue.Value).ShouldBe((ImportIssueCodes.NotADate, @"B2", shown));
+        }
+
+        // The dates of a workbook of old Excel for the Mac are counted from 1904, four years and a day after those of the others.
+        [Fact]
+        public void Import_Given_AWorkbookThatCountsItsDatesFrom1904_Then_ADateIsTheDayThatExcelShowsForIt()
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Use1904DateSystem()
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.MinimumEarliestStartDateTime))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", DateSerialOf(44850))))
+                .Build();
+
+            ActivityModel activity = Import(workbook).DependentActivities.Select(x => x.Activity).Single();
+
+            activity.MinimumEarliestStartDateTime!.Value.DateTime.ShouldBe(new DateTime(2026, 10, 17));
+        }
+
+        // A workbook may hold things that the importer does not read, such as a picture, and they do not matter.
+        [Fact]
+        public void Import_Given_AWorkbookWithAPicture_Then_ThePictureIsLeftAlone()
+        {
+            using var workbook = new ClosedXML.Excel.XLWorkbook();
+            ClosedXML.Excel.IXLWorksheet sheet = workbook.AddWorksheet(s_Activities);
+            sheet.Cell(1, 1).Value = nameof(ActivityModel.Id);
+            sheet.Cell(1, 2).Value = nameof(ActivityModel.Name);
+            sheet.Cell(2, 1).Value = 1;
+            sheet.Cell(2, 2).Value = @"with a picture";
+            using (var picture = new MemoryStream(Convert.FromBase64String(@"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")))
+            {
+                sheet.AddPicture(picture).MoveTo(sheet.Cell(4, 4));
+            }
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+
+            Import(stream.ToArray()).DependentActivities.Select(x => x.Activity.Name).ShouldBe([@"with a picture"]);
         }
 
         [Fact]

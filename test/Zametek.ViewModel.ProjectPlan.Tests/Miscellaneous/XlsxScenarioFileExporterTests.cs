@@ -11,7 +11,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 {
     // A workbook takes its times from the exporter's clock, never the wall clock: the time it was created, and the
     // time each part of its package was last written. So exporting a scenario at a given time gives the same workbook
-    // however often, and wherever, it is done.
+    // however often it is done, on the same runtime. (The runtime zips the parts, and two runtimes may zip them in two
+    // ways: the parts of a workbook are the same on every platform, but the bytes of the file may not be.)
     public class XlsxScenarioFileExporterTests
     {
         [Fact]

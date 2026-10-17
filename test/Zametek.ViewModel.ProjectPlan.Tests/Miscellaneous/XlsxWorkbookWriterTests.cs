@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
@@ -20,7 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         private static XlsxBook Write(Action<XlsxWorkbookWriter> write)
         {
-            var writer = new XlsxWorkbookWriter();
+            using var writer = new XlsxWorkbookWriter();
             write(writer);
             using var stream = new MemoryStream();
             writer.Save(stream, s_Now);
@@ -67,6 +69,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             CellOf(book, @"Values", @"A1").Text.ShouldBe(@"18446744073709551615");
         }
 
+        // A text that starts with an apostrophe keeps it: the library takes the first apostrophe of a text for a mark that it puts
+        // on a text that looks like a number, and the writer sees to it that this is not so.
+        [Theory]
+        [InlineData(@"'quoted")]
+        [InlineData(@"''two")]
+        [InlineData(@"'")]
+        [InlineData(@"a'b")]
+        [InlineData(@"=1+2")]
+        [InlineData(@"  spaces  ")]
+        [InlineData("two\nlines")]
+        public void Text_Given_ATextThatLooksLikeSomethingElse_Then_ItIsHeldAsItIs(string text)
+        {
+            XlsxBook book = Write(workbook => workbook.AddSheet(@"Values").Text(0, 0, text));
+
+            XlsxCell cell = CellOf(book, @"Values", @"A1");
+            (cell.Kind, cell.Text, cell.Formula).ShouldBe((XlsxCellKind.Text, text, null));
+        }
+
         [Fact]
         public void Text_Given_NoText_Then_TheCellHasNoValue()
         {
@@ -101,6 +121,33 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             XlsxCell cell = CellOf(book, @"Values", @"A1");
             (cell.Kind, cell.Text).ShouldBe((XlsxCellKind.Error, error));
+        }
+
+        // A number that is more than a workbook can hold to 15 digits (the largest number that there is, to start with) is an
+        // error, because a workbook with a number past the end of what a number can be cannot be read.
+        [Theory]
+        [InlineData(double.MaxValue)]
+        [InlineData(double.MinValue)]
+        [InlineData(1.7976931348623155E+308)]
+        public void Number_Given_ANumberTooLargeForFifteenDigits_Then_TheCellHoldsAnErrorOfExcel(double value)
+        {
+            XlsxBook book = Write(workbook => workbook.AddSheet(@"Values").Number(0, 0, value));
+
+            XlsxCell cell = CellOf(book, @"Values", @"A1");
+            (cell.Kind, cell.Text).ShouldBe((XlsxCellKind.Error, @"#NUM!"));
+        }
+
+        [Theory]
+        [InlineData(1.79769313486231E+308)]
+        [InlineData(-1.79769313486231E+308)]
+        [InlineData(double.Epsilon)]
+        public void Number_Given_TheLargestOrSmallestNumberThatFifteenDigitsHold_Then_ItIsANumber(double value)
+        {
+            XlsxBook book = Write(workbook => workbook.AddSheet(@"Values").Number(0, 0, value));
+
+            XlsxCell cell = CellOf(book, @"Values", @"A1");
+            cell.Kind.ShouldBe(XlsxCellKind.Number);
+            double.IsFinite(cell.Number).ShouldBeTrue();
         }
 
         #endregion
@@ -153,7 +200,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Style_Given_ADateAndNoLooksOfDates_Then_ItIsAnError()
         {
-            var writer = new XlsxWorkbookWriter();
+            using var writer = new XlsxWorkbookWriter();
             XlsxSheetWriter sheet = writer.AddSheet(@"Looks");
 
             Should.Throw<InvalidOperationException>(() => sheet.Date(0, 0, new DateTime(2026, 3, 9), XlsxCellStyle.Date));
@@ -162,7 +209,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Style_Given_ATitleDateAndNoLookForOne_Then_ItIsAnError()
         {
-            var writer = new XlsxWorkbookWriter();
+            using var writer = new XlsxWorkbookWriter();
             XlsxSheetWriter sheet = writer.AddSheet(@"Looks", writer.CreateDateStyles(c_DateFormat));
 
             Should.Throw<InvalidOperationException>(() => sheet.Date(0, 0, new DateTime(2026, 3, 9), XlsxCellStyle.TitleDate));
@@ -225,7 +272,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Save_Given_AStream_Then_TheStreamIsLeftOpenAndHoldsAWorkbook()
         {
-            var writer = new XlsxWorkbookWriter();
+            using var writer = new XlsxWorkbookWriter();
             writer.AddSheet(@"Values").Text(0, 0, @"x");
             using var stream = new MemoryStream();
 
@@ -240,17 +287,84 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Save_Given_ATime_Then_TheWorkbookAndEachPartOfItAreStampedWithIt()
         {
-            var writer = new XlsxWorkbookWriter();
+            using var writer = new XlsxWorkbookWriter();
             writer.AddSheet(@"Values").Text(0, 0, @"x");
             using var stream = new MemoryStream();
 
             writer.Save(stream, s_Now);
 
-            XlsxPackageReader.Read(stream.ToArray()).Created.ShouldBe(s_Now.UtcDateTime);
+            XlsxBook book = XlsxPackageReader.Read(stream.ToArray());
+            book.Created.ShouldBe(s_Now.UtcDateTime);
+            book.Modified.ShouldBe(s_Now.UtcDateTime);
             using var archive = new ZipArchive(new MemoryStream(stream.ToArray()), ZipArchiveMode.Read);
             archive.Entries.ShouldNotBeEmpty();
             // A zip holds a time of the clock and no offset, and so it is the clock time that is compared.
             archive.Entries.ShouldAllBe(x => x.LastWriteTime.DateTime == s_Now.DateTime);
+        }
+
+        // The library names a part of the package, and two of the relationships to parts, with a random number. They are named
+        // here for what they hold, and each relationship leads to a part.
+        [Fact]
+        public void Save_Given_AWorkbook_Then_EachRelationshipOfThePackageLeadsToAPartAndNoIdentifierIsRandom()
+        {
+            using var writer = new XlsxWorkbookWriter();
+            writer.AddSheet(@"Values").Text(0, 0, @"x");
+            using var stream = new MemoryStream();
+
+            writer.Save(stream, s_Now);
+
+            using var archive = new ZipArchive(new MemoryStream(stream.ToArray()), ZipArchiveMode.Read);
+            XNamespace package = @"http://schemas.openxmlformats.org/package/2006/relationships";
+            XDocument relationships;
+            using (Stream part = archive.GetEntry(@"_rels/.rels")!.Open())
+            {
+                relationships = XDocument.Load(part);
+            }
+            string[] identifiers = [.. relationships.Descendants(package + @"Relationship").Select(x => (string)x.Attribute(@"Id")!)];
+            string[] targets = [.. relationships.Descendants(package + @"Relationship").Select(x => ((string)x.Attribute(@"Target")!).TrimStart('/'))];
+
+            targets.Length.ShouldBeGreaterThan(1);
+            targets.ShouldAllBe(x => archive.GetEntry(x) != null);
+            identifiers.Distinct().Count().ShouldBe(identifiers.Length);
+            identifiers.ShouldAllBe(x => Regex.IsMatch(x, @"^rId[0-9]+$"));
+        }
+
+        // The package is zipped again after the writer has named its parts, and a part of a large sheet is smaller in the zip.
+        [Fact]
+        public void Save_Given_ALargeSheet_Then_ItsPartIsCompressed()
+        {
+            using var writer = new XlsxWorkbookWriter();
+            XlsxSheetWriter sheet = writer.AddSheet(@"Values");
+            for (int row = 0; row < 300; row++)
+            {
+                sheet.Text(row, 0, @"a text that is the same in every row");
+                sheet.Number(row, 1, 1234.5);
+            }
+            using var stream = new MemoryStream();
+
+            writer.Save(stream, s_Now);
+
+            using var archive = new ZipArchive(new MemoryStream(stream.ToArray()), ZipArchiveMode.Read);
+            ZipArchiveEntry part = archive.GetEntry(@"xl/worksheets/sheet1.xml").ShouldNotBeNull();
+            part.Length.ShouldBeGreaterThan(5000);
+            part.CompressedLength.ShouldBeLessThan(part.Length / 2);
+        }
+
+        // The workbooks of two times hold the same parts under the same names: the name of a part does not hold the time.
+        [Fact]
+        public void Save_Given_TwoTimes_Then_TheWorkbooksHoldTheSameParts()
+        {
+            string[] PartsAt(DateTimeOffset now)
+            {
+                using var writer = new XlsxWorkbookWriter();
+                writer.AddSheet(@"Values").Text(0, 0, @"x");
+                using var stream = new MemoryStream();
+                writer.Save(stream, now);
+                using var archive = new ZipArchive(new MemoryStream(stream.ToArray()), ZipArchiveMode.Read);
+                return [.. archive.Entries.Select(x => x.FullName)];
+            }
+
+            PartsAt(s_Now).ShouldBe(PartsAt(s_Now.AddDays(40)));
         }
 
         // A zip holds times from 1980 to 2107 only.
@@ -259,7 +373,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(2200, 2107, 12, 31, 23, 59, 58)]
         public void Save_Given_ATimeOutsideWhatAZipHolds_Then_ThePartsAreStampedWithTheNearerEnd(int year, int expectedYear, int month, int day, int hour, int minute, int second)
         {
-            var writer = new XlsxWorkbookWriter();
+            using var writer = new XlsxWorkbookWriter();
             writer.AddSheet(@"Values").Text(0, 0, @"x");
             using var stream = new MemoryStream();
 
@@ -275,7 +389,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             byte[] Make()
             {
-                var writer = new XlsxWorkbookWriter();
+                using var writer = new XlsxWorkbookWriter();
                 XlsxSheetWriter sheet = writer.AddSheet(@"Values", writer.CreateDateStyles(c_DateFormat, includeTitleDate: true));
                 sheet.Text(0, 0, @"Title", XlsxCellStyle.Title);
                 sheet.Date(1, 0, new DateTime(2026, 3, 9));

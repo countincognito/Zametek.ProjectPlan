@@ -28,6 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Read a workbook by its XML alone, as the tests of the view models do: a test of a job reads when the workbook was created. -->
+    <Compile Include="..\Zametek.ViewModel.ProjectPlan.Tests\Miscellaneous\XlsxPackageReader.cs" Link="Miscellaneous\XlsxPackageReader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The plans zpp's own tests run, shared rather than copied: the engine runs them the same way. -->
     <Content Include="..\Zametek.ProjectPlan.CommandLine.Tests\Assets\**" LinkBase="Assets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
