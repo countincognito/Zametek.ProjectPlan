@@ -411,6 +411,20 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   `SimulationAnalyzer` calls `SimulationResult.IsCritical(iteration, activity)` once for each activity and each iteration. For 1,000,000 iterations of a plan of 2,000 activities, that is two thousand million calls. A method of `SimulationResult` that counts the set bits of one activity over the iterations would take a few seconds less. Measure before the change.
 
+- [ ] **Let the schedule simulator use the compile pipeline of its caller** *(2026-10-17)*
+
+  `ScheduleSimulator` of `Zametek.Maths.Graphs` makes its own `VertexGraphBuilder` with the standard engines. Each `SimulationIterationRunner` makes one, and the constructor makes a `VertexGraphCompiler` for the first check. The application has its own builder and compiler (`GraphCompilers`). Today both use the standard engines, and so a simulation and a compile agree. Suppose the application used another engine in its compile, for example another resource scheduler. The simulation would ignore it, and its finish times would not match the compile.
+
+  The library already has the parts for this. `VertexGraphBuilder` is not sealed, and it has constructors for custom engines (`VertexGraphBuilderEngines`: the id generator, the event generator, the finder of circular dependencies, the critical-path engine, the resource scheduler and the transitive reducer). `CloneObject` is its only virtual member. `VertexGraphCompiler` has no virtual member. Thus, the engines decide what a compile does, and the compiler only drives them.
+
+  Choices:
+
+  - Take a factory for the builder, and not a compiler. A compiler does not give its builder. The fast path of an iteration calls the builder (`CalculateCriticalPath`, `CalculateResourceSchedulesByPriorityList` and others) and does not call `Compile`. A builder holds state, so each thread needs its own, and a `Func` that makes a new one fits.
+  - Make the simulator generic in the activity type (`ScheduleSimulator<T, TResourceId, TWorkStreamId, TActivity>`). The builder of the application is `VertexGraphBuilder<int, int, int, IDependentActivity>`, and it is not a builder of the interface of the library. Keep the class with three parameters for the standard engines.
+  - Call `Compile` in each iteration, with a factory for the compiler. This honors any compiler, but the fast path saves 10 % to 25 % of an iteration. It is not necessary while the engines decide what a compile does.
+
+  The Rust port has no such seam. A custom pipeline is for .NET only, and the identical results of the two ports hold for the standard engines. The existing test that compares an iteration with a full compile must also run with a custom builder. A test with an engine that counts its calls must show that the simulator uses it. The baselines must not change for the standard engines. The library 3.3.0 is not published yet, and so the change can go in before the release.
+
 - [ ] **Run the schedule simulation in small batches in the web host** *(2026-10-16)*
 
   The web host has one thread. The panel runs the simulation with `Task.Run`, and the simulator uses `Parallel.For`. On the web host, both run on the one thread, and the UI freezes until the run ends. A run of 5,000 iterations of a plan like the sample plan takes about 5 seconds on one thread.
