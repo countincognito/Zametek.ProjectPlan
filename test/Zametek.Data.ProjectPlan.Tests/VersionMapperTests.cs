@@ -224,6 +224,11 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             roundTripped.SimulationSettings.ShouldBe(original.SimulationSettings);
             roundTripped.SimulationSummary.ShouldNotBeNull();
+
+            // The result keeps how the run was set up, and it is not the settings of the scenario.
+            original.SimulationSummary.Seed.ShouldNotBe(new SimulationSummaryModel().Seed);
+            (roundTripped.SimulationSummary.Seed, roundTripped.SimulationSummary.Distribution, roundTripped.SimulationSummary.ModifiedBetaShape)
+                .ShouldBe((original.SimulationSummary.Seed, original.SimulationSummary.Distribution, original.SimulationSummary.ModifiedBetaShape));
             roundTripped.SimulationSummary.Paths.Select(x => x.IdLabel)
                 .ShouldBe(original.SimulationSummary.Paths.Select(x => x.IdLabel));
             roundTripped.SimulationSummary.Bins.Count.ShouldBe(original.SimulationSummary.Bins.Count);

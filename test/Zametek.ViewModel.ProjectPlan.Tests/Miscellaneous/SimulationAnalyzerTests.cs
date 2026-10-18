@@ -20,6 +20,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             [30] = "C",
         };
 
+        // The settings of the run that made the results of these tests: not the defaults, so that a test sees the values that the summary keeps.
+        private static readonly SimulationSettings s_Settings = new() { Seed = 7, Distribution = DurationDistribution.Triangular };
+
         private static CriticalPath<int> Path(params (int Id, CriticalPathLink Link)[] steps) =>
             new(steps.Select(x => new CriticalPathStep<int>(x.Id, x.Link)));
 
@@ -55,9 +58,39 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void Analyze_Given_TheSettingsOfARun_Then_TheSummaryKeepsTheSeedTheDistributionAndNoShapeValueForAnotherDistribution()
+        {
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, new SimulationSettings { Seed = 7, Distribution = DurationDistribution.Triangular, ModifiedBetaShape = 9.0 });
+
+            // The setting has a shape value whatever the distribution is, and the run used it only for the modified beta-PERT.
+            (summary.Seed, summary.Distribution, summary.ModifiedBetaShape).ShouldBe((7UL, DurationDistribution.Triangular, (double?)null));
+        }
+
+        [Fact]
+        public void Analyze_Given_AModifiedBetaPert_Then_TheSummaryKeepsTheShapeValue()
+        {
+            var settings = new SimulationSettings { Seed = ulong.MaxValue, Distribution = DurationDistribution.ModifiedBetaPert, ModifiedBetaShape = 6.5 };
+
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, settings);
+
+            (summary.Seed, summary.Distribution, summary.ModifiedBetaShape).ShouldBe((ulong.MaxValue, DurationDistribution.ModifiedBetaPert, (double?)6.5));
+        }
+
+        [Fact]
+        public void Analyze_Given_NoValidIteration_Then_TheSummaryStillKeepsTheSettingsOfTheRun()
+        {
+            var result = new SimulationResult<int>([10], [-1], null, [], null, null, null);
+
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 11, null, s_Settings);
+
+            summary.HasResult.ShouldBeFalse();
+            (summary.Seed, summary.Distribution).ShouldBe((7UL, DurationDistribution.Triangular));
+        }
+
+        [Fact]
         public void Analyze_Given_AResult_Then_HasTheStatisticsOfTheValidIterations()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, plannedFinishTime: 11, targetFinishTime: null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, plannedFinishTime: 11, targetFinishTime: null, s_Settings);
 
             summary.IterationCount.ShouldBe(10);
             summary.ValidIterationCount.ShouldBe(9);
@@ -75,7 +108,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_AResult_Then_ThePercentilesAreTheNearestRank()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
 
             Dictionary<int, int> percentiles = summary.Percentiles.ToDictionary(x => x.Percentile, x => x.FinishTime);
 
@@ -114,7 +147,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_ATarget_Then_GivesTheShareOfIterationsThatFinishByIt()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, targetFinishTime: 11);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, targetFinishTime: 11, s_Settings);
 
             summary.TargetFinishTime.ShouldBe(11);
             summary.TargetProbability.ShouldNotBeNull();
@@ -124,7 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_NoTarget_Then_HasNoProbability()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
 
             summary.TargetFinishTime.ShouldBeNull();
             summary.TargetProbability.ShouldBeNull();
@@ -133,7 +166,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_AResult_Then_TheHistogramHasABinForEachDayAndTheSCurveEndsAtOne()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
 
             summary.BinWidth.ShouldBe(1);
             summary.Bins.Select(x => x.FirstFinishTime).ShouldBe([10, 11, 12, 13]);
@@ -145,7 +178,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_TiedPaths_Then_TheWeightOfAnIterationIsSplitEquallyAmongThem()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
 
             summary.ChartPathCount.ShouldBe(3);
 
@@ -165,7 +198,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_AResult_Then_ThePathTableGivesTheSharesThatAddUpToOne()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
 
             summary.Paths.Select(x => x.Label).ShouldBe(["A > B", "A > C", "A ~> C"]);
             summary.Paths.Select(x => x.Rank).ShouldBe([1, 2, 3]);
@@ -181,7 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_AResult_Then_TheCriticalityIndexCountsTheValidIterationsOfEachActivity()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
 
             summary.Activities.Select(x => x.Name).ShouldBe(["A", "C", "B"]);
             summary.Activities.Select(x => x.CriticalIterationCount).ShouldBe([9, 5, 4]);
@@ -192,7 +225,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_AnActivityWithNoName_Then_UsesItsNumber()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), new Dictionary<int, string> { [10] = "A", [20] = " " }, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), new Dictionary<int, string> { [10] = "A", [20] = " " }, 11, null, s_Settings);
 
             summary.Activities.Select(x => x.Name).ShouldBe(["A", "#30", "#20"]);
             summary.Paths[0].Label.ShouldBe("A > #20");
@@ -206,7 +239,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             var path = new CriticalPath<int>(ids.Select((x, i) => new CriticalPathStep<int>(x, i == 0 ? CriticalPathLink.None : CriticalPathLink.Dependency)));
             var result = new SimulationResult<int>(ids, [20], [0b1111_1111UL], [path], [0, 1], [0], [true]);
 
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, names, 20, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, names, 20, null, s_Settings);
 
             summary.Paths[0].Label.ShouldBe("A > B > C > D > E > F > G > H");
             summary.Paths[0].ShortLabel.ShouldBe("A > B > … > G > H");
@@ -232,7 +265,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
             var result = new SimulationResult<int>([10], [.. finishTimes], null, paths, [.. offsets], [.. indexes], [.. finishTimes.Select(_ => true)]);
 
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null, s_Settings);
 
             summary.ChartPathCount.ShouldBe(8);
             summary.Bins.Count.ShouldBe(1);
@@ -255,7 +288,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 [1, 0],
                 [true, true]);
 
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null, s_Settings);
 
             summary.Paths.Select(x => x.Label).ShouldBe(["A > B", "A > C"]);
         }
@@ -266,7 +299,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             int[] finishTimes = [.. Enumerable.Range(0, 251)];
             var result = new SimulationResult<int>([10], finishTimes, null, [], null, null, null);
 
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 100, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 100, null, s_Settings);
 
             summary.BinWidth.ShouldBe(3);
             summary.Bins.Count.ShouldBe(84);
@@ -283,7 +316,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             var result = new SimulationResult<int>([10], [4, 5, 5], null, [], null, null, null);
 
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null, s_Settings);
 
             summary.ChartPathCount.ShouldBe(0);
             summary.Paths.ShouldBeEmpty();
@@ -296,7 +329,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             var result = new SimulationResult<int>([10], [-1, -1], new ulong[2], [], null, null, null);
 
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, targetFinishTime: 7);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, targetFinishTime: 7, s_Settings);
 
             summary.HasResult.ShouldBeFalse();
             summary.IterationCount.ShouldBe(2);
@@ -309,8 +342,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Analyze_Given_TheSameResultTwice_Then_GivesTheSameSummary()
         {
-            SimulationSummaryModel first = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, 12);
-            SimulationSummaryModel second = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, 12);
+            SimulationSummaryModel first = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, 12, s_Settings);
+            SimulationSummaryModel second = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, 12, s_Settings);
 
             second.Mean.ShouldBe(first.Mean);
             second.Paths.Select(x => (x.Label, x.Weight)).ShouldBe(first.Paths.Select(x => (x.Label, x.Weight)));

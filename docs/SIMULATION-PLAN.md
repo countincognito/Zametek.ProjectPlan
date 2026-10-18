@@ -410,10 +410,25 @@ The maintainer looked at the docks in the application and asked for changes. The
 ### What is not done
 
 - Nobody has looked at the three docks in the running application. A headless render of each view looks right. A person must look at them with the real theme, and at the layout of the docks.
-- A saved result does not say which seed, distribution and shape value made it. The statistics that `zpp` prints for a saved result use the settings that the project holds, and a person can change them after the run. [TODO](TODO.md) has an entry.
 - A project does not hold the iterations of a run. The file of the iterations needs a run.
 - A job cannot make only some of the CSV files of a simulation. At the end of phase 4, the API had an output for each file. Phase 5 replaced them with the one output `simulation`, which makes the chart and all the files. [TODO](TODO.md) has an entry.
 - The CSV files of a simulation are not in one Excel workbook with a worksheet for each file. [TODO](TODO.md) has an entry to explore this.
+
+## Work after phase 5
+
+The maintainer chose these items from the list of the known gaps on 2026-10-18. Each item is a commit of its own.
+
+### The result keeps how the run was set up
+
+A result that a project held did not say which seed, distribution and shape value made it. The statistics that `zpp` and the API gave for it came from the settings of the project. A person can change the settings after a run and save the project. Then the statistics named a seed that did not make the numbers next to it.
+
+- **Where.** `SimulationSummaryModel` has `Seed`, `Distribution` and `ModifiedBetaShape`. `SimulationAnalyzer.Analyze` takes the settings of the run and copies the three values. The project file (v0.6.2) holds them, in the same record as the statistics.
+- **The shape value is null when the distribution has none.** The settings always have a shape value, but only the modified beta-PERT distribution uses it. The result has the value only for that distribution.
+- **Excel.** The sheet "Simulation Statistics" has the columns `Seed` (as text, as in the sheet of the settings), `Distribution` and `ModifiedBetaShape` after `FailedIterationCount`. A workbook from before these columns has the settings of the scenario in their place. The import finds a column by its title, and so the other columns do not move.
+- **CSV.** The statistics file has the rows `Seed`, `Distribution` and, for the modified beta-PERT, `ModifiedBetaShape`, after `FailedIterations`. They are there also when every iteration failed.
+- **The statistics of the panel.** The panel shows the seed, the distribution and the shape value first, with the values of the result. `zpp` and the server print the same lines, because they print the statistics of the panel. The line for the shape value is new, and it shows only for the modified beta-PERT.
+- **The job.** `JobSimulationMetrics` takes the values from the result. Thus a job that loads a project, gives other settings and does not run reports the seed that made the result.
+- **The golden files.** The workbook `sample-simulation.xlsx` and its snapshot have the new columns. The other two workbooks did not change, and they are still the files that an older release wrote.
 
 ## Performance work to explore later
 

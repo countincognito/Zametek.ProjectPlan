@@ -400,7 +400,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 result,
                 input.ActivityNames,
                 simulator.PlannedFinishTime,
-                targetFinishTime);
+                targetFinishTime,
+                settings);
 
             return new SimulationOutcome(result, summary, input.ActivityNames, input.CompilationOutputRevision);
         }
@@ -466,6 +467,16 @@ namespace Zametek.ViewModel.ProjectPlan
             var statistics = new List<SimulationStatisticModel>();
 
             void Add(string name, string value) => statistics.Add(new SimulationStatisticModel { Name = name, Value = value });
+
+            // How the run was set up comes first. The settings of the scenario can be other than these, because a person can
+            // change them after the run, and so the result says which values made it.
+            Add(Resource.ProjectPlan.Labels.Label_SimulationSeed, summary.Seed.ToString(CultureInfo.CurrentCulture));
+            Add(Resource.ProjectPlan.Labels.Label_SimulationDistribution, StringConverters.DurationDistributionValue(summary.Distribution));
+
+            if (summary.ModifiedBetaShape is double shape)
+            {
+                Add(Resource.ProjectPlan.Labels.Label_SimulationShape, shape.ToString(CultureInfo.CurrentCulture));
+            }
 
             Add(
                 Resource.ProjectPlan.Labels.Label_SimulationIterationCount,

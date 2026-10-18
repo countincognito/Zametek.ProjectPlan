@@ -253,7 +253,7 @@ The answer has `simulation` when the request ran the simulation, or the project 
 ```
 
 - `iterations` is the number that the simulation ran. An iteration fails when the scheduler cannot place each activity. `failedIterations` counts these, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
-- `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`.
+- `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`. A project keeps these values with its result. They stay the same for a result that a project saved before a person changed its settings.
 - `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
 - `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.
 - `percentiles` lists the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. A percentile is the smallest finish that at least that share of the valid iterations reach.

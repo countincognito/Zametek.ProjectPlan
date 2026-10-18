@@ -37,6 +37,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             new()
             {
                 IterationCount = 1234,
+
+                // The run that made the result used other values than the settings have now: the person changed them after it.
+                Seed = ulong.MaxValue - 9,
+                Distribution = DurationDistribution.ModifiedBetaPert,
+                ModifiedBetaShape = 3.25,
                 ValidIterationCount = 1200,
                 FailedIterationCount = 34,
                 PlannedFinishTime = 60,
@@ -123,6 +128,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities,
             ]);
 
+            workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics)!.Header().ShouldBe(
+                [
+                    "IterationCount", "ValidIterationCount", "FailedIterationCount", "Seed", "Distribution", "ModifiedBetaShape", "PlannedFinishTime",
+                    "TargetFinishTime", "TargetProbability", "Mean", "StandardDeviation", "Minimum", "Maximum", "BinWidth", "ChartPathCount", "OtherPathsWeight",
+                ]);
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles)!.Header().ShouldBe(["Percentile", "FinishTime"]);
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram)!.Header().ShouldBe(
                 ["FirstFinishTime", "LastFinishTime", "Count", "CumulativeShare", "PathGroupWeight1", "PathGroupWeight2", "PathGroupWeight3"]);
@@ -172,6 +182,69 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // The critical paths as activity ids are what the Critical paths table shows, and a workbook has them.
             summary.Paths.Select(x => x.IdLabel).ShouldBe(["1 > 3 ~> 7", "1 > 7"]);
             summary.HasResult.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void Export_Given_AResult_Then_TheStatisticsSheetHasTheSeedTheDistributionAndTheShapeOfTheRun()
+        {
+            XlsxBook workbook = XlsxPackageReader.Read(Export(Scenario(Settings(), Summary())));
+            XlsxSheet sheet = workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics)!;
+
+            // The values of the run and not the values of the settings, which the person changed after the run. The seed is
+            // text, as in the sheet of the settings.
+            sheet.Cell(@"D2")!.Kind.ShouldBe(XlsxCellKind.Text);
+            sheet.Cell(@"D2")!.Text.ShouldBe((ulong.MaxValue - 9).ToString(CultureInfo.InvariantCulture));
+            sheet.Cell(@"E2")!.Text.ShouldBe(nameof(DurationDistribution.ModifiedBetaPert));
+            sheet.Cell(@"F2")!.Number.ShouldBe(3.25);
+        }
+
+        [Fact]
+        public void Import_Given_AnExportedWorkbook_Then_TheResultHasTheSeedTheDistributionAndTheShapeOfTheRun()
+        {
+            // The settings and the result do not agree, and each comes back as it was.
+            ProjectScenarioImportModel import = Import(Export(Scenario(Settings(), Summary())));
+
+            import.SimulationSettings.Seed.ShouldBe(ulong.MaxValue - 3);
+            import.SimulationSettings.ModifiedBetaShape.ShouldBe(6.5);
+            import.SimulationSummary.ShouldNotBeNull();
+            import.SimulationSummary.Seed.ShouldBe(ulong.MaxValue - 9);
+            import.SimulationSummary.Distribution.ShouldBe(DurationDistribution.ModifiedBetaPert);
+            import.SimulationSummary.ModifiedBetaShape.ShouldBe(3.25);
+        }
+
+        [Fact]
+        public void Import_Given_ADistributionThatHasNoShapeValue_Then_TheShapeOfTheResultIsNullAndNotTheShapeOfTheSettings()
+        {
+            // The scenario has a shape value (the setting always has one), but the run used the beta-PERT distribution, which has none.
+            SimulationSummaryModel summary = Summary() with { Distribution = DurationDistribution.BetaPert, ModifiedBetaShape = null };
+
+            SimulationSummaryModel? imported = Import(Export(Scenario(Settings(), summary))).SimulationSummary;
+
+            imported.ShouldNotBeNull();
+            imported.Distribution.ShouldBe(DurationDistribution.BetaPert);
+            imported.ModifiedBetaShape.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Import_Given_AWorkbookThatWasMadeBeforeTheResultKeptTheRunSettings_Then_TheResultHasTheSettingsOfTheScenario()
+        {
+            // The statistics of an older workbook have no columns for the seed, the distribution and the shape value. A person who
+            // keeps such a workbook has the seed and the distribution of the settings, as they had before the result kept its own.
+            string sheet = Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics;
+            byte[] bytes = XlsxPackageEditor.Edit(
+                Export(Scenario(Settings(), Summary())),
+                workbook => workbook
+                    .SetText(sheet, @"D1", @"NotSeed")
+                    .SetText(sheet, @"E1", @"NotDistribution")
+                    .SetText(sheet, @"F1", @"NotShape"));
+
+            SimulationSummaryModel? summary = Import(bytes).SimulationSummary;
+
+            summary.ShouldNotBeNull();
+            summary.Seed.ShouldBe(ulong.MaxValue - 3);
+            summary.Distribution.ShouldBe(DurationDistribution.ModifiedBetaPert);
+            summary.ModifiedBetaShape.ShouldBe(6.5);
+            summary.Mean.ShouldBe(66.25);
         }
 
         [Fact]

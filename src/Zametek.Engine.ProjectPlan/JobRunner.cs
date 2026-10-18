@@ -421,7 +421,7 @@ namespace Zametek.Engine.ProjectPlan
             if (simulation is not null
                 && hasSimulationResult)
             {
-                simulationMetrics = JobSimulationMetrics.From(simulation, core.SimulationSettings);
+                simulationMetrics = JobSimulationMetrics.From(simulation);
 
                 if (request.SimulationChart is ChartOutputRequest simulationChart)
                 {

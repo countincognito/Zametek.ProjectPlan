@@ -1,12 +1,23 @@
+using Zametek.Maths.Graphs;
+
 namespace Zametek.Data.ProjectPlan.v0_6_2
 {
     // What the last run of the schedule simulation of a scenario found: the statistics of the finish time, a
     // histogram that is split by critical path, the critical paths, and how often each activity was critical.
-    // It does not hold the iterations. It is new in v0.6.2.
+    // It does not hold the iterations. It is new in v0.6.2. It also holds the seed, the distribution and the shape
+    // value of the run that made it, because the settings of the scenario can change after the run. A file from
+    // before these three values had no place for them has the defaults, which are the defaults of the settings
+    // (the model of a version does not change, and so the values are written here and not read from there).
     [Serializable]
     public record SimulationSummaryModel
     {
         public int IterationCount { get; init; }
+
+        public ulong Seed { get; init; } = 1;
+
+        public DurationDistribution Distribution { get; init; } = DurationDistribution.BetaPert;
+
+        public double? ModifiedBetaShape { get; init; }
 
         public int ValidIterationCount { get; init; }
 

@@ -41,6 +41,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(SimulationSummaryModel.IterationCount),
                 nameof(SimulationSummaryModel.ValidIterationCount),
                 nameof(SimulationSummaryModel.FailedIterationCount),
+                nameof(SimulationSummaryModel.Seed),
+                nameof(SimulationSummaryModel.Distribution),
+                nameof(SimulationSummaryModel.ModifiedBetaShape),
                 nameof(SimulationSummaryModel.PlannedFinishTime),
                 nameof(SimulationSummaryModel.TargetFinishTime),
                 nameof(SimulationSummaryModel.TargetProbability),
@@ -129,6 +132,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         summary.IterationCount,
                         summary.ValidIterationCount,
                         summary.FailedIterationCount,
+                        summary.Seed,
+                        summary.Distribution,
+                        summary.ModifiedBetaShape,
                         summary.PlannedFinishTime,
                         summary.TargetFinishTime,
                         summary.TargetProbability,
@@ -251,7 +257,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(reader);
 
-            return (ReadSettings(reader), ReadSummary(reader));
+            SimulationSettingsModel settings = ReadSettings(reader);
+
+            return (settings, ReadSummary(reader, settings));
         }
 
         private static SimulationSettingsModel ReadSettings(XlsxWorkbookReader reader)
@@ -276,7 +284,9 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static SimulationSummaryModel? ReadSummary(XlsxWorkbookReader reader)
+        private static SimulationSummaryModel? ReadSummary(
+            XlsxWorkbookReader reader,
+            SimulationSettingsModel settings)
         {
             ImportTable? statistics = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics, s_StatisticsColumnTitles);
             ImportRow? row = statistics?.Rows.FirstOrDefault();
@@ -288,8 +298,23 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var summary = new SimulationSummaryModel();
 
+            // The seed, the distribution and the shape value say how the run was set up. A workbook that was made before the
+            // statistics had them has the settings of the scenario in their place, as the file did before it kept them with the
+            // result. A blank cell of the shape is not that: the distribution of the run had no shape value.
+            bool hasProvenance = row.Table.HasColumn(nameof(SimulationSummaryModel.Seed));
+            DurationDistribution distribution = hasProvenance
+                ? row.Option<DurationDistribution>(nameof(SimulationSummaryModel.Distribution)) ?? summary.Distribution
+                : settings.Distribution;
+
             summary = summary with
             {
+                Seed = hasProvenance
+                    ? row.ULong(nameof(SimulationSummaryModel.Seed)) ?? summary.Seed
+                    : settings.Seed,
+                Distribution = distribution,
+                ModifiedBetaShape = hasProvenance
+                    ? row.Double(nameof(SimulationSummaryModel.ModifiedBetaShape))
+                    : distribution == DurationDistribution.ModifiedBetaPert ? settings.ModifiedBetaShape : null,
                 IterationCount = row.Int(nameof(SimulationSummaryModel.IterationCount)) ?? summary.IterationCount,
                 ValidIterationCount = row.Int(nameof(SimulationSummaryModel.ValidIterationCount)) ?? summary.ValidIterationCount,
                 FailedIterationCount = row.Int(nameof(SimulationSummaryModel.FailedIterationCount)) ?? summary.FailedIterationCount,

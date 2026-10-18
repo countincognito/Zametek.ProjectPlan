@@ -396,6 +396,42 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_SettingsThatAreNotThoseOfTheResultAndNoRun_Then_TheMetricsHaveTheValuesThatMadeTheResult()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            byte[] saved = await SaveSimulatedProjectAsync(
+                runner,
+                new SimulationSettingsModel { Iterations = 300, Seed = 31, Distribution = DurationDistribution.Triangular, UseRandomSeed = false });
+
+            // The settings of the project were changed after the run, and the job does not run again: the statistics are those of
+            // the result, and they name the seed and the distribution that made it.
+            (JobResult result, _) = await RunBytesAsync(
+                runner,
+                saved,
+                input => new JobRequest
+                {
+                    Input = input,
+                    SimulationSettings = new SimulationSettingsModel
+                    {
+                        Iterations = 300,
+                        Seed = 99,
+                        Distribution = DurationDistribution.ModifiedBetaPert,
+                        ModifiedBetaShape = 8.0,
+                        UseRandomSeed = false,
+                    },
+                });
+
+            JobSimulationMetrics simulation = result.Simulation.ShouldNotBeNull();
+            simulation.Seed.ShouldBe(31UL);
+            simulation.Distribution.ShouldBe(DurationDistribution.Triangular);
+            simulation.ModifiedBetaShape.ShouldBeNull();
+            simulation.Statistics[0].ShouldBe(new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = @"31" });
+            simulation.Statistics[1].Value.ShouldBe(StringConverters.DurationDistributionValue(DurationDistribution.Triangular));
+            simulation.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationShape);
+        }
+
+        [Fact]
         public async Task RunAsync_Given_AProjectThatHoldsAResultAndARun_Then_TheRunReplacesTheResult()
         {
             await using ServiceProvider services = BuildServices();

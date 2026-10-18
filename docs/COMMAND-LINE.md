@@ -108,7 +108,7 @@ The option `--run-simulation` runs the simulation after the plan compiles. `zpp`
 zpp -i plan.zpp --run-simulation
 ```
 
-The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution, the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date.
+The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution (and the shape value, for the modified beta-PERT), the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date. The seed, the distribution and the shape value are those of the run that made the result. A person can change the settings of the project after the run, and the statistics of a saved result do not follow them.
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |

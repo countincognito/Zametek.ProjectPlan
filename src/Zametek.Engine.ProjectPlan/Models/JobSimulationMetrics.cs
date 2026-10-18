@@ -52,7 +52,8 @@ namespace Zametek.Engine.ProjectPlan
         // The share of the valid iterations that finish by the target, from 0 to 1.
         public double? TargetProbability { get; init; }
 
-        // The statistics as the panel shows them, as text: the seed and the distribution, then each of the panel's lines.
+        // The statistics as the panel shows them, as text: the seed, the distribution and, for a modified beta-PERT, its shape
+        // value, then each of the panel's other lines.
         public IReadOnlyList<SimulationStatisticModel> Statistics { get; init; } = [];
 
         // Two sets of metrics are equal when they say the same thing: a record would compare the lists by reference, not by
@@ -109,32 +110,22 @@ namespace Zametek.Engine.ProjectPlan
             return hash.ToHashCode();
         }
 
-        // The metrics of the result the view-model has, which a run of the job made or the scenario held, with the settings that
-        // the scenario has. A result that a file held was made with the settings that the file saved with it, unless somebody
-        // changed them after that run.
-        internal static JobSimulationMetrics From(
-            ISimulationChartManagerViewModel simulation,
-            SimulationSettingsModel settings)
+        // The metrics of the result the view-model has, which a run of the job made or the scenario held. The result says
+        // which seed, distribution and shape value made it, and so the metrics do not use the settings of the scenario: a
+        // person can change those after the run, and then they are not the values of the result.
+        internal static JobSimulationMetrics From(ISimulationChartManagerViewModel simulation)
         {
             ArgumentNullException.ThrowIfNull(simulation);
-            ArgumentNullException.ThrowIfNull(settings);
 
             SimulationSummaryModel summary = simulation.Summary ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
             bool hasResult = summary.HasResult;
 
-            List<SimulationStatisticModel> statistics =
-            [
-                new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = settings.Seed.ToString(CultureInfo.CurrentCulture) },
-                new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationDistribution, Value = StringConverters.DurationDistributionValue(settings.Distribution) },
-                .. simulation.Statistics,
-            ];
-
             return new JobSimulationMetrics
             {
                 Iterations = summary.IterationCount,
-                Seed = settings.Seed,
-                Distribution = settings.Distribution,
-                ModifiedBetaShape = settings.Distribution == DurationDistribution.ModifiedBetaPert ? settings.ModifiedBetaShape : null,
+                Seed = summary.Seed,
+                Distribution = summary.Distribution,
+                ModifiedBetaShape = summary.ModifiedBetaShape,
                 ValidIterations = summary.ValidIterationCount,
                 FailedIterations = summary.FailedIterationCount,
                 PlannedFinishDays = summary.PlannedFinishTime,
@@ -149,7 +140,7 @@ namespace Zametek.Engine.ProjectPlan
                 TargetFinishDays = hasResult ? summary.TargetFinishTime : null,
                 TargetFinishDate = hasResult && summary.TargetFinishTime is int target ? simulation.GetFinishDate(target) : null,
                 TargetProbability = hasResult ? summary.TargetProbability : null,
-                Statistics = statistics,
+                Statistics = [.. simulation.Statistics],
             };
         }
     }

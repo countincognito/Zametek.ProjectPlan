@@ -164,6 +164,65 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.StatusText.ShouldStartWith(Resource.ProjectPlan.Labels.Label_SimulationDone.Split('{')[0]);
         }
 
+        [Fact]
+        public async Task RunSimulationAsync_Given_ARun_Then_TheResultKeepsTheSeedTheDistributionAndTheShapeOfTheRun()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+            panel.Distribution = DurationDistribution.ModifiedBetaPert;
+            panel.ModifiedBetaShape = 6.5;
+
+            await panel.RunSimulationAsync();
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            SimulationSummaryModel summary = panel.Summary.ShouldNotBeNull();
+            (summary.Seed, summary.Distribution, summary.ModifiedBetaShape).ShouldBe((7UL, DurationDistribution.ModifiedBetaPert, (double?)6.5));
+            panel.Statistics[0].ShouldBe(new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = 7UL.ToString(System.Globalization.CultureInfo.CurrentCulture) });
+            panel.Statistics[1].Name.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationDistribution);
+            panel.Statistics[1].Value.ShouldBe(StringConverters.DurationDistributionValue(DurationDistribution.ModifiedBetaPert));
+            panel.Statistics[2].Name.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationShape);
+            panel.Statistics[2].Value.ShouldBe(6.5.ToString(System.Globalization.CultureInfo.CurrentCulture));
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_ADistributionWithoutAShapeValue_Then_TheResultHasNoShapeValue()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+            panel.Distribution = DurationDistribution.Triangular;
+            panel.ModifiedBetaShape = 6.5; // The setting always has one. The run does not use it.
+
+            await panel.RunSimulationAsync();
+
+            panel.Summary.ShouldNotBeNull().ModifiedBetaShape.ShouldBeNull();
+            panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationShape);
+        }
+
+        [Fact]
+        public async Task Settings_Given_AChangeAfterTheRun_Then_TheResultStillSaysWhichValuesMadeIt()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+            panel.Distribution = DurationDistribution.Triangular;
+            await panel.RunSimulationAsync();
+
+            panel.Seed = 99;
+            panel.Distribution = DurationDistribution.Uniform;
+
+            SimulationSummaryModel summary = harness.Core.SimulationSummary.ShouldNotBeNull();
+            (summary.Seed, summary.Distribution).ShouldBe((7UL, DurationDistribution.Triangular));
+            harness.Core.SimulationSettings.Seed.ShouldBe(99UL);
+        }
+
         [Theory]
         [InlineData(BaseTheme.Light)]
         [InlineData(BaseTheme.Dark)]

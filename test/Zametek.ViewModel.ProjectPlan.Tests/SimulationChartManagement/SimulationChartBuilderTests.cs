@@ -22,6 +22,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             [30] = "C",
         };
 
+        // The settings of the run that made the results of these tests: not the defaults, so that a test sees the values that the summary keeps.
+        private static readonly SimulationSettings s_Settings = new() { Seed = 7, Distribution = DurationDistribution.Triangular };
+
         private static CriticalPath<int> Path(params (int Id, CriticalPathLink Link)[] steps) =>
             new(steps.Select(x => new CriticalPathStep<int>(x.Id, x.Link)));
 
@@ -52,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 [.. indexes],
                 [true, true, true, true, true, true, true, true, true, true]);
 
-            return SimulationAnalyzer.Analyze(result, s_Names, plannedFinishTime: 11, targetFinishTime: target);
+            return SimulationAnalyzer.Analyze(result, s_Names, plannedFinishTime: 11, targetFinishTime: target, s_Settings);
         }
 
         private static Plot Build(SimulationSummaryModel summary, bool showDates = false, BaseTheme theme = BaseTheme.Light) =>
@@ -111,7 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             var names = ids.ToDictionary(x => x, x => $"Activity number {x}");
             var path = new CriticalPath<int>(ids.Select((x, i) => new CriticalPathStep<int>(x, i == 0 ? CriticalPathLink.None : CriticalPathLink.Dependency)));
             var result = new SimulationResult<int>(ids, [30, 31], new ulong[2], [path], [0, 1, 2], [0, 0], [true, true]);
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, names, 30, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, names, 30, null, s_Settings);
 
             using Plot plot = Build(summary);
 

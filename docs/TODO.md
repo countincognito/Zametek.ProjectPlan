@@ -417,10 +417,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
 
-- [ ] **Keep the seed and the distribution with the result of a simulation** *(2026-10-16)*
-
-  A result that a project holds does not say which seed, distribution and shape value made it. The statistics that `zpp` and the API give for it use the settings that the project holds. A person can change the settings after the run and save the project, and then the statistics name a seed that did not make them. Choices: add the three values to the result, in the file and in the Excel sheet "Simulation Statistics". The file format v0.6.2 is not released, and thus it can take them. Or clear the result when a setting changes.
-
 - [ ] **Run the iterations of a job on a share of the processors** *(2026-10-16)*
 
   `SimulationSettings.MaxDegreeOfParallelism` is -1 (all the processors) in the panel and in each job. A server with `MaxJobs` jobs that all simulate asks the pool for several times its processors. The result does not change with the number of threads, and thus a server could give each job `processors / MaxJobs`. Measure before the change.

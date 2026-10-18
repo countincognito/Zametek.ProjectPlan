@@ -23,6 +23,16 @@ namespace Zametek.ViewModel.ProjectPlan
             WriteRow(writer, @"Iterations", Number(summary.IterationCount));
             WriteRow(writer, @"ValidIterations", Number(summary.ValidIterationCount));
             WriteRow(writer, @"FailedIterations", Number(summary.FailedIterationCount));
+
+            // How the run was set up. The result keeps these values, and the file says which ones made its numbers.
+            WriteRow(writer, @"Seed", summary.Seed.ToString(CultureInfo.InvariantCulture));
+            WriteRow(writer, @"Distribution", summary.Distribution.ToString());
+
+            if (summary.ModifiedBetaShape is double shape)
+            {
+                WriteRow(writer, @"ModifiedBetaShape", Number(shape));
+            }
+
             WriteRow(writer, @"PlannedFinish", Number(summary.PlannedFinishTime));
 
             if (!summary.HasResult)

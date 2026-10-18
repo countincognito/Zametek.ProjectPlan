@@ -17,6 +17,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             [30] = "The \"big\" one",
         };
 
+        // The settings of the run that made the results of these tests: not the defaults, so that a test sees the values that the summary keeps.
+        private static readonly SimulationSettings s_Settings = new() { Seed = 7, Distribution = DurationDistribution.Triangular };
+
         private static SimulationResult<int> Result() =>
             new(
                 [10, 20, 30],
@@ -42,7 +45,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void WriteStatistics_Given_ASummary_Then_HasARowForEachStatistic()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, plannedFinishTime: 11, targetFinishTime: 11);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, plannedFinishTime: 11, targetFinishTime: 11, s_Settings);
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteStatistics(w, summary)));
 
@@ -50,6 +53,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             lines.ShouldContain("Iterations,4");
             lines.ShouldContain("ValidIterations,3");
             lines.ShouldContain("FailedIterations,1");
+            lines.ShouldContain("Seed,7");
+            lines.ShouldContain("Distribution,Triangular");
+            lines.ShouldNotContain(x => x.StartsWith("ModifiedBetaShape,", System.StringComparison.Ordinal));
             lines.ShouldContain("PlannedFinish,11");
             lines.ShouldContain("Minimum,10");
             lines.ShouldContain("Maximum,12");
@@ -62,17 +68,32 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void WriteStatistics_Given_NoValidIteration_Then_HasOnlyTheCounts()
         {
             var result = new SimulationResult<int>([10], [-1], null, [], null, null, null);
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 11, null, s_Settings);
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteStatistics(w, summary)));
 
-            lines.ShouldBe(["Statistic,Value", "Iterations,1", "ValidIterations,0", "FailedIterations,1", "PlannedFinish,11"]);
+            // The seed and the distribution are there also when every iteration failed: the run was made with them.
+            lines.ShouldBe(["Statistic,Value", "Iterations,1", "ValidIterations,0", "FailedIterations,1", "Seed,7", "Distribution,Triangular", "PlannedFinish,11"]);
+        }
+
+        [Fact]
+        public void WriteStatistics_Given_AModifiedBetaPert_Then_HasTheShapeValueAfterTheDistribution()
+        {
+            var settings = new SimulationSettings { Seed = ulong.MaxValue, Distribution = DurationDistribution.ModifiedBetaPert, ModifiedBetaShape = 6.5 };
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null, settings);
+
+            string[] lines = Lines(Write(w => SimulationCsvWriter.WriteStatistics(w, summary)));
+
+            int distribution = System.Array.IndexOf(lines, "Distribution,ModifiedBetaPert");
+            distribution.ShouldBeGreaterThan(0);
+            lines[distribution - 1].ShouldBe("Seed,18446744073709551615");
+            lines[distribution + 1].ShouldBe("ModifiedBetaShape,6.5");
         }
 
         [Fact]
         public void WriteHistogram_Given_ASummary_Then_HasABinForEachRowAndAColumnForEachGroup()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null, s_Settings);
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteHistogram(w, summary)));
 
@@ -86,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void WritePaths_Given_ASummary_Then_TheLabelsWithACommaAreQuoted()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null, s_Settings);
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WritePaths(w, summary)));
 
@@ -98,7 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void WriteActivities_Given_ASummary_Then_HasARowForEachCriticalActivity()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, null, s_Settings);
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteActivities(w, summary)));
 
@@ -146,7 +167,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Write_Given_AnyCsv_Then_EveryLineEndsWithALineFeedAndNoCarriageReturn()
         {
-            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, 11);
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(Result(), s_Names, 11, 11, s_Settings);
 
             string text = Write(w =>
             {
