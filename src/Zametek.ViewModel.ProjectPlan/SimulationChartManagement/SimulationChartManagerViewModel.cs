@@ -302,7 +302,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return null;
         }
 
-        private void ReportProgress(int done, int total, Stopwatch stopwatch)
+        private void ReportProgress(int done, int total, Stopwatch stopwatch, IProgress<int>? observer)
         {
             long now = Stopwatch.GetTimestamp();
             long last = Interlocked.Read(ref m_LastProgressTicks);
@@ -329,6 +329,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 FormatDuration(remaining));
 
             SetStatus(fraction, text);
+
+            // The caller who asked to be told is told as often as the panel is. It runs on a thread of the simulation, and so
+            // whatever it does must not stop the run.
+            if (observer is not null)
+            {
+                try
+                {
+                    observer.Report(done);
+                }
+                catch (Exception ex)
+                {
+                    m_Logger.LogDebug(ex, "Simulation: the observer of the progress failed");
+                }
+            }
 
             // Rarely, and not at the end, which the log says in its own words.
             long lastLog = Interlocked.Read(ref m_LastLogTicks);
@@ -843,17 +857,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public Task RunSimulationAsync(CancellationToken cancellationToken)
         {
-            return RunAsync(cancellationToken, useSavedSeed: false);
+            return RunAsync(cancellationToken, useSavedSeed: false, observer: null);
         }
 
-        public Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken)
+        public Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
-            return RunAsync(cancellationToken, useSavedSeed: true);
+            return RunAsync(cancellationToken, useSavedSeed: true, progress);
         }
 
         private async Task RunAsync(
             CancellationToken cancellationToken,
-            bool useSavedSeed)
+            bool useSavedSeed,
+            IProgress<int>? observer)
         {
             // One run at a time. A second request while a run is in progress does nothing.
             if (Interlocked.CompareExchange(ref m_RunGate, 1, 0) != 0)
@@ -926,7 +941,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 var stopwatch = Stopwatch.StartNew();
                 Interlocked.Exchange(ref m_LastLogTicks, Stopwatch.GetTimestamp());
-                var progress = new CallbackProgress(done => ReportProgress(done, settings.Iterations, stopwatch));
+                var progress = new CallbackProgress(done => ReportProgress(done, settings.Iterations, stopwatch, observer));
                 CancellationToken token = cancellation.Token;
 
                 SimulationOutcome outcome = await Task.Run(() => Simulate(settings, target, progress, token), token);

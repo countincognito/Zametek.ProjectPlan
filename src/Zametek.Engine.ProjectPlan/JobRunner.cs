@@ -275,7 +275,12 @@ namespace Zametek.Engine.ProjectPlan
                 using SimulationProcessorShare.Lease share = processorShare.Begin();
                 simulation.MaxDegreeOfParallelism = request.MaximumSimulationThreads ?? share.Threads;
 
-                await simulation.RunSimulationWithSavedSeedAsync(cancellationToken);
+                int iterations = core.SimulationSettings.Iterations;
+                IProgress<int>? progress = request.Progress is IProgress<JobProgress> observer
+                    ? new IterationProgress(done => observer.Report(new JobProgress(done, iterations)))
+                    : null;
+
+                await simulation.RunSimulationWithSavedSeedAsync(cancellationToken, progress);
 
                 // A run that was cancelled has no result, and the job stops with it. A run that failed has told the dialog
                 // service why, and the result that the scenario had before it is not the result of this job.
@@ -532,6 +537,20 @@ namespace Zametek.Engine.ProjectPlan
             {
                 throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationOutputsNeedAResult, SimulationFailure.NoResult);
             }
+        }
+
+        // The iterations that have run, as a callback: Progress<T> would post them to the context that made it.
+        private sealed class IterationProgress
+            : IProgress<int>
+        {
+            private readonly Action<int> m_Callback;
+
+            public IterationProgress(Action<int> callback)
+            {
+                m_Callback = callback;
+            }
+
+            public void Report(int value) => m_Callback(value);
         }
 
         private static async Task WriteChartAsync(

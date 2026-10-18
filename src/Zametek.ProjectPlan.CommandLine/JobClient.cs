@@ -1,4 +1,5 @@
 using Serilog;
+using Serilog.Events;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -31,6 +32,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private const string c_CompilePath = @"v1/projects/compile?include=console";
         private const string c_ScenariosPath = @"v1/projects/scenarios?include=console";
+        private const string c_JobsPath = @"v1/jobs";
         private const string c_ProjectPart = @"project";
         private const string c_ImportPart = @"import";
         private const string c_OptionsPart = @"options";
@@ -56,6 +58,14 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // How long zpp tries to connect to a server. Once it has, the server's own limits bound the job.
         private static readonly TimeSpan s_ConnectTimeout = TimeSpan.FromSeconds(30);
+
+        // How long zpp waits before it first asks the server how far the job has got, so that a job that is short is not asked
+        // about at all, and how long it waits between two questions when the server does not say.
+        private static readonly TimeSpan s_FirstProgressWait = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan s_ProgressWait = TimeSpan.FromSeconds(2);
+
+        // The shortest zpp waits between two questions about the progress, whatever the server says.
+        private static readonly TimeSpan s_ShortestProgressWait = TimeSpan.FromSeconds(1);
 
         #endregion
 
@@ -135,14 +145,21 @@ namespace Zametek.ProjectPlan.CommandLine
             IReadOnlyDictionary<JobOutput, string> filenames = Program.BuildOutputFilenames(options, FileFormatHelper.GetProjectTitle(inputFilename));
             CompileOptions compileOptions = CompileOptionsHelper.FromOptions(options);
 
-            ServerAnswer<CompileResponse> compiled = await PostAsync<CompileResponse>(
-                client,
-                settings,
-                traceId,
-                c_CompilePath,
-                () => CreateContent(plan, sentName, importFormat is null ? c_ProjectPart : c_ImportPart, compileOptions),
-                limit,
-                cancellationToken);
+            // While the job runs, the log says how far it has got, as the log of a run here does (with --verbose): the server says
+            // it to whoever asks for it by the id of the request, and zpp asks.
+            ServerAnswer<CompileResponse> compiled;
+
+            await using (WatchProgress(client, settings, traceId, cancellationToken))
+            {
+                compiled = await PostAsync<CompileResponse>(
+                    client,
+                    settings,
+                    traceId,
+                    c_CompilePath,
+                    () => CreateContent(plan, sentName, importFormat is null ? c_ProjectPart : c_ImportPart, compileOptions),
+                    limit,
+                    cancellationToken);
+            }
 
             return compiled.Problem is not null
                 ? await ReplayProblemAsync(settings, compiled, compiled.Problem.Outputs ?? [], filenames, console)
@@ -220,6 +237,121 @@ namespace Zametek.ProjectPlan.CommandLine
             }
 
             return content;
+        }
+
+        // Starts to ask the server how far the job with this trace id has got, and goes on until what it returns is disposed of.
+        // It asks only when the log would show the answer: the progress is for a person who looks at it.
+        private static ProgressWatch WatchProgress(
+            HttpClient client,
+            ClientSettings settings,
+            string traceId,
+            CancellationToken cancellationToken)
+        {
+            var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            Task task = Log.IsEnabled(LogEventLevel.Information)
+                ? Task.Run(() => AskProgressAsync(client, settings, traceId, cancellation.Token))
+                : Task.CompletedTask;
+
+            return new ProgressWatch(cancellation, task);
+        }
+
+        // Asks, again and again, until it is cancelled. The job is not there before the server has taken it, and not after it
+        // has ended; a server that is an older one, or that cannot be asked, is no cause to stop the run. Nothing here fails the run.
+        private static async Task AskProgressAsync(
+            HttpClient client,
+            ClientSettings settings,
+            string traceId,
+            CancellationToken cancellationToken)
+        {
+            TimeSpan wait = s_FirstProgressWait;
+            JobProgressResponse? last = null;
+
+            try
+            {
+                while (true)
+                {
+                    await Task.Delay(wait, cancellationToken);
+                    wait = s_ProgressWait;
+
+                    try
+                    {
+                        using var request = new HttpRequestMessage(HttpMethod.Get, $@"{c_JobsPath}/{traceId}");
+                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(c_JsonMediaType));
+                        request.Headers.Add(c_TraceParentHeader, $@"00-{traceId}-{ActivitySpanId.CreateRandom().ToHexString()}-00");
+
+                        if (settings.ApiKey is string apiKey)
+                        {
+                            request.Headers.Authorization = new AuthenticationHeaderValue(c_Scheme, apiKey);
+                        }
+
+                        using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            continue;
+                        }
+
+                        if (response.Headers.RetryAfter?.Delta is TimeSpan said)
+                        {
+                            wait = said > s_ShortestProgressWait ? said : s_ShortestProgressWait;
+                        }
+
+                        JobStatusResponse? status = await response.Content.ReadFromJsonAsync<JobStatusResponse>(JobJsonHelper.ClientOptions, cancellationToken);
+
+                        if (status?.Progress is JobProgressResponse progress
+                            && progress != last
+                            && progress.Total > 0)
+                        {
+                            last = progress;
+                            Log.Information(
+                                "Simulation on {Server}: {Done} of {Total} iterations ({Percent:P0})",
+                                settings.Server,
+                                progress.Done,
+                                progress.Total,
+                                (double)progress.Done / progress.Total);
+                        }
+                    }
+                    catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException or IOException)
+                    {
+                        Log.Debug("The progress of the job could not be read: {Reason}", ex.Message);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // The answer to the request has come, or the run was stopped.
+            }
+        }
+
+        // What asks about the progress of a job, and stops when the answer to the job's request has come.
+        private sealed class ProgressWatch
+            : IAsyncDisposable
+        {
+            private readonly CancellationTokenSource m_Cancellation;
+            private readonly Task m_Task;
+
+            public ProgressWatch(
+                CancellationTokenSource cancellation,
+                Task task)
+            {
+                m_Cancellation = cancellation;
+                m_Task = task;
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                await m_Cancellation.CancelAsync();
+
+                try
+                {
+                    await m_Task;
+                }
+                finally
+                {
+                    m_Cancellation.Dispose();
+                }
+            }
         }
 
         // Sends the request, and again while the server is busy, for as long as busyLimit allows - waiting what the server says

@@ -1,4 +1,5 @@
 using Shouldly;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -27,6 +28,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         : IClassFixture<EngineFixture>
     {
         private const string c_ApiKey = @"s3cr3t-k3y";
+
+        // The id of a job: a trace id.
+        private const string c_JobId = @"4bf92f3577b34da6a3ce929d0e0e4736";
 
         private static readonly TimeSpan s_Settle = TimeSpan.FromMilliseconds(250);
 
@@ -126,6 +130,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var observations = new Observations(Description);
 
             await ObserveWhatAServerAnswersAsync(observations);
+            await ObserveWhatAServerAnswersAboutAJobThatRunsAsync(observations);
             await ObserveWhatAServerThatNeedsAKeyAnswersAsync(observations);
             await ObserveWhatAServerThatIsFullAnswersAsync(observations);
             await ObserveWhatAServerThatFailsAnswersAsync(observations);
@@ -161,10 +166,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"description, as JSON", client, Get(@"/v1/openapi", accept: @"application/json"), HttpStatusCode.NotAcceptable);
             await observations.SendAsync(@"description, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"), HttpStatusCode.OK);
 
-            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/projects/compile", @"/v1/projects/scenarios" })
+            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
             {
                 await observations.SendAsync($@"what {path} takes", client, new HttpRequestMessage(HttpMethod.Options, path), HttpStatusCode.NoContent);
             }
+
+            // How far a job has got: none runs, so there is no status. The id is a trace id, and the answer can be JSON only.
+            await observations.SendAsync(@"job, none runs", client, Get($@"/v1/jobs/{c_JobId}"), HttpStatusCode.NotFound);
+            await observations.SendAsync(@"job, an id that is not a trace id", client, Get(@"/v1/jobs/not-an-id"), HttpStatusCode.BadRequest);
+            await observations.SendAsync(@"job, as HTML", client, Get($@"/v1/jobs/{c_JobId}", accept: @"text/html"), HttpStatusCode.NotAcceptable);
 
             await observations.SendAsync(@"live", client, Get(@"/health/live"), HttpStatusCode.OK);
             await observations.SendAsync(@"not ready", client, Get(@"/health/ready"), HttpStatusCode.ServiceUnavailable);
@@ -205,6 +215,55 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"scenarios, a file that is not a project", client, Post(@"/v1/projects/scenarios", Plan(plan: Encoding.UTF8.GetBytes(@"not a project"))), HttpStatusCode.UnprocessableEntity);
         }
 
+        // A job that runs, and the status that the server gives of it: a simulation of a million iterations, which takes minutes,
+        // stopped when the server has said how far it has got.
+        private async Task ObserveWhatAServerAnswersAboutAJobThatRunsAsync(Observations observations)
+        {
+            byte[] sample;
+            await using (Stream stream = WarmUpService.OpenSample())
+            using (var memory = new MemoryStream())
+            {
+                await stream.CopyToAsync(memory);
+                sample = memory.ToArray();
+            }
+
+            using var input = new MemoryStream(sample);
+            var sink = new MemoryJobSink(new BufferedConsole());
+            await m_Engine.JobRunner.RunAsync(
+                new JobRequest { Input = input, SaveProject = true, SimulationSettings = new SimulationSettingsModel { Iterations = 1_000_000 } },
+                sink);
+            byte[] plan = sink.Outputs.Single(x => x.Output == JobOutput.Project).Content;
+
+            await using RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = new ServeLimits { MaxSimulationIterations = 1_000_000 } });
+            using var cancellation = new CancellationTokenSource();
+
+            HttpRequestMessage compile = Post(@"/v1/projects/compile", Plan(plan: plan, options: @"{""runSimulation"":true}"));
+            compile.Headers.Add(@"traceparent", $@"00-{c_JobId}-00f067aa0ba902b7-00");
+            Task<HttpResponseMessage> running = server.Client.SendAsync(compile, cancellation.Token);
+
+            var waited = Stopwatch.StartNew();
+            HttpStatusCode status = HttpStatusCode.NotFound;
+
+            while (status != HttpStatusCode.OK
+                && waited.Elapsed < TimeSpan.FromSeconds(120))
+            {
+                using HttpResponseMessage response = await server.Client.GetAsync($@"/v1/jobs/{c_JobId}");
+                status = response.StatusCode;
+
+                if (status != HttpStatusCode.OK)
+                {
+                    await Task.Delay(50);
+                }
+            }
+
+            await observations.SendAsync(@"job, running", server.Client, Get($@"/v1/jobs/{c_JobId}"), HttpStatusCode.OK);
+
+            await cancellation.CancelAsync();
+            await Should.ThrowAsync<OperationCanceledException>(() => running);
+        }
+
         private async Task ObserveWhatAServerThatNeedsAKeyAnswersAsync(Observations observations)
         {
             await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner, new ServeSettings { ApiKey = c_ApiKey });
@@ -214,12 +273,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"info, the headers, without the key", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/info"), HttpStatusCode.Unauthorized);
             await observations.SendAsync(@"compile, without the key", client, Post(@"/v1/projects/compile", Plan()), HttpStatusCode.Unauthorized);
             await observations.SendAsync(@"scenarios, without the key", client, Post(@"/v1/projects/scenarios", Plan()), HttpStatusCode.Unauthorized);
+            await observations.SendAsync(@"job, without the key", client, Get($@"/v1/jobs/{c_JobId}"), HttpStatusCode.Unauthorized);
 
             // The description needs no key: it holds nothing that the repository does not.
             await observations.SendAsync(@"description, without the key", client, Get(@"/v1/openapi"), HttpStatusCode.OK);
             await observations.SendAsync(@"description, the headers, without the key", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"), HttpStatusCode.OK);
 
-            foreach (string path in new[] { @"/v1/info", @"/v1/projects/compile", @"/v1/projects/scenarios" })
+            foreach (string path in new[] { @"/v1/info", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
             {
                 await observations.SendAsync($@"what {path} takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, path), HttpStatusCode.Unauthorized);
             }
@@ -533,6 +593,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var simulation = new SimulationResponse { Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))] };
             var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
+            var jobProgress = new JobProgressResponse(1, 2);
+            var jobStatus = new JobStatusResponse(@"i", JobState.Running, DateTimeOffset.UnixEpoch, TimeSpan.Zero, jobProgress);
 
             Names(Schema(@"Console")).ShouldBe(Names(console, written), ignoreOrder: true);
             Names(Schema(@"TranscriptEntry")).ShouldBe(Names(transcript, written), ignoreOrder: true);
@@ -543,6 +605,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Enumerated(Schema(@"Simulation")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Names(Schema(@"ProblemError")).ShouldBe(Names(error, written), ignoreOrder: true);
             Names(Schema(@"Limits")).ShouldBe(Names(limits, written), ignoreOrder: true);
+            Names(Schema(@"JobStatus")).ShouldBe(Names(jobStatus, written), ignoreOrder: true);
+            Schema(@"JobStatus")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(jobStatus, written), ignoreOrder: true);
+            Names(Schema(@"JobProgress")).ShouldBe(Names(jobProgress, written), ignoreOrder: true);
+            Schema(@"JobProgress")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(jobProgress, written), ignoreOrder: true);
+            Enumerated(Schema(@"JobStatus")[@"properties"]![@"state"]!).ShouldBe([.. Values<JobState>()], ignoreOrder: true);
             Names(Schema(@"InfoResponse")).ShouldBe(Names(new InfoResponse(@"v", @"c", @"z", limits), written), ignoreOrder: true);
             Names(Schema(@"Scenario")).ShouldBe(Names(new ScenarioSummary(@"p", Guid.Empty, true, true), written), ignoreOrder: true);
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
@@ -712,6 +779,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 byte[] body = await response.Content.ReadAsByteArrayAsync();
                 int status = (int)response.StatusCode;
+
+                // A path with the value of a parameter is the path of the description that has the parameter.
+                path = m_Description.ToDescribedPath(path);
                 m_Responses.Add($@"{method} {path} {status}");
 
                 if (response.StatusCode != expected)

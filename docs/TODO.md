@@ -417,10 +417,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
 
-- [ ] **Let a client of `zpp --server` see the progress of a simulation** *(2026-10-16)*
-
-  The server writes the progress to its log, and the client waits without a sign. A simulation of a large plan can take minutes. The API has no operation for a job that is in progress (ASY-1 is a deviation of the API), and so the choices are a response that streams, or a job that the client can ask about. Both change the API.
-
 - [ ] **Show the problems of an import in a window of their own** *(2026-10-17)*
 
   The desktop shows the first ten problems of a workbook in an error, and it offers to save a CSV report of all of them (`ImportProblemsPresenter`). A window with a grid (sheet, cell, column, row, value, message), with the buttons "Save report" and "Copy", is easier to use when a workbook has hundreds of problems. `ScenarioImportException.Issues` already holds all that the window needs.

@@ -248,6 +248,72 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Core.SimulationSettings.Seed.ShouldBe(99UL);
         }
 
+        private sealed class CountingProgress
+            : IProgress<int>
+        {
+            private readonly List<int> m_Reports = [];
+            private readonly bool m_Throws;
+
+            public CountingProgress(bool throws = false)
+            {
+                m_Throws = throws;
+            }
+
+            public IReadOnlyList<int> Reports
+            {
+                get
+                {
+                    lock (m_Reports)
+                    {
+                        return [.. m_Reports];
+                    }
+                }
+            }
+
+            public void Report(int value)
+            {
+                lock (m_Reports)
+                {
+                    m_Reports.Add(value);
+                }
+
+                if (m_Throws)
+                {
+                    throw new InvalidOperationException("The observer is broken.");
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RunSimulationWithSavedSeedAsync_Given_AnObserver_Then_IsToldHowManyIterationsHaveRunUpToAllOfThem()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = 2000;
+            var progress = new CountingProgress();
+
+            await panel.RunSimulationWithSavedSeedAsync(CancellationToken.None, progress);
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            progress.Reports.ShouldNotBeEmpty();
+            progress.Reports.ShouldAllBe(x => x >= 1 && x <= 2000);
+            progress.Reports.Max().ShouldBe(2000);
+        }
+
+        [Fact]
+        public async Task RunSimulationWithSavedSeedAsync_Given_AnObserverThatThrows_Then_TheRunStillFindsItsResult()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+
+            await panel.RunSimulationWithSavedSeedAsync(CancellationToken.None, new CountingProgress(throws: true));
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            panel.HasResult.ShouldBeTrue();
+            panel.Summary.ShouldNotBeNull().ValidIterationCount.ShouldBe(c_Iterations);
+        }
+
         [Fact]
         public async Task MaxDegreeOfParallelism_Given_NothingSet_Then_IsAllTheProcessors()
         {

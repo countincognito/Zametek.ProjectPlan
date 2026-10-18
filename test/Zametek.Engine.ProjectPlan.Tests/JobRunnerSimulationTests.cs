@@ -796,6 +796,87 @@ namespace Zametek.Engine.ProjectPlan.Tests
             share.Running.ShouldBe(1);
         }
 
+        // The reports of a job, from the threads of its simulation.
+        private sealed class ListProgress
+            : IProgress<JobProgress>
+        {
+            private readonly List<JobProgress> m_Reports = [];
+
+            public IReadOnlyList<JobProgress> Reports
+            {
+                get
+                {
+                    lock (m_Reports)
+                    {
+                        return [.. m_Reports];
+                    }
+                }
+            }
+
+            public void Report(JobProgress value)
+            {
+                lock (m_Reports)
+                {
+                    m_Reports.Add(value);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnObserverOfTheProgress_Then_IsToldHowManyIterationsHaveRunUpToAllOfThem()
+        {
+            await using ServiceProvider services = BuildServices();
+            var progress = new ListProgress();
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => Simulate(input, Settings(3000, 3)) with { Progress = progress });
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            IReadOnlyList<JobProgress> reports = progress.Reports;
+            reports.ShouldNotBeEmpty();
+            reports.ShouldAllBe(x => x.Total == 3000 && x.Done >= 1 && x.Done <= 3000);
+
+            // The last word is that all of them have run. The reports come from several threads, and so not exactly in order.
+            reports.Max(x => x.Done).ShouldBe(3000);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnObserverAndNoSimulation_Then_IsToldNothing()
+        {
+            await using ServiceProvider services = BuildServices();
+            var progress = new ListProgress();
+
+            await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => new JobRequest { Input = input, Progress = progress });
+
+            progress.Reports.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnObserverThatThrows_Then_TheJobStillFinishesWithTheSameResult()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+
+            (JobResult plain, _) = await RunAsync(runner, @"estimated.zpp", input => Simulate(input, Settings(1000, 5)));
+            (JobResult observed, _) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, Settings(1000, 5)) with { Progress = new ThrowingProgress() });
+
+            observed.ShouldBe(plain);
+        }
+
+        private sealed class ThrowingProgress
+            : IProgress<JobProgress>
+        {
+            public void Report(JobProgress value) => throw new InvalidOperationException("The observer is broken.");
+        }
+
         [Fact]
         public async Task RunAsync_Given_ACancelledTokenAndASimulation_Then_ThrowsBeforeReadingThePlan()
         {
@@ -915,17 +996,19 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
                 if (targetMethod.Name == nameof(ISimulationChartManagerViewModel.RunSimulationWithSavedSeedAsync))
                 {
-                    // The run is called with the token of the job, and nothing else cancels it.
-                    var token = (CancellationToken)args!.Single()!;
+                    // The run is called with the token of the job, and nothing else cancels it. It is also given the observer of the
+                    // progress, if the request has one.
+                    var token = (CancellationToken)args![0]!;
+                    var progress = (IProgress<int>?)args[1];
 
                     if (CancelsBeforeTheRun)
                     {
                         Cancellation.Cancel();
-                        return Inner.RunSimulationWithSavedSeedAsync(token);
+                        return Inner.RunSimulationWithSavedSeedAsync(token, progress);
                     }
 
                     // The call returns at its first await, with the run going.
-                    Task run = Inner.RunSimulationWithSavedSeedAsync(token);
+                    Task run = Inner.RunSimulationWithSavedSeedAsync(token, progress);
                     SpinWait.SpinUntil(() => Inner.IsRunning, TimeSpan.FromSeconds(10)).ShouldBeTrue();
                     Cancellation.Cancel();
                     return run;

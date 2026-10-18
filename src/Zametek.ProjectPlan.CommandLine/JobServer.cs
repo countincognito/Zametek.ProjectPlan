@@ -44,6 +44,9 @@ namespace Zametek.ProjectPlan.CommandLine
         internal const string DescriptionRoute = @"/openapi";
         internal const string DescriptionPath = ApiPath + DescriptionRoute;
 
+        // Where the status of a job that runs is: the id of the request that began it follows.
+        internal const string JobRoute = @"/jobs/{requestId}";
+
         // The command that lists its options.
         private const string c_HelpCommand = @"zpp " + Command + @" --help";
 
@@ -63,6 +66,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // How long a request turned away is told to wait before it tries again, in seconds.
         public const int RetryAfterSeconds = 5;
+
+        // How long the status of a job tells a caller to wait before it asks again, in seconds.
+        public const int PollAfterSeconds = 2;
 
         #endregion
 
@@ -237,6 +243,7 @@ namespace Zametek.ProjectPlan.CommandLine
             services.AddSingleton(jobRunner);
             services.AddSingleton(limits);
             services.AddSingleton(TimeProvider.System);
+            services.AddSingleton<RunningJobs>();
             services.AddSingleton<ProjectEndpoints>();
             services.AddSingleton<WarmUpService>();
 
@@ -279,6 +286,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 @"/info",
                 [HttpMethods.Get, HttpMethods.Head],
                 x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetInfoAsync(x));
+
+            // Not behind the limiter of the jobs: a caller who asks how far its job has got is asking about one of the jobs that
+            // fill it, and must not wait for a place.
+            api.MapMethods(
+                JobRoute,
+                [HttpMethods.Get],
+                x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetJobAsync(x));
             api.MapMethods(
                 DescriptionRoute,
                 [HttpMethods.Get, HttpMethods.Head],
@@ -297,6 +311,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 @"/info",
                 [HttpMethods.Options],
                 x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS"));
+            api.MapMethods(
+                JobRoute,
+                [HttpMethods.Options],
+                x => ProjectEndpoints.GetOptionsAsync(x, @"GET, OPTIONS"));
             api.MapMethods(
                 DescriptionRoute,
                 [HttpMethods.Options],

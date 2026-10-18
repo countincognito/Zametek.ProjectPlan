@@ -82,6 +82,28 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return node;
         }
 
+        // The path of the description that a path of a request is: itself, or the path with a parameter that it has the value of -
+        // /v1/jobs/{requestId} for /v1/jobs/4bf92f3577b34da6a3ce929d0e0e4736. A path that the description does not have is itself.
+        public string ToDescribedPath(string path)
+        {
+            ArgumentNullException.ThrowIfNull(path);
+
+            string[] segments = path.Split('/');
+
+            foreach ((string described, _) in Root[@"paths"]!.AsObject())
+            {
+                string[] template = described.Split('/');
+
+                if (template.Length == segments.Length
+                    && template.Zip(segments).All(x => x.First == x.Second || (x.First.StartsWith('{') && x.First.EndsWith('}') && x.Second.Length > 0)))
+                {
+                    return described;
+                }
+            }
+
+            return path;
+        }
+
         // The response an operation describes for a status, with its references followed - or none, if it describes none.
         public JsonObject? FindResponse(
             string method,

@@ -87,8 +87,10 @@ namespace Zametek.Contract.ProjectPlan
         Task RunSimulationAsync(CancellationToken cancellationToken);
 
         // The same, with the seed that the scenario has saved, also when "New seed each run" is set: the settings of the
-        // scenario are not changed, and the run repeats. A caller that runs a saved scenario (zpp does) uses this one.
-        Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken);
+        // scenario are not changed, and the run repeats. A caller that runs a saved scenario (zpp does) uses this one. The
+        // progress, if there is one, is told how many iterations have run, about ten times a second at most, from any thread,
+        // and a last time when they all have. The panel has its own progress bar and does not use it.
+        Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken, IProgress<int>? progress = null);
 
         void CancelSimulation();
 

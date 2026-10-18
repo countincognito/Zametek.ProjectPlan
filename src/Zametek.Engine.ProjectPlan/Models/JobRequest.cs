@@ -61,6 +61,11 @@ namespace Zametek.Engine.ProjectPlan
         // server.
         public int? MaximumSimulationIterations { get; init; }
 
+        // Told how far the simulation has got, when the job runs one: how many of its iterations have run (see JobProgress). It
+        // is called from the threads of the simulation, and so it must not wait for anything. What it throws is not heard. A server
+        // uses it to tell a client who asks.
+        public IProgress<JobProgress>? Progress { get; init; }
+
         // The most threads that the run of the simulation uses, or -1 for as many as the machine has processors. The value 0, and
         // values below -1, are a SimulationException of the failure InvalidSettings. When it is not set, the run takes a share of
         // the processors: all of them if it is alone, and less when other jobs of the same runner run a simulation at the same

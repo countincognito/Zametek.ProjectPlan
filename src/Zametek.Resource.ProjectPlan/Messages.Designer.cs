@@ -984,6 +984,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to must be the 32 hexadecimal characters of the trace id that the request which began the job gave.
+        /// </summary>
+        public static string Message_ServeErrorJobIdNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorJobIdNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to must be true or false.
         /// </summary>
         public static string Message_ServeErrorMustBeABoolean {
@@ -1185,6 +1194,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeHttpsNeedsCertificate {
             get {
                 return ResourceManager.GetString("Message_ServeHttpsNeedsCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it..
+        /// </summary>
+        public static string Message_ServeJobNotRunning {
+            get {
+                return ResourceManager.GetString("Message_ServeJobNotRunning", resourceCulture);
             }
         }
         
