@@ -412,7 +412,6 @@ The maintainer looked at the docks in the application and asked for changes. The
 - Nobody has looked at the three docks in the running application. A headless render of each view looks right. A person must look at them with the real theme, and at the layout of the docks.
 - A project does not hold the iterations of a run. The file of the iterations needs a run.
 - A job cannot make only some of the CSV files of a simulation. At the end of phase 4, the API had an output for each file. Phase 5 replaced them with the one output `simulation`, which makes the chart and all the files. [TODO](TODO.md) has an entry.
-- The CSV files of a simulation are not in one Excel workbook with a worksheet for each file. [TODO](TODO.md) has an entry to explore this.
 
 ## Work after phase 5
 
@@ -429,6 +428,26 @@ A result that a project held did not say which seed, distribution and shape valu
 - **The statistics of the panel.** The panel shows the seed, the distribution and the shape value first, with the values of the result. `zpp` and the server print the same lines, because they print the statistics of the panel. The line for the shape value is new, and it shows only for the modified beta-PERT.
 - **The job.** `JobSimulationMetrics` takes the values from the result. Thus a job that loads a project, gives other settings and does not run reports the seed that made the result.
 - **The golden files.** The workbook `sample-simulation.xlsx` and its snapshot have the new columns. The other two workbooks did not change, and they are still the files that an older release wrote.
+
+### One Excel workbook for the files of a simulation
+
+A person who wants the files of a simulation had to keep and send five CSV files. The Excel export of the scenario already wrote six sheets of the result, and the TODO list had an entry to explore one workbook for the simulation.
+
+- **The decisions.** The workbook is an output of its own, `simulationWorkbook` (the option `--simulation-workbook-directory` of `zpp`, and the file `<name>-simulation.xlsx`). It is independent of `simulation`: a request can ask for the chart with the CSV files, for the workbook, or for both. The workbook does not replace the CSV files, because a script that reads them must still work. The desktop has a new item in the menu of the chart, "Export Workbook...".
+- **The sheets.** The workbook has the sheets that the Excel export of a scenario writes for the simulation ("Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities"), written by the same code (`XlsxSimulationSheets`), and so the two cannot differ. A test compares them. A run also has the sheet "Simulation Iterations" (the number, the finish time, and the critical paths of each iteration, as in the CSV file). A project does not hold the iterations, and so the workbook of a result that a project held has six sheets. The import of a scenario does not read the sheet of the iterations, and it is not in the workbook of a scenario.
+- **The limits of Excel.** A sheet has 1,048,576 rows, and a run has at most 1,000,000 iterations. They fit, with the row of the titles. The code refuses a result that does not fit, if the maximum of the iterations ever grows. A cell holds 32,767 characters. The critical paths of an iteration, and the labels of the paths in "Simulation Paths", can have more for a very large plan. The text is then cut and ends with an ellipsis. The Excel export of a scenario failed with an exception for such a label before this change.
+- **The cost.** The measurement used a build for debugging on four processors, a workbook made in memory (as every workbook of the application is), and paths of about 30 steps:
+
+| Iterations | Activities | Paths | Time, in seconds | Size of the file, in MB | Peak memory of the process, in MB |
+| --- | --- | --- | --- | --- | --- |
+| 5,000 | 50 | 300 | 0.5 | 0.1 | 109 |
+| 100,000 | 50 | 300 | 1.5 | 1.8 | 210 |
+| 100,000 | 2,000 | 5,000 | 0.8 | 2.2 | 231 |
+| 1,000,000 | 50 | 300 | 8.2 | 17.5 | 1,004 |
+| 1,000,000 | 2,000 | 5,000 | 8.7 | 18.7 | 1,148 |
+
+- **What the measurement says.** The cost grows with the iterations, and not with the size of the plan. A run of 100,000 iterations (the default maximum of a server) needs about 110 MB more than the process had, and a run of a million needs about 900 MB more and about 9 seconds. The time stays far below the time limit of a job (120 seconds). A server that raises `MaxSimulationIterations` to a million and runs many jobs at one time needs memory for each: the operator can keep the maximum low, or ask for the CSV files, which are written in a stream.
+- **Where.** `SimulationWorkbook.Write` makes the workbook. `ISimulationChartManagerViewModel.WriteSimulationWorkbookAsync` and the command `ExportWorkbookCommand` give it to the desktop and to a job. `JobRequest.SimulationWorkbook` and `JobOutput.SimulationWorkbook` give it to the engine. The warm-up of the server makes it too.
 
 ### Ctrl+C stops a run of zpp
 

@@ -229,6 +229,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 RunSimulation = options.RunSimulation,
                 SimulationChart = ToChartOutputRequest(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
                 SimulationCsvFiles = options.SimulationDirectory is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
+                SimulationWorkbook = options.SimulationWorkbookDirectory is not null,
             };
 
             // Chart and graph files are named after the file the plan came from,
@@ -316,6 +317,7 @@ namespace Zametek.ProjectPlan.CommandLine
             // All export directories are checked up front so that a bad path fails
             // the run before any file has been written.
             RequireDirectory(options.SimulationDirectory);
+            RequireDirectory(options.SimulationWorkbookDirectory);
             RequireDirectory(options.GanttDirectory);
             RequireDirectory(options.ArrowGraphDirectory);
             RequireDirectory(options.VertexGraphDirectory);
@@ -451,6 +453,9 @@ namespace Zametek.ProjectPlan.CommandLine
             AddExportFilePath(filenames, JobOutput.SimulationPaths, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, csv);
             AddExportFilePath(filenames, JobOutput.SimulationActivities, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, csv);
             AddExportFilePath(filenames, JobOutput.SimulationIterations, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, csv);
+
+            // The workbook of the simulation, in a directory of its own.
+            AddExportFilePath(filenames, JobOutput.SimulationWorkbook, options.SimulationWorkbookDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationWorkbook, Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension);
 
             return filenames;
         }

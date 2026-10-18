@@ -1000,6 +1000,112 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
         }
 
+        private static readonly string[] s_WorkbookSheets =
+        [
+            "Simulation Settings",
+            "Simulation Statistics",
+            "Simulation Percentiles",
+            "Simulation Histogram",
+            "Simulation Paths",
+            "Simulation Criticalities",
+        ];
+
+        [Fact]
+        public async Task WriteSimulationWorkbookAsync_Given_ARun_Then_WritesTheSheetsOfTheResultAndOneForTheIterations()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 4;
+            await panel.RunSimulationAsync();
+            using var stream = new MemoryStream();
+
+            await panel.WriteSimulationWorkbookAsync(stream);
+
+            XlsxBook book = XlsxPackageReader.Read(stream.ToArray());
+            book.SheetNames.ShouldBe([.. s_WorkbookSheets, "Simulation Iterations"]);
+            book.Sheet("Simulation Iterations")!.LastRow.ShouldBe(c_Iterations + 1);
+            book.Sheet("Simulation Settings")!.Cell("D2")!.Text.ShouldBe("4");
+        }
+
+        [Fact]
+        public async Task WriteSimulationWorkbookAsync_Given_AResultThatAFileHeld_Then_HasNoSheetForTheIterations()
+        {
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            using var stream = new MemoryStream();
+
+            await harness.Panel.WriteSimulationWorkbookAsync(stream);
+
+            XlsxPackageReader.Read(stream.ToArray()).SheetNames.ShouldBe(s_WorkbookSheets);
+        }
+
+        [Fact]
+        public async Task WriteSimulationWorkbookAsync_Given_NoResult_Then_Throws()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            using var stream = new MemoryStream();
+
+            InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(() => harness.Panel.WriteSimulationWorkbookAsync(stream));
+
+            ex.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
+            stream.Length.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task ExportWorkbookCommand_Given_AResult_Then_WritesOneFileWithTheNameThatTheUserChose()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 4;
+            panel.ExportWorkbookCommand.CanExecute(null).ShouldBeFalse();
+            await panel.RunSimulationAsync();
+            panel.ExportWorkbookCommand.CanExecute(null).ShouldBeTrue();
+
+            string directory = Path.Combine(Path.GetTempPath(), $@"simulation-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(directory);
+            try
+            {
+                string filename = Path.Combine(directory, @"plan-simulation.xlsx");
+                harness.Dialogs.SaveFilename = filename;
+
+                panel.ExportWorkbookCommand.Execute(null);
+
+                DateTime deadline = DateTime.UtcNow.AddSeconds(60);
+                while (harness.Dialogs.Infos.Count == 0 && harness.Dialogs.Errors.Count == 0 && DateTime.UtcNow < deadline)
+                {
+                    await Task.Delay(20, CancellationToken.None);
+                }
+
+                harness.Dialogs.Errors.ShouldBeEmpty();
+                Directory.GetFiles(directory).Select(Path.GetFileName).ShouldBe(["plan-simulation.xlsx"]);
+                harness.Dialogs.Infos.ShouldHaveSingleItem().ShouldBe(string.Format(System.Globalization.CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationWorkbookSaved, filename));
+                XlsxPackageReader.Read(File.ReadAllBytes(filename)).SheetNames.ShouldContain("Simulation Iterations");
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task ExportWorkbookCommand_Given_AUserWhoChoosesNoFile_Then_WritesNothingAndSaysNothing()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            await panel.RunSimulationAsync();
+            harness.Dialogs.SaveFilename = null;
+
+            panel.ExportWorkbookCommand.Execute(null);
+            await Task.Delay(300, CancellationToken.None);
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            harness.Dialogs.Infos.ShouldBeEmpty();
+        }
+
         [Theory]
         [InlineData(SimulationCsvFile.Statistics, "Statistic,Value")]
         [InlineData(SimulationCsvFile.Histogram, "FirstFinishTime,LastFinishTime,Count,Share,CumulativeShare")]

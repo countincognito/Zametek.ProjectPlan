@@ -93,6 +93,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void Export_Given_APathWhoseLabelIsLongerThanACell_Then_TheCellIsCutAndTheExportDoesNotFail()
+        {
+            // A critical path through a very large plan can have a label of more than 32,767 characters, which a cell cannot hold.
+            SimulationSummaryModel summary = Summary() with
+            {
+                Paths = [Summary().Paths[0] with { Label = new string('x', 40_000), IdLabel = string.Join(" > ", Enumerable.Range(1, 10_000)) }],
+            };
+
+            XlsxBook workbook = XlsxPackageReader.Read(Export(Scenario(Settings(), summary)));
+
+            XlsxSheet sheet = workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths)!;
+            sheet.Cell("B2")!.Text.Length.ShouldBe(32_767);
+            sheet.Cell("B2")!.Text.ShouldEndWith("…");
+            sheet.Cell("D2")!.Text.Length.ShouldBeLessThanOrEqualTo(32_767);
+            sheet.Cell("C2")!.Text.ShouldBe("Design > Build ~> Test"); // The short label is short.
+        }
+
+        [Fact]
         public void Export_Given_ASettingThatIsNotTheDefault_Then_TheWorkbookHasTheSettingsSheetAndNoResult()
         {
             XlsxBook workbook = XlsxPackageReader.Read(Export(Scenario(Settings())));

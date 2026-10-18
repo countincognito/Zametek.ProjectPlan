@@ -443,21 +443,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: add the single outputs again, next to `simulation`. Or let `simulation` carry a list of the parts to make (for example `"parts": ["chart", "statistics"]`). The command line needs an option in both cases (for example `--simulation-files statistics,histogram`). Decide first what a request means when it gives `simulation` and a single output together.
 
-  **Where.** `SimulationCsvFile` is a flags enum, and so the engine can already make a set of files. `JobRunner` has the table of `SimulationCsvFile` and `JobOutput`. The change is also in `JobRequest`, in `CompileOptionsHelper` and `Program` of the command line, and in `docs/API.md`, `docs/openapi.yaml` and `docs/COMMAND-LINE.md`. The contract tests of the OpenAPI description change with the API. See also the entry "Explore one Excel workbook for the files of a simulation" below.
-
-- [ ] **Explore one Excel workbook for the files of a simulation** *(2026-10-18, an idea to explore and not a decision)*
-
-  A simulation gives up to five CSV files, and a person who wants all of them must keep and send five files. One Excel workbook with a worksheet for each file would be one file. A workbook also keeps numbers as numbers and can give each column a width, and a CSV file has neither.
-
-  **What exists now.** The Excel export of the scenario (`-x` in `zpp`, and the export of the application) already writes six worksheets of the result: "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities" (`XlsxSimulationSheets`). The import reads them again, and so their layout must stay. They do not have the iterations, because a project does not hold them.
-
-  **Questions to answer.**
-
-  - Is it a new output (for example `simulationWorkbook`, with the name `<name>-simulation.xlsx`), or a choice of format for `simulation` (CSV files or one workbook)? Does the workbook replace the CSV files, or does it come with them?
-  - Does the workbook use the worksheets of `XlsxSimulationSheets`, so that the two cannot differ? Then it needs one more worksheet for the iterations. The import of a scenario must then refuse this workbook with a clear message, or ignore the extra worksheet.
-  - The limits of Excel. A worksheet has at most 1,048,576 rows, and a cell holds at most 32,767 characters. A run of 1,000,000 iterations fits in the rows, with 48,575 rows to spare. But the column "CriticalPaths" of an iteration can be long for a large plan. Measure the longest value for a plan of thousands of activities.
-  - The cost. `XlsxWorkbookWriter` builds the whole workbook in memory, and a worksheet of 1,000,000 rows takes time and memory. Measure it before the change, on the server (`MaxJobs` jobs at one time) and in the browser head. A lower limit of iterations for the workbook, or a workbook with no worksheet of the iterations, can be the answer.
-  - A request that asks for only some of the parts. This is the question of the entry "Let a job make only some of the CSV files of a simulation" above.
+  **Where.** `SimulationCsvFile` is a flags enum, and so the engine can already make a set of files. `JobRunner` has the table of `SimulationCsvFile` and `JobOutput`. The change is also in `JobRequest`, in `CompileOptionsHelper` and `Program` of the command line, and in `docs/API.md`, `docs/openapi.yaml` and `docs/COMMAND-LINE.md`. The contract tests of the OpenAPI description change with the API. The workbook of the simulation (`simulationWorkbook`) is an output of its own and is independent of `simulation`, so that a request can already choose between the chart with its five files and one workbook. The same choice for the single files remains.
 
 - [ ] **Make the schedule simulation faster** *(2026-10-18, from the review of the known gaps)*
 

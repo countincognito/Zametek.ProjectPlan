@@ -1747,6 +1747,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The result has {0} iterations, and a sheet of Excel has room for {1}..
+        /// </summary>
+        public static string Message_SimulationIterationsFitNoSheet {
+            get {
+                return ResourceManager.GetString("Message_SimulationIterationsFitNoSheet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of iterations must be from 1 to {0}..
         /// </summary>
         public static string Message_SimulationIterationsOutOfRange {
@@ -1807,6 +1816,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_SimulationThreadsOutOfRange {
             get {
                 return ResourceManager.GetString("Message_SimulationThreadsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook was saved as {0}..
+        /// </summary>
+        public static string Message_SimulationWorkbookSaved {
+            get {
+                return ResourceManager.GetString("Message_SimulationWorkbookSaved", resourceCulture);
             }
         }
         

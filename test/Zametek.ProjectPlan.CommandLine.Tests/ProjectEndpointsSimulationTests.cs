@@ -247,6 +247,43 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_TheWorkbookOfARun_Then_AnswersWithOneWorkbookWithTheSheetOfTheIterations()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 300, Seed = 8, UseRandomSeed = false });
+
+            using HttpResponseMessage response = await PostAsync(server, @"{""runSimulation"":true,""outputs"":{""simulationWorkbook"":{}}}", plan);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Simulation.ShouldNotBeNull().Iterations.ShouldBe(300);
+
+            // Only what the request asked for: not the chart, and not the CSV files.
+            OutputResponse output = compiled.Outputs.ShouldHaveSingleItem();
+            output.Kind.ShouldBe(JobOutput.SimulationWorkbook);
+            output.FileName.ShouldBe(@"estimated-simulation.xlsx");
+            output.ContentType.ShouldBe(@"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            using var archive = new ZipArchive(new MemoryStream(output.Content.ShouldNotBeNull()));
+            using Stream workbook = archive.GetEntry(@"xl/workbook.xml")!.Open();
+            string[] sheets = [.. System.Xml.Linq.XDocument.Load(workbook).Descendants().Where(x => x.Name.LocalName == @"sheet").Select(x => (string)x.Attribute(@"name")!)];
+            sheets.ShouldContain(@"Simulation Iterations");
+            sheets.Length.ShouldBe(7);
+        }
+
+        [Fact]
+        public async Task Compile_Given_TheWorkbookAndNoResultAndNoRun_Then_422WithTheOutputNamed()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+
+            using HttpResponseMessage response = await PostAsync(server, @"{""outputs"":{""simulationWorkbook"":{}}}");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.SimulationNotPossible));
+        }
+
+        [Fact]
         public async Task Compile_Given_AProjectWithMoreIterationsThanTheLimitAndARun_Then_422WithTheLimitNamed()
         {
             await using RunningServer server = await RunningServer.StartAsync(

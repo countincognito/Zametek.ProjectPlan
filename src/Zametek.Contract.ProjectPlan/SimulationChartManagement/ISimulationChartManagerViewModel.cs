@@ -78,6 +78,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ExportCsvFilesCommand { get; }
 
+        ICommand ExportWorkbookCommand { get; }
+
         // Runs a simulation of a copy of the plan, on the task pool, and presents the result. A second call
         // while a run is in progress does nothing.
         Task RunSimulationAsync();
@@ -104,6 +106,11 @@ namespace Zametek.Contract.ProjectPlan
         // panel saves: UTF-8 with a byte order mark. It is an error to ask for more than one file, or for a result that
         // does not exist.
         Task WriteSimulationCsvAsync(Stream stream, SimulationCsvFile file);
+
+        // Writes the last result to the stream as one Excel workbook, which is left open: a sheet for the settings, the statistics,
+        // the percentiles, the histogram, the critical paths and the criticalities, which are the sheets of the Excel export of a
+        // scenario, and, for a run in this session, a sheet for the iterations. It is an error to ask for a result that does not exist.
+        Task WriteSimulationWorkbookAsync(Stream stream);
 
         // Presents the result that the scenario holds: the statistics, the tables and the chart. A run does this when it ends,
         // and the panel when the display settings change. A caller that has no running panel, and wants the statistics of a

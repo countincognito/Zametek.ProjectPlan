@@ -80,5 +80,11 @@ namespace Zametek.Engine.ProjectPlan
         // SimulationIterations: each of the CSV files that is set. The iterations of a run are not in a project file, and so
         // the file SimulationIterations is produced only by a job that ran the simulation, and a job that did not skips it.
         public SimulationCsvFile SimulationCsvFiles { get; init; }
+
+        // JobOutput.SimulationWorkbook: the result as one Excel workbook, with a sheet for each of the CSV files and for the settings.
+        // The result is the one that the job made or the one that the scenario held, as for the files above, and the sheet of the
+        // iterations is there only for a job that ran the simulation. It is independent of the chart and of the CSV files: a job makes
+        // the ones that are asked for.
+        public bool SimulationWorkbook { get; init; }
     }
 }

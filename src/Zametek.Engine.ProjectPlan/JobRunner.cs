@@ -477,6 +477,18 @@ namespace Zametek.Engine.ProjectPlan
                             cancellationToken);
                     }
                 }
+
+                if (request.SimulationWorkbook)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    await WriteReportedOutputAsync(
+                        dialogService,
+                        sink,
+                        JobOutput.SimulationWorkbook,
+                        stream => simulation.WriteSimulationWorkbookAsync(stream),
+                        cancellationToken);
+                }
             }
 
             // A chart or graph export that fails does not throw: WriteReportedOutputAsync
@@ -532,7 +544,7 @@ namespace Zametek.Engine.ProjectPlan
                 return;
             }
 
-            if ((request.SimulationChart is not null || request.SimulationCsvFiles != SimulationCsvFile.None)
+            if ((request.SimulationChart is not null || request.SimulationCsvFiles != SimulationCsvFile.None || request.SimulationWorkbook)
                 && core.SimulationSummary is null)
             {
                 throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationOutputsNeedAResult, SimulationFailure.NoResult);

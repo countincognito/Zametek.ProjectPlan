@@ -441,4 +441,7 @@
   <data name="Menu_ScaleToOwnPlan" xml:space="preserve">
     <value>Scale to Own Plan</value>
   </data>
+  <data name="Menu_ExportWorkbook" xml:space="preserve">
+    <value>Export Workbook...</value>
+  </data>
 </root>

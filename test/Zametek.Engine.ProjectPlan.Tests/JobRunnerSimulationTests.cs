@@ -796,6 +796,98 @@ namespace Zametek.Engine.ProjectPlan.Tests
             share.Running.ShouldBe(1);
         }
 
+        // The names of the sheets of a workbook, in their order.
+        private static string[] SheetNames(byte[] workbook)
+        {
+            using var archive = new System.IO.Compression.ZipArchive(new MemoryStream(workbook));
+            using Stream entry = archive.GetEntry(@"xl/workbook.xml")!.Open();
+            return [.. System.Xml.Linq.XDocument.Load(entry).Descendants().Where(x => x.Name.LocalName == @"sheet").Select(x => (string)x.Attribute(@"name")!)];
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheWorkbookOfARun_Then_ProducesItAfterTheCsvFilesWithASheetForTheIterations()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (JobResult result, MemoryJobSink sink) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => Simulate(input, Settings(300, 3), SimulationCsvFile.All) with { SimulationWorkbook = true });
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            sink.Outputs.Select(x => x.Output).ShouldBe(
+            [
+                JobOutput.SimulationStatistics,
+                JobOutput.SimulationHistogram,
+                JobOutput.SimulationPaths,
+                JobOutput.SimulationActivities,
+                JobOutput.SimulationIterations,
+                JobOutput.SimulationWorkbook,
+            ]);
+            SheetNames(sink[JobOutput.SimulationWorkbook]).ShouldBe(
+            [
+                "Simulation Settings",
+                "Simulation Statistics",
+                "Simulation Percentiles",
+                "Simulation Histogram",
+                "Simulation Paths",
+                "Simulation Criticalities",
+                "Simulation Iterations",
+            ]);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_OnlyTheWorkbook_Then_ProducesNothingElseOfTheSimulation()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (_, MemoryJobSink sink) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => Simulate(input, Settings(300, 3)) with { SimulationWorkbook = true });
+
+            sink.Outputs.Select(x => x.Output).ShouldBe([JobOutput.SimulationWorkbook]);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheWorkbookOfAResultThatTheProjectHeld_Then_HasNoSheetForTheIterations()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            byte[] saved = await SaveSimulatedProjectAsync(runner, Settings(300, 3));
+
+            (_, MemoryJobSink sink) = await RunBytesAsync(runner, saved, input => new JobRequest { Input = input, SimulationWorkbook = true });
+
+            SheetNames(sink[JobOutput.SimulationWorkbook]).ShouldNotContain("Simulation Iterations");
+            SheetNames(sink[JobOutput.SimulationWorkbook]).Length.ShouldBe(6);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheWorkbookAndNoResult_Then_TheSimulationHasNoResult()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            SimulationException exception = await Should.ThrowAsync<SimulationException>(async () =>
+                await RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"estimated.zpp",
+                    input => new JobRequest { Input = input, SimulationWorkbook = true }));
+
+            exception.Failure.ShouldBe(SimulationFailure.NoResult);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheSameRunTwice_Then_TheWorkbooksAreTheSameBytes()
+        {
+            await using ServiceProvider services = BuildServices();
+            await using ServiceProvider another = BuildServices();
+
+            (_, MemoryJobSink first) = await RunAsync(services.GetRequiredService<JobRunner>(), @"estimated.zpp", input => Simulate(input, Settings(300, 3)) with { SimulationWorkbook = true });
+            (_, MemoryJobSink second) = await RunAsync(another.GetRequiredService<JobRunner>(), @"estimated.zpp", input => Simulate(input, Settings(300, 3)) with { SimulationWorkbook = true });
+
+            second[JobOutput.SimulationWorkbook].ShouldBe(first[JobOutput.SimulationWorkbook]);
+        }
+
         // The reports of a job, from the threads of its simulation.
         private sealed class ListProgress
             : IProgress<JobProgress>

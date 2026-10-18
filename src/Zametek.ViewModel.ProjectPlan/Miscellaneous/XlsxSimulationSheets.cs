@@ -26,6 +26,20 @@ namespace Zametek.ViewModel.ProjectPlan
         // The histogram has one column for the weight of each group of paths: PathGroupWeight1, PathGroupWeight2, and so on.
         private const string c_PathGroupWeightColumnPrefix = @"PathGroupWeight";
 
+        // What Excel holds: the rows of a sheet (the titles among them) and the characters of a cell.
+        internal const int MaximumRows = 1_048_576;
+        internal const int MaximumCellLength = 32_767;
+
+        // The last character of a cell that holds less than the text it was given.
+        private const string c_Truncated = @"…";
+
+        private static readonly IReadOnlyList<string> s_IterationColumnTitles =
+            [
+                @"Iteration",
+                @"FinishTime",
+                @"CriticalPaths",
+            ];
+
         private static readonly IReadOnlyList<string> s_SettingsColumnTitles =
             [
                 nameof(SimulationSettingsModel.Iterations),
@@ -106,17 +120,27 @@ namespace Zametek.ViewModel.ProjectPlan
             XlsxWorkbookWriter workbook)
         {
             ArgumentNullException.ThrowIfNull(projectScenario);
-            ArgumentNullException.ThrowIfNull(workbook);
 
-            SimulationSettingsModel settings = projectScenario.SimulationSettings;
+            WriteToWorkbook(projectScenario.SimulationSettings, projectScenario.SimulationSummary, workbook);
+        }
+
+        /// <summary>
+        /// Writes the sheet of the settings, and, if there is a result, the sheets of it. The workbook of a scenario and the workbook of a
+        /// simulation (<see cref="SimulationWorkbook"/>) have the same sheets, and so the two cannot differ.
+        /// </summary>
+        public static void WriteToWorkbook(
+            SimulationSettingsModel settings,
+            SimulationSummaryModel? summary,
+            XlsxWorkbookWriter workbook)
+        {
+            ArgumentNullException.ThrowIfNull(settings);
+            ArgumentNullException.ThrowIfNull(workbook);
 
             WriteSheet(
                 workbook,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationSettings,
                 s_SettingsColumnTitles,
                 [[settings.Iterations, settings.Distribution, settings.ModifiedBetaShape, settings.Seed, settings.UseRandomSeed, settings.TargetFinishTime]]);
-
-            SimulationSummaryModel? summary = projectScenario.SimulationSummary;
 
             if (summary is null)
             {
@@ -184,6 +208,90 @@ namespace Zametek.ViewModel.ProjectPlan
                 [.. summary.Activities.Select(x => new object?[] { x.ActivityId, x.Name, x.CriticalIterationCount, x.CriticalityIndex })]);
         }
 
+        /// <summary>
+        /// Writes the sheet of the iterations of a run: for each iteration, its number, its finish time (a cell with no value when
+        /// the iteration failed) and its critical paths, as the CSV file of the iterations has them. A project does not hold the
+        /// iterations, and so a workbook that is made of a saved result has no such sheet.
+        /// </summary>
+        /// <remarks>
+        /// A sheet of Excel has <see cref="MaximumRows"/> rows, and so a run of more iterations than that has no sheet (a run has up to
+        /// one million). A cell holds <see cref="MaximumCellLength"/> characters. The critical paths of an iteration that has more than
+        /// that are cut, and end with an ellipsis.
+        /// </remarks>
+        public static void WriteIterations(
+            XlsxWorkbookWriter workbook,
+            SimulationResult<int> result,
+            IReadOnlyDictionary<int, string> activityNames)
+        {
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(result);
+            ArgumentNullException.ThrowIfNull(activityNames);
+
+            if (result.IterationCount >= MaximumRows)
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.ProjectPlan.Messages.Message_SimulationIterationsFitNoSheet,
+                    result.IterationCount,
+                    MaximumRows - 1));
+            }
+
+            XlsxSheetWriter sheet = workbook.AddSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationIterations);
+
+            for (int columnIndex = 0; columnIndex < s_IterationColumnTitles.Count; columnIndex++)
+            {
+                sheet.Text(0, columnIndex, s_IterationColumnTitles[columnIndex], XlsxCellStyle.Title);
+            }
+
+            // The label of each path is made once, and not for each iteration that has it.
+            string[] labels = result.HasCriticalPaths
+                ? [.. result.CriticalPaths.Select(x => SimulationAnalyzer.FormatLabel(x, activityNames))]
+                : [];
+
+            for (int i = 0; i < result.IterationCount; i++)
+            {
+                int row = i + 1;
+                int finishTime = result.FinishTimes[i];
+                sheet.Number(row, 0, i + 1);
+
+                if (finishTime == SimulationResult<int>.FailedFinishTime)
+                {
+                    sheet.Blank(row, 1);
+                    sheet.Blank(row, 2);
+                    continue;
+                }
+
+                sheet.Number(row, 1, finishTime);
+
+                if (result.HasCriticalPaths)
+                {
+                    sheet.Text(row, 2, Truncate(string.Join(@" | ", result.CriticalPathIndexes(i).ToArray().Select(x => labels[x]))));
+                }
+                else
+                {
+                    sheet.Blank(row, 2);
+                }
+            }
+        }
+
+        // The text, or its start and an ellipsis when a cell cannot hold it. A character of two UTF-16 units is not cut in the middle.
+        internal static string Truncate(string text)
+        {
+            if (text.Length <= MaximumCellLength)
+            {
+                return text;
+            }
+
+            int length = MaximumCellLength - c_Truncated.Length;
+
+            if (char.IsHighSurrogate(text[length - 1]))
+            {
+                length--;
+            }
+
+            return string.Concat(text.AsSpan(0, length), c_Truncated);
+        }
+
         private static void WriteSheet(
             XlsxWorkbookWriter workbook,
             string sheetTitle,
@@ -208,7 +316,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        // A value that is not there is a blank cell. The seed is text, as the remarks of the class say.
+        // A value that is not there is a blank cell. The seed is text, as the remarks of the class say. A text that is longer than a
+        // cell holds is cut (see Truncate).
         private static void SetCellValue(
             XlsxSheetWriter sheet,
             int row,
@@ -221,7 +330,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     sheet.Blank(row, column);
                     break;
                 case string text:
-                    sheet.Text(row, column, text);
+                    // A critical path through a very large plan can have a label that a cell cannot hold.
+                    sheet.Text(row, column, Truncate(text));
                     break;
                 case bool flag:
                     sheet.Boolean(row, column, flag);

@@ -1225,6 +1225,11 @@ components:
         `simulationPaths`, `simulationActivities` and `simulationIterations`). They are made from the result of the run of the request
         (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
         project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
+
+        The output `simulationWorkbook` is the same result as one Excel workbook: a sheet for the settings and for each of the CSV files
+        above (`Simulation Settings`, `Simulation Statistics`, `Simulation Percentiles`, `Simulation Histogram`, `Simulation Paths`
+        and `Simulation Criticalities`), and, for a run, the sheet `Simulation Iterations`. It is an output of its own, and a request can
+        ask for it with or without `simulation`. A project that holds no result, with no run, is the same problem.
       type: object
       additionalProperties: false
       properties:
@@ -1246,6 +1251,8 @@ components:
           $ref: '#/components/schemas/ChartOptions'
         simulation:
           $ref: '#/components/schemas/ChartOptions'
+        simulationWorkbook:
+          $ref: '#/components/schemas/OutputWithoutSettings'
     OutputWithoutSettings:
       description: An output with no settings at this time. The request gives it as an empty object, which can carry settings later.
       type: [object, 'null']
@@ -1491,6 +1498,7 @@ components:
             - simulationPaths
             - simulationActivities
             - simulationIterations
+            - simulationWorkbook
         fileName:
           type: string
           description: The name that `zpp` gives to the file.

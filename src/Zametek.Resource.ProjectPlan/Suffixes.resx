@@ -159,4 +159,7 @@
   <data name="Suffix_ImportProblems" xml:space="preserve">
     <value>-import-problems</value>
   </data>
+  <data name="Suffix_SimulationWorkbook" xml:space="preserve">
+    <value>-simulation</value>
+  </data>
 </root>
