@@ -362,6 +362,8 @@ Phase 4 finished on 2026-10-16. All the work is in this repository, on the branc
 - One job uses all the processors for its iterations. A server that runs many simulations at one time asks the pool for more threads than it has processors. The result does not change, but the jobs slow each other. The limit of iterations and the job time bound the cost.
 - The cancel of `zpp` (Ctrl+C) kills the process and does not cancel the job.
 
+The last three items are done. [Work after phase 5](#work-after-phase-5) says how: the progress of a job that the client can ask about, a share of the processors for each simulation, and Ctrl+C that stops a run.
+
 ## Phase 5: the results
 
 Phase 5 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`. It has six steps, and each step is a commit: `255c545c` (the title bar), `b6bab7a7` (the settings and the result in the scenario and in the file), `40a9aff2` (the three docks), `6d848a1b` (Excel), `4e98d8fe` (`zpp` and `zpp serve`) and the commit that holds this section. Nothing is pushed.
