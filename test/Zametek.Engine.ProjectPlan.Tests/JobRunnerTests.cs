@@ -275,8 +275,9 @@ namespace Zametek.Engine.ProjectPlan.Tests
                     input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx }));
 
             ex.Message.ShouldBe(failure.Message);
-            ex.ImportProblems.ShouldBeSameAs(failure);
-            ex.ImportProblems.TotalCount.ShouldBe(5);
+            ScenarioImportException problems = ex.ImportProblems.ShouldNotBeNull();
+            problems.ShouldBeSameAs(failure);
+            problems.TotalCount.ShouldBe(5);
         }
 
         [Fact]

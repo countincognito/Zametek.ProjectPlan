@@ -2,6 +2,7 @@ using Dock.Model.Core;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
+using System.IO;
 using System.Reflection;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -96,7 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using Harness harness = Harness.Make();
             harness.Main.StartSubscriptions();
             Drain(main, pool);
-            harness.Settings.SetProjectFilePath(@"C:\plans\plan.zpp", bindTitleToFilename: true);
+            harness.Settings.SetProjectFilePath(PlanFile(@"plan"), bindTitleToFilename: true);
             harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
             Drain(main, pool);
             harness.Main.ProjectTitle.ShouldStartWith(@"plan - ");
@@ -117,7 +118,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using Harness harness = Harness.Make();
             harness.Main.StartSubscriptions();
             Drain(main, pool);
-            harness.Settings.SetProjectFilePath(@"C:\plans\plan.zpp", bindTitleToFilename: true);
+            harness.Settings.SetProjectFilePath(PlanFile(@"plan"), bindTitleToFilename: true);
             harness.Settings.SetProjectScenarioTitle(@"Alpha");
             harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
             Drain(main, pool);
@@ -140,19 +141,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using Harness harness = Harness.Make();
             harness.Main.StartSubscriptions();
             Drain(main, pool);
-            harness.Settings.SetProjectFilePath(@"C:\plans\first.zpp", bindTitleToFilename: true);
+            harness.Settings.SetProjectFilePath(PlanFile(@"first"), bindTitleToFilename: true);
             harness.Core.IsProjectScenarioUpdated = true;
             Drain(main, pool);
             harness.Main.ProjectTitle.ShouldStartWith(@"*first - ");
 
             // A load clears the edits and names the new project, in that order: the title is made of both.
-            harness.Settings.SetProjectFilePath(@"C:\plans\second.zpp", bindTitleToFilename: true);
+            harness.Settings.SetProjectFilePath(PlanFile(@"second"), bindTitleToFilename: true);
             harness.Core.IsProjectScenarioUpdated = false;
             harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
             Drain(main, pool);
 
             harness.Main.ProjectTitle.ShouldStartWith(@"second - ");
         }
+
+        // The path of a project file in a folder, made with the separator of the platform that runs the test. The title is the
+        // name of the file without its folder, and on Linux a backslash does not end a folder: a path written as C:\plans\plan.zpp
+        // would be one long file name there. Nothing is read from or written to the path.
+        private static string PlanFile(string name) => Path.Combine(Path.GetTempPath(), @"plans", $"{name}.zpp");
 
         // A main view model over a core and a project manager, with the dock, the files and the services a test never
         // reaches stood in for by objects that do nothing.
