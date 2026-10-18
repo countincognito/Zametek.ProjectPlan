@@ -412,10 +412,12 @@ The maintainer looked at the docks in the application and asked for changes. The
 - Nobody has looked at the three docks in the running application. A headless render of each view looks right. A person must look at them with the real theme, and at the layout of the docks.
 - A saved result does not say which seed, distribution and shape value made it. The statistics that `zpp` prints for a saved result use the settings that the project holds, and a person can change them after the run. [TODO](TODO.md) has an entry.
 - A project does not hold the iterations of a run. The file of the iterations needs a run.
+- A job cannot make only some of the CSV files of a simulation. At the end of phase 4, the API had an output for each file. Phase 5 replaced them with the one output `simulation`, which makes the chart and all the files. [TODO](TODO.md) has an entry.
+- The CSV files of a simulation are not in one Excel workbook with a worksheet for each file. [TODO](TODO.md) has an entry to explore this.
 
 ## Performance work to explore later
 
-The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them.
+The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.
 
 ### Where the time goes
 

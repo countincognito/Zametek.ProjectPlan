@@ -51,14 +51,13 @@ curl -s -F project=@plan.zpp -F "options=@options.json;type=application/json" -H
 
 `plan.zip` contains `plan.zpp`, `plan-gantt.png` and `plan-arrow.svg`, each with the name that `zpp` gives it. It also contains `result.json`, which is the JSON answer without the contents of the files. Without `Accept: application/zip`, the answer is JSON. Then each file is in the `outputs` list, as base64 in its `content`.
 
-To simulate the schedule of the project, add `simulation` to the options. The answer then has the [statistics](#simulation) of the simulation, and the options can ask for its chart and CSV files in `outputs`:
+To simulate the schedule of the project, set the option `runSimulation`. The answer then has the [statistics](#simulation) of the simulation, and the output `simulation` asks for its chart and its CSV files. A request does not give the settings of the simulation, because they are in the project (refer to [The simulation](#the-simulation)):
 
 ```json
 {
-  "simulation": { "iterations": 10000, "seed": "2026", "targetFinishDays": 120 },
+  "runSimulation": true,
   "outputs": {
-    "simulationChart": { "format": "png", "width": 1600, "height": 900 },
-    "simulationStatistics": {}
+    "simulation": { "format": "png", "width": 1600, "height": 900 }
   }
 }
 ```

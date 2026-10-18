@@ -450,3 +450,40 @@ This file lists the maintainer-internal engineering intents that must version wi
 - [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
 
   `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.
+
+- [ ] **Let a job make only some of the CSV files of a simulation** *(2026-10-18, from the review of the known gaps)*
+
+  The output `simulation` of a job makes the chart of the simulation and all its CSV files: the statistics, the histogram, the paths, the activities and, for a run, the iterations. At the end of phase 4, a request could ask for each file with an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). Step 5 of phase 5 (`4e98d8fe`) replaced them with the one output `simulation`. The answer still lists each file as an output of its own, but a request cannot ask for a part. A client that needs only the statistics gets the other files too. `zpp` never had an option for only some of the files.
+
+  The file of the iterations has one row for each iteration, and a run can have 1,000,000 iterations. Thus the files that a client does not need cost most for this file.
+
+  Choices: add the single outputs again, next to `simulation`. Or let `simulation` carry a list of the parts to make (for example `"parts": ["chart", "statistics"]`). The command line needs an option in both cases (for example `--simulation-files statistics,histogram`). Decide first what a request means when it gives `simulation` and a single output together.
+
+  **Where.** `SimulationCsvFile` is a flags enum, and so the engine can already make a set of files. `JobRunner` has the table of `SimulationCsvFile` and `JobOutput`. The change is also in `JobRequest`, in `CompileOptionsHelper` and `Program` of the command line, and in `docs/API.md`, `docs/openapi.yaml` and `docs/COMMAND-LINE.md`. The contract tests of the OpenAPI description change with the API. See also the entry "Explore one Excel workbook for the files of a simulation" below.
+
+- [ ] **Explore one Excel workbook for the files of a simulation** *(2026-10-18, an idea to explore and not a decision)*
+
+  A simulation gives up to five CSV files, and a person who wants all of them must keep and send five files. One Excel workbook with a worksheet for each file would be one file. A workbook also keeps numbers as numbers and can give each column a width, and a CSV file has neither.
+
+  **What exists now.** The Excel export of the scenario (`-x` in `zpp`, and the export of the application) already writes six worksheets of the result: "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities" (`XlsxSimulationSheets`). The import reads them again, and so their layout must stay. They do not have the iterations, because a project does not hold them.
+
+  **Questions to answer.**
+
+  - Is it a new output (for example `simulationWorkbook`, with the name `<name>-simulation.xlsx`), or a choice of format for `simulation` (CSV files or one workbook)? Does the workbook replace the CSV files, or does it come with them?
+  - Does the workbook use the worksheets of `XlsxSimulationSheets`, so that the two cannot differ? Then it needs one more worksheet for the iterations. The import of a scenario must then refuse this workbook with a clear message, or ignore the extra worksheet.
+  - The limits of Excel. A worksheet has at most 1,048,576 rows, and a cell holds at most 32,767 characters. A run of 1,000,000 iterations fits in the rows, with 48,575 rows to spare. But the column "CriticalPaths" of an iteration can be long for a large plan. Measure the longest value for a plan of thousands of activities.
+  - The cost. `XlsxWorkbookWriter` builds the whole workbook in memory, and a worksheet of 1,000,000 rows takes time and memory. Measure it before the change, on the server (`MaxJobs` jobs at one time) and in the browser head. A lower limit of iterations for the workbook, or a workbook with no worksheet of the iterations, can be the answer.
+  - A request that asks for only some of the parts. This is the question of the entry "Let a job make only some of the CSV files of a simulation" above.
+
+- [ ] **Make the schedule simulation faster** *(2026-10-18, from the review of the known gaps)*
+
+  Phase 0 found where the time goes, and the maintainer decided that phase 2 builds none of the speed work. [The plan](SIMULATION-PLAN.md#performance-work-to-explore-later) lists four possibilities, with their rough effort and their effect on the accuracy:
+
+  - A mode that keeps the resource order of the compiled plan. It takes 1 to 2 days and is 430 to 1,400 times faster. The results change for a plan that the resources decide.
+  - A faster incremental update in the critical-path engine. It takes about a week and is up to 2 to 3 times faster. The results do not change.
+  - A flat kernel for the priority list and the scheduler. It takes 2 to 4 weeks for each language. Nobody measured the gain.
+  - An approximate priority list. The team does not recommend it, because the loss is not predictable.
+
+  The efforts are estimates, and nobody measured them.
+
+  Start with a measurement when speed becomes a problem. Each exact change must be made in the Rust port too, because the same seed must give the same iterations in both languages.
