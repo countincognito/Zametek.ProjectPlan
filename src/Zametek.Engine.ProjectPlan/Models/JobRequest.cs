@@ -61,6 +61,12 @@ namespace Zametek.Engine.ProjectPlan
         // server.
         public int? MaximumSimulationIterations { get; init; }
 
+        // The most threads that the run of the simulation uses, or -1 for as many as the machine has processors. The value 0, and
+        // values below -1, are a SimulationException of the failure InvalidSettings. When it is not set, the run takes a share of
+        // the processors: all of them if it is alone, and less when other jobs of the same runner run a simulation at the same
+        // time (see SimulationProcessorShare). The result does not depend on the number of threads.
+        public int? MaximumSimulationThreads { get; init; }
+
         // JobOutput.SimulationChart, of the result of the scenario: the one that the job made, or else the one that the
         // scenario held. A job with no result of either kind is a SimulationException of the failure NoResult.
         public ChartOutputRequest? SimulationChart { get; init; }

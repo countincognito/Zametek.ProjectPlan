@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
@@ -67,7 +68,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Panel = panel;
             }
 
-            public static async Task<Harness> MakeAsync(ProjectScenarioModel? scenario = null, IUIDispatcher? dispatcher = null, BaseTheme baseTheme = BaseTheme.Light)
+            public static async Task<Harness> MakeAsync(
+                ProjectScenarioModel? scenario = null,
+                IUIDispatcher? dispatcher = null,
+                BaseTheme baseTheme = BaseTheme.Light,
+                ILogger<SimulationChartManagerViewModel>? logger = null)
             {
                 CoreViewModel core = CoreViewModelFixture.Create();
                 core.BaseTheme = baseTheme;
@@ -83,7 +88,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
                     dispatcher ?? CoreViewModelFixture.CreateUIDispatcher(),
-                    NullLogger<SimulationChartManagerViewModel>.Instance);
+                    logger ?? NullLogger<SimulationChartManagerViewModel>.Instance);
 
                 return new Harness(core, dialogs, panel);
             }
@@ -92,6 +97,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 Panel.Dispose();
                 Core.Dispose();
+            }
+        }
+
+        // A logger that keeps the text of each line it is given.
+        private sealed class ListLogger
+            : ILogger<SimulationChartManagerViewModel>
+        {
+            public List<string> Lines { get; } = [];
+
+            public IDisposable? BeginScope<TState>(TState state)
+                where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                lock (Lines)
+                {
+                    Lines.Add(formatter(state, exception));
+                }
             }
         }
 
@@ -221,6 +246,60 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             SimulationSummaryModel summary = harness.Core.SimulationSummary.ShouldNotBeNull();
             (summary.Seed, summary.Distribution).ShouldBe((7UL, DurationDistribution.Triangular));
             harness.Core.SimulationSettings.Seed.ShouldBe(99UL);
+        }
+
+        [Fact]
+        public async Task MaxDegreeOfParallelism_Given_NothingSet_Then_IsAllTheProcessors()
+        {
+            using Harness harness = await Harness.MakeAsync();
+
+            harness.Panel.MaxDegreeOfParallelism.ShouldBe(-1);
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public async Task MaxDegreeOfParallelism_Given_AValueThatIsNotValid_Then_Refuses(int threads)
+        {
+            using Harness harness = await Harness.MakeAsync();
+
+            Should.Throw<ArgumentOutOfRangeException>(() => harness.Panel.MaxDegreeOfParallelism = threads);
+
+            harness.Panel.MaxDegreeOfParallelism.ShouldBe(-1);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async Task RunSimulationAsync_Given_ALimitOnTheThreads_Then_RunsWithThemAndFindsWhatItFindsWithAnyOther(int threads)
+        {
+            var logger = new ListLogger();
+            using Harness limited = await Harness.MakeAsync(logger: logger);
+            using Harness unlimited = await Harness.MakeAsync();
+
+            foreach (SimulationChartManagerViewModel panel in new[] { limited.Panel, unlimited.Panel })
+            {
+                panel.Iterations = c_Iterations;
+                panel.UseRandomSeed = false;
+                panel.Seed = 5;
+            }
+
+            limited.Panel.MaxDegreeOfParallelism = threads;
+            await limited.Panel.RunSimulationAsync();
+            await unlimited.Panel.RunSimulationAsync();
+
+            limited.Dialogs.Errors.ShouldBeEmpty();
+            logger.Lines.ShouldContain(x => x.Contains($@"{threads} threads", System.StringComparison.Ordinal));
+
+            // The result does not depend on the number of threads: the same numbers, the same paths and the same bins.
+            SimulationSummaryModel one = limited.Panel.Summary.ShouldNotBeNull();
+            SimulationSummaryModel other = unlimited.Panel.Summary.ShouldNotBeNull();
+            (one.Mean, one.StandardDeviation, one.Minimum, one.Maximum).ShouldBe((other.Mean, other.StandardDeviation, other.Minimum, other.Maximum));
+            one.Percentiles.ShouldBe(other.Percentiles);
+            one.Paths.ShouldBe(other.Paths);
+            one.Activities.ShouldBe(other.Activities);
+            one.Bins.Select(x => (x.FirstFinishTime, x.Count, string.Join(',', x.PathGroupWeights)))
+                .ShouldBe(other.Bins.Select(x => (x.FirstFinishTime, x.Count, string.Join(',', x.PathGroupWeights))));
         }
 
         [Theory]

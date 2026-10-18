@@ -710,6 +710,92 @@ namespace Zametek.Engine.ProjectPlan.Tests
             result.Simulation.ShouldNotBeNull().Iterations.ShouldBe(500);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        [InlineData(-1)]
+        public async Task RunAsync_Given_ANumberOfThreads_Then_TheResultIsTheSameAsWithAnyOther(int threads)
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            SimulationSettingsModel settings = Settings(1500, 21);
+
+            (JobResult reference, MemoryJobSink referenceSink) = await RunAsync(runner, @"estimated.zpp", input => Simulate(input, settings, SimulationCsvFile.All));
+            (JobResult limited, MemoryJobSink limitedSink) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, settings, SimulationCsvFile.All) with { MaximumSimulationThreads = threads });
+
+            // The statistics and every file, byte for byte: the iterations too, which say the finish time of each one.
+            limited.ShouldBe(reference);
+            limitedSink.Outputs.Select(x => x.Output).ShouldBe(referenceSink.Outputs.Select(x => x.Output));
+
+            foreach ((JobOutput output, byte[] content) in referenceSink.Outputs)
+            {
+                limitedSink[output].ShouldBe(content, output.ToString());
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public async Task RunAsync_Given_ANumberOfThreadsThatIsNotValid_Then_InvalidSettingsBeforeThePlanCompiles(int threads)
+        {
+            await using ServiceProvider services = BuildServices();
+
+            SimulationException exception = await Should.ThrowAsync<SimulationException>(async () =>
+                await RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"estimated.zpp",
+                    input => Simulate(input) with { MaximumSimulationThreads = threads }));
+
+            exception.Failure.ShouldBe(SimulationFailure.InvalidSettings);
+            exception.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationThreadsOutOfRange);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ARunThatEnds_Then_ItsPlaceInTheShareOfTheProcessorsIsFree()
+        {
+            await using ServiceProvider services = BuildServices();
+            var share = new SimulationProcessorShare(4);
+            var runner = new JobRunner(services.GetRequiredService<IServiceScopeFactory>(), share);
+
+            await RunAsync(runner, @"estimated.zpp", input => Simulate(input));
+
+            share.Running.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ARunThatIsCancelled_Then_ItsPlaceInTheShareOfTheProcessorsIsFree()
+        {
+            await using ServiceProvider services = BuildServices();
+            var share = new SimulationProcessorShare(4);
+            var runner = new JobRunner(services.GetRequiredService<IServiceScopeFactory>(), share);
+            using var cancellation = new CancellationTokenSource();
+            cancellation.CancelAfter(TimeSpan.FromMilliseconds(300));
+
+            // Far more iterations than the time to the cancel allows.
+            await Should.ThrowAsync<OperationCanceledException>(async () =>
+                await RunAsync(runner, @"estimated.zpp", input => Simulate(input, Settings(1_000_000)), cancellationToken: cancellation.Token));
+
+            share.Running.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnotherSimulationInProgress_Then_TheRunStillSucceedsAndLeavesTheOtherAlone()
+        {
+            await using ServiceProvider services = BuildServices();
+            var share = new SimulationProcessorShare(4);
+            var runner = new JobRunner(services.GetRequiredService<IServiceScopeFactory>(), share);
+
+            // A simulation that another job runs: this one takes a share of what is left.
+            using SimulationProcessorShare.Lease other = share.Begin();
+            (JobResult result, _) = await RunAsync(runner, @"estimated.zpp", input => Simulate(input));
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            share.Running.ShouldBe(1);
+        }
+
         [Fact]
         public async Task RunAsync_Given_ACancelledTokenAndASimulation_Then_ThrowsBeforeReadingThePlan()
         {

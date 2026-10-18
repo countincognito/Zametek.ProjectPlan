@@ -38,6 +38,12 @@ namespace Zametek.Contract.ProjectPlan
         // finishes on that date or after it.
         DateTimeOffset? TargetFinishDate { get; set; }
 
+        // The most threads that a run uses, or -1 (the default) for as many as the machine has processors. The value 0 and
+        // values below -1 are refused. It is not a setting of the scenario, because it depends on the machine and not on the
+        // plan, and because the result does not depend on it: the same seed gives the same result for any number of threads.
+        // A host that runs several simulations at one time (zpp serve) gives each of them a share of the processors.
+        int MaxDegreeOfParallelism { get; set; }
+
         // The state of a run.
 
         bool IsRunning { get; }

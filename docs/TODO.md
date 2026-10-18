@@ -417,10 +417,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
 
-- [ ] **Run the iterations of a job on a share of the processors** *(2026-10-16)*
-
-  `SimulationSettings.MaxDegreeOfParallelism` is -1 (all the processors) in the panel and in each job. A server with `MaxJobs` jobs that all simulate asks the pool for several times its processors. The result does not change with the number of threads, and thus a server could give each job `processors / MaxJobs`. Measure before the change.
-
 - [ ] **Let a client of `zpp --server` see the progress of a simulation** *(2026-10-16)*
 
   The server writes the progress to its log, and the client waits without a sign. A simulation of a large plan can take minutes. The API has no operation for a job that is in progress (ASY-1 is a deviation of the API), and so the choices are a response that streams, or a job that the client can ask about. Both change the API.

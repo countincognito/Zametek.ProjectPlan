@@ -1784,6 +1784,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The number of threads must be -1 (all the processors), or 1 or more..
+        /// </summary>
+        public static string Message_SimulationThreadsOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationThreadsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit must be equal or greater than 0.
         /// </summary>
         public static string Message_SlackLimitMustBeEqualOrGreaterThanZero {

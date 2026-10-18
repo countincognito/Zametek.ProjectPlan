@@ -760,6 +760,21 @@ namespace Zametek.ViewModel.ProjectPlan
             set => TargetFinishTime = value is DateTimeOffset date ? DaysOfFinishDate(date) : null;
         }
 
+        private int m_MaxDegreeOfParallelism = -1;
+        public int MaxDegreeOfParallelism
+        {
+            get => Volatile.Read(ref m_MaxDegreeOfParallelism);
+            set
+            {
+                if (value < -1 || value == 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, Resource.ProjectPlan.Messages.Message_SimulationThreadsOutOfRange);
+                }
+
+                Volatile.Write(ref m_MaxDegreeOfParallelism, value);
+            }
+        }
+
         private bool m_IsRunning;
         public bool IsRunning
         {
@@ -891,6 +906,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         : c_DefaultModifiedBetaShape,
                     RecordCriticalActivities = true,
                     RecordCriticalPaths = true,
+                    MaxDegreeOfParallelism = MaxDegreeOfParallelism,
                 };
                 int? target = TargetFinishTime;
 
@@ -902,10 +918,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 Interlocked.Exchange(ref m_LastProgressTicks, 0);
 
                 m_Logger.LogInformation(
-                    "Simulation: {Iterations} iterations, seed {Seed}, {Distribution}",
+                    "Simulation: {Iterations} iterations, seed {Seed}, {Distribution}, {Threads} threads",
                     settings.Iterations,
                     settings.Seed,
-                    settings.Distribution);
+                    settings.Distribution,
+                    settings.MaxDegreeOfParallelism < 0 ? Environment.ProcessorCount : settings.MaxDegreeOfParallelism);
 
                 var stopwatch = Stopwatch.StartNew();
                 Interlocked.Exchange(ref m_LastLogTicks, Stopwatch.GetTimestamp());

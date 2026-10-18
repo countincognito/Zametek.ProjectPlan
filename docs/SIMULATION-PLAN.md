@@ -441,6 +441,29 @@ At the end of phase 4, Ctrl+C killed `zpp`, and the job did not know. The engine
 - **With `--server`.** The stop cancels the request. The server already cancels its job when the connection closes (`RequestAborted`), and it stops the simulation between two chunks.
 - **How it was checked.** The tests cancel the token in a simulation of a million iterations (three seconds, then the run ends at once), and in the wait for a busy server. A run on Linux sent real `SIGINT` and `SIGTERM` signals to a `zpp` process that ran a simulation.
 
+### A simulation of a job takes a share of the processors
+
+A simulation asks the thread pool for as many threads as the machine has processors. A server that runs `MaxJobs` jobs at one time, and that has the default (`MaxJobs` is the number of processors), asked for the processors times the number of the jobs that simulate. The result does not depend on the number of threads.
+
+- **The rule.** `SimulationProcessorShare` counts the simulations that run. A simulation that begins takes the processors divided by that count, itself among them, and at least one. The first takes all the processors. A later one takes less than the one before it, and so the threads that all the simulations ask for add up to less than the processors times the number of simulations. The share is the one that the simulation had when it began, and it does not change while the simulation runs. A static share (the processors divided by `MaxJobs`) would give each job one thread by default, and a server with one user would then be as slow as one thread. The count gives that user all the processors.
+- **Where.** `JobRunner` holds the share. It sets `ISimulationChartManagerViewModel.MaxDegreeOfParallelism`, a property of the panel that is not a setting of the scenario, because it depends on the machine and not on the plan. `JobRequest.MaximumSimulationThreads` replaces the share (-1 is all the processors, and the value 0 and the values below -1 are an invalid setting). `zpp` and the API do not set it.
+- **No setting for the operator.** A server option for the share was not added. The automatic rule needs none, and an option can be added later without a change of what exists.
+- **The measurement.** Four processors, the sample plan, 4000 iterations for each job, all the jobs begin together, the median of three runs. "All" is what happened before (every job asks for all the processors), and "share" is the rule above.
+
+| Jobs | Mode | Time to finish all, in seconds | Slowest job, in seconds | Processor time, in seconds |
+| --- | --- | --- | --- | --- |
+| 1 | all | 1.72 | 1.72 | 3.7 |
+| 1 | share | 1.29 | 1.29 | 3.5 |
+| 2 | all | 2.83 | 2.83 | 7.9 |
+| 2 | share | 2.82 | 2.81 | 7.1 |
+| 4 | all | 5.80 | 5.80 | 15.9 |
+| 4 | share | 6.07 | 6.06 | 15.0 |
+| 8 | all | 13.42 | 13.39 | 36.8 |
+| 8 | share | 12.28 | 12.25 | 32.6 |
+
+- **What the measurement says.** It shows no gain and no loss. The two lines for one job are the same run (all four processors), and they differ by 25 %. Thus the noise of the measurement is larger than the difference in the other lines, which is between 5 % more and 8 % less in time. The processor time is lower with the share in each line (4 to 11 %), and the noise is large there also. A machine with more processors, and a server with more jobs at one time, can show more. Nobody measured them.
+- **Why it stays.** The share costs nothing for a single job, and it bounds the threads that a busy server asks for. It did not make anything slower in the measurement.
+
 ## Performance work to explore later
 
 The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.

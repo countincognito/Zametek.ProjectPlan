@@ -783,4 +783,7 @@
   <data name="Message_RunStopping" xml:space="preserve">
     <value>Stopping after the step that is in progress. Press Ctrl+C again to stop at once.</value>
   </data>
+  <data name="Message_SimulationThreadsOutOfRange" xml:space="preserve">
+    <value>The number of threads must be -1 (all the processors), or 1 or more.</value>
+  </data>
 </root>

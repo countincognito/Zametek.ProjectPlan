@@ -27,14 +27,28 @@ namespace Zametek.Engine.ProjectPlan
 
         private readonly IServiceScopeFactory m_ScopeFactory;
 
+        // The processors, shared by the simulations that the jobs of this runner run at one time.
+        private readonly SimulationProcessorShare m_ProcessorShare;
+
         #endregion
 
         #region Ctors
 
         public JobRunner(IServiceScopeFactory scopeFactory)
+            : this(scopeFactory, new SimulationProcessorShare())
+        {
+        }
+
+        // A runner whose jobs share the processors as the given share says. A test uses it to share fewer, or more, than the
+        // machine has.
+        internal JobRunner(
+            IServiceScopeFactory scopeFactory,
+            SimulationProcessorShare processorShare)
         {
             ArgumentNullException.ThrowIfNull(scopeFactory);
+            ArgumentNullException.ThrowIfNull(processorShare);
             m_ScopeFactory = scopeFactory;
+            m_ProcessorShare = processorShare;
         }
 
         #endregion
@@ -91,7 +105,7 @@ namespace Zametek.Engine.ProjectPlan
             dialogService.Sink = sink;
             services.GetRequiredService<JobClock>().Now = request.Now;
 
-            return await RunAsync(request, sink, dialogService, services, cancellationToken);
+            return await RunAsync(request, sink, dialogService, services, m_ProcessorShare, cancellationToken);
         }
 
         #endregion
@@ -142,6 +156,7 @@ namespace Zametek.Engine.ProjectPlan
             IJobSink sink,
             JobDialogService dialogService,
             IServiceProvider services,
+            SimulationProcessorShare processorShare,
             CancellationToken cancellationToken)
         {
             // The view models are resolved and never started (see IStartSubscriptions): a job invokes every build
@@ -254,6 +269,11 @@ namespace Zametek.Engine.ProjectPlan
 
                 simulation = services.GetRequiredService<ISimulationChartManagerViewModel>();
                 SimulationSummaryModel? earlier = core.SimulationSummary;
+
+                // The threads of the run: those the request limits it to, or else its share of the processors with the other
+                // simulations that run now. The result is the same for any number of them.
+                using SimulationProcessorShare.Lease share = processorShare.Begin();
+                simulation.MaxDegreeOfParallelism = request.MaximumSimulationThreads ?? share.Threads;
 
                 await simulation.RunSimulationWithSavedSeedAsync(cancellationToken);
 
@@ -488,6 +508,12 @@ namespace Zametek.Engine.ProjectPlan
                     && (double.IsNaN(settings.ModifiedBetaShape) || double.IsInfinity(settings.ModifiedBetaShape) || settings.ModifiedBetaShape <= 0.0))
                 {
                     throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationShapeOutOfRange, SimulationFailure.InvalidSettings);
+                }
+
+                if (request.MaximumSimulationThreads is int threads
+                    && (threads < -1 || threads == 0))
+                {
+                    throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationThreadsOutOfRange, SimulationFailure.InvalidSettings);
                 }
 
                 if (request.MaximumSimulationIterations is int maximum
