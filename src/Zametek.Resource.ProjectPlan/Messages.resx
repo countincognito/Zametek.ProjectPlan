@@ -777,4 +777,10 @@
   <data name="Message_ImportFirstProblemsListed" xml:space="preserve">
     <value>The first {0} are listed.</value>
   </data>
+  <data name="Message_RunCancelled" xml:space="preserve">
+    <value>The run was cancelled.</value>
+  </data>
+  <data name="Message_RunStopping" xml:space="preserve">
+    <value>Stopping after the step that is in progress. Press Ctrl+C again to stop at once.</value>
+  </data>
 </root>

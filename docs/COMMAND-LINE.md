@@ -139,8 +139,25 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 | 3 | The plan compiled with errors |
 | 4 | A compilation used more time than `--compile-timeout` gives, and `zpp` cancelled it |
 | 5 | `zpp` sent the run to a server, and the server did not run it (refer to [Send runs to a server](#send-runs-to-a-server)) |
+| 130 | A person stopped the run with Ctrl+C, or a program stopped it with `SIGTERM` (refer to [Stop a run](#stop-a-run)). This is the code that a shell gives to a program that Ctrl+C stopped (128 + 2). |
 
 A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
+
+## Stop a run
+
+Press Ctrl+C to stop a run of `zpp`. A `SIGTERM` has the same effect. `zpp` then does this:
+
+1. `zpp` writes `Stopping after the step that is in progress. Press Ctrl+C again to stop at once.` to the standard error stream. It does not stop in the middle of a step. A step is the read of the plan, the compilation, the simulation, or the write of one output.
+2. The run stops before the next step. A simulation is the exception, because it stops between two chunks of its iterations. This takes a fraction of a second, also for a simulation of a million iterations.
+3. `zpp` writes `The run was cancelled.` to the standard error stream. It does not print the metrics, and it exits with code 130.
+
+A file that `zpp` wrote before the stop stays where it is. Each of these files is complete, because `zpp` writes one output at a time and does not stop in the middle of one. The project (`-o`) and the workbook (`-x`) come after the simulation, and thus a run that you stop in the simulation does not write them.
+
+Press Ctrl+C a second time to stop `zpp` at once. The system then ends the process, and the exit code is the one that your system gives to a program that Ctrl+C ended. A file that `zpp` was writing at that time can be incomplete.
+
+With `--server`, the stop cancels the request to the server, and the server stops the job (refer to [Send runs to a server](#send-runs-to-a-server)). `zpp` writes no file, because it writes the files when the answer arrives.
+
+A step that is in progress runs to its end. A very large plan can thus keep `zpp` busy for some time after the first Ctrl+C. The compilation is limited by `--compile-timeout`.
 
 ## zpp as a server
 

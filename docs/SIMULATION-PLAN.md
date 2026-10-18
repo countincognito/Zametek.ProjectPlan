@@ -430,6 +430,17 @@ A result that a project held did not say which seed, distribution and shape valu
 - **The job.** `JobSimulationMetrics` takes the values from the result. Thus a job that loads a project, gives other settings and does not run reports the seed that made the result.
 - **The golden files.** The workbook `sample-simulation.xlsx` and its snapshot have the new columns. The other two workbooks did not change, and they are still the files that an older release wrote.
 
+### Ctrl+C stops a run of zpp
+
+At the end of phase 4, Ctrl+C killed `zpp`, and the job did not know. The engine could already stop a simulation between two chunks of its iterations, but `zpp` gave the job no token.
+
+- **Two presses.** The first Ctrl+C (or `SIGTERM`) cancels the token of the run, and `zpp` says so. The second press is not handled, and the system ends the process at once. A person who does not want to wait for a step has a way out.
+- **Where.** `InterruptHandler` registers `SIGINT` and `SIGTERM` with `PosixSignalRegistration`, which works on Windows and on Linux. `Program.MainAsync` takes a `CancellationToken` and links it to the handler, so that a test can cancel without a signal. The token goes to `JobRunner.RunAsync`, to `ListScenariosAsync` and to `JobClient.RunAsync`. `zpp serve` does not use the handler, because the host has its own for the server.
+- **Exit code 130.** It is the code that a shell gives to a program that `SIGINT` ended (128 + 2), and so a script reads it as it reads the stop of any other program. Code 4 is for a compilation that ran out of time, and it says nothing about a person who stopped the run.
+- **Nothing half-way.** The job stops between steps, and it writes one output at a time. The project and the workbook come after the simulation, and so a run that was stopped in the simulation does not write them. The files that came before the stop stay.
+- **With `--server`.** The stop cancels the request. The server already cancels its job when the connection closes (`RequestAborted`), and it stops the simulation between two chunks.
+- **How it was checked.** The tests cancel the token in a simulation of a million iterations (three seconds, then the run ends at once), and in the wait for a busy server. A run on Linux sent real `SIGINT` and `SIGTERM` signals to a `zpp` process that ran a simulation.
+
 ## Performance work to explore later
 
 The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.

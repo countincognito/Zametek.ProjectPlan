@@ -443,10 +443,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   One fix is to find the cell in the file when the load fails with this message, and to report it. Another fix is to read the cells of such a workbook without the date conversion of the library.
 
-- [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
-
-  `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.
-
 - [ ] **Let a job make only some of the CSV files of a simulation** *(2026-10-18, from the review of the known gaps)*
 
   The output `simulation` of a job makes the chart of the simulation and all its CSV files: the statistics, the histogram, the paths, the activities and, for a run, the iterations. At the end of phase 4, a request could ask for each file with an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). Step 5 of phase 5 (`4e98d8fe`) replaced them with the one output `simulation`. The answer still lists each file as an output of its own, but a request cannot ask for a part. A client that needs only the statistics gets the other files too. `zpp` never had an option for only some of the files.

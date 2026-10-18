@@ -8,16 +8,18 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         public static Task<int> RunAsync(
             string[] args,
-            IReadOnlyDictionary<string, string>? environment = null)
+            IReadOnlyDictionary<string, string>? environment = null,
+            CancellationToken cancellationToken = default)
         {
-            return Program.MainAsync(args, environment ?? s_NoEnvironment);
+            return Program.MainAsync(args, environment ?? s_NoEnvironment, cancellationToken);
         }
 
         // The same, with stdout and stderr captured. Main swaps the console's streams while it runs, so whatever calls
         // this is in ProgramExitCodeTests' collection.
         public static async Task<(int ExitCode, string Output, string Error)> RunCapturedAsync(
             string[] args,
-            IReadOnlyDictionary<string, string>? environment = null)
+            IReadOnlyDictionary<string, string>? environment = null,
+            CancellationToken cancellationToken = default)
         {
             TextWriter originalOutput = Console.Out;
             TextWriter originalError = Console.Error;
@@ -29,7 +31,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 Console.SetOut(output);
                 Console.SetError(error);
 
-                int exitCode = await RunAsync(args, environment);
+                int exitCode = await RunAsync(args, environment, cancellationToken);
                 return (exitCode, output.ToString(), error.ToString());
             }
             finally

@@ -849,6 +849,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The run was cancelled..
+        /// </summary>
+        public static string Message_RunCancelled {
+            get {
+                return ResourceManager.GetString("Message_RunCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping after the step that is in progress. Press Ctrl+C again to stop at once..
+        /// </summary>
+        public static string Message_RunStopping {
+            get {
+                return ResourceManager.GetString("Message_RunStopping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scenario &apos;{0}&apos; has no scenario data in the project file.
         /// </summary>
         public static string Message_ScenarioHasNoScenarioData {
