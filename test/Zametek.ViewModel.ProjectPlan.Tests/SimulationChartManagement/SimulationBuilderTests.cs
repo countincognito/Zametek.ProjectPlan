@@ -10,9 +10,10 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
     /// <summary>
-    /// A simulation schedules the plan with the builder of the application, which is the builder that a compile
-    /// uses. These tests show that a simulation with that builder gives what a simulation with the standard
-    /// engines gives, so that the two agree as long as the application uses the standard engines.
+    /// A simulation schedules the plan with the builders of the application, which are the builders that a compile
+    /// uses (the factory of the application gives them). These tests show that a simulation with those builders
+    /// gives what a simulation with the standard engines gives, so that the two agree as long as the application
+    /// uses the standard engines.
     /// </summary>
     public class SimulationBuilderTests
     {
@@ -61,7 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 input.Resources,
                 input.WorkStreams,
                 input.Estimates,
-                VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder);
+                new VertexGraphFactory());
 
             application.CompilationErrors.ShouldBeEmpty();
             application.PlannedFinishTime.ShouldBe(standard.PlannedFinishTime);
@@ -99,7 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     input.Resources,
                     input.WorkStreams,
                     input.Estimates,
-                    VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder);
+                    new VertexGraphFactory());
 
                 application.PlannedFinishTime.ShouldBe(core.ProjectFinishDays.ShouldNotBeNull());
             }

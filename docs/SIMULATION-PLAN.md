@@ -167,7 +167,7 @@ The team stops after each phase for a review.
 | --- | --- | --- |
 | 0 | Measure the cost of one iteration. Prototype a lean path. Check the prototype against the reference tool. Decide the default iteration count. | Library and this repository |
 | 1 | The estimates: the new file format, the rules, the grid and the dialog, the imports and the export. | This repository |
-| 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
+| 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (published). | Library |
 | 3 | The desktop panel. Done (not pushed). | This repository |
 | 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. Done (not pushed). | This repository |
 | 5 | The three docks, the title bar, the saving in the file and in Excel, and the new options of `zpp` and the API. Done (not pushed). | This repository |
@@ -272,7 +272,7 @@ The proposal for the number of iterations is 5,000 by default. The expected time
 
 ## Phase 2: the results
 
-Phase 2 finished on 2026-10-16. All the work is in the library repository, on the branch `mc-sim`, in the commits `e5a952c` (random numbers and samplers), `c6a68c9` (the simulator), `f239d36` (whole simulations in the baseline) and `df644cb` (the Rust port, the documentation and the version 3.3.0). Nothing is published. The version is 3.3.0 in the library, and this repository reads the library source through a local file that git ignores (refer to [Reading the library source](#reading-the-library-source)).
+Phase 2 finished on 2026-10-16. All the work is in the library repository, on the branch `mc-sim`, in the commits `e5a952c` (random numbers and samplers), `c6a68c9` (the simulator), `f239d36` (whole simulations in the baseline) and `df644cb` (the Rust port, the documentation and the version 3.3.0). Nothing is published. The version is 3.3.0 in the library, and this repository reads the library source through a local file that git ignores (refer to [Reading the library source](#reading-the-library-source)). The library published version 3.3.0 later. The application now uses version 4.0.0 (refer to [The application uses version 4.0.0 of the library](#the-application-uses-version-400-of-the-library)).
 
 ### What the library has now
 
@@ -295,7 +295,9 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 
 ### Reading the library source
 
-The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages. Before this work merges, the packages must be published at 3.3.0, and the two package references must change to that version.
+The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages.
+
+The maintainer published the packages, and the two package references use version 4.0.0. Use the local file only for a change that needs a version of the library that nobody has published.
 
 ## Phase 3: the results
 
@@ -496,6 +498,16 @@ A simulation of a large plan can take minutes. The server wrote the progress to 
 - **Where.** `JobRequest.Progress` (an `IProgress<JobProgress>`) tells the engine where to report. The panel takes an `IProgress<int>` in `RunSimulationWithSavedSeedAsync`, and it reports as often as it updates its own progress bar (about ten times a second). An observer that throws does not stop the simulation. `ProjectEndpoints` registers each compile in `RunningJobs` under the trace id of the request.
 - **The client.** `zpp --server -v` asks after two seconds and then as often as `Retry-After` says, and it writes `Simulation on <server>: <done> of <total> iterations (<percent>)` to its log. It asks only when its log would show the answer, and a question that fails (a server that does not have the operation, say) never fails the run.
 - **What is not done.** The status is for the simulation only; the other steps of a job do not report. A client sees nothing of a job that waits for a place. The estimate of the time that is left is not in the answer, and the client does not make one.
+
+### The application uses version 4.0.0 of the library
+
+Version 4.0.0 of the library changes two parts of the API that the application uses. A builder takes an id generator factory in place of an id generator. `ScheduleSimulator` takes a factory object in place of the function that made its builders. The application moved from version 3.3.0 to version 4.0.0 on 2026-10-24. The section "Breaking changes" in the README of the library describes the changes in the library.
+
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.0.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.0.0. The local file of [Reading the library source](#reading-the-library-source) is not necessary, because the maintainer published the packages.
+- **The builders.** `VertexGraphBuilder` and `ArrowGraphBuilder` take `IIdGeneratorFactory<int>` in place of `IIdGenerator<int>`. Their methods `CreateDependentActivityVertexGraphBuilder` and `CreateDependentActivityArrowGraphBuilder` give `PreviousIdGeneratorFactory<int>`, and so the ids that a builder makes still count down from -1. The library now starts the generator of a builder that loads a graph under the lowest id of that graph. The three computations of that id in the two builders are gone.
+- **The factory of the application.** `VertexGraphFactory` (in `GraphCompilers`) implements `IVertexGraphFactory<int, int, int, IDependentActivity>`. `CreateBuilder` gives a new builder of the application, and `CreateCompiler` gives a new `VertexGraphCompiler`. `SimulationChartManagerViewModel` gives a `VertexGraphFactory` to the simulator, where version 3.3.0 took the method `VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder`. The simulator asks for one builder for each thread, and for one compiler for its first check of the plan. Thus a simulation schedules with the engines that a compile uses.
+- **One change in the numbers.** The clone of an arrow builder whose graph has no dummy activity now numbers its new dummy activities from -1. The old code started under the lowest id of the graph. That id is the id of an activity, and so the first new id was 0 or higher. No test depended on this.
+- **How it was checked.** The checks of the commit hook and a build for release passed. Twelve new tests cover the factory and the two builders (`VertexGraphFactoryTests`, `VertexGraphBuilderTests` and `ArrowGraphBuilderTests`). The team planted nine faults, one at a time, and the tests found all of them. The faults were a shared builder, a compiler of the library, five builders that count up, and two clones that the library makes.
 
 ## Performance work to explore later
 

@@ -406,7 +406,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             SimulationInputModel input = m_CoreViewModel.CaptureSimulationInput();
 
-            // The plan is scheduled with the builder of the application, which is the builder that a compile uses. A
+            // The plan is scheduled with the builders of the application, and the first check of the plan is a compile by
+            // the compiler of the application. These are the builders and the compiler that a compile uses. A
             // simulation then schedules in the same way as the compile does, also when the builder has other engines.
             // The activities are copies of the ones that a compile takes (see CaptureSimulationInput), so they have
             // the activity type of the application.
@@ -415,7 +416,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 input.Resources,
                 input.WorkStreams,
                 input.Estimates,
-                VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder);
+                new VertexGraphFactory());
 
             if (simulator.CompilationErrors.Count > 0)
             {

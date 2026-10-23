@@ -9,11 +9,11 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ArrowGraphBuilder(
-            IIdGenerator<int> edgeIdGenerator,
-            IIdGenerator<int> nodeIdGenerator)
+            IIdGeneratorFactory<int> edgeIdGeneratorFactory,
+            IIdGeneratorFactory<int> nodeIdGeneratorFactory)
             : base(
-                  edgeIdGenerator,
-                  nodeIdGenerator,
+                  edgeIdGeneratorFactory,
+                  nodeIdGeneratorFactory,
                   new DummyActivityGenerator(),
                   new EventGenerator<int>(),
                   new ArrowTarjanStronglyConnectedComponentsFinder<int, int, int, IDependentActivity>(),
@@ -24,12 +24,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ArrowGraphBuilder(
             Graph<int, IDependentActivity, IEvent<int>> graph,
-            IIdGenerator<int> edgeIdGenerator,
-            IIdGenerator<int> nodeIdGenerator)
+            IIdGeneratorFactory<int> edgeIdGeneratorFactory,
+            IIdGeneratorFactory<int> nodeIdGeneratorFactory)
             : base(
                   graph,
-                  edgeIdGenerator,
-                  nodeIdGenerator,
+                  edgeIdGeneratorFactory,
+                  nodeIdGeneratorFactory,
                   new DummyActivityGenerator(),
                   new EventGenerator<int>(),
                   new ArrowTarjanStronglyConnectedComponentsFinder<int, int, int, IDependentActivity>(),
@@ -40,23 +40,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        // The IDs of the dummy activities and of the nodes count down from -1. When a builder loads a graph, the
+        // factories start them under the lowest ID that the graph holds, so the IDs of a clone follow the IDs of its
+        // original without a gap.
         public static ArrowGraphBuilder CreateDependentActivityArrowGraphBuilder()
         {
-            int edgeId = default;
-            int nodeId = default;
             return new ArrowGraphBuilder(
-                new PreviousIdGenerator<int>(edgeId),
-                new PreviousIdGenerator<int>(nodeId));
+                new PreviousIdGeneratorFactory<int>(),
+                new PreviousIdGeneratorFactory<int>());
         }
 
         public static ArrowGraphBuilder CreateDependentActivityArrowGraphBuilder(Graph<int, IDependentActivity, IEvent<int>> arrowGraph)
         {
-            int edgeId = arrowGraph.Edges.Select(x => x.Id).DefaultIfEmpty().Min();
-            int nodeId = arrowGraph.Nodes.Select(x => x.Id).DefaultIfEmpty().Min();
             return new ArrowGraphBuilder(
                 arrowGraph,
-                new PreviousIdGenerator<int>(edgeId),
-                new PreviousIdGenerator<int>(nodeId));
+                new PreviousIdGeneratorFactory<int>(),
+                new PreviousIdGeneratorFactory<int>());
         }
 
         #region Overrides
