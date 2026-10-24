@@ -1,0 +1,3407 @@
+{
+  "Version": "v0.6.2",
+  "Id": "989e940f-cab5-5e77-bce4-ce3ad5a53078",
+  "Root": "583acbc8-9910-568b-8c13-0c6f192dcaa3",
+  "Current": "6c2608a8-ce00-5ae5-9d83-f4958da6df02",
+  "Nodes": [
+    {
+      "Id": "6c2608a8-ce00-5ae5-9d83-f4958da6df02",
+      "ParentId": "583acbc8-9910-568b-8c13-0c6f192dcaa3",
+      "NodeType": 0,
+      "Name": "Baseline",
+      "CreatedOn": "2026-10-24T12:00:00+01:00",
+      "IsTracked": true,
+      "ModifiedOn": "2026-10-24T12:00:00+01:00"
+    }
+  ],
+  "Files": [
+    {
+      "NodeId": "6c2608a8-ce00-5ae5-9d83-f4958da6df02",
+      "Scenario": {
+        "ProjectStart": "2027-01-04T00:00:00+00:00",
+        "Today": "2027-01-04T00:00:00+00:00",
+        "DependentActivities": [
+          {
+            "Activity": {
+              "Id": 1,
+              "DisplayOrder": 0,
+              "Name": "Project kick-off",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "MostLikelyDuration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 0,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 2,
+              "DisplayOrder": 1,
+              "Name": "Stakeholder interviews",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                1,
+                2
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                1,
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 8,
+              "FreeSlack": 0,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 5,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              1
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              7
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 3,
+              "DisplayOrder": 2,
+              "Name": "Analytics review",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 4,
+              "FreeSlack": 0,
+              "EarliestStartTime": 5,
+              "LatestFinishTime": 8,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              1
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              2
+            ],
+            "Successors": [
+              7
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 4,
+              "DisplayOrder": 3,
+              "Name": "Competitor review",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 4,
+              "FreeSlack": 0,
+              "EarliestStartTime": 8,
+              "LatestFinishTime": 11,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              1
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              3
+            ],
+            "Successors": [
+              7
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 5,
+              "DisplayOrder": 4,
+              "Name": "Content audit",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                4
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 8,
+              "FreeSlack": 6,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 11,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              1
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              7
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 6,
+              "DisplayOrder": 5,
+              "Name": "Technical audit of the current site",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                8
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 7,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 11,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              1
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              7
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 7,
+              "DisplayOrder": 6,
+              "Name": "Requirements and scope",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                1
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                1
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 11,
+              "LatestFinishTime": 14,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              2
+            ],
+            "Successors": [
+              8
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 8,
+              "DisplayOrder": 7,
+              "Name": "Scope signed off",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "MostLikelyDuration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 14,
+              "LatestFinishTime": 14,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              7
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              9,
+              13,
+              25
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 9,
+              "DisplayOrder": 8,
+              "Name": "Sitemap and information architecture",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 8,
+              "FreeSlack": 0,
+              "EarliestStartTime": 14,
+              "LatestFinishTime": 20,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              8
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              4
+            ],
+            "Successors": [
+              10,
+              11,
+              12,
+              18
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 10,
+              "DisplayOrder": 9,
+              "Name": "Wireframes: home page",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 23,
+              "LatestFinishTime": 27,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              9
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              11
+            ],
+            "Successors": [
+              15,
+              19
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 11,
+              "DisplayOrder": 10,
+              "Name": "Wireframes: product pages",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 0,
+              "EarliestStartTime": 19,
+              "LatestFinishTime": 24,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              9
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              9
+            ],
+            "Successors": [
+              15,
+              20
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 12,
+              "DisplayOrder": 11,
+              "Name": "Wireframes: support pages",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 26,
+              "LatestFinishTime": 30,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              9
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              10
+            ],
+            "Successors": [
+              15,
+              21
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 13,
+              "DisplayOrder": 12,
+              "Name": "Visual concepts",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                3
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                3
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 7,
+              "MostLikelyDuration": 6,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 13,
+              "FreeSlack": 0,
+              "EarliestStartTime": 14,
+              "LatestFinishTime": 21,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              8
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              14
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 14,
+              "DisplayOrder": 13,
+              "Name": "Design system",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                3
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                3
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 9,
+              "MostLikelyDuration": 8,
+              "OptimisticDuration": 6,
+              "PessimisticDuration": 13,
+              "FreeSlack": 0,
+              "EarliestStartTime": 21,
+              "LatestFinishTime": 30,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              13
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              13
+            ],
+            "Successors": [
+              15,
+              22
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 15,
+              "DisplayOrder": 14,
+              "Name": "Page designs",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                3
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                3
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 9,
+              "MostLikelyDuration": 8,
+              "OptimisticDuration": 6,
+              "PessimisticDuration": 13,
+              "FreeSlack": 0,
+              "EarliestStartTime": 30,
+              "LatestFinishTime": 39,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              11,
+              12,
+              14
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              14
+            ],
+            "Successors": [
+              16
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 16,
+              "DisplayOrder": 15,
+              "Name": "Usability test of the prototype",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 9,
+              "FreeSlack": 0,
+              "EarliestStartTime": 39,
+              "LatestFinishTime": 44,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              15
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              12
+            ],
+            "Successors": [
+              17
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 17,
+              "DisplayOrder": 16,
+              "Name": "Designs signed off",
+              "Notes": "",
+              "TargetWorkStreams": [
+                2
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "MostLikelyDuration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 44,
+              "LatestFinishTime": 44,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              16
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              27,
+              28,
+              29,
+              31
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 18,
+              "DisplayOrder": 17,
+              "Name": "Content plan and tone of voice",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                4
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 4,
+              "FreeSlack": 1,
+              "EarliestStartTime": 19,
+              "LatestFinishTime": 32,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              9
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              5
+            ],
+            "Successors": [
+              19,
+              20,
+              21
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 19,
+              "DisplayOrder": 18,
+              "Name": "Home page copy",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                5
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 3,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 26,
+              "LatestFinishTime": 35,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              18
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              23,
+              24
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 20,
+              "DisplayOrder": 19,
+              "Name": "Product page copy",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                4
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 11,
+              "MostLikelyDuration": 10,
+              "OptimisticDuration": 8,
+              "PessimisticDuration": 16,
+              "FreeSlack": 8,
+              "EarliestStartTime": 23,
+              "LatestFinishTime": 48,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              11,
+              18
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              18
+            ],
+            "Successors": [
+              23,
+              24,
+              35
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 21,
+              "DisplayOrder": 20,
+              "Name": "Support articles",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                5
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 13,
+              "MostLikelyDuration": 12,
+              "OptimisticDuration": 9,
+              "PessimisticDuration": 19,
+              "FreeSlack": 0,
+              "EarliestStartTime": 29,
+              "LatestFinishTime": 48,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              12,
+              18
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              19
+            ],
+            "Successors": [
+              23,
+              24,
+              35
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 22,
+              "DisplayOrder": 21,
+              "Name": "Photography and images",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                3
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                3
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 8,
+              "MostLikelyDuration": 6,
+              "OptimisticDuration": 5,
+              "PessimisticDuration": 18,
+              "FreeSlack": 11,
+              "EarliestStartTime": 39,
+              "LatestFinishTime": 60,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              14
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              15
+            ],
+            "Successors": [
+              36
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 23,
+              "DisplayOrder": 22,
+              "Name": "SEO metadata and redirect map",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                4
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 6,
+              "EarliestStartTime": 42,
+              "LatestFinishTime": 52,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              19,
+              20,
+              21
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              20
+            ],
+            "Successors": [
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 24,
+              "DisplayOrder": 23,
+              "Name": "Legal review of the content",
+              "Notes": "",
+              "TargetWorkStreams": [
+                3
+              ],
+              "TargetResources": [
+                11
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                11
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 5,
+              "FreeSlack": 26,
+              "EarliestStartTime": 42,
+              "LatestFinishTime": 73,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              19,
+              20,
+              21
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 25,
+              "DisplayOrder": 24,
+              "Name": "Hosting environments",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                10
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                10
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 0,
+              "EarliestStartTime": 14,
+              "LatestFinishTime": 40,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              8
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              26
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 26,
+              "DisplayOrder": 25,
+              "Name": "CMS installation and set-up",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                8
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 22,
+              "EarliestStartTime": 18,
+              "LatestFinishTime": 44,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              25
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              6
+            ],
+            "Successors": [
+              27,
+              28,
+              29,
+              31
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 27,
+              "DisplayOrder": 26,
+              "Name": "Page templates: home page",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 0,
+              "EarliestStartTime": 44,
+              "LatestFinishTime": 48,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              17,
+              26
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              30,
+              33
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 28,
+              "DisplayOrder": 27,
+              "Name": "Page templates: product pages",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 6,
+              "MostLikelyDuration": 6,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 44,
+              "LatestFinishTime": 50,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              17,
+              26
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              30,
+              35
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 29,
+              "DisplayOrder": 28,
+              "Name": "Page templates: support pages",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 0,
+              "EarliestStartTime": 48,
+              "LatestFinishTime": 52,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              17,
+              26
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              27
+            ],
+            "Successors": [
+              30,
+              35
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 30,
+              "DisplayOrder": 29,
+              "Name": "Navigation and site search",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 6,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 11,
+              "FreeSlack": 0,
+              "EarliestStartTime": 52,
+              "LatestFinishTime": 58,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              27,
+              28,
+              29
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              33
+            ],
+            "Successors": [
+              37,
+              38,
+              39
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 31,
+              "DisplayOrder": 30,
+              "Name": "Contact and quote forms",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                8
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 0,
+              "EarliestStartTime": 44,
+              "LatestFinishTime": 57,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              17,
+              26
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              26
+            ],
+            "Successors": [
+              32,
+              34
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 32,
+              "DisplayOrder": 31,
+              "Name": "CRM integration",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                8
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 8,
+              "MostLikelyDuration": 6,
+              "OptimisticDuration": 5,
+              "PessimisticDuration": 18,
+              "FreeSlack": 0,
+              "EarliestStartTime": 48,
+              "LatestFinishTime": 65,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              31
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              31
+            ],
+            "Successors": [
+              40
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 33,
+              "DisplayOrder": 32,
+              "Name": "Cookie consent and analytics tags",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 2,
+              "MostLikelyDuration": 2,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 2,
+              "FreeSlack": 0,
+              "EarliestStartTime": 50,
+              "LatestFinishTime": 52,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              27
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              28
+            ],
+            "Successors": [
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 34,
+              "DisplayOrder": 33,
+              "Name": "Newsletter sign-up",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                8
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 2,
+              "MostLikelyDuration": 2,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 3,
+              "FreeSlack": 0,
+              "EarliestStartTime": 56,
+              "LatestFinishTime": 67,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              31
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              32
+            ],
+            "Successors": [
+              40
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 35,
+              "DisplayOrder": 34,
+              "Name": "Content migration",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                4
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 6,
+              "MostLikelyDuration": 6,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 52,
+              "LatestFinishTime": 58,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              20,
+              21,
+              28,
+              29
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              23
+            ],
+            "Successors": [
+              36,
+              37,
+              38,
+              46
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 36,
+              "DisplayOrder": 35,
+              "Name": "Image optimisation",
+              "Notes": "",
+              "TargetWorkStreams": [
+                4
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 2,
+              "MostLikelyDuration": 2,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 2,
+              "FreeSlack": 0,
+              "EarliestStartTime": 58,
+              "LatestFinishTime": 62,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              22,
+              35
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              30
+            ],
+            "Successors": [
+              39
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 37,
+              "DisplayOrder": 36,
+              "Name": "Accessibility audit",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                9
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 6,
+              "FreeSlack": 0,
+              "EarliestStartTime": 63,
+              "LatestFinishTime": 67,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              30,
+              35
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              38
+            ],
+            "Successors": [
+              42
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 38,
+              "DisplayOrder": 37,
+              "Name": "Cross-browser and device testing",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                9
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 8,
+              "FreeSlack": 0,
+              "EarliestStartTime": 58,
+              "LatestFinishTime": 63,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              30,
+              35
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              42,
+              45
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 39,
+              "DisplayOrder": 38,
+              "Name": "Performance tuning",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 4,
+              "OptimisticDuration": 3,
+              "PessimisticDuration": 9,
+              "FreeSlack": 2,
+              "EarliestStartTime": 60,
+              "LatestFinishTime": 67,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              30,
+              36
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              36
+            ],
+            "Successors": [
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 40,
+              "DisplayOrder": 39,
+              "Name": "Security scan",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                10
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                10
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 2,
+              "MostLikelyDuration": 2,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 2,
+              "FreeSlack": 0,
+              "EarliestStartTime": 58,
+              "LatestFinishTime": 69,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              32,
+              34
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              25
+            ],
+            "Successors": [
+              41
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 41,
+              "DisplayOrder": 40,
+              "Name": "Fix security findings",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                8
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 4,
+              "MostLikelyDuration": 3,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 7,
+              "FreeSlack": 9,
+              "EarliestStartTime": 60,
+              "LatestFinishTime": 73,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              40
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              34
+            ],
+            "Successors": [
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 42,
+              "DisplayOrder": 41,
+              "Name": "Fix defects",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 6,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 11,
+              "FreeSlack": 0,
+              "EarliestStartTime": 67,
+              "LatestFinishTime": 73,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              37,
+              38
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              39
+            ],
+            "Successors": [
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 43,
+              "DisplayOrder": 42,
+              "Name": "User acceptance testing",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [
+                1,
+                9
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                1,
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "MostLikelyDuration": 5,
+              "OptimisticDuration": 4,
+              "PessimisticDuration": 8,
+              "FreeSlack": 0,
+              "EarliestStartTime": 73,
+              "LatestFinishTime": 78,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              24,
+              41,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              37,
+              45
+            ],
+            "Successors": [
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 44,
+              "DisplayOrder": 43,
+              "Name": "Ready to launch",
+              "Notes": "",
+              "TargetWorkStreams": [
+                5
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "MostLikelyDuration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 78,
+              "LatestFinishTime": 78,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              23,
+              33,
+              39,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              47
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 45,
+              "DisplayOrder": 44,
+              "Name": "Launch plan",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [
+                1
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                1
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 2,
+              "MostLikelyDuration": 2,
+              "OptimisticDuration": 2,
+              "PessimisticDuration": 2,
+              "FreeSlack": 8,
+              "EarliestStartTime": 63,
+              "LatestFinishTime": 73,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              38
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              7
+            ],
+            "Successors": [
+              47
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 46,
+              "DisplayOrder": 45,
+              "Name": "Editor training",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [
+                4,
+                5
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                4
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 2,
+              "MostLikelyDuration": 2,
+              "FreeSlack": 19,
+              "EarliestStartTime": 58,
+              "LatestFinishTime": 79,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              35
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              35
+            ],
+            "Successors": [
+              48
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 47,
+              "DisplayOrder": 46,
+              "Name": "DNS and CDN cutover",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [
+                10
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                10
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 1,
+              "MostLikelyDuration": 1,
+              "OptimisticDuration": 1,
+              "PessimisticDuration": 1,
+              "FreeSlack": 0,
+              "EarliestStartTime": 78,
+              "LatestFinishTime": 79,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              44,
+              45
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              40
+            ],
+            "Successors": [
+              48
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 48,
+              "DisplayOrder": 47,
+              "Name": "Go live",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "MostLikelyDuration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 79,
+              "LatestFinishTime": 79,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              46,
+              47
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              49
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 49,
+              "DisplayOrder": 48,
+              "Name": "Hypercare",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [
+                6,
+                7
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "MostLikelyDuration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 79,
+              "LatestFinishTime": 89,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              48
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              42
+            ],
+            "Successors": [
+              50
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 50,
+              "DisplayOrder": 49,
+              "Name": "Post-launch review",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [
+                1
+              ],
+              "TargetResourceOperator": 1,
+              "AllocatedToResources": [
+                1
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 1,
+              "MostLikelyDuration": 1,
+              "OptimisticDuration": 1,
+              "PessimisticDuration": 1,
+              "FreeSlack": 0,
+              "EarliestStartTime": 89,
+              "LatestFinishTime": 90,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              49
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              43
+            ],
+            "Successors": [
+              51
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 51,
+              "DisplayOrder": 50,
+              "Name": "Project closed",
+              "Notes": "",
+              "TargetWorkStreams": [
+                6
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "MostLikelyDuration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 90,
+              "LatestFinishTime": 90,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              50
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": []
+          }
+        ],
+        "GraphSettings": {
+          "ActivitySeverities": [
+            {
+              "SlackLimit": 0,
+              "CriticalityWeight": 4.0,
+              "FibonacciWeight": 4.23606797749979,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 10,
+              "CriticalityWeight": 3.0,
+              "FibonacciWeight": 2.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 25,
+              "CriticalityWeight": 2.0,
+              "FibonacciWeight": 1.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 215,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 2147483647,
+              "CriticalityWeight": 1.0,
+              "FibonacciWeight": 1.0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 128,
+                "B": 0
+              }
+            }
+          ],
+          "EdgeTypeFormats": [
+            {
+              "EdgeType": 0,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 1,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 1
+            },
+            {
+              "EdgeType": 2,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 3,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 1
+            }
+          ],
+          "NodeTypeFormats": [
+            {
+              "NodeType": 0,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 1,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 1
+            },
+            {
+              "NodeType": 2,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 3,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            }
+          ]
+        },
+        "ResourceSettings": {
+          "Resources": [
+            {
+              "Id": 1,
+              "Name": "Project manager",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 1,
+              "InterActivityAllocationType": 2,
+              "InterActivityPhases": [],
+              "UnitCost": 650.0,
+              "UnitBilling": 845.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 52,
+                "G": 101,
+                "B": 164
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 2,
+              "Name": "UX designer",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 780.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 1,
+              "DisplayOrder": 1,
+              "ColorFormat": {
+                "A": 255,
+                "R": 117,
+                "G": 80,
+                "B": 123
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 3,
+              "Name": "Visual designer",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 550.0,
+              "UnitBilling": 715.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 2,
+              "DisplayOrder": 2,
+              "ColorFormat": {
+                "A": 255,
+                "R": 173,
+                "G": 127,
+                "B": 168
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 4,
+              "Name": "Content writer 1",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 400.0,
+              "UnitBilling": 520.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 3,
+              "DisplayOrder": 3,
+              "ColorFormat": {
+                "A": 255,
+                "R": 206,
+                "G": 92,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 5,
+              "Name": "Content writer 2",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 400.0,
+              "UnitBilling": 520.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 4,
+              "DisplayOrder": 4,
+              "ColorFormat": {
+                "A": 255,
+                "R": 245,
+                "G": 121,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 6,
+              "Name": "Front-end developer 1",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 780.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 5,
+              "DisplayOrder": 5,
+              "ColorFormat": {
+                "A": 255,
+                "R": 78,
+                "G": 154,
+                "B": 6
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 7,
+              "Name": "Front-end developer 2",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 780.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 6,
+              "DisplayOrder": 6,
+              "ColorFormat": {
+                "A": 255,
+                "R": 115,
+                "G": 210,
+                "B": 22
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 8,
+              "Name": "Back-end developer",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 650.0,
+              "UnitBilling": 845.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 7,
+              "DisplayOrder": 7,
+              "ColorFormat": {
+                "A": 255,
+                "R": 196,
+                "G": 160,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 9,
+              "Name": "Test analyst",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 500.0,
+              "UnitBilling": 650.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 8,
+              "DisplayOrder": 8,
+              "ColorFormat": {
+                "A": 255,
+                "R": 204,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 10,
+              "Name": "DevOps engineer",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 650.0,
+              "UnitBilling": 845.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 9,
+              "DisplayOrder": 9,
+              "ColorFormat": {
+                "A": 255,
+                "R": 85,
+                "G": 87,
+                "B": 83
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 11,
+              "Name": "Legal adviser",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 900.0,
+              "UnitBilling": 1170.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 10,
+              "DisplayOrder": 10,
+              "ColorFormat": {
+                "A": 255,
+                "R": 46,
+                "G": 52,
+                "B": 54
+              },
+              "Trackers": []
+            }
+          ],
+          "DefaultUnitCost": 0.0,
+          "DefaultUnitBilling": 0.0,
+          "AreDisabled": false
+        },
+        "WorkStreamSettings": {
+          "WorkStreams": [
+            {
+              "Id": 1,
+              "Name": "Discovery",
+              "IsPhase": false,
+              "DisplayOrder": 0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 52,
+                "G": 101,
+                "B": 164
+              }
+            },
+            {
+              "Id": 2,
+              "Name": "Design",
+              "IsPhase": false,
+              "DisplayOrder": 1,
+              "ColorFormat": {
+                "A": 255,
+                "R": 117,
+                "G": 80,
+                "B": 123
+              }
+            },
+            {
+              "Id": 3,
+              "Name": "Content",
+              "IsPhase": false,
+              "DisplayOrder": 2,
+              "ColorFormat": {
+                "A": 255,
+                "R": 206,
+                "G": 92,
+                "B": 0
+              }
+            },
+            {
+              "Id": 4,
+              "Name": "Build",
+              "IsPhase": false,
+              "DisplayOrder": 3,
+              "ColorFormat": {
+                "A": 255,
+                "R": 78,
+                "G": 154,
+                "B": 6
+              }
+            },
+            {
+              "Id": 5,
+              "Name": "Quality",
+              "IsPhase": false,
+              "DisplayOrder": 4,
+              "ColorFormat": {
+                "A": 255,
+                "R": 204,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "Id": 6,
+              "Name": "Launch",
+              "IsPhase": false,
+              "DisplayOrder": 5,
+              "ColorFormat": {
+                "A": 255,
+                "R": 85,
+                "G": 87,
+                "B": 83
+              }
+            }
+          ]
+        },
+        "HolidaySettings": {
+          "Holidays": []
+        },
+        "Metrics": {
+          "Risks": {
+            "Criticality": 0.8277777777777777,
+            "Fibonacci": 0.761566885138854,
+            "Activity": 0.8136752136752137,
+            "ActivityStdDevCorrection": 0.6777777777777778,
+            "GeometricCriticality": 0.8001982866332159,
+            "GeometricFibonacci": 0.7178450941745383,
+            "GeometricActivity": 0.9245721432536346
+          },
+          "Costs": {
+            "Direct": 205100.0,
+            "Indirect": 58500.0,
+            "Other": 0.0,
+            "Total": 263600.0
+          },
+          "Billings": {
+            "Direct": 266630.0,
+            "Indirect": 76050.0,
+            "Other": 0.0,
+            "Total": 342680.0
+          },
+          "Margins": {
+            "Direct": 0.23076923076923078,
+            "Indirect": 0.23076923076923078,
+            "Other": 0.0,
+            "Total": 0.23076923076923078,
+            "DirectAbsolute": 61530.0,
+            "IndirectAbsolute": 17550.0,
+            "OtherAbsolute": 0.0,
+            "TotalAbsolute": 79080.0
+          },
+          "Efforts": {
+            "Direct": 360.0,
+            "Indirect": 90.0,
+            "Other": 0.0,
+            "Total": 450.0,
+            "Activity": 224.0,
+            "Efficiency": 0.49777777777777776
+          },
+          "Network": {
+            "CyclomaticComplexity": 24,
+            "Duration": 90,
+            "DurationManMonths": 4.142465753424657
+          }
+        },
+        "ResourceMetrics": [
+          {
+            "ResourceId": 11,
+            "ResourceName": "Legal adviser",
+            "Costs": {
+              "Direct": 4500.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 4500.0
+            },
+            "Billings": {
+              "Direct": 5850.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 5850.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 1350.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 1350.0
+            },
+            "Efforts": {
+              "Direct": 5.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 5.0,
+              "Activity": 5.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 10,
+            "ResourceName": "DevOps engineer",
+            "Costs": {
+              "Direct": 42250.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 42250.0
+            },
+            "Billings": {
+              "Direct": 54925.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 54925.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 12675.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 12675.0
+            },
+            "Efforts": {
+              "Direct": 65.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 65.0,
+              "Activity": 7.0,
+              "Efficiency": 0.1076923076923077
+            }
+          },
+          {
+            "ResourceId": 9,
+            "ResourceName": "Test analyst",
+            "Costs": {
+              "Direct": 10000.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 10000.0
+            },
+            "Billings": {
+              "Direct": 13000.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 13000.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 3000.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 3000.0
+            },
+            "Efforts": {
+              "Direct": 20.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 20.0,
+              "Activity": 14.0,
+              "Efficiency": 0.7
+            }
+          },
+          {
+            "ResourceId": 8,
+            "ResourceName": "Back-end developer",
+            "Costs": {
+              "Direct": 41600.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 41600.0
+            },
+            "Billings": {
+              "Direct": 54080.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 54080.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 12480.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 12480.0
+            },
+            "Efforts": {
+              "Direct": 64.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 64.0,
+              "Activity": 26.0,
+              "Efficiency": 0.40625
+            }
+          },
+          {
+            "ResourceId": 7,
+            "ResourceName": "Front-end developer 2",
+            "Costs": {
+              "Direct": 4800.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 4800.0
+            },
+            "Billings": {
+              "Direct": 6240.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 6240.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 1440.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 1440.0
+            },
+            "Efforts": {
+              "Direct": 8.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 8.0,
+              "Activity": 8.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 6,
+            "ResourceName": "Front-end developer 1",
+            "Costs": {
+              "Direct": 27000.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 27000.0
+            },
+            "Billings": {
+              "Direct": 35100.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 35100.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 8100.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 8100.0
+            },
+            "Efforts": {
+              "Direct": 45.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 45.0,
+              "Activity": 37.0,
+              "Efficiency": 0.8222222222222222
+            }
+          },
+          {
+            "ResourceId": 5,
+            "ResourceName": "Content writer 2",
+            "Costs": {
+              "Direct": 6400.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 6400.0
+            },
+            "Billings": {
+              "Direct": 8320.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 8320.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 1920.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 1920.0
+            },
+            "Efforts": {
+              "Direct": 16.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 16.0,
+              "Activity": 16.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 4,
+            "ResourceName": "Content writer 1",
+            "Costs": {
+              "Direct": 24000.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 24000.0
+            },
+            "Billings": {
+              "Direct": 31200.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 31200.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 7200.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 7200.0
+            },
+            "Efforts": {
+              "Direct": 60.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 60.0,
+              "Activity": 31.0,
+              "Efficiency": 0.5166666666666667
+            }
+          },
+          {
+            "ResourceId": 3,
+            "ResourceName": "Visual designer",
+            "Costs": {
+              "Direct": 18150.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 18150.0
+            },
+            "Billings": {
+              "Direct": 23595.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 23595.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 5445.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 5445.0
+            },
+            "Efforts": {
+              "Direct": 33.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 33.0,
+              "Activity": 33.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 2,
+            "ResourceName": "UX designer",
+            "Costs": {
+              "Direct": 26400.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 26400.0
+            },
+            "Billings": {
+              "Direct": 34320.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 34320.0
+            },
+            "Margins": {
+              "Direct": 0.23076923076923078,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 7920.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 7920.0
+            },
+            "Efforts": {
+              "Direct": 44.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 44.0,
+              "Activity": 31.0,
+              "Efficiency": 0.7045454545454546
+            }
+          },
+          {
+            "ResourceId": 1,
+            "ResourceName": "Project manager",
+            "Costs": {
+              "Direct": 0.0,
+              "Indirect": 58500.0,
+              "Other": 0.0,
+              "Total": 58500.0
+            },
+            "Billings": {
+              "Direct": 0.0,
+              "Indirect": 76050.0,
+              "Other": 0.0,
+              "Total": 76050.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.23076923076923078,
+              "Other": 0.0,
+              "Total": 0.23076923076923078,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 17550.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 17550.0
+            },
+            "Efforts": {
+              "Direct": 0.0,
+              "Indirect": 90.0,
+              "Other": 0.0,
+              "Total": 90.0,
+              "Activity": 16.0,
+              "Efficiency": 0.17777777777777778
+            }
+          }
+        ],
+        "SimulationSettings": {
+          "Iterations": 10000,
+          "Distribution": 0,
+          "ModifiedBetaShape": 4.0,
+          "Seed": 1,
+          "UseRandomSeed": false,
+          "TargetFinishTime": 96
+        },
+        "DisplaySettings": {
+          "ShowDates": true,
+          "UseClassicDates": false,
+          "NonWorkingDayMode": 1,
+          "HideCost": false,
+          "HideBilling": false,
+          "ArrowGraphShowNames": true,
+          "VertexGraphShowNames": false,
+          "ArrowGraphEdgeRoutingMode": 1,
+          "VertexGraphEdgeRoutingMode": 4,
+          "GanttChartGroupByMode": 1,
+          "GanttChartAnnotationStyle": 2,
+          "GanttChartShowGroupLabels": true,
+          "GanttChartShowProjectFinish": true,
+          "GanttChartShowTracking": true,
+          "GanttChartShowToday": false,
+          "GanttChartShowMilestones": false,
+          "GanttChartShowSlack": false,
+          "GanttChartShowNonWorkingDays": false,
+          "GanttChartShowConnections": [],
+          "ResourceChartAllocationMode": 0,
+          "ResourceChartScheduleMode": 0,
+          "ResourceChartDisplayStyle": 1,
+          "ResourceChartShowToday": false,
+          "ResourceChartShowMilestones": false,
+          "EarnedValueShowProjections": true,
+          "EarnedValueShowToday": false,
+          "EarnedValueShowMilestones": false,
+          "EarnedValueCombineResources": false,
+          "EarnedValueScaleToOwnPlan": false,
+          "EarnedValueShowResources": []
+        },
+        "ArrowGraphLayout": {
+          "Nodes": []
+        },
+        "VertexGraphLayout": {
+          "Nodes": []
+        }
+      }
+    }
+  ],
+  "Tags": [],
+  "DisplaySettings": {
+    "ProjectScenarioSortMode": 0,
+    "ProjectScenarioSortDirection": 0,
+    "ScenarioChartTrackedMetricXAxis": 1,
+    "ScenarioChartTrackedMetricY1Axis": 0,
+    "ScenarioChartTrackedMetricY2Axis": 0,
+    "ScenarioChartCurveFittingTypeY1": 0,
+    "ScenarioChartCurveFittingTypeY2": 0,
+    "ScenarioChartShowNamesY1": false,
+    "ScenarioChartShowNamesY2": false,
+    "ScenarioChartShowDerivativeY1": false,
+    "ScenarioChartShowDerivativeY2": false,
+    "ScenarioChartAbsoluteCurveFittingY1": false,
+    "ScenarioChartAbsoluteCurveFittingY2": false
+  }
+}

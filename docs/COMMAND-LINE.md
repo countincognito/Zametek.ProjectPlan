@@ -127,6 +127,7 @@ zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --s
 - With `--metrics-format json`, the statistics are one more object, `Simulation`, after the metrics. It has raw values, as the metrics have. The seed is text, because a seed can be larger than every reader of JSON reads without loss. A date is `yyyy-MM-dd`. A project with no result, and no `--run-simulation`, has the JSON that it had before there was a simulation.
 - A run can fail in two ways. The settings of the project can be ones that a run cannot use, for example no iterations or a shape value that is not above 0. Or the simulation cannot run, for example for a plan that has no activities. Then `zpp` writes the reason to the standard error stream and exits with code 1. A plan with no activities still has its metrics printed.
 - `zpp --server` sends the run to the server, and the server limits the iterations of a project that it runs (refer to [Limits](#limits)).
+- [Simulations on the server](CLIENT-SERVER-QUICK-START.md#simulations-on-the-server) is a tutorial with three sample plans of different sizes. It shows the progress of each simulation, and how simulations at the same time share the processors of a server.
 
 ## Exit codes
 
@@ -174,7 +175,7 @@ By default, the server listens on `http://localhost:9770`. Only the computer of 
 
 `zpp` can act as a client of a server and send its runs to it with the option `--server`. Each program that speaks HTTP can also send plan data to the server (refer to [The API](#the-api)).
 
-For a step-by-step guide, refer to the [Client-server quick start](SERVER.md). It shows `zpp serve` on Windows with HTTPS or on a Unix domain socket. It also shows `zpp` when it sends its runs to the server from a second window. It has sample plans to download.
+For a step-by-step guide, refer to the [Client-server quick start](CLIENT-SERVER-QUICK-START.md). It shows `zpp serve` on Windows with HTTPS or on a Unix domain socket. It also shows `zpp` when it sends its runs to the server from a second window. It has sample plans to download, and a tutorial for [simulations on the server](CLIENT-SERVER-QUICK-START.md#simulations-on-the-server).
 
 ### Send runs to a server
 
