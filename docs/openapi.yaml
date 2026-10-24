@@ -28,7 +28,7 @@ info:
     The API follows the [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), version 1.2. The guide asks that the description records each deviation. A deviation is a rule that the API does not follow, or an option that a rule gives to the API. The description gives the reason for each deviation ([DOC-2](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance),
     [section 0.5](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#05-deviations)):
 
-    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead.
+    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead. While a job runs, `GET /v1/jobs/{requestId}` tells how far it has got (ASY-2). The server keeps this status only for as long as the job runs.
     - [**REP-7**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#3-representations) - The costs, billings and margins in `metrics` are floating-point numbers. The engine calculates them in this way, and a project has no currency. They are estimates in the unit of the figures of the project, and not amounts of money. REP-7 lets such values be JSON numbers.
     - [**COL-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#51-the-collection-representation), [**COL-2**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) - `scenarios` and `outputs` are plain arrays and not paged `items`. They are bounded parts of what the caller sent, and not collections that the server holds. COL-1 says that a bounded array inside a representation is a plain array under a descriptive name.
     - [**ACT-4**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [**REQ-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#4-requests) - `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. A project is a file, and a file cannot go in a URL.
@@ -51,6 +51,8 @@ servers:
 tags:
   - name: Projects
     description: What the API does with a project.
+  - name: Jobs
+    description: A job that the server runs now.
   - name: Server
     description: Information about the server.
   - name: Probes
@@ -271,6 +273,59 @@ paths:
           $ref: '#/components/responses/OptionsGet'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /v1/jobs/{requestId}:
+    parameters:
+      - $ref: '#/components/parameters/RequestIdPath'
+    get:
+      operationId: getJob
+      tags: [Jobs]
+      summary: Ask how far a job that runs has got
+      description: |
+        This operation tells how far a job has got. The job is a request to compile a project, and its id is the id of the request: the
+        trace id that the request gave in its `traceparent`. The server answers the request when the job ends. A caller that waits for
+        the answer can ask here, as often as `Retry-After` says, how many iterations of the simulation have run.
+
+        The server keeps nothing of a job after it ends. Thus, a job that has not begun, and a job that has ended, have no status (`404`),
+        and the answer to the request of the job is the only word of its end. A request that has no `traceparent` has a trace id that the
+        server chooses, and the caller does not know it before the answer comes. This operation is not for such a request. The operation
+        does not use a place among the jobs. Thus, it answers also when all the jobs at one time run.
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: The job runs.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+              examples:
+                running:
+                  $ref: '#/components/examples/JobRunning'
+        '400':
+          $ref: '#/components/responses/MalformedRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    options:
+      operationId: optionsGetJob
+      tags: [Jobs]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes `GET`. It needs the API key, as the other operations under `/v1` do.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGetOnly'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/openapi:
     get:
       operationId: getDescription
@@ -416,6 +471,14 @@ components:
       schema:
         type: string
         pattern: '^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$'
+    RequestIdPath:
+      name: requestId
+      in: path
+      description: The id of the request that began the job. It is the trace id that the request gave in its `traceparent`.
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{32}$'
     IfNoneMatch:
       name: If-None-Match
       in: header
@@ -478,6 +541,18 @@ components:
           examples:
             unauthorized:
               $ref: '#/components/examples/Unauthorized'
+    NotFound:
+      description: No job with this id runs now. It has not begun, or it has ended.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            jobNotRunning:
+              $ref: '#/components/examples/JobNotRunning'
     NotAcceptable:
       description: '`Accept` offers nothing that the operation can answer with. `detail` says what it can answer with.'
       headers:
@@ -590,6 +665,17 @@ components:
           schema:
             type: string
             const: GET, HEAD, OPTIONS
+    OptionsGetOnly:
+      description: What the endpoint takes.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Allow:
+          description: The methods it takes.
+          required: true
+          schema:
+            type: string
+            const: GET, OPTIONS
     OptionsPost:
       description: What the endpoint takes.
       headers:
@@ -804,6 +890,24 @@ components:
           maxSimulationIterations: 100000
           jobTimeout: PT2M
           maxCompileTimeout: PT1M
+    JobRunning:
+      summary: A simulation that has run 2,340 of its 5,000 iterations
+      value:
+        id: 4bf92f3577b34da6a3ce929d0e0e4736
+        state: running
+        startedAt: '2026-10-18T09:00:00+01:00'
+        elapsed: PT12.5S
+        progress:
+          done: 2340
+          total: 5000
+    JobNotRunning:
+      summary: A job that has not begun, or that has ended
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.5
+        title: Not Found
+        status: 404
+        detail: No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it.
+        traceId: 8c2b5e1d0f4a47b69a3e7d51c0f2a9b4
     MalformedRequest:
       summary: Options that are not JSON, and an `include` value that the server does not know
       value:
@@ -1122,6 +1226,11 @@ components:
         `simulationPaths`, `simulationActivities` and `simulationIterations`). They are made from the result of the run of the request
         (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
         project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
+
+        The output `simulationWorkbook` is the same result as one Excel workbook: a sheet for the settings and for each of the CSV files
+        above (`Simulation Settings`, `Simulation Statistics`, `Simulation Percentiles`, `Simulation Histogram`, `Simulation Paths`
+        and `Simulation Criticalities`), and, for a run, the sheet `Simulation Iterations`. It is an output of its own, and a request can
+        ask for it with or without `simulation`. A project that holds no result, with no run, is the same problem.
       type: object
       additionalProperties: false
       properties:
@@ -1143,6 +1252,8 @@ components:
           $ref: '#/components/schemas/ChartOptions'
         simulation:
           $ref: '#/components/schemas/ChartOptions'
+        simulationWorkbook:
+          $ref: '#/components/schemas/OutputWithoutSettings'
     OutputWithoutSettings:
       description: An output with no settings at this time. The request gives it as an empty object, which can carry settings later.
       type: [object, 'null']
@@ -1388,6 +1499,7 @@ components:
             - simulationPaths
             - simulationActivities
             - simulationIterations
+            - simulationWorkbook
         fileName:
           type: string
           description: The name that `zpp` gives to the file.
@@ -1465,6 +1577,42 @@ components:
           description: |
             Shows if the scenario is the current scenario of the project. This is the scenario that was open when a user saved the project.
             `zpp` loads it when the request does not name a scenario. A project has a maximum of one current scenario.
+    JobStatus:
+      description: |
+        A job that the server runs now. The server has a status for a job only while the job runs, and thus `state` has one value.
+      type: object
+      required: [id, state, startedAt, elapsed, progress]
+      properties:
+        id:
+          $ref: '#/components/schemas/TraceId'
+          description: The id of the job. It is the id of the request that began it.
+        state:
+          type: string
+          enum: [running]
+        startedAt:
+          type: string
+          format: date-time
+          description: When the server began the job.
+        elapsed:
+          $ref: '#/components/schemas/Duration'
+          description: The time since the server began the job.
+        progress:
+          description: How far the job has got in the simulation. It is `null` when the job does not run a simulation, and before the simulation begins.
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/JobProgress'
+    JobProgress:
+      type: object
+      required: [done, total]
+      properties:
+        done:
+          type: integer
+          minimum: 0
+          description: The iterations that have run.
+        total:
+          type: integer
+          minimum: 1
+          description: The iterations that the simulation has.
     InfoResponse:
       type: object
       required: [version, culture, timeZone, limits]

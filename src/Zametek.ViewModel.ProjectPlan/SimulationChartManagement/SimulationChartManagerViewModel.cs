@@ -78,6 +78,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             ];
 
+        private static readonly IList<IFileFilter> s_WorkbookExportFileFilters =
+            [
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ExcelFileType,
+                    Patterns = [Resource.ProjectPlan.Filters.Filter_ExcelXlsxFilePattern]
+                }
+            ];
+
         // The shape value that the modified beta-PERT distribution has when the user does not change it: the usual 4.
         private const double c_DefaultModifiedBetaShape = 4.0;
 
@@ -223,6 +232,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 ExportCsvFilesCommand = exportCsvFilesCommand;
             }
 
+            {
+                ReactiveCommand<RxVoid, RxVoid> exportWorkbookCommand = ReactiveCommand.CreateFromTask(ExportWorkbookAsync, ForTheUiThread(this.WhenAnyValue(ssm => ssm.HasResult)));
+                ExportWorkbookCommand = exportWorkbookCommand;
+            }
+
             Id = Resource.ProjectPlan.Titles.Title_SimulationChart;
             Title = Resource.ProjectPlan.Titles.Title_SimulationChart;
         }
@@ -302,7 +316,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return null;
         }
 
-        private void ReportProgress(int done, int total, Stopwatch stopwatch)
+        private void ReportProgress(int done, int total, Stopwatch stopwatch, IProgress<int>? observer)
         {
             long now = Stopwatch.GetTimestamp();
             long last = Interlocked.Read(ref m_LastProgressTicks);
@@ -329,6 +343,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 FormatDuration(remaining));
 
             SetStatus(fraction, text);
+
+            // The caller who asked to be told is told as often as the panel is. It runs on a thread of the simulation, and so
+            // whatever it does must not stop the run.
+            if (observer is not null)
+            {
+                try
+                {
+                    observer.Report(done);
+                }
+                catch (Exception ex)
+                {
+                    m_Logger.LogDebug(ex, "Simulation: the observer of the progress failed");
+                }
+            }
 
             // Rarely, and not at the end, which the log says in its own words.
             long lastLog = Interlocked.Read(ref m_LastLogTicks);
@@ -378,7 +406,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             SimulationInputModel input = m_CoreViewModel.CaptureSimulationInput();
 
-            // The plan is scheduled with the builder of the application, which is the builder that a compile uses. A
+            // The plan is scheduled with the builders of the application, and the first check of the plan is a compile by
+            // the compiler of the application. These are the builders and the compiler that a compile uses. A
             // simulation then schedules in the same way as the compile does, also when the builder has other engines.
             // The activities are copies of the ones that a compile takes (see CaptureSimulationInput), so they have
             // the activity type of the application.
@@ -387,7 +416,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 input.Resources,
                 input.WorkStreams,
                 input.Estimates,
-                VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder);
+                new VertexGraphFactory());
 
             if (simulator.CompilationErrors.Count > 0)
             {
@@ -400,7 +429,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 result,
                 input.ActivityNames,
                 simulator.PlannedFinishTime,
-                targetFinishTime);
+                targetFinishTime,
+                settings);
 
             return new SimulationOutcome(result, summary, input.ActivityNames, input.CompilationOutputRevision);
         }
@@ -466,6 +496,16 @@ namespace Zametek.ViewModel.ProjectPlan
             var statistics = new List<SimulationStatisticModel>();
 
             void Add(string name, string value) => statistics.Add(new SimulationStatisticModel { Name = name, Value = value });
+
+            // How the run was set up comes first. The settings of the scenario can be other than these, because a person can
+            // change them after the run, and so the result says which values made it.
+            Add(Resource.ProjectPlan.Labels.Label_SimulationSeed, summary.Seed.ToString(CultureInfo.CurrentCulture));
+            Add(Resource.ProjectPlan.Labels.Label_SimulationDistribution, StringConverters.DurationDistributionValue(summary.Distribution));
+
+            if (summary.ModifiedBetaShape is double shape)
+            {
+                Add(Resource.ProjectPlan.Labels.Label_SimulationShape, shape.ToString(CultureInfo.CurrentCulture));
+            }
 
             Add(
                 Resource.ProjectPlan.Labels.Label_SimulationIterationCount,
@@ -618,6 +658,68 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The result as one workbook, in the file that the user chooses.
+        private async Task ExportWorkbookAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    if (Summary is null)
+                    {
+                        return;
+                    }
+                }
+
+                string title = m_SettingService.ProjectTitle;
+                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+                string outputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_SimulationWorkbook}.{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}";
+                string directory = m_SettingService.ProjectDirectory;
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(outputFile, directory, s_WorkbookExportFileFilters);
+
+                if (string.IsNullOrWhiteSpace(filename))
+                {
+                    return;
+                }
+
+                await Task.Run(() => FileStreamHelper.Save(filename, stream => WriteWorkbook(stream)));
+
+                await m_DialogService.ShowInfoAsync(
+                    Resource.ProjectPlan.Titles.Title_SimulationChart,
+                    string.Empty,
+                    string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationWorkbookSaved, filename));
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        // The result as one workbook: the settings of the scenario, the result, and the iterations when this session made the result.
+        private void WriteWorkbook(Stream stream)
+        {
+            SimulationSummaryModel? summary;
+            SimulationResult<int>? result;
+            IReadOnlyDictionary<int, string> names;
+
+            lock (m_Lock)
+            {
+                summary = Summary;
+                result = ReferenceEquals(m_ResultSummary, summary) ? m_Result : null;
+                names = m_ActivityNames;
+            }
+
+            if (summary is null)
+            {
+                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
+            }
+
+            SimulationWorkbook.Write(stream, m_CoreViewModel.SimulationSettings, summary, result, names, m_DateTimeCalculator.GetLocalNow());
+        }
+
         // One CSV file, as the panel saves it. A byte order mark leads, so that Excel reads the names of the activities as
         // UTF-8.
         private static void WriteCsv(
@@ -749,6 +851,21 @@ namespace Zametek.ViewModel.ProjectPlan
             set => TargetFinishTime = value is DateTimeOffset date ? DaysOfFinishDate(date) : null;
         }
 
+        private int m_MaxDegreeOfParallelism = -1;
+        public int MaxDegreeOfParallelism
+        {
+            get => Volatile.Read(ref m_MaxDegreeOfParallelism);
+            set
+            {
+                if (value < -1 || value == 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, Resource.ProjectPlan.Messages.Message_SimulationThreadsOutOfRange);
+                }
+
+                Volatile.Write(ref m_MaxDegreeOfParallelism, value);
+            }
+        }
+
         private bool m_IsRunning;
         public bool IsRunning
         {
@@ -810,6 +927,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ExportCsvFilesCommand { get; }
 
+        public ICommand ExportWorkbookCommand { get; }
+
         public Task RunSimulationAsync()
         {
             return RunSimulationAsync(CancellationToken.None);
@@ -817,17 +936,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public Task RunSimulationAsync(CancellationToken cancellationToken)
         {
-            return RunAsync(cancellationToken, useSavedSeed: false);
+            return RunAsync(cancellationToken, useSavedSeed: false, observer: null);
         }
 
-        public Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken)
+        public Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
-            return RunAsync(cancellationToken, useSavedSeed: true);
+            return RunAsync(cancellationToken, useSavedSeed: true, progress);
         }
 
         private async Task RunAsync(
             CancellationToken cancellationToken,
-            bool useSavedSeed)
+            bool useSavedSeed,
+            IProgress<int>? observer)
         {
             // One run at a time. A second request while a run is in progress does nothing.
             if (Interlocked.CompareExchange(ref m_RunGate, 1, 0) != 0)
@@ -880,6 +1000,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         : c_DefaultModifiedBetaShape,
                     RecordCriticalActivities = true,
                     RecordCriticalPaths = true,
+                    MaxDegreeOfParallelism = MaxDegreeOfParallelism,
                 };
                 int? target = TargetFinishTime;
 
@@ -891,14 +1012,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 Interlocked.Exchange(ref m_LastProgressTicks, 0);
 
                 m_Logger.LogInformation(
-                    "Simulation: {Iterations} iterations, seed {Seed}, {Distribution}",
+                    "Simulation: {Iterations} iterations, seed {Seed}, {Distribution}, {Threads} threads",
                     settings.Iterations,
                     settings.Seed,
-                    settings.Distribution);
+                    settings.Distribution,
+                    settings.MaxDegreeOfParallelism < 0 ? Environment.ProcessorCount : settings.MaxDegreeOfParallelism);
 
                 var stopwatch = Stopwatch.StartNew();
                 Interlocked.Exchange(ref m_LastLogTicks, Stopwatch.GetTimestamp());
-                var progress = new CallbackProgress(done => ReportProgress(done, settings.Iterations, stopwatch));
+                var progress = new CallbackProgress(done => ReportProgress(done, settings.Iterations, stopwatch, observer));
                 CancellationToken token = cancellation.Token;
 
                 SimulationOutcome outcome = await Task.Run(() => Simulate(settings, target, progress, token), token);
@@ -1011,6 +1133,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             WriteCsv(stream, file, summary, result, names);
+            return Task.CompletedTask;
+        }
+
+        public Task WriteSimulationWorkbookAsync(Stream stream)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+
+            WriteWorkbook(stream);
             return Task.CompletedTask;
         }
 

@@ -27,14 +27,28 @@ namespace Zametek.Engine.ProjectPlan
 
         private readonly IServiceScopeFactory m_ScopeFactory;
 
+        // The processors, shared by the simulations that the jobs of this runner run at one time.
+        private readonly SimulationProcessorShare m_ProcessorShare;
+
         #endregion
 
         #region Ctors
 
         public JobRunner(IServiceScopeFactory scopeFactory)
+            : this(scopeFactory, new SimulationProcessorShare())
+        {
+        }
+
+        // A runner whose jobs share the processors as the given share says. A test uses it to share fewer, or more, than the
+        // machine has.
+        internal JobRunner(
+            IServiceScopeFactory scopeFactory,
+            SimulationProcessorShare processorShare)
         {
             ArgumentNullException.ThrowIfNull(scopeFactory);
+            ArgumentNullException.ThrowIfNull(processorShare);
             m_ScopeFactory = scopeFactory;
+            m_ProcessorShare = processorShare;
         }
 
         #endregion
@@ -91,7 +105,7 @@ namespace Zametek.Engine.ProjectPlan
             dialogService.Sink = sink;
             services.GetRequiredService<JobClock>().Now = request.Now;
 
-            return await RunAsync(request, sink, dialogService, services, cancellationToken);
+            return await RunAsync(request, sink, dialogService, services, m_ProcessorShare, cancellationToken);
         }
 
         #endregion
@@ -142,6 +156,7 @@ namespace Zametek.Engine.ProjectPlan
             IJobSink sink,
             JobDialogService dialogService,
             IServiceProvider services,
+            SimulationProcessorShare processorShare,
             CancellationToken cancellationToken)
         {
             // The view models are resolved and never started (see IStartSubscriptions): a job invokes every build
@@ -255,7 +270,17 @@ namespace Zametek.Engine.ProjectPlan
                 simulation = services.GetRequiredService<ISimulationChartManagerViewModel>();
                 SimulationSummaryModel? earlier = core.SimulationSummary;
 
-                await simulation.RunSimulationWithSavedSeedAsync(cancellationToken);
+                // The threads of the run: those the request limits it to, or else its share of the processors with the other
+                // simulations that run now. The result is the same for any number of them.
+                using SimulationProcessorShare.Lease share = processorShare.Begin();
+                simulation.MaxDegreeOfParallelism = request.MaximumSimulationThreads ?? share.Threads;
+
+                int iterations = core.SimulationSettings.Iterations;
+                IProgress<int>? progress = request.Progress is IProgress<JobProgress> observer
+                    ? new IterationProgress(done => observer.Report(new JobProgress(done, iterations)))
+                    : null;
+
+                await simulation.RunSimulationWithSavedSeedAsync(cancellationToken, progress);
 
                 // A run that was cancelled has no result, and the job stops with it. A run that failed has told the dialog
                 // service why, and the result that the scenario had before it is not the result of this job.
@@ -421,7 +446,7 @@ namespace Zametek.Engine.ProjectPlan
             if (simulation is not null
                 && hasSimulationResult)
             {
-                simulationMetrics = JobSimulationMetrics.From(simulation, core.SimulationSettings);
+                simulationMetrics = JobSimulationMetrics.From(simulation);
 
                 if (request.SimulationChart is ChartOutputRequest simulationChart)
                 {
@@ -451,6 +476,18 @@ namespace Zametek.Engine.ProjectPlan
                             stream => simulation.WriteSimulationCsvAsync(stream, file),
                             cancellationToken);
                     }
+                }
+
+                if (request.SimulationWorkbook)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    await WriteReportedOutputAsync(
+                        dialogService,
+                        sink,
+                        JobOutput.SimulationWorkbook,
+                        stream => simulation.WriteSimulationWorkbookAsync(stream),
+                        cancellationToken);
                 }
             }
 
@@ -490,6 +527,12 @@ namespace Zametek.Engine.ProjectPlan
                     throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationShapeOutOfRange, SimulationFailure.InvalidSettings);
                 }
 
+                if (request.MaximumSimulationThreads is int threads
+                    && (threads < -1 || threads == 0))
+                {
+                    throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationThreadsOutOfRange, SimulationFailure.InvalidSettings);
+                }
+
                 if (request.MaximumSimulationIterations is int maximum
                     && settings.Iterations > maximum)
                 {
@@ -501,11 +544,25 @@ namespace Zametek.Engine.ProjectPlan
                 return;
             }
 
-            if ((request.SimulationChart is not null || request.SimulationCsvFiles != SimulationCsvFile.None)
+            if ((request.SimulationChart is not null || request.SimulationCsvFiles != SimulationCsvFile.None || request.SimulationWorkbook)
                 && core.SimulationSummary is null)
             {
                 throw new SimulationException(Resource.ProjectPlan.Messages.Message_SimulationOutputsNeedAResult, SimulationFailure.NoResult);
             }
+        }
+
+        // The iterations that have run, as a callback: Progress<T> would post them to the context that made it.
+        private sealed class IterationProgress
+            : IProgress<int>
+        {
+            private readonly Action<int> m_Callback;
+
+            public IterationProgress(Action<int> callback)
+            {
+                m_Callback = callback;
+            }
+
+            public void Report(int value) => m_Callback(value);
         }
 
         private static async Task WriteChartAsync(

@@ -2906,7 +2906,7 @@
     {
       "SlackLimit": 10,
       "CriticalityWeight": 3.0,
-      "FibonacciWeight": 2.618033988749895,
+      "FibonacciWeight": 2.61803398874989,
       "ColorFormat": {
         "A": 255,
         "R": 255,
@@ -2917,7 +2917,7 @@
     {
       "SlackLimit": 25,
       "CriticalityWeight": 2.0,
-      "FibonacciWeight": 1.618033988749895,
+      "FibonacciWeight": 1.61803398874989,
       "ColorFormat": {
         "A": 255,
         "R": 255,
@@ -3009,6 +3009,9 @@
   },
   "SimulationSummary": {
     "IterationCount": 1234,
+    "Seed": 18446744073709551606,
+    "Distribution": "ModifiedBetaPert",
+    "ModifiedBetaShape": 3.25,
     "ValidIterationCount": 1200,
     "FailedIterationCount": 34,
     "PlannedFinishTime": 60,
@@ -3038,7 +3041,7 @@
         "PathGroupWeights": [
           6.5,
           3.5,
-          0.30000000000000004
+          0.3
         ]
       },
       {

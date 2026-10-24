@@ -125,6 +125,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 MaximumSimulationIterations = limits.MaxSimulationIterations,
                 SimulationChart = ToChartOutputRequest(outputs.Simulation),
                 SimulationCsvFiles = outputs.Simulation is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
+                SimulationWorkbook = outputs.SimulationWorkbook is not null,
             };
         }
 
@@ -146,6 +147,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 EarnedValueChart = ToChartOptions(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOptions(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
                 Simulation = ToChartOptions(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
+                SimulationWorkbook = options.SimulationWorkbookDirectory is not null ? new SimulationWorkbookOptions() : null,
             };
 
             return new CompileOptions
@@ -190,6 +192,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 AddIf(requested, outputs.Simulation, JobOutput.SimulationIterations);
             }
 
+            AddIf(requested, outputs.SimulationWorkbook, JobOutput.SimulationWorkbook);
+
             return requested;
         }
 
@@ -222,6 +226,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 JobOutput.SimulationPaths => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths),
                 JobOutput.SimulationActivities => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities),
                 JobOutput.SimulationIterations => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations),
+                JobOutput.SimulationWorkbook => $@"{projectTitle}{Resource.ProjectPlan.Suffixes.Suffix_SimulationWorkbook}.{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}",
                 _ => throw new ArgumentOutOfRangeException(nameof(output), output, null),
             };
         }
@@ -345,6 +350,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ChartOptions? earnedValueChart = null;
             ChartOptions? scenarioChart = null;
             ChartOptions? simulation = null;
+            SimulationWorkbookOptions? simulationWorkbook = null;
 
             foreach (JsonProperty member in value.EnumerateObject())
             {
@@ -379,6 +385,9 @@ namespace Zametek.ProjectPlan.CommandLine
                     case @"simulation":
                         simulation = ReadChart(member.Value, memberPointer, limits, problems);
                         break;
+                    case @"simulationWorkbook":
+                        simulationWorkbook = ReadEmptyObject(member.Value, memberPointer, problems) ? new SimulationWorkbookOptions() : null;
+                        break;
                     default:
                         problems.AddInvalid(Error(memberPointer, ProblemCodes.UnknownProperty, Resource.ProjectPlan.Messages.Message_ServeErrorNotKnown));
                         break;
@@ -396,6 +405,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 EarnedValueChart = earnedValueChart,
                 ScenarioChart = scenarioChart,
                 Simulation = simulation,
+                SimulationWorkbook = simulationWorkbook,
             };
         }
 

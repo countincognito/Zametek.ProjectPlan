@@ -36,6 +36,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // The chart of the simulation and its CSV files go to one directory, and a request asks for them with one output.
             [@"outputs.simulation"] = [@"simulation-directory", @"simulation-format", @"simulation-size"],
+
+            // The workbook of the simulation has a directory of its own, and a request asks for it with an output of its own.
+            [@"outputs.simulationWorkbook"] = [@"simulation-workbook-directory"],
         };
 
         // The options of zpp's that a request does not carry: the plan is its own part, a listing is its own endpoint, the
@@ -69,11 +72,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Webp, Width = 320, Height = 240 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Bmp, Width = 100, Height = 50 },
                     Simulation = new ChartOptions { Format = PlotExport.Png, Width = 400, Height = 300 },
+                    SimulationWorkbook = new SimulationWorkbookOptions(),
                 },
             });
 
             json.ShouldBe(
-                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulation":{"format":"png","width":400,"height":300}}}""");
+                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulation":{"format":"png","width":400,"height":300},"simulationWorkbook":{}}}""");
         }
 
         [Fact]

@@ -38,6 +38,12 @@ namespace Zametek.Contract.ProjectPlan
         // finishes on that date or after it.
         DateTimeOffset? TargetFinishDate { get; set; }
 
+        // The most threads that a run uses, or -1 (the default) for as many as the machine has processors. The value 0 and
+        // values below -1 are refused. It is not a setting of the scenario, because it depends on the machine and not on the
+        // plan, and because the result does not depend on it: the same seed gives the same result for any number of threads.
+        // A host that runs several simulations at one time (zpp serve) gives each of them a share of the processors.
+        int MaxDegreeOfParallelism { get; set; }
+
         // The state of a run.
 
         bool IsRunning { get; }
@@ -72,6 +78,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ExportCsvFilesCommand { get; }
 
+        ICommand ExportWorkbookCommand { get; }
+
         // Runs a simulation of a copy of the plan, on the task pool, and presents the result. A second call
         // while a run is in progress does nothing.
         Task RunSimulationAsync();
@@ -81,8 +89,10 @@ namespace Zametek.Contract.ProjectPlan
         Task RunSimulationAsync(CancellationToken cancellationToken);
 
         // The same, with the seed that the scenario has saved, also when "New seed each run" is set: the settings of the
-        // scenario are not changed, and the run repeats. A caller that runs a saved scenario (zpp does) uses this one.
-        Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken);
+        // scenario are not changed, and the run repeats. A caller that runs a saved scenario (zpp does) uses this one. The
+        // progress, if there is one, is told how many iterations have run, about ten times a second at most, from any thread,
+        // and a last time when they all have. The panel has its own progress bar and does not use it.
+        Task RunSimulationWithSavedSeedAsync(CancellationToken cancellationToken, IProgress<int>? progress = null);
 
         void CancelSimulation();
 
@@ -96,6 +106,11 @@ namespace Zametek.Contract.ProjectPlan
         // panel saves: UTF-8 with a byte order mark. It is an error to ask for more than one file, or for a result that
         // does not exist.
         Task WriteSimulationCsvAsync(Stream stream, SimulationCsvFile file);
+
+        // Writes the last result to the stream as one Excel workbook, which is left open: a sheet for the settings, the statistics,
+        // the percentiles, the histogram, the critical paths and the criticalities, which are the sheets of the Excel export of a
+        // scenario, and, for a run in this session, a sheet for the iterations. It is an error to ask for a result that does not exist.
+        Task WriteSimulationWorkbookAsync(Stream stream);
 
         // Presents the result that the scenario holds: the statistics, the tables and the chart. A run does this when it ends,
         // and the panel when the display settings change. A caller that has no running panel, and wants the statistics of a

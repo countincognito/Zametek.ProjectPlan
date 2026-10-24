@@ -6,16 +6,18 @@
 extends: ["spectral:oas"]
 
 rules:
-  # URI-1, URI-2: lower-case words, which hyphens may join, between slashes; no trailing slash, no extension.
+  # URI-1, URI-2: lower-case words, which hyphens may join, between slashes; no trailing slash, no extension. A segment can also be a
+  # template variable in braces, in lowerCamelCase as the guide writes it (section 0.2: /stations/{stationId}). The braces are in
+  # character classes, so that the pattern needs no escape in a YAML string.
   zpp-path-lower-case:
-    description: A path is made of lower-case words between slashes, with no trailing slash and no extension.
+    description: A path is made of lower-case words or template variables between slashes, with no trailing slash and no extension.
     message: "{{property}} is not a lower-case path"
     severity: error
     given: "$.paths[*]~"
     then:
       function: pattern
       functionOptions:
-        match: "^(/[a-z0-9]+(-[a-z0-9]+)*)+$"
+        match: "^(/([a-z0-9]+(-[a-z0-9]+)*|[{][a-z][a-zA-Z0-9]*[}]))+$"
 
   # REP-4: the names of members are lowerCamelCase.
   zpp-property-lower-camel-case:

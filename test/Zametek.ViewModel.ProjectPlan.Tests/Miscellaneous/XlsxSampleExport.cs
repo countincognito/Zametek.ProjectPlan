@@ -52,9 +52,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     UseRandomSeed = false,
                     TargetFinishTime = 77,
                 },
+                // The run that made the result used other values than the settings have now: the person changed them after it.
                 SimulationSummary = new SimulationSummaryModel
                 {
                     IterationCount = 1234,
+                    Seed = ulong.MaxValue - 9,
+                    Distribution = Zametek.Maths.Graphs.DurationDistribution.ModifiedBetaPert,
+                    ModifiedBetaShape = 3.25,
                     ValidIterationCount = 1200,
                     FailedIterationCount = 34,
                     PlannedFinishTime = 60,

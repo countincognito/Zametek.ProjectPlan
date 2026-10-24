@@ -167,7 +167,7 @@ The team stops after each phase for a review.
 | --- | --- | --- |
 | 0 | Measure the cost of one iteration. Prototype a lean path. Check the prototype against the reference tool. Decide the default iteration count. | Library and this repository |
 | 1 | The estimates: the new file format, the rules, the grid and the dialog, the imports and the export. | This repository |
-| 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (not published). | Library |
+| 2 | The simulation core, the random number generator and the samplers, with tests, then release 3.3.0 and the Rust port. Done (published). | Library |
 | 3 | The desktop panel. Done (not pushed). | This repository |
 | 4 | The options of `zpp`, then the API of `zpp serve`, with the documentation. Done (not pushed). | This repository |
 | 5 | The three docks, the title bar, the saving in the file and in Excel, and the new options of `zpp` and the API. Done (not pushed). | This repository |
@@ -272,7 +272,7 @@ The proposal for the number of iterations is 5,000 by default. The expected time
 
 ## Phase 2: the results
 
-Phase 2 finished on 2026-10-16. All the work is in the library repository, on the branch `mc-sim`, in the commits `e5a952c` (random numbers and samplers), `c6a68c9` (the simulator), `f239d36` (whole simulations in the baseline) and `df644cb` (the Rust port, the documentation and the version 3.3.0). Nothing is published. The version is 3.3.0 in the library, and this repository reads the library source through a local file that git ignores (refer to [Reading the library source](#reading-the-library-source)).
+Phase 2 finished on 2026-10-16. All the work is in the library repository, on the branch `mc-sim`, in the commits `e5a952c` (random numbers and samplers), `c6a68c9` (the simulator), `f239d36` (whole simulations in the baseline) and `df644cb` (the Rust port, the documentation and the version 3.3.0). Nothing is published. The version is 3.3.0 in the library, and this repository reads the library source through a local file that git ignores (refer to [Reading the library source](#reading-the-library-source)). The library published version 3.3.0 later. The application now uses version 4.0.0 (refer to [The application uses version 4.0.0 of the library](#the-application-uses-version-400-of-the-library)).
 
 ### What the library has now
 
@@ -295,7 +295,9 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 
 ### Reading the library source
 
-The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages. Before this work merges, the packages must be published at 3.3.0, and the two package references must change to that version.
+The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages.
+
+The maintainer published the packages, and the two package references use version 4.0.0. Use the local file only for a change that needs a version of the library that nobody has published.
 
 ## Phase 3: the results
 
@@ -362,6 +364,8 @@ Phase 4 finished on 2026-10-16. All the work is in this repository, on the branc
 - One job uses all the processors for its iterations. A server that runs many simulations at one time asks the pool for more threads than it has processors. The result does not change, but the jobs slow each other. The limit of iterations and the job time bound the cost.
 - The cancel of `zpp` (Ctrl+C) kills the process and does not cancel the job.
 
+The last three items are done. [Work after phase 5](#work-after-phase-5) says how: the progress of a job that the client can ask about, a share of the processors for each simulation, and Ctrl+C that stops a run.
+
 ## Phase 5: the results
 
 Phase 5 finished on 2026-10-16. All the work is in this repository, on the branch `mc-sim`. It has six steps, and each step is a commit: `255c545c` (the title bar), `b6bab7a7` (the settings and the result in the scenario and in the file), `40a9aff2` (the three docks), `6d848a1b` (Excel), `4e98d8fe` (`zpp` and `zpp serve`) and the commit that holds this section. Nothing is pushed.
@@ -410,12 +414,104 @@ The maintainer looked at the docks in the application and asked for changes. The
 ### What is not done
 
 - Nobody has looked at the three docks in the running application. A headless render of each view looks right. A person must look at them with the real theme, and at the layout of the docks.
-- A saved result does not say which seed, distribution and shape value made it. The statistics that `zpp` prints for a saved result use the settings that the project holds, and a person can change them after the run. [TODO](TODO.md) has an entry.
 - A project does not hold the iterations of a run. The file of the iterations needs a run.
+- A job cannot make only some of the CSV files of a simulation. At the end of phase 4, the API had an output for each file. Phase 5 replaced them with the one output `simulation`, which makes the chart and all the files. [TODO](TODO.md) has an entry.
+
+## Work after phase 5
+
+The maintainer chose these items from the list of the known gaps on 2026-10-18. Each item is a commit of its own.
+
+### The result keeps how the run was set up
+
+A result that a project held did not say which seed, distribution and shape value made it. The statistics that `zpp` and the API gave for it came from the settings of the project. A person can change the settings after a run and save the project. Then the statistics named a seed that did not make the numbers next to it.
+
+- **Where.** `SimulationSummaryModel` has `Seed`, `Distribution` and `ModifiedBetaShape`. `SimulationAnalyzer.Analyze` takes the settings of the run and copies the three values. The project file (v0.6.2) holds them, in the same record as the statistics.
+- **The shape value is null when the distribution has none.** The settings always have a shape value, but only the modified beta-PERT distribution uses it. The result has the value only for that distribution.
+- **Excel.** The sheet "Simulation Statistics" has the columns `Seed` (as text, as in the sheet of the settings), `Distribution` and `ModifiedBetaShape` after `FailedIterationCount`. A workbook from before these columns has the settings of the scenario in their place. The import finds a column by its title, and so the other columns do not move.
+- **CSV.** The statistics file has the rows `Seed`, `Distribution` and, for the modified beta-PERT, `ModifiedBetaShape`, after `FailedIterations`. They are there also when every iteration failed.
+- **The statistics of the panel.** The panel shows the seed, the distribution and the shape value first, with the values of the result. `zpp` and the server print the same lines, because they print the statistics of the panel. The line for the shape value is new, and it shows only for the modified beta-PERT.
+- **The job.** `JobSimulationMetrics` takes the values from the result. Thus a job that loads a project, gives other settings and does not run reports the seed that made the result.
+- **The golden files.** The workbook `sample-simulation.xlsx` and its snapshot have the new columns. The other two workbooks did not change, and they are still the files that an older release wrote.
+
+### One Excel workbook for the files of a simulation
+
+A person who wants the files of a simulation had to keep and send five CSV files. The Excel export of the scenario already wrote six sheets of the result, and the TODO list had an entry to explore one workbook for the simulation.
+
+- **The decisions.** The workbook is an output of its own, `simulationWorkbook` (the option `--simulation-workbook-directory` of `zpp`, and the file `<name>-simulation.xlsx`). It is independent of `simulation`: a request can ask for the chart with the CSV files, for the workbook, or for both. The workbook does not replace the CSV files, because a script that reads them must still work. The desktop has a new item in the menu of the chart, "Export Workbook...".
+- **The sheets.** The workbook has the sheets that the Excel export of a scenario writes for the simulation ("Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities"), written by the same code (`XlsxSimulationSheets`), and so the two cannot differ. A test compares them. A run also has the sheet "Simulation Iterations" (the number, the finish time, and the critical paths of each iteration, as in the CSV file). A project does not hold the iterations, and so the workbook of a result that a project held has six sheets. The import of a scenario does not read the sheet of the iterations, and it is not in the workbook of a scenario.
+- **The limits of Excel.** A sheet has 1,048,576 rows, and a run has at most 1,000,000 iterations. They fit, with the row of the titles. The code refuses a result that does not fit, if the maximum of the iterations ever grows. A cell holds 32,767 characters. The critical paths of an iteration, and the labels of the paths in "Simulation Paths", can have more for a very large plan. The text is then cut and ends with an ellipsis. The Excel export of a scenario failed with an exception for such a label before this change.
+- **The cost.** The measurement used a build for debugging on four processors, a workbook made in memory (as every workbook of the application is), and paths of about 30 steps:
+
+| Iterations | Activities | Paths | Time, in seconds | Size of the file, in MB | Peak memory of the process, in MB |
+| --- | --- | --- | --- | --- | --- |
+| 5,000 | 50 | 300 | 0.5 | 0.1 | 109 |
+| 100,000 | 50 | 300 | 1.5 | 1.8 | 210 |
+| 100,000 | 2,000 | 5,000 | 0.8 | 2.2 | 231 |
+| 1,000,000 | 50 | 300 | 8.2 | 17.5 | 1,004 |
+| 1,000,000 | 2,000 | 5,000 | 8.7 | 18.7 | 1,148 |
+
+- **What the measurement says.** The cost grows with the iterations, and not with the size of the plan. A run of 100,000 iterations (the default maximum of a server) needs about 110 MB more than the process had, and a run of a million needs about 900 MB more and about 9 seconds. The time stays far below the time limit of a job (120 seconds). A server that raises `MaxSimulationIterations` to a million and runs many jobs at one time needs memory for each: the operator can keep the maximum low, or ask for the CSV files, which are written in a stream.
+- **Where.** `SimulationWorkbook.Write` makes the workbook. `ISimulationChartManagerViewModel.WriteSimulationWorkbookAsync` and the command `ExportWorkbookCommand` give it to the desktop and to a job. `JobRequest.SimulationWorkbook` and `JobOutput.SimulationWorkbook` give it to the engine. The warm-up of the server makes it too.
+
+### Ctrl+C stops a run of zpp
+
+At the end of phase 4, Ctrl+C killed `zpp`, and the job did not know. The engine could already stop a simulation between two chunks of its iterations, but `zpp` gave the job no token.
+
+- **Two presses.** The first Ctrl+C (or `SIGTERM`) cancels the token of the run, and `zpp` says so. The second press is not handled, and the system ends the process at once. A person who does not want to wait for a step has a way out.
+- **Where.** `InterruptHandler` registers `SIGINT` and `SIGTERM` with `PosixSignalRegistration`, which works on Windows and on Linux. `Program.MainAsync` takes a `CancellationToken` and links it to the handler, so that a test can cancel without a signal. The token goes to `JobRunner.RunAsync`, to `ListScenariosAsync` and to `JobClient.RunAsync`. `zpp serve` does not use the handler, because the host has its own for the server.
+- **Exit code 130.** It is the code that a shell gives to a program that `SIGINT` ended (128 + 2), and so a script reads it as it reads the stop of any other program. Code 4 is for a compilation that ran out of time, and it says nothing about a person who stopped the run.
+- **Nothing half-way.** The job stops between steps, and it writes one output at a time. The project and the workbook come after the simulation, and so a run that was stopped in the simulation does not write them. The files that came before the stop stay.
+- **With `--server`.** The stop cancels the request. The server already cancels its job when the connection closes (`RequestAborted`), and it stops the simulation between two chunks.
+- **How it was checked.** The tests cancel the token in a simulation of a million iterations (three seconds, then the run ends at once), and in the wait for a busy server. A run on Linux sent real `SIGINT` and `SIGTERM` signals to a `zpp` process that ran a simulation.
+
+### A simulation of a job takes a share of the processors
+
+A simulation asks the thread pool for as many threads as the machine has processors. A server that runs `MaxJobs` jobs at one time, and that has the default (`MaxJobs` is the number of processors), asked for the processors times the number of the jobs that simulate. The result does not depend on the number of threads.
+
+- **The rule.** `SimulationProcessorShare` counts the simulations that run. A simulation that begins takes the processors divided by that count, itself among them, and at least one. The first takes all the processors. A later one takes less than the one before it, and so the threads that all the simulations ask for add up to less than the processors times the number of simulations. The share is the one that the simulation had when it began, and it does not change while the simulation runs. A static share (the processors divided by `MaxJobs`) would give each job one thread by default, and a server with one user would then be as slow as one thread. The count gives that user all the processors.
+- **Where.** `JobRunner` holds the share. It sets `ISimulationChartManagerViewModel.MaxDegreeOfParallelism`, a property of the panel that is not a setting of the scenario, because it depends on the machine and not on the plan. `JobRequest.MaximumSimulationThreads` replaces the share (-1 is all the processors, and the value 0 and the values below -1 are an invalid setting). `zpp` and the API do not set it.
+- **No setting for the operator.** A server option for the share was not added. The automatic rule needs none, and an option can be added later without a change of what exists.
+- **The measurement.** Four processors, the sample plan, 4000 iterations for each job, all the jobs begin together, the median of three runs. "All" is what happened before (every job asks for all the processors), and "share" is the rule above.
+
+| Jobs | Mode | Time to finish all, in seconds | Slowest job, in seconds | Processor time, in seconds |
+| --- | --- | --- | --- | --- |
+| 1 | all | 1.72 | 1.72 | 3.7 |
+| 1 | share | 1.29 | 1.29 | 3.5 |
+| 2 | all | 2.83 | 2.83 | 7.9 |
+| 2 | share | 2.82 | 2.81 | 7.1 |
+| 4 | all | 5.80 | 5.80 | 15.9 |
+| 4 | share | 6.07 | 6.06 | 15.0 |
+| 8 | all | 13.42 | 13.39 | 36.8 |
+| 8 | share | 12.28 | 12.25 | 32.6 |
+
+- **What the measurement says.** It shows no gain and no loss. The two lines for one job are the same run (all four processors), and they differ by 25 %. Thus the noise of the measurement is larger than the difference in the other lines, which is between 5 % more and 8 % less in time. The processor time is lower with the share in each line (4 to 11 %), and the noise is large there also. A machine with more processors, and a server with more jobs at one time, can show more. Nobody measured them.
+- **Why it stays.** The share costs nothing for a single job, and it bounds the threads that a busy server asks for. It did not make anything slower in the measurement.
+
+### A client of the server sees the progress of a simulation
+
+A simulation of a large plan can take minutes. The server wrote the progress to its log, and a client of `zpp --server` waited with no sign. The API had no operation for a job that is in progress. The TODO list gave two choices: a response that streams, or a job that the client can ask about. Both change the API.
+
+- **The choice.** A job that the client can ask about. The guide has a rule for this (ASY-2: a status resource that reports a state and can report progress). A stream would have to report an error after it has sent the status `200`, and then the status no longer says the outcome. A status resource keeps the API as it was for every client that does not ask.
+- **What the API got.** `GET /v1/jobs/{requestId}` answers with the state of the job (`running`), when it began, how long it has run, and the progress of the simulation (`done` and `total` iterations, or `null`). It sends `Retry-After: 2`. It does not use one of the places among the jobs, and so it answers when all the jobs run. [API](API.md#ask-how-far-a-job-has-got) and [openapi.yaml](openapi.yaml) have it.
+- **The id of a job is the id of its request.** The request already has a trace id, and `zpp` already sends one in a `traceparent` (the same one for each try of a busy server). A client that knows this id can ask. No second id, and no new header, was necessary. A request without a `traceparent` has an id that the server chooses, and its caller does not know it before the answer comes. Two requests in one trace share an id, and the first one has it while it runs.
+- **The server stays stateless.** `RunningJobs` holds a job from the moment it has a place until it ends, and it holds a count of iterations and two times. The size of the list is bounded by the places among the jobs. After the job ends, the answer to its request is the only word of it. This is why the deviation from ASY-1 stays: the server does not keep results to continue a job as a `202`.
+- **Where.** `JobRequest.Progress` (an `IProgress<JobProgress>`) tells the engine where to report. The panel takes an `IProgress<int>` in `RunSimulationWithSavedSeedAsync`, and it reports as often as it updates its own progress bar (about ten times a second). An observer that throws does not stop the simulation. `ProjectEndpoints` registers each compile in `RunningJobs` under the trace id of the request.
+- **The client.** `zpp --server -v` asks after two seconds and then as often as `Retry-After` says, and it writes `Simulation on <server>: <done> of <total> iterations (<percent>)` to its log. It asks only when its log would show the answer, and a question that fails (a server that does not have the operation, say) never fails the run.
+- **What is not done.** The status is for the simulation only; the other steps of a job do not report. A client sees nothing of a job that waits for a place. The estimate of the time that is left is not in the answer, and the client does not make one.
+
+### The application uses version 4.0.0 of the library
+
+Version 4.0.0 of the library changes two parts of the API that the application uses. A builder takes an id generator factory in place of an id generator. `ScheduleSimulator` takes a factory object in place of the function that made its builders. The application moved from version 3.3.0 to version 4.0.0 on 2026-10-24. The section "Breaking changes" in the README of the library describes the changes in the library.
+
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.0.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.0.0. The local file of [Reading the library source](#reading-the-library-source) is not necessary, because the maintainer published the packages.
+- **The builders.** `VertexGraphBuilder` and `ArrowGraphBuilder` take `IIdGeneratorFactory<int>` in place of `IIdGenerator<int>`. Their methods `CreateDependentActivityVertexGraphBuilder` and `CreateDependentActivityArrowGraphBuilder` give `PreviousIdGeneratorFactory<int>`, and so the ids that a builder makes still count down from -1. The library now starts the generator of a builder that loads a graph under the lowest id of that graph. The three computations of that id in the two builders are gone.
+- **The factory of the application.** `VertexGraphFactory` (in `GraphCompilers`) implements `IVertexGraphFactory<int, int, int, IDependentActivity>`. `CreateBuilder` gives a new builder of the application, and `CreateCompiler` gives a new `VertexGraphCompiler`. `SimulationChartManagerViewModel` gives a `VertexGraphFactory` to the simulator, where version 3.3.0 took the method `VertexGraphBuilder.CreateDependentActivityVertexGraphBuilder`. The simulator asks for one builder for each thread, and for one compiler for its first check of the plan. Thus a simulation schedules with the engines that a compile uses.
+- **One change in the numbers.** The clone of an arrow builder whose graph has no dummy activity now numbers its new dummy activities from -1. The old code started under the lowest id of the graph. That id is the id of an activity, and so the first new id was 0 or higher. No test depended on this.
+- **How it was checked.** The checks of the commit hook and a build for release passed. Twelve new tests cover the factory and the two builders (`VertexGraphFactoryTests`, `VertexGraphBuilderTests` and `ArrowGraphBuilderTests`). The team planted nine faults, one at a time, and the tests found all of them. The faults were a shared builder, a compiler of the library, five builders that count up, and two clones that the library makes.
 
 ## Performance work to explore later
 
-The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them.
+The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.
 
 ### Where the time goes
 

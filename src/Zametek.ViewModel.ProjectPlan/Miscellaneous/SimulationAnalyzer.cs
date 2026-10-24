@@ -39,14 +39,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly int[] s_Percentiles = [5, 10, 25, 50, 75, 80, 90, 95, 99];
 
+        /// <param name="result">The raw result of the run.</param>
+        /// <param name="activityNames">The name of each activity, by its ID.</param>
+        /// <param name="plannedFinishTime">The finish time of the plan as it stands.</param>
+        /// <param name="targetFinishTime">The target finish time, or null.</param>
+        /// <param name="settings">
+        /// The settings that the run used. The summary keeps the seed, the distribution and the shape value, so that the
+        /// result says how it was made also after the settings of the scenario change.
+        /// </param>
         public static SimulationSummaryModel Analyze(
             SimulationResult<int> result,
             IReadOnlyDictionary<int, string> activityNames,
             int plannedFinishTime,
-            int? targetFinishTime)
+            int? targetFinishTime,
+            SimulationSettings settings)
         {
             ArgumentNullException.ThrowIfNull(result);
             ArgumentNullException.ThrowIfNull(activityNames);
+            ArgumentNullException.ThrowIfNull(settings);
 
             int[] finishTimes = [.. result.FinishTimes.Where(x => x != SimulationResult<int>.FailedFinishTime)];
             int validCount = finishTimes.Length;
@@ -54,6 +64,9 @@ namespace Zametek.ViewModel.ProjectPlan
             var summary = new SimulationSummaryModel
             {
                 IterationCount = result.IterationCount,
+                Seed = settings.Seed,
+                Distribution = settings.Distribution,
+                ModifiedBetaShape = settings.Distribution == DurationDistribution.ModifiedBetaPert ? settings.ModifiedBetaShape : null,
                 ValidIterationCount = validCount,
                 FailedIterationCount = result.FailedIterationCount,
                 PlannedFinishTime = plannedFinishTime,

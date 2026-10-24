@@ -61,6 +61,17 @@ namespace Zametek.Engine.ProjectPlan
         // server.
         public int? MaximumSimulationIterations { get; init; }
 
+        // Told how far the simulation has got, when the job runs one: how many of its iterations have run (see JobProgress). It
+        // is called from the threads of the simulation, and so it must not wait for anything. What it throws is not heard. A server
+        // uses it to tell a client who asks.
+        public IProgress<JobProgress>? Progress { get; init; }
+
+        // The most threads that the run of the simulation uses, or -1 for as many as the machine has processors. The value 0, and
+        // values below -1, are a SimulationException of the failure InvalidSettings. When it is not set, the run takes a share of
+        // the processors: all of them if it is alone, and less when other jobs of the same runner run a simulation at the same
+        // time (see SimulationProcessorShare). The result does not depend on the number of threads.
+        public int? MaximumSimulationThreads { get; init; }
+
         // JobOutput.SimulationChart, of the result of the scenario: the one that the job made, or else the one that the
         // scenario held. A job with no result of either kind is a SimulationException of the failure NoResult.
         public ChartOutputRequest? SimulationChart { get; init; }
@@ -69,5 +80,11 @@ namespace Zametek.Engine.ProjectPlan
         // SimulationIterations: each of the CSV files that is set. The iterations of a run are not in a project file, and so
         // the file SimulationIterations is produced only by a job that ran the simulation, and a job that did not skips it.
         public SimulationCsvFile SimulationCsvFiles { get; init; }
+
+        // JobOutput.SimulationWorkbook: the result as one Excel workbook, with a sheet for each of the CSV files and for the settings.
+        // The result is the one that the job made or the one that the scenario held, as for the files above, and the sheet of the
+        // iterations is there only for a job that ran the simulation. It is independent of the chart and of the CSV files: a job makes
+        // the ones that are asked for.
+        public bool SimulationWorkbook { get; init; }
     }
 }

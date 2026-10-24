@@ -2,6 +2,7 @@ using CommandLine;
 using CommandLine.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
 using System.Collections;
 using System.Globalization;
@@ -37,10 +38,11 @@ namespace Zametek.ProjectPlan.CommandLine
         }
 
         // Main, with the environment it reads ZPP_SERVER and ZPP_API_KEY from given to it, so that a test can choose
-        // what it reads without changing the process's.
+        // what it reads without changing the process's. A run stops, as it does for Ctrl+C, when the token is cancelled.
         internal static async Task<int> MainAsync(
             string[] args,
-            IReadOnlyDictionary<string, string> environment)
+            IReadOnlyDictionary<string, string> environment,
+            CancellationToken cancellationToken = default)
         {
             var console = new StandardConsole(Console.Out, Console.Error);
 
@@ -76,12 +78,25 @@ namespace Zametek.ProjectPlan.CommandLine
                         ConfigureSerilog(options.Verbose);
                         ValidateOptions(options);
 
-                        // A run sent to a server never builds the engine, nor so
-                        // much as loads its container: running here is a method
-                        // of its own, which only a run here compiles.
-                        return ClientSettingsHelper.Resolve(options, environment) is ClientSettings server
-                            ? await JobClient.RunAsync(options, server, console)
-                            : await RunHereAsync(options, console);
+                        // Ctrl+C and SIGTERM cancel the run, which then stops before the next step that it would take.
+                        // The signals of a serve are the host's, and so this is for a run only.
+                        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        using var interrupt = new InterruptHandler(cancellation, console);
+
+                        try
+                        {
+                            // A run sent to a server never builds the engine, nor so
+                            // much as loads its container: running here is a method
+                            // of its own, which only a run here compiles.
+                            return ClientSettingsHelper.Resolve(options, environment) is ClientSettings server
+                                ? await JobClient.RunAsync(options, server, console, cancellationToken: cancellation.Token)
+                                : await RunHereAsync(options, console, cancellation.Token);
+                        }
+                        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+                        {
+                            await console.WriteErrorLineAsync(Resource.ProjectPlan.Messages.Message_RunCancelled);
+                            return ExitCode.Cancelled;
+                        }
                     },
                     errs => Task.FromResult(OnParseErrors(parserResult, errs, Options.Usage)));
             }
@@ -118,18 +133,22 @@ namespace Zametek.ProjectPlan.CommandLine
             return environment;
         }
 
-        private static void ConfigureSerilog(bool verbose)
+        internal static void ConfigureSerilog(bool verbose)
         {
             // Everything goes to stderr so stdout stays clean for parseable output
             // (the metrics table or JSON). Warnings and errors always show - this
             // is where the view models' ILogger<T> output surfaces, via the
             // AddSerilog registration in BuildServices - and --verbose lowers the
-            // threshold to their informational lifecycle logging.
+            // threshold to their informational lifecycle logging. A value is
+            // written as it came, and the title of a scenario in a project that
+            // is not the user's own can have a line end in it: the log escapes it.
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(verbose ? LogEventLevel.Information : LogEventLevel.Warning)
-                .WriteTo.Console(
-                    standardErrorFromLevel: LogEventLevel.Verbose,
-                    formatProvider: System.Globalization.CultureInfo.InvariantCulture)
+                .WriteTo.Sink(LoggerSinkConfiguration.Wrap(
+                    sink => new LogEscapeSink(sink),
+                    text => text.Console(
+                        standardErrorFromLevel: LogEventLevel.Verbose,
+                        formatProvider: System.Globalization.CultureInfo.InvariantCulture)))
                 .CreateLogger();
         }
 
@@ -151,7 +170,8 @@ namespace Zametek.ProjectPlan.CommandLine
         // The run, in this process, on an engine built for its one job.
         private static async Task<ExitCode> RunHereAsync(
             Options options,
-            IJobConsole console)
+            IJobConsole console,
+            CancellationToken cancellationToken)
         {
             // Before the container exists, because the view models the
             // engine runs depend on it.
@@ -162,13 +182,14 @@ namespace Zametek.ProjectPlan.CommandLine
             // job, which the engine gives a scope of its own.
             await using ServiceProvider services = BuildServices();
 
-            return await RunAsync(options, services.GetRequiredService<JobRunner>(), console);
+            return await RunAsync(options, services.GetRequiredService<JobRunner>(), console, cancellationToken);
         }
 
         private static async Task<ExitCode> RunAsync(
             Options options,
             JobRunner jobRunner,
-            IJobConsole console)
+            IJobConsole console,
+            CancellationToken cancellationToken)
         {
             // File in: a project file, or a file to import. The parser's file-in
             // group requires one of the two, and ValidateOptions rejects both.
@@ -183,7 +204,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (options.ListScenarios)
             {
-                await JobConsoleHelper.WriteScenariosAsync(console, await jobRunner.ListScenariosAsync(input));
+                await JobConsoleHelper.WriteScenariosAsync(console, await jobRunner.ListScenariosAsync(input, cancellationToken));
                 return ExitCode.Success;
             }
 
@@ -213,13 +234,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 RunSimulation = options.RunSimulation,
                 SimulationChart = ToChartOutputRequest(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
                 SimulationCsvFiles = options.SimulationDirectory is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
+                SimulationWorkbook = options.SimulationWorkbookDirectory is not null,
             };
 
             // Chart and graph files are named after the file the plan came from,
             // not after wherever its results are saved.
             string projectTitle = FileFormatHelper.GetProjectTitle(inputFilename);
 
-            JobResult result = await jobRunner.RunAsync(request, new FileJobSink(BuildOutputFilenames(options, projectTitle), console));
+            JobResult result = await jobRunner.RunAsync(request, new FileJobSink(BuildOutputFilenames(options, projectTitle), console), cancellationToken);
 
             return await JobConsoleHelper.WriteResultAsync(console, result, options.MetricsFormat);
         }
@@ -300,6 +322,7 @@ namespace Zametek.ProjectPlan.CommandLine
             // All export directories are checked up front so that a bad path fails
             // the run before any file has been written.
             RequireDirectory(options.SimulationDirectory);
+            RequireDirectory(options.SimulationWorkbookDirectory);
             RequireDirectory(options.GanttDirectory);
             RequireDirectory(options.ArrowGraphDirectory);
             RequireDirectory(options.VertexGraphDirectory);
@@ -435,6 +458,9 @@ namespace Zametek.ProjectPlan.CommandLine
             AddExportFilePath(filenames, JobOutput.SimulationPaths, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, csv);
             AddExportFilePath(filenames, JobOutput.SimulationActivities, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, csv);
             AddExportFilePath(filenames, JobOutput.SimulationIterations, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, csv);
+
+            // The workbook of the simulation, in a directory of its own.
+            AddExportFilePath(filenames, JobOutput.SimulationWorkbook, options.SimulationWorkbookDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationWorkbook, Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension);
 
             return filenames;
         }

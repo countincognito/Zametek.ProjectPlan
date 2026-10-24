@@ -92,6 +92,34 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void ValidateOptions_Given_AWorkbookDirectoryAndNoRunOrSize_Then_Passes()
+        {
+            // The workbook has no chart, and so it needs no size, and it needs no run: a project may hold a result.
+            Should.NotThrow(() => Program.ValidateOptions(new Options { InputFilename = @"a.zpp", SimulationWorkbookDirectory = Path.GetTempPath() }));
+        }
+
+        [Fact]
+        public void ValidateOptions_Given_AWorkbookDirectoryThatIsNotThere_Then_TheRunFailsBeforeAnythingIsWritten()
+        {
+            Should.Throw<InvalidOperationException>(() => Program.ValidateOptions(new Options
+            {
+                InputFilename = @"a.zpp",
+                SimulationWorkbookDirectory = Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}"),
+            }));
+        }
+
+        [Fact]
+        public void BuildOutputFilenames_Given_TheWorkbookOfTheSimulation_Then_InItsOwnDirectoryNamedAsTheServerNamesIt()
+        {
+            var options = new Options { InputFilename = @"a.zpp", SimulationWorkbookDirectory = @"workbooks" };
+
+            Program.BuildOutputFilenames(options, @"plan").ShouldBe(new Dictionary<JobOutput, string>
+            {
+                [JobOutput.SimulationWorkbook] = Path.Combine(@"workbooks", @"plan-simulation.xlsx"),
+            });
+        }
+
+        [Fact]
         public void BuildOutputFilenames_Given_TheOutputsOfASimulation_Then_EachInItsDirectoryNamedAsTheServerNamesIt()
         {
             var options = new Options

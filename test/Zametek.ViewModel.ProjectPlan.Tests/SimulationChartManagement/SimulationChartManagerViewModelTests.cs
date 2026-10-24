@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
@@ -67,7 +68,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Panel = panel;
             }
 
-            public static async Task<Harness> MakeAsync(ProjectScenarioModel? scenario = null, IUIDispatcher? dispatcher = null, BaseTheme baseTheme = BaseTheme.Light)
+            public static async Task<Harness> MakeAsync(
+                ProjectScenarioModel? scenario = null,
+                IUIDispatcher? dispatcher = null,
+                BaseTheme baseTheme = BaseTheme.Light,
+                ILogger<SimulationChartManagerViewModel>? logger = null)
             {
                 CoreViewModel core = CoreViewModelFixture.Create();
                 core.BaseTheme = baseTheme;
@@ -83,7 +88,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     new DateTimeCalculator(TimeProvider.System),
                     new ScottPlotImageExporter(),
                     dispatcher ?? CoreViewModelFixture.CreateUIDispatcher(),
-                    NullLogger<SimulationChartManagerViewModel>.Instance);
+                    logger ?? NullLogger<SimulationChartManagerViewModel>.Instance);
 
                 return new Harness(core, dialogs, panel);
             }
@@ -92,6 +97,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 Panel.Dispose();
                 Core.Dispose();
+            }
+        }
+
+        // A logger that keeps the text of each line it is given.
+        private sealed class ListLogger
+            : ILogger<SimulationChartManagerViewModel>
+        {
+            public List<string> Lines { get; } = [];
+
+            public IDisposable? BeginScope<TState>(TState state)
+                where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                lock (Lines)
+                {
+                    Lines.Add(formatter(state, exception));
+                }
             }
         }
 
@@ -162,6 +187,185 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.Activities.ShouldNotBeEmpty();
             panel.SimulationChartPlotModel.GetPlottables().ShouldNotBeEmpty();
             panel.StatusText.ShouldStartWith(Resource.ProjectPlan.Labels.Label_SimulationDone.Split('{')[0]);
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_ARun_Then_TheResultKeepsTheSeedTheDistributionAndTheShapeOfTheRun()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+            panel.Distribution = DurationDistribution.ModifiedBetaPert;
+            panel.ModifiedBetaShape = 6.5;
+
+            await panel.RunSimulationAsync();
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            SimulationSummaryModel summary = panel.Summary.ShouldNotBeNull();
+            (summary.Seed, summary.Distribution, summary.ModifiedBetaShape).ShouldBe((7UL, DurationDistribution.ModifiedBetaPert, (double?)6.5));
+            panel.Statistics[0].ShouldBe(new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = 7UL.ToString(System.Globalization.CultureInfo.CurrentCulture) });
+            panel.Statistics[1].Name.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationDistribution);
+            panel.Statistics[1].Value.ShouldBe(StringConverters.DurationDistributionValue(DurationDistribution.ModifiedBetaPert));
+            panel.Statistics[2].Name.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationShape);
+            panel.Statistics[2].Value.ShouldBe(6.5.ToString(System.Globalization.CultureInfo.CurrentCulture));
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_ADistributionWithoutAShapeValue_Then_TheResultHasNoShapeValue()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+            panel.Distribution = DurationDistribution.Triangular;
+            panel.ModifiedBetaShape = 6.5; // The setting always has one. The run does not use it.
+
+            await panel.RunSimulationAsync();
+
+            panel.Summary.ShouldNotBeNull().ModifiedBetaShape.ShouldBeNull();
+            panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationShape);
+        }
+
+        [Fact]
+        public async Task Settings_Given_AChangeAfterTheRun_Then_TheResultStillSaysWhichValuesMadeIt()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+            panel.Distribution = DurationDistribution.Triangular;
+            await panel.RunSimulationAsync();
+
+            panel.Seed = 99;
+            panel.Distribution = DurationDistribution.Uniform;
+
+            SimulationSummaryModel summary = harness.Core.SimulationSummary.ShouldNotBeNull();
+            (summary.Seed, summary.Distribution).ShouldBe((7UL, DurationDistribution.Triangular));
+            harness.Core.SimulationSettings.Seed.ShouldBe(99UL);
+        }
+
+        private sealed class CountingProgress
+            : IProgress<int>
+        {
+            private readonly List<int> m_Reports = [];
+            private readonly bool m_Throws;
+
+            public CountingProgress(bool throws = false)
+            {
+                m_Throws = throws;
+            }
+
+            public IReadOnlyList<int> Reports
+            {
+                get
+                {
+                    lock (m_Reports)
+                    {
+                        return [.. m_Reports];
+                    }
+                }
+            }
+
+            public void Report(int value)
+            {
+                lock (m_Reports)
+                {
+                    m_Reports.Add(value);
+                }
+
+                if (m_Throws)
+                {
+                    throw new InvalidOperationException("The observer is broken.");
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RunSimulationWithSavedSeedAsync_Given_AnObserver_Then_IsToldHowManyIterationsHaveRunUpToAllOfThem()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = 2000;
+            var progress = new CountingProgress();
+
+            await panel.RunSimulationWithSavedSeedAsync(CancellationToken.None, progress);
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            progress.Reports.ShouldNotBeEmpty();
+            progress.Reports.ShouldAllBe(x => x >= 1 && x <= 2000);
+            progress.Reports.Max().ShouldBe(2000);
+        }
+
+        [Fact]
+        public async Task RunSimulationWithSavedSeedAsync_Given_AnObserverThatThrows_Then_TheRunStillFindsItsResult()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+
+            await panel.RunSimulationWithSavedSeedAsync(CancellationToken.None, new CountingProgress(throws: true));
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            panel.HasResult.ShouldBeTrue();
+            panel.Summary.ShouldNotBeNull().ValidIterationCount.ShouldBe(c_Iterations);
+        }
+
+        [Fact]
+        public async Task MaxDegreeOfParallelism_Given_NothingSet_Then_IsAllTheProcessors()
+        {
+            using Harness harness = await Harness.MakeAsync();
+
+            harness.Panel.MaxDegreeOfParallelism.ShouldBe(-1);
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public async Task MaxDegreeOfParallelism_Given_AValueThatIsNotValid_Then_Refuses(int threads)
+        {
+            using Harness harness = await Harness.MakeAsync();
+
+            Should.Throw<ArgumentOutOfRangeException>(() => harness.Panel.MaxDegreeOfParallelism = threads);
+
+            harness.Panel.MaxDegreeOfParallelism.ShouldBe(-1);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async Task RunSimulationAsync_Given_ALimitOnTheThreads_Then_RunsWithThemAndFindsWhatItFindsWithAnyOther(int threads)
+        {
+            var logger = new ListLogger();
+            using Harness limited = await Harness.MakeAsync(logger: logger);
+            using Harness unlimited = await Harness.MakeAsync();
+
+            foreach (SimulationChartManagerViewModel panel in new[] { limited.Panel, unlimited.Panel })
+            {
+                panel.Iterations = c_Iterations;
+                panel.UseRandomSeed = false;
+                panel.Seed = 5;
+            }
+
+            limited.Panel.MaxDegreeOfParallelism = threads;
+            await limited.Panel.RunSimulationAsync();
+            await unlimited.Panel.RunSimulationAsync();
+
+            limited.Dialogs.Errors.ShouldBeEmpty();
+            logger.Lines.ShouldContain(x => x.Contains($@"{threads} threads", System.StringComparison.Ordinal));
+
+            // The result does not depend on the number of threads: the same numbers, the same paths and the same bins.
+            SimulationSummaryModel one = limited.Panel.Summary.ShouldNotBeNull();
+            SimulationSummaryModel other = unlimited.Panel.Summary.ShouldNotBeNull();
+            (one.Mean, one.StandardDeviation, one.Minimum, one.Maximum).ShouldBe((other.Mean, other.StandardDeviation, other.Minimum, other.Maximum));
+            one.Percentiles.ShouldBe(other.Percentiles);
+            one.Paths.ShouldBe(other.Paths);
+            one.Activities.ShouldBe(other.Activities);
+            one.Bins.Select(x => (x.FirstFinishTime, x.Count, string.Join(',', x.PathGroupWeights)))
+                .ShouldBe(other.Bins.Select(x => (x.FirstFinishTime, x.Count, string.Join(',', x.PathGroupWeights))));
         }
 
         [Theory]
@@ -794,6 +998,112 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 Directory.Delete(directory, recursive: true);
             }
+        }
+
+        private static readonly string[] s_WorkbookSheets =
+        [
+            "Simulation Settings",
+            "Simulation Statistics",
+            "Simulation Percentiles",
+            "Simulation Histogram",
+            "Simulation Paths",
+            "Simulation Criticalities",
+        ];
+
+        [Fact]
+        public async Task WriteSimulationWorkbookAsync_Given_ARun_Then_WritesTheSheetsOfTheResultAndOneForTheIterations()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 4;
+            await panel.RunSimulationAsync();
+            using var stream = new MemoryStream();
+
+            await panel.WriteSimulationWorkbookAsync(stream);
+
+            XlsxBook book = XlsxPackageReader.Read(stream.ToArray());
+            book.SheetNames.ShouldBe([.. s_WorkbookSheets, "Simulation Iterations"]);
+            book.Sheet("Simulation Iterations")!.LastRow.ShouldBe(c_Iterations + 1);
+            book.Sheet("Simulation Settings")!.Cell("D2")!.Text.ShouldBe("4");
+        }
+
+        [Fact]
+        public async Task WriteSimulationWorkbookAsync_Given_AResultThatAFileHeld_Then_HasNoSheetForTheIterations()
+        {
+            using Harness harness = await Harness.MakeAsync(await MakeScenarioWithAResultAsync());
+            using var stream = new MemoryStream();
+
+            await harness.Panel.WriteSimulationWorkbookAsync(stream);
+
+            XlsxPackageReader.Read(stream.ToArray()).SheetNames.ShouldBe(s_WorkbookSheets);
+        }
+
+        [Fact]
+        public async Task WriteSimulationWorkbookAsync_Given_NoResult_Then_Throws()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            using var stream = new MemoryStream();
+
+            InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(() => harness.Panel.WriteSimulationWorkbookAsync(stream));
+
+            ex.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationNoResult);
+            stream.Length.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task ExportWorkbookCommand_Given_AResult_Then_WritesOneFileWithTheNameThatTheUserChose()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 4;
+            panel.ExportWorkbookCommand.CanExecute(null).ShouldBeFalse();
+            await panel.RunSimulationAsync();
+            panel.ExportWorkbookCommand.CanExecute(null).ShouldBeTrue();
+
+            string directory = Path.Combine(Path.GetTempPath(), $@"simulation-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(directory);
+            try
+            {
+                string filename = Path.Combine(directory, @"plan-simulation.xlsx");
+                harness.Dialogs.SaveFilename = filename;
+
+                panel.ExportWorkbookCommand.Execute(null);
+
+                DateTime deadline = DateTime.UtcNow.AddSeconds(60);
+                while (harness.Dialogs.Infos.Count == 0 && harness.Dialogs.Errors.Count == 0 && DateTime.UtcNow < deadline)
+                {
+                    await Task.Delay(20, CancellationToken.None);
+                }
+
+                harness.Dialogs.Errors.ShouldBeEmpty();
+                Directory.GetFiles(directory).Select(Path.GetFileName).ShouldBe(["plan-simulation.xlsx"]);
+                harness.Dialogs.Infos.ShouldHaveSingleItem().ShouldBe(string.Format(System.Globalization.CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_SimulationWorkbookSaved, filename));
+                XlsxPackageReader.Read(File.ReadAllBytes(filename)).SheetNames.ShouldContain("Simulation Iterations");
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task ExportWorkbookCommand_Given_AUserWhoChoosesNoFile_Then_WritesNothingAndSaysNothing()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            await panel.RunSimulationAsync();
+            harness.Dialogs.SaveFilename = null;
+
+            panel.ExportWorkbookCommand.Execute(null);
+            await Task.Delay(300, CancellationToken.None);
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            harness.Dialogs.Infos.ShouldBeEmpty();
         }
 
         [Theory]

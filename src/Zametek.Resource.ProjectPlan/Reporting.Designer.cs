@@ -241,6 +241,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Simulation Iterations.
+        /// </summary>
+        public static string Reporting_WorksheetSimulationIterations {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetSimulationIterations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Simulation Paths.
         /// </summary>
         public static string Reporting_WorksheetSimulationPaths {

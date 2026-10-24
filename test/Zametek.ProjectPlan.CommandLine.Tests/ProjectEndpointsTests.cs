@@ -235,6 +235,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                         ScenarioExport = new ScenarioExportOptions(),
                         Project = new ProjectOptions(),
                         Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
+                        SimulationWorkbook = new SimulationWorkbookOptions(),
                     },
                 });
 
@@ -256,6 +257,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"text/csv",
                 @"text/csv",
                 @"text/csv",
+                @"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             ]);
         }
 

@@ -192,4 +192,7 @@
   <data name="Reporting_WorksheetDisplaySettings" xml:space="preserve">
     <value>Display Settings</value>
   </data>
+  <data name="Reporting_WorksheetSimulationIterations" xml:space="preserve">
+    <value>Simulation Iterations</value>
+  </data>
 </root>

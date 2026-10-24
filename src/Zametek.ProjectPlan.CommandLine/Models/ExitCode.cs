@@ -25,5 +25,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // answered with something zpp cannot read. Kept distinct from Failure so that a pipeline can tell a server it
         // could try again, or do without, from a job that failed.
         ServerFailure = 5,
+
+        // A person stopped the run with Ctrl+C (or a program stopped it with SIGTERM), and the run stopped before it did all that
+        // it was asked to. It is the code that a shell gives to a program that SIGINT ended (128 + 2), so that a script reads it
+        // as it reads the same stop of another program.
+        Cancelled = 130,
     }
 }

@@ -1,3 +1,5 @@
+using Zametek.Maths.Graphs;
+
 namespace Zametek.Common.ProjectPlan
 {
     /// <summary>
@@ -5,6 +7,11 @@ namespace Zametek.Common.ProjectPlan
     /// time, a histogram split by critical path, the critical paths, and how often each activity was
     /// critical. All the times are in days from the start of the project.
     /// </summary>
+    /// <remarks>
+    /// The summary also says how the run that made it was set up (the iterations, the seed, the distribution
+    /// and the shape value). The settings of the scenario can change after the run, and the summary keeps
+    /// the values that made it.
+    /// </remarks>
     [Serializable]
     public record SimulationSummaryModel
     {
@@ -12,6 +19,22 @@ namespace Zametek.Common.ProjectPlan
         /// The number of iterations that ran, including the ones that failed.
         /// </summary>
         public int IterationCount { get; init; }
+
+        /// <summary>
+        /// The seed of the random numbers that the run used. The same seed, with the same plan and the same
+        /// settings, makes the same result again.
+        /// </summary>
+        public ulong Seed { get; init; } = SimulationSettingsModel.DefaultSeed;
+
+        /// <summary>
+        /// The distribution that gave the duration of each activity in the run.
+        /// </summary>
+        public DurationDistribution Distribution { get; init; } = DurationDistribution.BetaPert;
+
+        /// <summary>
+        /// The shape value of the run, or null. Only the modified beta-PERT distribution has one.
+        /// </summary>
+        public double? ModifiedBetaShape { get; init; }
 
         /// <summary>
         /// The iterations that gave a finish time. Every statistic uses these.

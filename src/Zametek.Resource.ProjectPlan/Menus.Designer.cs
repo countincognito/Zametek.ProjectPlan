@@ -169,6 +169,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export Workbook....
+        /// </summary>
+        public static string Menu_ExportWorkbook {
+            get {
+                return ResourceManager.GetString("Menu_ExportWorkbook", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _File.
         /// </summary>
         public static string Menu_File {

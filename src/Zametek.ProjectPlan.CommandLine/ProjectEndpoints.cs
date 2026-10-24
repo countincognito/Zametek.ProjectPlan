@@ -65,8 +65,16 @@ namespace Zametek.ProjectPlan.CommandLine
         // The description of the API as it was embedded when the server was built, and its strong ETag: read when first asked for.
         private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_Description = new(ReadDescription);
 
+        // The part of the path of a job that is its id.
+        private const string c_RequestIdRoute = @"requestId";
+        private const int c_RequestIdLength = 32;
+
+        // The route of the status of a job, as the log says it: the template, and not the path of a request.
+        private const string c_JobRoute = JobServer.ApiPath + JobServer.JobRoute;
+
         private readonly JobRunner m_JobRunner;
         private readonly ServeLimits m_Limits;
+        private readonly RunningJobs m_RunningJobs;
         private readonly TimeProvider m_TimeProvider;
         private readonly ILogger<ProjectEndpoints> m_Logger;
 
@@ -77,15 +85,18 @@ namespace Zametek.ProjectPlan.CommandLine
         public ProjectEndpoints(
             JobRunner jobRunner,
             ServeLimits limits,
+            RunningJobs runningJobs,
             TimeProvider timeProvider,
             ILogger<ProjectEndpoints> logger)
         {
             ArgumentNullException.ThrowIfNull(jobRunner);
             ArgumentNullException.ThrowIfNull(limits);
+            ArgumentNullException.ThrowIfNull(runningJobs);
             ArgumentNullException.ThrowIfNull(timeProvider);
             ArgumentNullException.ThrowIfNull(logger);
             m_JobRunner = jobRunner;
             m_Limits = limits;
+            m_RunningJobs = runningJobs;
             m_TimeProvider = timeProvider;
             m_Logger = logger;
         }
@@ -121,6 +132,23 @@ namespace Zametek.ProjectPlan.CommandLine
             var stopwatch = Stopwatch.StartNew();
             Answer answer = await ListScenariosAnswerAsync(context);
             Log(context, answer, stopwatch);
+            await answer.Result.ExecuteAsync(context);
+        }
+
+        // How far a job that runs now has got: GET /v1/jobs/{requestId}, where the id is the id of the request that began the
+        // job - the trace id the caller gave it, in a traceparent. The server answers a request with the job's result when the
+        // job ends, and a caller who waits for it asks here, as often as Retry-After says, what the job has done so far. The
+        // status is there only while the job runs; the server keeps nothing of a job after it.
+        public async Task GetJobAsync(HttpContext context)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+
+            Answer answer = GetJobAnswer(context);
+
+            // A caller asks again and again for as long as its job runs: a line in the log for each would bury the rest. The line says
+            // the route and not the path, as the last part of the path is whatever the caller sent, and nothing in it may end a line
+            // of the log.
+            m_Logger.LogDebug("{Method} {Route}: {StatusCode}", HttpMethods.Get, c_JobRoute, answer.Status);
             await answer.Result.ExecuteAsync(context);
         }
 
@@ -244,6 +272,43 @@ namespace Zametek.ProjectPlan.CommandLine
             return (body, GetStrongTag(body));
         }
 
+        private Answer GetJobAnswer(HttpContext context)
+        {
+            // What it is answered with depends on what the request accepts.
+            context.Response.Headers.Vary = c_AcceptHeader;
+
+            if (AcceptHelper.Choose(context.Request, [c_JsonMediaType]) is null)
+            {
+                return NotAcceptable(context, [c_JsonMediaType]);
+            }
+
+            string id = Convert.ToString(context.Request.RouteValues[c_RequestIdRoute], CultureInfo.InvariantCulture) ?? string.Empty;
+
+            if (id.Length != c_RequestIdLength
+                || !id.All(Uri.IsHexDigit))
+            {
+                var problems = new ProblemCollector();
+                problems.AddMalformed(new ProblemError
+                {
+                    Parameter = c_RequestIdRoute,
+                    Code = ProblemCodes.InvalidFormat,
+                    Detail = Resource.ProjectPlan.Messages.Message_ServeErrorJobIdNotValid,
+                });
+                return Invalid(context, problems);
+            }
+
+            JobStatusResponse? status = m_RunningJobs.Find(id.ToLowerInvariant());
+
+            if (status is null)
+            {
+                return Refuse(context, StatusCodes.Status404NotFound, Resource.ProjectPlan.Messages.Message_ServeJobNotRunning);
+            }
+
+            // How often it is worth asking again.
+            context.Response.Headers.RetryAfter = JobServer.PollAfterSeconds.ToString(CultureInfo.InvariantCulture);
+            return new Answer(Results.Json(status, JsonOptions), StatusCodes.Status200OK);
+        }
+
         private async Task<Answer> CompileAnswerAsync(HttpContext context)
         {
             var problems = new ProblemCollector();
@@ -333,7 +398,11 @@ namespace Zametek.ProjectPlan.CommandLine
             }
 
             await using Stream stream = plan.OpenReadStream();
-            JobRequest request = CompileOptionsHelper.ToJobRequest(options, stream, importFormat, m_Limits);
+
+            // The job is in the list of the jobs that run, under the id of the request, for as long as it takes: a caller who
+            // waits can ask how far it has got. It reports there.
+            using RunningJobs.Registration running = m_RunningJobs.Begin(RequestIdHelper.Get(context));
+            JobRequest request = CompileOptionsHelper.ToJobRequest(options, stream, importFormat, m_Limits) with { Progress = running };
 
             // The time the job's files are stamped with in a zip: the time it runs at.
             DateTimeOffset runsAt = request.Now ?? m_TimeProvider.GetLocalNow();

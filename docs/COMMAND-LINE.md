@@ -70,7 +70,7 @@ A formula is its result, and a date cell is its date. A number that you type as 
 
 For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
 
-`zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle.
+`zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle. A control character in a value, for example a line end in the title of a scenario, is written as an escape such as `\n`.
 
 `zpp` and `zpp serve` read their options strictly. They refuse an invalid option with exit code 2, and they do not ignore it. These are the invalid options:
 
@@ -108,12 +108,13 @@ The option `--run-simulation` runs the simulation after the plan compiles. `zpp`
 zpp -i plan.zpp --run-simulation
 ```
 
-The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution, the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date.
+The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution (and the shape value, for the modified beta-PERT), the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date. The seed, the distribution and the shape value are those of the run that made the result. A person can change the settings of the project after the run, and the statistics of a saved result do not follow them.
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `--run-simulation` | | Runs the simulation with the settings of the input file. It uses the seed that the file has saved, also when the file draws a new seed each time, and thus a run repeats. |
 | `--simulation-directory`, `--simulation-format`, `--simulation-size` | | The chart of the simulation and its CSV files, in the directory. The chart is a stacked histogram of the finish times, split by critical path, with the S-curve and lines at the mean, at the 50th, 80th and 90th percentiles, at the plan and at the target (`<name>-simulation.<format>`). It is like the other charts. The CSV files are `<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`, which are the files that the panel saves. |
+| `--simulation-workbook-directory` | | The result of the simulation as one Excel workbook, in the directory (`<name>-simulation.xlsx`). It has a sheet for the settings and for each of the five CSV files: "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities", and, for a run, "Simulation Iterations". A project does not hold the iterations of a run, and so the workbook of a result that the input file holds has no such sheet. The workbook is independent of the chart and of the CSV files, and `zpp` makes them only when their options are present. A cell holds 32,767 characters, and `zpp` cuts a longer text and ends it with an ellipsis. |
 
 ```
 zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --simulation-size 1600:900 --simulation-format png
@@ -121,7 +122,7 @@ zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --s
 
 - A project that holds the result of an earlier run gives its statistics without `--run-simulation`. `zpp` prints them after the metrics, and `--simulation-directory` draws that result and writes its CSV files. A project does not hold the iterations of a run, and thus a job that does not run the simulation writes no file `-iterations.csv`. `--simulation-directory` is a failure for a project that holds no result, without `--run-simulation`. `zpp` writes the reason to the standard error stream and exits with code 1.
 - `-o` saves the project with the settings and the result of the run. `-x` writes them to the Excel workbook, in the sheets "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities". The simulation runs before the project and the workbook are written. A plan with the default settings and no result has none of these sheets.
-- The result does not depend on the number of processors. The iterations run on all of them.
+- The result does not depend on the number of processors. The iterations run on all of them. A server shares the processors between the simulations that run at one time (refer to [Limits](#limits)).
 - An iteration costs about as much as a compilation: less than a millisecond for the sample plan, and about 100 milliseconds for a plan of 1000 activities (measured in phase 0 of the work, refer to the [simulation plan](SIMULATION-PLAN.md)). Large plans with many iterations can take minutes. `--verbose` writes the progress of the simulation to the standard error stream, about every two seconds.
 - With `--metrics-format json`, the statistics are one more object, `Simulation`, after the metrics. It has raw values, as the metrics have. The seed is text, because a seed can be larger than every reader of JSON reads without loss. A date is `yyyy-MM-dd`. A project with no result, and no `--run-simulation`, has the JSON that it had before there was a simulation.
 - A run can fail in two ways. The settings of the project can be ones that a run cannot use, for example no iterations or a shape value that is not above 0. Or the simulation cannot run, for example for a plan that has no activities. Then `zpp` writes the reason to the standard error stream and exits with code 1. A plan with no activities still has its metrics printed.
@@ -139,8 +140,25 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 | 3 | The plan compiled with errors |
 | 4 | A compilation used more time than `--compile-timeout` gives, and `zpp` cancelled it |
 | 5 | `zpp` sent the run to a server, and the server did not run it (refer to [Send runs to a server](#send-runs-to-a-server)) |
+| 130 | A person stopped the run with Ctrl+C, or a program stopped it with `SIGTERM` (refer to [Stop a run](#stop-a-run)). This is the code that a shell gives to a program that Ctrl+C stopped (128 + 2). |
 
 A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
+
+## Stop a run
+
+Press Ctrl+C to stop a run of `zpp`. A `SIGTERM` has the same effect. `zpp` then does this:
+
+1. `zpp` writes `Stopping after the step that is in progress. Press Ctrl+C again to stop at once.` to the standard error stream. It does not stop in the middle of a step. A step is the read of the plan, the compilation, the simulation, or the write of one output.
+2. The run stops before the next step. A simulation is the exception, because it stops between two chunks of its iterations. This takes a fraction of a second, also for a simulation of a million iterations.
+3. `zpp` writes `The run was cancelled.` to the standard error stream. It does not print the metrics, and it exits with code 130.
+
+A file that `zpp` wrote before the stop stays where it is. Each of these files is complete, because `zpp` writes one output at a time and does not stop in the middle of one. The project (`-o`) and the workbook (`-x`) come after the simulation, and thus a run that you stop in the simulation does not write them.
+
+Press Ctrl+C a second time to stop `zpp` at once. The system then ends the process, and the exit code is the one that your system gives to a program that Ctrl+C ended. A file that `zpp` was writing at that time can be incomplete.
+
+With `--server`, the stop cancels the request to the server, and the server stops the job (refer to [Send runs to a server](#send-runs-to-a-server)). `zpp` writes no file, because it writes the files when the answer arrives.
+
+A step that is in progress runs to its end. A very large plan can thus keep `zpp` busy for some time after the first Ctrl+C. The compilation is limited by `--compile-timeout`.
 
 ## zpp as a server
 
@@ -180,6 +198,7 @@ To use a server by default, set `ZPP_SERVER` and do not use the option `--server
 - A server does not run the job in these cases. `zpp` cannot connect to the server. The server needs its key. The server refuses the request, because the request is invalid or beyond its limits. The server stays busy. The server stops the job at its time limit.
 - If a server runs the job, and the job fails, the run ends in the same way as the same run on the local computer. `zpp` writes the same text to the standard error stream, for each status of the answer. For example, the plan does not compile, `zpp` cannot read a file, or `zpp` cannot select a scenario.
 - The compile timeout goes with the run. It is 5000 milliseconds, unless `--compile-timeout` gives another value. It must be within the limit of the server (refer to [Limits](#limits)). The server refuses `0`, which disables the watchdog on the local computer, and it refuses a timeout above the limit.
+- A simulation of a large plan can take minutes. With `-v`, `zpp` asks the server how far the job has got, after two seconds and then as often as the server says (every two seconds), and it writes `Simulation on <server>: <done> of <total> iterations` to the standard error stream. This is the same information as the progress that a local run writes to its log. Without `-v`, `zpp` does not ask. Ctrl+C stops the run (refer to [Stop a run](#stop-a-run)).
 - The text and the files come from the server. Thus, numbers and dates use the culture and time zone of the server. The run takes its times from the clock of the server, unless `--now` gives a time (refer to [Culture, time zone and logs](#culture-time-zone-and-logs)). The log of `zpp` stays in the log of the server. The option `-v` shows where the run went.
 
 ### The API
@@ -266,6 +285,8 @@ Each way overrides the one before it. The server reads the file one time, when i
 
 `GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The server checks the time of a job between the steps of the job. Thus, a step that is in progress, such as a compile or the drawing of a chart, ends first. A simulation is the exception: it stops between two groups of its iterations, and the job stops with it. Each iteration schedules the resources again, and it costs about as much as a compilation. Thus, the time of a job (`--job-timeout`) is the limit for a simulation of a large plan, and the limit for the iterations is the limit for a simulation of a small plan. A job cannot disable its compile timeout, but `zpp` can.
 
+The simulations of the jobs of a server share the processors. A simulation that begins takes the processors divided by the number of simulations that run at that time, itself among them. The first takes all the processors, the second half of them, the third a third, and so on, and each takes at least one. A simulation keeps its share to its end. This does not change the result of a simulation, which is the same for any number of threads. It limits the threads that the jobs ask for. A run of `zpp` is one job, and it has all the processors. There is no setting for this.
+
 ### Other computers
 
 ```
@@ -312,6 +333,8 @@ The server writes its log to the standard error stream. The log has these items:
 The option `-v` adds their informational messages.
 
 Each line that belongs to a request begins with the id of the request. This id is the `Request-Id` of the response and the `traceId` of the problem. Thus, you can find a request in the log from its answer. You can also find it from the trace in which it came: a request that has a `traceparent` keeps its trace id. The option `--log-format json` writes each line as a JSON object, for a program to read (refer to [The log](API.md#the-log)).
+
+The text log writes each control character in a value as an escape, such as `\n` for a line end. Thus, the path of a request or the title of a scenario in a project cannot add a line to the log. The JSON log keeps the value, and writes it as JSON does.
 
 ### Stop the server
 

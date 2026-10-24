@@ -276,6 +276,29 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Read_Given_TheWorkbookOfTheSimulation_Then_ReadsItAsAnEmptyObjectAndItNeedsNeitherARunNorTheChart()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""outputs"":{""simulationWorkbook"":{}}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldNotBeNull().RunSimulation.ShouldBeFalse();
+            options.Outputs.ShouldNotBeNull().SimulationWorkbook.ShouldNotBeNull();
+            options.Outputs.Simulation.ShouldBeNull();
+        }
+
+        [Theory]
+        [InlineData(@"{""outputs"":{""simulationWorkbook"":true}}", @"#/options/outputs/simulationWorkbook wrongType")]
+        [InlineData(@"{""outputs"":{""simulationWorkbook"":{""format"":""xlsx""}}}", @"#/options/outputs/simulationWorkbook/format unknownProperty")]
+        [InlineData(@"{""outputs"":{""simulationWorkbook"":""x""}}", @"#/options/outputs/simulationWorkbook wrongType")]
+        public void Read_Given_TheWorkbookOfTheSimulationThatIsNotAnEmptyObject_Then_NoOptionsAndTheProblemIsListedWhereItIs(string json, string expected)
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(json);
+
+            options.ShouldBeNull();
+            problems.Errors.Select(x => $@"{x.Pointer} {x.Code}").ShouldBe([expected]);
+        }
+
+        [Fact]
         public void Read_Given_TheOutputOfASimulationThatIsNull_Then_NoneIsAskedFor()
         {
             (CompileOptions? options, ProblemCollector problems) = Read(@"{""outputs"":{""simulation"":null}}");
@@ -628,6 +651,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 RunSimulation = true,
                 Outputs = new OutputsOptions
                 {
+                    SimulationWorkbook = new SimulationWorkbookOptions(),
                     Simulation = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
@@ -662,6 +686,43 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void GetRequestedOutputs_Given_TheWorkbookOfTheSimulation_Then_ItIsTheLastAndNeedsNeitherTheChartNorARun()
+        {
+            var options = new CompileOptions { Outputs = new OutputsOptions { SimulationWorkbook = new SimulationWorkbookOptions() } };
+
+            CompileOptionsHelper.GetRequestedOutputs(options).ShouldBe([JobOutput.SimulationWorkbook]);
+        }
+
+        [Fact]
+        public void BuildOutputFilename_Given_TheWorkbookOfTheSimulation_Then_NamedAfterThePlanWithTheSimulationSuffix()
+        {
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.SimulationWorkbook, new CompileOptions(), @"plan").ShouldBe(@"plan-simulation.xlsx");
+        }
+
+        [Fact]
+        public void ToJobRequest_Given_TheWorkbookOfTheSimulation_Then_TheJobMakesIt()
+        {
+            using var input = new MemoryStream();
+            var withIt = new CompileOptions { Outputs = new OutputsOptions { SimulationWorkbook = new SimulationWorkbookOptions() } };
+
+            CompileOptionsHelper.ToJobRequest(withIt, input, null, new ServeLimits()).SimulationWorkbook.ShouldBeTrue();
+            CompileOptionsHelper.ToJobRequest(new CompileOptions(), input, null, new ServeLimits()).SimulationWorkbook.ShouldBeFalse();
+
+            // It is independent of the chart and the files of the simulation.
+            CompileOptionsHelper.ToJobRequest(withIt, input, null, new ServeLimits()).SimulationCsvFiles.ShouldBe(SimulationCsvFile.None);
+            CompileOptionsHelper.ToJobRequest(withIt, input, null, new ServeLimits()).SimulationChart.ShouldBeNull();
+        }
+
+        [Fact]
+        public void FromOptions_Given_TheDirectoryOfTheWorkbook_Then_ARequestAsksForTheWorkbook()
+        {
+            CompileOptions options = CompileOptionsHelper.FromOptions(new Options { InputFilename = @"plan.zpp", SimulationWorkbookDirectory = @"out" });
+
+            options.Outputs.ShouldNotBeNull().SimulationWorkbook.ShouldNotBeNull();
+            options.Outputs.Simulation.ShouldBeNull();
+        }
+
+        [Fact]
         public void GetRequestedOutputs_Given_NoOutputs_Then_None()
         {
             CompileOptionsHelper.GetRequestedOutputs(new CompileOptions()).ShouldBeEmpty();
@@ -693,14 +754,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [
                 @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart", @"scenarioChart",
                 @"simulationChart", @"simulationStatistics", @"simulationHistogram", @"simulationPaths", @"simulationActivities", @"simulationIterations",
+                @"simulationWorkbook",
             ]);
 
             // Each output but those of the simulation is a member of the outputs a request asks for, and each member is one of them.
-            // The simulation is one member: its chart and its files are the outputs that it makes.
+            // The simulation is one member: its chart and its files are the outputs that it makes. Its workbook is an output of its own.
             string[] members = [.. typeof(OutputsOptions).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(x => ApiNamingPolicy.Instance.ConvertName(x.Name))];
 
-            members.ShouldBe([.. names.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation"]);
+            members.ShouldBe([.. names.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation", @"simulationWorkbook"]);
         }
 
         [Theory]

@@ -206,5 +206,68 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             log.ShouldNotContain(key);
             log.ShouldNotContain(@"not-the-key");
         }
+
+        [Fact]
+        public async Task CreateLogger_Given_TextAndAValueWithLineEnds_Then_OneLineThatKeepsThemEscaped()
+        {
+            string line = await CaptureAsync(() =>
+            {
+                using Serilog.Core.Logger logger = JobServer.CreateLogger(verbose: false, LogFormat.Text);
+                logger.Information(@"{Method} {Path}: {StatusCode}", @"GET", "/v1/a\nWARN fake line\r\n\x1b[31mred", 400);
+                return Task.CompletedTask;
+            });
+
+            string escaped = Regex.Escape(@"/v1/a\nWARN fake line\r\n" + @"\u" + "001b[31mred");
+            line.ShouldMatch($@"^\[\d\d:\d\d:\d\d INF\] GET {escaped}: 400\r?\n$");
+        }
+
+        [Fact]
+        public async Task CreateLogger_Given_JsonAndAValueWithLineEnds_Then_OneLineThatKeepsTheValue()
+        {
+            string line = await CaptureAsync(() =>
+            {
+                using Serilog.Core.Logger logger = JobServer.CreateLogger(verbose: false, LogFormat.Json);
+                logger.Information(@"{Path}: {StatusCode}", "/v1/a\nWARN fake line", 400);
+                return Task.CompletedTask;
+            });
+
+            // JSON writes the line end as JSON does, and the value is read back as it was.
+            using JsonDocument document = JsonDocument.Parse(line);
+            document.RootElement.GetProperty(@"properties").GetProperty(@"path").GetString().ShouldBe("/v1/a\nWARN fake line");
+            line.Count(x => x == '\n').ShouldBe(1);
+        }
+
+        [Theory]
+        [InlineData(LogFormat.Text)]
+        [InlineData(LogFormat.Json)]
+        public async Task Log_Given_AVerboseServerAndAPathWithALineEnd_Then_NoLineOfTheLogIsTheCallers(LogFormat format)
+        {
+            ILogger previous = Log.Logger;
+            string log;
+
+            try
+            {
+                log = await CaptureAsync(async () =>
+                {
+                    Log.Logger = JobServer.CreateLogger(verbose: true, format);
+                    await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+
+                    // The web server logs the path of each request as it is, in verbose mode and before the key is asked for.
+                    using HttpResponseMessage response = await server.Client.GetAsync(@"/v1/jobs/x%0AFORGED-LINE");
+                    response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+                });
+            }
+            finally
+            {
+                (Log.Logger as IDisposable)?.Dispose();
+                Log.Logger = previous;
+            }
+
+            string[] lines = [.. log.Split('\n').Select(x => x.TrimEnd('\r'))];
+            lines.ShouldNotContain(x => x.StartsWith(@"FORGED-LINE", StringComparison.Ordinal));
+
+            // The request is in the log, as one line, with the line end as an escape: the text log writes it so, and the JSON log as JSON does.
+            lines.ShouldContain(x => x.Contains(@"/v1/jobs/x\nFORGED-LINE"));
+        }
     }
 }

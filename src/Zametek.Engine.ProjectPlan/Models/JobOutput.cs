@@ -16,6 +16,7 @@ namespace Zametek.Engine.ProjectPlan
         SimulationHistogram,
         SimulationPaths,
         SimulationActivities,
-        SimulationIterations
+        SimulationIterations,
+        SimulationWorkbook
     }
 }

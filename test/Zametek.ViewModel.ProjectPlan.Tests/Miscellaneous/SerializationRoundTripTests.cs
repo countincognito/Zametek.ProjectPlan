@@ -461,6 +461,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                             SimulationSummary = new SimulationSummaryModel
                             {
                                 IterationCount = 1234,
+
+                                // The run that made the result used other values than the settings have now.
+                                Seed = ulong.MaxValue - 9,
+                                Distribution = DurationDistribution.Triangular,
+                                ModifiedBetaShape = null,
                                 ValidIterationCount = 1200,
                                 FailedIterationCount = 34,
                                 PlannedFinishTime = 60,
@@ -517,6 +522,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             SimulationSummaryModel summary = loaded.Files[0].Scenario.SimulationSummary.ShouldNotBeNull();
             (summary.IterationCount, summary.ValidIterationCount, summary.FailedIterationCount, summary.PlannedFinishTime, summary.TargetFinishTime, summary.TargetProbability)
                 .ShouldBe((1234, 1200, 34, 60, 77, 0.875));
+            (summary.Seed, summary.Distribution, summary.ModifiedBetaShape)
+                .ShouldBe((ulong.MaxValue - 9, DurationDistribution.Triangular, (double?)null));
             (summary.Mean, summary.StandardDeviation, summary.Minimum, summary.Maximum, summary.BinWidth, summary.ChartPathCount, summary.OtherPathsWeight)
                 .ShouldBe((66.25, 4.5, 50, 90, 2, 2, 199.5));
             summary.Percentiles.ShouldBe(expected.Percentiles);

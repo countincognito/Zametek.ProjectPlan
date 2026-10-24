@@ -777,4 +777,25 @@
   <data name="Message_ImportFirstProblemsListed" xml:space="preserve">
     <value>The first {0} are listed.</value>
   </data>
+  <data name="Message_RunCancelled" xml:space="preserve">
+    <value>The run was cancelled.</value>
+  </data>
+  <data name="Message_RunStopping" xml:space="preserve">
+    <value>Stopping after the step that is in progress. Press Ctrl+C again to stop at once.</value>
+  </data>
+  <data name="Message_SimulationThreadsOutOfRange" xml:space="preserve">
+    <value>The number of threads must be -1 (all the processors), or 1 or more.</value>
+  </data>
+  <data name="Message_ServeErrorJobIdNotValid" xml:space="preserve">
+    <value>must be the 32 hexadecimal characters of the trace id that the request which began the job gave</value>
+  </data>
+  <data name="Message_ServeJobNotRunning" xml:space="preserve">
+    <value>No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it.</value>
+  </data>
+  <data name="Message_SimulationWorkbookSaved" xml:space="preserve">
+    <value>The workbook was saved as {0}.</value>
+  </data>
+  <data name="Message_SimulationIterationsFitNoSheet" xml:space="preserve">
+    <value>The result has {0} iterations, and a sheet of Excel has room for {1}.</value>
+  </data>
 </root>

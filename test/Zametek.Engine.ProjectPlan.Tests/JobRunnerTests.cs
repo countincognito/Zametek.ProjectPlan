@@ -100,6 +100,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 SimulationSettings = new SimulationSettingsModel { Iterations = 200, Seed = 7, TargetFinishTime = 5 },
                 SimulationChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                 SimulationCsvFiles = SimulationCsvFile.All,
+                SimulationWorkbook = true,
             };
         }
 

@@ -44,6 +44,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_SimulationDirectoryLongName = "simulation-directory";
         private const string c_SimulationFormatLongName = "simulation-format";
         private const string c_SimulationSizeLongName = "simulation-size";
+        private const string c_SimulationWorkbookDirectoryLongName = "simulation-workbook-directory";
         private const string c_ServerLongName = "server";
         private const string c_LocalLongName = "local";
         private const string c_ApiKeyFileLongName = "api-key-file";
@@ -179,6 +180,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_SimulationSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Simulation chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> SimulationSize { get; set; } = [];
+
+        [Option(c_SimulationWorkbookDirectoryLongName, HelpText = "Simulation workbook directory: the result as one Excel workbook, with a sheet for the settings, the statistics, the percentiles, the histogram, the critical paths and the criticalities and, for a run, the iterations. It comes from the result of the run, or else from the result that the input file holds, and it is made without the chart and the CSV files")]
+        public string? SimulationWorkbookDirectory { get; set; } = default;
 
 
 

@@ -15,6 +15,11 @@ namespace Zametek.Common.ProjectPlan
         public const double DefaultModifiedBetaShape = 4.0;
 
         /// <summary>
+        /// The seed that a scenario has when nobody gives another.
+        /// </summary>
+        public const ulong DefaultSeed = 1;
+
+        /// <summary>
         /// The number of iterations of a run. A run accepts the numbers from 1 to the limit of the library.
         /// </summary>
         public int Iterations { get; init; } = SimulationSettings.DefaultIterations;
@@ -29,7 +34,7 @@ namespace Zametek.Common.ProjectPlan
         /// <summary>
         /// The seed of the random numbers. After a run, it is the seed that the run used.
         /// </summary>
-        public ulong Seed { get; init; } = 1;
+        public ulong Seed { get; init; } = DefaultSeed;
 
         /// <summary>
         /// Whether each run of the panel draws a new seed. A run of <c>zpp</c> never does.

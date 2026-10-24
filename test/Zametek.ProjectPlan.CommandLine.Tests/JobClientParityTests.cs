@@ -158,6 +158,37 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Run_Given_TheWorkbookOfARunAndOfAResultThatTheProjectHolds_Then_DoesWhatZppDoesHere()
+        {
+            string plan = await SimulatedPlanAsync(
+                @"estimated-workbook",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 600, Seed = 5, Distribution = DurationDistribution.Normal, TargetFinishTime = 28, UseRandomSeed = false });
+            string held = await SimulatedPlanAsync(
+                @"estimated-workbook-held",
+                AssetPath(@"estimated.zpp"),
+                new SimulationSettingsModel { Iterations = 400, Seed = 2, UseRandomSeed = false },
+                withResult: true);
+
+            // The workbook of a run has the sheet of the iterations, and the same bytes from the process, the server and the client.
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", plan,
+                @"--now", c_Now,
+                @"--run-simulation",
+                @"--simulation-workbook-directory", directory,
+            ]);
+
+            // The workbook of a result that the project holds has not.
+            await ShouldDoWhatZppDoesHereAsync(directory =>
+            [
+                @"-i", held,
+                @"--now", c_Now,
+                @"--simulation-workbook-directory", directory,
+            ]);
+        }
+
+        [Fact]
         public async Task Run_Given_ARunOfAPlanWithResourcesAndTableMetrics_Then_DoesWhatZppDoesHere()
         {
             string plan = await SimulatedPlanAsync(

@@ -849,6 +849,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The run was cancelled..
+        /// </summary>
+        public static string Message_RunCancelled {
+            get {
+                return ResourceManager.GetString("Message_RunCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping after the step that is in progress. Press Ctrl+C again to stop at once..
+        /// </summary>
+        public static string Message_RunStopping {
+            get {
+                return ResourceManager.GetString("Message_RunStopping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scenario &apos;{0}&apos; has no scenario data in the project file.
         /// </summary>
         public static string Message_ScenarioHasNoScenarioData {
@@ -962,6 +980,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeErrorIncludeNotKnown {
             get {
                 return ResourceManager.GetString("Message_ServeErrorIncludeNotKnown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be the 32 hexadecimal characters of the trace id that the request which began the job gave.
+        /// </summary>
+        public static string Message_ServeErrorJobIdNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorJobIdNotValid", resourceCulture);
             }
         }
         
@@ -1167,6 +1194,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeHttpsNeedsCertificate {
             get {
                 return ResourceManager.GetString("Message_ServeHttpsNeedsCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it..
+        /// </summary>
+        public static string Message_ServeJobNotRunning {
+            get {
+                return ResourceManager.GetString("Message_ServeJobNotRunning", resourceCulture);
             }
         }
         
@@ -1711,6 +1747,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The result has {0} iterations, and a sheet of Excel has room for {1}..
+        /// </summary>
+        public static string Message_SimulationIterationsFitNoSheet {
+            get {
+                return ResourceManager.GetString("Message_SimulationIterationsFitNoSheet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of iterations must be from 1 to {0}..
         /// </summary>
         public static string Message_SimulationIterationsOutOfRange {
@@ -1762,6 +1807,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_SimulationShapeOutOfRange {
             get {
                 return ResourceManager.GetString("Message_SimulationShapeOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of threads must be -1 (all the processors), or 1 or more..
+        /// </summary>
+        public static string Message_SimulationThreadsOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationThreadsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook was saved as {0}..
+        /// </summary>
+        public static string Message_SimulationWorkbookSaved {
+            get {
+                return ResourceManager.GetString("Message_SimulationWorkbookSaved", resourceCulture);
             }
         }
         

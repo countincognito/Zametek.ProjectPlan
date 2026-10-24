@@ -35,5 +35,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // its own: simulationChart, simulationStatistics, simulationHistogram, simulationPaths, simulationActivities and
         // simulationIterations. A project with no result, and no run, is refused.
         public ChartOptions? Simulation { get; init; }
+
+        // --simulation-workbook-directory: the result of the simulation as one Excel workbook (<name>-simulation.xlsx): a sheet for the
+        // settings and for each of the CSV files. It is independent of the output above, and it comes from the same result. It has the
+        // sheet of the iterations only when the job ran the simulation (runSimulation).
+        public SimulationWorkbookOptions? SimulationWorkbook { get; init; }
     }
 }

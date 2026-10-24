@@ -417,18 +417,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: give the simulator a way to run a number of chunks and return (the chunk is already the unit of the work, with its own seed), and let the panel call it from a timer so that the UI gets the thread between batches. Or hide the panel on the web host until this is done. The result must stay the same, because a chunk does not depend on the thread that runs it.
 
-- [ ] **Keep the seed and the distribution with the result of a simulation** *(2026-10-16)*
-
-  A result that a project holds does not say which seed, distribution and shape value made it. The statistics that `zpp` and the API give for it use the settings that the project holds. A person can change the settings after the run and save the project, and then the statistics name a seed that did not make them. Choices: add the three values to the result, in the file and in the Excel sheet "Simulation Statistics". The file format v0.6.2 is not released, and thus it can take them. Or clear the result when a setting changes.
-
-- [ ] **Run the iterations of a job on a share of the processors** *(2026-10-16)*
-
-  `SimulationSettings.MaxDegreeOfParallelism` is -1 (all the processors) in the panel and in each job. A server with `MaxJobs` jobs that all simulate asks the pool for several times its processors. The result does not change with the number of threads, and thus a server could give each job `processors / MaxJobs`. Measure before the change.
-
-- [ ] **Let a client of `zpp --server` see the progress of a simulation** *(2026-10-16)*
-
-  The server writes the progress to its log, and the client waits without a sign. A simulation of a large plan can take minutes. The API has no operation for a job that is in progress (ASY-1 is a deviation of the API), and so the choices are a response that streams, or a job that the client can ask about. Both change the API.
-
 - [ ] **Show the problems of an import in a window of their own** *(2026-10-17)*
 
   The desktop shows the first ten problems of a workbook in an error, and it offers to save a CSV report of all of them (`ImportProblemsPresenter`). A window with a grid (sheet, cell, column, row, value, message), with the buttons "Save report" and "Copy", is easier to use when a workbook has hundreds of problems. `ScenarioImportException.Issues` already holds all that the window needs.
@@ -447,6 +435,25 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   One fix is to find the cell in the file when the load fails with this message, and to report it. Another fix is to read the cells of such a workbook without the date conversion of the library.
 
-- [ ] **Cancel a job of `zpp` with Ctrl+C** *(2026-10-16)*
+- [ ] **Let a job make only some of the CSV files of a simulation** *(2026-10-18, from the review of the known gaps)*
 
-  `Program.RunAsync` runs the job with no token, and so Ctrl+C kills the process. The engine can already stop a simulation between two chunks of its iterations. A handler for the cancel key that cancels the token would let `zpp` stop after the chunk that is in progress, write nothing half-way and exit with a code of its own.
+  The output `simulation` of a job makes the chart of the simulation and all its CSV files: the statistics, the histogram, the paths, the activities and, for a run, the iterations. At the end of phase 4, a request could ask for each file with an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). Step 5 of phase 5 (`4e98d8fe`) replaced them with the one output `simulation`. The answer still lists each file as an output of its own, but a request cannot ask for a part. A client that needs only the statistics gets the other files too. `zpp` never had an option for only some of the files.
+
+  The file of the iterations has one row for each iteration, and a run can have 1,000,000 iterations. Thus the files that a client does not need cost most for this file.
+
+  Choices: add the single outputs again, next to `simulation`. Or let `simulation` carry a list of the parts to make (for example `"parts": ["chart", "statistics"]`). The command line needs an option in both cases (for example `--simulation-files statistics,histogram`). Decide first what a request means when it gives `simulation` and a single output together.
+
+  **Where.** `SimulationCsvFile` is a flags enum, and so the engine can already make a set of files. `JobRunner` has the table of `SimulationCsvFile` and `JobOutput`. The change is also in `JobRequest`, in `CompileOptionsHelper` and `Program` of the command line, and in `docs/API.md`, `docs/openapi.yaml` and `docs/COMMAND-LINE.md`. The contract tests of the OpenAPI description change with the API. The workbook of the simulation (`simulationWorkbook`) is an output of its own and is independent of `simulation`, so that a request can already choose between the chart with its five files and one workbook. The same choice for the single files remains.
+
+- [ ] **Make the schedule simulation faster** *(2026-10-18, from the review of the known gaps)*
+
+  Phase 0 found where the time goes, and the maintainer decided that phase 2 builds none of the speed work. [The plan](SIMULATION-PLAN.md#performance-work-to-explore-later) lists four possibilities, with their rough effort and their effect on the accuracy:
+
+  - A mode that keeps the resource order of the compiled plan. It takes 1 to 2 days and is 430 to 1,400 times faster. The results change for a plan that the resources decide.
+  - A faster incremental update in the critical-path engine. It takes about a week and is up to 2 to 3 times faster. The results do not change.
+  - A flat kernel for the priority list and the scheduler. It takes 2 to 4 weeks for each language. Nobody measured the gain.
+  - An approximate priority list. The team does not recommend it, because the loss is not predictable.
+
+  The efforts are estimates, and nobody measured them.
+
+  Start with a measurement when speed becomes a problem. Each exact change must be made in the Rust port too, because the same seed must give the same iterations in both languages.

@@ -8,16 +8,17 @@ The file [`openapi.yaml`](openapi.yaml) describes the same API for programs (Ope
 
 The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md), and this document refers to the rules of the guide by their identifiers, for example `ASY-1`. The section [Deviations from the guide](#deviations-from-the-guide) lists the rules that the API does not follow.
 
-The API has four operations, all under `/v1`. The table that follows lists them:
+The API has five operations, all under `/v1`. The table that follows lists them:
 
 | Operation | Description |
 | --------- | ----------- |
 | [`POST /v1/projects/compile`](#compile-a-project) | This operation compiles the project in the request. It answers with the metrics of the project, the statistics of a simulation of its schedule if the request asks for one, and the outputs (files) that the request asks for. |
 | [`POST /v1/projects/scenarios`](#list-a-projects-scenarios) | This operation lists the scenarios of the project in the request. |
+| [`GET /v1/jobs/{requestId}`](#ask-how-far-a-job-has-got) | This operation tells how far a job that runs now has got. The id of the job is the trace id of the request that began it. |
 | [`GET /v1/info`](#ask-what-the-server-is) | This operation gives information about the server: its version, culture, time zone and limits. |
 | [`GET /v1/openapi`](#fetch-the-description) | This operation gives the description of this API, `openapi.yaml`, for programs. It needs no API key. |
 
-The server keeps nothing between requests. Each request carries its project, and the server does not store it. The two operations use POST only because a project is a file, and a file cannot go in a URL. A request that you send again has the same result. You can send a request to any server of the same version.
+The server keeps nothing between requests. Each request carries its project, and the server does not store it. The two operations use POST only because a project is a file, and a file cannot go in a URL. A request that you send again has the same result. You can send a request to any server of the same version. The one thing that the server knows about a job is how far it has got while it runs (refer to [Ask how far a job has got](#ask-how-far-a-job-has-got)), and it forgets this when the job ends.
 
 ## Quick start
 
@@ -51,14 +52,13 @@ curl -s -F project=@plan.zpp -F "options=@options.json;type=application/json" -H
 
 `plan.zip` contains `plan.zpp`, `plan-gantt.png` and `plan-arrow.svg`, each with the name that `zpp` gives it. It also contains `result.json`, which is the JSON answer without the contents of the files. Without `Accept: application/zip`, the answer is JSON. Then each file is in the `outputs` list, as base64 in its `content`.
 
-To simulate the schedule of the project, add `simulation` to the options. The answer then has the [statistics](#simulation) of the simulation, and the options can ask for its chart and CSV files in `outputs`:
+To simulate the schedule of the project, set the option `runSimulation`. The answer then has the [statistics](#simulation) of the simulation, and the output `simulation` asks for its chart and its CSV files. A request does not give the settings of the simulation, because they are in the project (refer to [The simulation](#the-simulation)):
 
 ```json
 {
-  "simulation": { "iterations": 10000, "seed": "2026", "targetFinishDays": 120 },
+  "runSimulation": true,
   "outputs": {
-    "simulationChart": { "format": "png", "width": 1600, "height": 900 },
-    "simulationStatistics": {}
+    "simulation": { "format": "png", "width": 1600, "height": 900 }
   }
 }
 ```
@@ -152,7 +152,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | `runSimulation` | `--run-simulation` | `true` runs the simulation of the schedule after the project compiles (refer to [The simulation](#the-simulation)). The default is `false`. |
 | `outputs` | | What the job produces (refer to the table that follows). |
 
-The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Two outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`).
+The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Three outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`).
 
 | Member | Option of zpp | Produces | Settings |
 | ------ | ------------- | -------- | -------- |
@@ -165,6 +165,7 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `earnedValueChart` | `--ev-*` | The earned value chart (`<name>-ev.<format>`) | A chart |
 | `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`) | A chart |
 | `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
+| `simulationWorkbook` | `--simulation-workbook-directory` | The result of the simulation as one Excel workbook (`<name>-simulation.xlsx`), with a sheet for the settings and for each of the CSV files, and, for a run, a sheet for the iterations. It is independent of `simulation`. | `{}` |
 
 `<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`.
 
@@ -178,7 +179,7 @@ The simulation draws the duration of each activity from its three-point estimate
 
 - `runSimulation` runs the simulation with those settings. It uses the seed that the project saved, also when the project draws a new seed each time. Thus the same project gives the same result each time. A project that was saved before the simulation has the settings of a new scenario (5000 iterations, the distribution `betaPert`, and the seed 1).
 - The server runs at most `maxSimulationIterations` iterations. A project with more than that, and a request with `runSimulation`, is a problem with the type `validation-failed`, at `#/options/runSimulation`. The settings that a run cannot use (no iterations, or a shape value that is not above 0) are the problem `simulation-not-possible`.
-- A project can hold the result of the last run. Without `runSimulation`, the answer has the [statistics](#simulation) of that result, and `outputs.simulation` makes its chart and its CSV files from it. The iterations of a run are not in the project, and thus there is no file `simulationIterations` for a result that the project held. A request for `outputs.simulation` that has no `runSimulation`, for a project with no result, is the problem `simulation-not-possible`, at `#/options/outputs/simulation`.
+- A project can hold the result of the last run. Without `runSimulation`, the answer has the [statistics](#simulation) of that result, and `outputs.simulation` makes its chart and its CSV files from it. The iterations of a run are not in the project, and thus there is no file `simulationIterations` for a result that the project held. A request for `outputs.simulation` that has no `runSimulation`, for a project with no result, is the problem `simulation-not-possible`, at `#/options/outputs/simulation`. The output `simulationWorkbook` has the same rule, at `#/options/outputs/simulationWorkbook`, and the workbook of a result that the project held has no sheet `Simulation Iterations`. A cell of Excel holds 32,767 characters, and the server cuts a longer text and ends it with an ellipsis.
 - The limit `maxSimulationIterations` is on what a run costs. A result that the project already holds is given back without it.
 
 ### Answer
@@ -254,7 +255,7 @@ The answer has `simulation` when the request ran the simulation, or the project 
 ```
 
 - `iterations` is the number that the simulation ran. An iteration fails when the scheduler cannot place each activity. `failedIterations` counts these, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
-- `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`.
+- `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`. A project keeps these values with its result. They stay the same for a result that a project saved before a person changed its settings.
 - `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
 - `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.
 - `percentiles` lists the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. A percentile is the smallest finish that at least that share of the valid iterations reach.
@@ -303,6 +304,32 @@ The request is a `multipart/form-data` body with a part named `project` and no o
 
 The problems are the problems of a compile, where they apply.
 
+## Ask how far a job has got
+
+`GET /v1/jobs/{requestId}`
+
+The server answers a request to compile a project when the job ends. A simulation of a large plan can take minutes, and the caller that waits has no sign. This operation tells how far the job has got. `requestId` is the id of the request that began the job. It is the trace id that the request gave in its `traceparent` (refer to [Conventions](#conventions)). A caller that wants to ask must send a `traceparent`, because the server chooses a trace id for a request that has none, and the caller does not know it before the answer comes.
+
+```json
+{
+  "id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "state": "running",
+  "startedAt": "2026-10-18T09:00:00+01:00",
+  "elapsed": "PT12.5S",
+  "progress": { "done": 2340, "total": 5000 }
+}
+```
+
+- `state` is `running`. The server has a status for a job only while the job runs. The status of a job that has ended is not kept (refer to [Deviations from the guide](#deviations-from-the-guide)). The answer to the request of the job is the only word of its end.
+- `progress` says how many iterations of the simulation have run (`done`) of the iterations that it has (`total`). It is `null` when the job does not run a simulation, and before the simulation begins. The simulation is the only step that reports.
+- `elapsed` is the time since the server began the job. The job begins when the server has read the request and has a place for it among the jobs.
+- The answer has `Retry-After`, the number of seconds to wait before you ask again. A caller must not ask more often. `zpp --server` asks every two seconds, and only when its log shows the answer (`--verbose`).
+- A job that has not begun, and a job that has ended, have no status. The answer is `404`. A caller that asks before the server has the job gets `404` also. It asks again.
+- An `id` that is not 32 hexadecimal characters is `400`. The request needs the API key, as the other requests under `/v1` do, and the operation does not use one of the places among the jobs. Thus it answers also when all the places are in use.
+- Two requests in one trace have the same id. The job that began first has the id for as long as it runs.
+
+`OPTIONS` gets status `204` with `Allow: GET, OPTIONS`.
+
 ## Ask what the server is
 
 `GET /v1/info`
@@ -332,7 +359,7 @@ The problems are the problems of a compile, where they apply.
 - The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
-`OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, and it is `GET, HEAD, OPTIONS` for `/v1/info` and `/v1/openapi`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi`.
+`OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, it is `GET, OPTIONS` for `/v1/jobs/{requestId}`, and it is `GET, HEAD, OPTIONS` for `/v1/info` and `/v1/openapi`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi`.
 
 ## Fetch the description
 
@@ -657,6 +684,8 @@ The web server itself refuses a request that it cannot read at all. Examples: a 
 
 An answer whose console has an exit code that does not match its kind is an answer that `zpp` cannot read. An example is a `compilation-failed` with exit code 0. Then `zpp` exits with code 5, and it prints and writes nothing.
 
+While the server runs the job, `zpp --server --verbose` asks [how far the job has got](#ask-how-far-a-job-has-got), and it writes `Simulation on <server>: <done> of <total> iterations` to the standard error stream. It starts to ask after two seconds, and then as often as `Retry-After` says. A failed question does not fail the run. Without `--verbose`, `zpp` does not ask. Ctrl+C cancels the request, and the server stops the job (refer to [Stop a run](COMMAND-LINE.md#stop-a-run)).
+
 ## Operations
 
 ### The log
@@ -694,6 +723,8 @@ The JSON object has these members:
 
 The server logs a request that it refuses for its API key at warning level, and the line has no key. Examples: `GET /v1/info: refused, no API key`, or `refused, API key not accepted`.
 
+A value in a line can come from a caller. Examples are the path of a request and the title of a scenario in a project that the caller sends. The text format writes each control character in a value as an escape, so that a value cannot end a line. A line end is `\n` or `\r`, and any other control character is `\u` and four hexadecimal digits. A tab and a backslash stay as they are. The JSON format keeps the value, and writes it as JSON does.
+
 ### Objectives
 
 `zpp serve` is a tool that its users operate for themselves. Thus, it states no availability objective. `jobTimeout` limits its latency. A warm server compiles a small plan in tens of milliseconds, and it compiles a larger plan in the time that the plan needs.
@@ -704,7 +735,7 @@ This table compares the OWASP API Security Top 10 (2023) with the API in its pre
 
 | Risk | Where the API stands |
 | ---- | -------------------- |
-| API1 Broken object level authorization | The server stores nothing, and thus it has no objects to authorize. A request is about the project that it carries. |
+| API1 Broken object level authorization | The server stores nothing, and thus it has no objects to authorize. A request is about the project that it carries. The one object is the status of a job that runs. The id of a job is 128 bits that the caller chose, and the caller needs the API key to ask about it. The status holds no part of the project. It holds a count of iterations and two times. |
 | API2 Broken authentication | The API has one shared key. It has a minimum of 32 characters, and the client sends it as a bearer token. The server keeps it as a hash and compares it in constant time. Beyond this computer, TLS protects it. The server logs refusals without the key. A Unix domain socket belongs to the user alone. |
 | API3 Broken object property level authorization | The server checks each member of a request. It refuses a member that it does not know, and thus a request cannot assign a property that it must not assign. The answer holds only what the operation produces. |
 | API4 Unrestricted resource consumption | The server limits the size of a request, the size and the depth of its `options`, and the size of a chart. It also limits the iterations of a simulation, the time of a job and of a compilation, and the number of jobs that run at one time and that wait. It turns away the other requests with `Retry-After`. |
@@ -721,7 +752,7 @@ The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md), version 1.2. This
 
 | Rule | Deviation | Reason |
 | ---- | --------- | ------ |
-| [ASY-1](RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) | The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. | The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead. |
+| [ASY-1](RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) | The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. While a job runs, `GET /v1/jobs/{requestId}` tells how far it has got (ASY-2). The server keeps this status only for as long as the job runs. | The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead. The status of a job that runs is the state of the process, and it is gone with the job. |
 | [REP-7](RESTFUL-API-GUIDE.md#3-representations) | The costs, billings and margins in `metrics` are floating-point numbers. | The engine calculates them in this way, and a project has no currency. They are estimates in the unit of the figures of the project, and not amounts of money. REP-7 lets such values be JSON numbers. |
 | [COL-1](RESTFUL-API-GUIDE.md#51-the-collection-representation), [COL-2](RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) | `scenarios` and `outputs` are plain arrays and not paged `items`. | They are bounded parts of what the caller sent, and not collections that the server holds. COL-1 says that a bounded array inside a representation is a plain array under a descriptive name. |
 | [ACT-4](RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [REQ-1](RESTFUL-API-GUIDE.md#4-requests) | `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. | A project is a file, and a file cannot go in a URL. |
@@ -743,4 +774,6 @@ This is the first version of the API.
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
 - The import of a workbook is all or nothing. A workbook with problems in its cells gives a `project-not-readable` problem with one error for each problem (up to 100), at `#/import`, and the codes `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn`, `missingValue`, `duplicateId`, `unknownActivity`, `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice` and `notAColor`.
+- The output `simulationWorkbook`: the result of the simulation as one Excel workbook (`<name>-simulation.xlsx`). It is a new member of `outputs`, and a new kind of output in the answer.
+- The operation `GET /v1/jobs/{requestId}` tells how far a job that runs has got (the iterations of its simulation). The job is the request, and its id is the trace id that the request gave in its `traceparent`. The server keeps the status only while the job runs.
 - The simulation of the schedule. Its settings are the project's. A request has the option `runSimulation` and the output `simulation`. The answer has the member `simulation`, and it lists the output as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). There is a problem, `simulation-not-possible`, with the code `noResult`, and a limit, `maxSimulationIterations`.

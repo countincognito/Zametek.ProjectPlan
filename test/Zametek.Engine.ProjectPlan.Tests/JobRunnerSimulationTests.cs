@@ -396,6 +396,42 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_SettingsThatAreNotThoseOfTheResultAndNoRun_Then_TheMetricsHaveTheValuesThatMadeTheResult()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            byte[] saved = await SaveSimulatedProjectAsync(
+                runner,
+                new SimulationSettingsModel { Iterations = 300, Seed = 31, Distribution = DurationDistribution.Triangular, UseRandomSeed = false });
+
+            // The settings of the project were changed after the run, and the job does not run again: the statistics are those of
+            // the result, and they name the seed and the distribution that made it.
+            (JobResult result, _) = await RunBytesAsync(
+                runner,
+                saved,
+                input => new JobRequest
+                {
+                    Input = input,
+                    SimulationSettings = new SimulationSettingsModel
+                    {
+                        Iterations = 300,
+                        Seed = 99,
+                        Distribution = DurationDistribution.ModifiedBetaPert,
+                        ModifiedBetaShape = 8.0,
+                        UseRandomSeed = false,
+                    },
+                });
+
+            JobSimulationMetrics simulation = result.Simulation.ShouldNotBeNull();
+            simulation.Seed.ShouldBe(31UL);
+            simulation.Distribution.ShouldBe(DurationDistribution.Triangular);
+            simulation.ModifiedBetaShape.ShouldBeNull();
+            simulation.Statistics[0].ShouldBe(new SimulationStatisticModel { Name = Resource.ProjectPlan.Labels.Label_SimulationSeed, Value = @"31" });
+            simulation.Statistics[1].Value.ShouldBe(StringConverters.DurationDistributionValue(DurationDistribution.Triangular));
+            simulation.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationShape);
+        }
+
+        [Fact]
         public async Task RunAsync_Given_AProjectThatHoldsAResultAndARun_Then_TheRunReplacesTheResult()
         {
             await using ServiceProvider services = BuildServices();
@@ -674,6 +710,265 @@ namespace Zametek.Engine.ProjectPlan.Tests
             result.Simulation.ShouldNotBeNull().Iterations.ShouldBe(500);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        [InlineData(-1)]
+        public async Task RunAsync_Given_ANumberOfThreads_Then_TheResultIsTheSameAsWithAnyOther(int threads)
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            SimulationSettingsModel settings = Settings(1500, 21);
+
+            (JobResult reference, MemoryJobSink referenceSink) = await RunAsync(runner, @"estimated.zpp", input => Simulate(input, settings, SimulationCsvFile.All));
+            (JobResult limited, MemoryJobSink limitedSink) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, settings, SimulationCsvFile.All) with { MaximumSimulationThreads = threads });
+
+            // The statistics and every file, byte for byte: the iterations too, which say the finish time of each one.
+            limited.ShouldBe(reference);
+            limitedSink.Outputs.Select(x => x.Output).ShouldBe(referenceSink.Outputs.Select(x => x.Output));
+
+            foreach ((JobOutput output, byte[] content) in referenceSink.Outputs)
+            {
+                limitedSink[output].ShouldBe(content, output.ToString());
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public async Task RunAsync_Given_ANumberOfThreadsThatIsNotValid_Then_InvalidSettingsBeforeThePlanCompiles(int threads)
+        {
+            await using ServiceProvider services = BuildServices();
+
+            SimulationException exception = await Should.ThrowAsync<SimulationException>(async () =>
+                await RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"estimated.zpp",
+                    input => Simulate(input) with { MaximumSimulationThreads = threads }));
+
+            exception.Failure.ShouldBe(SimulationFailure.InvalidSettings);
+            exception.Message.ShouldBe(Resource.ProjectPlan.Messages.Message_SimulationThreadsOutOfRange);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ARunThatEnds_Then_ItsPlaceInTheShareOfTheProcessorsIsFree()
+        {
+            await using ServiceProvider services = BuildServices();
+            var share = new SimulationProcessorShare(4);
+            var runner = new JobRunner(services.GetRequiredService<IServiceScopeFactory>(), share);
+
+            await RunAsync(runner, @"estimated.zpp", input => Simulate(input));
+
+            share.Running.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ARunThatIsCancelled_Then_ItsPlaceInTheShareOfTheProcessorsIsFree()
+        {
+            await using ServiceProvider services = BuildServices();
+            var share = new SimulationProcessorShare(4);
+            var runner = new JobRunner(services.GetRequiredService<IServiceScopeFactory>(), share);
+            using var cancellation = new CancellationTokenSource();
+            cancellation.CancelAfter(TimeSpan.FromMilliseconds(300));
+
+            // Far more iterations than the time to the cancel allows.
+            await Should.ThrowAsync<OperationCanceledException>(async () =>
+                await RunAsync(runner, @"estimated.zpp", input => Simulate(input, Settings(1_000_000)), cancellationToken: cancellation.Token));
+
+            share.Running.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnotherSimulationInProgress_Then_TheRunStillSucceedsAndLeavesTheOtherAlone()
+        {
+            await using ServiceProvider services = BuildServices();
+            var share = new SimulationProcessorShare(4);
+            var runner = new JobRunner(services.GetRequiredService<IServiceScopeFactory>(), share);
+
+            // A simulation that another job runs: this one takes a share of what is left.
+            using SimulationProcessorShare.Lease other = share.Begin();
+            (JobResult result, _) = await RunAsync(runner, @"estimated.zpp", input => Simulate(input));
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            share.Running.ShouldBe(1);
+        }
+
+        // The names of the sheets of a workbook, in their order.
+        private static string[] SheetNames(byte[] workbook)
+        {
+            using var archive = new System.IO.Compression.ZipArchive(new MemoryStream(workbook));
+            using Stream entry = archive.GetEntry(@"xl/workbook.xml")!.Open();
+            return [.. System.Xml.Linq.XDocument.Load(entry).Descendants().Where(x => x.Name.LocalName == @"sheet").Select(x => (string)x.Attribute(@"name")!)];
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheWorkbookOfARun_Then_ProducesItAfterTheCsvFilesWithASheetForTheIterations()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (JobResult result, MemoryJobSink sink) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => Simulate(input, Settings(300, 3), SimulationCsvFile.All) with { SimulationWorkbook = true });
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            sink.Outputs.Select(x => x.Output).ShouldBe(
+            [
+                JobOutput.SimulationStatistics,
+                JobOutput.SimulationHistogram,
+                JobOutput.SimulationPaths,
+                JobOutput.SimulationActivities,
+                JobOutput.SimulationIterations,
+                JobOutput.SimulationWorkbook,
+            ]);
+            SheetNames(sink[JobOutput.SimulationWorkbook]).ShouldBe(
+            [
+                "Simulation Settings",
+                "Simulation Statistics",
+                "Simulation Percentiles",
+                "Simulation Histogram",
+                "Simulation Paths",
+                "Simulation Criticalities",
+                "Simulation Iterations",
+            ]);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_OnlyTheWorkbook_Then_ProducesNothingElseOfTheSimulation()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (_, MemoryJobSink sink) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => Simulate(input, Settings(300, 3)) with { SimulationWorkbook = true });
+
+            sink.Outputs.Select(x => x.Output).ShouldBe([JobOutput.SimulationWorkbook]);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheWorkbookOfAResultThatTheProjectHeld_Then_HasNoSheetForTheIterations()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            byte[] saved = await SaveSimulatedProjectAsync(runner, Settings(300, 3));
+
+            (_, MemoryJobSink sink) = await RunBytesAsync(runner, saved, input => new JobRequest { Input = input, SimulationWorkbook = true });
+
+            SheetNames(sink[JobOutput.SimulationWorkbook]).ShouldNotContain("Simulation Iterations");
+            SheetNames(sink[JobOutput.SimulationWorkbook]).Length.ShouldBe(6);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheWorkbookAndNoResult_Then_TheSimulationHasNoResult()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            SimulationException exception = await Should.ThrowAsync<SimulationException>(async () =>
+                await RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"estimated.zpp",
+                    input => new JobRequest { Input = input, SimulationWorkbook = true }));
+
+            exception.Failure.ShouldBe(SimulationFailure.NoResult);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheSameRunTwice_Then_TheWorkbooksAreTheSameBytes()
+        {
+            await using ServiceProvider services = BuildServices();
+            await using ServiceProvider another = BuildServices();
+
+            (_, MemoryJobSink first) = await RunAsync(services.GetRequiredService<JobRunner>(), @"estimated.zpp", input => Simulate(input, Settings(300, 3)) with { SimulationWorkbook = true });
+            (_, MemoryJobSink second) = await RunAsync(another.GetRequiredService<JobRunner>(), @"estimated.zpp", input => Simulate(input, Settings(300, 3)) with { SimulationWorkbook = true });
+
+            second[JobOutput.SimulationWorkbook].ShouldBe(first[JobOutput.SimulationWorkbook]);
+        }
+
+        // The reports of a job, from the threads of its simulation.
+        private sealed class ListProgress
+            : IProgress<JobProgress>
+        {
+            private readonly List<JobProgress> m_Reports = [];
+
+            public IReadOnlyList<JobProgress> Reports
+            {
+                get
+                {
+                    lock (m_Reports)
+                    {
+                        return [.. m_Reports];
+                    }
+                }
+            }
+
+            public void Report(JobProgress value)
+            {
+                lock (m_Reports)
+                {
+                    m_Reports.Add(value);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnObserverOfTheProgress_Then_IsToldHowManyIterationsHaveRunUpToAllOfThem()
+        {
+            await using ServiceProvider services = BuildServices();
+            var progress = new ListProgress();
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => Simulate(input, Settings(3000, 3)) with { Progress = progress });
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            IReadOnlyList<JobProgress> reports = progress.Reports;
+            reports.ShouldNotBeEmpty();
+            reports.ShouldAllBe(x => x.Total == 3000 && x.Done >= 1 && x.Done <= 3000);
+
+            // The last word is that all of them have run. The reports come from several threads, and so not exactly in order.
+            reports.Max(x => x.Done).ShouldBe(3000);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnObserverAndNoSimulation_Then_IsToldNothing()
+        {
+            await using ServiceProvider services = BuildServices();
+            var progress = new ListProgress();
+
+            await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => new JobRequest { Input = input, Progress = progress });
+
+            progress.Reports.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AnObserverThatThrows_Then_TheJobStillFinishesWithTheSameResult()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+
+            (JobResult plain, _) = await RunAsync(runner, @"estimated.zpp", input => Simulate(input, Settings(1000, 5)));
+            (JobResult observed, _) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, Settings(1000, 5)) with { Progress = new ThrowingProgress() });
+
+            observed.ShouldBe(plain);
+        }
+
+        private sealed class ThrowingProgress
+            : IProgress<JobProgress>
+        {
+            public void Report(JobProgress value) => throw new InvalidOperationException("The observer is broken.");
+        }
+
         [Fact]
         public async Task RunAsync_Given_ACancelledTokenAndASimulation_Then_ThrowsBeforeReadingThePlan()
         {
@@ -793,17 +1088,19 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
                 if (targetMethod.Name == nameof(ISimulationChartManagerViewModel.RunSimulationWithSavedSeedAsync))
                 {
-                    // The run is called with the token of the job, and nothing else cancels it.
-                    var token = (CancellationToken)args!.Single()!;
+                    // The run is called with the token of the job, and nothing else cancels it. It is also given the observer of the
+                    // progress, if the request has one.
+                    var token = (CancellationToken)args![0]!;
+                    var progress = (IProgress<int>?)args[1];
 
                     if (CancelsBeforeTheRun)
                     {
                         Cancellation.Cancel();
-                        return Inner.RunSimulationWithSavedSeedAsync(token);
+                        return Inner.RunSimulationWithSavedSeedAsync(token, progress);
                     }
 
                     // The call returns at its first await, with the run going.
-                    Task run = Inner.RunSimulationWithSavedSeedAsync(token);
+                    Task run = Inner.RunSimulationWithSavedSeedAsync(token, progress);
                     SpinWait.SpinUntil(() => Inner.IsRunning, TimeSpan.FromSeconds(10)).ShouldBeTrue();
                     Cancellation.Cancel();
                     return run;
