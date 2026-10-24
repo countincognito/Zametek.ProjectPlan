@@ -1,5 +1,6 @@
 using Shouldly;
 using System.Reflection;
+using System.Text.Json;
 using Xunit;
 using Zametek.Engine.ProjectPlan;
 
@@ -81,6 +82,33 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         public void From_Given_NoMetrics_Then_Throws()
         {
             Should.Throw<ArgumentNullException>(() => MetricsResponse.From(null!));
+        }
+
+        [Theory]
+        [InlineData(double.PositiveInfinity)]
+        [InlineData(double.NegativeInfinity)]
+        [InlineData(double.NaN)]
+        public void From_Given_MetricsThatAreNotFiniteNumbers_Then_NoneOfThemHasAValueAndTheAnswerCanBeWritten(double value)
+        {
+            // Each metric that is a number of the engine, at once: such a value is a metric that the project could not
+            // calculate, and JSON cannot write it.
+            var metrics = new JobMetrics();
+            PropertyInfo[] numbers = [.. typeof(JobMetrics).GetProperties().Where(x => x.PropertyType == typeof(double?))];
+            numbers.ShouldNotBeEmpty();
+
+            foreach (PropertyInfo property in numbers)
+            {
+                property.SetValue(metrics, value);
+            }
+
+            MetricsResponse response = MetricsResponse.From(metrics);
+
+            foreach (PropertyInfo property in numbers)
+            {
+                typeof(MetricsResponse).GetProperty(ApiName(property.Name))!.GetValue(response).ShouldBeNull(property.Name);
+            }
+
+            Should.NotThrow(() => JsonSerializer.Serialize(response, ProjectEndpoints.JsonOptions));
         }
 
         [Fact]

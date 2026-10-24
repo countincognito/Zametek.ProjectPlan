@@ -86,41 +86,48 @@ namespace Zametek.ProjectPlan.CommandLine
 
             return new MetricsResponse
             {
-                ActivityRisk = metrics.ActivityRisk,
-                ActivityRiskWithStandardDeviationCorrection = metrics.ActivityRiskWithStdDevCorrection,
-                CriticalityRisk = metrics.CriticalityRisk,
-                FibonacciRisk = metrics.FibonacciRisk,
-                GeometricActivityRisk = metrics.GeometricActivityRisk,
-                GeometricCriticalityRisk = metrics.GeometricCriticalityRisk,
-                GeometricFibonacciRisk = metrics.GeometricFibonacciRisk,
+                ActivityRisk = Finite(metrics.ActivityRisk),
+                ActivityRiskWithStandardDeviationCorrection = Finite(metrics.ActivityRiskWithStdDevCorrection),
+                CriticalityRisk = Finite(metrics.CriticalityRisk),
+                FibonacciRisk = Finite(metrics.FibonacciRisk),
+                GeometricActivityRisk = Finite(metrics.GeometricActivityRisk),
+                GeometricCriticalityRisk = Finite(metrics.GeometricCriticalityRisk),
+                GeometricFibonacciRisk = Finite(metrics.GeometricFibonacciRisk),
                 NetworkCyclomaticComplexity = metrics.NetworkCyclomaticComplexity,
                 NetworkDuration = metrics.NetworkDuration,
-                NetworkDurationManMonths = metrics.NetworkDurationManMonths,
+                NetworkDurationManMonths = Finite(metrics.NetworkDurationManMonths),
                 ProjectFinishDays = metrics.ProjectFinishDays,
                 ProjectFinishDate = metrics.ProjectFinishDate,
-                EffortEfficiency = metrics.EffortEfficiency,
-                ActivityEffort = metrics.ActivityEffort,
-                DirectEffort = metrics.DirectEffort,
-                IndirectEffort = metrics.IndirectEffort,
-                OtherEffort = metrics.OtherEffort,
-                TotalEffort = metrics.TotalEffort,
-                DirectCost = metrics.DirectCost,
-                IndirectCost = metrics.IndirectCost,
-                OtherCost = metrics.OtherCost,
-                TotalCost = metrics.TotalCost,
-                DirectBilling = metrics.DirectBilling,
-                IndirectBilling = metrics.IndirectBilling,
-                OtherBilling = metrics.OtherBilling,
-                TotalBilling = metrics.TotalBilling,
-                DirectMargin = metrics.DirectMargin,
-                IndirectMargin = metrics.IndirectMargin,
-                OtherMargin = metrics.OtherMargin,
-                TotalMargin = metrics.TotalMargin,
-                DirectMarginAbsolute = metrics.DirectMarginAbsolute,
-                IndirectMarginAbsolute = metrics.IndirectMarginAbsolute,
-                OtherMarginAbsolute = metrics.OtherMarginAbsolute,
-                TotalMarginAbsolute = metrics.TotalMarginAbsolute,
+                EffortEfficiency = Finite(metrics.EffortEfficiency),
+                ActivityEffort = Finite(metrics.ActivityEffort),
+                DirectEffort = Finite(metrics.DirectEffort),
+                IndirectEffort = Finite(metrics.IndirectEffort),
+                OtherEffort = Finite(metrics.OtherEffort),
+                TotalEffort = Finite(metrics.TotalEffort),
+                DirectCost = Finite(metrics.DirectCost),
+                IndirectCost = Finite(metrics.IndirectCost),
+                OtherCost = Finite(metrics.OtherCost),
+                TotalCost = Finite(metrics.TotalCost),
+                DirectBilling = Finite(metrics.DirectBilling),
+                IndirectBilling = Finite(metrics.IndirectBilling),
+                OtherBilling = Finite(metrics.OtherBilling),
+                TotalBilling = Finite(metrics.TotalBilling),
+                DirectMargin = Finite(metrics.DirectMargin),
+                IndirectMargin = Finite(metrics.IndirectMargin),
+                OtherMargin = Finite(metrics.OtherMargin),
+                TotalMargin = Finite(metrics.TotalMargin),
+                DirectMarginAbsolute = Finite(metrics.DirectMarginAbsolute),
+                IndirectMarginAbsolute = Finite(metrics.IndirectMarginAbsolute),
+                OtherMarginAbsolute = Finite(metrics.OtherMarginAbsolute),
+                TotalMarginAbsolute = Finite(metrics.TotalMarginAbsolute),
             };
+        }
+
+        // A metric that is an infinity or not a number is one that the project could not calculate. JSON cannot write it - the
+        // whole answer would fail to be written, at the end of its job - and so it is no value, as every such metric is.
+        private static double? Finite(double? value)
+        {
+            return value is double number && double.IsFinite(number) ? number : null;
         }
     }
 }

@@ -128,12 +128,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(activitySeverityLookup);
-            double numerator = 1.0;
-            foreach (ActivityModel activity in activities)
-            {
-                numerator *= activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack);
-            }
-            numerator = Math.Pow(numerator, 1.0 / activities.Count());
+            double numerator = GeometricMean(
+                [.. activities.Select(activity => activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack))],
+                activities.Count());
             double denominator = activitySeverityLookup.CriticalCriticalityWeight();
 
             if (denominator == 0)
@@ -154,12 +151,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(activitySeverityLookup);
-            double numerator = 1.0;
-            foreach (ActivityModel activity in activities)
-            {
-                numerator *= activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack);
-            }
-            numerator = Math.Pow(numerator, 1.0 / activities.Count());
+            double numerator = GeometricMean(
+                [.. activities.Select(activity => activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack))],
+                activities.Count());
             double denominator = activitySeverityLookup.CriticalFibonacciWeight();
 
             if (denominator == 0)
@@ -177,7 +171,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public static double? CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)
         {
             ArgumentNullException.ThrowIfNull(activities);
-            double numerator = 1.0;
+            var factors = new List<double>();
             double maxTotalSlack = 0.0;
             foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
             {
@@ -186,9 +180,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     maxTotalSlack = totalSlack;
                 }
-                numerator *= (totalSlack + 1.0);
+                factors.Add(totalSlack + 1.0);
             }
-            numerator = Math.Pow(numerator, 1.0 / activities.Count());
+            double numerator = GeometricMean(factors, activities.Count());
             numerator -= 1.0;
             double denominator = maxTotalSlack;
 
@@ -202,6 +196,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return 1.0 - (numerator / denominator);
+        }
+
+        // The geometric mean of the factors, the n-th root of their product, where n is the count given. The product of a large
+        // plan can be out of the range of a double: a thousand critical activities of weight 4 make 4 to the power of 1000. Then
+        // the mean comes from the sum of the logarithms of the factors, which stays in range. A product in range keeps the
+        // n-th root of the product, so that each plan that had a value keeps it to the last bit.
+        private static double GeometricMean(
+            List<double> factors,
+            int count)
+        {
+            double product = 1.0;
+            foreach (double factor in factors)
+            {
+                product *= factor;
+            }
+
+            if (double.IsFinite(product) && product != 0.0)
+            {
+                return Math.Pow(product, 1.0 / count);
+            }
+
+            return Math.Exp(factors.Sum(factor => Math.Log(factor)) / count);
         }
 
         public static RisksModel CalculateProjectRisks(

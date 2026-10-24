@@ -1,5 +1,7 @@
 using Shouldly;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 
@@ -31,6 +33,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             MakeSeverity(slackLimit: 5, criticalityWeight: 0.8, fibonacciWeight: 0.5),
             MakeSeverity(slackLimit: 10, criticalityWeight: 0.6, fibonacciWeight: 0.25),
         ];
+
+        // The severities of a new plan in the application: the weights grow with the criticality of an activity.
+        private static IEnumerable<ActivitySeverityModel> ApplicationSeverities() =>
+        [
+            MakeSeverity(slackLimit: 0, criticalityWeight: 4.0, fibonacciWeight: 4.23606797749979),
+            MakeSeverity(slackLimit: 10, criticalityWeight: 3.0, fibonacciWeight: 2.618033988749895),
+            MakeSeverity(slackLimit: 25, criticalityWeight: 2.0, fibonacciWeight: 1.618033988749895),
+            MakeSeverity(slackLimit: int.MaxValue, criticalityWeight: 1.0, fibonacciWeight: 1.0),
+        ];
+
+        // A weight of 4 for a critical activity and of 3 for one with a slack of up to 10, in both kinds of weight. The n-th root
+        // of the product of 4 and 3 differs in its last bit from the mean worked out with logarithms.
+        private static IEnumerable<ActivitySeverityModel> FourAndThreeSeverities() =>
+        [
+            MakeSeverity(slackLimit: 0, criticalityWeight: 4.0, fibonacciWeight: 4.0),
+            MakeSeverity(slackLimit: 10, criticalityWeight: 3.0, fibonacciWeight: 3.0),
+        ];
+
+        private static ActivityModel[] MakeActivities(int count, int totalSlack) =>
+            [.. Enumerable.Range(0, count).Select(_ => MakeActivity(totalSlack))];
 
         #endregion
 
@@ -187,6 +209,110 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             var activities = new[] { MakeActivity(0), MakeActivity(0) };
             var result = MetricsHelper.CalculateGeometricActivityRisk(activities);
             result.ShouldBe(1.0);
+        }
+
+        #endregion
+
+        #region The geometric risks of a large plan
+
+        // The product of one factor for each activity is out of the range of a double for a large plan. These risks had no
+        // value then: infinity, or minus infinity. A plan whose product is in range keeps the n-th root of the product.
+
+        [Fact]
+        public void CalculateGeometricCriticalityRisk_Given_AThousandCriticalActivities_Then_ReturnsOne()
+        {
+            // 4 to the power of 1000 is more than a double holds. The mean of the weights is 4, and the critical weight is 4.
+            var lookup = new ActivitySeverityLookup(ApplicationSeverities());
+            var result = MetricsHelper.CalculateGeometricCriticalityRisk(MakeActivities(1000, 0), lookup);
+            result.ShouldNotBeNull();
+            result!.Value.ShouldBe(1.0, 1e-12);
+        }
+
+        [Fact]
+        public void CalculateGeometricFibonacciRisk_Given_AThousandCriticalActivities_Then_ReturnsOne()
+        {
+            var lookup = new ActivitySeverityLookup(ApplicationSeverities());
+            var result = MetricsHelper.CalculateGeometricFibonacciRisk(MakeActivities(1000, 0), lookup);
+            result.ShouldNotBeNull();
+            result!.Value.ShouldBe(1.0, 1e-12);
+        }
+
+        [Fact]
+        public void CalculateGeometricActivityRisk_Given_AThousandActivitiesWithTheSameSlack_Then_ReturnsZero()
+        {
+            // 101 to the power of 1000 is more than a double holds. The mean of (slack + 1) is 101, and so the mean slack
+            // is 100, the largest slack: 1 - 100 / 100 = 0.
+            var result = MetricsHelper.CalculateGeometricActivityRisk(MakeActivities(1000, 100));
+            result.ShouldNotBeNull();
+            result!.Value.ShouldBe(0.0, 1e-12);
+        }
+
+        [Fact]
+        public void CalculateGeometricCriticalityRisk_Given_ALargePlanOfCriticalAndFreeActivities_Then_ReturnsTheMeanOverTheCriticalWeight()
+        {
+            // 600 weights of 4 and 400 of 1: the mean is 4 to the power of 0.6, and 4 to the power of 600 is out of range.
+            var lookup = new ActivitySeverityLookup(ApplicationSeverities());
+            ActivityModel[] activities = [.. MakeActivities(600, 0), .. MakeActivities(400, 30)];
+            var result = MetricsHelper.CalculateGeometricCriticalityRisk(activities, lookup);
+            result.ShouldNotBeNull();
+            result!.Value.ShouldBe(Math.Pow(4.0, 0.6) / 4.0, 1e-12);
+        }
+
+        [Fact]
+        public void CalculateGeometricCriticalityRisk_Given_AProductBelowTheRangeOfADouble_Then_ReturnsTheMeanOverTheCriticalWeight()
+        {
+            // 0.5 to the power of 2000 is too small for a double, and the product is zero, but no weight is zero.
+            var lookup = new ActivitySeverityLookup([MakeSeverity(slackLimit: 0, criticalityWeight: 0.5, fibonacciWeight: 0.5)]);
+            var result = MetricsHelper.CalculateGeometricCriticalityRisk(MakeActivities(2000, 0), lookup);
+            result.ShouldNotBeNull();
+            result!.Value.ShouldBe(1.0, 1e-12);
+        }
+
+        [Fact]
+        public void CalculateGeometricCriticalityRisk_Given_AWeightOfZero_Then_ReturnsZero()
+        {
+            // A weight of zero makes the product zero, and the mean is zero too.
+            var lookup = new ActivitySeverityLookup(
+            [
+                MakeSeverity(slackLimit: 0, criticalityWeight: 4.0, fibonacciWeight: 4.0),
+                MakeSeverity(slackLimit: 10, criticalityWeight: 0.0, fibonacciWeight: 0.0),
+            ]);
+            var result = MetricsHelper.CalculateGeometricCriticalityRisk([MakeActivity(0), MakeActivity(5)], lookup);
+            result.ShouldBe(0.0);
+        }
+
+        [Fact]
+        public void CalculateGeometricCriticalityRisk_Given_ASmallPlan_Then_ReturnsTheRootOfTheProductToTheLastBit()
+        {
+            var lookup = new ActivitySeverityLookup(FourAndThreeSeverities());
+            var result = MetricsHelper.CalculateGeometricCriticalityRisk([MakeActivity(0), MakeActivity(5)], lookup);
+            result.ShouldBe(Math.Pow(4.0 * 3.0, 1.0 / 2) / 4.0);
+        }
+
+        [Fact]
+        public void CalculateGeometricFibonacciRisk_Given_ASmallPlan_Then_ReturnsTheRootOfTheProductToTheLastBit()
+        {
+            var lookup = new ActivitySeverityLookup(FourAndThreeSeverities());
+            var result = MetricsHelper.CalculateGeometricFibonacciRisk([MakeActivity(0), MakeActivity(5)], lookup);
+            result.ShouldBe(Math.Pow(4.0 * 3.0, 1.0 / 2) / 4.0);
+        }
+
+        [Fact]
+        public void CalculateGeometricActivityRisk_Given_AnActivityWithNoSlack_Then_ItCountsAsAFactorOfOne()
+        {
+            // The factors are 4, for a slack of 3, and none for the activity with no slack, but the root is over both
+            // activities: the square root of 4 is 2, and 1 - (2 - 1) / 3 = 2/3.
+            var result = MetricsHelper.CalculateGeometricActivityRisk([MakeActivity(3), MakeActivity(null)]);
+            result.ShouldNotBeNull();
+            result!.Value.ShouldBe(2.0 / 3.0, 1e-12);
+        }
+
+        [Fact]
+        public void CalculateGeometricActivityRisk_Given_ASmallPlan_Then_ReturnsTheRootOfTheProductToTheLastBit()
+        {
+            // Slacks of 1, 1 and 3: the factors are 2, 2 and 4, and the largest slack is 3.
+            var result = MetricsHelper.CalculateGeometricActivityRisk([MakeActivity(1), MakeActivity(1), MakeActivity(3)]);
+            result.ShouldBe(1.0 - ((Math.Pow(2.0 * 2.0 * 4.0, 1.0 / 3) - 1.0) / 3.0));
         }
 
         #endregion
