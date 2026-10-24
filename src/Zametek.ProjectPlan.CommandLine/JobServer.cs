@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
 using System.Globalization;
 using System.IO.Compression;
@@ -365,10 +366,15 @@ namespace Zametek.ProjectPlan.CommandLine
             }
             else
             {
-                configuration.WriteTo.Console(
-                    outputTemplate: TextLogTemplate,
-                    standardErrorFromLevel: LogEventLevel.Verbose,
-                    formatProvider: CultureInfo.InvariantCulture);
+                // A value is written as it came, and a line end in it would end a line of the log: the path of a request has one as
+                // %0A, and the web server logs that path as it is when --verbose lets it. The JSON log needs no escape, as it
+                // writes a value as JSON does. The escape is the last step, so that it sees every value, whatever added it.
+                configuration.WriteTo.Sink(LoggerSinkConfiguration.Wrap(
+                    sink => new LogEscapeSink(sink),
+                    text => text.Console(
+                        outputTemplate: TextLogTemplate,
+                        standardErrorFromLevel: LogEventLevel.Verbose,
+                        formatProvider: CultureInfo.InvariantCulture)));
             }
 
             if (!verbose)

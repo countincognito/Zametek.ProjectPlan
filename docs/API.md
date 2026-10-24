@@ -723,6 +723,8 @@ The JSON object has these members:
 
 The server logs a request that it refuses for its API key at warning level, and the line has no key. Examples: `GET /v1/info: refused, no API key`, or `refused, API key not accepted`.
 
+A value in a line can come from a caller. Examples are the path of a request and the title of a scenario in a project that the caller sends. The text format writes each control character in a value as an escape, so that a value cannot end a line. A line end is `\n` or `\r`, and any other control character is `\u` and four hexadecimal digits. A tab and a backslash stay as they are. The JSON format keeps the value, and writes it as JSON does.
+
 ### Objectives
 
 `zpp serve` is a tool that its users operate for themselves. Thus, it states no availability objective. `jobTimeout` limits its latency. A warm server compiles a small plan in tens of milliseconds, and it compiles a larger plan in the time that the plan needs.

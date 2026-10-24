@@ -2,6 +2,7 @@ using CommandLine;
 using CommandLine.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
 using System.Collections;
 using System.Globalization;
@@ -132,18 +133,22 @@ namespace Zametek.ProjectPlan.CommandLine
             return environment;
         }
 
-        private static void ConfigureSerilog(bool verbose)
+        internal static void ConfigureSerilog(bool verbose)
         {
             // Everything goes to stderr so stdout stays clean for parseable output
             // (the metrics table or JSON). Warnings and errors always show - this
             // is where the view models' ILogger<T> output surfaces, via the
             // AddSerilog registration in BuildServices - and --verbose lowers the
-            // threshold to their informational lifecycle logging.
+            // threshold to their informational lifecycle logging. A value is
+            // written as it came, and the title of a scenario in a project that
+            // is not the user's own can have a line end in it: the log escapes it.
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(verbose ? LogEventLevel.Information : LogEventLevel.Warning)
-                .WriteTo.Console(
-                    standardErrorFromLevel: LogEventLevel.Verbose,
-                    formatProvider: System.Globalization.CultureInfo.InvariantCulture)
+                .WriteTo.Sink(LoggerSinkConfiguration.Wrap(
+                    sink => new LogEscapeSink(sink),
+                    text => text.Console(
+                        standardErrorFromLevel: LogEventLevel.Verbose,
+                        formatProvider: System.Globalization.CultureInfo.InvariantCulture)))
                 .CreateLogger();
         }
 

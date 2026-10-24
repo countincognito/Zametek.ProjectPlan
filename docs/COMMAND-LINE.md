@@ -70,7 +70,7 @@ A formula is its result, and a date cell is its date. A number that you type as 
 
 For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
 
-`zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle.
+`zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle. A control character in a value, for example a line end in the title of a scenario, is written as an escape such as `\n`.
 
 `zpp` and `zpp serve` read their options strictly. They refuse an invalid option with exit code 2, and they do not ignore it. These are the invalid options:
 
@@ -333,6 +333,8 @@ The server writes its log to the standard error stream. The log has these items:
 The option `-v` adds their informational messages.
 
 Each line that belongs to a request begins with the id of the request. This id is the `Request-Id` of the response and the `traceId` of the problem. Thus, you can find a request in the log from its answer. You can also find it from the trace in which it came: a request that has a `traceparent` keeps its trace id. The option `--log-format json` writes each line as a JSON object, for a program to read (refer to [The log](API.md#the-log)).
+
+The text log writes each control character in a value as an escape, such as `\n` for a line end. Thus, the path of a request or the title of a scenario in a project cannot add a line to the log. The JSON log keeps the value, and writes it as JSON does.
 
 ### Stop the server
 
