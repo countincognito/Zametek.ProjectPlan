@@ -69,6 +69,9 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_RequestIdRoute = @"requestId";
         private const int c_RequestIdLength = 32;
 
+        // The route of the status of a job, as the log says it: the template, and not the path of a request.
+        private const string c_JobRoute = JobServer.ApiPath + JobServer.JobRoute;
+
         private readonly JobRunner m_JobRunner;
         private readonly ServeLimits m_Limits;
         private readonly RunningJobs m_RunningJobs;
@@ -142,8 +145,10 @@ namespace Zametek.ProjectPlan.CommandLine
 
             Answer answer = GetJobAnswer(context);
 
-            // A caller asks again and again for as long as its job runs: a line in the log for each would bury the rest.
-            m_Logger.LogDebug("{Method} {Path}: {StatusCode}", context.Request.Method, context.Request.Path, answer.Status);
+            // A caller asks again and again for as long as its job runs: a line in the log for each would bury the rest. The line says
+            // the route and not the path, as the last part of the path is whatever the caller sent, and nothing in it may end a line
+            // of the log.
+            m_Logger.LogDebug("{Method} {Route}: {StatusCode}", HttpMethods.Get, c_JobRoute, answer.Status);
             await answer.Result.ExecuteAsync(context);
         }
 

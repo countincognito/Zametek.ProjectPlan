@@ -274,6 +274,8 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/jobs/{requestId}:
+    parameters:
+      - $ref: '#/components/parameters/RequestIdPath'
     get:
       operationId: getJob
       tags: [Jobs]
@@ -288,7 +290,6 @@ paths:
         server chooses, and the caller does not know it before the answer comes. This operation is not for such a request. The operation
         does not use a place among the jobs. Thus, it answers also when all the jobs at one time run.
       parameters:
-        - $ref: '#/components/parameters/RequestIdPath'
         - $ref: '#/components/parameters/Traceparent'
       responses:
         '200':

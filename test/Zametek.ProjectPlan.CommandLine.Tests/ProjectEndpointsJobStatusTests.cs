@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using System.Diagnostics;
 using System.Net;
@@ -62,6 +65,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
 
             return request;
+        }
+
+        // The endpoints, built by hand with a logger that keeps what it is told, for a test of what they log.
+        private ProjectEndpoints Endpoints(
+            RecordingLogger<ProjectEndpoints> logger,
+            RunningJobs jobs)
+        {
+            return new ProjectEndpoints(m_Engine.JobRunner, new ServeLimits(), jobs, TimeProvider.System, logger);
+        }
+
+        // A request for the status of a job, which no web server has read: the id is the last part of its path, as it came.
+        private static DefaultHttpContext Request(
+            ServiceProvider services,
+            string id)
+        {
+            var context = new DefaultHttpContext { RequestServices = services };
+            context.Request.Method = HttpMethods.Get;
+            context.Request.Path = $@"/v1/jobs/{id}";
+            context.Request.RouteValues[@"requestId"] = id;
+            context.Response.Body = new MemoryStream();
+            return context;
         }
 
         // A request to run the simulation of a plan, in the trace with the given id.
@@ -175,6 +199,39 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             using HttpResponseMessage response = await server.Client.SendAsync(Get(c_TraceId, accept: @"text/html"));
 
             response.StatusCode.ShouldBe(HttpStatusCode.NotAcceptable);
+        }
+
+        // The last part of the path is whatever the caller sent, and a line of the log must not end in it.
+        [Theory]
+        [InlineData("a\nWARN fake line", StatusCodes.Status400BadRequest)]
+        [InlineData("a\r\n[12:00:00 WRN] fake line", StatusCodes.Status400BadRequest)]
+        [InlineData("abc", StatusCodes.Status400BadRequest)]
+        [InlineData(c_TraceId, StatusCodes.Status404NotFound)]
+        public async Task GetJob_Given_AnId_Then_LogsTheRouteAndNotThePath(string id, int status)
+        {
+            var logger = new RecordingLogger<ProjectEndpoints>();
+            await using ServiceProvider services = new ServiceCollection().AddLogging().BuildServiceProvider();
+            DefaultHttpContext context = Request(services, id);
+
+            await Endpoints(logger, new RunningJobs(TimeProvider.System)).GetJobAsync(context);
+
+            context.Response.StatusCode.ShouldBe(status);
+            logger.Entries.ShouldHaveSingleItem().ShouldBe((LogLevel.Debug, $@"GET /v1/jobs/{{requestId}}: {status}"));
+        }
+
+        [Fact]
+        public async Task GetJob_Given_AJobThatRuns_Then_LogsTheRouteAndNotThePath()
+        {
+            var logger = new RecordingLogger<ProjectEndpoints>();
+            var jobs = new RunningJobs(TimeProvider.System);
+            using RunningJobs.Registration job = jobs.Begin(c_TraceId);
+            await using ServiceProvider services = new ServiceCollection().AddLogging().BuildServiceProvider();
+            DefaultHttpContext context = Request(services, c_TraceId);
+
+            await Endpoints(logger, jobs).GetJobAsync(context);
+
+            context.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+            logger.Entries.ShouldHaveSingleItem().ShouldBe((LogLevel.Debug, @"GET /v1/jobs/{requestId}: 200"));
         }
 
         [Fact]
