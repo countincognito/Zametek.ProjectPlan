@@ -402,3 +402,13 @@ The output goes to `Debug.WriteLine`, and it is also written to `zametek-cascade
 Use the real application for a question about threads, and not a headless test. On 2026-10-17 a headless test of a chart view threw "The calling thread cannot access this object because a different thread owns it". This happened when the view model published a plot from a thread of the pool. A trace of the real application showed that the four older charts do publish from the pool. The view handles each change on the UI thread, and no exception occurs. Thus, the bindings of the real application move the change of a property to the UI thread, and a headless test does not.
 
 A change that an event carries is not moved. The state of a command (`CanExecuteChanged`) reached an open menu item on the thread that raised it. Rule 13 of section 7 describes this fault. Hand the state of a command to `IUIDispatcher`.
+
+## 13. Where a file goes
+
+The large projects group their files by function. The command line, view model and view projects each have a folder for every feature. They also have a folder for every group of classes that work together. Examples are `ActivityManagement`, `Xlsx`, `Server`, `Charts` and `DataGrid`. Records, helpers and enums of one function sit side by side in its folder.
+
+`Miscellaneous` holds only the files that have no function of their own. These are the stand-ins of the host, such as `AvaloniaUIDispatcher` and `DialogService`, and small helpers for dates and text. A helper that one dock alone uses sits in the folder of that dock. A helper that several folders use stays in `Miscellaneous`, unless it has a function of its own.
+
+`Contracts` and `Exceptions` stay folders by kind, even when they hold one file. The root of a project holds its top-level classes, such as `Program` and `CoreViewModel`. A small project, such as the engine, groups its files by kind: `Contracts`, `Models`, `Exceptions` and `Miscellaneous`.
+
+The namespace of a project stays flat. Thus, a move between folders changes no code. A test project has the same folders as the project that it tests, and its shared fixtures stay at its root.
