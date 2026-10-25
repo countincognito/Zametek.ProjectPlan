@@ -38,10 +38,42 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private readonly Lock m_ActivityDataLock;
 
+        /// <summary>
+        /// Held while the outputs of a cascade are built, so that two builds never draw from the colour sequence of
+        /// the resource scheduling service at the same time. A cascade builds without holding <see cref="m_Lock"/>, and
+        /// a bulk update builds one while it holds it.
+        /// </summary>
+        /// <remarks>
+        /// A leaf lock: nothing that holds it takes <see cref="m_Lock"/>, and it is taken only by the builds. The
+        /// resource series and the tracking series share one sequence, and the second carries on where the first
+        /// stopped, so they have to be built one after the other and as a pair.
+        /// </remarks>
+        private readonly Lock m_OutputBuildLock;
+
         private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
         private int m_BulkUpdateNestingLevel;
         private int m_BusyNestingLevel;
+
+        // What a compilation reads has a revision: a count of everything that changes it. A compilation records the
+        // revision that it started from, and so it can tell when it has finished whether the plan has moved on
+        // (ARCHITECTURE section 7 rule 14). The count only has to differ from one moment to the next, and so it wraps.
+        private int m_InputRevision;
+
+        // The revision that the newest snapshot started from. The plan is due a compilation when the two differ. Written
+        // under m_Lock, and read without it.
+        private int m_SnapshotRevision;
+
+        // Number the snapshots in the order they are taken, so that the results of an older snapshot never replace the
+        // results of a newer one that has published already. Used under m_Lock only.
+        private int m_SnapshotTicket;
+        private int m_PublishedTicket;
+
+        // 1 while one thread makes the compilations that the edits ask for (see DrainAutoCompiles), and 0 otherwise.
+        private int m_AutoCompileRunning;
+
+        // The compilation that the outputs were last built from. Used under m_Lock only.
+        private IGraphCompilation<int, int, int, IDependentActivity>? m_CascadedCompilation;
 
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
@@ -94,6 +126,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger = logger;
             m_Lock = new();
             m_ActivityDataLock = new();
+            m_OutputBuildLock = new();
             m_SubscriptionLifetime = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
@@ -365,19 +398,51 @@ namespace Zametek.ViewModel.ProjectPlan
         /// subscriptions are muted, so that all compilation outputs are settled
         /// before the bulk update ends.
         /// </summary>
+        /// <remarks>
+        /// The outputs are built from a copy of what they read, taken in one short step
+        /// under <see cref="m_Lock"/>, and they are built without it - the cascade takes
+        /// longer than the compilation that it follows. They are published together, in
+        /// another short step, and only if the compilation they were built from is still
+        /// the current one. When a later compilation has published in the meantime, its
+        /// own cascade is on its way, and publishing these would show the user outputs
+        /// that are already out of date (ARCHITECTURE section 7 rule 14).
+        /// <para>
+        /// A bulk update calls this while it holds the lock for the whole of the update,
+        /// and then all of it runs under that hold, as it always did.
+        /// </para>
+        /// </remarks>
         private void RunBuildCascade()
         {
             try
             {
+                CascadeInputs inputs;
+
                 lock (m_Lock)
                 {
-                    BuildArrowGraph();
-                    BuildVertexGraph();
-                    BuildResourceSeriesSet();
-                    BuildTrackingSeriesSet();
-                    BuildNetworkMetrics();
-                    BuildRiskMetrics();
-                    BuildFinancialMetrics();
+                    // A burst of compilations queues a cascade for each of them behind the one
+                    // that is running. The first of the queued cascades builds from the newest
+                    // compilation, and so the others find nothing to add.
+                    if (ReferenceEquals(m_CascadedCompilation, GraphCompilation))
+                    {
+                        return;
+                    }
+
+                    inputs = CaptureCascadeInputs();
+                }
+
+                CascadeOutputs outputs = ComputeCascadeOutputs(inputs);
+
+                lock (m_Lock)
+                {
+                    if (m_Disposed
+                        || !ReferenceEquals(inputs.GraphCompilation, GraphCompilation)
+                        || inputs.ScenarioRevision != ProjectScenarioRevision)
+                    {
+                        return;
+                    }
+
+                    ApplyCascadeOutputs(outputs);
+                    m_CascadedCompilation = inputs.GraphCompilation;
                     CompilationOutputRevision =
                         (CompilationOutputRevision + 1) % c_CompilationOutputRevisionWrap;
                 }
@@ -386,8 +451,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // The arrow and vertex display graphs are built by compiling the
                 // plan again, so they carry the same watchdog and can abandon the
-                // cascade part way through. Whatever was built before the timeout
-                // stays as it is; the revision pulse is deliberately not bumped, so
+                // cascade part way through. None of the outputs has been published
+                // by then, because they are published together after the last of
+                // them is built; the revision pulse is deliberately not bumped, so
                 // subscribers waiting on a settled set of outputs do not act on a
                 // half-built one.
                 AbandonCompilation(ex);
@@ -396,9 +462,192 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Builds a compiler holding an independent copy of the plan - the input half of
-        /// the snapshot/compile/publish sequence that <see cref="CompileWithTimeout"/>
-        /// runs.
+        /// What the outputs of a cascade read, copied in one step so that all of them are built
+        /// from the same moment. The compilation and the settings are shared, not copied, because
+        /// they are replaced as a whole and never changed in place.
+        /// </summary>
+        private sealed record CascadeInputs(
+            IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation,
+            bool HasCompilationErrors,
+            ResourceSettingsModel ResourceSettings,
+            WorkStreamSettingsModel WorkStreamSettings,
+            IReadOnlyList<ActivitySeverityModel> ActivitySeverities,
+            DateTimeOffset ProjectStart,
+            int? StartTime,
+            int? FinishTime,
+            bool HasResources,
+            IList<ActivityModel> ActivityModels,
+            int ScenarioRevision);
+
+        private sealed record CascadeOutputs(
+            ArrowGraphModel ArrowGraph,
+            VertexGraphModel VertexGraph,
+            ResourceSeriesSetModel ResourceSeriesSet,
+            TrackingSeriesSetModel TrackingSeriesSet,
+            NetworkModel NetworkMetrics,
+            RisksModel RiskMetrics,
+            CostsModel CostMetrics,
+            BillingsModel BillingMetrics,
+            MarginsModel MarginMetrics,
+            EffortsModel EffortMetrics,
+            List<ResourceMetricsModel> ResourceMetrics);
+
+        /// <summary>
+        /// Copies what the outputs of a cascade read. Call it with <see cref="m_Lock"/> held, after the
+        /// compilation has published: the tracking series reads the times that it published.
+        /// </summary>
+        private CascadeInputs CaptureCascadeInputs() =>
+            new(
+                GraphCompilation,
+                HasCompilationErrors,
+                ResourceSettings,
+                WorkStreamSettings,
+                [.. GraphSettings.ActivitySeverities],
+                ProjectStart,
+                m_VertexGraphCompiler.StartTime,
+                m_VertexGraphCompiler.FinishTime,
+                HasResources,
+                MapActivityModels(),
+                ProjectScenarioRevision);
+
+        private IList<ActivityModel> MapActivityModels() =>
+            [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToActivityModel)];
+
+        /// <summary>
+        /// Builds the outputs of a cascade, in dependency order, from a copy of what they read. Needs no lock
+        /// of the core, and takes <see cref="m_OutputBuildLock"/> for the colours.
+        /// </summary>
+        private CascadeOutputs ComputeCascadeOutputs(CascadeInputs inputs)
+        {
+            lock (m_OutputBuildLock)
+            {
+                ArrowGraphModel arrowGraph = ComputeArrowGraph(
+                    inputs.GraphCompilation,
+                    inputs.HasCompilationErrors);
+
+                VertexGraphModel vertexGraph = ComputeVertexGraph(
+                    inputs.GraphCompilation,
+                    inputs.HasCompilationErrors,
+                    inputs.ResourceSettings,
+                    inputs.WorkStreamSettings);
+
+                ResourceSeriesSetModel resourceSeriesSet = ComputeResourceSeriesSet(
+                    inputs.GraphCompilation,
+                    inputs.ResourceSettings);
+
+                TrackingSeriesSetModel trackingSeriesSet = ComputeTrackingSeriesSet(
+                    inputs.ActivityModels,
+                    inputs.ResourceSettings,
+                    inputs.HasResources);
+
+                NetworkModel networkMetrics = ComputeNetworkMetrics(
+                    inputs.GraphCompilation,
+                    inputs.HasCompilationErrors,
+                    inputs.ProjectStart,
+                    inputs.StartTime,
+                    inputs.FinishTime);
+
+                RisksModel riskMetrics = ComputeRiskMetrics(
+                    inputs.GraphCompilation,
+                    inputs.HasCompilationErrors,
+                    inputs.ActivitySeverities);
+
+                (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
+                    ComputeFinancialMetrics(resourceSeriesSet, inputs.HasCompilationErrors);
+
+                return new CascadeOutputs(
+                    arrowGraph,
+                    vertexGraph,
+                    resourceSeriesSet,
+                    trackingSeriesSet,
+                    networkMetrics,
+                    riskMetrics,
+                    costs,
+                    billings,
+                    margins,
+                    efforts,
+                    resourceMetrics);
+            }
+        }
+
+        /// <summary>
+        /// Publishes the outputs of a cascade, in the order that they were built in. Call it with
+        /// <see cref="m_Lock"/> held.
+        /// </summary>
+        private void ApplyCascadeOutputs(CascadeOutputs outputs)
+        {
+            ArrowGraph = outputs.ArrowGraph;
+            VertexGraph = outputs.VertexGraph;
+            ResourceSeriesSet = outputs.ResourceSeriesSet;
+            TrackingSeriesSet = outputs.TrackingSeriesSet;
+            ApplyNetworkMetrics(outputs.NetworkMetrics);
+            ApplyRiskMetrics(outputs.RiskMetrics);
+            ApplyFinancialMetrics(
+                outputs.CostMetrics,
+                outputs.BillingMetrics,
+                outputs.MarginMetrics,
+                outputs.EffortMetrics,
+                outputs.ResourceMetrics);
+        }
+
+        /// <summary>
+        /// The input half of a compilation: a copy of the plan, taken in one short step, with what is needed
+        /// to tell afterwards whether the results can still be used.
+        /// </summary>
+        /// <param name="Activities">The copies of the activities, in the order of the live graph.</param>
+        /// <param name="Sources">The live activity that each copy was made from.</param>
+        /// <param name="Resources">The resources that the compilation schedules.</param>
+        /// <param name="WorkStreams">The work streams that the compilation uses.</param>
+        /// <param name="InputRevision">The revision of what a compilation reads, when the copies were taken.</param>
+        /// <param name="ScenarioRevision">The scenario that the copies belong to.</param>
+        /// <param name="Ticket">Puts this snapshot in order among the others.</param>
+        private sealed record CompilationSnapshot(
+            List<IDependentActivity> Activities,
+            IReadOnlyDictionary<int, IManagedActivityViewModel> Sources,
+            List<IResource<int, int>> Resources,
+            List<IWorkStream<int>> WorkStreams,
+            int InputRevision,
+            int ScenarioRevision,
+            int Ticket);
+
+        /// <summary>
+        /// Takes the copy of the plan that a compilation works on. Call it with <see cref="m_Lock"/> held: it
+        /// reads the live graph, which the structural edits change under that lock.
+        /// </summary>
+        private CompilationSnapshot TakeSnapshot()
+        {
+            UpdateActivityDisplayOrders();
+
+            var availableResources = new List<IResource<int, int>>();
+            if (!ResourceSettings.AreDisabled)
+            {
+                availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+            }
+
+            var workStreams = new List<IWorkStream<int>>();
+            workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
+
+            // The revision is read before the copies are taken. An edit that lands in between is then
+            // in the copies and counted as not yet seen, which costs one more compilation and never
+            // loses the edit.
+            int inputRevision = Volatile.Read(ref m_InputRevision);
+
+            (List<IDependentActivity> activityCopies, Dictionary<int, IManagedActivityViewModel> sources) = CopyActivities();
+
+            Volatile.Write(ref m_SnapshotRevision, inputRevision);
+
+            return new CompilationSnapshot(
+                activityCopies,
+                sources,
+                availableResources,
+                workStreams,
+                inputRevision,
+                ProjectScenarioRevision,
+                ++m_SnapshotTicket);
+        }
+
+        /// <summary>
+        /// Copies every activity, together with the live activity that it came from.
         /// </summary>
         /// <remarks>
         /// The copies are taken in one pass while <see cref="m_ActivityDataLock"/> is held,
@@ -410,10 +659,12 @@ namespace Zametek.ViewModel.ProjectPlan
         /// whichever it meets first; copying them in any other order would schedule ties
         /// differently from a compilation of the live graph.
         /// </para>
+        /// Call it with <see cref="m_Lock"/> held.
         /// </remarks>
-        private VertexGraphCompiler SnapshotCompiler()
+        private (List<IDependentActivity> Copies, Dictionary<int, IManagedActivityViewModel> Sources) CopyActivities()
         {
             List<IDependentActivity> activityCopies = [];
+            Dictionary<int, IManagedActivityViewModel> sources = [];
 
             lock (m_ActivityDataLock)
             {
@@ -424,10 +675,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
                     {
                         activityCopies.Add((IDependentActivity)activity.CloneObject());
+                        sources[activityId] = activity;
                     }
                 }
             }
 
+            return (activityCopies, sources);
+        }
+
+        /// <summary>
+        /// Builds a throwaway compiler that holds the copies. It needs no lock: nothing else can reach it.
+        /// </summary>
+        private static VertexGraphCompiler BuildCompiler(IEnumerable<IDependentActivity> activityCopies)
+        {
             var compiler = new VertexGraphCompiler();
 
             foreach (IDependentActivity activityCopy in activityCopies)
@@ -454,14 +714,24 @@ namespace Zametek.ViewModel.ProjectPlan
         /// project start and finish times by reading them from the activities it holds,
         /// which are these ones.
         /// </para>
+        /// <para>
+        /// A result goes only to the live activity that its copy was made from. An activity that was
+        /// removed while the compilation ran, and one that has taken its id since, get nothing.
+        /// </para>
         /// </remarks>
-        private void PublishCompilation(IGraphCompilation<int, int, int, IDependentActivity> graphCompilation)
+        /// <param name="graphCompilation">The compilation to apply.</param>
+        /// <param name="sources">The live activity that each copy was made from, or null to go by id.</param>
+        private void PublishCompilation(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            IReadOnlyDictionary<int, IManagedActivityViewModel>? sources)
         {
             Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
 
             foreach (IDependentActivity compiledActivity in graphCompilation.DependentActivities)
             {
-                if (activityLookup.TryGetValue(compiledActivity.Id, out IManagedActivityViewModel? activity))
+                if (activityLookup.TryGetValue(compiledActivity.Id, out IManagedActivityViewModel? activity)
+                    && (sources is null
+                        || (sources.TryGetValue(compiledActivity.Id, out IManagedActivityViewModel? source) && ReferenceEquals(source, activity))))
                 {
                     activity.SetCompiledValues(compiledActivity);
                 }
@@ -469,9 +739,9 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Compiles a copy of the plan under the watchdog and applies the results, turning
-        /// a watchdog cancellation into a <see cref="GraphCompilationTimeoutException"/> so
-        /// that callers can tell it apart from any other cancellation.
+        /// Compiles a snapshot under the watchdog, turning a watchdog cancellation into a
+        /// <see cref="GraphCompilationTimeoutException"/> so that callers can tell it apart
+        /// from any other cancellation.
         /// </summary>
         /// <remarks>
         /// The compiler works on copies rather than on the live activities, so an edit made
@@ -480,45 +750,55 @@ namespace Zametek.ViewModel.ProjectPlan
         /// timed out, or because it failed - therefore publishes nothing at all, and the
         /// previous results stay in place whole.
         /// <para>
-        /// The budget starts immediately around the compile, so neither the wait for
-        /// m_Lock nor the copying is charged to it.
+        /// It needs no lock, and its caller holds none unless a bulk update is running it. The
+        /// budget starts immediately around the compile, so neither the wait for m_Lock nor
+        /// the copying is charged to it.
         /// </para>
         /// </remarks>
         private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(
-            List<IResource<int, int>> availableResources,
-            List<IWorkStream<int>> workStreams,
+            CompilationSnapshot snapshot,
             int timeoutMilliseconds)
         {
-            VertexGraphCompiler compiler = SnapshotCompiler();
+            VertexGraphCompiler compiler = BuildCompiler(snapshot.Activities);
 
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
+            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
 
-            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
+            try
             {
-                try
-                {
-                    graphCompilation = compiler.Compile(
-                        availableResources,
-                        workStreams,
-                        CompilationTimeoutHelper.TokenOrNone(timeoutSource));
-                }
-                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-                {
-                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-                }
+                return CompilePlan(
+                    compiler,
+                    snapshot.Resources,
+                    snapshot.WorkStreams,
+                    CompilationTimeoutHelper.TokenOrNone(timeoutSource));
             }
-
-            PublishCompilation(graphCompilation);
-            return graphCompilation;
+            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+            {
+                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
+            }
         }
+
+        /// <summary>
+        /// Compiles the copy of the plan. Here so that a test can hold a compilation part way through, to see what
+        /// happens to the edits that are made meanwhile.
+        /// </summary>
+        protected virtual IGraphCompilation<int, int, int, IDependentActivity> CompilePlan(
+            VertexGraphCompiler compiler,
+            List<IResource<int, int>> availableResources,
+            List<IWorkStream<int>> workStreams,
+            CancellationToken cancellationToken) =>
+            compiler.Compile(availableResources, workStreams, cancellationToken);
 
         /// <summary>
         /// The infinite resource overload - the pure critical path schedule - used by
         /// the transitive reduction.
         /// </summary>
+        /// <remarks>
+        /// Call it with <see cref="m_Lock"/> held, for the whole of the reduction: the reduction changes the
+        /// live graph, and it reads the times that this publishes into the live activities.
+        /// </remarks>
         private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(int timeoutMilliseconds)
         {
-            VertexGraphCompiler compiler = SnapshotCompiler();
+            VertexGraphCompiler compiler = BuildCompiler(CopyActivities().Copies);
 
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
 
@@ -534,8 +814,153 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            PublishCompilation(graphCompilation);
+            PublishCompilation(graphCompilation, sources: null);
             return graphCompilation;
+        }
+
+        // The seven outputs of the cascade, each built from the values that it reads and nothing else. The Build*
+        // methods give them the live values, under m_Lock; the cascade gives them a copy, without it. Either way the
+        // output is the same.
+
+        private ArrowGraphModel ComputeArrowGraph(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            bool hasCompilationErrors)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildArrowGraph)}");
+
+            if (hasCompilationErrors)
+            {
+                return new ArrowGraphModel();
+            }
+
+            // Stamp each event with a stable, activity-anchored id (ArrowEventIdMapper), so the
+            // interactive layout can persist and rehydrate by it; the compiler's own event ids
+            // are transient (regenerated every compile) and so cannot key a saved arrangement.
+            var arrowGraph = m_GraphCompilationService.BuildArrowGraph(
+                graphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()));
+
+            return ArrowEventIdMapper.ApplyStableIds(arrowGraph);
+        }
+
+        private VertexGraphModel ComputeVertexGraph(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            bool hasCompilationErrors,
+            ResourceSettingsModel resourceSettings,
+            WorkStreamSettingsModel workStreamSettings)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildVertexGraph)}");
+
+            if (hasCompilationErrors)
+            {
+                return new VertexGraphModel();
+            }
+
+            return m_GraphCompilationService.BuildVertexGraph(
+                graphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()),
+                resourceSettings.Resources,
+                resourceSettings.AreDisabled,
+                workStreamSettings.WorkStreams);
+        }
+
+        private ResourceSeriesSetModel ComputeResourceSeriesSet(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            ResourceSettingsModel resourceSettings)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildResourceSeriesSet)}");
+
+            lock (m_OutputBuildLock)
+            {
+                return m_ResourceSchedulingService.BuildResourceSeriesSet(
+                    graphCompilation,
+                    resourceSettings);
+            }
+        }
+
+        private TrackingSeriesSetModel ComputeTrackingSeriesSet(
+            IList<ActivityModel> activityModels,
+            ResourceSettingsModel resourceSettings,
+            bool hasResources)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildTrackingSeriesSet)}");
+
+            lock (m_OutputBuildLock)
+            {
+                return m_ResourceSchedulingService.BuildTrackingSeriesSet(
+                    activityModels,
+                    resourceSettings,
+                    hasResources);
+            }
+        }
+
+        private NetworkModel ComputeNetworkMetrics(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            bool hasCompilationErrors,
+            DateTimeOffset projectStart,
+            int? startTime,
+            int? finishTime)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildNetworkMetrics)}");
+
+            return m_MetricCalculationService.BuildNetworkMetrics(
+                graphCompilation,
+                hasCompilationErrors,
+                projectStart,
+                startTime,
+                finishTime);
+        }
+
+        private RisksModel ComputeRiskMetrics(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            bool hasCompilationErrors,
+            IEnumerable<ActivitySeverityModel> activitySeverities)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildRiskMetrics)}");
+
+            return m_MetricCalculationService.BuildRiskMetrics(
+                graphCompilation,
+                hasCompilationErrors,
+                activitySeverities);
+        }
+
+        private (CostsModel Costs, BillingsModel Billings, MarginsModel Margins, EffortsModel Efforts, List<ResourceMetricsModel> ResourceMetrics) ComputeFinancialMetrics(
+            ResourceSeriesSetModel resourceSeriesSet,
+            bool hasCompilationErrors)
+        {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildFinancialMetrics)}");
+
+            return m_MetricCalculationService.BuildFinancialMetrics(
+                resourceSeriesSet,
+                hasCompilationErrors);
+        }
+
+        // Publishing the metrics. Call these with m_Lock held. The setters mark the scenario as updated when a
+        // value is different, and Metrics is raised for the observers of the record as a whole.
+
+        private void ApplyNetworkMetrics(NetworkModel networkMetrics)
+        {
+            NetworkMetrics = networkMetrics;
+            this.RaisePropertyChanged(nameof(Metrics));
+        }
+
+        private void ApplyRiskMetrics(RisksModel riskMetrics)
+        {
+            RiskMetrics = riskMetrics;
+            this.RaisePropertyChanged(nameof(Metrics));
+        }
+
+        private void ApplyFinancialMetrics(
+            CostsModel costs,
+            BillingsModel billings,
+            MarginsModel margins,
+            EffortsModel efforts,
+            List<ResourceMetricsModel> resourceMetrics)
+        {
+            CostMetrics = costs;
+            BillingMetrics = billings;
+            MarginMetrics = margins;
+            EffortMetrics = efforts;
+            ResourceMetrics = resourceMetrics;
+            this.RaisePropertyChanged(nameof(Metrics));
         }
 
         /// <summary>
@@ -586,6 +1011,13 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsReadyToCompile;
             private set
             {
+                // Every arm is a change of what a compilation reads, including the one that finds the property
+                // armed already and so raises nothing. A compilation that is running counts it, and compiles again.
+                if (value == ReadyToCompile.Yes)
+                {
+                    NoteInputsChanged();
+                }
+
                 lock (m_Lock)
                 {
                     if (m_TrackIsProjectScenarioUpdated)
@@ -801,7 +1233,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (m_AutoCompile)
                     {
+                        // Switching automatic compilation on compiles nothing by itself: the next edit does.
                         IsReadyToCompile = ReadyToCompile.No;
+                        AbsorbPendingInputs();
                     }
                 }
             }
@@ -1428,6 +1862,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
 
+                    // The settings that were cleared above armed the compilation, and an empty scenario has nothing
+                    // to compile. A compilation that is running finds the scenario changed, and discards its results.
+                    AbsorbPendingInputs();
+
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = false;
 
@@ -1869,6 +2307,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     });
 
                     UpdateActivityDisplayOrders();
+                    NoteInputsChanged();
                     //IsProjectScenarioUpdated = true;
                 }
             }
@@ -1900,6 +2339,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     });
 
                     UpdateActivityDisplayOrders();
+                    NoteInputsChanged();
                     IsProjectScenarioUpdated = true;
                 }
             }
@@ -1981,6 +2421,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
+                    NoteInputsChanged();
                     IsProjectScenarioUpdated = true;
 
                     if (AutoCompile)
@@ -2060,6 +2501,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                         }
 
+                        NoteInputsChanged();
                         IsProjectScenarioUpdated = true;
                     }
                 }
@@ -2255,7 +2697,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Dictionary<int, DurationEstimate> estimates = [];
                 Dictionary<int, string> names = [];
 
-                // The copies are taken as a compilation takes them (SnapshotCompiler): in the order that the live
+                // The copies are taken as a compilation takes them (CopyActivities): in the order that the live
                 // graph holds the activities, and in one pass under the activity data lock, so that no activity is
                 // edited part way through being copied. A simulation takes minutes, and it must never see the
                 // live activities again after this.
@@ -2305,9 +2747,26 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void RunCompile()
+        /// <summary>
+        /// Counts a change of something that a compilation reads. A compilation that is running did not see the
+        /// change, so it publishes its results as stale, and the plan is compiled again.
+        /// </summary>
+        public void NoteInputsChanged() => Interlocked.Increment(ref m_InputRevision);
+
+        public void RunCompile() => RunCompile(drainAfter: true);
+
+        // A compilation is three steps: snapshot, compile, publish (ARCHITECTURE section 7 rules 11 and 14). Only the first
+        // and the last hold m_Lock, and each of them is short. The compile in between takes the time, and it works on
+        // private copies. So a compilation no longer holds up the edits of the plan, and an edit made meanwhile is
+        // counted: the results are published as stale, and the plan is compiled again (see DrainAutoCompiles).
+        //
+        // A bulk update calls this while it holds m_Lock for the whole of the update. All three steps then run under
+        // that hold, as they always did: it rewrites the model, and nothing else should see the model part way.
+        private void RunCompile(bool drainAfter)
         {
             CascadeDiagnostics.RecordStackTrace($@"{nameof(CoreViewModel)}.{nameof(RunCompile)} invoked");
+
+            bool isNested = m_Lock.IsHeldByCurrentThread;
 
             // Captured under the lock but logged after it: a compile runs on the taskpool
             // while UI bindings contend for this lock, so nothing avoidable happens inside.
@@ -2320,32 +2779,44 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
+                    BeginBusy();
+
+                    CompilationSnapshot snapshot;
+
                     lock (m_Lock)
                     {
-                        BeginBusy();
+                        snapshot = TakeSnapshot();
+                    }
 
-                        UpdateActivityDisplayOrders();
+                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = CompileWithTimeout(snapshot, timeoutMilliseconds);
 
-                        var availableResources = new List<IResource<int, int>>();
-                        if (!ResourceSettings.AreDisabled)
+                    lock (m_Lock)
+                    {
+                        // The results are of no use to anyone, and are dropped, when another scenario has been loaded
+                        // since the snapshot, or when a snapshot taken after this one has published already. Publishing
+                        // them would put the plan of one scenario into another, or an older plan over a newer one.
+                        if (!m_Disposed
+                            && snapshot.ScenarioRevision == ProjectScenarioRevision
+                            && snapshot.Ticket > m_PublishedTicket)
                         {
-                            availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+                            m_PublishedTicket = snapshot.Ticket;
+
+                            PublishCompilation(graphCompilation, snapshot.Sources);
+                            bool hadCompilationErrors = HasCompilationErrors;
+                            HasCompilationErrors = graphCompilation.CompilationErrors.Any();
+                            compilationErrorsAppeared = HasCompilationErrors && !hadCompilationErrors;
+                            compilationErrorCount = graphCompilation.CompilationErrors.Count();
+                            GraphCompilation = graphCompilation;
+
+                            IsProjectScenarioUpdated = true;
+
+                            // The outputs match the plan only if nothing that a compilation reads has changed since the
+                            // snapshot. If something has, these results are the newest there are and they stay on
+                            // display, but they are stale until the compilation that follows has published.
+                            HasStaleOutputs = Volatile.Read(ref m_InputRevision) != snapshot.InputRevision;
+                            IsReadyToReviseTrackers = ReadyToRevise.No;
+                            IsReadyToCompile = ReadyToCompile.No;
                         }
-
-                        var workStreams = new List<IWorkStream<int>>();
-                        workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
-
-                        IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = CompileWithTimeout(availableResources, workStreams, timeoutMilliseconds);
-                        bool hadCompilationErrors = HasCompilationErrors;
-                        HasCompilationErrors = graphCompilation.CompilationErrors.Any();
-                        compilationErrorsAppeared = HasCompilationErrors && !hadCompilationErrors;
-                        compilationErrorCount = graphCompilation.CompilationErrors.Count();
-                        GraphCompilation = graphCompilation;
-
-                        IsProjectScenarioUpdated = true;
-                        HasStaleOutputs = false;
-                        IsReadyToReviseTrackers = ReadyToRevise.No;
-                        IsReadyToCompile = ReadyToCompile.No;
                     }
                 }
                 finally
@@ -2369,27 +2840,81 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_Logger.LogWarning("Compilation failed with {CompilationErrorCount} error(s)", compilationErrorCount);
             }
+
+            // A compilation leaves nothing due behind it. When the plan changed while this one ran, and automatic
+            // compilation is on, the next compilation is made here. A bulk update does not: it holds the lock, and its
+            // snapshot is taken after everything it changed.
+            if (drainAfter && !isNested)
+            {
+                DrainAutoCompiles();
+            }
         }
 
         public void RunAutoCompile()
         {
             CascadeDiagnostics.RecordMarker($@"RunAutoCompile invoked: AutoCompile={AutoCompile} IsBusy={IsBusy}");
-            try
+
+            // A request for a compilation: the caller has changed the plan. Counting the request makes the plan due a
+            // compilation, and this thread then makes it - unless another thread is making compilations already. That
+            // thread looks at the revision again when it has published, and so it compiles for this request as well.
+            NoteInputsChanged();
+            DrainAutoCompiles();
+        }
+
+        /// <summary>
+        /// Makes the compilations that the edits of the plan ask for, one at a time, until the plan is not due another.
+        /// </summary>
+        /// <remarks>
+        /// At most one thread makes them. A thread that finds another making them leaves, and its request waits in the
+        /// revision: the thread that is making them compares the revision with that of its snapshot when it has
+        /// published, and compiles again if they differ. So the edits made while a compilation runs are compiled
+        /// together, once, after it - neither cancelled into the compilation that is running, nor lost, nor compiled
+        /// one by one. The check of the outer loop closes the gap in which a request arrives after the last check of
+        /// the inner loop and before the thread has given up the right to compile.
+        /// </remarks>
+        private void DrainAutoCompiles()
+        {
+            while (IsCompileDue())
             {
-                lock (m_Lock)
+                if (Interlocked.CompareExchange(ref m_AutoCompileRunning, 1, 0) != 0)
                 {
+                    return;
+                }
+
+                try
+                {
+                    // One busy window for all of them, and not one for each, so that the signal does not flap.
                     BeginBusy();
-                    if (AutoCompile)
+
+                    try
                     {
-                        RunCompile();
+                        while (IsCompileDue())
+                        {
+                            RunCompile(drainAfter: false);
+                        }
+                    }
+                    finally
+                    {
+                        EndBusy();
                     }
                 }
-            }
-            finally
-            {
-                EndBusy();
+                finally
+                {
+                    Volatile.Write(ref m_AutoCompileRunning, 0);
+                }
             }
         }
+
+        // Automatic compilation is on, and something that a compilation reads has changed since the newest snapshot.
+        private bool IsCompileDue() => AutoCompile && HasUnabsorbedInputs();
+
+        private bool HasUnabsorbedInputs() =>
+            Volatile.Read(ref m_InputRevision) != Volatile.Read(ref m_SnapshotRevision);
+
+        // Takes everything that has changed so far as already compiled: a reset has nothing to compile, and switching
+        // automatic compilation on compiles nothing until the next edit.
+        private void AbsorbPendingInputs() =>
+            Volatile.Write(ref m_SnapshotRevision, Volatile.Read(ref m_InputRevision));
 
         public void RunTransitiveReduction()
         {
@@ -2424,52 +2949,31 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildArrowGraph()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildArrowGraph)}");
             lock (m_Lock)
             {
-                if (HasCompilationErrors)
-                {
-                    ArrowGraph = new ArrowGraphModel();
-                }
-                else
-                {
-                    // Stamp each event with a stable, activity-anchored id (ArrowEventIdMapper), so the
-                    // interactive layout can persist and rehydrate by it; the compiler's own event ids
-                    // are transient (regenerated every compile) and so cannot key a saved arrangement.
-                    var arrowGraph = m_GraphCompilationService.BuildArrowGraph(
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()));
-
-                    ArrowGraph = ArrowEventIdMapper.ApplyStableIds(arrowGraph);
-                }
+                ArrowGraph = ComputeArrowGraph(
+                    GraphCompilation,
+                    HasCompilationErrors);
             }
         }
 
         public void BuildVertexGraph()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildVertexGraph)}");
             lock (m_Lock)
             {
-                if (HasCompilationErrors)
-                {
-                    VertexGraph = new VertexGraphModel();
-                }
-                else
-                {
-                    VertexGraph = m_GraphCompilationService.BuildVertexGraph(
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()),
-                        ResourceSettings.Resources,
-                        ResourceSettings.AreDisabled,
-                        WorkStreamSettings.WorkStreams);
-                }
+                VertexGraph = ComputeVertexGraph(
+                    GraphCompilation,
+                    HasCompilationErrors,
+                    ResourceSettings,
+                    WorkStreamSettings);
             }
         }
 
         public void BuildResourceSeriesSet()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildResourceSeriesSet)}");
             lock (m_Lock)
             {
-                ResourceSeriesSet = m_ResourceSchedulingService.BuildResourceSeriesSet(
+                ResourceSeriesSet = ComputeResourceSeriesSet(
                     GraphCompilation,
                     ResourceSettings);
             }
@@ -2477,14 +2981,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildTrackingSeriesSet()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildTrackingSeriesSet)}");
             lock (m_Lock)
             {
-                IList<ActivityModel> activityModels =
-                    [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToActivityModel)];
-
-                TrackingSeriesSet = m_ResourceSchedulingService.BuildTrackingSeriesSet(
-                    activityModels,
+                TrackingSeriesSet = ComputeTrackingSeriesSet(
+                    MapActivityModels(),
                     ResourceSettings,
                     HasResources);
             }
@@ -2492,48 +2992,38 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildNetworkMetrics()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildNetworkMetrics)}");
             lock (m_Lock)
             {
-                NetworkMetrics = m_MetricCalculationService.BuildNetworkMetrics(
+                ApplyNetworkMetrics(ComputeNetworkMetrics(
                     GraphCompilation,
                     HasCompilationErrors,
                     ProjectStart,
                     m_VertexGraphCompiler.StartTime,
-                    m_VertexGraphCompiler.FinishTime);
-                this.RaisePropertyChanged(nameof(Metrics));
+                    m_VertexGraphCompiler.FinishTime));
             }
         }
 
         public void BuildRiskMetrics()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildRiskMetrics)}");
             lock (m_Lock)
             {
-                RiskMetrics = m_MetricCalculationService.BuildRiskMetrics(
+                ApplyRiskMetrics(ComputeRiskMetrics(
                     GraphCompilation,
                     HasCompilationErrors,
-                    GraphSettings.ActivitySeverities);
-                this.RaisePropertyChanged(nameof(Metrics));
+                    GraphSettings.ActivitySeverities));
             }
         }
 
         public void BuildFinancialMetrics()
         {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildFinancialMetrics)}");
             lock (m_Lock)
             {
                 (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
-                    m_MetricCalculationService.BuildFinancialMetrics(
+                    ComputeFinancialMetrics(
                         ResourceSeriesSet,
                         HasCompilationErrors);
 
-                CostMetrics = costs;
-                BillingMetrics = billings;
-                MarginMetrics = margins;
-                EffortMetrics = efforts;
-                ResourceMetrics = resourceMetrics;
-                this.RaisePropertyChanged(nameof(Metrics));
+                ApplyFinancialMetrics(costs, billings, margins, efforts, resourceMetrics);
             }
         }
 
@@ -2578,29 +3068,33 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         lock (m_Lock)
                         {
-                            if (!IsBusy)
+                            // The changeset's uncompiled verdict is baked in at
+                            // emission time and may be stale by the time it is
+                            // delivered here (e.g. activities added during a load
+                            // are emitted as uncompiled, but the load has already
+                            // compiled them by the time the load releases m_Lock),
+                            // so re-check before arming a redundant compile, which
+                            // would mark the project scenario as updated.
+                            //
+                            // The check is the revision, not the flags of the
+                            // activities. A compilation that was running when the
+                            // edit was made marks every activity compiled when it
+                            // publishes, the edited one among them, and the flag
+                            // would then hide the edit. IsBusy is no help either:
+                            // it is set for the whole of a compilation, and a
+                            // compilation holds no lock.
+                            if (HasUnabsorbedInputs())
                             {
-                                // The changeset's uncompiled verdict is baked in at
-                                // emission time and may be stale by the time it is
-                                // delivered here (e.g. activities added during a load
-                                // are emitted as uncompiled, but the load has already
-                                // compiled them by the time the load releases m_Lock),
-                                // so re-check the live state before arming a redundant
-                                // compile, which would mark the project scenario as
-                                // updated.
-                                if (RawActivities.Any(activity => !activity.IsCompiled))
+                                if (AutoCompile)
                                 {
-                                    if (AutoCompile)
-                                    {
-                                        IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                                        IsReadyToCompile = ReadyToCompile.Yes;
-                                        CascadeDiagnostics.RecordMarker(@"UncompiledSub armed IsReadyToCompile=Yes");
-                                    }
-                                    else
-                                    {
-                                        IsReadyToReviseTrackers = ReadyToRevise.No;
-                                        IsReadyToCompile = ReadyToCompile.No;
-                                    }
+                                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                                    IsReadyToCompile = ReadyToCompile.Yes;
+                                    CascadeDiagnostics.RecordMarker(@"UncompiledSub armed IsReadyToCompile=Yes");
+                                }
+                                else
+                                {
+                                    IsReadyToReviseTrackers = ReadyToRevise.No;
+                                    IsReadyToCompile = ReadyToCompile.No;
                                 }
                             }
                         }
@@ -2620,22 +3114,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: IsReadyToCompile={IsReadyToCompile} IsBusy={IsBusy}");
                     try
                     {
-                        lock (m_Lock)
-                        {
-                            // Re-read rather than trust the delivered value (rule 7).
-                            // Every completed compile clears this flag, so two edits in
-                            // quick succession arm it twice and the second delivery
-                            // arrives after the first compile has already absorbed both
-                            // - and a redundant compile marks the project scenario as
-                            // updated, exactly as the uncompiled-activities handler
-                            // above explains. The getter is lock-free (rule 9), so
-                            // reading it here costs nothing.
-                            if (IsReadyToCompile == ReadyToCompile.Yes
-                                && !IsBusy)
-                            {
-                                RunAutoCompile();
-                            }
-                        }
+                        // Re-read rather than trust the delivered value (rule 7), and
+                        // read the revision, not the property: whether the plan is due
+                        // a compilation does not depend on a flag that a compilation
+                        // in progress may be about to clear. Every compile takes the
+                        // changes made before its snapshot into account, so two edits
+                        // in quick succession arm this twice and the second delivery,
+                        // which arrives after the first compile has absorbed both,
+                        // finds nothing to do - and a redundant compile marks the
+                        // project scenario as updated, exactly as the
+                        // uncompiled-activities handler above explains.
+                        DrainAutoCompiles();
                     }
                     catch (GraphCompilationTimeoutException)
                     {

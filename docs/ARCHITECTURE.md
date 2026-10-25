@@ -10,7 +10,7 @@ Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.
 
 ## 1. The moving parts
 
-- **`CoreViewModel`** owns the editable state: the activities, the settings for resources, work streams, graphs and holidays, the project start, and today. It also owns the compiler (`m_VertexGraphCompiler`), the compilation result (`GraphCompilation`), and the derived outputs: `ArrowGraph`, `VertexGraph`, `ResourceSeriesSet`, `TrackingSeriesSet` and the metrics. A single private lock, `m_Lock`, makes each change of that state run one at a time.
+- **`CoreViewModel`** owns the editable state: the activities, the settings for resources, work streams, graphs and holidays, the project start, and today. It also owns the compiler (`m_VertexGraphCompiler`), the compilation result (`GraphCompilation`), and the derived outputs: `ArrowGraph`, `VertexGraph`, `ResourceSeriesSet`, `TrackingSeriesSet` and the metrics. A single private lock, `m_Lock`, makes each change of that state run one at a time. A compilation and a cascade hold it only to copy what they read and to publish what they build (§7 rule 14).
 - **Manager view models** subscribe to properties of `CoreViewModel` with ReactiveUI `WhenAnyValue` chains. When an input changes, they rebuild their own outputs: plots, graphs and grids. Each of them makes its pipeline in `IStartSubscriptions.StartSubscriptions()` and not in its constructor (§7 rule 12). It disposes the pipeline in `IKillSubscriptions.KillSubscriptions()`.
 - **Schedulers.** Heavy work runs on `RxSchedulers.TaskpoolScheduler`. Heavy work is compilations, the Build\* methods and the builds of chart plots. Only the delivery to the UI uses `RxSchedulers.MainThreadScheduler`. ReactiveUI 24 models the main thread as an `ISequencer` and not as an Rx `IScheduler`. The bridge `ObserveOn(ISequencer)` in [`ObservableExtensions`](../src/Zametek.ViewModel.ProjectPlan/Reactive/ObservableExtensions.cs) is specific to this repository. It exists because an import of `ReactiveUI.Primitives` as a whole makes each call to a core Rx operator ambiguous. `ReactiveUI.Primitives` declares `Select`, `Where`, `Subscribe` and others again.
 
@@ -37,9 +37,9 @@ This is the steady-state flow for a **single edit**. The user changes the durati
 
 1. The edit marks activities as uncompiled, or it raises a settings property.
 2. The uncompiled-activities watcher (`m_AreActivitiesUncompiledSub`) or a settings applier arms the trigger. First, it raises `IsReadyToReviseTrackers`, and the tracker revisions run *inline* during that raise. Then it sets `IsReadyToCompile = ReadyToCompile.Yes`. Each arm site sets `IsReadyToCompile` **last** on purpose. It is an enum and not a bool, because repeated `true` assignments do not raise the property again (ReactiveUI issue #3846).
-3. `m_CompileOnSettingsUpdateSub` observes `IsReadyToCompile` and moves to the taskpool. Arming happens on the UI thread, but **the compilation must never run there**. Under `m_Lock`, it calls `RunAutoCompile()`. This method runs `RunCompile()` only if `AutoCompile` is enabled.
-4. `RunCompile()` runs under `m_Lock`, between `BeginBusy` and `EndBusy`. It gives the resources and work streams to the vertex-graph compiler, and then it assigns the result to `GraphCompilation`. It also sets `IsProjectScenarioUpdated`, clears `HasStaleOutputs`, and disarms both triggers.
-5. The emission of the change of `GraphCompilation` reaches `m_BuildCascadeSub`. On the taskpool, this subscription calls `RunBuildCascade()`. This method calls the seven Build\* methods in dependency order: `BuildArrowGraph` → `BuildVertexGraph` → `BuildResourceSeriesSet` → `BuildTrackingSeriesSet` → `BuildNetworkMetrics` → `BuildRiskMetrics` → `BuildFinancialMetrics`. Then it increments `CompilationOutputRevision`, the settled signal (§9).
+3. `m_CompileOnSettingsUpdateSub` observes `IsReadyToCompile` and moves to the taskpool. Arming happens on the UI thread, but **the compilation must never run there**. The subscription calls `DrainAutoCompiles()`. This method compiles only if `AutoCompile` is enabled and the plan changed since the newest snapshot (§7 rule 14).
+4. `RunCompile()` does three steps between `BeginBusy` and `EndBusy`: snapshot, compile and publish. It holds `m_Lock` for the snapshot and for the publication, and not for the compile. The publication assigns the result to `GraphCompilation`, sets `IsProjectScenarioUpdated`, and disarms both triggers. It sets `HasStaleOutputs` only if an edit arrived during the compile.
+5. The emission of the change of `GraphCompilation` reaches `m_BuildCascadeSub`. On the taskpool, this subscription calls `RunBuildCascade()`. This method copies what the outputs read, builds the seven outputs in dependency order, and publishes them together. The order is `ArrowGraph` → `VertexGraph` → `ResourceSeriesSet` → `TrackingSeriesSet` → `NetworkMetrics` → `RiskMetrics` → the financial metrics. Only the copy and the publication hold `m_Lock`. Then the method increments `CompilationOutputRevision`, the settled signal (§9). It publishes nothing if a newer compilation has published during the build.
 6. The chart manager view models that use `CompilationOutputRevision` as their key rebuild their plots one time, on the taskpool.
 
 The net result is **one edit, one compilation, one cascade, and one rebuild for each chart.**
@@ -89,6 +89,7 @@ These are the key properties of the mechanism:
 - **`IsBulkUpdating` is a gate with a counter.** `BeginBulkUpdate()` and `EndBulkUpdate()` use an `Interlocked` nesting counter. They raise the property change only at the outermost transitions. Nesting is usual: `ProcessProjectScenario` calls `ResetProjectScenario` inside its own bulk window, and thus both frames hold the gate. Always use Begin and End as a pair in a `try`/`finally`.
 - **The core subscriptions drop their emissions** while the gate is up. They use `.Where(_ => !IsBulkUpdating)`, which is before `ObserveOn` (emission-time check, §2). Dropping is correct, and conflation is not necessary, because the bulk method does the job of the pipeline itself.
 - **The bulk method drives the process explicitly.** When *all* state is in place, it calls `RunCompile()` and then `RunBuildCascade()` directly, inside the window that is still muted. Exactly one compilation and one cascade run, at the one moment when each input is consistent. `ResetProjectScenario` is the exception. It does not compile. It assigns a new empty `GraphCompilation` and clears each output directly.
+- **The bulk method keeps `m_Lock` for all of it.** The compilation and the cascade of a bulk update run under the hold of the bulk method, as they always did. Nothing else must see the model part way. A compilation or a cascade of the pipeline that is still running finds the scenario changed, and it publishes nothing (§7 rule 14).
 
 This table compares the two modes:
 
@@ -97,8 +98,9 @@ This table compares the two modes:
 | Trigger | One edit | A load, an import or a reset |
 | Who drives | The reactive pipeline | The bulk method, with explicit calls |
 | Pipeline state | Live | Muted (`IsBulkUpdating`) |
-| Compilation | `RunAutoCompile` through a subscription | `RunCompile()`, called explicitly |
+| Compilation | `DrainAutoCompiles` through a subscription | `RunCompile()`, called explicitly |
 | Cascade | `m_BuildCascadeSub` through a subscription | `RunBuildCascade()`, called explicitly |
+| Lock | Short steps only | The whole update |
 | Chart rebuilds | One for each settled signal | One, replayed at `EndBulkUpdate` |
 
 ```mermaid
@@ -106,10 +108,10 @@ flowchart TB
     subgraph regular ["Regular edit - the pipeline drives"]
         A["User edit"] --> B["Emission: IsCompiled / settings change"]
         B --> C["Arm IsReadyToCompile<br/>(last thing set, UI thread)"]
-        C --> D["CompileOnSettingsUpdateSub<br/>(taskpool, under m_Lock)"]
-        D --> E["RunAutoCompile → RunCompile"]
+        C --> D["CompileOnSettingsUpdateSub<br/>(taskpool)"]
+        D --> E["DrainAutoCompiles → RunCompile<br/>(m_Lock for the snapshot and the publication)"]
         E --> F["GraphCompilation emission"]
-        F --> G["RunBuildCascade<br/>(taskpool, under m_Lock)"]
+        F --> G["RunBuildCascade<br/>(taskpool, m_Lock for the copy and the publication)"]
         G --> H["CompilationOutputRevision bump"]
         H --> I["Chart managers rebuild once"]
     end
@@ -171,7 +173,7 @@ Note the order of the operators: inputs → `MuteWhile` → `ObserveOn` → hand
 
 These rules are important. Several of them came from deadlocks and double-build bugs during the rework after v0.9.3.
 
-1. **`m_Lock` runs the model changes one at a time.** Each mutation of the state of `CoreViewModel`, each compilation and each Build\* method runs under it.
+1. **`m_Lock` runs the model changes one at a time.** Each mutation of the state of `CoreViewModel` runs under it. So do the short steps of a compilation and of a cascade, which copy what they read and publish what they build. The long steps do not (rule 14). A bulk update holds the lock for all of it, and the compilation and the cascade of the update run under that hold. Each Build\* method that the engine or a test calls runs under the lock.
 2. **Compilations and cascades never run on the UI thread.** The arm sites raise triggers on any thread, often the UI thread. The subscriptions move to `RxSchedulers.TaskpoolScheduler` before they do work. The UI bindings compete for `m_Lock` at the same time. Thus, nothing that is avoidable occurs inside the locked sections. For example, `RunCompile` captures values under the lock, but it writes the log after it releases the lock.
 3. **Suppression gates are before `ObserveOn`**, and thus they run at emission time (§2). This applies to `.Where(_ => !IsBulkUpdating)` and to `.MuteWhile(...)`.
 4. **The getters of `IsBusy` and `IsBulkUpdating` are lock-free** (`Volatile.Read` on an `Interlocked` counter). The `WhenAnyValue` observers read a raised property again *synchronously on the raising thread*. Suppose these getters take `m_Lock`. Then each raise connects those observers to the lock, and this can cause a deadlock.
@@ -219,7 +221,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     Rule 10 removed the systematic cause of the failures, but it left the ordinary one. The compilation runs on the taskpool. Suppose a grid commits an edit while an earlier armed compilation is still in progress. Then the edit changes the activity that the compiler clones. The compiler also writes its results (the times, the slack, the allocated resources, the resource dependencies and the successors) into the live activities while it calculates. This races the reads of the bindings and the `DeepCopy()` saves for the whole time of the compilation.
 
-    Thus, [`RunCompile`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) does three steps: **snapshot, compile, publish**. `SnapshotCompiler()` copies every activity (`CloneObject()`) into a throwaway `VertexGraphCompiler`. The compilation runs against those copies. `PublishCompilation()` gives each live activity its own results back through `SetCompiledValues`.
+    Thus, [`RunCompile`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) does three steps: **snapshot, compile, publish**. `TakeSnapshot()` copies every activity (`CloneObject()`), and the compilation builds a throwaway `VertexGraphCompiler` from the copies. The compilation runs against those copies. `PublishCompilation()` gives each live activity its own results back through `SetCompiledValues`.
 
     The activities own both halves of this exchange. Thus, the list of the fields that a compilation produces is next to the fields themselves, and not in a loop somewhere else. An activity can also assert that the results it receives are its own. Publishing writes *only* what a compilation produces. It never writes an input of an activity, such as the duration, the targets, the constraints and the dependencies that the user set. Thus, an edit that the user makes during a compilation survives the compilation.
 
@@ -239,7 +241,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     The live compiler keeps its own graph for everything between compilations: `GetNextActivityId`, dependency edits, `TransitiveReduction` and `IsIsolated`. It stays correct without compiling, for two reasons. A compilation is net-zero on the structure of the graph. It also derives the project start and finish by reading them from the live activities that the publication updated before.
 
-    Two items are not covered. The tracker sets guard their own state and hold immutable records. The compilation still runs under `m_Lock`. The removal of that lock is a separate change (refer to the TODO).
+    One item is not covered. The tracker sets guard their own state and hold immutable records. The compilation itself runs without `m_Lock` (rule 14).
 
 12. **A constructor starts no pipeline that delivers on another thread. `StartSubscriptions()` does.**
 
@@ -269,7 +271,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     The schedule simulation takes seconds to minutes. Each iteration schedules the whole plan again, and it costs about as much as a compile. Thus, the simulation panel is not part of the build cascade. It runs only when the user asks.
 
-    [`CaptureSimulationInput()`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) takes the copy, with the same steps as `SnapshotCompiler()` (rule 11). It holds `m_Lock` and then the leaf lock `m_ActivityDataLock`, and it copies the activities in the order of the live graph. It also takes the resources and the work streams that a compile uses, the three estimates and the name of each activity, and `CompilationOutputRevision`. The simulation changes the durations of the copies. It never reads a live activity again, and thus an edit during a run cannot reach it.
+    [`CaptureSimulationInput()`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) takes the copy, with the same steps as `TakeSnapshot()` (rule 11). It holds `m_Lock` and then the leaf lock `m_ActivityDataLock`, and it copies the activities in the order of the live graph. It also takes the resources and the work streams that a compile uses, the three estimates and the name of each activity, and `CompilationOutputRevision`. The simulation changes the durations of the copies. It never reads a live activity again, and thus an edit during a run cannot reach it.
 
     A run reports its progress from the threads of the simulation, and it builds the statistics and the chart on the task pool. A bound control can change only on the UI thread. Thus, the panel hands each change that the UI shows to `IUIDispatcher.Defer`. The dispatcher keeps the order of the changes, and thus the last word of a run (done, or cancelled) cannot be overwritten by a report that was still on its way. A progress bar that is bound to a property that the simulation threads set throws an exception.
 
@@ -280,6 +282,29 @@ These rules are important. Several of them came from deadlocks and double-build 
     The core owns the settings of the simulation (`SimulationSettings`) and its last result (`SimulationSummary`), as it owns the metrics. Both belong to the scenario, and the project file holds them. A setter marks the scenario as modified, except while a scenario loads or resets, and a getter takes no lock. `ResetProjectScenario()` puts back the defaults and no result, and it adds one to `ProjectScenarioRevision`. A run records that revision. When it changes, the run stops and its result is thrown away.
 
     The panel keeps no state of its own for this. Three docks show the one view model, `SimulationChartManagerViewModel`. It is the dock "Simulation Chart". The docks "Simulation" and "Simulation Metrics" are thin view models that hold it. The name of the scenario in the first of them follows `TitleRevision`, as the title bar does. A result that a file holds reaches the panel through a pipeline of its own. The panel decides whether it made a result with `ReferenceEquals`, and not with the pipeline that presents the display settings.
+
+14. **A compilation and its cascade run without `m_Lock`. Four checks decide what happens to their results.**
+
+    A compilation of a large plan takes 100 to 200 ms, and its cascade takes about 600 ms. Suppose both held `m_Lock`. Then each setter of the core waits for them, and the UI thread stops. Thus, each of them copies what it reads in one short step under the lock. It builds on the copy without the lock. Then it publishes in another short step under the lock.
+
+    On the largest sample plan (985 activities), the short steps take 10 to 20 ms. The lock also did three other jobs, and the checks replace them. First, a grid commit takes the lock when it sets `IsProjectScenarioUpdated`. Thus, the commit used to wait until the compilation ended. This ordered the commit after the moment when the publication marks every activity as compiled. Without the wait, the commit can mark an activity as uncompiled too early, and the publication hides the edit.
+
+    Second, the lock stopped a load from changing the scenario while a compilation ran. Third, it kept two compilations from publishing in the wrong order. These four checks replace the lock for all three jobs:
+
+    - **The input revision.** `m_InputRevision` counts each change of what a compilation reads. `NoteInputsChanged()` adds one. The commit of an edit calls it *first*, before anything announces the edit. Each arm of `IsReadyToCompile`, each call of `RunAutoCompile`, and each change of the structure of the plan call it too. A snapshot reads the revision before it copies the activities. The plan is stale, and due another compilation, when the revision differs from that of the snapshot.
+    - **The ticket.** Each snapshot has a number. A compilation publishes only if no later snapshot published before it. Thus, an older result never replaces a newer result.
+    - **The scenario.** A load or a reset changes `ProjectScenarioRevision`. A compilation or a cascade that started before the change publishes nothing. A result also goes only to the live activity that its copy came from. An activity that took the id of a removed activity gets nothing.
+    - **The compilation.** The cascade publishes only if `GraphCompilation` is still the compilation that it started from. A newer compilation has a cascade of its own, and the old outputs show a state that is out of date. `m_CascadedCompilation` tells the queued cascades that the first of them already built the newest compilation.
+
+    The publication sets `HasStaleOutputs` to true if the revision moved on during the compile. The results stay on display, because they are the newest there are. They are stale until the next compilation publishes. One thread at a time makes the compilations that the edits ask for (`DrainAutoCompiles`). The other threads leave their request in the revision and return. The thread that compiles compares the revision with that of its snapshot after each publication, and it compiles again if they differ.
+
+    Thus, one compilation after it takes all the edits made during a compilation. The application loses no edit and cancels no compilation. A compilation that someone starts by hand does the same check when it ends, if automatic compilation is on. The check of the revision replaces the checks of `IsBusy` in the two handlers that arm a compilation. `IsBusy` is true for the whole of a compilation, and a compilation holds no lock.
+
+    A bulk update keeps `m_Lock` for all of it, and thus its compilation and its cascade run under that hold. The transitive reduction does the same. Such an update does not wait for a compilation in progress. That compilation finds the scenario changed, and it publishes nothing. The update does wait for a cascade in progress.
+
+    The resource scheduling service draws colors from one sequence. The series of the tracking carries on where the series of the resources stopped. Thus, a cascade builds all its outputs while it holds the leaf lock `m_OutputBuildLock`. No code takes `m_Lock` while it holds this lock. Thus, the wait of a bulk update ends when the cascade ends.
+
+    [`CoreViewModelOffLockTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/CoreViewModelOffLockTests.cs) pin this rule. They hold a compilation or a cascade part way through, and then they edit, load and compile. An edit at a random moment almost never meets the short window of a compilation.
 
 ## 8. `IsBusy` versus `IsBulkUpdating`
 
@@ -296,7 +321,7 @@ Quick automatic compilations end well inside the delay. Thus, an ordinary edit n
 
 A compilation produces its outputs in seven Build\* steps. Suppose a chart watches `ResourceSeriesSet` *and* `GraphCompilation`. Then it rebuilds two times for each compilation, one time for each input. In between, it can see a mix of generations of the state.
 
-Thus, `RunBuildCascade()` increments `CompilationOutputRevision` **after all seven outputs are in place**. This is an `int`, which wraps around at a constant. The chart managers key their rebuild pipelines on this revision and not on the single outputs. Thus, one compilation gives exactly one settled raise, and one settled raise gives exactly one rebuild.
+Thus, `RunBuildCascade()` increments `CompilationOutputRevision` **after all seven outputs are in place**. This is an `int`, which wraps around at a constant. The chart managers key their rebuild pipelines on this revision and not on the single outputs. Thus, one compilation gives exactly one settled raise, and one settled raise gives exactly one rebuild. A cascade that a newer compilation overtakes publishes nothing and gives no raise (rule 14). The cascade of the newer compilation gives it.
 
 ## 10. Display order: input surfaces versus display-only surfaces
 

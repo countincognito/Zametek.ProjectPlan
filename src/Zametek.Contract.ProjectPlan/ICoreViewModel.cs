@@ -182,6 +182,12 @@ namespace Zametek.Contract.ProjectPlan
         // activities, and so an edit that is made while the simulation runs cannot reach it.
         SimulationInputModel CaptureSimulationInput();
 
+        // Tells the core that something a compilation reads has changed - the commit of an edit to an activity, for
+        // one. A compilation that is running did not see the change, and so its results are out of date as soon as
+        // it publishes them: the core marks the outputs as stale and, when auto compilation is on, compiles again.
+        // Call it before anything announces the edit.
+        void NoteInputsChanged();
+
         void RunCompile();
 
         void RunAutoCompile();

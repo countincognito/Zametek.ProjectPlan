@@ -70,6 +70,39 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         /// <summary>
+        /// Builds a core whose compilations a test can hold part way through, over a graph service whose first build of
+        /// the arrow graph - the first step of the cascade - it can hold in the same way. Nothing is held until the
+        /// test says so.
+        /// </summary>
+        public static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs) CreateGated()
+        {
+            EnsureReactiveUIInitialized();
+
+            var mapper = new ProjectPlanMapper();
+            var settingService = new TestSettingService
+            {
+                CompilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+            };
+            var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
+            var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));
+
+            var coreViewModel = new GatedCoreViewModel(
+                new TestProjectScenarioFileImport(),
+                new TestProjectScenarioFileExport(),
+                settingService,
+                dateTimeCalculator,
+                mapper,
+                graphs,
+                new ResourceSchedulingService(mapper),
+                new MetricCalculationService(mapper, dateTimeCalculator),
+                new TestDataGridScrollManager(),
+                NullLogger<CoreViewModel>.Instance);
+
+            coreViewModel.AutoCompile = false;
+            return (coreViewModel, graphs);
+        }
+
+        /// <summary>
         /// Builds the core and the settings managers that sit on top of it with their
         /// reactive subscriptions <em>started</em>, as the application's container starts
         /// them, for the tests that are about when the pipeline delivers rather than what
@@ -237,7 +270,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// that a compilation has both a critical path to calculate and a schedule to
         /// resolve rather than being trivially satisfiable.
         /// </summary>
-        public static ProjectScenarioModel CreateProjectScenario(int activityCount)
+        public static ProjectScenarioModel CreateProjectScenario(int activityCount, int durationOffset = 0)
         {
             List<ResourceModel> resources =
                 [.. Enumerable.Range(1, 2).Select(id => new ResourceModel
@@ -257,7 +290,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                         Id = id,
                         DisplayOrder = id,
                         Name = $@"Activity {id}",
-                        Duration = 1 + (id % 5),
+                        Duration = 1 + (id % 5) + durationOffset,
                         TargetResources = [1 + (id % 2)],
                         ColorFormat = ColorHelper.Random(),
                     },

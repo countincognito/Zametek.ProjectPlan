@@ -90,7 +90,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The ClrMD analysis of 2026-08-18 found the root cause of the spin: a torn `HashSet` clone poisoned the `Contains` gate of the scheduler. ARCHITECTURE §7 rule 10 tells the full story, and it shows the race on the ProjectPlan side that tore the clone.
 
-  The scheduler now detects the dead state upstream. Zametek.Maths.Graphs 3.2.0 reports compilation error C0020 and does not spin, and `Compile` takes a cancellation token. The compile watchdog of the application (`CompilationTimeoutMilliseconds`, 2026-08-19) limits all that the scheduler cannot prove dead. One structural item remains from this paragraph: run the compile outside the lock, against a snapshot. It has its own entry below (Phase 2b).
+  The scheduler now detects the dead state upstream. Zametek.Maths.Graphs 3.2.0 reports compilation error C0020 and does not spin, and `Compile` takes a cancellation token. The compile watchdog of the application (`CompilationTimeoutMilliseconds`, 2026-08-19) limits all that the scheduler cannot prove dead. The last structural item of this paragraph landed on 2026-10-25: the compile and the cascade now run outside the lock, against a snapshot (§7 rule 14).
 
   **Size, and a recommendation not to do the surgery as written** *(2026-08-21)*
 
@@ -108,7 +108,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Second, this entry argues against itself. The direction to explore above makes items 1 to 4 unnecessary and not only done. It also makes item 5 unnecessary: with no locks, there is no DAG of acquisition to document. If the surgery for the lock order comes first, the cost is full for something that the better end state discards.
 
-  Better value is nearby. Phase 2b (run the compile outside `m_Lock`) is small and concrete now that compilation works on private copies.
+  Better value was nearby. Phase 2b (run the compile and the cascade outside `m_Lock`) landed on 2026-10-25, and it was larger than this entry expected. The lock did hidden jobs, and counters now do them (§7 rule 14). The pattern that it proves is the one of the direction above: copy under the lock, build without it, and publish with checks.
 
   **The browser head changes the economics** *(2026-08-21)*
 
@@ -116,21 +116,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   If the web app becomes worth shipping, this direction is no longer speculative. It becomes the natural shape of the application. Then you must delete this entry. Do not do the work that it lists.
 
-- [ ] **Run the compile outside `m_Lock`** *(2026-08-19, Phase 2b of the work on the data race of the live activity)*
+- [ ] **Speed up the calculation of the tracking series** *(2026-10-25)*
 
-  Phases 1 and 2 both landed on 2026-08-19. The deferred callbacks of the settings that corrupted the input of a compilation are gone (ARCHITECTURE §7 rule 10). A compilation now makes a snapshot of the plan and compiles a throwaway copy of the graph. It publishes the results back through `SetCompiledValues`. A leaf lock makes the snapshot and publish passes exclusive with the own writes of the activities (§7 rule 11).
+  The cascade of a large plan takes about 650 ms on the sample plan with 985 activities (`docs/assets/erp-migration.zpp`). The compile takes 100 to 170 ms. `CalculateTrackingSeriesSet` in `ResourceSchedulingService` takes 310 to 370 ms, and thus it is about half of the cascade. The arrow graph takes 50 to 90 ms, the vertex graph takes 160 to 190 ms, and all the metrics together take 30 to 70 ms.
 
-  One piece remains from the original design, and the design split it out on purpose. `RunCompile` still holds `m_Lock` across the compile itself. Thus, a long compile still blocks every UI binding that touches the core. A compile that never finishes still wedges the application. (Only the watchdog limits this now.)
-
-  The compile no longer needs the lock, because it runs entirely on private copies. Thus, the change is now small. Take `m_Lock` for the snapshot. Release it for the compile. Take it again to publish the results and to assign `GraphCompilation`.
-
-  Compilations can overlap when the lock no longer serializes them. This case needs thought. There are two options. One option drops a second compilation while one is in progress. `IsReadyToCompile` already arms and does not queue, and thus this option is close to the behavior today.
-
-  The other option lets the later result win and discards the earlier one. In both options, `CompilationOutputRevision` and `HasStaleOutputs` must still describe the compilation that the application published.
-
-  Consider the seam for the cancellation of the compile. The token is already in place. Thus, a new compilation can cancel the compilation in progress and not let it run to the end.
-
-  Verify the change with the comparison that Phase 2 used, before and after. Run `zpp -i <file> -o <out>` across all sample projects and several scenarios. Compare the output with a diff that ignores `ModifiedOn`. Also use the concurrency tests in `CoreViewModelCompilationTests`.
+  The cascade no longer holds `m_Lock` (ARCHITECTURE §7 rule 14), and thus the time does not block the UI. But it delays the charts after each edit, and a bulk update waits for it. Profile the calculation and look for work that repeats for each activity. A faster tracking series shortens the wait for every chart.
 
 - [ ] **Bring the browser head up to the desktop application** *(2026-08-21)*
 
