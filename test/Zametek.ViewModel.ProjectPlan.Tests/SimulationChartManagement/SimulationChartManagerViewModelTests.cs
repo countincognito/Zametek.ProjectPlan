@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -22,9 +21,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// result stops belonging to the plan.
     /// </summary>
     /// <remarks>
-    /// The core is never started, so a test drives it explicitly (a scenario load compiles, the setters say what
-    /// changed). The sample plan of the application has no estimates, so a copy of it is given an optimistic
-    /// duration of 0.75 and a pessimistic duration of 1.6 times its duration.
+    /// The core is not started, so a test drives it explicitly (a scenario load compiles, the setters say what
+    /// changed). The test about a plan that compiles again is the exception: it starts the core, so that a compile
+    /// settles the outputs as it does in the application. The sample plan of the application has no estimates, so a
+    /// copy of it is given an optimistic duration of 0.75 and a pessimistic duration of 1.6 times its duration.
     /// </remarks>
     public class SimulationChartManagerViewModelTests
     {
@@ -661,7 +661,17 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RunSimulationAsync_Given_APlanThatCompilesAgain_Then_TheResultIsStaleUntilItRunsAgain()
         {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
             using Harness harness = await Harness.MakeAsync();
+
+            // The core is started, so that a compile settles its outputs as it does in the application. Starting it queues
+            // a cascade for the compilation that the harness made. The cascade runs now, so that it cannot move the
+            // revision of the outputs under the result of the simulation later.
+            harness.Core.StartSubscriptions();
+            Drain(main, pool);
+
             SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
@@ -680,8 +690,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.IsResultStale.ShouldBeFalse();
 
             // A compile builds the outputs again, and a new revision of them says that the result is of the plan that
-            // was there before. (The core is never started, so the test runs the step that settles the outputs.)
-            typeof(CoreViewModel).GetMethod(@"RunBuildCascade", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(harness.Core, null);
+            // was there before.
+            harness.Core.RunCompile();
+            Drain(main, pool);
             panel.IsResultStale.ShouldBeTrue();
 
             await panel.RunSimulationAsync();
