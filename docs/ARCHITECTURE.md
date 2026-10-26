@@ -4,7 +4,7 @@ This document describes how a change of project state moves through the applicat
 
 > **Transparency note:** Claude AI (Anthropic) worked alongside the maintainer to develop many of the refinements in this document. These refinements are the bulk-update gating, `MuteWhile`, the threading discipline, and the performance rework that they came from. Claude AI also helped to develop this document itself.
 
-Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics. The schedule simulation also connects to it, but it is not part of the cascade (rule 13). Three docks show it: "Simulation", "Simulation Chart" and "Simulation Metrics".
+Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics. The schedule simulation also connects to it, but it is not part of the cascade (rule 13). Three docks show it: "Simulation", "Simulation Chart" and "Simulation Metrics".
 
 ---
 
@@ -221,7 +221,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     Rule 10 removed the systematic cause of the failures, but it left the ordinary one. The compilation runs on the taskpool. Suppose a grid commits an edit while an earlier armed compilation is still in progress. Then the edit changes the activity that the compiler clones. The compiler also writes its results (the times, the slack, the allocated resources, the resource dependencies and the successors) into the live activities while it calculates. This races the reads of the bindings and the `DeepCopy()` saves for the whole time of the compilation.
 
-    Thus, [`RunCompile`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) does three steps: **snapshot, compile, publish**. `TakeSnapshot()` copies every activity (`CloneObject()`), and the compilation builds a throwaway `VertexGraphCompiler` from the copies. The compilation runs against those copies. `PublishCompilation()` gives each live activity its own results back through `SetCompiledValues`.
+    Thus, [`RunCompile`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) does three steps: **snapshot, compile, publish**. `TakeSnapshot()` copies every activity (`CloneObject()`), and the compilation builds a throwaway `VertexGraphCompiler` from the copies. The compilation runs against those copies. `PublishCompilation()` gives each live activity its own results back through `SetCompiledValues`.
 
     The activities own both halves of this exchange. Thus, the list of the fields that a compilation produces is next to the fields themselves, and not in a loop somewhere else. An activity can also assert that the results it receives are its own. Publishing writes *only* what a compilation produces. It never writes an input of an activity, such as the duration, the targets, the constraints and the dependencies that the user set. Thus, an edit that the user makes during a compilation survives the compilation.
 
@@ -271,7 +271,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     The schedule simulation takes seconds to minutes. Each iteration schedules the whole plan again, and it costs about as much as a compile. Thus, the simulation panel is not part of the build cascade. It runs only when the user asks.
 
-    [`CaptureSimulationInput()`](../src/Zametek.ViewModel.ProjectPlan/CoreViewModel.cs) takes the copy, with the same steps as `TakeSnapshot()` (rule 11). It holds `m_Lock` and then the leaf lock `m_ActivityDataLock`, and it copies the activities in the order of the live graph. It also takes the resources and the work streams that a compile uses, the three estimates and the name of each activity, and `CompilationOutputRevision`. The simulation changes the durations of the copies. It never reads a live activity again, and thus an edit during a run cannot reach it.
+    [`CaptureSimulationInput()`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) takes the copy, with the same steps as `TakeSnapshot()` (rule 11). It holds `m_Lock` and then the leaf lock `m_ActivityDataLock`, and it copies the activities in the order of the live graph. It also takes the resources and the work streams that a compile uses, the three estimates and the name of each activity, and `CompilationOutputRevision`. The simulation changes the durations of the copies. It never reads a live activity again, and thus an edit during a run cannot reach it.
 
     A run reports its progress from the threads of the simulation, and it builds the statistics and the chart on the task pool. A bound control can change only on the UI thread. Thus, the panel hands each change that the UI shows to `IUIDispatcher.Defer`. The dispatcher keeps the order of the changes, and thus the last word of a run (done, or cancelled) cannot be overwritten by a report that was still on its way. A progress bar that is bound to a property that the simulation threads set throws an exception.
 
@@ -304,7 +304,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     The resource scheduling service draws colors from one sequence. The series of the tracking carries on where the series of the resources stopped. Thus, a cascade builds all its outputs while it holds the leaf lock `m_OutputBuildLock`. No code takes `m_Lock` while it holds this lock. Thus, the wait of a bulk update ends when the cascade ends.
 
-    [`CoreViewModelOffLockTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/CoreViewModelOffLockTests.cs) pin this rule. They hold a compilation or a cascade part way through, and then they edit, load and compile. An edit at a random moment almost never meets the short window of a compilation.
+    [`CoreViewModelOffLockTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/CoreViewModelOffLockTests.cs) pin this rule. They hold a compilation or a cascade part way through, and then they edit, load and compile. An edit at a random moment almost never meets the short window of a compilation.
 
 ## 8. `IsBusy` versus `IsBulkUpdating`
 
@@ -434,6 +434,6 @@ The large projects group their files by function. The command line, view model a
 
 `Miscellaneous` holds only the files that have no function of their own. These are the stand-ins of the host, such as `AvaloniaUIDispatcher` and `DialogService`, and small helpers for dates and text. A helper that one dock alone uses sits in the folder of that dock. A helper that several folders use stays in `Miscellaneous`, unless it has a function of its own.
 
-`Contracts` and `Exceptions` stay folders by kind, even when they hold one file. The root of a project holds its top-level classes, such as `Program` and `CoreViewModel`. A small project, such as the engine, groups its files by kind: `Contracts`, `Models`, `Exceptions` and `Miscellaneous`.
+`Contracts` and `Exceptions` stay folders by kind, even when they hold one file. The root of a project holds its top-level classes, such as `Program` and `MainViewModel`. A small project, such as the engine, groups its files by kind: `Contracts`, `Models`, `Exceptions` and `Miscellaneous`.
 
 The namespace of a project stays flat. Thus, a move between folders changes no code. A test project has the same folders as the project that it tests, and its shared fixtures stay at its root.
