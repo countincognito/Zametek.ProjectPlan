@@ -33,7 +33,7 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | current scenario | The scenario that was open when a user saved the plan. `zpp` loads it when a request does not name a scenario. A plan has a maximum of one current scenario. |
 | activity | A task in a plan. |
 | compile | To calculate the schedule of a scenario with the vertex-graph compiler. The result is the compilation (`GraphCompilation`). |
-| build cascade | The seven outputs that `RunBuildCascade()` builds after a compile. They are the arrow graph, the vertex graph, the series for resources and tracking, and the three kinds of metrics. It builds them from a copy of what they read, and it publishes them together. |
+| build cascade | The seven outputs that `RunBuildCascade()` builds after a compile. They are the arrow graph, the vertex graph, the series for resources and tracking, and the three kinds of metrics. `RunBuildCascade()` copies what they read, `CompilationOutputService` builds them from the copy, and `RunBuildCascade()` publishes them together. |
 | output | A result that the desktop application, `zpp` or the server makes from a compiled plan. Examples are the metrics, a chart, a graph and an exported plan. |
 | metrics | The numbers that describe a compiled scenario. There are network, risk and financial metrics. |
 | estimates | The three durations of an activity: the optimistic duration (O), the most likely duration (ML) and the pessimistic duration (P). The rule is 0 ≤ O ≤ ML ≤ P. The compiler schedules the expected duration, (O + 4 ML + P) / 6, rounded to the nearest whole day, with halves up. |

@@ -38,18 +38,6 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private readonly Lock m_ActivityDataLock;
 
-        /// <summary>
-        /// Held while the outputs of a cascade are built, so that two builds never draw from the colour sequence of
-        /// the resource scheduling service at the same time. A cascade builds without holding <see cref="m_Lock"/>, and
-        /// a bulk update builds one while it holds it.
-        /// </summary>
-        /// <remarks>
-        /// A leaf lock: nothing that holds it takes <see cref="m_Lock"/>, and it is taken only by the builds. The
-        /// resource series and the tracking series share one sequence, and the second carries on where the first
-        /// stopped, so they have to be built one after the other and as a pair.
-        /// </remarks>
-        private readonly Lock m_OutputBuildLock;
-
         private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
         private int m_BulkUpdateNestingLevel;
@@ -82,9 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly ProjectPlanMapper m_Mapper;
-        private readonly IGraphCompilationService m_GraphCompilationService;
-        private readonly IResourceSchedulingService m_ResourceSchedulingService;
-        private readonly IMetricCalculationService m_MetricCalculationService;
+        private readonly CompilationOutputService m_OutputService;
         private readonly IDataGridScrollManager m_DataGridScrollManager;
         private readonly ILogger<CoreViewModel> m_Logger;
 
@@ -126,7 +112,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger = logger;
             m_Lock = new();
             m_ActivityDataLock = new();
-            m_OutputBuildLock = new();
             m_SubscriptionLifetime = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
@@ -141,9 +126,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 () => IsReadyToCompile = ReadyToCompile.Yes,
                 RefreshActivityDateTimes);
             m_Mapper = mapper;
-            m_GraphCompilationService = graphCompilationService;
-            m_ResourceSchedulingService = resourceSchedulingService;
-            m_MetricCalculationService = metricCalculationService;
+            m_OutputService = new CompilationOutputService(
+                graphCompilationService,
+                resourceSchedulingService,
+                metricCalculationService);
             m_DataGridScrollManager = dataGridScrollManager;
 
             m_IsReadyToCompile = ReadyToCompile.No;
@@ -430,7 +416,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     inputs = CaptureCascadeInputs();
                 }
 
-                CascadeOutputs outputs = ComputeCascadeOutputs(inputs);
+                CascadeOutputs outputs = m_OutputService.Compute(inputs);
 
                 lock (m_Lock)
                 {
@@ -462,37 +448,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// What the outputs of a cascade read, copied in one step so that all of them are built
-        /// from the same moment. The compilation and the settings are shared, not copied, because
-        /// they are replaced as a whole and never changed in place.
-        /// </summary>
-        private sealed record CascadeInputs(
-            IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation,
-            bool HasCompilationErrors,
-            ResourceSettingsModel ResourceSettings,
-            WorkStreamSettingsModel WorkStreamSettings,
-            IReadOnlyList<ActivitySeverityModel> ActivitySeverities,
-            DateTimeOffset ProjectStart,
-            int? StartTime,
-            int? FinishTime,
-            bool HasResources,
-            IList<ActivityModel> ActivityModels,
-            int ScenarioRevision);
-
-        private sealed record CascadeOutputs(
-            ArrowGraphModel ArrowGraph,
-            VertexGraphModel VertexGraph,
-            ResourceSeriesSetModel ResourceSeriesSet,
-            TrackingSeriesSetModel TrackingSeriesSet,
-            NetworkModel NetworkMetrics,
-            RisksModel RiskMetrics,
-            CostsModel CostMetrics,
-            BillingsModel BillingMetrics,
-            MarginsModel MarginMetrics,
-            EffortsModel EffortMetrics,
-            List<ResourceMetricsModel> ResourceMetrics);
-
-        /// <summary>
         /// Copies what the outputs of a cascade read. Call it with <see cref="m_Lock"/> held, after the
         /// compilation has published: the tracking series reads the times that it published.
         /// </summary>
@@ -512,63 +467,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private IList<ActivityModel> MapActivityModels() =>
             [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToActivityModel)];
-
-        /// <summary>
-        /// Builds the outputs of a cascade, in dependency order, from a copy of what they read. Needs no lock
-        /// of the core, and takes <see cref="m_OutputBuildLock"/> for the colours.
-        /// </summary>
-        private CascadeOutputs ComputeCascadeOutputs(CascadeInputs inputs)
-        {
-            lock (m_OutputBuildLock)
-            {
-                ArrowGraphModel arrowGraph = ComputeArrowGraph(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors);
-
-                VertexGraphModel vertexGraph = ComputeVertexGraph(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors,
-                    inputs.ResourceSettings,
-                    inputs.WorkStreamSettings);
-
-                ResourceSeriesSetModel resourceSeriesSet = ComputeResourceSeriesSet(
-                    inputs.GraphCompilation,
-                    inputs.ResourceSettings);
-
-                TrackingSeriesSetModel trackingSeriesSet = ComputeTrackingSeriesSet(
-                    inputs.ActivityModels,
-                    inputs.ResourceSettings,
-                    inputs.HasResources);
-
-                NetworkModel networkMetrics = ComputeNetworkMetrics(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors,
-                    inputs.ProjectStart,
-                    inputs.StartTime,
-                    inputs.FinishTime);
-
-                RisksModel riskMetrics = ComputeRiskMetrics(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors,
-                    inputs.ActivitySeverities);
-
-                (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
-                    ComputeFinancialMetrics(resourceSeriesSet, inputs.HasCompilationErrors);
-
-                return new CascadeOutputs(
-                    arrowGraph,
-                    vertexGraph,
-                    resourceSeriesSet,
-                    trackingSeriesSet,
-                    networkMetrics,
-                    riskMetrics,
-                    costs,
-                    billings,
-                    margins,
-                    efforts,
-                    resourceMetrics);
-            }
-        }
 
         /// <summary>
         /// Publishes the outputs of a cascade, in the order that they were built in. Call it with
@@ -816,121 +714,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             PublishCompilation(graphCompilation, sources: null);
             return graphCompilation;
-        }
-
-        // The seven outputs of the cascade, each built from the values that it reads and nothing else. The Build*
-        // methods give them the live values, under m_Lock; the cascade gives them a copy, without it. Either way the
-        // output is the same.
-
-        private ArrowGraphModel ComputeArrowGraph(
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            bool hasCompilationErrors)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildArrowGraph)}");
-
-            if (hasCompilationErrors)
-            {
-                return new ArrowGraphModel();
-            }
-
-            // Stamp each event with a stable, activity-anchored id (ArrowEventIdMapper), so the
-            // interactive layout can persist and rehydrate by it; the compiler's own event ids
-            // are transient (regenerated every compile) and so cannot key a saved arrangement.
-            var arrowGraph = m_GraphCompilationService.BuildArrowGraph(
-                graphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()));
-
-            return ArrowEventIdMapper.ApplyStableIds(arrowGraph);
-        }
-
-        private VertexGraphModel ComputeVertexGraph(
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            bool hasCompilationErrors,
-            ResourceSettingsModel resourceSettings,
-            WorkStreamSettingsModel workStreamSettings)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildVertexGraph)}");
-
-            if (hasCompilationErrors)
-            {
-                return new VertexGraphModel();
-            }
-
-            return m_GraphCompilationService.BuildVertexGraph(
-                graphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()),
-                resourceSettings.Resources,
-                resourceSettings.AreDisabled,
-                workStreamSettings.WorkStreams);
-        }
-
-        private ResourceSeriesSetModel ComputeResourceSeriesSet(
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            ResourceSettingsModel resourceSettings)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildResourceSeriesSet)}");
-
-            lock (m_OutputBuildLock)
-            {
-                return m_ResourceSchedulingService.BuildResourceSeriesSet(
-                    graphCompilation,
-                    resourceSettings);
-            }
-        }
-
-        private TrackingSeriesSetModel ComputeTrackingSeriesSet(
-            IList<ActivityModel> activityModels,
-            ResourceSettingsModel resourceSettings,
-            bool hasResources)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildTrackingSeriesSet)}");
-
-            lock (m_OutputBuildLock)
-            {
-                return m_ResourceSchedulingService.BuildTrackingSeriesSet(
-                    activityModels,
-                    resourceSettings,
-                    hasResources);
-            }
-        }
-
-        private NetworkModel ComputeNetworkMetrics(
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            bool hasCompilationErrors,
-            DateTimeOffset projectStart,
-            int? startTime,
-            int? finishTime)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildNetworkMetrics)}");
-
-            return m_MetricCalculationService.BuildNetworkMetrics(
-                graphCompilation,
-                hasCompilationErrors,
-                projectStart,
-                startTime,
-                finishTime);
-        }
-
-        private RisksModel ComputeRiskMetrics(
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            bool hasCompilationErrors,
-            IEnumerable<ActivitySeverityModel> activitySeverities)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildRiskMetrics)}");
-
-            return m_MetricCalculationService.BuildRiskMetrics(
-                graphCompilation,
-                hasCompilationErrors,
-                activitySeverities);
-        }
-
-        private (CostsModel Costs, BillingsModel Billings, MarginsModel Margins, EffortsModel Efforts, List<ResourceMetricsModel> ResourceMetrics) ComputeFinancialMetrics(
-            ResourceSeriesSetModel resourceSeriesSet,
-            bool hasCompilationErrors)
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildFinancialMetrics)}");
-
-            return m_MetricCalculationService.BuildFinancialMetrics(
-                resourceSeriesSet,
-                hasCompilationErrors);
         }
 
         // Publishing the metrics. Call these with m_Lock held. The setters mark the scenario as updated when a
@@ -2951,7 +2734,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ArrowGraph = ComputeArrowGraph(
+                ArrowGraph = m_OutputService.ComputeArrowGraph(
                     GraphCompilation,
                     HasCompilationErrors);
             }
@@ -2961,7 +2744,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                VertexGraph = ComputeVertexGraph(
+                VertexGraph = m_OutputService.ComputeVertexGraph(
                     GraphCompilation,
                     HasCompilationErrors,
                     ResourceSettings,
@@ -2973,7 +2756,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ResourceSeriesSet = ComputeResourceSeriesSet(
+                ResourceSeriesSet = m_OutputService.ComputeResourceSeriesSet(
                     GraphCompilation,
                     ResourceSettings);
             }
@@ -2983,7 +2766,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                TrackingSeriesSet = ComputeTrackingSeriesSet(
+                TrackingSeriesSet = m_OutputService.ComputeTrackingSeriesSet(
                     MapActivityModels(),
                     ResourceSettings,
                     HasResources);
@@ -2994,7 +2777,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ApplyNetworkMetrics(ComputeNetworkMetrics(
+                ApplyNetworkMetrics(m_OutputService.ComputeNetworkMetrics(
                     GraphCompilation,
                     HasCompilationErrors,
                     ProjectStart,
@@ -3007,7 +2790,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ApplyRiskMetrics(ComputeRiskMetrics(
+                ApplyRiskMetrics(m_OutputService.ComputeRiskMetrics(
                     GraphCompilation,
                     HasCompilationErrors,
                     GraphSettings.ActivitySeverities));
@@ -3019,7 +2802,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
-                    ComputeFinancialMetrics(
+                    m_OutputService.ComputeFinancialMetrics(
                         ResourceSeriesSet,
                         HasCompilationErrors);
 

@@ -302,7 +302,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     A bulk update keeps `m_Lock` for all of it, and thus its compilation and its cascade run under that hold. The transitive reduction does the same. Such an update does not wait for a compilation in progress. That compilation finds the scenario changed, and it publishes nothing. The update does wait for a cascade in progress.
 
-    The resource scheduling service draws colors from one sequence. The series of the tracking carries on where the series of the resources stopped. Thus, a cascade builds all its outputs while it holds the leaf lock `m_OutputBuildLock`. No code takes `m_Lock` while it holds this lock. Thus, the wait of a bulk update ends when the cascade ends.
+    The resource scheduling service draws colors from one sequence. The series of the tracking carries on where the series of the resources stopped. Thus, a cascade builds all its outputs through [`CompilationOutputService`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationOutputService.cs), and this class holds the leaf lock `m_OutputBuildLock` while it builds. No code takes `m_Lock` while it holds this lock. Thus, the wait of a bulk update ends when the cascade ends.
 
     [`CoreViewModelOffLockTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/CoreViewModelOffLockTests.cs) pin this rule. They hold a compilation or a cascade part way through, and then they edit, load and compile. An edit at a random moment almost never meets the short window of a compilation.
 
