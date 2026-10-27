@@ -25,19 +25,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly Lock m_Lock;
 
-        /// <summary>
-        /// The leaf lock shared by every activity view model, guarding the activity state
-        /// a compilation reads and writes. Held only around the snapshot and publish steps
-        /// here, and around the individual writes inside the activities themselves.
-        /// </summary>
-        /// <remarks>
-        /// Strictly inside <see cref="m_Lock"/> in the lock order, and the only lock the
-        /// activities take, so it cannot form a cycle. Never hold it while raising a
-        /// change notification or calling out to anything else - see ARCHITECTURE
-        /// section 7 rules 6 and 11.
-        /// </remarks>
-        private readonly Lock m_ActivityDataLock;
-
         private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
         private int m_BulkUpdateNestingLevel;
@@ -48,7 +35,7 @@ namespace Zametek.ViewModel.ProjectPlan
         // The compilation that the outputs were last built from. Used under m_Lock only.
         private IGraphCompilation<int, int, int, IDependentActivity>? m_CascadedCompilation;
 
-        private readonly VertexGraphCompiler m_VertexGraphCompiler;
+        private readonly PlanGraph m_PlanGraph;
 
         private readonly IProjectScenarioFileImport m_ProjectScenarioFileImport;
         private readonly IProjectScenarioFileExport m_ProjectScenarioFileExport;
@@ -61,8 +48,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
         private readonly SubscriptionLifetime m_SubscriptionLifetime;
-        private IDisposable? m_ReadOnlyActivitiesSub;
-        private IDisposable? m_OrderableActivitiesSub;
         private IDisposable? m_AreActivitiesUncompiledSub;
         private IDisposable? m_CompileOnSettingsUpdateSub;
         private IDisposable? m_BuildCascadeSub;
@@ -96,12 +81,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(logger);
             m_Logger = logger;
             m_Lock = new();
-            m_ActivityDataLock = new();
             m_Scheduler = new();
             m_SubscriptionLifetime = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
-            m_VertexGraphCompiler = new VertexGraphCompiler();
             m_ProjectScenarioFileImport = projectScenarioFileImport;
             m_ProjectScenarioFileExport = projectScenarioFileExport;
             m_SettingService = settingService;
@@ -124,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectStart = today;
             m_Today = today;
             m_ResourceSettings = new ResourceSettingsModel();
-            m_Activities = new();
+            m_PlanGraph = new PlanGraph(m_Mapper, m_DateTimeCalculator, m_SubscriptionLifetime);
             m_GraphSettings = m_SettingService.DefaultGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
@@ -151,8 +134,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_VertexGraphLayout = new GraphLayoutModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
-
-            m_OrderableActivities = [];
 
             m_SelectedTheme = m_SettingService.SelectedTheme;
 
@@ -196,14 +177,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     })
                 .ToProperty(this, mm => mm.ProjectFinish);
 
-            // The read-only view of the source list is made here, empty, so that it can be read and observed from
-            // the start. The bind that fills it delivers on the UI thread and is made by StartSubscriptions.
-            m_BoundActivities = [];
-            m_ReadOnlyActivities = new ReadOnlyObservableCollection<IManagedActivityViewModel>(m_BoundActivities);
-
-            m_HasActivities = m_ReadOnlyActivities
+            m_HasActivities = Activities
                 .ToObservableChangeSet()
-                .Select(x => m_ReadOnlyActivities.Count > 0)
+                .Select(x => Activities.Count > 0)
                 .ToProperty(this, core => core.HasActivities);
 
             m_HasResources = this
@@ -267,10 +243,7 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private void RefreshActivityDateTimes()
         {
-            foreach (IManagedActivityViewModel activity in RawActivities)
-            {
-                activity.UpdateEarliestStartAndLatestFinishDateTimes();
-            }
+            m_PlanGraph.UpdateEarliestStartAndLatestFinishDateTimes();
         }
 
         private void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated, bool trackStaleOutputs)
@@ -445,8 +418,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 WorkStreamSettings,
                 [.. GraphSettings.ActivitySeverities],
                 ProjectStart,
-                m_VertexGraphCompiler.StartTime,
-                m_VertexGraphCompiler.FinishTime,
+                m_PlanGraph.StartTime,
+                m_PlanGraph.FinishTime,
                 HasResources,
                 MapActivityModels(),
                 ProjectScenarioRevision);
@@ -491,84 +464,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var workStreams = new List<IWorkStream<int>>();
             workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
 
-            return m_Scheduler.TakeSnapshot(availableResources, workStreams, ProjectScenarioRevision, CopyActivities);
-        }
-
-        /// <summary>
-        /// Copies every activity, together with the live activity that it came from.
-        /// </summary>
-        /// <remarks>
-        /// The copies are taken in one pass while <see cref="m_ActivityDataLock"/> is held,
-        /// so no activity can be edited part way through being copied, and the copy of the
-        /// plan as a whole is of a single moment rather than of several.
-        /// <para>
-        /// The activities are copied in the order the live graph holds them, because the
-        /// scheduling priority list resolves a tie between two activities in favour of
-        /// whichever it meets first; copying them in any other order would schedule ties
-        /// differently from a compilation of the live graph.
-        /// </para>
-        /// Call it with <see cref="m_Lock"/> held.
-        /// </remarks>
-        private (List<IDependentActivity> Copies, Dictionary<int, IManagedActivityViewModel> Sources) CopyActivities()
-        {
-            List<IDependentActivity> activityCopies = [];
-            Dictionary<int, IManagedActivityViewModel> sources = [];
-
-            lock (m_ActivityDataLock)
-            {
-                Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
-
-                foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
-                {
-                    if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
-                    {
-                        activityCopies.Add((IDependentActivity)activity.CloneObject());
-                        sources[activityId] = activity;
-                    }
-                }
-            }
-
-            return (activityCopies, sources);
-        }
-
-        /// <summary>
-        /// Applies a compilation's results to the live activities - the output half of the
-        /// sequence. Each activity absorbs its own results, so what a compilation produces
-        /// is applied in one place, next to the values it writes.
-        /// </summary>
-        /// <remarks>
-        /// Deliberately not under <see cref="m_ActivityDataLock"/>. Applying results
-        /// announces them - that is how they reach the view - and nothing may be announced
-        /// while that lock is held; each activity takes it for its own writes and announces
-        /// after releasing it. So results arrive one activity at a time, exactly as they did
-        /// when the compiler wrote into the live activities as it calculated.
-        /// <para>
-        /// This also keeps the live compiler's own derived values right: it reports the
-        /// project start and finish times by reading them from the activities it holds,
-        /// which are these ones.
-        /// </para>
-        /// <para>
-        /// A result goes only to the live activity that its copy was made from. An activity that was
-        /// removed while the compilation ran, and one that has taken its id since, get nothing.
-        /// </para>
-        /// </remarks>
-        /// <param name="graphCompilation">The compilation to apply.</param>
-        /// <param name="sources">The live activity that each copy was made from, or null to go by id.</param>
-        private void PublishCompilation(
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            IReadOnlyDictionary<int, IManagedActivityViewModel>? sources)
-        {
-            Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
-
-            foreach (IDependentActivity compiledActivity in graphCompilation.DependentActivities)
-            {
-                if (activityLookup.TryGetValue(compiledActivity.Id, out IManagedActivityViewModel? activity)
-                    && (sources is null
-                        || (sources.TryGetValue(compiledActivity.Id, out IManagedActivityViewModel? source) && ReferenceEquals(source, activity))))
-                {
-                    activity.SetCompiledValues(compiledActivity);
-                }
-            }
+            return m_Scheduler.TakeSnapshot(availableResources, workStreams, ProjectScenarioRevision, m_PlanGraph.CopyActivities);
         }
 
         /// <summary>
@@ -593,9 +489,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(int timeoutMilliseconds)
         {
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation =
-                m_Scheduler.CompileCriticalPath(CopyActivities().Copies, timeoutMilliseconds);
+                m_Scheduler.CompileCriticalPath(m_PlanGraph.CopyActivities().Copies, timeoutMilliseconds);
 
-            PublishCompilation(graphCompilation, sources: null);
+            m_PlanGraph.PublishCompilation(graphCompilation, sources: null);
             return graphCompilation;
         }
 
@@ -778,10 +674,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // delivery. During a load this loop is empty: the start is always
                     // assigned before the activities are added, and each activity is
                     // built with the current start.
-                    foreach (IManagedActivityViewModel activity in RawActivities)
-                    {
-                        activity.SetProjectStart(m_ProjectStart);
-                    }
+                    m_PlanGraph.SetProjectStart(m_ProjectStart);
 
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -935,15 +828,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly SourceList<IManagedActivityViewModel> m_Activities;
-        public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_Activities.Items;
+        public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_PlanGraph.RawActivities;
 
-        private readonly ObservableCollectionExtended<IManagedActivityViewModel> m_BoundActivities;
-        private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
-        public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
+        public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_PlanGraph.Activities;
 
-        private readonly ObservableCollectionExtended<IManagedActivityViewModel> m_OrderableActivities;
-        public ObservableCollection<IManagedActivityViewModel> OrderableActivities => m_OrderableActivities;
+        public ObservableCollection<IManagedActivityViewModel> OrderableActivities => m_PlanGraph.OrderableActivities;
 
         private GraphSettingsModel m_GraphSettings;
         public GraphSettingsModel GraphSettings
@@ -981,10 +870,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // a load this loop is empty: the settings are always assigned
                     // before the activities are added, and each activity seeds
                     // itself from the current settings in its constructor.
-                    foreach (IManagedActivityViewModel activity in RawActivities)
-                    {
-                        activity.SetResourceSettings(value);
-                    }
+                    m_PlanGraph.SetResourceSettings(value);
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
@@ -1004,10 +890,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_WorkStreamSettings = value;
 
                     // Synchronous for the same reason as ResourceSettings above.
-                    foreach (IManagedActivityViewModel activity in RawActivities)
-                    {
-                        activity.SetWorkStreamSettings(value);
-                    }
+                    m_PlanGraph.SetWorkStreamSettings(value);
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
@@ -1414,7 +1297,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return m_VertexGraphCompiler.GetNextActivityId();
+                return m_PlanGraph.GetNextActivityId();
             }
         }
 
@@ -1933,44 +1816,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_Activities.Edit(activities =>
-                    {
-                        BeginBusy();
-
-                        IOrderedEnumerable<DependentActivityModel> orderedDependentActivityModels = dependentActivityModels
-                            .OrderBy(x => x.Activity.DisplayOrder)
-                            .ThenBy(x => x.Activity.Id);
-
-                        foreach (DependentActivityModel dependentActivity in orderedDependentActivityModels)
-                        {
-                            var activity = new ManagedActivityViewModel(
-                                this,
-                                m_Mapper.ToDependentActivity(dependentActivity),
-                                m_DateTimeCalculator,
-                                m_VertexGraphCompiler,
-                                m_ActivityDataLock,
-                                ProjectStart,
-                                dependentActivity.Activity.Trackers,
-                                dependentActivity.Activity.MinimumEarliestStartDateTime,
-                                dependentActivity.Activity.MaximumLatestFinishDateTime);
-
-                            // Started as it is made when this has been started; a host that has not started this
-                            // (the headless engine) gets activities that do nothing by themselves.
-                            if (m_SubscriptionLifetime.IsStarted)
-                            {
-                                activity.StartSubscriptions();
-                            }
-
-                            if (m_VertexGraphCompiler.AddActivity(activity))
-                            {
-                                activities.Add(activity);
-                            }
-                            else
-                            {
-                                activity.Dispose();
-                            }
-                        }
-                    });
+                    BeginBusy();
+                    m_PlanGraph.AddActivities(this, ProjectStart, dependentActivityModels);
 
                     UpdateActivityDisplayOrders();
                     NoteInputsChanged();
@@ -1989,20 +1836,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_Activities.Edit(activities =>
-                    {
-                        BeginBusy();
-                        IEnumerable<IManagedActivityViewModel> dependentActivities = [.. RawActivities.Where(x => dependentActivityIds.Contains(x.Id))];
-
-                        foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
-                        {
-                            if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
-                            {
-                                activities.Remove(dependentActivity);
-                                dependentActivity.Dispose();
-                            }
-                        }
-                    });
+                    BeginBusy();
+                    m_PlanGraph.RemoveActivities(dependentActivityIds);
 
                     UpdateActivityDisplayOrders();
                     NoteInputsChanged();
@@ -2021,71 +1856,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_Activities.Edit(activities =>
-                    {
-                        BeginBusy();
-                        Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
-
-                        foreach (UpdateDependentActivityModel updateModel in updateModels)
-                        {
-                            if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
-                            {
-                                if (activity is IEditableObject editable)
-                                {
-                                    activity.IsEditMuted = true;
-                                    editable.BeginEdit();
-
-                                    if (updateModel.IsNameEdited)
-                                    {
-                                        activity.Name = updateModel.Name;
-                                    }
-                                    if (updateModel.IsNotesEdited)
-                                    {
-                                        activity.Notes = updateModel.Notes;
-                                    }
-                                    if (updateModel.IsTargetWorkStreamsEdited)
-                                    {
-                                        activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.TargetWorkStreams]);
-                                    }
-                                    if (updateModel.IsTargetResourcesEdited)
-                                    {
-                                        activity.ResourceSelector.SetSelectedTargetResources([.. updateModel.TargetResources]);
-                                    }
-                                    if (updateModel.IsTargetResourceOperatorEdited)
-                                    {
-                                        activity.TargetResourceOperator = updateModel.TargetResourceOperator;
-                                    }
-                                    if (updateModel.IsHasNoCostEdited)
-                                    {
-                                        activity.HasNoCost = updateModel.HasNoCost;
-                                    }
-                                    if (updateModel.IsHasNoBillingEdited)
-                                    {
-                                        activity.HasNoBilling = updateModel.HasNoBilling;
-                                    }
-                                    if (updateModel.IsHasNoEffortEdited)
-                                    {
-                                        activity.HasNoEffort = updateModel.HasNoEffort;
-                                    }
-                                    if (updateModel.IsHasNoRiskEdited)
-                                    {
-                                        activity.HasNoRisk = updateModel.HasNoRisk;
-                                    }
-                                    if (updateModel.IsOverrideColorEdited)
-                                    {
-                                        activity.OverrideColor = updateModel.OverrideColor;
-                                    }
-                                    if (updateModel.IsColorFormatEdited)
-                                    {
-                                        activity.ColorFormat = updateModel.ColorFormat;
-                                    }
-
-                                    editable.EndEdit();
-                                    activity.IsEditMuted = false;
-                                }
-                            }
-                        }
-                    });
+                    BeginBusy();
+                    m_PlanGraph.UpdateActivities(updateModels);
 
                     NoteInputsChanged();
                     IsProjectScenarioUpdated = true;
@@ -2146,7 +1918,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 // This time with the new milestone activity ID.
                                 foreach (IManagedActivityViewModel downstreamActivity in downstreamCompiledActivities)
                                 {
-                                    m_VertexGraphCompiler.SetActivityDependencies(
+                                    m_PlanGraph.SetActivityDependencies(
                                         downstreamActivity.Id,
                                         [.. downstreamActivity.Dependencies, milestoneId],
                                         downstreamActivity.PlanningDependencies);
@@ -2154,7 +1926,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 foreach (IManagedActivityViewModel downstreamActivity in downstreamPlanningActivities)
                                 {
-                                    m_VertexGraphCompiler.SetActivityDependencies(
+                                    m_PlanGraph.SetActivityDependencies(
                                         downstreamActivity.Id,
                                         downstreamActivity.Dependencies,
                                         [.. downstreamActivity.PlanningDependencies, milestoneId]);
@@ -2162,7 +1934,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 // Finally, add the upstream activities' IDs as dependencies
                                 // for the milestone activity.
-                                m_VertexGraphCompiler.SetActivityDependencies(
+                                m_PlanGraph.SetActivityDependencies(
                                     milestoneId, upstreamActivityIds, []);
                             }
                         }
@@ -2182,11 +1954,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                // Mark the display order as it was left.
-                for (int i = 0; i < OrderableActivities.Count; i++)
-                {
-                    OrderableActivities[i].DisplayOrder = i;
-                }
+                m_PlanGraph.SetDisplayOrders();
             }
         }
 
@@ -2265,18 +2033,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_Activities.Edit(activities =>
-                    {
-                        BeginBusy();
-
-                        foreach (IManagedActivityViewModel activity in RawActivities)
-                        {
-                            activity.Dispose();
-                        }
-                        activities.Clear();
-
-                        m_VertexGraphCompiler.Reset();
-                    });
+                    BeginBusy();
+                    m_PlanGraph.ClearActivities();
                 }
             }
             finally
@@ -2359,28 +2117,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 List<IWorkStream<int>> workStreams = [.. WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream)];
 
-                List<IDependentActivity<int, int, int>> activities = [];
-                Dictionary<int, DurationEstimate> estimates = [];
-                Dictionary<int, string> names = [];
-
-                // The copies are taken as a compilation takes them (CopyActivities): in the order that the live
-                // graph holds the activities, and in one pass under the activity data lock, so that no activity is
-                // edited part way through being copied. A simulation takes minutes, and it must never see the
-                // live activities again after this.
-                lock (m_ActivityDataLock)
-                {
-                    Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
-
-                    foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
-                    {
-                        if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
-                        {
-                            activities.Add((IDependentActivity<int, int, int>)activity.CloneObject());
-                            estimates[activityId] = EstimatesOf(activity);
-                            names[activityId] = activity.Name ?? string.Empty;
-                        }
-                    }
-                }
+                (List<IDependentActivity<int, int, int>> activities, Dictionary<int, DurationEstimate> estimates, Dictionary<int, string> names) =
+                    m_PlanGraph.CopySimulationActivities();
 
                 return new SimulationInputModel
                 {
@@ -2391,25 +2129,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     ActivityNames = names,
                     CompilationOutputRevision = CompilationOutputRevision,
                 };
-            }
-        }
-
-        // The three estimates that an activity has. An activity outside the rule is one that a compile refuses (its
-        // values are over the limit), and a simulation is not started for a plan that a compile refuses.
-        private static DurationEstimate EstimatesOf(IManagedActivityViewModel activity)
-        {
-            (int optimistic, int mostLikely, int pessimistic) = EstimateHelper.Effective(
-                activity.MostLikelyDuration,
-                activity.OwnOptimisticDuration,
-                activity.OwnPessimisticDuration);
-
-            try
-            {
-                return new DurationEstimate(optimistic, mostLikely, pessimistic);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                return DurationEstimate.Fixed(Math.Clamp(activity.Duration, 0, GraphLimits.MaximumTimeValue));
             }
         }
 
@@ -2465,7 +2184,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             && snapshot.ScenarioRevision == ProjectScenarioRevision
                             && m_Scheduler.TryClaimPublication(snapshot))
                         {
-                            PublishCompilation(graphCompilation, snapshot.Sources);
+                            m_PlanGraph.PublishCompilation(graphCompilation, snapshot.Sources);
                             bool hadCompilationErrors = HasCompilationErrors;
                             HasCompilationErrors = graphCompilation.CompilationErrors.Any();
                             compilationErrorsAppeared = HasCompilationErrors && !hadCompilationErrors;
@@ -2542,7 +2261,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         BeginBusy();
                         CompileWithTimeout(timeoutMilliseconds);
-                        m_VertexGraphCompiler.TransitiveReduction();
+                        m_PlanGraph.TransitiveReduction();
                         RunCompile();
                     }
                 }
@@ -2612,8 +2331,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     GraphCompilation,
                     HasCompilationErrors,
                     ProjectStart,
-                    m_VertexGraphCompiler.StartTime,
-                    m_VertexGraphCompiler.FinishTime));
+                    m_PlanGraph.StartTime,
+                    m_PlanGraph.FinishTime));
             }
         }
 
@@ -2653,18 +2372,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // The views of the source list that the UI binds to, filled on the UI thread.
-            m_ReadOnlyActivitiesSub = m_Activities.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler)
-               .Bind(m_BoundActivities)
-               .Subscribe();
+            m_PlanGraph.StartBinds();
 
-            m_OrderableActivitiesSub = m_Activities.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
-               .Bind(m_OrderableActivities)          // Bind to the mutable collection
-               .DisposeMany()                        // Clean up resources
-               .Subscribe();
-
-            m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
+            m_AreActivitiesUncompiledSub = Activities
                 .ToObservableChangeSet()
                 .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
                 .Filter(activity => !activity.IsCompiled)
@@ -2789,10 +2499,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(_ => BuildRiskMetrics());
 
             // The activities made before the start start with it; those made after it start as they are made.
-            foreach (IManagedActivityViewModel activity in RawActivities)
-            {
-                activity.StartSubscriptions();
-            }
+            m_PlanGraph.StartActivities();
         }
 
         #endregion
@@ -2802,8 +2509,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_SubscriptionLifetime.Kill();
-            m_ReadOnlyActivitiesSub?.Dispose();
-            m_OrderableActivitiesSub?.Dispose();
+            m_PlanGraph.KillBinds();
             m_AreActivitiesUncompiledSub?.Dispose();
             m_CompileOnSettingsUpdateSub?.Dispose();
             m_BuildCascadeSub?.Dispose();
@@ -2834,7 +2540,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasWorkStreams?.Dispose();
                 m_HasPhases?.Dispose();
                 ClearManagedActivities();
-                m_Activities?.Dispose();
+                m_PlanGraph?.Dispose();
                 m_DisplaySettingsViewModel?.Dispose();
                 m_DataGridScrollManager?.Dispose();
             }

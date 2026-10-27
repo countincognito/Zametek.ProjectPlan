@@ -52,7 +52,8 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | --- | --- |
 | host | A project that starts the shared parts of the application on one kind of platform. `Zametek.ProjectPlan.Desktop` is the desktop host. `Zametek.ProjectPlan.Browser` is the web host. [TODO](TODO.md) also calls a host a "head". |
 | view model | An object that holds the state and the logic of a part of the UI, with no UI elements of its own. |
-| core | The view model `CoreViewModel`. It owns the editable state of a plan, the compiler and the outputs that the compiler gives. |
+| core | The view model `CoreViewModel`. It owns the editable state of a plan and the outputs that the compiler gives. It makes a plan graph for the activities. |
+| plan graph | The class `PlanGraph`. It holds the live activities of the core and the live compiler, and it holds the views of the activities that the UI binds to. It adds, removes and updates the activities, and it makes the copies that a compile and a simulation take. It gives the results of a compile back to the live activities. |
 | manager | A view model that subscribes to the core and rebuilds its own outputs when an input changes. The outputs are plots, graphs and grids. |
 | engine | The library `Zametek.Engine.ProjectPlan`. It runs a job with no user interface. `zpp` and `zpp serve` use it. |
 | `zpp` | The command line tool of the repository. It has no user interface. |
