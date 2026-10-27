@@ -74,14 +74,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// the arrow graph - the first step of the cascade - it can hold in the same way. Nothing is held until the
         /// test says so.
         /// </summary>
-        public static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs) CreateGated()
+        public static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs) CreateGated(
+            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
         {
             EnsureReactiveUIInitialized();
 
             var mapper = new ProjectPlanMapper();
             var settingService = new TestSettingService
             {
-                CompilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+                CompilationTimeoutMilliseconds = compilationTimeoutMilliseconds,
             };
             var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
             var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));

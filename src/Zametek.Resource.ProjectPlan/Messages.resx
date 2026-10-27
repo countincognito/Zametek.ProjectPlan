@@ -153,6 +153,12 @@
   <data name="Message_SimulationShapeOutOfRange" xml:space="preserve">
     <value>The shape value must be a number above 0.</value>
   </data>
+  <data name="Message_TransitiveReductionCompilationErrors" xml:space="preserve">
+    <value>The plan has compilation errors, and the transitive reduction cannot be made. Nothing was changed.</value>
+  </data>
+  <data name="Message_TransitiveReductionPlanChanged" xml:space="preserve">
+    <value>The dependencies of the plan were changed while the transitive reduction was made. Nothing was changed. Make the transitive reduction again.</value>
+  </data>
   <data name="Message_VertexGraphDataContainsNoEndNodes" xml:space="preserve">
     <value>Vertex Graph Data contains no End nodes</value>
   </data>

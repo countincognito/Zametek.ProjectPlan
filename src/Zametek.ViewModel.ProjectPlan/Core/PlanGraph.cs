@@ -282,12 +282,58 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Removes the dependencies that other dependencies imply, from the live graph. Call it with the lock of the core
-        /// held.
+        /// Gives the activities and the live compiler the dependencies that the reduction of the copies of the activities
+        /// left. Call it with the lock of the core held.
         /// </summary>
-        public void TransitiveReduction()
+        /// <remarks>
+        /// The reduction took away a dependency because the others imply it, and the others are those it saw. It is
+        /// applied only if the plan is as it was copied: every activity is the one that was copied, and holds the
+        /// dependencies that it held then. An edit made meanwhile could make a dependency that the reduction took away
+        /// needed again. When the plan is not as it was copied nothing is changed.
+        /// <para>
+        /// The check and the changes are made under <see cref="m_ActivityDataLock"/> together, so that no edit comes
+        /// between them. The changes announce nothing: the compilation that follows publishes its results, and with them
+        /// the strings of the dependencies.
+        /// </para>
+        /// </remarks>
+        /// <param name="reduction">What the reduction of the copies gave.</param>
+        /// <param name="sources">The live activity that each copy was made from.</param>
+        /// <returns>Whether the dependencies were applied.</returns>
+        public bool TryApplyReduction(TransitiveReduction reduction, IReadOnlyDictionary<int, IManagedActivityViewModel> sources)
         {
-            m_VertexGraphCompiler.TransitiveReduction();
+            ArgumentNullException.ThrowIfNull(reduction);
+            ArgumentNullException.ThrowIfNull(sources);
+
+            lock (m_ActivityDataLock)
+            {
+                Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
+
+                if (activityLookup.Count != sources.Count)
+                {
+                    return false;
+                }
+
+                foreach ((int activityId, IManagedActivityViewModel source) in sources)
+                {
+                    if (!activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity)
+                        || !ReferenceEquals(activity, source)
+                        || !reduction.Before.TryGetValue(activityId, out ActivityDependencies? before)
+                        || !ActivityDependencies.Of(activity).IsSameAs(before))
+                    {
+                        return false;
+                    }
+                }
+
+                foreach ((int activityId, ActivityDependencies after) in reduction.After)
+                {
+                    if (!after.IsSameAs(reduction.Before[activityId]))
+                    {
+                        m_VertexGraphCompiler.SetActivityDependencies(activityId, [.. after.Dependencies], [.. after.PlanningDependencies]);
+                    }
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

@@ -168,12 +168,30 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Compiles the copies with infinite resources - the pure critical path schedule - under the watchdog.
+        /// Takes away the dependencies of the user that other dependencies of the user imply, from the copies. It compiles
+        /// the copies with infinite resources under the watchdog, and reduces them in the compiler that holds them.
         /// </summary>
-        public IGraphCompilation<int, int, int, IDependentActivity> CompileCriticalPath(
-            IEnumerable<IDependentActivity> activityCopies,
-            int timeoutMilliseconds)
+        /// <remarks>
+        /// The dependencies that a resource gives are dynamic, and the reduction must not see them: it would take away a
+        /// dependency of the user that only a resource implies. The compilation takes them out of the network of the
+        /// compiler, and so the reduction that follows works on the dependencies of the user alone. The compilation also
+        /// checks the copies. When it finds errors the copies are not reduced, and the caller says why.
+        /// <para>
+        /// It changes the copies and nothing else, and what it gives back says what each of them held before and after.
+        /// It needs no lock, and its caller holds one for as long as the result must stay true of the plan. The budget
+        /// of the watchdog starts immediately around the compile.
+        /// </para>
+        /// </remarks>
+        /// <param name="activityCopies">The copies of the activities, in the order of the live graph.</param>
+        /// <param name="timeoutMilliseconds">The budget of the compilation, or 0 for none.</param>
+        /// <param name="compilePlan">Compiles the copies. The core gives it, so that a test can hold a compilation part way through.</param>
+        public TransitiveReduction ReduceTransitively(
+            IReadOnlyList<IDependentActivity> activityCopies,
+            int timeoutMilliseconds,
+            CompilePlanDelegate compilePlan)
         {
+            Dictionary<int, ActivityDependencies> before = activityCopies.ToDictionary(x => x.Id, ActivityDependencies.Of);
+
             VertexGraphCompiler compiler = BuildCompiler(activityCopies);
 
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
@@ -182,7 +200,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    graphCompilation = compiler.Compile(CompilationTimeoutHelper.TokenOrNone(timeoutSource));
+                    // No resources: the compilation is the pure critical path schedule.
+                    graphCompilation = compilePlan(compiler, [], [], CompilationTimeoutHelper.TokenOrNone(timeoutSource));
                 }
                 catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
                 {
@@ -190,7 +209,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            return graphCompilation;
+            if (graphCompilation.CompilationErrors.Any())
+            {
+                return new TransitiveReduction(graphCompilation, before, before);
+            }
+
+            compiler.TransitiveReduction();
+
+            return new TransitiveReduction(
+                graphCompilation,
+                before,
+                activityCopies.ToDictionary(x => x.Id, ActivityDependencies.Of));
         }
 
         /// <summary>

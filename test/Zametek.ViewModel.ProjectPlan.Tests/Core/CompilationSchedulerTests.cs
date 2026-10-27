@@ -526,15 +526,158 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             thrown.GetType().ShouldBe(typeof(OperationCanceledException));
         }
 
+        #endregion
+
+        #region Transitive reduction
+
+        // Three activities: the second after the first, and the third after both. The third need not wait for the first.
+        private static List<IDependentActivity> ThreeActivities()
+        {
+            var first = new DependentActivity(1, 3, canBeRemoved: false);
+            var second = new DependentActivity(2, 4, canBeRemoved: false);
+            var third = new DependentActivity(3, 2, canBeRemoved: false);
+            second.Dependencies.Add(1);
+            third.Dependencies.Add(1);
+            third.Dependencies.Add(2);
+            return [first, second, third];
+        }
+
+        // Compiles the copies as the core does.
+        private static IGraphCompilation<int, int, int, IDependentActivity> Plan(
+            VertexGraphCompiler compiler,
+            List<IResource<int, int>> availableResources,
+            List<IWorkStream<int>> workStreams,
+            CancellationToken cancellationToken) =>
+            compiler.Compile(availableResources, workStreams, cancellationToken);
+
         [Fact]
-        public void CompileCriticalPath_Then_CompilesTheCopiesWithNoResources()
+        public void ReduceTransitively_Given_ADependencyThatAnotherImplies_Then_TheReductionLacksItAndTheStateBeforeHoldsIt()
         {
             var scheduler = new CompilationScheduler();
 
-            IGraphCompilation<int, int, int, IDependentActivity> compilation = scheduler.CompileCriticalPath(TwoActivities(), 0);
+            TransitiveReduction reduction = scheduler.ReduceTransitively(ThreeActivities(), 0, Plan);
 
-            compilation.CompilationErrors.ShouldBeEmpty();
-            compilation.DependentActivities.Select(x => x.Id).Order().ShouldBe([1, 2]);
+            reduction.Compilation.CompilationErrors.ShouldBeEmpty();
+            reduction.Before[3].Dependencies.ShouldBe(new HashSet<int> { 1, 2 }, ignoreOrder: true);
+            reduction.After[3].Dependencies.ShouldBe(new HashSet<int> { 2 });
+            reduction.After[2].Dependencies.ShouldBe(new HashSet<int> { 1 });
+            reduction.After[1].Dependencies.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void ReduceTransitively_Then_HasAnEntryForEveryCopyBeforeAndAfter()
+        {
+            var scheduler = new CompilationScheduler();
+
+            TransitiveReduction reduction = scheduler.ReduceTransitively(ThreeActivities(), 0, Plan);
+
+            reduction.Before.Keys.Order().ShouldBe([1, 2, 3]);
+            reduction.After.Keys.Order().ShouldBe([1, 2, 3]);
+        }
+
+        [Fact]
+        public void ReduceTransitively_Given_APlanningDependencyThatAnotherImplies_Then_TheReductionLacksItToo()
+        {
+            var scheduler = new CompilationScheduler();
+            List<IDependentActivity> copies = ThreeActivities();
+            copies[2].Dependencies.Remove(1);
+            copies[2].PlanningDependencies.Add(1);
+
+            TransitiveReduction reduction = scheduler.ReduceTransitively(copies, 0, Plan);
+
+            reduction.Before[3].PlanningDependencies.ShouldBe(new HashSet<int> { 1 });
+            reduction.After[3].PlanningDependencies.ShouldBeEmpty();
+            reduction.After[3].Dependencies.ShouldBe(new HashSet<int> { 2 });
+        }
+
+        [Fact]
+        public void ReduceTransitively_Given_ACopyThatHoldsADependencyOfAResource_Then_ItIsNotPartOfTheNetwork()
+        {
+            // The third activity waits for the second only because of a resource. It does not say so, and the dependency of
+            // the user of the third on the first must stay.
+            var scheduler = new CompilationScheduler();
+            var first = new DependentActivity(1, 3, canBeRemoved: false);
+            var second = new DependentActivity(2, 4, canBeRemoved: false);
+            var third = new DependentActivity(3, 2, canBeRemoved: false);
+            second.Dependencies.Add(1);
+            third.Dependencies.Add(1);
+            third.ResourceDependencies.Add(2);
+
+            TransitiveReduction reduction = scheduler.ReduceTransitively([first, second, third], 0, Plan);
+
+            reduction.Compilation.CompilationErrors.ShouldBeEmpty();
+            reduction.After[3].Dependencies.ShouldBe(new HashSet<int> { 1 });
+        }
+
+        [Fact]
+        public void ReduceTransitively_Given_ACompilationWithErrors_Then_ReturnsThemAndReducesNothing()
+        {
+            // Two activities that depend on each other, and a third with a dependency that is redundant.
+            var scheduler = new CompilationScheduler();
+            List<IDependentActivity> copies = ThreeActivities();
+            copies[0].Dependencies.Add(2);
+
+            TransitiveReduction reduction = scheduler.ReduceTransitively(copies, 0, Plan);
+
+            reduction.Compilation.CompilationErrors.ShouldNotBeEmpty();
+            reduction.After.Keys.Order().ShouldBe([1, 2, 3]);
+            foreach (int id in reduction.After.Keys)
+            {
+                reduction.After[id].IsSameAs(reduction.Before[id]).ShouldBeTrue();
+            }
+
+            copies[2].Dependencies.ShouldBe(new HashSet<int> { 1, 2 }, ignoreOrder: true);
+        }
+
+        [Fact]
+        public void ReduceTransitively_Then_GivesThePlanCompilerTheCopiesAndNoResourcesOrWorkStreams()
+        {
+            var scheduler = new CompilationScheduler();
+            bool called = false;
+
+            scheduler.ReduceTransitively(
+                ThreeActivities(),
+                0,
+                (compiler, availableResources, streams, token) =>
+                {
+                    called = true;
+                    availableResources.ShouldBeEmpty();
+                    streams.ShouldBeEmpty();
+                    compiler.ActivityIds.ShouldBe([1, 2, 3]);
+                    return compiler.Compile(availableResources, streams, token);
+                });
+
+            called.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void ReduceTransitively_Given_APlanCompilerThatOutlastsTheWatchdog_Then_ThrowsATimeoutException()
+        {
+            var scheduler = new CompilationScheduler();
+
+            Should.Throw<GraphCompilationTimeoutException>(() => scheduler.ReduceTransitively(
+                ThreeActivities(),
+                50,
+                (compiler, availableResources, streams, token) =>
+                {
+                    token.WaitHandle.WaitOne(s_Patience);
+                    token.ThrowIfCancellationRequested();
+                    return compiler.Compile(availableResources, streams, token);
+                }));
+        }
+
+        [Fact]
+        public void ReduceTransitively_Given_ACancellationThatIsNotTheWatchdog_Then_ItIsNotTurnedIntoATimeout()
+        {
+            var scheduler = new CompilationScheduler();
+
+            // No budget, so there is no watchdog to blame.
+            Exception thrown = Should.Throw<Exception>(() => scheduler.ReduceTransitively(
+                ThreeActivities(),
+                0,
+                (compiler, availableResources, streams, token) => throw new OperationCanceledException()));
+
+            thrown.GetType().ShouldBe(typeof(OperationCanceledException));
         }
 
         #endregion

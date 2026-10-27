@@ -192,6 +192,11 @@ namespace Zametek.Contract.ProjectPlan
 
         void RunAutoCompile();
 
+        // Takes away the dependencies of the user that other dependencies of the user imply, and then compiles the plan.
+        // The dependencies that a resource gives are not the user's, and the reduction does not see them. It changes
+        // nothing, and throws an InvalidOperationException, when the plan has compilation errors or when an edit changes
+        // the dependencies while the reduction is made. It throws a GraphCompilationTimeoutException when the compilation
+        // that checks the plan runs past its budget.
         void RunTransitiveReduction();
 
         void BuildArrowGraph();

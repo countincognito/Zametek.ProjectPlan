@@ -478,23 +478,6 @@ namespace Zametek.ViewModel.ProjectPlan
             CancellationToken cancellationToken) =>
             compiler.Compile(availableResources, workStreams, cancellationToken);
 
-        /// <summary>
-        /// The infinite resource overload - the pure critical path schedule - used by
-        /// the transitive reduction.
-        /// </summary>
-        /// <remarks>
-        /// Call it with <see cref="m_Lock"/> held, for the whole of the reduction: the reduction changes the
-        /// live graph, and it reads the times that this publishes into the live activities.
-        /// </remarks>
-        private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(int timeoutMilliseconds)
-        {
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation =
-                m_Scheduler.CompileCriticalPath(m_PlanGraph.CopyActivities().Copies, timeoutMilliseconds);
-
-            m_PlanGraph.PublishCompilation(graphCompilation, sources: null);
-            return graphCompilation;
-        }
-
         // Publishing the metrics. Call these with m_Lock held. The setters mark the scenario as updated when a
         // value is different, and Metrics is raised for the observers of the record as a whole.
 
@@ -2260,8 +2243,25 @@ namespace Zametek.ViewModel.ProjectPlan
                     lock (m_Lock)
                     {
                         BeginBusy();
-                        CompileWithTimeout(timeoutMilliseconds);
-                        m_PlanGraph.TransitiveReduction();
+
+                        // The reduction works on a copy of the plan, and the plan shows nothing of it until it is done. The
+                        // compilation of the copy checks the plan, and takes the dependencies that the resources gave out of
+                        // the network. They are dynamic, and the reduction must see the dependencies of the user alone: it
+                        // would take away a dependency of the user that only a resource implies.
+                        (List<IDependentActivity> copies, Dictionary<int, IManagedActivityViewModel> sources) = m_PlanGraph.CopyActivities();
+                        TransitiveReduction reduction = m_Scheduler.ReduceTransitively(copies, timeoutMilliseconds, CompilePlan);
+
+                        if (reduction.Compilation.CompilationErrors.Any())
+                        {
+                            throw new InvalidOperationException(DescribeCompilationErrors(reduction.Compilation));
+                        }
+
+                        if (!m_PlanGraph.TryApplyReduction(reduction, sources))
+                        {
+                            throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_TransitiveReductionPlanChanged);
+                        }
+
+                        // The compilation publishes its results once, and with them the new dependencies reach the view.
                         RunCompile();
                     }
                 }
@@ -2279,6 +2279,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw;
             }
         }
+
+        // What the transitive reduction says when it is refused: why, and then the errors of the compilation one to a line.
+        private static string DescribeCompilationErrors(IGraphCompilation<int, int, int, IDependentActivity> compilation) =>
+            NewLineHelper.JoinLines(
+            [
+                Resource.ProjectPlan.Messages.Message_TransitiveReductionCompilationErrors,
+                .. compilation.CompilationErrors.Select(x => $@"{x.ErrorCode}: {x.ErrorMessage}"),
+            ]);
 
         public void BuildArrowGraph()
         {

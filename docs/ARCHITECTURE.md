@@ -233,13 +233,15 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     None of this arms another compilation. An activity arms a compilation only when the application marks it as uncompiled. The commit of an edit (`IEditableObject.EndEdit`) causes this, and the announcement of a value never causes it (`m_AreActivitiesUncompiledSub` auto-refreshes on `IsCompiled` only).
 
-    **Exclusion is a leaf lock** (`m_ActivityDataLock`). `PlanGraph` creates it and shares it with every activity. The application holds it around the snapshot pass, the publish pass, and each single write inside an activity. The application *never* holds it around a raise, a call to anything else, or another lock. It is strictly inside `m_Lock` in the lock order, and it is the only lock that the activities take. Thus, it cannot complete a cycle.
+    **Exclusion is a leaf lock** (`m_ActivityDataLock`). `PlanGraph` creates it and shares it with every activity. The application holds it around the snapshot pass, the publish pass, the change by a transitive reduction, and each single write inside an activity. The application *never* holds it around a raise, a call to anything else, or another lock. It is strictly inside `m_Lock` in the lock order, and it is the only lock that the activities take. Thus, it cannot complete a cycle.
 
     The lock is reentrant. Thus, an activity that takes it again inside a publish pass has no cost. The outer acquisition keeps the whole pass atomic.
 
     Two consequences are important. First, the application must make the copies **in the order in which the live graph holds its activities** (`VertexGraphCompiler.ActivityIds`). The reason is that the scheduling priority list gives a slack tie to the activity that it meets first. Second, a compilation that stops before the end, by a timeout or a failure, now publishes *nothing*. Thus, the previous results stay in place as a whole and are not half overwritten.
 
-    The live compiler keeps its own graph for everything between compilations: `GetNextActivityId`, dependency edits, `TransitiveReduction` and `IsIsolated`. It stays correct without compiling, for two reasons. A compilation is net-zero on the structure of the graph. It also derives the project start and finish by reading them from the live activities that the publication updated before.
+    The live compiler keeps its own graph for everything between compilations: `GetNextActivityId`, dependency edits and `IsIsolated`. It stays correct without compiling, for two reasons. A compilation is net-zero on the structure of the graph. It also derives the project start and finish by reading them from the live activities that the publication updated before.
+
+    This graph is not free of resource dependencies. An edit of the dependencies of an activity wires the resource dependencies of that activity into the graph as edges. A compilation does not take them out again, because it works on a copy. Thus, nothing that must see the dependencies of the user alone can read this graph, and the transitive reduction is such a thing. It reduces a copy with `CompilationScheduler.ReduceTransitively`, and the compilation of the copy takes the resource dependencies out first. The activities take the result with `PlanGraph.TryApplyReduction`, and only if their dependencies are still those of the copy.
 
     One item is not covered. The tracker sets guard their own state and hold immutable records. The compilation itself runs without `m_Lock` (rule 14).
 

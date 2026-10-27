@@ -188,19 +188,228 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             activity.PlanningDependencies.ShouldBe(new HashSet<int> { 2 });
         }
 
+        #endregion
+
+        #region Reduction
+
+        // Three activities, the second after the first and the third after both, copied as a reduction takes them. The
+        // reduction that the tests apply takes the dependency of the third on the first away.
+        private static (Harness Harness, Dictionary<int, IManagedActivityViewModel> Sources, TransitiveReduction Reduction) Reducible()
+        {
+            var harness = new Harness();
+            harness.Graph.AddActivities(
+                harness.Owner,
+                s_Monday,
+                [Model(1), Model(2, dependencies: [1]), Model(3, dependencies: [1, 2])]);
+            (_, Dictionary<int, IManagedActivityViewModel> sources) = harness.Graph.CopyActivities();
+            var reduction = new TransitiveReduction(
+                Compile([]),
+                new Dictionary<int, ActivityDependencies>
+                {
+                    [1] = Dependencies(),
+                    [2] = Dependencies(1),
+                    [3] = Dependencies(1, 2),
+                },
+                new Dictionary<int, ActivityDependencies>
+                {
+                    [1] = Dependencies(),
+                    [2] = Dependencies(1),
+                    [3] = Dependencies(2),
+                });
+
+            return (harness, sources, reduction);
+        }
+
+        private static ActivityDependencies Dependencies(params int[] dependencies) => new([.. dependencies], []);
+
+        private static IManagedActivityViewModel Activity(Harness harness, int id) =>
+            harness.Graph.RawActivities.Single(x => x.Id == id);
+
         [Fact]
-        public void TransitiveReduction_Given_ADependencyThatAnotherImplies_Then_ItIsRemoved()
+        public void TryApplyReduction_Given_ThePlanAsItWasCopied_Then_TheActivitiesTakeTheReducedDependencies()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                bool applied = harness.Graph.TryApplyReduction(reduction, sources);
+
+                applied.ShouldBeTrue();
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 2 });
+                Activity(harness, 2).Dependencies.ShouldBe(new HashSet<int> { 1 });
+                Activity(harness, 1).Dependencies.ShouldBeEmpty();
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_APlanningDependencyAway_Then_TheActivityLosesIt()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                harness.Graph.SetActivityDependencies(3, [2], [1]);
+                (_, sources) = harness.Graph.CopyActivities();
+                reduction = new TransitiveReduction(
+                    reduction.Compilation,
+                    new Dictionary<int, ActivityDependencies>
+                    {
+                        [1] = Dependencies(),
+                        [2] = Dependencies(1),
+                        [3] = new([2], [1]),
+                    },
+                    new Dictionary<int, ActivityDependencies>
+                    {
+                        [1] = Dependencies(),
+                        [2] = Dependencies(1),
+                        [3] = Dependencies(2),
+                    });
+
+                harness.Graph.TryApplyReduction(reduction, sources).ShouldBeTrue();
+
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 2 });
+                Activity(harness, 3).PlanningDependencies.ShouldBeEmpty();
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_ADependencyAway_Then_TheLiveCompilerFollows()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2, dependencies: [1])]);
+            (_, Dictionary<int, IManagedActivityViewModel> sources) = harness.Graph.CopyActivities();
+            Activity(harness, 2).IsIsolated.ShouldBeFalse("the test cannot tell an edge from none");
+
+            // Not a reduction that a compilation would make, but the live graph has to do as it is told.
+            bool applied = harness.Graph.TryApplyReduction(
+                new TransitiveReduction(
+                    Compile([]),
+                    new Dictionary<int, ActivityDependencies> { [1] = Dependencies(), [2] = Dependencies(1) },
+                    new Dictionary<int, ActivityDependencies> { [1] = Dependencies(), [2] = Dependencies() }),
+                sources);
+
+            applied.ShouldBeTrue();
+            Activity(harness, 1).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).IsIsolated.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_AnActivityEditedSinceTheCopy_Then_ChangesNothingAndSaysSo()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                // The user takes the dependency of the second on the first away. That makes the dependency of the third on
+                // the first needed, and the reduction does not know.
+                Activity(harness, 2).DependenciesString = string.Empty;
+
+                bool applied = harness.Graph.TryApplyReduction(reduction, sources);
+
+                applied.ShouldBeFalse();
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 1, 2 });
+                Activity(harness, 2).Dependencies.ShouldBeEmpty();
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_ADependencyAddedSinceTheCopy_Then_ChangesNothingAndSaysSo()
         {
             using var harness = new Harness();
             harness.Graph.AddActivities(
                 harness.Owner,
                 s_Monday,
-                [Model(1), Model(2, dependencies: [1]), Model(3, dependencies: [1, 2])]);
+                [Model(1), Model(2, dependencies: [1]), Model(3, dependencies: [1, 2]), Model(4)]);
+            (_, Dictionary<int, IManagedActivityViewModel> sources) = harness.Graph.CopyActivities();
+            var reduction = new TransitiveReduction(
+                Compile([]),
+                new Dictionary<int, ActivityDependencies>
+                {
+                    [1] = Dependencies(),
+                    [2] = Dependencies(1),
+                    [3] = Dependencies(1, 2),
+                    [4] = Dependencies(),
+                },
+                new Dictionary<int, ActivityDependencies>
+                {
+                    [1] = Dependencies(),
+                    [2] = Dependencies(1),
+                    [3] = Dependencies(2),
+                    [4] = Dependencies(),
+                });
 
-            harness.Graph.TransitiveReduction();
+            // The user makes the third wait for the fourth too. An activity that holds more than it held when it was
+            // copied is not the activity that the reduction saw.
+            Activity(harness, 3).DependenciesString = "1,2,4";
 
-            harness.Graph.RawActivities.Single(x => x.Id == 3).Dependencies.ShouldBe(new HashSet<int> { 2 });
-            harness.Graph.RawActivities.Single(x => x.Id == 2).Dependencies.ShouldBe(new HashSet<int> { 1 });
+            harness.Graph.TryApplyReduction(reduction, sources).ShouldBeFalse();
+            Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 1, 2, 4 });
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_AnActivityThatTheReductionLeftAloneAndWasEdited_Then_ChangesNothingAndSaysSo()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                // The second activity has the same dependencies before and after the reduction. The edit of its planning
+                // dependencies is still an edit of the plan that the reduction was made from.
+                Activity(harness, 2).PlanningDependenciesString = "1";
+
+                harness.Graph.TryApplyReduction(reduction, sources).ShouldBeFalse();
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 1, 2 });
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_AnActivityReplacedSinceTheCopy_Then_ChangesNothingAndSaysSo()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                // Another activity with the same id, and the same dependencies.
+                harness.Graph.RemoveActivities([3]);
+                harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(3, dependencies: [1, 2])]);
+
+                bool applied = harness.Graph.TryApplyReduction(reduction, sources);
+
+                applied.ShouldBeFalse();
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 1, 2 });
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_AnActivityRemovedSinceTheCopy_Then_ChangesNothingAndSaysSo()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                harness.Graph.RemoveActivities([2]);
+
+                harness.Graph.TryApplyReduction(reduction, sources).ShouldBeFalse();
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 1 });
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_AnActivityAddedSinceTheCopy_Then_ChangesNothingAndSaysSo()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(4)]);
+
+                harness.Graph.TryApplyReduction(reduction, sources).ShouldBeFalse();
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 1, 2 });
+            }
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_NullArguments_Then_Throws()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                Should.Throw<ArgumentNullException>(() => harness.Graph.TryApplyReduction(null!, sources));
+                Should.Throw<ArgumentNullException>(() => harness.Graph.TryApplyReduction(reduction, null!));
+            }
         }
 
         #endregion

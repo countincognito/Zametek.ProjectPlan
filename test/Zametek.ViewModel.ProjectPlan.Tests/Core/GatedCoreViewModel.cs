@@ -28,6 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private readonly ManualResetEventSlim m_Open = new(true);
         private readonly SemaphoreSlim m_Held = new(0);
         private int m_HoldNext;
+        private int m_StallNext;
         private int m_Started;
 
         public GatedCoreViewModel(
@@ -79,6 +80,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public void ReleaseHeldCompilation() => m_Open.Set();
 
+        /// <summary>
+        /// Makes the next compilation outlast the watchdog: it waits for the watchdog to cancel it, and then it ends as a
+        /// cancelled compilation does. The core needs a budget for this, and so the test makes it with one.
+        /// </summary>
+        public void StallNextCompilation() => Volatile.Write(ref m_StallNext, 1);
+
         protected override IGraphCompilation<int, int, int, IDependentActivity> CompilePlan(
             VertexGraphCompiler compiler,
             List<IResource<int, int>> availableResources,
@@ -95,6 +102,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 {
                     throw new TimeoutException(@"The held compilation was never released.");
                 }
+            }
+
+            if (Interlocked.Exchange(ref m_StallNext, 0) == 1)
+            {
+                cancellationToken.WaitHandle.WaitOne(s_Patience);
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             return base.CompilePlan(compiler, availableResources, workStreams, cancellationToken);
