@@ -76,7 +76,8 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | gate | In a pipeline, a check that suppresses emissions, for example `.Where(_ => !IsBulkUpdating)` or `MuteWhile`. In [TODO](TODO.md), it is a check that the pre-commit hook runs. It is also a condition that must be true before a task can start, for example the release of a package. |
 | bulk update | One logical operation that rewrites large parts of the model in sequence: a load, an import or a reset. |
 | snapshot | The copy of the plan that a compile works on. The core takes it in one short step under its lock, and it compiles the copy without the lock. |
-| input revision | The counter `m_InputRevision`. It counts each change of what a compile reads. A compile that finishes after the counter moved on publishes stale results, and the plan is compiled again. |
+| input revision | The counter `m_InputRevision` of `CompilationScheduler`. It counts each change of what a compile reads. A compile that finishes after the counter moved on publishes stale results, and the plan is compiled again. |
+| drain | To make the compilations that the edits of a plan ask for, one thread at a time, until no edit waits. `CompilationScheduler.Drain` does this, and the core calls it from `DrainAutoCompiles()`. A thread that finds another thread at work leaves at once, and its edit waits in the input revision. The thread at work compares the input revision with that of its snapshot after each compilation, and it compiles again if they differ. Thus the edits that arrive during a compilation wait for the next one, and one compilation takes all of them. |
 | conflate | To keep only the latest of the values that a gate suppresses, and to replay it when the gate opens. `MuteWhile` does this. |
 | settled signal | The counter `CompilationOutputRevision`. `RunBuildCascade()` increments it after it builds all the outputs. |
 

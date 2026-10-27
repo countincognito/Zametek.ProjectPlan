@@ -43,22 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private int m_BulkUpdateNestingLevel;
         private int m_BusyNestingLevel;
 
-        // What a compilation reads has a revision: a count of everything that changes it. A compilation records the
-        // revision that it started from, and so it can tell when it has finished whether the plan has moved on
-        // (ARCHITECTURE section 7 rule 14). The count only has to differ from one moment to the next, and so it wraps.
-        private int m_InputRevision;
-
-        // The revision that the newest snapshot started from. The plan is due a compilation when the two differ. Written
-        // under m_Lock, and read without it.
-        private int m_SnapshotRevision;
-
-        // Number the snapshots in the order they are taken, so that the results of an older snapshot never replace the
-        // results of a newer one that has published already. Used under m_Lock only.
-        private int m_SnapshotTicket;
-        private int m_PublishedTicket;
-
-        // 1 while one thread makes the compilations that the edits ask for (see DrainAutoCompiles), and 0 otherwise.
-        private int m_AutoCompileRunning;
+        private readonly CompilationScheduler m_Scheduler;
 
         // The compilation that the outputs were last built from. Used under m_Lock only.
         private IGraphCompilation<int, int, int, IDependentActivity>? m_CascadedCompilation;
@@ -112,6 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger = logger;
             m_Lock = new();
             m_ActivityDataLock = new();
+            m_Scheduler = new();
             m_SubscriptionLifetime = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
@@ -489,26 +475,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// The input half of a compilation: a copy of the plan, taken in one short step, with what is needed
-        /// to tell afterwards whether the results can still be used.
-        /// </summary>
-        /// <param name="Activities">The copies of the activities, in the order of the live graph.</param>
-        /// <param name="Sources">The live activity that each copy was made from.</param>
-        /// <param name="Resources">The resources that the compilation schedules.</param>
-        /// <param name="WorkStreams">The work streams that the compilation uses.</param>
-        /// <param name="InputRevision">The revision of what a compilation reads, when the copies were taken.</param>
-        /// <param name="ScenarioRevision">The scenario that the copies belong to.</param>
-        /// <param name="Ticket">Puts this snapshot in order among the others.</param>
-        private sealed record CompilationSnapshot(
-            List<IDependentActivity> Activities,
-            IReadOnlyDictionary<int, IManagedActivityViewModel> Sources,
-            List<IResource<int, int>> Resources,
-            List<IWorkStream<int>> WorkStreams,
-            int InputRevision,
-            int ScenarioRevision,
-            int Ticket);
-
-        /// <summary>
         /// Takes the copy of the plan that a compilation works on. Call it with <see cref="m_Lock"/> held: it
         /// reads the live graph, which the structural edits change under that lock.
         /// </summary>
@@ -525,23 +491,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var workStreams = new List<IWorkStream<int>>();
             workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
 
-            // The revision is read before the copies are taken. An edit that lands in between is then
-            // in the copies and counted as not yet seen, which costs one more compilation and never
-            // loses the edit.
-            int inputRevision = Volatile.Read(ref m_InputRevision);
-
-            (List<IDependentActivity> activityCopies, Dictionary<int, IManagedActivityViewModel> sources) = CopyActivities();
-
-            Volatile.Write(ref m_SnapshotRevision, inputRevision);
-
-            return new CompilationSnapshot(
-                activityCopies,
-                sources,
-                availableResources,
-                workStreams,
-                inputRevision,
-                ProjectScenarioRevision,
-                ++m_SnapshotTicket);
+            return m_Scheduler.TakeSnapshot(availableResources, workStreams, ProjectScenarioRevision, CopyActivities);
         }
 
         /// <summary>
@@ -579,21 +529,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return (activityCopies, sources);
-        }
-
-        /// <summary>
-        /// Builds a throwaway compiler that holds the copies. It needs no lock: nothing else can reach it.
-        /// </summary>
-        private static VertexGraphCompiler BuildCompiler(IEnumerable<IDependentActivity> activityCopies)
-        {
-            var compiler = new VertexGraphCompiler();
-
-            foreach (IDependentActivity activityCopy in activityCopies)
-            {
-                compiler.AddActivity(activityCopy);
-            }
-
-            return compiler;
         }
 
         /// <summary>
@@ -637,45 +572,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Compiles a snapshot under the watchdog, turning a watchdog cancellation into a
-        /// <see cref="GraphCompilationTimeoutException"/> so that callers can tell it apart
-        /// from any other cancellation.
-        /// </summary>
-        /// <remarks>
-        /// The compiler works on copies rather than on the live activities, so an edit made
-        /// while it runs cannot corrupt what it is compiling, and it cannot be seen writing
-        /// its results one activity at a time. A compilation that is abandoned - because it
-        /// timed out, or because it failed - therefore publishes nothing at all, and the
-        /// previous results stay in place whole.
-        /// <para>
-        /// It needs no lock, and its caller holds none unless a bulk update is running it. The
-        /// budget starts immediately around the compile, so neither the wait for m_Lock nor
-        /// the copying is charged to it.
-        /// </para>
-        /// </remarks>
-        private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(
-            CompilationSnapshot snapshot,
-            int timeoutMilliseconds)
-        {
-            VertexGraphCompiler compiler = BuildCompiler(snapshot.Activities);
-
-            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
-
-            try
-            {
-                return CompilePlan(
-                    compiler,
-                    snapshot.Resources,
-                    snapshot.WorkStreams,
-                    CompilationTimeoutHelper.TokenOrNone(timeoutSource));
-            }
-            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-            {
-                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-            }
-        }
-
-        /// <summary>
         /// Compiles the copy of the plan. Here so that a test can hold a compilation part way through, to see what
         /// happens to the edits that are made meanwhile.
         /// </summary>
@@ -696,21 +592,8 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private IGraphCompilation<int, int, int, IDependentActivity> CompileWithTimeout(int timeoutMilliseconds)
         {
-            VertexGraphCompiler compiler = BuildCompiler(CopyActivities().Copies);
-
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
-
-            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
-            {
-                try
-                {
-                    graphCompilation = compiler.Compile(CompilationTimeoutHelper.TokenOrNone(timeoutSource));
-                }
-                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-                {
-                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-                }
-            }
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation =
+                m_Scheduler.CompileCriticalPath(CopyActivities().Copies, timeoutMilliseconds);
 
             PublishCompilation(graphCompilation, sources: null);
             return graphCompilation;
@@ -1018,7 +901,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         // Switching automatic compilation on compiles nothing by itself: the next edit does.
                         IsReadyToCompile = ReadyToCompile.No;
-                        AbsorbPendingInputs();
+                        m_Scheduler.AbsorbPendingInputs();
                     }
                 }
             }
@@ -1647,7 +1530,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // The settings that were cleared above armed the compilation, and an empty scenario has nothing
                     // to compile. A compilation that is running finds the scenario changed, and discards its results.
-                    AbsorbPendingInputs();
+                    m_Scheduler.AbsorbPendingInputs();
 
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = false;
@@ -2534,7 +2417,7 @@ namespace Zametek.ViewModel.ProjectPlan
         /// Counts a change of something that a compilation reads. A compilation that is running did not see the
         /// change, so it publishes its results as stale, and the plan is compiled again.
         /// </summary>
-        public void NoteInputsChanged() => Interlocked.Increment(ref m_InputRevision);
+        public void NoteInputsChanged() => m_Scheduler.NoteInputsChanged();
 
         public void RunCompile() => RunCompile(drainAfter: true);
 
@@ -2571,7 +2454,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         snapshot = TakeSnapshot();
                     }
 
-                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = CompileWithTimeout(snapshot, timeoutMilliseconds);
+                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = m_Scheduler.Compile(snapshot, timeoutMilliseconds, CompilePlan);
 
                     lock (m_Lock)
                     {
@@ -2580,10 +2463,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         // them would put the plan of one scenario into another, or an older plan over a newer one.
                         if (!m_Disposed
                             && snapshot.ScenarioRevision == ProjectScenarioRevision
-                            && snapshot.Ticket > m_PublishedTicket)
+                            && m_Scheduler.TryClaimPublication(snapshot))
                         {
-                            m_PublishedTicket = snapshot.Ticket;
-
                             PublishCompilation(graphCompilation, snapshot.Sources);
                             bool hadCompilationErrors = HasCompilationErrors;
                             HasCompilationErrors = graphCompilation.CompilationErrors.Any();
@@ -2596,7 +2477,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // The outputs match the plan only if nothing that a compilation reads has changed since the
                             // snapshot. If something has, these results are the newest there are and they stay on
                             // display, but they are stale until the compilation that follows has published.
-                            HasStaleOutputs = Volatile.Read(ref m_InputRevision) != snapshot.InputRevision;
+                            HasStaleOutputs = m_Scheduler.HasMovedOnSince(snapshot);
                             IsReadyToReviseTrackers = ReadyToRevise.No;
                             IsReadyToCompile = ReadyToCompile.No;
                         }
@@ -2644,60 +2525,10 @@ namespace Zametek.ViewModel.ProjectPlan
             DrainAutoCompiles();
         }
 
-        /// <summary>
-        /// Makes the compilations that the edits of the plan ask for, one at a time, until the plan is not due another.
-        /// </summary>
-        /// <remarks>
-        /// At most one thread makes them. A thread that finds another making them leaves, and its request waits in the
-        /// revision: the thread that is making them compares the revision with that of its snapshot when it has
-        /// published, and compiles again if they differ. So the edits made while a compilation runs are compiled
-        /// together, once, after it - neither cancelled into the compilation that is running, nor lost, nor compiled
-        /// one by one. The check of the outer loop closes the gap in which a request arrives after the last check of
-        /// the inner loop and before the thread has given up the right to compile.
-        /// </remarks>
-        private void DrainAutoCompiles()
-        {
-            while (IsCompileDue())
-            {
-                if (Interlocked.CompareExchange(ref m_AutoCompileRunning, 1, 0) != 0)
-                {
-                    return;
-                }
-
-                try
-                {
-                    // One busy window for all of them, and not one for each, so that the signal does not flap.
-                    BeginBusy();
-
-                    try
-                    {
-                        while (IsCompileDue())
-                        {
-                            RunCompile(drainAfter: false);
-                        }
-                    }
-                    finally
-                    {
-                        EndBusy();
-                    }
-                }
-                finally
-                {
-                    Volatile.Write(ref m_AutoCompileRunning, 0);
-                }
-            }
-        }
-
-        // Automatic compilation is on, and something that a compilation reads has changed since the newest snapshot.
-        private bool IsCompileDue() => AutoCompile && HasUnabsorbedInputs();
-
-        private bool HasUnabsorbedInputs() =>
-            Volatile.Read(ref m_InputRevision) != Volatile.Read(ref m_SnapshotRevision);
-
-        // Takes everything that has changed so far as already compiled: a reset has nothing to compile, and switching
-        // automatic compilation on compiles nothing until the next edit.
-        private void AbsorbPendingInputs() =>
-            Volatile.Write(ref m_SnapshotRevision, Volatile.Read(ref m_InputRevision));
+        // The compilations that the edits ask for are made by the scheduler, one thread at a time, and it shows one busy
+        // window for all of them. Each of them is a call of RunCompile.
+        private void DrainAutoCompiles() =>
+            m_Scheduler.Drain(() => AutoCompile, BeginBusy, EndBusy, () => RunCompile(drainAfter: false));
 
         public void RunTransitiveReduction()
         {
@@ -2866,7 +2697,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // would then hide the edit. IsBusy is no help either:
                             // it is set for the whole of a compilation, and a
                             // compilation holds no lock.
-                            if (HasUnabsorbedInputs())
+                            if (m_Scheduler.HasUnabsorbedInputs())
                             {
                                 if (AutoCompile)
                                 {
