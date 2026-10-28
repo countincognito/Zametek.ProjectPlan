@@ -61,6 +61,16 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public int CompilationsStarted => Volatile.Read(ref m_Started);
 
+        /// <summary>
+        /// The resources that the last compilation was given, in the order that it was given them.
+        /// </summary>
+        public IReadOnlyList<IResource<int, int>> LastResources { get; private set; } = [];
+
+        /// <summary>
+        /// The work streams that the last compilation was given, in the order that it was given them.
+        /// </summary>
+        public IReadOnlyList<IWorkStream<int>> LastWorkStreams { get; private set; } = [];
+
         public void HoldNextCompilation()
         {
             m_Open.Reset();
@@ -93,6 +103,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             CancellationToken cancellationToken)
         {
             Interlocked.Increment(ref m_Started);
+            LastResources = [.. availableResources];
+            LastWorkStreams = [.. workStreams];
 
             if (Interlocked.Exchange(ref m_HoldNext, 0) == 1)
             {

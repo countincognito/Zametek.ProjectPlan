@@ -64,5 +64,109 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ex.InnerException.ShouldBeSameAs(inner);
             ex.Message.ShouldContain(@"2500");
         }
+
+        #region Run
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(60_000)]
+        public void Run_Given_ACompilationThatFinishes_Then_GivesItsResult(int timeoutMilliseconds)
+        {
+            int result = CompilationTimeoutHelper.Run(timeoutMilliseconds, _ => 42);
+
+            result.ShouldBe(42);
+        }
+
+        [Fact]
+        public void Run_Given_NoBudget_Then_TheCompilationGetsATokenThatCannotBeCancelled()
+        {
+            CancellationToken given = CompilationTimeoutHelper.Run(0, token => token);
+
+            given.CanBeCanceled.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void Run_Given_ABudget_Then_TheCompilationGetsATokenThatIsNotCancelledYet()
+        {
+            (bool canBeCancelled, bool isCancelled) = CompilationTimeoutHelper.Run(60_000, token => (token.CanBeCanceled, token.IsCancellationRequested));
+
+            canBeCancelled.ShouldBeTrue();
+            isCancelled.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void Run_Given_ACompilationThatOutlastsTheBudget_Then_ThrowsTheTimeoutExceptionOfThatBudget()
+        {
+            // The compilation waits for the watchdog, as a compilation that has stopped making progress does, and ends as a
+            // cancelled compilation does. The wait is a ceiling: the watchdog ends it after the budget.
+            var cancellation = new OperationCanceledException();
+
+            GraphCompilationTimeoutException ex = Should.Throw<GraphCompilationTimeoutException>(() => CompilationTimeoutHelper.Run(
+                50,
+                token =>
+                {
+                    token.WaitHandle.WaitOne(TimeSpan.FromSeconds(10));
+                    if (token.IsCancellationRequested)
+                    {
+                        throw cancellation;
+                    }
+
+                    return 0;
+                }));
+
+            ex.Timeout.ShouldBe(TimeSpan.FromMilliseconds(50));
+            ex.InnerException.ShouldBeSameAs(cancellation);
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(60_000)]
+        public void Run_Given_ACancellationThatIsNotTheWatchdog_Then_ItIsNotTurnedIntoATimeout(int timeoutMilliseconds)
+        {
+            var cancellation = new OperationCanceledException();
+
+            OperationCanceledException ex = Should.Throw<OperationCanceledException>(
+                () => CompilationTimeoutHelper.Run<int>(timeoutMilliseconds, _ => throw cancellation));
+
+            ex.ShouldBeSameAs(cancellation);
+        }
+
+        [Fact]
+        public void Run_Given_AnExceptionThatIsNotACancellation_Then_ItPropagates()
+        {
+            var failure = new InvalidOperationException();
+
+            InvalidOperationException ex = Should.Throw<InvalidOperationException>(
+                () => CompilationTimeoutHelper.Run<int>(60_000, _ => throw failure));
+
+            ex.ShouldBeSameAs(failure);
+        }
+
+        [Fact]
+        public void Run_Given_ACompilationThatEnds_Then_TheWatchdogIsDisposed()
+        {
+            // A token whose source is disposed gives no wait handle.
+            CancellationToken ended = CompilationTimeoutHelper.Run(60_000, token => token);
+            Should.Throw<ObjectDisposedException>(() => { _ = ended.WaitHandle; });
+
+            CancellationToken failed = default;
+            Should.Throw<InvalidOperationException>(() => CompilationTimeoutHelper.Run<int>(
+                60_000,
+                token =>
+                {
+                    failed = token;
+                    throw new InvalidOperationException();
+                }));
+            Should.Throw<ObjectDisposedException>(() => { _ = failed.WaitHandle; });
+        }
+
+        [Fact]
+        public void Run_Given_NoCompilation_Then_ItThrows()
+        {
+            Should.Throw<ArgumentNullException>(() => CompilationTimeoutHelper.Run<int>(0, null!))
+                .ParamName.ShouldBe(@"compile");
+        }
+
+        #endregion
     }
 }

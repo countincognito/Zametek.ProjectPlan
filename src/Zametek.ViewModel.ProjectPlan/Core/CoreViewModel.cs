@@ -433,16 +433,26 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             UpdateActivityDisplayOrders();
 
-            var availableResources = new List<IResource<int, int>>();
-            if (!ResourceSettings.AreDisabled)
-            {
-                availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
-            }
-
-            var workStreams = new List<IWorkStream<int>>();
-            workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
+            (List<IResource<int, int>> availableResources, List<IWorkStream<int>> workStreams) = MapResourcesAndWorkStreams();
 
             return m_Scheduler.TakeSnapshot(availableResources, workStreams, ProjectScenarioRevision, m_PlanGraph.CopyActivities);
+        }
+
+        /// <summary>
+        /// Maps the resources and the work streams of the settings to the ones that a compiler takes: the resources in
+        /// the order of their ids, and none when the settings disable the resources. Call it with <see cref="m_Lock"/> held.
+        /// </summary>
+        private (List<IResource<int, int>> Resources, List<IWorkStream<int>> WorkStreams) MapResourcesAndWorkStreams()
+        {
+            var resources = new List<IResource<int, int>>();
+            if (!ResourceSettings.AreDisabled)
+            {
+                resources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
+            }
+
+            List<IWorkStream<int>> workStreams = [.. WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream)];
+
+            return (resources, workStreams);
         }
 
         /// <summary>
@@ -1837,7 +1847,22 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idMaps)
+        public void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idMaps) =>
+            RemapManagedIds(idMaps, ProjectScenarioHelper.UpdateActivityIds);
+
+        public void UpdateManagedResourceIds(IEnumerable<(int OldId, int NewId)> idMaps) =>
+            RemapManagedIds(idMaps, ProjectScenarioHelper.UpdateResourceIds);
+
+        public void UpdateManagedWorkStreamIds(IEnumerable<(int OldId, int NewId)> idMaps) =>
+            RemapManagedIds(idMaps, ProjectScenarioHelper.UpdateWorkStreamIds);
+
+        /// <summary>
+        /// Builds the scenario, gives the ids in it other ids with the function that it is given, and loads it again under
+        /// the same id and the same title.
+        /// </summary>
+        private void RemapManagedIds(
+            IEnumerable<(int OldId, int NewId)> idMaps,
+            Func<ProjectScenarioModel, List<(int FromId, int ToId)>, ProjectScenarioModel> remap)
         {
             try
             {
@@ -1848,53 +1873,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
                     Guid projectScenarioId = m_SettingService.ScenarioId;
                     string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                    projectScenarioModel = ProjectScenarioHelper.UpdateActivityIds(projectScenarioModel, [.. idMaps]);
-                    ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
-
-                    IsProjectScenarioUpdated = true;
-                }
-            }
-            finally
-            {
-                EndBusy();
-            }
-        }
-
-        public void UpdateManagedResourceIds(IEnumerable<(int OldId, int NewId)> idMaps)
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-
-                    ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
-                    Guid projectScenarioId = m_SettingService.ScenarioId;
-                    string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                    projectScenarioModel = ProjectScenarioHelper.UpdateResourceIds(projectScenarioModel, [.. idMaps]);
-                    ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
-
-                    IsProjectScenarioUpdated = true;
-                }
-            }
-            finally
-            {
-                EndBusy();
-            }
-        }
-
-        public void UpdateManagedWorkStreamIds(IEnumerable<(int OldId, int NewId)> idMaps)
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-
-                    ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
-                    Guid projectScenarioId = m_SettingService.ScenarioId;
-                    string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                    projectScenarioModel = ProjectScenarioHelper.UpdateWorkStreamIds(projectScenarioModel, [.. idMaps]);
+                    projectScenarioModel = remap(projectScenarioModel, [.. idMaps]);
                     ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
 
                     IsProjectScenarioUpdated = true;
@@ -1988,13 +1967,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 // The resources and the work streams are the ones that a compile uses.
-                var resources = new List<IResource<int, int>>();
-                if (!ResourceSettings.AreDisabled)
-                {
-                    resources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
-                }
-
-                List<IWorkStream<int>> workStreams = [.. WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream)];
+                (List<IResource<int, int>> resources, List<IWorkStream<int>> workStreams) = MapResourcesAndWorkStreams();
 
                 (List<IDependentActivity<int, int, int>> activities, Dictionary<int, DurationEstimate> estimates, Dictionary<int, string> names) =
                     m_PlanGraph.CopySimulationActivities();

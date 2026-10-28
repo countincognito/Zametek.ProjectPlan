@@ -151,20 +151,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             VertexGraphCompiler compiler = BuildCompiler(snapshot.Activities);
 
-            using CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds);
-
-            try
-            {
-                return compilePlan(
-                    compiler,
-                    snapshot.Resources,
-                    snapshot.WorkStreams,
-                    CompilationTimeoutHelper.TokenOrNone(timeoutSource));
-            }
-            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-            {
-                throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-            }
+            return CompilationTimeoutHelper.Run(
+                timeoutMilliseconds,
+                cancellationToken => compilePlan(compiler, snapshot.Resources, snapshot.WorkStreams, cancellationToken));
         }
 
         /// <summary>
@@ -194,20 +183,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             VertexGraphCompiler compiler = BuildCompiler(activityCopies);
 
-            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation;
-
-            using (CancellationTokenSource? timeoutSource = CompilationTimeoutHelper.CreateTimeoutSource(timeoutMilliseconds))
-            {
-                try
-                {
-                    // No resources: the compilation is the pure critical path schedule.
-                    graphCompilation = compilePlan(compiler, [], [], CompilationTimeoutHelper.TokenOrNone(timeoutSource));
-                }
-                catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
-                {
-                    throw CompilationTimeoutHelper.TimedOut(timeoutMilliseconds, ex);
-                }
-            }
+            // No resources: the compilation is the pure critical path schedule.
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = CompilationTimeoutHelper.Run(
+                timeoutMilliseconds,
+                cancellationToken => compilePlan(compiler, [], [], cancellationToken));
 
             if (graphCompilation.CompilationErrors.Any())
             {

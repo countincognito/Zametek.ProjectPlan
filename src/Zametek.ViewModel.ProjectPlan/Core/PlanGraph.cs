@@ -394,6 +394,26 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
+        /// Calls <paramref name="visit"/> for each live activity, with its id, in the order that the live graph holds
+        /// them and in one pass while <see cref="m_ActivityDataLock"/> is held. The remarks of CopyActivities say why.
+        /// </summary>
+        private void VisitLiveActivities(Action<int, IManagedActivityViewModel> visit)
+        {
+            lock (m_ActivityDataLock)
+            {
+                Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
+
+                foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
+                {
+                    if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
+                    {
+                        visit(activityId, activity);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Copies every activity, together with the live activity that it came from.
         /// </summary>
         /// <remarks>
@@ -413,19 +433,11 @@ namespace Zametek.ViewModel.ProjectPlan
             List<IDependentActivity> activityCopies = [];
             Dictionary<int, IManagedActivityViewModel> sources = [];
 
-            lock (m_ActivityDataLock)
+            VisitLiveActivities((activityId, activity) =>
             {
-                Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
-
-                foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
-                {
-                    if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
-                    {
-                        activityCopies.Add((IDependentActivity)activity.CloneObject());
-                        sources[activityId] = activity;
-                    }
-                }
-            }
+                activityCopies.Add((IDependentActivity)activity.CloneObject());
+                sources[activityId] = activity;
+            });
 
             return (activityCopies, sources);
         }
@@ -482,24 +494,14 @@ namespace Zametek.ViewModel.ProjectPlan
             Dictionary<int, DurationEstimate> estimates = [];
             Dictionary<int, string> names = [];
 
-            // The copies are taken as a compilation takes them (CopyActivities): in the order that the live
-            // graph holds the activities, and in one pass under the activity data lock, so that no activity is
-            // edited part way through being copied. A simulation takes minutes, and it must never see the
-            // live activities again after this.
-            lock (m_ActivityDataLock)
+            // The copies are taken as a compilation takes them (CopyActivities). A simulation takes minutes, and
+            // it must never see the live activities again after this.
+            VisitLiveActivities((activityId, activity) =>
             {
-                Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
-
-                foreach (int activityId in m_VertexGraphCompiler.ActivityIds)
-                {
-                    if (activityLookup.TryGetValue(activityId, out IManagedActivityViewModel? activity))
-                    {
-                        activities.Add((IDependentActivity<int, int, int>)activity.CloneObject());
-                        estimates[activityId] = EstimatesOf(activity);
-                        names[activityId] = activity.Name ?? string.Empty;
-                    }
-                }
-            }
+                activities.Add((IDependentActivity<int, int, int>)activity.CloneObject());
+                estimates[activityId] = EstimatesOf(activity);
+                names[activityId] = activity.Name ?? string.Empty;
+            });
 
             return (activities, estimates, names);
         }
