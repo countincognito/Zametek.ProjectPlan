@@ -25,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
-        private int m_BusyNestingLevel;
+        private readonly NestingCounter m_BusyNesting = new();
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -340,7 +340,7 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         private void BeginBusy()
         {
-            if (Interlocked.Increment(ref m_BusyNestingLevel) == 1)
+            if (m_BusyNesting.Begin())
             {
                 this.RaisePropertyChanged(nameof(IsBusy));
             }
@@ -348,31 +348,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void EndBusy()
         {
-            // Decrement defensively, clamping at zero: pairing is expected (BeginBusy
-            // at the start of a try block, EndBusy in its finally), but an unmatched
-            // call must never drive the count negative, which would silently break
-            // the busy signal for the remainder of the session.
-            //
-            // This is a standard lock-free compare-and-swap retry loop. The initial
-            // volatile read is only a first guess and may be stale by the time the
-            // CompareExchange runs; that is fine, because CompareExchange writes the
-            // decrement only if the field still holds the guessed value, atomically,
-            // and otherwise writes nothing and returns the actual current value, with
-            // which the loop simply tries again. A stale read can therefore only ever
-            // cause a retry, never an incorrect write.
-            int currentLevel = Volatile.Read(ref m_BusyNestingLevel);
-            while (currentLevel > 0)
+            if (m_BusyNesting.End())
             {
-                int originalLevel = Interlocked.CompareExchange(ref m_BusyNestingLevel, currentLevel - 1, currentLevel);
-                if (originalLevel == currentLevel)
-                {
-                    if (currentLevel == 1)
-                    {
-                        this.RaisePropertyChanged(nameof(IsBusy));
-                    }
-                    return;
-                }
-                currentLevel = originalLevel;
+                this.RaisePropertyChanged(nameof(IsBusy));
             }
         }
 
@@ -1878,7 +1856,7 @@ namespace Zametek.ViewModel.ProjectPlan
         // This getter must remain lock-free: it is re-read synchronously by property
         // chain observers (WhenAnyValue) on whichever thread raises the change
         // notification, so it must never contend for m_Lock.
-        public bool IsBusy => Volatile.Read(ref m_BusyNestingLevel) > 0;
+        public bool IsBusy => m_BusyNesting.IsActive;
 
         // We need to use an enum because raised changes on bools aren't always captured.
         // https://github.com/reactiveui/ReactiveUI/issues/3846
