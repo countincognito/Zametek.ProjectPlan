@@ -321,7 +321,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #region Stand-ins
 
-        private sealed class TestSettingService
+        internal sealed class TestSettingService
             : SettingServiceBase
         {
             private string m_ProjectDirectory = string.Empty;

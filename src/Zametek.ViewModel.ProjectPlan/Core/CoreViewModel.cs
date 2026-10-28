@@ -1292,29 +1292,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     BeginBusy();
 
-                    DateTimeOffset today = m_DateTimeCalculator.GetLocalToday();
-                    var plan = new ProjectScenarioModel
-                    {
-                        ProjectStart = today,
-                        Today = today,
-                        DependentActivities = [],
-                        GraphSettings = m_SettingService.DefaultGraphSettings,
-                        ResourceSettings = m_SettingService.DefaultResourceSettings,
-                        WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings,
-                        HolidaySettings = m_SettingService.DefaultHolidaySettings,
-                        Metrics = new(),
-                        ResourceMetrics = [],
-                        DisplaySettings = new ProjectScenarioDisplaySettingsModel
-                        {
-                            ShowDates = m_SettingService.DefaultShowDates,
-                            UseClassicDates = m_SettingService.DefaultUseClassicDates,
-                            NonWorkingDayMode = m_SettingService.DefaultNonWorkingDayMode,
-                            HideCost = m_SettingService.DefaultHideCost,
-                            HideBilling = m_SettingService.DefaultHideBilling,
-                        },
-                    };
-
-                    return plan;
+                    return ProjectScenarioHelper.CreateEmptyProjectScenario(m_DateTimeCalculator.GetLocalToday(), m_SettingService);
                 }
             }
             finally
@@ -1486,70 +1464,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Holiday settings.
 
-                    HolidaySettingsModel holidaySettings = m_SettingService.DefaultHolidaySettings.CloneObject();
-
-                    if (projectScenarioImportModel.Holidays.Count != 0)
-                    {
-                        holidaySettings.Holidays.Clear();
-
-                        foreach (HolidayModel holiday in projectScenarioImportModel.Holidays)
-                        {
-                            holidaySettings.Holidays.Add(holiday);
-                        }
-                    }
-
-                    HolidaySettings = holidaySettings;
+                    HolidaySettings = ProjectScenarioHelper.CreateImportedHolidaySettings(m_SettingService.DefaultHolidaySettings, projectScenarioImportModel);
 
                     // Work Stream settings.
-                    WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
-
-                    if (projectScenarioImportModel.WorkStreams.Count != 0)
-                    {
-                        workStreamSettings.WorkStreams.Clear();
-
-                        foreach (WorkStreamModel workStream in projectScenarioImportModel.WorkStreams)
-                        {
-                            workStreamSettings.WorkStreams.Add(workStream);
-                        }
-                    }
-
-                    WorkStreamSettings = workStreamSettings;
+                    WorkStreamSettings = ProjectScenarioHelper.CreateImportedWorkStreamSettings(m_SettingService.DefaultWorkStreamSettings, projectScenarioImportModel);
 
                     // Resources.
-                    ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
-                    resourceSettings = resourceSettings with
-                    {
-                        DefaultUnitCost = projectScenarioImportModel.ResourceSettings.DefaultUnitCost,
-                        DefaultUnitBilling = projectScenarioImportModel.ResourceSettings.DefaultUnitBilling,
-                        AreDisabled = projectScenarioImportModel.ResourceSettings.AreDisabled,
-                    };
-
-                    if (projectScenarioImportModel.ResourceSettings.Resources.Count != 0)
-                    {
-                        resourceSettings.Resources.Clear();
-
-                        foreach (ResourceModel resource in projectScenarioImportModel.ResourceSettings.Resources)
-                        {
-                            resourceSettings.Resources.Add(resource);
-                        }
-                    }
-
-                    ResourceSettings = resourceSettings;
+                    ResourceSettings = ProjectScenarioHelper.CreateImportedResourceSettings(m_SettingService.DefaultResourceSettings, projectScenarioImportModel);
 
                     // Graph settings.
-                    GraphSettingsModel graphSettings = m_SettingService.DefaultGraphSettings.CloneObject();
-
-                    if (projectScenarioImportModel.ActivitySeverities.Count != 0)
-                    {
-                        graphSettings.ActivitySeverities.Clear();
-
-                        foreach (ActivitySeverityModel activitySeverity in projectScenarioImportModel.ActivitySeverities)
-                        {
-                            graphSettings.ActivitySeverities.Add(activitySeverity);
-                        }
-                    }
-
-                    GraphSettings = graphSettings;
+                    GraphSettings = ProjectScenarioHelper.CreateImportedGraphSettings(m_SettingService.DefaultGraphSettings, projectScenarioImportModel);
 
                     // Activities.
                     // Be sure to set the ResourceSettings first, so that the activities know
@@ -1744,13 +1668,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     };
 
                     // Reorder activity dependencies so they are more readable.
-                    foreach (DependentActivityModel activityModel in plan.DependentActivities)
-                    {
-                        activityModel.Dependencies.Sort();
-                        activityModel.PlanningDependencies.Sort();
-                        activityModel.ResourceDependencies.Sort();
-                        activityModel.Successors.Sort();
-                    }
+                    ProjectScenarioHelper.SortDependencies(plan.DependentActivities);
 
                     // Put display mode back to the way it was.
                     m_DateTimeCalculator.DisplayMode = oldDisplayMode;
