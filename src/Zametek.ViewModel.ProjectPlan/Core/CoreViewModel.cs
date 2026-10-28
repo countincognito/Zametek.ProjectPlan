@@ -5,6 +5,7 @@ using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -689,65 +690,43 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool DefaultShowDates
         {
             get => m_SettingService.DefaultShowDates;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_SettingService.DefaultShowDates = value;
-                    this.RaisePropertyChanged();
-                }
-            }
+            set => SetDefault(x => m_SettingService.DefaultShowDates = x, value);
         }
 
         public bool DefaultUseClassicDates
         {
             get => m_SettingService.DefaultUseClassicDates;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_SettingService.DefaultUseClassicDates = value;
-                    this.RaisePropertyChanged();
-                }
-            }
+            set => SetDefault(x => m_SettingService.DefaultUseClassicDates = x, value);
         }
 
         public NonWorkingDayMode DefaultNonWorkingDayMode
         {
             get => m_SettingService.DefaultNonWorkingDayMode;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_SettingService.DefaultNonWorkingDayMode = value;
-                    this.RaisePropertyChanged();
-                }
-            }
+            set => SetDefault(x => m_SettingService.DefaultNonWorkingDayMode = x, value);
         }
 
         public bool DefaultHideCost
         {
             get => m_SettingService.DefaultHideCost;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_SettingService.DefaultHideCost = value;
-                    this.RaisePropertyChanged();
-                }
-            }
+            set => SetDefault(x => m_SettingService.DefaultHideCost = x, value);
         }
 
         public bool DefaultHideBilling
         {
             get => m_SettingService.DefaultHideBilling;
-            set
+            set => SetDefault(x => m_SettingService.DefaultHideBilling = x, value);
+        }
+
+        /// <summary>
+        /// Passes one of the default display settings to the setting service, and raises the change of the property that
+        /// called it. It raises the change also when the value is the one that the service holds.
+        /// </summary>
+        private void SetDefault<T>(Action<T> store, T value, [CallerMemberName] string? propertyName = null)
+        {
+            lock (m_Lock)
             {
-                lock (m_Lock)
-                {
-                    m_SettingService.DefaultHideBilling = value;
-                    this.RaisePropertyChanged();
-                }
+                store(value);
+                this.RaisePropertyChanged(propertyName);
             }
         }
 
@@ -937,119 +916,61 @@ namespace Zametek.ViewModel.ProjectPlan
         public RisksModel RiskMetrics
         {
             get => m_RiskMetrics;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    if (m_RiskMetrics == value)
-                    {
-                        return;
-                    }
-                    m_RiskMetrics = value;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Metrics));
-                }
-            }
+            private set => SetMetric(ref m_RiskMetrics, value);
         }
 
         private CostsModel m_CostMetrics;
         public CostsModel CostMetrics
         {
             get => m_CostMetrics;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    if (m_CostMetrics == value)
-                    {
-                        return;
-                    }
-                    m_CostMetrics = value;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Metrics));
-                }
-            }
+            private set => SetMetric(ref m_CostMetrics, value);
         }
 
         private BillingsModel m_BillingMetrics;
         public BillingsModel BillingMetrics
         {
             get => m_BillingMetrics;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    if (m_BillingMetrics == value)
-                    {
-                        return;
-                    }
-                    m_BillingMetrics = value;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Metrics));
-                }
-            }
+            private set => SetMetric(ref m_BillingMetrics, value);
         }
 
         private MarginsModel m_MarginMetrics;
         public MarginsModel MarginMetrics
         {
             get => m_MarginMetrics;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    if (m_MarginMetrics == value)
-                    {
-                        return;
-                    }
-                    m_MarginMetrics = value;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Metrics));
-                }
-            }
+            private set => SetMetric(ref m_MarginMetrics, value);
         }
 
         private EffortsModel m_EffortMetrics;
         public EffortsModel EffortMetrics
         {
             get => m_EffortMetrics;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    if (m_EffortMetrics == value)
-                    {
-                        return;
-                    }
-                    m_EffortMetrics = value;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Metrics));
-                }
-            }
+            private set => SetMetric(ref m_EffortMetrics, value);
         }
 
         private NetworkModel m_NetworkMetrics;
         public NetworkModel NetworkMetrics
         {
             get => m_NetworkMetrics;
-            private set
+            private set => SetMetric(ref m_NetworkMetrics, value);
+        }
+
+        /// <summary>
+        /// Stores one of the metrics when it is different from the one that the core holds. Then it marks the scenario as
+        /// updated (without marking the outputs as stale), and raises the change of the property that called it and the
+        /// change of <see cref="Metrics"/>.
+        /// </summary>
+        private void SetMetric<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                if (EqualityComparer<T>.Default.Equals(field, value))
                 {
-                    if (m_NetworkMetrics == value)
-                    {
-                        return;
-                    }
-                    m_NetworkMetrics = value;
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Metrics));
+                    return;
                 }
+                field = value;
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                this.RaisePropertyChanged(propertyName);
+                this.RaisePropertyChanged(nameof(Metrics));
             }
         }
 
