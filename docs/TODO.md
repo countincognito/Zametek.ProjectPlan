@@ -2,19 +2,19 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-08-15)*
+- [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-10-29)*
 
   ReactiveUI 24 no longer uses System.Reactive. But removal has no value while other packages still depend on it. Thus, the assembly ships in all cases.
 
-  **Dock.** At the last check, Dock was in the middle of a split. Version 12.1.0.1 introduced the suffixed System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, with `ReactiveUI.Reactive`). It documents the unsuffixed family as the ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repository).
+  **Dock.** Dock now ships two lanes. The Dock documentation recommends the suffixed System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, with `ReactiveUI.Reactive`). It calls the unsuffixed family the optional ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repository).
 
-  The shipped unsuffixed `Dock.Model.ReactiveUI` 12.1.0.1 still declares `System.Reactive` 7.0.0. But Dock master no longer has the reference. Thus, the next unsuffixed release is expected to open the Dock gate.
+  The unsuffixed lane keeps `System.Reactive`. Version 12.1.0.13 of `Dock.Model.ReactiveUI` declares `System.Reactive` 7.0.0, and so does the suffixed twin. On Dock master, the props file `build/ReactiveUI.Primitives.props` of the unsuffixed project references `ReactiveUI` and `System.Reactive` together. Thus, the Dock gate can stay closed for good. The earlier expectation, that the next unsuffixed release drops the reference, does not hold.
 
-  **DynamicData.** `DynamicData` is the remaining hard blocker in released packages. Versions 9.4.33 and 9.5.0-preview.15 both declare `System.Reactive` 6.1.0, and no suffixed twin exists. But the direction is certain. PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116) migrates DynamicData to ReactiveUI.Primitives.
+  **DynamicData.** `DynamicData` is the remaining hard blocker in released packages. Version 9.5.0 (2026-10-13) declares `System.Reactive` 6.1.0, and no suffixed twin exists. PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116) migrates DynamicData to ReactiveUI.Primitives. It is open, and it has conflicts with main.
 
-  The maintainer plans to ship it in a 10.0.0-preview. At the last check, the naming of the packages was still undecided: a suffixed convention like ReactiveUI and Dock, or explicit dual names. Thus, the Rx-free DynamicData arrives as a MAJOR bump (10.x), with previews first.
+  On 2026-10-28, a maintainer wrote in this PR that Primitives support will be opt-in. The default `DynamicData` package stays on `System.Reactive`. Primitives support ships as a separate package that consumers choose to reference. Thus, the default package does not become free of Rx.
 
-  **Watch.** Confirm that the next unsuffixed Dock release drops `System.Reactive`. Then watch for a stable DynamicData 10.x without it.
+  **Watch.** Watch for the separate DynamicData package for Primitives, and for a Dock release whose unsuffixed package drops `System.Reactive`. If both packages keep the dependency, the assembly ships in all cases, and you cannot complete this entry. Then decide whether to delete the entry.
 
   **Caution for version bumps.** This repository is deliberately in the unsuffixed Primitives lane. Do not adopt a package with the suffix `.Reactive`. The two families have distinct type identities, and you must not mix them.
 
