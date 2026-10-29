@@ -19,7 +19,7 @@ namespace Zametek.ViewModel.ProjectPlan
     /// <remarks>
     /// It has no lock of its own, but the leaf lock that it shares with every activity (<see cref="m_ActivityDataLock"/>).
     /// The core calls the members that change the list of the activities, and the members that copy it, with the lock of
-    /// the core held (ARCHITECTURE section 7 rules 6 and 11).
+    /// the core held (ARCHITECTURE section 7 rules 6 and 11). Every write to the live graph is made under the leaf lock too.
     /// </remarks>
     internal sealed class PlanGraph
         : IDisposable
@@ -29,18 +29,23 @@ namespace Zametek.ViewModel.ProjectPlan
         /// <summary>
         /// The leaf lock shared by every activity view model, guarding the activity state
         /// a compilation reads and writes. Held only around the snapshot and publish steps
-        /// here, and around the individual writes inside the activities themselves.
+        /// here, around every write to the live graph, and around the individual writes
+        /// inside the activities themselves.
         /// </summary>
         /// <remarks>
         /// Strictly inside the lock of the core in the lock order, and the only lock the
         /// activities take, so it cannot form a cycle. Never hold it while raising a
         /// change notification or calling out to anything else - see ARCHITECTURE
-        /// section 7 rules 6 and 11.
+        /// section 7 rules 6 and 11. The one exception is a call of the live compiler:
+        /// the lock of the compiler is inside this lock, and the compiler takes this lock
+        /// again only to call an activity back (RemoveActivity calls SetAsRemovable).
         /// </remarks>
         private readonly Lock m_ActivityDataLock;
 
         // The compiler of the live graph. The activities are its nodes, and it keeps the structure of the graph for
-        // everything between the compilations. A compilation never uses it: it works on a compiler of its own.
+        // everything between the compilations. A compilation never uses it: it works on a compiler of its own. The graph
+        // holds the links that the user entered and no link that only a resource gave (see
+        // VertexGraphCompiler.SetUserDependencies), and every write to it is made under the leaf lock.
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
         private readonly ProjectPlanMapper m_Mapper;
@@ -101,6 +106,12 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         public int FinishTime => m_VertexGraphCompiler.FinishTime;
 
+        /// <summary>
+        /// The leaf lock that the graph shares with its activities. It is exposed so that a test can hold it and see that a
+        /// member waits for it.
+        /// </summary>
+        internal Lock ActivityDataLock => m_ActivityDataLock;
+
         #endregion
 
         #region Methods
@@ -151,7 +162,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         activity.StartSubscriptions();
                     }
 
-                    if (m_VertexGraphCompiler.AddActivity(activity))
+                    // Like every write to the live graph, this one is made under the leaf lock (see SetUserDependencies).
+                    bool isAdded;
+                    lock (m_ActivityDataLock)
+                    {
+                        isAdded = m_VertexGraphCompiler.AddActivity(activity);
+                    }
+
+                    if (isAdded)
                     {
                         activities.Add(activity);
                     }
@@ -175,7 +193,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
                 {
-                    if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
+                    // The compiler calls the activity back inside this call (SetAsRemovable takes the leaf lock). Taking the
+                    // leaf lock first keeps the order of the locks the same as in an edit: the leaf lock, then the compiler.
+                    bool isRemoved;
+                    lock (m_ActivityDataLock)
+                    {
+                        isRemoved = m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id);
+                    }
+
+                    if (isRemoved)
                     {
                         activities.Remove(dependentActivity);
                         dependentActivity.Dispose();
@@ -269,16 +295,23 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 activities.Clear();
 
-                m_VertexGraphCompiler.Reset();
+                lock (m_ActivityDataLock)
+                {
+                    m_VertexGraphCompiler.Reset();
+                }
             });
         }
 
         /// <summary>
-        /// Sets the dependencies of an activity in the live graph. Call it with the lock of the core held.
+        /// Sets the dependencies of an activity in the live graph, which holds the links of the user alone. Call it with the
+        /// lock of the core held.
         /// </summary>
         public void SetActivityDependencies(int activityId, HashSet<int> dependencies, HashSet<int> planningDependencies)
         {
-            m_VertexGraphCompiler.SetActivityDependencies(activityId, dependencies, planningDependencies);
+            lock (m_ActivityDataLock)
+            {
+                m_VertexGraphCompiler.SetUserDependencies(activityId, dependencies, planningDependencies);
+            }
         }
 
         /// <summary>
@@ -328,7 +361,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (!after.IsSameAs(reduction.Before[activityId]))
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(activityId, [.. after.Dependencies], [.. after.PlanningDependencies]);
+                        m_VertexGraphCompiler.SetUserDependencies(activityId, [.. after.Dependencies], [.. after.PlanningDependencies]);
                     }
                 }
             }

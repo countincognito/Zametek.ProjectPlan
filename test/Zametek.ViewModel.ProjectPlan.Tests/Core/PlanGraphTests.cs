@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -862,6 +863,243 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             harness.Graph.Activities.Select(x => x.Id).ShouldBe(new[] { 1 });
             harness.Graph.OrderableActivities.Select(x => x.Id).ShouldBe(new[] { 1 });
+        }
+
+        #endregion
+
+        #region Links of the live graph
+
+        // The user enters the dependencies of an activity. A compilation gives the activity resource dependencies, and the
+        // publication writes them into the live activity. The tests write them there too, as the publication does, so that
+        // they do not depend on what the scheduler decides. Whatever the activities hold, the live graph has to hold the
+        // links of the user alone: IsIsolated reads it, and the grid shows that an activity has no dependency and no
+        // successor, not that a resource puts it in a queue.
+
+        [Fact]
+        public void DependenciesString_Given_AResourceDependencyOfTheActivity_Then_NoLinkOfTheResourceIsInTheGraph()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            Activity(harness, 2).ResourceDependencies.Add(1);
+
+            Activity(harness, 2).DependenciesString = string.Empty;
+
+            Activity(harness, 1).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).ResourceDependencies.ShouldBe(new HashSet<int> { 1 }, "a compilation gave it, and an edit leaves it");
+        }
+
+        [Fact]
+        public void PlanningDependenciesString_Given_AResourceDependencyOfTheActivity_Then_NoLinkOfTheResourceIsInTheGraph()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            Activity(harness, 2).ResourceDependencies.Add(1);
+
+            Activity(harness, 2).PlanningDependenciesString = string.Empty;
+
+            Activity(harness, 1).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).ResourceDependencies.ShouldBe(new HashSet<int> { 1 }, "a compilation gave it, and an edit leaves it");
+        }
+
+        [Fact]
+        public void DependenciesString_Given_ADependencyThatTheResourceGaveToo_Then_TheLinkStaysUntilTheUserTakesTheDependencyAway()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            Activity(harness, 2).ResourceDependencies.Add(1);
+
+            Activity(harness, 2).DependenciesString = "1";
+
+            Activity(harness, 2).Dependencies.ShouldBe(new HashSet<int> { 1 });
+            Activity(harness, 1).IsIsolated.ShouldBeFalse();
+            Activity(harness, 2).IsIsolated.ShouldBeFalse();
+
+            Activity(harness, 2).DependenciesString = string.Empty;
+
+            Activity(harness, 2).Dependencies.ShouldBeEmpty();
+            Activity(harness, 1).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).IsIsolated.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void PlanningDependenciesString_Given_ADependencyThatTheResourceGaveToo_Then_TheLinkStaysUntilTheUserTakesTheDependencyAway()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            Activity(harness, 2).ResourceDependencies.Add(1);
+
+            Activity(harness, 2).PlanningDependenciesString = "1";
+
+            Activity(harness, 2).PlanningDependencies.ShouldBe(new HashSet<int> { 1 });
+            Activity(harness, 1).IsIsolated.ShouldBeFalse();
+            Activity(harness, 2).IsIsolated.ShouldBeFalse();
+
+            Activity(harness, 2).PlanningDependenciesString = string.Empty;
+
+            Activity(harness, 2).PlanningDependencies.ShouldBeEmpty();
+            Activity(harness, 1).IsIsolated.ShouldBeTrue();
+            Activity(harness, 2).IsIsolated.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void SetActivityDependencies_Given_AResourceDependencyOfTheActivity_Then_OnlyTheLinkOfTheUserIsInTheGraph()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2), Model(3)]);
+            Activity(harness, 3).ResourceDependencies.Add(1);
+
+            harness.Graph.SetActivityDependencies(3, [2], []);
+
+            Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 2 });
+            Activity(harness, 2).IsIsolated.ShouldBeFalse();
+            Activity(harness, 3).IsIsolated.ShouldBeFalse();
+            Activity(harness, 1).IsIsolated.ShouldBeTrue("only the resource links it to the third");
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_AResourceDependencyOfAnActivityItChanges_Then_NoLinkOfTheResourceIsInTheGraph()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(
+                harness.Owner,
+                s_Monday,
+                [Model(1), Model(2, dependencies: [1]), Model(3, dependencies: [1, 2]), Model(4)]);
+            Activity(harness, 3).ResourceDependencies.Add(4);
+            (_, Dictionary<int, IManagedActivityViewModel> sources) = harness.Graph.CopyActivities();
+            var reduction = new TransitiveReduction(
+                Compile([]),
+                new Dictionary<int, ActivityDependencies>
+                {
+                    [1] = Dependencies(),
+                    [2] = Dependencies(1),
+                    [3] = Dependencies(1, 2),
+                    [4] = Dependencies(),
+                },
+                new Dictionary<int, ActivityDependencies>
+                {
+                    [1] = Dependencies(),
+                    [2] = Dependencies(1),
+                    [3] = Dependencies(2),
+                    [4] = Dependencies(),
+                });
+
+            bool applied = harness.Graph.TryApplyReduction(reduction, sources);
+
+            applied.ShouldBeTrue();
+            Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 2 });
+            Activity(harness, 4).IsIsolated.ShouldBeTrue("only the resource links it to the third");
+        }
+
+        // Every write to the live graph is made under the leaf lock. The lock of the compiler is private to the library, and
+        // it cannot keep the cleaning of the links of a resource apart from the other writes, so the leaf lock does.
+        //
+        // AddActivities has no test of this kind. Making an activity takes the leaf lock itself, and so the call waits for it
+        // whether or not the call to the compiler is made under it. Each test below makes the call once before it holds the
+        // lock: the first call of a path is slow, and a slow call must not look like a call that waits.
+
+        [Fact]
+        public void RemoveActivities_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2), Model(3)]);
+            harness.Graph.RemoveActivities([3]);
+
+            AssertWaitsForTheLeafLock(harness, () => harness.Graph.RemoveActivities([2]));
+
+            harness.Graph.RawActivities.Select(x => x.Id).ShouldBe(new[] { 1 });
+        }
+
+        [Fact]
+        public void ClearActivities_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            harness.Graph.ClearActivities();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+
+            AssertWaitsForTheLeafLock(harness, () => harness.Graph.ClearActivities());
+
+            harness.Graph.RawActivities.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void SetActivityDependencies_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            harness.Graph.SetActivityDependencies(2, [], []);
+
+            AssertWaitsForTheLeafLock(harness, () => harness.Graph.SetActivityDependencies(2, [1], []));
+
+            Activity(harness, 2).Dependencies.ShouldBe(new HashSet<int> { 1 });
+        }
+
+        [Fact]
+        public void TryApplyReduction_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            (Harness harness, Dictionary<int, IManagedActivityViewModel> sources, TransitiveReduction reduction) = Reducible();
+            using (harness)
+            {
+                harness.Graph.TryApplyReduction(reduction, sources).ShouldBeTrue();
+
+                // The plan is not as it was copied any more, and so the call changes nothing. It takes the lock first.
+                AssertWaitsForTheLeafLock(harness, () => harness.Graph.TryApplyReduction(reduction, sources).ShouldBeFalse());
+
+                Activity(harness, 3).Dependencies.ShouldBe(new HashSet<int> { 2 });
+            }
+        }
+
+        [Fact]
+        public void DependenciesString_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            Activity(harness, 2).DependenciesString = string.Empty;
+
+            AssertWaitsForTheLeafLock(harness, () => Activity(harness, 2).DependenciesString = "1");
+
+            Activity(harness, 2).Dependencies.ShouldBe(new HashSet<int> { 1 });
+        }
+
+        [Fact]
+        public void PlanningDependenciesString_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2)]);
+            Activity(harness, 2).PlanningDependenciesString = string.Empty;
+
+            AssertWaitsForTheLeafLock(harness, () => Activity(harness, 2).PlanningDependenciesString = "1");
+
+            Activity(harness, 2).PlanningDependencies.ShouldBe(new HashSet<int> { 1 });
+        }
+
+        // Holds the leaf lock on this thread, calls on another one, and sees that the call does not finish while the lock is
+        // held and does finish when it is free.
+        //
+        // The call must also wait with the lock of the compiler free. The compiler calls the activity back inside some of its
+        // calls (RemoveActivity calls SetAsRemovable, which takes the leaf lock), and an edit holds the leaf lock when it
+        // calls the compiler. A call that took the lock of the compiler first and then waited for the leaf lock would wait
+        // for the edit, and the edit would wait for it. Any other call of the compiler shows whether its lock is free, and
+        // GetNextActivityId needs nothing else.
+        private static void AssertWaitsForTheLeafLock(Harness harness, Action call)
+        {
+            Task task;
+            Task probe;
+
+            lock (harness.Graph.ActivityDataLock)
+            {
+                task = Task.Run(call);
+
+                Task.WaitAny([task], 300).ShouldBe(-1, "the call must wait while another thread holds the leaf lock");
+
+                probe = Task.Run(() => harness.Graph.GetNextActivityId());
+
+                Task.WaitAny([probe], 5000).ShouldBe(0, "the call waits for the leaf lock with the lock of the compiler in its hands");
+            }
+
+            task.Wait(TimeSpan.FromSeconds(10)).ShouldBeTrue("the call must finish when the leaf lock is free");
         }
 
         #endregion

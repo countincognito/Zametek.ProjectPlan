@@ -569,7 +569,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // graph edges, so it is a write to the data a compilation snapshots.
                     lock (m_DataLock)
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], PlanningDependencies);
+                        m_VertexGraphCompiler.SetUserDependencies(Id, [.. updatedDependencies], PlanningDependencies);
                     }
                 }
                 this.RaisePropertyChanged();
@@ -593,7 +593,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     lock (m_DataLock)
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
+                        m_VertexGraphCompiler.SetUserDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
                     }
                 }
                 this.RaisePropertyChanged();
