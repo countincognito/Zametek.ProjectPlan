@@ -6,24 +6,23 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
     /// Builds the outputs of a compilation: the two graphs, the two series sets and the metrics. Each build reads
-    /// only what it is given, and so it needs no lock of the core. One lock of its own keeps two builds from drawing
-    /// on the colour sequence of the resource scheduling service at the same time.
+    /// only what it is given, and it draws colours from a sequence that it owns. So a build needs no lock, and two
+    /// builds can run at the same time.
     /// </summary>
     internal sealed class CompilationOutputService
     {
         #region Fields
 
         /// <summary>
-        /// Held while the outputs of a cascade are built, so that two builds never draw from the colour sequence of
-        /// the resource scheduling service at the same time. A cascade builds without holding the lock of the core,
-        /// and a bulk update builds one while it holds it.
+        /// The colours of the series that the Build methods of the core give, one after the other. The series of the
+        /// resources start the sequence again, and the series of the tracking carry on where those stopped.
         /// </summary>
         /// <remarks>
-        /// A leaf lock: nothing that holds it takes the lock of the core, and it is taken only by the builds. The
-        /// resource series and the tracking series share one sequence, and the second carries on where the first
-        /// stopped, so they have to be built one after the other and as a pair.
+        /// A cascade does not use this sequence. It makes one of its own for its two series (<see cref="Compute"/>),
+        /// and so a cascade and these methods never shift the colours of one another. The core calls these methods
+        /// under its lock, and so they run one at a time.
         /// </remarks>
-        private readonly Lock m_OutputBuildLock;
+        private readonly PresetColorSequence m_BuildColors = new();
 
         private readonly IGraphCompilationService m_GraphCompilationService;
         private readonly IResourceSchedulingService m_ResourceSchedulingService;
@@ -41,7 +40,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphCompilationService);
             ArgumentNullException.ThrowIfNull(resourceSchedulingService);
             ArgumentNullException.ThrowIfNull(metricCalculationService);
-            m_OutputBuildLock = new();
             m_GraphCompilationService = graphCompilationService;
             m_ResourceSchedulingService = resourceSchedulingService;
             m_MetricCalculationService = metricCalculationService;
@@ -52,60 +50,62 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Methods
 
         /// <summary>
-        /// Builds the outputs of a cascade, in dependency order, from a copy of what they read. Needs no lock
-        /// of the core, and takes <see cref="m_OutputBuildLock"/> for the colours.
+        /// Builds the outputs of a cascade, in dependency order, from a copy of what they read. Needs no lock of
+        /// the core and no lock of its own. The cascade makes a sequence of colours for its two series, and the series
+        /// of the tracking carry on where the series of the resources stopped.
         /// </summary>
         public CascadeOutputs Compute(CascadeInputs inputs)
         {
-            lock (m_OutputBuildLock)
-            {
-                ArrowGraphModel arrowGraph = ComputeArrowGraph(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors);
+            var presetColors = new PresetColorSequence();
 
-                VertexGraphModel vertexGraph = ComputeVertexGraph(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors,
-                    inputs.ResourceSettings,
-                    inputs.WorkStreamSettings);
+            ArrowGraphModel arrowGraph = ComputeArrowGraph(
+                inputs.GraphCompilation,
+                inputs.HasCompilationErrors);
 
-                ResourceSeriesSetModel resourceSeriesSet = ComputeResourceSeriesSet(
-                    inputs.GraphCompilation,
-                    inputs.ResourceSettings);
+            VertexGraphModel vertexGraph = ComputeVertexGraph(
+                inputs.GraphCompilation,
+                inputs.HasCompilationErrors,
+                inputs.ResourceSettings,
+                inputs.WorkStreamSettings);
 
-                TrackingSeriesSetModel trackingSeriesSet = ComputeTrackingSeriesSet(
-                    inputs.ActivityModels,
-                    inputs.ResourceSettings,
-                    inputs.HasResources);
+            ResourceSeriesSetModel resourceSeriesSet = ComputeResourceSeriesSet(
+                inputs.GraphCompilation,
+                inputs.ResourceSettings,
+                presetColors);
 
-                NetworkModel networkMetrics = ComputeNetworkMetrics(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors,
-                    inputs.ProjectStart,
-                    inputs.StartTime,
-                    inputs.FinishTime);
+            TrackingSeriesSetModel trackingSeriesSet = ComputeTrackingSeriesSet(
+                inputs.ActivityModels,
+                inputs.ResourceSettings,
+                inputs.HasResources,
+                presetColors);
 
-                RisksModel riskMetrics = ComputeRiskMetrics(
-                    inputs.GraphCompilation,
-                    inputs.HasCompilationErrors,
-                    inputs.ActivitySeverities);
+            NetworkModel networkMetrics = ComputeNetworkMetrics(
+                inputs.GraphCompilation,
+                inputs.HasCompilationErrors,
+                inputs.ProjectStart,
+                inputs.StartTime,
+                inputs.FinishTime);
 
-                (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
-                    ComputeFinancialMetrics(resourceSeriesSet, inputs.HasCompilationErrors);
+            RisksModel riskMetrics = ComputeRiskMetrics(
+                inputs.GraphCompilation,
+                inputs.HasCompilationErrors,
+                inputs.ActivitySeverities);
 
-                return new CascadeOutputs(
-                    arrowGraph,
-                    vertexGraph,
-                    resourceSeriesSet,
-                    trackingSeriesSet,
-                    networkMetrics,
-                    riskMetrics,
-                    costs,
-                    billings,
-                    margins,
-                    efforts,
-                    resourceMetrics);
-            }
+            (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
+                ComputeFinancialMetrics(resourceSeriesSet, inputs.HasCompilationErrors);
+
+            return new CascadeOutputs(
+                arrowGraph,
+                vertexGraph,
+                resourceSeriesSet,
+                trackingSeriesSet,
+                networkMetrics,
+                riskMetrics,
+                costs,
+                billings,
+                margins,
+                efforts,
+                resourceMetrics);
         }
 
         // The seven outputs of the cascade, each built from the values that it reads and nothing else. The Build*
@@ -152,34 +152,47 @@ namespace Zametek.ViewModel.ProjectPlan
                 workStreamSettings.WorkStreams);
         }
 
+        // The series of the resources and of the tracking draw colours for the resources that have none, and the second
+        // carries on where the first stopped. So the two take the same sequence. The cascade gives them one of its own,
+        // and the Build methods of the core give them m_BuildColors.
+
         public ResourceSeriesSetModel ComputeResourceSeriesSet(
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            ResourceSettingsModel resourceSettings)
+            ResourceSettingsModel resourceSettings) =>
+            ComputeResourceSeriesSet(graphCompilation, resourceSettings, m_BuildColors);
+
+        public ResourceSeriesSetModel ComputeResourceSeriesSet(
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            ResourceSettingsModel resourceSettings,
+            IPresetColorSequence presetColors)
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(CoreViewModel.BuildResourceSeriesSet)}");
 
-            lock (m_OutputBuildLock)
-            {
-                return m_ResourceSchedulingService.BuildResourceSeriesSet(
-                    graphCompilation,
-                    resourceSettings);
-            }
+            return m_ResourceSchedulingService.BuildResourceSeriesSet(
+                graphCompilation,
+                resourceSettings,
+                presetColors);
         }
 
         public TrackingSeriesSetModel ComputeTrackingSeriesSet(
             IList<ActivityModel> activityModels,
             ResourceSettingsModel resourceSettings,
-            bool hasResources)
+            bool hasResources) =>
+            ComputeTrackingSeriesSet(activityModels, resourceSettings, hasResources, m_BuildColors);
+
+        public TrackingSeriesSetModel ComputeTrackingSeriesSet(
+            IList<ActivityModel> activityModels,
+            ResourceSettingsModel resourceSettings,
+            bool hasResources,
+            IPresetColorSequence presetColors)
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(CoreViewModel.BuildTrackingSeriesSet)}");
 
-            lock (m_OutputBuildLock)
-            {
-                return m_ResourceSchedulingService.BuildTrackingSeriesSet(
-                    activityModels,
-                    resourceSettings,
-                    hasResources);
-            }
+            return m_ResourceSchedulingService.BuildTrackingSeriesSet(
+                activityModels,
+                resourceSettings,
+                hasResources,
+                presetColors);
         }
 
         public NetworkModel ComputeNetworkMetrics(

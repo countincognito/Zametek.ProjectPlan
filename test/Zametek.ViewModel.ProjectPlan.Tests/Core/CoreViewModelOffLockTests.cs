@@ -625,11 +625,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 graphs.WaitUntilHeld();
 
-                // The load rebuilds every output itself, under the lock it holds, and it builds them one cascade at a
-                // time: it waits for the cascade that is held, which is releasing nothing until the test says. So the
-                // test lets the load get as far as replacing the scenario - which it does under the lock, before it
-                // builds anything - and then releases the cascade. That cascade then finishes building, finds the lock
-                // taken, and publishes only when the load is over.
+                // The load rebuilds every output itself, under the lock it holds, and it does not wait for the cascade
+                // that is held. The test lets the load get as far as replacing the scenario - which it does under the
+                // lock, before it builds anything - and then releases the cascade. That cascade finishes building, finds
+                // the scenario changed, and publishes nothing, whether the load is over or not.
                 int scenarioRevision = core.ProjectScenarioRevision;
                 ProjectScenarioModel other = CoreViewModelFixture.CreateProjectScenario(5, durationOffset: 40);
                 load = Task.Run(() => core.ProcessProjectScenario(other, Guid.NewGuid(), @"Other"));
@@ -659,7 +658,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public async Task Cascade_Given_AHeldCascade_Then_AnotherBuildOfTheColoursWaitsForIt()
+        public async Task Cascade_Given_AHeldCascade_Then_AnotherBuildOfTheColoursDoesNotWaitForIt()
         {
             CoreViewModelFixture.EnsureReactiveUIInitialized();
             using var main = new MainThreadSequencerScope();
@@ -673,19 +672,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             core.RunCompile();
             graphs.HoldNextCascade();
             Task cascade = Task.Run(pool.Pump.Drain);
-            Task build;
 
             try
             {
                 graphs.WaitUntilHeld();
 
-                // The resource series and the tracking series draw from one sequence of colors. A build that draws while
-                // the cascade is drawing would take colors out of its sequence.
-                build = Task.Run(core.BuildResourceSeriesSet);
-
-                await Task.Delay(300);
-
-                build.IsCompleted.ShouldBeFalse("a build drew colors while a cascade was drawing them");
+                // The resource series and the tracking series draw from a sequence of colors, and each build keeps a
+                // sequence of its own. So a build that draws while the cascade is held has nothing to wait for.
+                await Task.Run(core.BuildResourceSeriesSet).WaitAsync(s_Patience);
             }
             finally
             {
@@ -693,7 +687,6 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
 
             await cascade.WaitAsync(s_Patience);
-            await build.WaitAsync(s_Patience);
         }
 
         [Fact]

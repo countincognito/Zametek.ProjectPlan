@@ -12,12 +12,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ProjectPlanMapper m_Mapper;
 
-        // The colours of resources that have none of their own. The resource series start the sequence
-        // again and the tracking series carry on from where they stopped. The sequence belongs to this
-        // service rather than being shared, so the desktop, which keeps one service for its project, and
-        // each headless job, which gets a service of its own, never shift one another's colours.
-        private readonly PresetColorSequence m_PresetColors = new();
-
         #endregion
 
         #region Ctors
@@ -35,7 +29,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
             IEnumerable<ResourceScheduleModel> resourceSchedules,
             ResourceSettingsModel resourceSettings,
-            PresetColorSequence presetColors)
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(resourceSchedules);
             ArgumentNullException.ThrowIfNull(resourceSettings);
@@ -247,7 +241,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
             bool hasResources,
-            PresetColorSequence presetColors)
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resourceSettings);
@@ -968,26 +962,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ResourceSeriesSetModel BuildResourceSeriesSet(
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            ResourceSettingsModel resourceSettings)
+            ResourceSettingsModel resourceSettings,
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(graphCompilation);
             ArgumentNullException.ThrowIfNull(resourceSettings);
+            ArgumentNullException.ThrowIfNull(presetColors);
 
             IList<ResourceScheduleModel> resourceScheduleModels =
                 [.. m_Mapper.ToResourceScheduleModels(graphCompilation)];
 
-            return CalculateResourceSeriesSet(resourceScheduleModels, resourceSettings, m_PresetColors);
+            return CalculateResourceSeriesSet(resourceScheduleModels, resourceSettings, presetColors);
         }
 
         public TrackingSeriesSetModel BuildTrackingSeriesSet(
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
-            bool hasResources)
+            bool hasResources,
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resourceSettings);
+            ArgumentNullException.ThrowIfNull(presetColors);
 
-            return CalculateTrackingSeriesSet(activities, resourceSettings, hasResources, m_PresetColors);
+            return CalculateTrackingSeriesSet(activities, resourceSettings, hasResources, presetColors);
         }
 
         /// <summary>
@@ -1141,7 +1139,7 @@ namespace Zametek.ViewModel.ProjectPlan
             public List<TrackingPointModel> Effort { get; } = [];
             public List<TrackingPointModel> EffortProjection { get; } = [];
 
-            public ResourceTrackingSeriesModel ToModel(PresetColorSequence presetColors)
+            public ResourceTrackingSeriesModel ToModel(IPresetColorSequence presetColors)
             {
                 return new ResourceTrackingSeriesModel
                 {

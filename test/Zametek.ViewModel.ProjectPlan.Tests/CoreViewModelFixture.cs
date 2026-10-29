@@ -269,9 +269,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// <summary>
         /// A plan of chained activities, each targeting one of two resources in turn, so
         /// that a compilation has both a critical path to calculate and a schedule to
-        /// resolve rather than being trivially satisfiable.
+        /// resolve rather than being trivially satisfiable. With <paramref name="coloredResources"/> false the
+        /// resources have no color of their own, and the series take the preset colors for them.
         /// </summary>
-        public static ProjectScenarioModel CreateProjectScenario(int activityCount, int durationOffset = 0)
+        public static ProjectScenarioModel CreateProjectScenario(int activityCount, int durationOffset = 0, bool coloredResources = true)
         {
             List<ResourceModel> resources =
                 [.. Enumerable.Range(1, 2).Select(id => new ResourceModel
@@ -280,7 +281,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     Name = $@"Resource {id}",
                     DisplayOrder = id,
                     IsExplicitTarget = false,
-                    ColorFormat = ColorHelper.Random(),
+                    ColorFormat = coloredResources ? ColorHelper.Random() : null!,
                 })];
 
             List<DependentActivityModel> activities =

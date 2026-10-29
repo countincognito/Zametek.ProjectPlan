@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -7,6 +8,7 @@ namespace Zametek.ViewModel.ProjectPlan
     // colours keeps a sequence of its own: one shared between builds would let each shift the colours of the
     // other, and two jobs running at once would draw from it in whatever order their threads happened to run.
     public sealed class PresetColorSequence
+        : IPresetColorSequence
     {
         private int m_Drawn;
 
