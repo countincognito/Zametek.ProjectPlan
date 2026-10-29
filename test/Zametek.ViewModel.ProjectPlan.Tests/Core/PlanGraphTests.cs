@@ -1075,15 +1075,83 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Activity(harness, 2).PlanningDependencies.ShouldBe(new HashSet<int> { 1 });
         }
 
+        // The copies of the plan are taken in one pass while the leaf lock is held (VisitLiveActivities), so that the copy is of
+        // one moment. Each activity also takes the leaf lock to copy itself (CloneObject). A call that waits for the lock does
+        // not show whether the pass holds the lock, because without it the call waits at the first activity all the same.
+        //
+        // So these tests change the plan while the call waits. Without the lock of the pass, the call has read the plan (the
+        // activities and the order of the graph) before it waits, and it finishes with that plan, or it fails because the graph
+        // changed under it. With the lock, it reads the plan when the lock is free, and the copy has the change.
+        //
+        // No test sees a lock of the pass that ends before the last copy: nothing can change the plan between the copies of two
+        // activities.
+
+        [Fact]
+        public void CopyActivities_Given_ThePlanChangesWhileTheCallWaitsForTheLeafLock_Then_TheCopyIsOfThePlanAfterTheChange()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2), Model(3)]);
+            harness.Graph.CopyActivities();
+            int[] copiedIds = [];
+
+            AssertWaitsForTheLeafLock(
+                harness,
+                () => copiedIds = [.. harness.Graph.CopyActivities().Copies.Select(x => x.Id)],
+                whileHeld: () => harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(4)]));
+
+            copiedIds.Order().ShouldBe(new[] { 1, 2, 3, 4 });
+        }
+
+        [Fact]
+        public void CopySimulationActivities_Given_ThePlanChangesWhileTheCallWaitsForTheLeafLock_Then_TheCopyIsOfThePlanAfterTheChange()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1), Model(2), Model(3)]);
+            harness.Graph.CopySimulationActivities();
+            int[] activityIds = [];
+            int[] estimateIds = [];
+            int[] nameIds = [];
+
+            AssertWaitsForTheLeafLock(
+                harness,
+                () =>
+                {
+                    var copy = harness.Graph.CopySimulationActivities();
+                    activityIds = [.. copy.Activities.Select(x => x.Id)];
+                    estimateIds = [.. copy.Estimates.Keys];
+                    nameIds = [.. copy.Names.Keys];
+                },
+                whileHeld: () => harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(4)]));
+
+            activityIds.Order().ShouldBe(new[] { 1, 2, 3, 4 });
+            estimateIds.Order().ShouldBe(new[] { 1, 2, 3, 4 });
+            nameIds.Order().ShouldBe(new[] { 1, 2, 3, 4 });
+        }
+
+        // The lock of one activity, apart from the lock of the pass: a copy of the activity is never torn by an edit.
+        [Fact]
+        public void CloneObject_Given_TheLeafLockIsHeldByAnotherThread_Then_WaitsForIt()
+        {
+            using var harness = new Harness();
+            harness.Graph.AddActivities(harness.Owner, s_Monday, [Model(1)]);
+            Activity(harness, 1).CloneObject();
+            object? copy = null;
+
+            AssertWaitsForTheLeafLock(harness, () => copy = Activity(harness, 1).CloneObject());
+
+            copy.ShouldBeAssignableTo<IDependentActivity>();
+        }
+
         // Holds the leaf lock on this thread, calls on another one, and sees that the call does not finish while the lock is
-        // held and does finish when it is free.
+        // held and does finish when it is free. The thread that holds the lock can change the plan meanwhile (whileHeld), and
+        // then the call has to come back to the plan after the change.
         //
         // The call must also wait with the lock of the compiler free. The compiler calls the activity back inside some of its
         // calls (RemoveActivity calls SetAsRemovable, which takes the leaf lock), and an edit holds the leaf lock when it
         // calls the compiler. A call that took the lock of the compiler first and then waited for the leaf lock would wait
         // for the edit, and the edit would wait for it. Any other call of the compiler shows whether its lock is free, and
         // GetNextActivityId needs nothing else.
-        private static void AssertWaitsForTheLeafLock(Harness harness, Action call)
+        private static void AssertWaitsForTheLeafLock(Harness harness, Action call, Action? whileHeld = null)
         {
             Task task;
             Task probe;
@@ -1093,6 +1161,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 task = Task.Run(call);
 
                 Task.WaitAny([task], 300).ShouldBe(-1, "the call must wait while another thread holds the leaf lock");
+
+                whileHeld?.Invoke();
 
                 probe = Task.Run(() => harness.Graph.GetNextActivityId());
 
