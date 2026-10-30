@@ -14,7 +14,7 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         // Prints what a job that ran to its end leaves on stdout - the compiler's output when the plan did not compile,
         // and otherwise its metrics, in the format asked for, with the statistics of its simulation after them if it ran
-        // one - and returns the exit code the run ends with.
+        // one (in a table of their own, or in JSON as one more object) - and returns the exit code the run ends with.
         public static async Task<ExitCode> WriteResultAsync(
             IJobConsole console,
             JobResult result,
@@ -41,11 +41,11 @@ namespace Zametek.ProjectPlan.CommandLine
                         await console.WriteLineAsync(BuildMetricsJson(metrics, result.Simulation));
                         break;
                     case MetricsExport.Table:
-                        await console.DisplayAsync(BuildMetricsTable(metrics, result.Simulation).ToString(), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, x => x.ToString()), hasErrors: false);
                         break;
                     case MetricsExport.Markdown:
                     default:
-                        await console.DisplayAsync(BuildMetricsTable(metrics, result.Simulation).ToMarkDownString(), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, x => x.ToMarkDownString()), hasErrors: false);
                         break;
                 }
             }
@@ -126,14 +126,26 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The metrics as a table, which prints as a table or as Markdown. This and the builders below are internal
-        // rather than private so the test assembly can build the text it expects a run to print. The statistics of a
-        // simulation, if there was one, are the rows after the metrics, as the panel shows them.
-        internal static ConsoleTable BuildMetricsTable(
+        // The tables of a run as one block of text, written as a table or as Markdown: the metrics and, if the job ran a
+        // simulation, its statistics in a table of their own. A table ends its last line, and so one line end more is the
+        // blank line between the two.
+        private static string BuildMetricsText(
             JobMetrics metrics,
-            JobSimulationMetrics? simulation = null)
+            JobSimulationMetrics? simulation,
+            Func<ConsoleTable, string> write)
         {
-            var table = new ConsoleTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
+            string text = write(BuildMetricsTable(metrics));
+
+            return simulation is null
+                ? text
+                : text + NewLineHelper.NewLine + write(BuildSimulationTable(simulation));
+        }
+
+        // The metrics as a table, which prints as a table or as Markdown. This and the builders below are internal
+        // rather than private so the test assembly can build the text it expects a run to print.
+        internal static ConsoleTable BuildMetricsTable(JobMetrics metrics)
+        {
+            ConsoleTable table = CreateTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
 
             table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRisk, $@"{metrics.ActivityRisk:F2}");
             table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection, $@"{metrics.ActivityRiskWithStdDevCorrection:F2}");
@@ -170,17 +182,29 @@ namespace Zametek.ProjectPlan.CommandLine
             table.AddRow(Resource.ProjectPlan.Labels.Label_OtherMargin, $@"{metrics.OtherMarginAbsolute:F2}{metrics.DisplayOtherMargin}");
             table.AddRow(Resource.ProjectPlan.Labels.Label_TotalMargin, $@"{metrics.TotalMarginAbsolute:F2}{metrics.DisplayTotalMargin}");
 
-            if (simulation is not null)
-            {
-                // A row of its own says what the rows after it are. A cell of more than about 40 characters wraps in the table,
-                // which a name with a prefix on each row would make of the longest.
-                table.AddRow(Resource.ProjectPlan.Titles.Title_SimulationMetrics, string.Empty);
+            return table;
+        }
 
-                foreach (SimulationStatisticModel statistic in simulation.Statistics)
-                {
-                    table.AddRow(statistic.Name, statistic.Value);
-                }
+        // The statistics of a simulation as a table of their own, as the panel shows them: the seed and the distribution
+        // first, then each of its other lines.
+        internal static ConsoleTable BuildSimulationTable(JobSimulationMetrics simulation)
+        {
+            ConsoleTable table = CreateTable(Resource.ProjectPlan.Titles.Title_SimulationMetrics, Resource.ProjectPlan.Titles.Title_Values);
+
+            foreach (SimulationStatisticModel statistic in simulation.Statistics)
+            {
+                table.AddRow(statistic.Name, statistic.Value);
             }
+
+            return table;
+        }
+
+        // A table of a name and a value in each row. The table library breaks a cell of more than 40 characters, which is its
+        // default, onto more lines, and Markdown reads a line that continues a cell as a row of its own. A statistic can be
+        // longer (the chance of the target, with the target and its date, has 51 characters), and so the width has no limit.
+        private static ConsoleTable CreateTable(string nameTitle, string valueTitle)
+        {
+            var table = new ConsoleTable(nameTitle, valueTitle) { MaxWidth = int.MaxValue };
 
             table.Configure(x =>
             {

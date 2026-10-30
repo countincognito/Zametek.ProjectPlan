@@ -374,10 +374,11 @@ The option `--run-simulation` runs the simulation after the plan compiles. With 
 [15:12:54 INF] Request d08baee785a62e2df14b7a0a1e1a4cc2 ran on http://localhost:9770: exit code 0
 ```
 
-Then `zpp` prints the metrics of the plan. The statistics of the simulation are at the end of the table:
+Then `zpp` prints the metrics of the plan. The statistics of the simulation are a second table, after the table of the metrics:
 
 ```text
-| Simulation Metrics                                  |                  |
+| Simulation Metrics                                  | Values           |
+|-----------------------------------------------------|------------------|
 | Seed                                                | 1                |
 | Distribution                                        | Beta-PERT        |
 | Iterations (valid)                                  | 10000            |
@@ -395,8 +396,7 @@ Then `zpp` prints the metrics of the plan. The statistics of the simulation are 
 | P90                                                 | 100 (24/05/2027) |
 | P95                                                 | 102 (26/05/2027) |
 | P99                                                 | 105 (31/05/2027) |
-| Chance of finishing by the target (96               | 70.0%            |
-| (18/05/2027))                                       |                  |
+| Chance of finishing by the target (96 (18/05/2027)) | 70.0%            |
 ```
 
 A time is a number of working days from the start of the project, with its date in parentheses. The planned finish is the finish when each activity takes its expected duration. The mean of the simulation is later. A delay on one path can make the project late, but an early finish on one path does not make the project early.

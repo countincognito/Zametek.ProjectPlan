@@ -167,7 +167,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option(c_RunSimulationLongName, HelpText = "Run a Monte Carlo simulation of the schedule once the plan has compiled, and print its statistics after the metrics. Each iteration draws the duration of each activity from its estimates, schedules the resources again, and finds the finish. The settings are the ones that the input file holds (the iterations, the distribution, its shape value and the target), and the seed is the one that it has saved, also when it is to draw a new seed each time, so that a run repeats. The result is saved with --" + c_OutputLongName + ". Without this option, the statistics of a result that the input file holds are printed")]
+        [Option(c_RunSimulationLongName, HelpText = "Run a Monte Carlo simulation of the schedule once the plan has compiled, and print its statistics after the metrics, in a table of their own. Each iteration draws the duration of each activity from its estimates, schedules the resources again, and finds the finish. The settings are the ones that the input file holds (the iterations, the distribution, its shape value and the target), and the seed is the one that it has saved, also when it is to draw a new seed each time, so that a run repeats. The result is saved with --" + c_OutputLongName + ". Without this option, the statistics of a result that the input file holds are printed")]
         public bool RunSimulation { get; set; } = default;
 
 

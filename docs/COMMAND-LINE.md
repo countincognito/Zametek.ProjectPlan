@@ -102,11 +102,13 @@ An activity can have three estimates of its duration: an optimistic, a most like
 
 The settings of the simulation are in the project. They are the iterations, the distribution, its shape value, the seed, whether to draw a new seed each time, and the target finish. You set them in the dock "Simulation" of the desktop application. The application saves them with the project, together with the result of the last run. `zpp` does not have options for them. It uses what the input file holds. A file that was saved before the simulation has the settings of a new scenario: 5000 iterations, the distribution `BetaPert`, and the seed 1.
 
-The option `--run-simulation` runs the simulation after the plan compiles. `zpp` prints the statistics of the finish after the metrics:
+The option `--run-simulation` runs the simulation after the plan compiles. `zpp` prints the statistics of the finish after the metrics, in a table of their own:
 
 ```
 zpp -i plan.zpp --run-simulation
 ```
+
+The statistics are a second table, with the headings "Simulation Metrics" and "Values". A blank line separates it from the table of the metrics. The table of the metrics is the same as for a run with no simulation. A long statistic stays in one row. Both `--metrics-format markdown` (the default) and `--metrics-format table` print the two tables.
 
 The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution (and the shape value, for the modified beta-PERT), the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date. The seed, the distribution and the shape value are those of the run that made the result. A person can change the settings of the project after the run, and the statistics of a saved result do not follow them.
 

@@ -117,40 +117,83 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public async Task WriteResultAsync_Given_ASimulation_Then_TheStatisticsFollowTheMetricsInEachFormat()
+        public async Task WriteResultAsync_Given_ASimulationAndJsonMetrics_Then_WritesTheJsonWithItsStatistics()
         {
-            var result = new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation };
+            var console = new RecordingJobConsole();
 
-            foreach (MetricsExport format in Enum.GetValues<MetricsExport>())
-            {
-                var console = new RecordingJobConsole();
+            ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(
+                console,
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation },
+                MetricsExport.Json);
 
-                ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(console, result, format);
-
-                exitCode.ShouldBe(ExitCode.Success);
-                string expected = format switch
-                {
-                    MetricsExport.Json => JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation),
-                    MetricsExport.Table => JobConsoleHelper.BuildMetricsTable(s_Metrics, s_Simulation).ToString(),
-                    _ => JobConsoleHelper.BuildMetricsTable(s_Metrics, s_Simulation).ToMarkDownString(),
-                };
-                console.Calls.ShouldHaveSingleItem().Text.ShouldBe(expected, format.ToString());
-            }
+            exitCode.ShouldBe(ExitCode.Success);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.Line(JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation)));
         }
 
-        [Fact]
-        public void BuildMetricsTable_Given_ASimulation_Then_ItsStatisticsAreTheRowsAfterTheMetrics()
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_ASimulation_Then_ItsStatisticsAreATableAfterTheTableOfTheMetrics(MetricsExport format)
         {
-            string[] without = JobConsoleHelper.BuildMetricsTable(s_Metrics).ToMarkDownString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            string[] with = JobConsoleHelper.BuildMetricsTable(s_Metrics, s_Simulation).ToMarkDownString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics }, format);
+            string with = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation }, format);
 
-            // A row that says what the rest are, and then each statistic as the panel shows it.
-            with.Length.ShouldBe(without.Length + 4);
-            with[^4].ShouldContain(Resource.ProjectPlan.Titles.Title_SimulationMetrics);
-            with[^3].ShouldContain(@"Seed");
-            with[^3].ShouldContain(@"18446744073709551615");
-            with[^2].ShouldContain(@"Mean");
-            with[^1].ShouldContain(@"P80");
+            // The table of the metrics is the table of a run without a simulation, and one blank line sets the next table apart.
+            with.ShouldStartWith(without + NewLineHelper.NewLine);
+            string statistics = with[(without.Length + NewLineHelper.NewLine.Length)..];
+            statistics.ShouldNotStartWith(NewLineHelper.NewLine);
+
+            // The statistics are the rows of that table, as the panel shows them, under a heading of their own.
+            Rows(statistics).ShouldBe(
+            [
+                $@"{Resource.ProjectPlan.Titles.Title_SimulationMetrics} | {Resource.ProjectPlan.Titles.Title_Values}",
+                @"Seed | 18446744073709551615",
+                @"Mean | 26.4",
+                @"P80 | 29",
+            ]);
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_NoSimulation_Then_TheMetricsAreTheOnlyTable(MetricsExport format)
+        {
+            string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics }, format);
+
+            Rows(text).First().ShouldBe($@"{Resource.ProjectPlan.Titles.Title_Metrics} | {Resource.ProjectPlan.Titles.Title_Values}");
+            Rows(text).ShouldNotContain(x => x.StartsWith(Resource.ProjectPlan.Titles.Title_SimulationMetrics, StringComparison.Ordinal));
+
+            // Nothing follows the table: no other table, and no count of its rows, which the table library adds by default.
+            text.ShouldNotContain(NewLineHelper.NewLine + NewLineHelper.NewLine);
+            text.ShouldNotContain(@"Count");
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_AStatisticOfMoreThanFortyCharacters_Then_ItStaysInOneRow(MetricsExport format)
+        {
+            // The longest statistic of the panel: the chance of the target, with the target and its date. The table library
+            // breaks a cell of more than 40 characters, and then Markdown reads the rest as a row of its own.
+            const string name = @"Chance of finishing by the target (96 (18/05/2027))";
+            JobSimulationMetrics simulation = s_Simulation with { Statistics = [new SimulationStatisticModel { Name = name, Value = @"70.0%" }] };
+
+            string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = simulation }, format);
+
+            Rows(text).ShouldContain($@"{name} | 70.0%");
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_AMetricOfMoreThanFortyCharacters_Then_ItStaysInOneRow(MetricsExport format)
+        {
+            string finish = string.Join(' ', Enumerable.Repeat(@"Friday", 10));
+            JobMetrics metrics = s_Metrics with { ProjectFinish = finish };
+
+            string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = metrics }, format);
+
+            Rows(text).ShouldContain($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} | {finish}");
         }
 
         [Fact]
@@ -338,6 +381,34 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             JobConsoleHelper.BuildScenarioSelectionMessage(ex).ShouldBe(
                 string.Format(Resource.ProjectPlan.Messages.Message_ScenarioHasNoScenarioData, @"Beta"));
+        }
+
+        // The one block that a run of the job displays, with the line ends that the consoles write.
+        private static async Task<string> DisplayedAsync(JobResult result, MetricsExport format)
+        {
+            var console = new RecordingJobConsole();
+
+            ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(console, result, format);
+
+            exitCode.ShouldBe(ExitCode.Success);
+            RecordingJobConsole.Call call = console.Calls.ShouldHaveSingleItem();
+            call.ShouldBe(RecordingJobConsole.Display(call.Text, hasErrors: false));
+            return NewLineHelper.NormalizeNewLines(call.Text);
+        }
+
+        // The rows of the tables in a text, in Markdown or in a box, each row as its cells with ' | ' between them. A line
+        // with no cell is not a row: the rules of a box, and the line under the heading of a Markdown table.
+        private static List<string> Rows(string text)
+        {
+            return
+            [
+                .. text
+                    .Split(NewLineHelper.LineFeed, StringSplitOptions.RemoveEmptyEntries)
+                    .Where(x => x.Contains('|'))
+                    .Select(x => x.Trim().Trim('|').Split('|').Select(cell => cell.Trim()).ToArray())
+                    .Where(x => !x.All(cell => cell.Length > 0 && cell.All(character => character == '-')))
+                    .Select(x => string.Join(@" | ", x)),
+            ];
         }
     }
 }
