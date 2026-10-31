@@ -332,6 +332,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             beta.ShouldContain(Resource.ProjectPlan.Symbols.Symbol_Current);
         }
 
+        [Fact]
+        public async Task WriteScenariosAsync_Given_APathOfMoreThanFortyCharacters_Then_ItStaysInOneRow()
+        {
+            // The table library breaks a cell of more than 40 characters, and then Markdown reads the rest as a row of its own.
+            const string path = @"A folder with a long name/Another folder/A scenario with a longer name";
+            var id = Guid.NewGuid();
+            var console = new RecordingJobConsole();
+
+            await JobConsoleHelper.WriteScenariosAsync(console, [new(path, id, IsTracked: true, IsCurrent: true)]);
+
+            Rows(NewLineHelper.NormalizeNewLines(console.Calls.ShouldHaveSingleItem().Text)).ShouldBe(
+            [
+                $@"{Resource.ProjectPlan.Titles.Title_Scenario} | {Resource.ProjectPlan.Titles.Title_Id} | {Resource.ProjectPlan.Titles.Title_Tracked} | {Resource.ProjectPlan.Titles.Title_Current}",
+                $@"{path} | {id} | {Resource.ProjectPlan.Labels.Label_Yes} | {Resource.ProjectPlan.Symbols.Symbol_Current}",
+            ]);
+        }
+
         [Theory]
         [InlineData(JobMessageKind.Error)]
         [InlineData(JobMessageKind.Warning)]

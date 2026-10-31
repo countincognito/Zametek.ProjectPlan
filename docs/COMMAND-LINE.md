@@ -38,7 +38,7 @@ The option `--list-scenarios` prints a table of the scenarios of the plan. This 
 | Beta     | 17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4 |         |         |
 ```
 
-A scenario in a folder, or under another scenario, has a name that shows its location: `Folder/Scenario`.
+A scenario in a folder, or under another scenario, has a name that shows its location: `Folder/Scenario`. A long name stays in one row.
 
 The column **Tracked** shows that the scenario is on the scenario chart. The chart plots the metrics of the scenario as a point, against the metrics of the axes of the chart. The option `--scenario-chart-directory` writes the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any other output holds. It is not the progress tracking of activities.
 
