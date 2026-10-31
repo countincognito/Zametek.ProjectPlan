@@ -62,6 +62,37 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         // On another thread, so that a call that waits for a lock fails the test instead of hanging it.
         private static Task RunAway(Action action) => Task.Run(action).WaitAsync(s_Patience);
 
+        // A core as the application has it: started, with a plan, and with automatic compilation on.
+        private static GatedCoreViewModel CreateStartedWithAutoCompile(MainThreadSequencerScope main, TaskpoolSequencerScope pool)
+        {
+            (GatedCoreViewModel core, GatedGraphCompilationService _) = CoreViewModelFixture.CreateGated();
+            core.StartSubscriptions();
+            core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(c_ActivityCount), Guid.NewGuid(), @"Test");
+            Drain(main, pool);
+            core.AutoCompile = true;
+            Drain(main, pool);
+            return core;
+        }
+
+        // The next edit, of a setting or in the grid, has to reach the compiler.
+        private static void NextEditShouldBeCompiled(GatedCoreViewModel core, MainThreadSequencerScope main, TaskpoolSequencerScope pool, bool inTheGrid)
+        {
+            IGraphCompilation<int, int, int, IDependentActivity> before = core.GraphCompilation;
+
+            if (inTheGrid)
+            {
+                CommitEdit(core.RawActivities.First(), 4);
+            }
+            else
+            {
+                core.ProjectStart = core.ProjectStart.AddDays(1);
+            }
+
+            Drain(main, pool);
+
+            core.GraphCompilation.ShouldNotBeSameAs(before, "the edit was never compiled");
+        }
+
         #region Compilation
 
         [Fact]
@@ -492,6 +523,85 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Drain(main, pool);
 
             core.CompilationsStarted.ShouldBe(before, "an empty scenario was compiled");
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Edit_Given_ALoadBeforeARequestIsDelivered_Then_TheNextEditIsCompiled(bool inTheGrid)
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using GatedCoreViewModel core = CreateStartedWithAutoCompile(main, pool);
+
+            // An edit asks for a compilation, and another scenario opens before the request is delivered.
+            core.ProjectStart = core.ProjectStart.AddDays(1);
+            core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(5, durationOffset: 40), Guid.NewGuid(), @"Other");
+            Drain(main, pool);
+
+            NextEditShouldBeCompiled(core, main, pool, inTheGrid);
+        }
+
+        [Fact]
+        public void Edit_Given_AResetBeforeARequestIsDelivered_Then_TheNextEditIsCompiled()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using GatedCoreViewModel core = CreateStartedWithAutoCompile(main, pool);
+
+            core.ProjectStart = core.ProjectStart.AddDays(1);
+            core.ResetProjectScenario();
+            Drain(main, pool);
+
+            NextEditShouldBeCompiled(core, main, pool, inTheGrid: false);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task Edit_Given_ALoadDuringACompilation_Then_TheNextEditIsCompiled(bool inTheGrid)
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using GatedCoreViewModel core = CreateStartedWithAutoCompile(main, pool);
+
+            // The compilation that an edit asks for is under way when another scenario opens. The load does not wait for it,
+            // and it publishes nothing.
+            core.HoldNextCompilation();
+            core.ProjectStart = core.ProjectStart.AddDays(1);
+            Task delivery = Task.Run(pool.Pump.Drain);
+            core.WaitUntilHeld();
+
+            try
+            {
+                ProjectScenarioModel other = CoreViewModelFixture.CreateProjectScenario(5, durationOffset: 40);
+                await RunAway(() => core.ProcessProjectScenario(other, Guid.NewGuid(), @"Other"));
+            }
+            finally
+            {
+                core.ReleaseHeldCompilation();
+            }
+
+            await delivery.WaitAsync(s_Patience);
+            Drain(main, pool);
+
+            NextEditShouldBeCompiled(core, main, pool, inTheGrid);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Edit_Given_NothingOverlapping_Then_ItIsCompiled(bool inTheGrid)
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using GatedCoreViewModel core = CreateStartedWithAutoCompile(main, pool);
+
+            NextEditShouldBeCompiled(core, main, pool, inTheGrid);
         }
 
         [Fact]

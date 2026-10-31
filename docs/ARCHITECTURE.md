@@ -36,9 +36,9 @@ These two consequences always apply:
 This is the steady-state flow for a **single edit**. The user changes the duration of an activity, adds a dependency, or edits a resource setting:
 
 1. The edit marks activities as uncompiled, or it raises a settings property.
-2. The uncompiled-activities watcher (`m_AreActivitiesUncompiledSub`) or a settings applier arms the trigger. First, it raises `IsReadyToReviseTrackers`, and the tracker revisions run *inline* during that raise. Then it sets `IsReadyToCompile = ReadyToCompile.Yes`. Each arm site sets `IsReadyToCompile` **last** on purpose. It is an enum and not a bool, because repeated `true` assignments do not raise the property again (ReactiveUI issue #3846).
-3. `m_CompileOnSettingsUpdateSub` observes `IsReadyToCompile` and moves to the taskpool. Arming happens on the UI thread, but **the compilation must never run there**. The subscription calls `DrainAutoCompiles()`. This method compiles only if `AutoCompile` is enabled and the plan changed since the newest snapshot (§7 rule 14).
-4. `RunCompile()` does three steps between `BeginBusy` and `EndBusy`: snapshot, compile and publish. It holds `m_Lock` for the snapshot and for the publication, and not for the compile. The publication assigns the result to `GraphCompilation`, sets `IsProjectScenarioUpdated`, and disarms both triggers. It sets `HasStaleOutputs` only if an edit arrived during the compile.
+2. The uncompiled-activities watcher (`m_AreActivitiesUncompiledSub`) or a settings applier arms the trigger. First, it raises `IsReadyToReviseTrackers`, and the tracker revisions run *inline* during that raise. Then it calls `RequestCompilation()`, which increments the revision counter `CompilationRequestRevision` (§9). Each arm site makes this call **last** on purpose.
+3. `m_CompileOnSettingsUpdateSub` observes `CompilationRequestRevision` and moves to the taskpool. Arming happens on the UI thread, but **the compilation must never run there**. The subscription calls `DrainAutoCompiles()`. This method compiles only if `AutoCompile` is enabled and the plan changed since the newest snapshot (§7 rule 14).
+4. `RunCompile()` does three steps between `BeginBusy` and `EndBusy`: snapshot, compile and publish. It holds `m_Lock` for the snapshot and for the publication, and not for the compile. The publication assigns the result to `GraphCompilation`, sets `IsProjectScenarioUpdated`, and sets `IsReadyToReviseTrackers` back to `No`. It sets `HasStaleOutputs` only if an edit arrived during the compile.
 5. The emission of the change of `GraphCompilation` reaches `m_BuildCascadeSub`. On the taskpool, this subscription calls `RunBuildCascade()`. This method copies what the outputs read, builds the seven outputs in dependency order, and publishes them together. The order is `ArrowGraph` → `VertexGraph` → `ResourceSeriesSet` → `TrackingSeriesSet` → `NetworkMetrics` → `RiskMetrics` → the financial metrics. Only the copy and the publication hold `m_Lock`. Then the method increments `CompilationOutputRevision`, the settled signal (§9). It publishes nothing if a newer compilation has published during the build.
 6. The chart manager view models that use `CompilationOutputRevision` as their key rebuild their plots one time, on the taskpool.
 
@@ -107,7 +107,7 @@ This table compares the two modes:
 flowchart TB
     subgraph regular ["Regular edit - the pipeline drives"]
         A["User edit"] --> B["Emission: IsCompiled / settings change"]
-        B --> C["Arm IsReadyToCompile<br/>(last thing set, UI thread)"]
+        B --> C["RequestCompilation<br/>(last step, UI thread)"]
         C --> D["CompileOnSettingsUpdateSub<br/>(taskpool)"]
         D --> E["DrainAutoCompiles → RunCompile<br/>(m_Lock for the snapshot and the publication)"]
         E --> F["GraphCompilation emission"]
@@ -205,7 +205,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     This rule follows from the incident. Anything that changes the underlying `IDependentActivity` of an activity must run synchronously on the thread that decides the change. This includes target sets, dependencies and scalars. `m_Lock` orders such a change against compilations, or the application arms the compilation only afterwards. It must never use an `ObserveOn` deferral.
 
-    Thus, settings changes no longer use subscriptions of single activities. The setters of `ResourceSettings` and `WorkStreamSettings` push the settings into every activity inline (`SetResourceSettings` and `SetWorkStreamSettings`). They do this under `m_Lock`, *before* `IsReadyToCompile` arms the compilation. Each activity fills itself from the current settings in its constructor. This includes the write-back that removes target ids that refer to resources that no longer exist.
+    Thus, settings changes no longer use subscriptions of single activities. The setters of `ResourceSettings` and `WorkStreamSettings` push the settings into every activity inline (`SetResourceSettings` and `SetWorkStreamSettings`). They do this under `m_Lock`, *before* `RequestCompilation()` asks for the compilation. Each activity fills itself from the current settings in its constructor. This includes the write-back that removes target ids that refer to resources that no longer exist.
 
     The date-derived scalars were the last subscriptions of single activities. They taught the second half of the rule: **`Scheduler.CurrentThread` is also a deferral.** `MinimumEarliestStartTime` and `MaximumLatestFinishTime` count from the project start along the working calendar. Thus, the project start, the holiday settings and the non-working day mode each make them invalid. All three came through `ObserveOn(Scheduler.CurrentThread)`.
 
@@ -299,7 +299,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     Second, the lock stopped a load from changing the scenario while a compilation ran. Third, it kept two compilations from publishing in the wrong order. These four checks replace the lock for all three jobs:
 
-    - **The input revision.** [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) keeps the revision counter `m_InputRevision` (§9). It counts each change of what a compilation reads. `NoteInputsChanged()` adds one. The commit of an edit calls it *first*, before anything announces the edit. Each arm of `IsReadyToCompile`, each call of `RunAutoCompile`, and each change of the structure of the plan call it too. A snapshot reads the revision before it copies the activities. The plan is stale, and due another compilation, when the revision differs from that of the snapshot.
+    - **The input revision.** [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) keeps the revision counter `m_InputRevision` (§9). It counts each change of what a compilation reads. `NoteInputsChanged()` adds one. The commit of an edit calls it *first*, before anything announces the edit. Each call of `RequestCompilation()`, each call of `RunAutoCompile`, and each change of the structure of the plan call it too. A snapshot reads the revision before it copies the activities. The plan is stale, and due another compilation, when the revision differs from that of the snapshot.
     - **The ticket.** `CompilationScheduler` gives each snapshot a number. A compilation publishes only if no later snapshot published before it. Thus, an older result never replaces a newer result.
     - **The scenario.** A load or a reset changes `ProjectScenarioRevision`. A compilation or a cascade that started before the change publishes nothing. A result also goes only to the live activity that its copy came from. An activity that took the id of a removed activity gets nothing.
     - **The compilation.** The cascade publishes only if `GraphCompilation` is still the compilation that it started from. A newer compilation has a cascade of its own, and the old outputs show a state that is out of date. `m_CascadedCompilation` tells the queued cascades that the first of them already built the newest compilation.
@@ -327,7 +327,7 @@ Quick automatic compilations end well inside the delay. Thus, an ordinary edit n
 
 ## 9. Revision counters and the settled signal
 
-A **revision counter** is an `int` that counts how many times an event occurred. A flag records a state, and a revision counter records an event. The application has four revision counters, and they all have the same form. This section gives the form, the rules for the consumers, and the four counters. It also lists the numbers and flags that look similar but are different. One of the four counters is the settled signal, and [it has its own part](#the-settled-signal) at the end.
+A **revision counter** is an `int` that counts how many times an event occurred. A flag records a state, and a revision counter records an event. The application has several revision counters, and they all have the same form. This section gives the form, the rules for the consumers, and the counters. It also lists the numbers and flags that look similar but are different. One of the counters is the settled signal, and [it has its own part](#the-settled-signal) at the end.
 
 ### Why a counter and not a flag
 
@@ -335,7 +335,9 @@ A `WhenAnyValue` chain drops a value that is the same as its last value. Thus, a
 
 A consumer can clear the flag, but this has two problems. The consumer writes to one of its own inputs, and the write goes back into its own chain. An arm that arrives before the clear also raises no event, because the flag is still `Yes`.
 
-A counter has neither problem. Each event gives a new value, and no consumer writes to the counter.
+A flag can also stay in the wrong state. `IsReadyToCompile` used to wake the compilation, and it stayed `Yes` if another scenario opened during the compilation. The next edits then raised no event, and they did not compile.
+
+A counter has none of these problems. Each event gives a new value, no consumer writes to the counter, and the counter has no state that can stay wrong.
 
 ### The form
 
@@ -383,6 +385,7 @@ These rules apply to each consumer:
 | `ProjectScenarioRevision` | [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) | Each load and reset of a scenario | `ResetProjectScenario()` | A snapshot and a cascade keep a copy, and they publish nothing if the value changes (§7 rule 14). A run of the simulation keeps a copy, and it stops if the value changes (§7 rule 13). |
 | `TitleRevision` | [`ProjectScenarioManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/ProjectScenarioManagement/ProjectScenarioManagerViewModel.cs) | Each arm of the title | The setter of `IsReadyToReviseTitle` | Two triggers: the title of the window in `MainViewModel`, and the name of the scenario in `SimulationManagerViewModel`. |
 | `m_InputRevision` | [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) | Each change of what a compilation reads | `NoteInputsChanged()` | A snapshot keeps a copy. If the value changes, the results are stale and the plan is due another compilation (§7 rule 14). |
+| `CompilationRequestRevision` | `CoreViewModel` | Each request for a compilation, except during a bulk update | `RequestCompilation()` | A trigger: `m_CompileOnSettingsUpdateSub`. The handler reads `m_InputRevision`, which says if the plan is due a compilation. |
 | `CompilationOutputRevision` | `CoreViewModel` | Each cascade that publishes | `RunBuildCascade()` | A trigger: the Gantt chart manager. A copy: the simulation panel marks a result as stale if the value changes (§7 rule 13). |
 
 The other names that end with `Revision` hold copies, and nothing increments them. They are `InputRevision` and `ScenarioRevision` of `CompilationSnapshot`, `ScenarioRevision` of `CascadeInputs`, `CompilationOutputRevision` of `SimulationInputModel` and `SimulationOutcome`, `m_SnapshotRevision` of `CompilationScheduler`, and `ResultRevision` and `m_RunScenarioRevision` of `SimulationChartManagerViewModel`.
@@ -397,7 +400,7 @@ These numbers and flags look similar. Their form is different on purpose, and th
 | `m_FramingToken` of `InteractiveGraphView` | A token: the latest request wins | Nothing watches it, and a callback on the UI thread compares it with its copy. A lost increment does no harm, and thus a plain `++` is enough. |
 | `NestingCounter` and `m_RevisingCount` | A level | They go up and down, and their value is a state: zero or more than zero. |
 | `m_Drawn` of `PresetColorSequence` | A count that selects a color | The value itself is important. The count changes to a `uint`, and thus the index stays in range after a rollover. |
-| `IsReadyToCompile` and `IsReadyToReviseTrackers` | A flag for a state | They say that work waits. A publication sets them back to `No`. |
+| `IsReadyToReviseTrackers` | A flag for a state | It says that work waits. A publication sets it back to `No`. |
 | `IsReadyToReviseTrackedMetrics`, `IsReadyToReviseGanttChartShowConnections` and `IsReadyToReviseEarnedValueShowResources` | A flag for a request | A consumer acts on `Yes`, and it then sets the flag back to `No`. |
 
 `IsReadyToReviseTitle` is the flag that arms the title. Its setter increments `TitleRevision`, and the consumers follow the counter and not the flag.
@@ -415,7 +418,7 @@ These numbers and flags look similar. Their form is different on purpose, and th
 
 No test can make two billion increments. Thus, a test sets the private field near the end of the range by reflection, and it then does the real action. [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs) does this for each counter. It checks that the value rolls over, that one event gives one raise, and that the getter has the new value when the raise occurs. It also checks that a getter does not wait for the lock of its owner. A further case takes `CompilationOutputRevision` past 1,000,000, where it used to wrap.
 
-The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`.
+The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`.
 
 ### The settled signal
 
@@ -439,7 +442,7 @@ A display-only surface must not use the technique of the input surfaces. The rea
 
 A renumbering rewrites all ids at one time. Additions and deletions of resources make rows with no snapshot entry, or entries with no row. A join of the live order with the snapshot values breaks in each stale window. It also needs bookkeeping of the last known order to prevent temporary scrambles.
 
-The cascade route avoids all of this. A reorder or a renumbering uses `UpdateResourceSettingsToCore()`. The setter of `ResourceSettings` arms `IsReadyToCompile`, and the automatic compilation runs. The rebuild then delivers the ids, the values and the order together, atomically. `HasStaleOutputs` marks the gap in between.
+The cascade route avoids all of this. A reorder or a renumbering uses `UpdateResourceSettingsToCore()`. The setter of `ResourceSettings` calls `RequestCompilation()`, and the automatic compilation runs. The rebuild then delivers the ids, the values and the order together, atomically. `HasStaleOutputs` marks the gap in between.
 
 A pure drag-reorder does cause a full recompilation, because the comparison of the settings record sees the change of `DisplayOrder`. This is the existing cost, and the team accepts it to keep everything downstream consistent.
 

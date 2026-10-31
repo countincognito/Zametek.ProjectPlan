@@ -51,7 +51,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   The point fixes are already in place:
 
   - The sweep for lock-free getters (ARCHITECTURE §7 rule 9).
-  - The move of the core callbacks of the display settings (`SetIsProjectScenarioUpdated` and `IsReadyToCompile`) out of all the lock blocks of the setters.
+  - The move of the core callbacks of the display settings (`SetIsProjectScenarioUpdated` and `RequestCompilation`) out of all the lock blocks of the setters.
   - Ref-counted guards for revision in the Gantt and earned-value selectors. A shared bool let the `finally` of one reviser clear the guard of the other reviser during the revision, across threads.
 
   The REMAINING sites that call out under a lock are not live bugs, because every remaining edge is one-way with the point fixes in place. A fix for them is hardening. These sites form the deferred surgery. The list that follows has the items in descending order of value:

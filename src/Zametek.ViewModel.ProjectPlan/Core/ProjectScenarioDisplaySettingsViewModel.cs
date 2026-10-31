@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly Lock m_Lock;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private Action<bool, bool>? m_SetIsProjectScenarioUpdated;
-        private Action? m_IsReadyToCompile;
+        private Action? m_RequestCompilation;
         private Action? m_RefreshActivityDateTimes;
 
         #endregion
@@ -22,17 +22,17 @@ namespace Zametek.ViewModel.ProjectPlan
         public ProjectScenarioDisplaySettingsViewModel(
             IDateTimeCalculator dateTimeCalculator,
             Action<bool, bool> setIsProjectScenarioUpdated,
-            Action isReadyToCompile,
+            Action requestCompilation,
             Action refreshActivityDateTimes)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(setIsProjectScenarioUpdated);
-            ArgumentNullException.ThrowIfNull(isReadyToCompile);
+            ArgumentNullException.ThrowIfNull(requestCompilation);
             ArgumentNullException.ThrowIfNull(refreshActivityDateTimes);
             m_Lock = new();
             m_DateTimeCalculator = dateTimeCalculator;
             m_SetIsProjectScenarioUpdated = setIsProjectScenarioUpdated;
-            m_IsReadyToCompile = isReadyToCompile;
+            m_RequestCompilation = requestCompilation;
             m_RefreshActivityDateTimes = refreshActivityDateTimes;
             m_GanttChartShowConnections = [];
             m_EarnedValueShowResources = [];
@@ -53,9 +53,9 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SetIsProjectScenarioUpdated?.Invoke(isProjectScenarioUpdated, trackStaleOutputs);
         }
 
-        private void IsReadyToCompile()
+        private void RequestCompilation()
         {
-            m_IsReadyToCompile?.Invoke();
+            m_RequestCompilation?.Invoke();
         }
 
         private void RefreshActivityDateTimes()
@@ -127,7 +127,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 RefreshActivityDateTimes();
 
                 SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: true);
-                IsReadyToCompile();
+                RequestCompilation();
             }
         }
 
@@ -735,7 +735,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 m_SetIsProjectScenarioUpdated = null;
-                m_IsReadyToCompile = null;
+                m_RequestCompilation = null;
                 m_RefreshActivityDateTimes = null;
             }
 

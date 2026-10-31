@@ -11,8 +11,6 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsBulkUpdating { get; }
 
-        ReadyToCompile IsReadyToCompile { get; }
-
         bool IsProjectScenarioUpdated { get; set; }
 
         bool HasStaleOutputs { get; set; }

@@ -87,7 +87,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DisplaySettingsViewModel = new ProjectScenarioDisplaySettingsViewModel(
                 m_DateTimeCalculator,
                 SetIsProjectScenarioUpdated,
-                () => IsReadyToCompile = ReadyToCompile.Yes,
+                RequestCompilation,
                 RefreshActivityDateTimes);
             m_Mapper = mapper;
             m_OutputService = new CompilationOutputService(
@@ -96,7 +96,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 metricCalculationService);
             m_DataGridScrollManager = dataGridScrollManager;
 
-            m_IsReadyToCompile = ReadyToCompile.No;
             m_HasStaleOutputs = false;
             DateTimeOffset today = m_DateTimeCalculator.GetLocalToday();
             m_ProjectStart = today;
@@ -491,6 +490,32 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(Metrics));
         }
 
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_CompilationRequestRevision;
+        public int CompilationRequestRevision => Volatile.Read(ref m_CompilationRequestRevision);
+
+        /// <summary>
+        /// Asks for a compilation. This should always be the last thing an edit does, because the request can start a
+        /// compilation on another thread at once.
+        /// </summary>
+        /// <remarks>
+        /// Every request is a change of what a compilation reads, also during a bulk update. A compilation that is running
+        /// counts it, and the plan is compiled again. A bulk update wakes nothing, because it compiles by itself.
+        /// </remarks>
+        private void RequestCompilation()
+        {
+            NoteInputsChanged();
+
+            lock (m_Lock)
+            {
+                if (m_TrackIsProjectScenarioUpdated)
+                {
+                    Interlocked.Increment(ref m_CompilationRequestRevision);
+                    this.RaisePropertyChanged(nameof(CompilationRequestRevision));
+                }
+            }
+        }
+
         /// <summary>
         /// Applies the state that follows a compilation the watchdog cut short. The
         /// last good compilation output is left alone and stays on display, but it no
@@ -511,7 +536,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 ex.Timeout.TotalMilliseconds);
 
             HasStaleOutputs = true;
-            IsReadyToCompile = ReadyToCompile.No;
             AutoCompile = false;
         }
 
@@ -528,33 +552,6 @@ namespace Zametek.ViewModel.ProjectPlan
         // chain observers (WhenAnyValue) on whichever thread raises the change
         // notification, so it must never contend for m_Lock.
         public bool IsBulkUpdating => m_BulkUpdateNesting.IsActive;
-
-        // We need to use an enum because raised changes on bools aren't always captured.
-        // https://github.com/reactiveui/ReactiveUI/issues/3846
-        private ReadyToCompile m_IsReadyToCompile;
-
-        // This should always be the last thing altered in order to trigger a compile.
-        public ReadyToCompile IsReadyToCompile
-        {
-            get => m_IsReadyToCompile;
-            private set
-            {
-                // Every arm is a change of what a compilation reads, including the one that finds the property
-                // armed already and so raises nothing. A compilation that is running counts it, and compiles again.
-                if (value == ReadyToCompile.Yes)
-                {
-                    NoteInputsChanged();
-                }
-
-                lock (m_Lock)
-                {
-                    if (m_TrackIsProjectScenarioUpdated)
-                    {
-                        this.RaiseAndSetIfChanged(ref m_IsReadyToCompile, value);
-                    }
-                }
-            }
-        }
 
         private bool m_IsProjectScenarioUpdated;
         public bool IsProjectScenarioUpdated
@@ -627,7 +624,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // built with the current start.
                     m_PlanGraph.SetProjectStart(m_ProjectStart);
 
-                    IsReadyToCompile = ReadyToCompile.Yes;
+                    RequestCompilation();
                 }
             }
         }
@@ -722,7 +719,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (m_AutoCompile)
                     {
                         // Switching automatic compilation on compiles nothing by itself: the next edit does.
-                        IsReadyToCompile = ReadyToCompile.No;
                         m_Scheduler.AbsorbPendingInputs();
                     }
                 }
@@ -774,7 +770,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_GraphSettings = value;
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
-                    IsReadyToCompile = ReadyToCompile.Yes;
+                    RequestCompilation();
                 }
             }
         }
@@ -803,7 +799,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
-                    IsReadyToCompile = ReadyToCompile.Yes;
+                    RequestCompilation();
                 }
             }
         }
@@ -823,7 +819,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
-                    IsReadyToCompile = ReadyToCompile.Yes;
+                    RequestCompilation();
                 }
             }
         }
@@ -857,7 +853,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
-                    IsReadyToCompile = ReadyToCompile.Yes;
+                    RequestCompilation();
                 }
             }
         }
@@ -1258,7 +1254,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceSeriesSet = new();
                     TrackingSeriesSet = new();
 
-                    IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
 
                     // The settings that were cleared above armed the compilation, and an empty scenario has nothing
@@ -1655,7 +1650,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (AutoCompile)
                     {
                         IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                        IsReadyToCompile = ReadyToCompile.Yes;
+                        RequestCompilation();
                     }
                 }
             }
@@ -1951,7 +1946,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             // display, but they are stale until the compilation that follows has published.
                             HasStaleOutputs = m_Scheduler.HasMovedOnSince(snapshot);
                             IsReadyToReviseTrackers = ReadyToRevise.No;
-                            IsReadyToCompile = ReadyToCompile.No;
                         }
                     }
                 }
@@ -2190,41 +2184,38 @@ namespace Zametek.ViewModel.ProjectPlan
                                 if (AutoCompile)
                                 {
                                     IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                                    IsReadyToCompile = ReadyToCompile.Yes;
-                                    CascadeDiagnostics.RecordMarker(@"UncompiledSub armed IsReadyToCompile=Yes");
+                                    RequestCompilation();
+                                    CascadeDiagnostics.RecordMarker(@"UncompiledSub requested a compilation");
                                 }
                                 else
                                 {
                                     IsReadyToReviseTrackers = ReadyToRevise.No;
-                                    IsReadyToCompile = ReadyToCompile.No;
                                 }
                             }
                         }
                     }
                 });
 
-            // Compile off the arming thread: the settings-apply subscriptions
-            // arm IsReadyToCompile on the UI thread, and the compile must
-            // never run there. The selector revisions still complete first,
-            // because they run inline during the IsReadyToReviseTrackers
-            // raise, which every arm site performs before this one.
+            // Compile off the requesting thread: the settings-apply subscriptions
+            // ask for a compilation on the UI thread, and the compile must never
+            // run there. The selector revisions still complete first, because
+            // they run inline during the IsReadyToReviseTrackers raise, which
+            // every request site performs before its request.
             m_CompileOnSettingsUpdateSub = this
-                .WhenAnyValue(core => core.IsReadyToCompile)
+                .WhenAnyValue(core => core.CompilationRequestRevision)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
-                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: IsReadyToCompile={IsReadyToCompile} IsBusy={IsBusy}");
+                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: CompilationRequestRevision={CompilationRequestRevision} IsBusy={IsBusy}");
                     try
                     {
-                        // Re-read rather than trust the delivered value (rule 7), and
-                        // read the revision, not the property: whether the plan is due
-                        // a compilation does not depend on a flag that a compilation
-                        // in progress may be about to clear. Every compile takes the
-                        // changes made before its snapshot into account, so two edits
-                        // in quick succession arm this twice and the second delivery,
-                        // which arrives after the first compile has absorbed both,
-                        // finds nothing to do - and a redundant compile marks the
-                        // project scenario as updated, exactly as the
+                        // The request is a trigger (rule 7). Whether the plan is due a
+                        // compilation is in the revision of what a compilation reads.
+                        // Every compile takes the changes made before its snapshot into
+                        // account, so two edits in quick succession ask twice and the
+                        // second delivery, which arrives after the first compile has
+                        // absorbed both, finds nothing to do - and a redundant compile
+                        // marks the project scenario as updated, exactly as the
                         // uncompiled-activities handler above explains.
                         DrainAutoCompiles();
                     }

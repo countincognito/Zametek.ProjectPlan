@@ -63,15 +63,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public void UpdateManagedActivities_Given_AutomaticCompilation_Then_ThePlanIsReadyToCompile()
+        public void UpdateManagedActivities_Given_AutomaticCompilation_Then_ACompilationIsRequested()
         {
             using CoreViewModel core = CreateCore();
             core.AutoCompile = true;
-            core.IsReadyToCompile.ShouldBe(ReadyToCompile.No);
+            int revision = core.CompilationRequestRevision;
 
             core.UpdateManagedActivities([new UpdateDependentActivityModel { Id = 2, IsNameEdited = true, Name = "Renamed" }]);
 
-            core.IsReadyToCompile.ShouldBe(ReadyToCompile.Yes);
+            core.CompilationRequestRevision.ShouldNotBe(revision);
             core.IsReadyToReviseTrackers.ShouldBe(ReadyToRevise.Yes);
         }
 

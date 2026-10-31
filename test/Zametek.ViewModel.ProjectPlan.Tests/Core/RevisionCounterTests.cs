@@ -27,6 +27,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static void SetCompilationOutputRevision(CoreViewModel core, int value) =>
             Field<CoreViewModel>(@"m_CompilationOutputRevision").SetValue(core, value);
 
+        public static void SetCompilationRequestRevision(CoreViewModel core, int value) =>
+            Field<CoreViewModel>(@"m_CompilationRequestRevision").SetValue(core, value);
+
         public static void SetTitleRevision(ProjectScenarioManagerViewModel project, int value) =>
             Field<ProjectScenarioManagerViewModel>(@"m_TitleRevision").SetValue(project, value);
 
@@ -48,7 +51,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     }
 
     /// <summary>
-    /// The four revision counters keep the form that ARCHITECTURE section 9 gives: each event moves the value on by one, the
+    /// The revision counters keep the form that ARCHITECTURE section 9 gives: each event moves the value on by one, the
     /// value rolls over at the end of its range and does not wrap anywhere else, one event gives one raise, and the getter
     /// has the new value when the raise occurs. A consumer reads the getter at the raise, and so a raise that comes before the
     /// increment looks like no change at all.
@@ -133,6 +136,72 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Theory]
         [InlineData(int.MaxValue, int.MinValue)]
         [InlineData(int.MinValue, int.MinValue + 1)]
+        public void CompilationRequestRevision_Given_ARequest_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            RevisionCounters.SetCompilationRequestRevision(core, before);
+            List<int> raises = RecordRaises(core, nameof(CoreViewModel.CompilationRequestRevision), () => core.CompilationRequestRevision);
+
+            core.ProjectStart = core.ProjectStart.AddDays(1);
+
+            raises.ShouldHaveSingleItem().ShouldBe(after);
+            core.CompilationRequestRevision.ShouldBe(after);
+        }
+
+        [Theory]
+        [InlineData(nameof(ICoreViewModel.ProjectStart))]
+        [InlineData(nameof(ICoreViewModel.GraphSettings))]
+        [InlineData(nameof(ICoreViewModel.ResourceSettings))]
+        [InlineData(nameof(ICoreViewModel.WorkStreamSettings))]
+        [InlineData(nameof(ICoreViewModel.HolidaySettings))]
+        [InlineData(nameof(IProjectScenarioDisplaySettingsViewModel.NonWorkingDayMode))]
+        public void CompilationRequestRevision_Given_AChangeOfWhatACompilationReads_Then_ItMoves(string setting)
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            int revision = core.CompilationRequestRevision;
+
+            switch (setting)
+            {
+                case nameof(ICoreViewModel.ProjectStart):
+                    core.ProjectStart = core.ProjectStart.AddDays(1);
+                    break;
+                case nameof(ICoreViewModel.GraphSettings):
+                    core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
+                    break;
+                case nameof(ICoreViewModel.ResourceSettings):
+                    core.ResourceSettings = new ResourceSettingsModel();
+                    break;
+                case nameof(ICoreViewModel.WorkStreamSettings):
+                    core.WorkStreamSettings = new WorkStreamSettingsModel();
+                    break;
+                case nameof(ICoreViewModel.HolidaySettings):
+                    core.HolidaySettings = new HolidaySettingsModel();
+                    break;
+                case nameof(IProjectScenarioDisplaySettingsViewModel.NonWorkingDayMode):
+                    core.DisplaySettingsViewModel.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(setting));
+            }
+
+            core.CompilationRequestRevision.ShouldNotBe(revision, $"a change of {setting} did not ask for a compilation");
+        }
+
+        [Fact]
+        public void CompilationRequestRevision_Given_ALoad_Then_ItDoesNotMove()
+        {
+            // A load changes all that a compilation reads, and it compiles by itself. A request would only compile it again.
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            List<int> raises = RecordRaises(core, nameof(CoreViewModel.CompilationRequestRevision), () => core.CompilationRequestRevision);
+
+            core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(c_ActivityCount), Guid.NewGuid(), @"Test");
+
+            raises.ShouldBeEmpty();
+        }
+
+        [Theory]
+        [InlineData(int.MaxValue, int.MinValue)]
+        [InlineData(int.MinValue, int.MinValue + 1)]
         public void TitleRevision_Given_AnArm_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
         {
             (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
@@ -159,6 +228,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Lock coreLock = RevisionCounters.LockOf(core);
 
             ShouldNotWaitForTheLock(coreLock, () => core.CompilationOutputRevision);
+            ShouldNotWaitForTheLock(coreLock, () => core.CompilationRequestRevision);
             ShouldNotWaitForTheLock(coreLock, () => core.ProjectScenarioRevision);
         }
 
