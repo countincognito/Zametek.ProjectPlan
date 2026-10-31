@@ -291,12 +291,19 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
         }
 
-        [Fact]
-        public async Task RunCompile_Given_AResetDuringIt_Then_TheResultsAreDropped()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task RunCompile_Given_AResetDuringIt_Then_TheResultsAreDropped(bool acrossARollover)
         {
             // A project that closes resets the scenario and compiles nothing, and so no newer compilation is there to
             // outrank the one that is running. Only the scenario can tell that its results belong to a plan that is gone.
             using GatedCoreViewModel core = CreateLoaded();
+
+            if (acrossARollover)
+            {
+                RevisionCounters.SetProjectScenarioRevision(core, int.MaxValue);
+            }
 
             core.HoldNextCompilation();
             Task stale = Task.Run(core.RunCompile);
@@ -604,8 +611,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             core.NetworkMetrics.Duration.ShouldBe(duration);
         }
 
-        [Fact]
-        public async Task Cascade_Given_AScenarioLoadedDuringIt_Then_ItsOutputsAreDropped()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task Cascade_Given_AScenarioLoadedDuringIt_Then_ItsOutputsAreDropped(bool acrossARollover)
         {
             CoreViewModelFixture.EnsureReactiveUIInitialized();
             using var main = new MainThreadSequencerScope();
@@ -615,6 +624,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             core.StartSubscriptions();
             core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(c_ActivityCount), Guid.NewGuid(), @"Test");
             Drain(main, pool);
+
+            if (acrossARollover)
+            {
+                RevisionCounters.SetProjectScenarioRevision(core, int.MaxValue);
+            }
 
             core.RunCompile();
             graphs.HoldNextCascade();

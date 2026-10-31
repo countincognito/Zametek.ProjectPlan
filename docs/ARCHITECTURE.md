@@ -299,7 +299,7 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     Second, the lock stopped a load from changing the scenario while a compilation ran. Third, it kept two compilations from publishing in the wrong order. These four checks replace the lock for all three jobs:
 
-    - **The input revision.** [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) keeps the counter `m_InputRevision`. It counts each change of what a compilation reads. `NoteInputsChanged()` adds one. The commit of an edit calls it *first*, before anything announces the edit. Each arm of `IsReadyToCompile`, each call of `RunAutoCompile`, and each change of the structure of the plan call it too. A snapshot reads the revision before it copies the activities. The plan is stale, and due another compilation, when the revision differs from that of the snapshot.
+    - **The input revision.** [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) keeps the revision counter `m_InputRevision` (§9). It counts each change of what a compilation reads. `NoteInputsChanged()` adds one. The commit of an edit calls it *first*, before anything announces the edit. Each arm of `IsReadyToCompile`, each call of `RunAutoCompile`, and each change of the structure of the plan call it too. A snapshot reads the revision before it copies the activities. The plan is stale, and due another compilation, when the revision differs from that of the snapshot.
     - **The ticket.** `CompilationScheduler` gives each snapshot a number. A compilation publishes only if no later snapshot published before it. Thus, an older result never replaces a newer result.
     - **The scenario.** A load or a reset changes `ProjectScenarioRevision`. A compilation or a cascade that started before the change publishes nothing. A result also goes only to the live activity that its copy came from. An activity that took the id of a removed activity gets nothing.
     - **The compilation.** The cascade publishes only if `GraphCompilation` is still the compilation that it started from. A newer compilation has a cascade of its own, and the old outputs show a state that is out of date. `m_CascadedCompilation` tells the queued cascades that the first of them already built the newest compilation.
@@ -325,11 +325,103 @@ They look similar: both use counters, and the application raises both on the out
 
 Quick automatic compilations end well inside the delay. Thus, an ordinary edit never switches the overlay on and off. Such switching changes the style of large parts of the window. The overlay clears immediately. Quick changes between busy and idle inside the delay have no visible effect.
 
-## 9. The settled signal: `CompilationOutputRevision`
+## 9. Revision counters and the settled signal
 
-A compilation produces its outputs in seven Build\* steps. Suppose a chart watches `ResourceSeriesSet` *and* `GraphCompilation`. Then it rebuilds two times for each compilation, one time for each input. In between, it can see a mix of generations of the state.
+A **revision counter** is an `int` that counts how many times an event occurred. A flag records a state, and a revision counter records an event. The application has four revision counters, and they all have the same form. This section gives the form, the rules for the consumers, and the four counters. It also lists the numbers and flags that look similar but are different. One of the four counters is the settled signal, and [it has its own part](#the-settled-signal) at the end.
 
-Thus, `RunBuildCascade()` increments `CompilationOutputRevision` **after all seven outputs are in place**. This is an `int`, which wraps around at a constant. The chart managers key their rebuild pipelines on this revision and not on the single outputs. Thus, one compilation gives exactly one settled raise, and one settled raise gives exactly one rebuild. A cascade that a newer compilation overtakes publishes nothing and gives no raise (rule 14). The cascade of the newer compilation gives it.
+### Why a counter and not a flag
+
+A `WhenAnyValue` chain drops a value that is the same as its last value. Thus, a flag that is already `Yes` cannot say that the event occurred again. The title of the window had this problem. The flag `IsReadyToReviseTitle` never went back to `No`, and thus only the first arm reached the title. A project that closed or loaded with no edit kept its old title.
+
+A consumer can clear the flag, but this has two problems. The consumer writes to one of its own inputs, and the write goes back into its own chain. An arm that arrives before the clear also raises no event, because the flag is still `Yes`.
+
+A counter has neither problem. Each event gives a new value, and no consumer writes to the counter.
+
+### The form
+
+A counter has a field, a getter, and an increment for each event:
+
+```csharp
+// A revision counter (ARCHITECTURE section 9).
+private int m_SomethingRevision;
+public int SomethingRevision => Volatile.Read(ref m_SomethingRevision);
+
+// At the event, when the state that the event changes is in place:
+Interlocked.Increment(ref m_SomethingRevision);
+this.RaisePropertyChanged(nameof(SomethingRevision));
+```
+
+A counter that only its owner reads has no public property, and it raises nothing. `m_InputRevision` is an example.
+
+These rules give the form:
+
+- **The getter takes no lock.** A `WhenAnyValue` chain reads the getter again, synchronously, on the thread that raises the change (§7 rules 4 and 9). `Volatile.Read` gives the latest value without a lock.
+- **The increment is atomic, also under a lock.** The readers do not hold the lock. `ProjectScenarioRevision` and `CompilationOutputRevision` increment under `m_Lock`, and they still use `Interlocked.Increment`.
+- **The raise has no guard.** Do not use `RaiseAndSetIfChanged`. Each increment gives a new value, and thus a guard has nothing to skip. One event gives one raise.
+- **The increment comes after the state that the event changes.** A consumer reads the live state when the raise reaches it (§2). If the raise comes first, the consumer reads the old state, and no other raise follows. Thus, `RunBuildCascade()` publishes the seven outputs before it increments `CompilationOutputRevision`. A consumer that only compares a copy does not depend on this order. For example, `ResetProjectScenario()` increments `ProjectScenarioRevision` part way through, under `m_Lock`.
+- **The value only moves forward.** Do not set a counter back to zero, and do not wrap it at a constant. A copy of the value must not meet that value again, and a small range makes this occur early. `CompilationOutputRevision` used to wrap at 1,000,000. A result that stayed stale for exactly that many compilations then looked current.
+- **The counter rolls over at the end of its range.** `Interlocked.Increment` takes `int.MaxValue` to `int.MinValue`, and it throws no exception. The compiler settings have no effect on this. The value repeats only after 4,294,967,296 increments. At one increment each second, this takes about 136 years.
+- **The value has no meaning outside its owner.** Each owner starts at zero. The desktop application makes one core when it starts, and each job of the engine makes its own. The project file holds no revision.
+
+### How to use a counter
+
+A consumer uses a counter in one of two ways:
+
+- **As a trigger.** A `WhenAnyValue` chain watches the counter, and the handler ignores the value. The handler reads the live state (§2). The Gantt chart manager and the title of the window do this.
+- **As a copy to compare later.** The consumer keeps a copy of the value with the state that it belongs to. If the copy and the counter differ later, at least one event occurred in between. A snapshot does this for a compilation (§7 rule 14). The simulation panel does this for a result and for a run (§7 rule 13).
+
+These rules apply to each consumer:
+
+- **Compare only for equality.** Use `==` and `!=`. After a rollover, a newer value is a smaller number, and `>` gives the wrong answer. Do not calculate with the value, do not use it as an index, and do not show it to the user. If you need an order, use a [ticket](#what-is-not-a-revision-counter).
+- **Read the counter before you copy what it guards.** `TakeSnapshot()` reads `m_InputRevision` before it copies the activities. An edit that lands in between is in the copy, and the plan also counts it as not yet seen. This costs one more compilation, and it never loses the edit. The other order loses the edit.
+- **Expect the first value.** A `WhenAnyValue` chain delivers the current value when it subscribes. Thus, a trigger runs one time at the start, whether or not an event occurred. A handler that must not run before the first event tests the value with `!= 0`. This test gives the correct answer after a rollover too.
+
+### The counters
+
+| Counter | Owner | What it counts | What increments it | Its consumers |
+| --- | --- | --- | --- | --- |
+| `ProjectScenarioRevision` | [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) | Each load and reset of a scenario | `ResetProjectScenario()` | A snapshot and a cascade keep a copy, and they publish nothing if the value changes (§7 rule 14). A run of the simulation keeps a copy, and it stops if the value changes (§7 rule 13). |
+| `TitleRevision` | [`ProjectScenarioManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/ProjectScenarioManagement/ProjectScenarioManagerViewModel.cs) | Each arm of the title | The setter of `IsReadyToReviseTitle` | Two triggers: the title of the window in `MainViewModel`, and the name of the scenario in `SimulationManagerViewModel`. |
+| `m_InputRevision` | [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) | Each change of what a compilation reads | `NoteInputsChanged()` | A snapshot keeps a copy. If the value changes, the results are stale and the plan is due another compilation (§7 rule 14). |
+| `CompilationOutputRevision` | `CoreViewModel` | Each cascade that publishes | `RunBuildCascade()` | A trigger: the Gantt chart manager. A copy: the simulation panel marks a result as stale if the value changes (§7 rule 13). |
+
+The other names that end with `Revision` hold copies, and nothing increments them. They are `InputRevision` and `ScenarioRevision` of `CompilationSnapshot`, `ScenarioRevision` of `CascadeInputs`, `CompilationOutputRevision` of `SimulationInputModel` and `SimulationOutcome`, `m_SnapshotRevision` of `CompilationScheduler`, and `ResultRevision` and `m_RunScenarioRevision` of `SimulationChartManagerViewModel`.
+
+### What is not a revision counter
+
+These numbers and flags look similar. Their form is different on purpose, and the rules above do not apply to them.
+
+| Name | What it is | Why its form is different |
+| --- | --- | --- |
+| `m_SnapshotTicket` and `m_PublishedTicket` of `CompilationScheduler` | A **ticket**: a number that gives an order | A result publishes only if its ticket is larger than the last ticket that published (§7 rule 14). An order needs `>`, and thus a rollover stops all publication. This needs 2,147,483,647 snapshots of one core, and thus it does not occur in practice. `CompilationScheduler` uses both only under `m_Lock`. |
+| `m_FramingToken` of `InteractiveGraphView` | A token: the latest request wins | Nothing watches it, and a callback on the UI thread compares it with its copy. A lost increment does no harm, and thus a plain `++` is enough. |
+| `NestingCounter` and `m_RevisingCount` | A level | They go up and down, and their value is a state: zero or more than zero. |
+| `m_Drawn` of `PresetColorSequence` | A count that selects a color | The value itself is important. The count changes to a `uint`, and thus the index stays in range after a rollover. |
+| `IsReadyToCompile` and `IsReadyToReviseTrackers` | A flag for a state | They say that work waits. A publication sets them back to `No`. |
+| `IsReadyToReviseTrackedMetrics`, `IsReadyToReviseGanttChartShowConnections` and `IsReadyToReviseEarnedValueShowResources` | A flag for a request | A consumer acts on `Yes`, and it then sets the flag back to `No`. |
+
+`IsReadyToReviseTitle` is the flag that arms the title. Its setter increments `TitleRevision`, and the consumers follow the counter and not the flag.
+
+### How to add a counter
+
+1. Make sure that the consumers need to know about an event. Use a flag for a state, and a ticket for an order.
+2. Add the field and the getter in [the form above](#the-form). End the name with `Revision`.
+3. Add the increment and the raise, after the state that the event changes.
+4. If an interface declares the property, write "Observe changes only." in its documentation comment.
+5. Add the counter to [the table of the counters](#the-counters).
+6. Add its tests to [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs).
+
+### How the tests hold the rules
+
+No test can make two billion increments. Thus, a test sets the private field near the end of the range by reflection, and it then does the real action. [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs) does this for each counter. It checks that the value rolls over, that one event gives one raise, and that the getter has the new value when the raise occurs. It also checks that a getter does not wait for the lock of its owner. A further case takes `CompilationOutputRevision` past 1,000,000, where it used to wrap.
+
+The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`.
+
+### The settled signal
+
+`CompilationOutputRevision` is the settled signal. A compilation produces its outputs in seven Build\* steps. Suppose a chart watches `ResourceSeriesSet` *and* `GraphCompilation`. Then it rebuilds two times for each compilation, one time for each input. In between, it can see a mix of generations of the state.
+
+Thus, `RunBuildCascade()` increments `CompilationOutputRevision` **after all seven outputs are in place**. The Gantt chart reads several outputs, and thus its manager keys its rebuild pipeline on this revision and not on the single outputs. One compilation gives exactly one settled raise, and one settled raise gives exactly one rebuild. The other charts follow one output each: `ResourceSeriesSet`, `TrackingSeriesSet` or `TrackedMetricsSet`. A cascade that a newer compilation overtakes publishes nothing and gives no raise (rule 14). The cascade of the newer compilation gives it.
 
 ## 10. Display order: input surfaces versus display-only surfaces
 

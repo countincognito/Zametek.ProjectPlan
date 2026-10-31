@@ -1880,6 +1880,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // A revision counter (ARCHITECTURE section 9).
         // This getter must remain lock-free: a property chain re-reads it on the thread that raises the change.
         private int m_TitleRevision;
         public int TitleRevision => Volatile.Read(ref m_TitleRevision);

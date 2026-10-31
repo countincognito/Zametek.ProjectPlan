@@ -1580,7 +1580,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         string newTitle = ProjectTitle;
 
-                        if (titleRevision > 0
+                        if (titleRevision != 0
                             || projectHasChanges)
                         {
                             string projectTitle = m_SettingService.ProjectTitle;

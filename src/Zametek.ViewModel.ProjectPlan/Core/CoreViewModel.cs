@@ -18,12 +18,6 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        // CompilationOutputRevision is an opaque change pulse, so it wraps to
-        // zero at a deliberate boundary instead of overflowing. Any modulus >= 2
-        // keeps consecutive raises distinct, which is all the property pipeline
-        // needs (consecutive equal values would be de-duplicated downstream).
-        private const int c_CompilationOutputRevisionWrap = 1_000_000;
-
         private readonly Lock m_Lock;
 
         private bool m_TrackIsProjectScenarioUpdated;
@@ -367,8 +361,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ApplyCascadeOutputs(outputs);
                     m_CascadedCompilation = inputs.GraphCompilation;
-                    CompilationOutputRevision =
-                        (CompilationOutputRevision + 1) % c_CompilationOutputRevisionWrap;
+                    Interlocked.Increment(ref m_CompilationOutputRevision);
+                    this.RaisePropertyChanged(nameof(CompilationOutputRevision));
                 }
             }
             catch (GraphCompilationTimeoutException ex)
@@ -603,24 +597,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // A revision counter (ARCHITECTURE section 9).
         private int m_CompilationOutputRevision;
-        /// <summary>
-        /// Increments once each time the full Build* output cascade has settled
-        /// after a compilation (or bulk load), so subscribers that need every
-        /// output in place can react exactly once per compile. The value is an
-        /// opaque change pulse that wraps to zero at
-        /// <see cref="c_CompilationOutputRevisionWrap"/> - observe changes,
-        /// never compare magnitudes.
-        /// </summary>
-        public int CompilationOutputRevision
-        {
-            get => m_CompilationOutputRevision;
-            private set
-            {
-                m_CompilationOutputRevision = value;
-                this.RaisePropertyChanged();
-            }
-        }
+        public int CompilationOutputRevision => Volatile.Read(ref m_CompilationOutputRevision);
 
         private DateTimeOffset m_ProjectStart;
         public DateTimeOffset ProjectStart
@@ -1040,6 +1019,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // A revision counter (ARCHITECTURE section 9).
         private int m_ProjectScenarioRevision;
         public int ProjectScenarioRevision => Volatile.Read(ref m_ProjectScenarioRevision);
 

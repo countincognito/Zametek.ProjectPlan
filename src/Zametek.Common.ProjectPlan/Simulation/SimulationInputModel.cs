@@ -29,8 +29,8 @@ namespace Zametek.Common.ProjectPlan
         public IReadOnlyDictionary<int, string> ActivityNames { get; init; } = new Dictionary<int, string>();
 
         /// <summary>
-        /// The revision of the compilation outputs when the copy was taken. A result that has an older
-        /// revision than the plan does not belong to it any more.
+        /// The revision of the compilation outputs when the copy was taken. A result with a different
+        /// revision from the plan does not belong to it any more.
         /// </summary>
         public int CompilationOutputRevision { get; init; }
     }

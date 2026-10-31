@@ -30,9 +30,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Fields
 
+        // A revision counter (ARCHITECTURE section 9).
         // What a compilation reads has a revision: a count of everything that changes it. A compilation records the
         // revision that it started from, and so it can tell when it has finished whether the plan has moved on
-        // (ARCHITECTURE section 7 rule 14). The count only has to differ from one moment to the next, and so it wraps.
+        // (ARCHITECTURE section 7 rule 14).
         private int m_InputRevision;
 
         // The revision that the newest snapshot started from. The plan is due a compilation when the two differ. Written
