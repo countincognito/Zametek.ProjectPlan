@@ -36,6 +36,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static void SetInputRevision(CompilationScheduler scheduler, int value) =>
             Field<CompilationScheduler>(@"m_InputRevision").SetValue(scheduler, value);
 
+        public static void SetGanttChartShowConnectionsRevision(IProjectScenarioDisplaySettingsViewModel display, int value) =>
+            Field<ProjectScenarioDisplaySettingsViewModel>(@"m_GanttChartShowConnectionsRevision").SetValue(display, value);
+
+        public static void SetEarnedValueShowResourcesRevision(IProjectScenarioDisplaySettingsViewModel display, int value) =>
+            Field<ProjectScenarioDisplaySettingsViewModel>(@"m_EarnedValueShowResourcesRevision").SetValue(display, value);
+
         public static int InputRevisionOf(CompilationScheduler scheduler) =>
             (int)Field<CompilationScheduler>(@"m_InputRevision").GetValue(scheduler)!;
 
@@ -44,6 +50,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public static Lock LockOf(ProjectScenarioManagerViewModel project) =>
             (Lock)Field<ProjectScenarioManagerViewModel>(@"m_Lock").GetValue(project)!;
+
+        public static Lock LockOf(ProjectScenarioDisplaySettingsViewModel display) =>
+            (Lock)Field<ProjectScenarioDisplaySettingsViewModel>(@"m_Lock").GetValue(display)!;
 
         private static FieldInfo Field<TOwner>(string name) =>
             typeof(TOwner).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
@@ -219,6 +228,91 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             raises.ShouldHaveSingleItem().ShouldBe(after);
             project.TitleRevision.ShouldBe(after);
+        }
+
+        [Theory]
+        [InlineData(int.MaxValue, int.MinValue)]
+        [InlineData(int.MinValue, int.MinValue + 1)]
+        public void GanttChartShowConnectionsRevision_Given_AFilter_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            var display = (ProjectScenarioDisplaySettingsViewModel)core.DisplaySettingsViewModel;
+            RevisionCounters.SetGanttChartShowConnectionsRevision(display, before);
+            List<int> raises = RecordRaises(display, nameof(IProjectScenarioDisplaySettingsViewModel.GanttChartShowConnectionsRevision), () => display.GanttChartShowConnectionsRevision);
+
+            display.SetValues(new ProjectScenarioDisplaySettingsModel());
+
+            raises.ShouldHaveSingleItem().ShouldBe(after);
+            display.GanttChartShowConnectionsRevision.ShouldBe(after);
+        }
+
+        [Theory]
+        [InlineData(int.MaxValue, int.MinValue)]
+        [InlineData(int.MinValue, int.MinValue + 1)]
+        public void EarnedValueShowResourcesRevision_Given_AFilter_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            var display = (ProjectScenarioDisplaySettingsViewModel)core.DisplaySettingsViewModel;
+            RevisionCounters.SetEarnedValueShowResourcesRevision(display, before);
+            List<int> raises = RecordRaises(display, nameof(IProjectScenarioDisplaySettingsViewModel.EarnedValueShowResourcesRevision), () => display.EarnedValueShowResourcesRevision);
+
+            display.SetValues(new ProjectScenarioDisplaySettingsModel());
+
+            raises.ShouldHaveSingleItem().ShouldBe(after);
+            display.EarnedValueShowResourcesRevision.ShouldBe(after);
+        }
+
+        [Fact]
+        public void GanttChartShowConnectionsRevision_Given_AFilter_Then_TheFilterIsInPlaceAtTheRaise()
+        {
+            // The selector reads the list after the raise, and no other raise follows.
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            var display = (ProjectScenarioDisplaySettingsViewModel)core.DisplaySettingsViewModel;
+            int[] filterAtTheRaise = [];
+
+            display.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(IProjectScenarioDisplaySettingsViewModel.GanttChartShowConnectionsRevision))
+                {
+                    filterAtTheRaise = [.. display.GanttChartShowConnections];
+                }
+            };
+
+            display.SetValues(new ProjectScenarioDisplaySettingsModel { GanttChartShowConnections = [3, 4] });
+
+            filterAtTheRaise.ShouldBe(new[] { 3, 4 });
+        }
+
+        [Fact]
+        public void EarnedValueShowResourcesRevision_Given_AFilter_Then_TheFilterIsInPlaceAtTheRaise()
+        {
+            // The selector reads the list after the raise, and no other raise follows.
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            var display = (ProjectScenarioDisplaySettingsViewModel)core.DisplaySettingsViewModel;
+            int[] filterAtTheRaise = [];
+
+            display.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(IProjectScenarioDisplaySettingsViewModel.EarnedValueShowResourcesRevision))
+                {
+                    filterAtTheRaise = [.. display.EarnedValueShowResources];
+                }
+            };
+
+            display.SetValues(new ProjectScenarioDisplaySettingsModel { EarnedValueShowResources = [3, 4] });
+
+            filterAtTheRaise.ShouldBe(new[] { 3, 4 });
+        }
+
+        [Fact]
+        public void Getters_Given_TheLockOfTheDisplaySettingsHeld_Then_TheyDoNotWaitForIt()
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            var display = (ProjectScenarioDisplaySettingsViewModel)core.DisplaySettingsViewModel;
+            Lock displayLock = RevisionCounters.LockOf(display);
+
+            ShouldNotWaitForTheLock(displayLock, () => display.GanttChartShowConnectionsRevision);
+            ShouldNotWaitForTheLock(displayLock, () => display.EarnedValueShowResourcesRevision);
         }
 
         [Fact]

@@ -151,13 +151,13 @@ namespace Zametek.Engine.ProjectPlan.Tests
             gantt.StartSubscriptions();
             held.Drain();
 
-            // The selector re-reads the connections a plan has saved when it is told they are ready, and says it has.
-            display.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.Yes;
+            // The selector reads the connections that a plan has saved again when they are put in place.
+            display.SetValues(new ProjectScenarioDisplaySettingsModel());
             (held.Pool.PendingCount + held.Main.PendingCount).ShouldBeGreaterThan(0, "the pipelines were not running to begin with");
             held.Drain();
 
             gantt.KillSubscriptions();
-            display.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.Yes;
+            display.SetValues(new ProjectScenarioDisplaySettingsModel());
 
             held.Pool.PendingCount.ShouldBe(0);
             held.Main.PendingCount.ShouldBe(0);
@@ -174,13 +174,13 @@ namespace Zametek.Engine.ProjectPlan.Tests
             ev.StartSubscriptions();
             held.Drain();
 
-            // The selector re-reads the resources a plan has saved when it is told they are ready, and says it has.
-            display.IsReadyToReviseEarnedValueShowResources = ReadyToRevise.Yes;
+            // The selector reads the resources that a plan has saved again when they are put in place.
+            display.SetValues(new ProjectScenarioDisplaySettingsModel());
             (held.Pool.PendingCount + held.Main.PendingCount).ShouldBeGreaterThan(0, "the pipelines were not running to begin with");
             held.Drain();
 
             ev.KillSubscriptions();
-            display.IsReadyToReviseEarnedValueShowResources = ReadyToRevise.Yes;
+            display.SetValues(new ProjectScenarioDisplaySettingsModel());
 
             held.Pool.PendingCount.ShouldBe(0);
             held.Main.PendingCount.ShouldBe(0);

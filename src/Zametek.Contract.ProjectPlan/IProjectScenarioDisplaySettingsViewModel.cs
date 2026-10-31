@@ -34,7 +34,12 @@ namespace Zametek.Contract.ProjectPlan
         bool GanttChartShowSlack { get; set; }
         bool GanttChartShowNonWorkingDays { get; set; }
         List<int> GanttChartShowConnections { get; }
-        ReadyToRevise IsReadyToReviseGanttChartShowConnections { get; set; }
+
+        /// <summary>
+        /// How many times SetValues has put a filter in GanttChartShowConnections. An edit by the user does not count, because
+        /// it comes from the selector that follows this. Observe changes only.
+        /// </summary>
+        int GanttChartShowConnectionsRevision { get; }
 
 
         AllocationMode ResourceChartAllocationMode { get; set; }
@@ -50,7 +55,12 @@ namespace Zametek.Contract.ProjectPlan
         bool EarnedValueCombineResources { get; set; }
         bool EarnedValueScaleToOwnPlan { get; set; }
         List<int> EarnedValueShowResources { get; }
-        ReadyToRevise IsReadyToReviseEarnedValueShowResources { get; set; }
+
+        /// <summary>
+        /// How many times SetValues has put a filter in EarnedValueShowResources. An edit by the user does not count, because
+        /// it comes from the selector that follows this. Observe changes only.
+        /// </summary>
+        int EarnedValueShowResourcesRevision { get; }
 
 
         void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated);

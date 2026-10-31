@@ -76,10 +76,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_SelectedTargetActivities.CollectionChanged += SelectedTargetActivities_CollectionChanged;
 
-            // Initial set up. The persisted connections filter is applied here, explicitly, and not left to the
-            // signal that m_ShowConnectionsSub observes: a project scenario loaded before this selector was made has
-            // consumed that signal already, and a selector that is never started would never see it. It is applied
-            // revising, so that it is not mistaken for a user edit and written straight back.
+            // Initial set up. The persisted connections filter is applied here, explicitly, and not left to
+            // m_ShowConnectionsSub: a selector that is never started would never see it. It is applied revising,
+            // so that it is not mistaken for a user edit and written straight back.
             try
             {
                 Interlocked.Increment(ref m_RevisingCount);
@@ -338,26 +337,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 return;
             }
 
+            // The handler reads the live filter, and so a delivery that a newer one follows has nothing to do: a load puts a
+            // filter in place three times, and the UI thread can be behind it. The first value runs the handler one time at
+            // the start, which applies a filter that arrived after the constructor.
             m_ShowConnectionsSub = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnectionsRevision)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(isReadyToRevise =>
+                .Where(revision => revision == m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnectionsRevision)
+                .Subscribe(_ =>
                 {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
+                    try
                     {
-                        try
-                        {
-                            Interlocked.Increment(ref m_RevisingCount);
-                            ReviseActivities();
-                            SetSelectedTargetActivities(
-                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
-                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref m_RevisingCount);
-                        }
+                        Interlocked.Increment(ref m_RevisingCount);
+                        ReviseActivities();
+                        SetSelectedTargetActivities(
+                            [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref m_RevisingCount);
                     }
                 });
         }

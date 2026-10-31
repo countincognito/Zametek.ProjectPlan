@@ -333,7 +333,7 @@ A **revision counter** is an `int` that counts how many times an event occurred.
 
 A `WhenAnyValue` chain drops a value that is the same as its last value. Thus, a flag that is already `Yes` cannot say that the event occurred again. The title of the window had this problem. The flag `IsReadyToReviseTitle` never went back to `No`, and thus only the first arm reached the title. A project that closed or loaded with no edit kept its old title.
 
-A consumer can clear the flag, but this has two problems. The consumer writes to one of its own inputs, and the write goes back into its own chain. An arm that arrives before the clear also raises no event, because the flag is still `Yes`.
+A consumer can clear the flag, but this has two problems. The consumer writes to one of its own inputs, and the write goes back into its own chain. An arm that arrives before the clear also raises no event, because the flag is still `Yes`. The selectors of the Gantt and earned-value charts used to clear their flags in this way. A selector lost a filter that arrived while it applied the previous filter.
 
 A flag can also stay in the wrong state. `IsReadyToCompile` used to wake the compilation, and it stayed `Yes` if another scenario opened during the compilation. The next edits then raised no event, and they did not compile.
 
@@ -369,14 +369,15 @@ These rules give the form:
 
 A consumer uses a counter in one of two ways:
 
-- **As a trigger.** A `WhenAnyValue` chain watches the counter, and the handler ignores the value. The handler reads the live state (§2). The Gantt chart manager and the title of the window do this.
+- **As a trigger.** A `WhenAnyValue` chain watches the counter, and the handler ignores the value. The handler reads the live state (§2). The Gantt chart manager, the selectors of the Gantt and earned-value charts, and the title of the window do this.
 - **As a copy to compare later.** The consumer keeps a copy of the value with the state that it belongs to. If the copy and the counter differ later, at least one event occurred in between. A snapshot does this for a compilation (§7 rule 14). The simulation panel does this for a result and for a run (§7 rule 13).
 
 These rules apply to each consumer:
 
 - **Compare only for equality.** Use `==` and `!=`. After a rollover, a newer value is a smaller number, and `>` gives the wrong answer. Do not calculate with the value, do not use it as an index, and do not show it to the user. If you need an order, use a [ticket](#what-is-not-a-revision-counter).
 - **Read the counter before you copy what it guards.** `TakeSnapshot()` reads `m_InputRevision` before it copies the activities. An edit that lands in between is in the copy, and the plan also counts it as not yet seen. This costs one more compilation, and it never loses the edit. The other order loses the edit.
-- **Expect the first value.** A `WhenAnyValue` chain delivers the current value when it subscribes. Thus, a trigger runs one time at the start, whether or not an event occurred. A handler that must not run before the first event tests the value with `!= 0`. This test gives the correct answer after a rollover too.
+- **Expect the first value.** A `WhenAnyValue` chain delivers the current value when it subscribes. Thus, a trigger runs one time at the start, whether or not an event occurred. A handler that must not run before the first event tests the value with `!= 0`. This test gives the correct answer after a rollover too. The selectors of the Gantt and earned-value charts use this run: it applies a filter that arrived between the constructor and the start.
+- **Expect one delivery for each event.** A flag that is already `Yes` merges events, and a counter does not. Thus, a handler can run again when it has nothing new to do, and it must give the same result. If a run costs too much, compare the delivered value with the getter after `ObserveOn`, and ignore a delivery that does not match. A newer delivery follows, and it reads the same live state. The selectors of the Gantt and earned-value charts do this. A load puts each filter in place three times, and the UI thread can be behind the load.
 
 ### The counters
 
@@ -387,6 +388,8 @@ These rules apply to each consumer:
 | `m_InputRevision` | [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) | Each change of what a compilation reads | `NoteInputsChanged()` | A snapshot keeps a copy. If the value changes, the results are stale and the plan is due another compilation (§7 rule 14). |
 | `CompilationRequestRevision` | `CoreViewModel` | Each request for a compilation, except during a bulk update | `RequestCompilation()` | A trigger: `m_CompileOnSettingsUpdateSub`. The handler reads `m_InputRevision`, which says if the plan is due a compilation. |
 | `CompilationOutputRevision` | `CoreViewModel` | Each cascade that publishes | `RunBuildCascade()` | A trigger: the Gantt chart manager. A copy: the simulation panel marks a result as stale if the value changes (§7 rule 13). |
+| `GanttChartShowConnectionsRevision` | [`ProjectScenarioDisplaySettingsViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/ProjectScenarioDisplaySettingsViewModel.cs) | Each filter of connections that goes into place | `SetValues()` | A trigger: `GanttActivitySelectorViewModel`. The handler reads the filter and applies it. |
+| `EarnedValueShowResourcesRevision` | `ProjectScenarioDisplaySettingsViewModel` | Each filter of resources that goes into place | `SetValues()` | A trigger: `EarnedValueResourceSelectorViewModel`. The handler reads the filter and applies it. |
 
 The other names that end with `Revision` hold copies, and nothing increments them. They are `InputRevision` and `ScenarioRevision` of `CompilationSnapshot`, `ScenarioRevision` of `CascadeInputs`, `CompilationOutputRevision` of `SimulationInputModel` and `SimulationOutcome`, `m_SnapshotRevision` of `CompilationScheduler`, and `ResultRevision` and `m_RunScenarioRevision` of `SimulationChartManagerViewModel`.
 
@@ -401,7 +404,7 @@ These numbers and flags look similar. Their form is different on purpose, and th
 | `NestingCounter` and `m_RevisingCount` | A level | They go up and down, and their value is a state: zero or more than zero. |
 | `m_Drawn` of `PresetColorSequence` | A count that selects a color | The value itself is important. The count changes to a `uint`, and thus the index stays in range after a rollover. |
 | `IsReadyToReviseTrackers` | A flag for a state | It says that work waits. A publication sets it back to `No`. |
-| `IsReadyToReviseTrackedMetrics`, `IsReadyToReviseGanttChartShowConnections` and `IsReadyToReviseEarnedValueShowResources` | A flag for a request | A consumer acts on `Yes`, and it then sets the flag back to `No`. |
+| `IsReadyToReviseTrackedMetrics` | A flag for a request | The consumer acts on `Yes`, and it then sets the flag back to `No`. Each arm and the clear occur under the lock of `ProjectScenarioManagerViewModel`. An arm occurs before the build takes the lock or after the build releases it, and thus the flag cannot lose an arm. The flag also merges a burst of arms into one build. |
 
 `IsReadyToReviseTitle` is the flag that arms the title. Its setter increments `TitleRevision`, and the consumers follow the counter and not the flag.
 
@@ -416,9 +419,13 @@ These numbers and flags look similar. Their form is different on purpose, and th
 
 ### How the tests hold the rules
 
-No test can make two billion increments. Thus, a test sets the private field near the end of the range by reflection, and it then does the real action. [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs) does this for each counter. It checks that the value rolls over, that one event gives one raise, and that the getter has the new value when the raise occurs. It also checks that a getter does not wait for the lock of its owner. A further case takes `CompilationOutputRevision` past 1,000,000, where it used to wrap.
+No test can make two billion increments. Thus, a test sets the private field near the end of the range by reflection, and it then does the real action. [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs) does this for each counter. It checks that the value rolls over, that one event gives one raise, and that the getter has the new value when the raise occurs.
 
-The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`.
+It also checks that a getter does not wait for the lock of its owner. For each filter of the display settings, it checks that the filter is in place when the raise occurs. A further case takes `CompilationOutputRevision` past 1,000,000, where it used to wrap.
+
+The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request.
+
+`GanttActivitySelectorViewModelTests` and `EarnedValueResourceSelectorViewModelTests` have the tests for a filter. They also test a load across a rollover, and two deliveries across a rollover. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`.
 
 ### The settled signal
 

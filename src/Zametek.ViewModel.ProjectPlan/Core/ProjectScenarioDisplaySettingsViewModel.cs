@@ -354,20 +354,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly List<int> m_GanttChartShowConnections;
         public List<int> GanttChartShowConnections => m_GanttChartShowConnections;
 
-        private ReadyToRevise m_IsReadyToReviseGanttChartShowConnections;
-        public ReadyToRevise IsReadyToReviseGanttChartShowConnections
-        {
-            get => m_IsReadyToReviseGanttChartShowConnections;
-            set
-            {
-                lock (m_Lock)
-                {
-                    //SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
-                    m_IsReadyToReviseGanttChartShowConnections = value;
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_GanttChartShowConnectionsRevision;
+        public int GanttChartShowConnectionsRevision => Volatile.Read(ref m_GanttChartShowConnectionsRevision);
 
         private AllocationMode m_ResourceChartAllocationMode;
         public AllocationMode ResourceChartAllocationMode
@@ -514,19 +503,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly List<int> m_EarnedValueShowResources;
         public List<int> EarnedValueShowResources => m_EarnedValueShowResources;
 
-        private ReadyToRevise m_IsReadyToReviseEarnedValueShowResources;
-        public ReadyToRevise IsReadyToReviseEarnedValueShowResources
-        {
-            get => m_IsReadyToReviseEarnedValueShowResources;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_IsReadyToReviseEarnedValueShowResources = value;
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_EarnedValueShowResourcesRevision;
+        public int EarnedValueShowResourcesRevision => Volatile.Read(ref m_EarnedValueShowResourcesRevision);
 
         public void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated)
         {
@@ -621,7 +600,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 GanttChartShowConnections.Clear();
                 GanttChartShowConnections.AddRange(model.GanttChartShowConnections);
-                IsReadyToReviseGanttChartShowConnections = ReadyToRevise.Yes;
+                Interlocked.Increment(ref m_GanttChartShowConnectionsRevision);
+                this.RaisePropertyChanged(nameof(GanttChartShowConnectionsRevision));
 
 
                 if (ResourceChartAllocationMode != model.ResourceChartAllocationMode)
@@ -669,7 +649,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 EarnedValueShowResources.Clear();
                 EarnedValueShowResources.AddRange(model.EarnedValueShowResources);
-                IsReadyToReviseEarnedValueShowResources = ReadyToRevise.Yes;
+                Interlocked.Increment(ref m_EarnedValueShowResourcesRevision);
+                this.RaisePropertyChanged(nameof(EarnedValueShowResourcesRevision));
             }
         }
 
