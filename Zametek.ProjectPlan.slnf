@@ -19,6 +19,7 @@
       "test\\Zametek.Graphs.Avalonia.TestApp\\Zametek.Graphs.Avalonia.TestApp.csproj",
       "test\\Zametek.Graphs.Avalonia.Tests\\Zametek.Graphs.Avalonia.Tests.csproj",
       "test\\Zametek.ProjectPlan.CommandLine.Tests\\Zametek.ProjectPlan.CommandLine.Tests.csproj",
+      "test\\Zametek.View.ProjectPlan.Tests\\Zametek.View.ProjectPlan.Tests.csproj",
       "test\\Zametek.ViewModel.ProjectPlan.Tests\\Zametek.ViewModel.ProjectPlan.Tests.csproj"
     ]
   }
