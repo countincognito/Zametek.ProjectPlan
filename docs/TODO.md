@@ -64,7 +64,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   4. The plot-model setters of the chart managers (the earned-value, Gantt and resource charts) and `ResourceTrackerSetViewModel.RefreshIndex` raise inside their locks. These are trivial splits: set under the lock, and raise after the release.
   5. Document the global DAG of lock acquisition in ARCHITECTURE §7: Manager→Core→DisplaySettings and Core→Selector, with the node and tracker view models as leaves. Verify that the core never calls back into the scenario manager under its lock. Then future calls across view models have an order to follow.
 
-  **Related problems.** The investigation found two more problems in the same area. First, `GanttChartShowConnections` and `EarnedValueShowResources` are plain `List<int>` objects. UI handlers change them without the DS lock, while `SetValues` seeds them under it. This is a risk of torn reads. Second, the DS setters mark the scenario as modified, also when `RaiseAndSetIfChanged` writes nothing.
+  **Related problem.** The investigation found one more problem in the same area. The DS setters mark the scenario as modified, also when `RaiseAndSetIfChanged` writes nothing.
 
   See also the entry of 2026-08-04 above. The sweep for getters already delivered its suggestion of lock-free snapshots for hot bound properties, for the getters of the selectors and the trackers.
 

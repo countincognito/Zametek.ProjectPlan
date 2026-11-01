@@ -1,5 +1,6 @@
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Xunit;
@@ -228,6 +229,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             core.DisplaySettingsViewModel.GanttChartShowConnections.Order().ShouldBe(new[] { 1, 2 });
             core.IsProjectScenarioUpdated.ShouldBeTrue("an edit by the user did not mark the scenario as updated");
+        }
+
+        [Fact]
+        public void SelectedTargetActivities_Given_AnEditByTheUser_Then_AReadOfTheFilterBeforeItKeepsWhatItHad()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using CoreViewModel core = CreateLoaded();
+            using var selector = new GanttActivitySelectorViewModel(core);
+            selector.StartSubscriptions();
+            Drain(main, pool);
+            core.DisplaySettingsViewModel.SetValues(Filter(1));
+            Drain(main, pool);
+
+            IEnumerable<int> before = core.DisplaySettingsViewModel.GanttChartShowConnections;
+
+            selector.SelectedTargetActivities.Add(selector.TargetActivities.First(x => x.Id == 2));
+
+            before.ToArray().ShouldBe(new[] { 1 });
         }
 
         [Theory]

@@ -351,8 +351,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly List<int> m_GanttChartShowConnections;
-        public List<int> GanttChartShowConnections => m_GanttChartShowConnections;
+        // Replaced as a whole and never changed in place: a handler on the UI thread reads this while a load replaces
+        // it on another thread (ARCHITECTURE section 7 rule 9).
+        private int[] m_GanttChartShowConnections;
+        public IReadOnlyList<int> GanttChartShowConnections => Volatile.Read(ref m_GanttChartShowConnections);
+
+        public void SetGanttChartShowConnections(IEnumerable<int> connections)
+        {
+            ArgumentNullException.ThrowIfNull(connections);
+            Volatile.Write(ref m_GanttChartShowConnections, [.. connections]);
+        }
 
         // A revision counter (ARCHITECTURE section 9).
         private int m_GanttChartShowConnectionsRevision;
@@ -500,8 +508,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly List<int> m_EarnedValueShowResources;
-        public List<int> EarnedValueShowResources => m_EarnedValueShowResources;
+        // Replaced as a whole and never changed in place: a handler on the UI thread reads this while a load replaces
+        // it on another thread (ARCHITECTURE section 7 rule 9).
+        private int[] m_EarnedValueShowResources;
+        public IReadOnlyList<int> EarnedValueShowResources => Volatile.Read(ref m_EarnedValueShowResources);
+
+        public void SetEarnedValueShowResources(IEnumerable<int> resources)
+        {
+            ArgumentNullException.ThrowIfNull(resources);
+            Volatile.Write(ref m_EarnedValueShowResources, [.. resources]);
+        }
 
         // A revision counter (ARCHITECTURE section 9).
         private int m_EarnedValueShowResourcesRevision;
@@ -598,8 +614,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowNonWorkingDays = model.GanttChartShowNonWorkingDays;
                 }
 
-                GanttChartShowConnections.Clear();
-                GanttChartShowConnections.AddRange(model.GanttChartShowConnections);
+                SetGanttChartShowConnections(model.GanttChartShowConnections);
                 Interlocked.Increment(ref m_GanttChartShowConnectionsRevision);
                 this.RaisePropertyChanged(nameof(GanttChartShowConnectionsRevision));
 
@@ -647,8 +662,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     EarnedValueScaleToOwnPlan = model.EarnedValueScaleToOwnPlan;
                 }
 
-                EarnedValueShowResources.Clear();
-                EarnedValueShowResources.AddRange(model.EarnedValueShowResources);
+                SetEarnedValueShowResources(model.EarnedValueShowResources);
                 Interlocked.Increment(ref m_EarnedValueShowResourcesRevision);
                 this.RaisePropertyChanged(nameof(EarnedValueShowResourcesRevision));
             }

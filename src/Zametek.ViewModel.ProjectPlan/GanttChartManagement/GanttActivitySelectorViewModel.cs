@@ -174,8 +174,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // selector briefly empties out).
             if (m_RevisingCount == 0)
             {
-                m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
-                m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
+                m_CoreViewModel.DisplaySettingsViewModel.SetGanttChartShowConnections(SelectedActivityIds);
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
             RaiseTargetActivitiesPropertiesChanged();

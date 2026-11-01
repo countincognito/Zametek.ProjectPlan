@@ -313,6 +313,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             ShouldNotWaitForTheLock(displayLock, () => display.GanttChartShowConnectionsRevision);
             ShouldNotWaitForTheLock(displayLock, () => display.EarnedValueShowResourcesRevision);
+            ShouldNotWaitForTheLock(displayLock, () => display.GanttChartShowConnections.Count);
+            ShouldNotWaitForTheLock(displayLock, () => display.EarnedValueShowResources.Count);
         }
 
         [Fact]

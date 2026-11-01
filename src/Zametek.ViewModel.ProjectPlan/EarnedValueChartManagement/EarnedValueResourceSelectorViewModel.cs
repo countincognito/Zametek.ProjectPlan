@@ -127,8 +127,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // of GanttChartShowConnections.
             if (m_RevisingCount == 0)
             {
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(SelectedResourceIds);
+                m_CoreViewModel.DisplaySettingsViewModel.SetEarnedValueShowResources(SelectedResourceIds);
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
         }

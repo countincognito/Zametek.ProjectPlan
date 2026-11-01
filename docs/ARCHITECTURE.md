@@ -191,6 +191,8 @@ These rules are important. Several of them came from deadlocks and double-build 
 
    Refer to `RefreshDerivedProperties()` of the selector view models, which their `Raise*PropertiesChanged()` methods call first. Refer also to the references of the tracker sets in the style of `m_LastTracker`, which the application only replaces. An atomic read of such a reference needs no lock.
 
+   The filters `GanttChartShowConnections` and `EarnedValueShowResources` of the display settings have the same form. They used to be plain lists. A handler on the UI thread read a list while a load changed it on another thread. The handler then threw an exception, and its pipeline stopped.
+
    Plain Avalonia bindings, sort comparers and copy-table readers hold no gate. At worst, they compete for a short time. Only a getter that takes a lock can complete a deadlock cycle.
 
 10. **Live activity state is compiler state, and no deferred callback ever changes it.**
