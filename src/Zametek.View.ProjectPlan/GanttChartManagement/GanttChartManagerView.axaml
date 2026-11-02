@@ -9,7 +9,6 @@
 			       x:DataType="vm:GanttChartManagerViewModel"
 			       xmlns:converters="using:Avalonia.Controls.Converters"
 			       xmlns:sys="using:System"
-			       xmlns:u="https://irihi.tech/ursa"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.GanttChartManagerView"
              Plot="{Binding Path=GanttChartPlotModel, Mode=OneWay}">
@@ -28,7 +27,7 @@
 					   Margin="0,0,11,0"
 					   Content="{x:Static resources:Labels.Label_ShowConnections}"/>
 
-        <u:MultiComboBox MaxHeight="200"
+        <local:SyncedMultiComboBox MaxHeight="200"
 								 Width="{x:Static sys:Double.NaN}"
 								 HorizontalAlignment="Stretch"
 								 VerticalAlignment="Stretch"
@@ -37,7 +36,7 @@
 					       Margin="0,0,11,0"
 								 ItemsSource="{Binding Path=ActivitySelector.TargetActivities, Mode=OneWay}"
 								 SelectedItems="{Binding Path=ActivitySelector.SelectedTargetActivities, Mode=OneWay}">
-          <u:MultiComboBox.SelectedItemTemplate>
+          <local:SyncedMultiComboBox.SelectedItemTemplate>
             <DataTemplate x:DataType="vm:SelectableActivityViewModel">
               <Grid>
                 <TextBlock>
@@ -50,8 +49,8 @@
                 </TextBlock>
               </Grid>
             </DataTemplate>
-          </u:MultiComboBox.SelectedItemTemplate>
-          <u:MultiComboBox.ItemTemplate>
+          </local:SyncedMultiComboBox.SelectedItemTemplate>
+          <local:SyncedMultiComboBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SelectableActivityViewModel">
               <Grid>
                 <TextBlock ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}">
@@ -64,8 +63,8 @@
                 </TextBlock>
               </Grid>
             </DataTemplate>
-          </u:MultiComboBox.ItemTemplate>
-        </u:MultiComboBox>
+          </local:SyncedMultiComboBox.ItemTemplate>
+        </local:SyncedMultiComboBox>
       </DockPanel>
 
       <!-- ScottPlot PlotView with drag-resize tooltip overlay -->

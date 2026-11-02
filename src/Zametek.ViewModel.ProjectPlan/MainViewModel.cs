@@ -567,9 +567,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await Task.Run(async () =>
                 {
-                    // We set this flag to force revision of trackers in case there
-                    // changes to activities or resources have occurred since the last compile.
-                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                    // We force a revision of the trackers in case changes to
+                    // activities or resources have occurred since the last compile.
+                    m_CoreViewModel.ReviseTrackers();
 
                     await RunCompileAsync(); // Need to force a compilation here.
                 });
@@ -1580,7 +1580,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         string newTitle = ProjectTitle;
 
-                        if (titleRevision > 0
+                        if (titleRevision != 0
                             || projectHasChanges)
                         {
                             string projectTitle = m_SettingService.ProjectTitle;

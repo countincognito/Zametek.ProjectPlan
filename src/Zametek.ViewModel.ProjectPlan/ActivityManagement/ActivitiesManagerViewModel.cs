@@ -144,7 +144,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Max(x => x?.DisplayOrder ?? 0) + 1;
 
                 m_CoreViewModel.AddManagedActivity(displayOrder);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -182,7 +182,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 int newId = m_CoreViewModel.AddManagedActivity(newDisplayOrder);
 
                 m_CoreViewModel.UpdateManagedActivityIds([(newId, selectedId)]);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -233,7 +233,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 };
 
                 m_CoreViewModel.AddManagedActivities([duplicateModel]);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
 
             m_CoreViewModel.RunAutoCompile();
@@ -301,7 +301,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.RemoveManagedActivities(activityIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -394,7 +394,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.UpdateManagedActivityIds(mappedIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -429,7 +429,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.AddMilestone(activityIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }

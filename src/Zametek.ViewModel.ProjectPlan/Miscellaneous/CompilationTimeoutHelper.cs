@@ -11,9 +11,9 @@ namespace Zametek.ViewModel.ProjectPlan
     /// <remarks>
     /// The budget comes from ISettingService.CompilationTimeoutMilliseconds, and
     /// zero or less switches it off. Every call site reads the setting once into a
-    /// local and passes it to both methods here, so the token that fired and the
-    /// message that reports it always describe the same budget, even if the setting
-    /// changes mid-compile.
+    /// local and passes it to Run, or to both CreateTimeoutSource and TimedOut, so
+    /// the token that fired and the message that reports it always describe the same
+    /// budget, even if the setting changes mid-compile.
     /// <para>
     /// Note that a budget of a few milliseconds is not meaningful: the underlying
     /// timer only guarantees to fire at or after the delay, and its resolution is
@@ -57,6 +57,31 @@ namespace Zametek.ViewModel.ProjectPlan
                 string.Format(Resource.ProjectPlan.Messages.Message_CompilationTimedOut, timeoutMilliseconds),
                 TimeSpan.FromMilliseconds(timeoutMilliseconds),
                 innerException);
+        }
+
+        /// <summary>
+        /// Runs a compilation under the watchdog. The compilation gets the token of the watchdog, and a cancellation by
+        /// the watchdog becomes a <see cref="GraphCompilationTimeoutException"/>, so that callers can tell it apart from
+        /// any other cancellation.
+        /// </summary>
+        /// <remarks>
+        /// The watchdog starts when this method does. Call it immediately around the compile, so that time spent waiting
+        /// on a lock is not charged to the budget.
+        /// </remarks>
+        public static T Run<T>(int timeoutMilliseconds, Func<CancellationToken, T> compile)
+        {
+            ArgumentNullException.ThrowIfNull(compile);
+
+            using CancellationTokenSource? timeoutSource = CreateTimeoutSource(timeoutMilliseconds);
+
+            try
+            {
+                return compile(TokenOrNone(timeoutSource));
+            }
+            catch (OperationCanceledException ex) when (timeoutSource is not null && timeoutSource.IsCancellationRequested)
+            {
+                throw TimedOut(timeoutMilliseconds, ex);
+            }
         }
     }
 }

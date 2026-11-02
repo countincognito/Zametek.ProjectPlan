@@ -95,7 +95,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // Keep the interactive graph's edge routing mode and the scenario's persisted routing-mode
         // setting in step (see the ctor).
-        private readonly IDisposable m_EdgeRoutingModePushSub;
         private readonly IDisposable m_EdgeRoutingModeApplySub;
 
         // Reset the interactive viewport (zoom x1, default pan, cleared framing) when the project
@@ -161,13 +160,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex, dispatcher: graphDispatcher);
 
             // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
-            // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
-            // apply a loaded mode back to the interactive graph (every mode applies, including None).
-            // ApplyEdgeRoutingMode's no-op-on-equal guard stops the push and apply from looping.
-            m_EdgeRoutingModePushSub = m_Interactive
-                .WhenAnyValue(x => x.EdgeRoutingMode)
-                .Skip(1)
-                .Subscribe(mode => m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode = mode.ToEdgeRoutingMode());
+            // setting; apply a loaded mode back to the interactive graph (every mode applies, including
+            // None). A load applies its mode on its own thread, and the graph takes what belongs to the UI
+            // thread there. Only a choice of the user raises EdgeRoutingModeChanged, so opening a scenario
+            // does not mark it modified, and a change that is still on its way to the UI thread cannot
+            // write an older mode back. ApplyEdgeRoutingMode's no-op-on-equal guard ends the push.
+            m_Interactive.EdgeRoutingModeChanged += OnInteractiveEdgeRoutingModeChanged;
 
             m_EdgeRoutingModeApplySub = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode)
@@ -278,6 +276,13 @@ namespace Zametek.ViewModel.ProjectPlan
         public Task WriteFixedLayoutVertexGraphImageAsync(Stream stream, GraphExportFormat format)
         {
             return m_Interactive.WriteImageAsync(stream, format.ToGraphFileFormat(), GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex);
+        }
+
+        // Push a routing mode into the Core (which persists it and marks the scenario modified) when the
+        // user chooses it.
+        private void OnInteractiveEdgeRoutingModeChanged(object? sender, EventArgs e)
+        {
+            m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode = m_Interactive.EdgeRoutingMode.ToEdgeRoutingMode();
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario
@@ -397,11 +402,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_Theme?.Dispose();
-                m_EdgeRoutingModePushSub?.Dispose();
                 m_EdgeRoutingModeApplySub?.Dispose();
                 m_ResetViewSub?.Dispose();
                 m_LayoutSeedSub?.Dispose();
                 m_Interactive.LayoutChanged -= OnInteractiveLayoutChanged;
+                m_Interactive.EdgeRoutingModeChanged -= OnInteractiveEdgeRoutingModeChanged;
             }
 
             m_Disposed = true;

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -22,9 +21,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// result stops belonging to the plan.
     /// </summary>
     /// <remarks>
-    /// The core is never started, so a test drives it explicitly (a scenario load compiles, the setters say what
-    /// changed). The sample plan of the application has no estimates, so a copy of it is given an optimistic
-    /// duration of 0.75 and a pessimistic duration of 1.6 times its duration.
+    /// The core is not started, so a test drives it explicitly (a scenario load compiles, the setters say what
+    /// changed). The test about a plan that compiles again is the exception: it starts the core, so that a compile
+    /// settles the outputs as it does in the application. The sample plan of the application has no estimates, so a
+    /// copy of it is given an optimistic duration of 0.75 and a pessimistic duration of 1.6 times its duration.
     /// </remarks>
     public class SimulationChartManagerViewModelTests
     {
@@ -661,7 +661,17 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task RunSimulationAsync_Given_APlanThatCompilesAgain_Then_TheResultIsStaleUntilItRunsAgain()
         {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
             using Harness harness = await Harness.MakeAsync();
+
+            // The core is started, so that a compile settles its outputs as it does in the application. Starting it queues
+            // a cascade for the compilation that the harness made. The cascade runs now, so that it cannot move the
+            // revision of the outputs under the result of the simulation later.
+            harness.Core.StartSubscriptions();
+            Drain(main, pool);
+
             SimulationChartManagerViewModel panel = harness.Panel;
             panel.Iterations = c_Iterations;
             panel.UseRandomSeed = false;
@@ -680,8 +690,69 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.IsResultStale.ShouldBeFalse();
 
             // A compile builds the outputs again, and a new revision of them says that the result is of the plan that
-            // was there before. (The core is never started, so the test runs the step that settles the outputs.)
-            typeof(CoreViewModel).GetMethod(@"RunBuildCascade", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(harness.Core, null);
+            // was there before.
+            harness.Core.RunCompile();
+            Drain(main, pool);
+            panel.IsResultStale.ShouldBeTrue();
+
+            await panel.RunSimulationAsync();
+            panel.IsResultStale.ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task IsResultStale_Given_AMillionCompilesSinceTheRun_Then_TheResultIsStillStale()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = await Harness.MakeAsync();
+            harness.Core.StartSubscriptions();
+            Drain(main, pool);
+
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 1;
+            await panel.RunSimulationAsync();
+            panel.IsResultStale.ShouldBeFalse();
+
+            // One more compile makes it a million since the run. The revision must not come back to that of the result: this
+            // is why it has no wrap (ARCHITECTURE section 9).
+            RevisionCounters.SetCompilationOutputRevision(harness.Core, harness.Core.CompilationOutputRevision + 999_999);
+            harness.Core.RunCompile();
+            Drain(main, pool);
+
+            panel.IsResultStale.ShouldBeTrue("the revision came back to that of the result");
+        }
+
+        [Fact]
+        public async Task IsResultStale_Given_ARolloverSinceTheRun_Then_TheResultIsStaleUntilItRunsAgain()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = await Harness.MakeAsync();
+            harness.Core.StartSubscriptions();
+            Drain(main, pool);
+
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 1;
+
+            // A compile takes the revision to the end of its range, with a raise, so that the panel has seen it.
+            RevisionCounters.SetCompilationOutputRevision(harness.Core, int.MaxValue - 1);
+            harness.Core.RunCompile();
+            Drain(main, pool);
+            harness.Core.CompilationOutputRevision.ShouldBe(int.MaxValue);
+
+            await panel.RunSimulationAsync();
+            panel.IsResultStale.ShouldBeFalse();
+
+            // The revision of the plan is now the smallest number there is, and that of the result is the largest.
+            harness.Core.RunCompile();
+            Drain(main, pool);
+            harness.Core.CompilationOutputRevision.ShouldBe(int.MinValue);
             panel.IsResultStale.ShouldBeTrue();
 
             await panel.RunSimulationAsync();
@@ -1456,8 +1527,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationNoResult);
         }
 
-        [Fact]
-        public async Task ProcessProjectScenario_Given_ARunInProgress_Then_TheRunStopsAndLeavesNoResult()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task ProcessProjectScenario_Given_ARunInProgress_Then_TheRunStopsAndLeavesNoResult(bool acrossARollover)
         {
             CoreViewModelFixture.EnsureReactiveUIInitialized();
             using var main = new MainThreadSequencerScope();
@@ -1466,6 +1539,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             SimulationChartManagerViewModel panel = harness.Panel;
             panel.StartSubscriptions();
             Drain(main, pool);
+
+            if (acrossARollover)
+            {
+                RevisionCounters.SetProjectScenarioRevision(harness.Core, int.MaxValue);
+            }
+
             panel.Iterations = GraphLimits.MaximumSimulationIterations;
             Task run = panel.RunSimulationAsync();
             panel.IsRunning.ShouldBeTrue();
@@ -1473,7 +1552,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // The scenario that the run belongs to is replaced. The run stops, and what it would have found is nobody's.
             harness.Core.ProcessProjectScenario(await LoadSampleWithEstimatesAsync(), Guid.NewGuid(), @"Other");
             Drain(main, pool);
-            await run;
+
+            // A run that does not stop goes on for all its iterations, and then finds at its end that the scenario is gone. The
+            // limit makes this a failure. Without it, the test only takes minutes and passes.
+            await run.WaitAsync(TimeSpan.FromSeconds(60));
 
             panel.IsRunning.ShouldBeFalse();
             panel.Summary.ShouldBeNull();

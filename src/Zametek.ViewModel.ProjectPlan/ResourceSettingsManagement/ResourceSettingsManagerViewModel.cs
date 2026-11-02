@@ -374,7 +374,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.UpdateManagedResourceIds(mappedIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }

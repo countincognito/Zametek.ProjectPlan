@@ -2,19 +2,19 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-08-15)*
+- [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-10-29)*
 
   ReactiveUI 24 no longer uses System.Reactive. But removal has no value while other packages still depend on it. Thus, the assembly ships in all cases.
 
-  **Dock.** At the last check, Dock was in the middle of a split. Version 12.1.0.1 introduced the suffixed System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, with `ReactiveUI.Reactive`). It documents the unsuffixed family as the ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repository).
+  **Dock.** Dock now ships two lanes. The Dock documentation recommends the suffixed System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, with `ReactiveUI.Reactive`). It calls the unsuffixed family the optional ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repository).
 
-  The shipped unsuffixed `Dock.Model.ReactiveUI` 12.1.0.1 still declares `System.Reactive` 7.0.0. But Dock master no longer has the reference. Thus, the next unsuffixed release is expected to open the Dock gate.
+  The unsuffixed lane keeps `System.Reactive`. Version 12.1.0.13 of `Dock.Model.ReactiveUI` declares `System.Reactive` 7.0.0, and so does the suffixed twin. On Dock master, the props file `build/ReactiveUI.Primitives.props` of the unsuffixed project references `ReactiveUI` and `System.Reactive` together. Thus, the Dock gate can stay closed for good. The earlier expectation, that the next unsuffixed release drops the reference, does not hold.
 
-  **DynamicData.** `DynamicData` is the remaining hard blocker in released packages. Versions 9.4.33 and 9.5.0-preview.15 both declare `System.Reactive` 6.1.0, and no suffixed twin exists. But the direction is certain. PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116) migrates DynamicData to ReactiveUI.Primitives.
+  **DynamicData.** `DynamicData` is the remaining hard blocker in released packages. Version 9.5.0 (2026-10-13) declares `System.Reactive` 6.1.0, and no suffixed twin exists. PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116) migrates DynamicData to ReactiveUI.Primitives. It is open, and it has conflicts with main.
 
-  The maintainer plans to ship it in a 10.0.0-preview. At the last check, the naming of the packages was still undecided: a suffixed convention like ReactiveUI and Dock, or explicit dual names. Thus, the Rx-free DynamicData arrives as a MAJOR bump (10.x), with previews first.
+  On 2026-10-28, a maintainer wrote in this PR that Primitives support will be opt-in. The default `DynamicData` package stays on `System.Reactive`. Primitives support ships as a separate package that consumers choose to reference. Thus, the default package does not become free of Rx.
 
-  **Watch.** Confirm that the next unsuffixed Dock release drops `System.Reactive`. Then watch for a stable DynamicData 10.x without it.
+  **Watch.** Watch for the separate DynamicData package for Primitives, and for a Dock release whose unsuffixed package drops `System.Reactive`. If both packages keep the dependency, the assembly ships in all cases, and you cannot complete this entry. Then decide whether to delete the entry.
 
   **Caution for version bumps.** This repository is deliberately in the unsuffixed Primitives lane. Do not adopt a package with the suffix `.Reactive`. The two families have distinct type identities, and you must not mix them.
 
@@ -25,6 +25,28 @@ This file lists the maintainer-internal engineering intents that must version wi
   - `Observable.Create` does not exist. `MuteWhile` uses it.
 
   **Starting points.** Comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock and DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj` mark the places. The bridge `ObservableExtensions.ObserveOn(ISequencer)` is the seam where the unwinding starts.
+
+- [ ] **Stop a revision of the trackers from changing a list that the UI thread reads** *(2026-11-02)*
+
+  A revision of the trackers changes the lists of a selector on the thread that asks for it. `TimesheetCellViewModel`, `ResourceTrackerSetViewModel.CloneTrackers` and an open dropdown read these lists on the UI thread, and they do not hold the lock of the selector. A read that meets the change throws `Collection was modified`. On the UI thread, nothing handles that exception.
+
+  A test of the real application met this on the old code during a rename, because each revision moved each item of the list. Now, a revision with nothing new changes nothing. A revision that adds or removes an activity still changes the lists, and this occurs only at a command of the user.
+
+  **Starting points.** The display settings solved the same problem: each of the two chart filters is an array, and a change replaces all of it (§7 rule 9 of [ARCHITECTURE](ARCHITECTURE.md)). A selector cannot do that for the lists that a dropdown binds to. It can post the change to the UI thread, as `InteractiveGraphViewModel.ApplyEdgeRoutingMode` does (§7 rule 15), and give the readers on other threads an array of the ids. Each selector already has such an array for its selection.
+
+- [ ] **Keep the open project when an import fails after its checks** *(2026-11-01)*
+
+  `MainViewModel.ImportProjectScenarioFileAsync` resets the project for each failure except `ScenarioImportException`. The import asks for a confirmation only if the scenario on show has changes. A later failure can be a compilation that uses all of its budget. This failure drops the changes in the other scenarios that are not saved. The file is as it was at the last save.
+
+  **Starting points.** Rule 16 of section 7 in [ARCHITECTURE](ARCHITECTURE.md) gives the method: go back to the scenario that the core had. `ProcessProjectScenario` also keeps a scenario whole when its compilation uses all of its budget, and `ProcessProjectScenarioImport` does not do this.
+
+- [ ] **Remove `SyncedMultiComboBox` when Ursa follows `SelectedItems`** *(2026-10-31)*
+
+  In Ursa 2.2.0, an item of `MultiComboBox` adds its data to `SelectedItems` when it attaches to the logical tree, if its own `IsSelected` is true. The control also stops listening to `SelectedItems` when it unloads, and it does not listen again. The two chart filters use [`SyncedMultiComboBox`](../src/Zametek.View.ProjectPlan/Controls/SyncedMultiComboBox.cs), and its item corrects `IsSelected` first.
+
+  The activity grid, the resource grid and the two edit dialogs still use the plain control. Their items belong to one row or one dialog, and thus a selection cannot go to another scenario. But a selection that changes without its dropdown can possibly come back in the same way. No test shows this yet.
+
+  **Watch.** Check each new version of Ursa. If the control is correct, remove the subclass. [`ChartFilterTests`](../test/Zametek.View.ProjectPlan.Tests/Controls/ChartFilterTests.cs) then show if the plain control is enough.
 
 - [ ] **Spin out Zametek.Graphs.Avalonia into its own repository** *(2026-08-02)*
 
@@ -51,12 +73,12 @@ This file lists the maintainer-internal engineering intents that must version wi
   The point fixes are already in place:
 
   - The sweep for lock-free getters (ARCHITECTURE §7 rule 9).
-  - The move of the core callbacks of the display settings (`SetIsProjectScenarioUpdated` and `IsReadyToCompile`) out of all the lock blocks of the setters.
+  - The move of the core callbacks of the display settings (`SetIsProjectScenarioUpdated` and `RequestCompilation`) out of all the lock blocks of the setters.
   - Ref-counted guards for revision in the Gantt and earned-value selectors. A shared bool let the `finally` of one reviser clear the guard of the other reviser during the revision, across threads.
 
   The REMAINING sites that call out under a lock are not live bugs, because every remaining edge is one-way with the point fixes in place. A fix for them is hardening. These sites form the deferred surgery. The list that follows has the items in descending order of value:
 
-  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `IsReadyToReviseTrackers`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `IsReadyToReviseTrackers` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. The call to `SetValues` is the Core→DS edge in the second dump.
+  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `TrackersRevision`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `TrackersRevision` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. The call to `SetValues` is the Core→DS edge in the second dump.
 
      The surgery splits each method into two phases. The state phase runs under the lock. The fan-out phase runs after the release. The state phase collects the pending raises and signals, and the fan-out phase emits them outside the lock. §7 rule 7 makes this safe. Handlers read the live state again, because payloads are stale snapshots. The window of `BeginBulkUpdate` and `EndBulkUpdate` wraps both phases, and thus the semantics of the suppression survive.
   2. `ProjectScenarioDisplaySettingsViewModel.SetValues` assigns about 30 raising setters under the DS lock. Thus, every synchronous observer (the sink gates of ReactiveUI) runs under that lock. The surgery sets the fields and collects the names of the changed properties under the lock. Then it raises all of them after the release. This also removes the re-entrant locking of the setters.
@@ -64,7 +86,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   4. The plot-model setters of the chart managers (the earned-value, Gantt and resource charts) and `ResourceTrackerSetViewModel.RefreshIndex` raise inside their locks. These are trivial splits: set under the lock, and raise after the release.
   5. Document the global DAG of lock acquisition in ARCHITECTURE §7: Manager→Core→DisplaySettings and Core→Selector, with the node and tracker view models as leaves. Verify that the core never calls back into the scenario manager under its lock. Then future calls across view models have an order to follow.
 
-  **Related problems.** The investigation found two more problems in the same area. First, `GanttChartShowConnections` and `EarnedValueShowResources` are plain `List<int>` objects. UI handlers change them without the DS lock, while `SetValues` seeds them under it. This is a risk of torn reads. Second, the DS setters mark the scenario as modified, also when `RaiseAndSetIfChanged` writes nothing.
+  **Related problem.** The investigation found one more problem in the same area. The DS setters mark the scenario as modified, also when `RaiseAndSetIfChanged` writes nothing.
 
   See also the entry of 2026-08-04 above. The sweep for getters already delivered its suggestion of lock-free snapshots for hot bound properties, for the getters of the selectors and the trackers.
 
@@ -90,13 +112,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The ClrMD analysis of 2026-08-18 found the root cause of the spin: a torn `HashSet` clone poisoned the `Contains` gate of the scheduler. ARCHITECTURE §7 rule 10 tells the full story, and it shows the race on the ProjectPlan side that tore the clone.
 
-  The scheduler now detects the dead state upstream. Zametek.Maths.Graphs 3.2.0 reports compilation error C0020 and does not spin, and `Compile` takes a cancellation token. The compile watchdog of the application (`CompilationTimeoutMilliseconds`, 2026-08-19) limits all that the scheduler cannot prove dead. One structural item remains from this paragraph: run the compile outside the lock, against a snapshot. It has its own entry below (Phase 2b).
+  The scheduler now detects the dead state upstream. Zametek.Maths.Graphs 3.2.0 reports compilation error C0020 and does not spin, and `Compile` takes a cancellation token. The compile watchdog of the application (`CompilationTimeoutMilliseconds`, 2026-08-19) limits all that the scheduler cannot prove dead. The last structural item of this paragraph landed on 2026-10-25: the compile and the cascade now run outside the lock, against a snapshot (§7 rule 14).
 
   **Size, and a recommendation not to do the surgery as written** *(2026-08-21)*
 
   The measurement is against the source code as it is now. The surgery spans these parts:
 
-  - `CoreViewModel`: 2,453 lines and 66 `lock (m_Lock)` sites. The fan-out of the load is about ninety lines under one lock. These lines contain two `SetValues` calls, four assignments of settings that each raise and fan out, and the assignment to `IsReadyToReviseTrackers`. The `Scheduler.CurrentThread` subscriptions of this assignment run selector revisions synchronously on the raising thread.
+  - `CoreViewModel`: 2,453 lines and 66 `lock (m_Lock)` sites. The fan-out of the load is about ninety lines under one lock. These lines contain two `SetValues` calls, four assignments of settings that each raise and fan out, and the call of `ReviseTrackers()`. The `Scheduler.CurrentThread` subscriptions of this call run selector revisions synchronously on the raising thread.
   - `ProjectScenarioDisplaySettingsViewModel`: 735 lines and 33 lock sites. Its `SetValues` makes sixty property assignments, and each one uses a locked raising setter.
   - The five selector view models: 1,455 lines in total.
   - A handful of trivial splits in the chart managers.
@@ -108,7 +130,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Second, this entry argues against itself. The direction to explore above makes items 1 to 4 unnecessary and not only done. It also makes item 5 unnecessary: with no locks, there is no DAG of acquisition to document. If the surgery for the lock order comes first, the cost is full for something that the better end state discards.
 
-  Better value is nearby. Phase 2b (run the compile outside `m_Lock`) is small and concrete now that compilation works on private copies.
+  Better value was nearby. Phase 2b (run the compile and the cascade outside `m_Lock`) landed on 2026-10-25, and it was larger than this entry expected. The lock did hidden jobs, and counters now do them (§7 rule 14). The pattern that it proves is the one of the direction above: copy under the lock, build without it, and publish with checks.
 
   **The browser head changes the economics** *(2026-08-21)*
 
@@ -116,21 +138,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   If the web app becomes worth shipping, this direction is no longer speculative. It becomes the natural shape of the application. Then you must delete this entry. Do not do the work that it lists.
 
-- [ ] **Run the compile outside `m_Lock`** *(2026-08-19, Phase 2b of the work on the data race of the live activity)*
+- [ ] **Speed up the calculation of the tracking series** *(2026-10-25)*
 
-  Phases 1 and 2 both landed on 2026-08-19. The deferred callbacks of the settings that corrupted the input of a compilation are gone (ARCHITECTURE §7 rule 10). A compilation now makes a snapshot of the plan and compiles a throwaway copy of the graph. It publishes the results back through `SetCompiledValues`. A leaf lock makes the snapshot and publish passes exclusive with the own writes of the activities (§7 rule 11).
+  The cascade of a large plan takes about 650 ms on the sample plan with 985 activities (`docs/assets/erp-migration.zpp`). The compile takes 100 to 170 ms. `CalculateTrackingSeriesSet` in `ResourceSchedulingService` takes 310 to 370 ms, and thus it is about half of the cascade. The arrow graph takes 50 to 90 ms, the vertex graph takes 160 to 190 ms, and all the metrics together take 30 to 70 ms.
 
-  One piece remains from the original design, and the design split it out on purpose. `RunCompile` still holds `m_Lock` across the compile itself. Thus, a long compile still blocks every UI binding that touches the core. A compile that never finishes still wedges the application. (Only the watchdog limits this now.)
-
-  The compile no longer needs the lock, because it runs entirely on private copies. Thus, the change is now small. Take `m_Lock` for the snapshot. Release it for the compile. Take it again to publish the results and to assign `GraphCompilation`.
-
-  Compilations can overlap when the lock no longer serializes them. This case needs thought. There are two options. One option drops a second compilation while one is in progress. `IsReadyToCompile` already arms and does not queue, and thus this option is close to the behavior today.
-
-  The other option lets the later result win and discards the earlier one. In both options, `CompilationOutputRevision` and `HasStaleOutputs` must still describe the compilation that the application published.
-
-  Consider the seam for the cancellation of the compile. The token is already in place. Thus, a new compilation can cancel the compilation in progress and not let it run to the end.
-
-  Verify the change with the comparison that Phase 2 used, before and after. Run `zpp -i <file> -o <out>` across all sample projects and several scenarios. Compare the output with a diff that ignores `ModifiedOn`. Also use the concurrency tests in `CoreViewModelCompilationTests`.
+  The cascade no longer holds `m_Lock` (ARCHITECTURE §7 rule 14), and thus the time does not block the UI. But it delays the charts after each edit, and a bulk update waits for it. Profile the calculation and look for work that repeats for each activity. A faster tracking series shortens the wait for every chart.
 
 - [ ] **Bring the browser head up to the desktop application** *(2026-08-21)*
 

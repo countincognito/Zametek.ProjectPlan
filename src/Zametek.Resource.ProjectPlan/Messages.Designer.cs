@@ -1883,6 +1883,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The plan has compilation errors, and the transitive reduction cannot be made. Nothing was changed.
+        /// </summary>
+        public static string Message_TransitiveReductionCompilationErrors {
+            get {
+                return ResourceManager.GetString("Message_TransitiveReductionCompilationErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The dependencies of the plan were changed while the transitive reduction was made. Nothing was changed. Make the transitive reduction again.
+        /// </summary>
+        public static string Message_TransitiveReductionPlanChanged {
+            get {
+                return ResourceManager.GetString("Message_TransitiveReductionPlanChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to determine directory for Dock Layout.
         /// </summary>
         public static string Message_UnableToDetermineDockLayoutDirectory {

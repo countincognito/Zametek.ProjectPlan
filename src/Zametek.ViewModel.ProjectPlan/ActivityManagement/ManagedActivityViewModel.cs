@@ -569,7 +569,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // graph edges, so it is a write to the data a compilation snapshots.
                     lock (m_DataLock)
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], PlanningDependencies);
+                        m_VertexGraphCompiler.SetUserDependencies(Id, [.. updatedDependencies], PlanningDependencies);
                     }
                 }
                 this.RaisePropertyChanged();
@@ -593,7 +593,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     lock (m_DataLock)
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
+                        m_VertexGraphCompiler.SetUserDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
                     }
                 }
                 this.RaisePropertyChanged();
@@ -1354,6 +1354,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 UpdateActivityTargetResources();
                 UpdateActivityTargetWorkStreams();
                 TrackerSet.RefreshIndex();
+
+                // First, before anything announces the edit: a compilation that is running has not seen it, and
+                // must not be able to publish and call the plan current in between (ARCHITECTURE section 7 rule 14).
+                // The wait for the core lock that the next line makes used to order the edit after the compilation.
+                if (!IsEditMuted)
+                {
+                    m_CoreViewModel.NoteInputsChanged();
+                }
+
                 m_CoreViewModel.IsProjectScenarioUpdated = true;
 
                 if (!IsEditMuted)

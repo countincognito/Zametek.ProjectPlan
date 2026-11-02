@@ -13,7 +13,7 @@ namespace Zametek.Contract.ProjectPlan
         ReadyToRevise IsReadyToReviseTitle { get; set; }
 
         // How many times the title has been armed. A value that does not change raises no event in WhenAnyValue, and so
-        // a flag that is already Yes cannot say that it was armed again. This one changes each time.
+        // a flag that is already Yes cannot say that it was armed again. This one changes each time. Observe changes only.
         int TitleRevision { get; }
 
         ReadyToRevise IsReadyToReviseTrackedMetrics { get; set; }

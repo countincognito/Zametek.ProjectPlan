@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.ExceptionServices;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -25,7 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
-        private int m_BusyNestingLevel;
+        private readonly NestingCounter m_BusyNesting = new();
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -340,7 +341,7 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         private void BeginBusy()
         {
-            if (Interlocked.Increment(ref m_BusyNestingLevel) == 1)
+            if (m_BusyNesting.Begin())
             {
                 this.RaisePropertyChanged(nameof(IsBusy));
             }
@@ -348,31 +349,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void EndBusy()
         {
-            // Decrement defensively, clamping at zero: pairing is expected (BeginBusy
-            // at the start of a try block, EndBusy in its finally), but an unmatched
-            // call must never drive the count negative, which would silently break
-            // the busy signal for the remainder of the session.
-            //
-            // This is a standard lock-free compare-and-swap retry loop. The initial
-            // volatile read is only a first guess and may be stale by the time the
-            // CompareExchange runs; that is fine, because CompareExchange writes the
-            // decrement only if the field still holds the guessed value, atomically,
-            // and otherwise writes nothing and returns the actual current value, with
-            // which the loop simply tries again. A stale read can therefore only ever
-            // cause a retry, never an incorrect write.
-            int currentLevel = Volatile.Read(ref m_BusyNestingLevel);
-            while (currentLevel > 0)
+            if (m_BusyNesting.End())
             {
-                int originalLevel = Interlocked.CompareExchange(ref m_BusyNestingLevel, currentLevel - 1, currentLevel);
-                if (originalLevel == currentLevel)
-                {
-                    if (currentLevel == 1)
-                    {
-                        this.RaisePropertyChanged(nameof(IsBusy));
-                    }
-                    return;
-                }
-                currentLevel = originalLevel;
+                this.RaisePropertyChanged(nameof(IsBusy));
             }
         }
 
@@ -942,17 +921,40 @@ namespace Zametek.ViewModel.ProjectPlan
                         ProjectScenarioNodeModel selectedScenarioNodeModel = managedNodeViewModel.Node;
                         Guid nodeId = selectedScenarioNodeModel.Id;
                         string nodeName = selectedScenarioNodeModel.Name;
+                        GraphCompilationTimeoutException? compilationTimeout = null;
 
                         if (m_FileScenarioLookup.TryGetValue(nodeId, out ProjectScenarioFileModel? projectScenarioFile))
                         {
                             ProjectScenarioModel projectScenarioModel = projectScenarioFile.Scenario;
-                            m_CoreViewModel.ProcessProjectScenario(projectScenarioModel, nodeId, nodeName);
+                            Guid previousNodeId = m_SettingService.ScenarioId;
+                            bool wasProjectScenarioUpdated = m_CoreViewModel.IsProjectScenarioUpdated;
+
+                            try
+                            {
+                                m_CoreViewModel.ProcessProjectScenario(projectScenarioModel, nodeId, nodeName);
+                            }
+                            catch (GraphCompilationTimeoutException ex)
+                            {
+                                // The scenario is whole, with no outputs, and so the load goes on.
+                                compilationTimeout = ex;
+                            }
+                            catch
+                            {
+                                RestoreProjectScenario(previousNodeId, wasProjectScenarioUpdated);
+                                throw;
+                            }
+
                             MarkNodeAsLoaded(nodeId);
                         }
 
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
                         IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
+
+                        if (compilationTimeout is not null)
+                        {
+                            ExceptionDispatchInfo.Capture(compilationTimeout).Throw();
+                        }
                     }
                 }
             }
@@ -960,6 +962,43 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 EndBusy();
             }
+        }
+
+        // A load failed part way. The core holds a part of a scenario under an id that names no node, and so
+        // BuildProject cannot write it over a scenario. This goes back to the scenario that the core held:
+        // BuildProject wrote it to its file before the load, with its edits, and the mark says that those edits
+        // are not saved yet. Its node still says that it is loaded. The caller reports the failure of the load, and
+        // the core logs a failure here. The core then stays as it is, and no node says that it is loaded. A save
+        // still writes every file as it was.
+        private void RestoreProjectScenario(Guid nodeId, bool isProjectScenarioUpdated)
+        {
+            if (GetNode(nodeId) is not IManagedNodeViewModel managedNode
+                || !m_FileScenarioLookup.TryGetValue(nodeId, out ProjectScenarioFileModel? projectScenarioFile))
+            {
+                return;
+            }
+
+            try
+            {
+                m_CoreViewModel.ProcessProjectScenario(projectScenarioFile.Scenario, nodeId, managedNode.Name);
+            }
+            catch (GraphCompilationTimeoutException)
+            {
+                // The scenario is whole, with no outputs.
+            }
+            catch (Exception)
+            {
+                foreach (IManagedNodeViewModel node in m_ManagedNodeLookup.Values)
+                {
+                    node.IsLoaded = false;
+                }
+
+                return;
+            }
+
+            m_CoreViewModel.IsProjectScenarioUpdated = isProjectScenarioUpdated;
+            IsReadyToReviseTitle = ReadyToRevise.Yes;
+            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
         }
 
         private async Task CreateEmptyProjectScenarioFileAsync()
@@ -1878,7 +1917,7 @@ namespace Zametek.ViewModel.ProjectPlan
         // This getter must remain lock-free: it is re-read synchronously by property
         // chain observers (WhenAnyValue) on whichever thread raises the change
         // notification, so it must never contend for m_Lock.
-        public bool IsBusy => Volatile.Read(ref m_BusyNestingLevel) > 0;
+        public bool IsBusy => m_BusyNesting.IsActive;
 
         // We need to use an enum because raised changes on bools aren't always captured.
         // https://github.com/reactiveui/ReactiveUI/issues/3846
@@ -1902,6 +1941,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // A revision counter (ARCHITECTURE section 9).
         // This getter must remain lock-free: a property chain re-reads it on the thread that raises the change.
         private int m_TitleRevision;
         public int TitleRevision => Volatile.Read(ref m_TitleRevision);
@@ -2395,8 +2435,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Ensure that the current project scenario is up to date.
 
+                    // The id names no node when a load has failed part way (see CoreViewModel.ResetProjectScenario):
+                    // what the core holds is then a part of a scenario, and it takes the place of nothing.
                     Guid nodeId = m_SettingService.ScenarioId;
-                    ProjectScenarioModel projectScenario = m_CoreViewModel.BuildProjectScenario();
 
                     IManagedNodeViewModel? managedProjectScenario = GetNode(nodeId);
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
@@ -2429,6 +2470,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (managedProjectScenario is not null)
                     {
                         // Update existing managed scenario.
+                        ProjectScenarioModel projectScenario = m_CoreViewModel.BuildProjectScenario();
                         managedProjectScenario.Scenario = projectScenario;
                         managedProjectScenario.ModifiedOn = localNow;
 

@@ -155,6 +155,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Main.ProjectTitle.ShouldStartWith(@"second - ");
         }
 
+        [Fact]
+        public void Title_Given_ARevisionThatRollsOver_Then_TheArmStillReachesTheTitle()
+        {
+            // After a rollover the revision is a negative number, and an arm still has to reach the title (ARCHITECTURE section 9).
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = Harness.Make();
+            harness.Main.StartSubscriptions();
+            Drain(main, pool);
+            RevisionCounters.SetTitleRevision(harness.Project, int.MaxValue);
+
+            harness.Settings.SetProjectFilePath(PlanFile(@"plan"), bindTitleToFilename: true);
+            harness.Project.IsReadyToReviseTitle = ReadyToRevise.Yes;
+            Drain(main, pool);
+
+            harness.Project.TitleRevision.ShouldBe(int.MinValue);
+            harness.Main.ProjectTitle.ShouldStartWith(@"plan - ");
+        }
+
         // The path of a project file in a folder, made with the separator of the platform that runs the test. The title is the
         // name of the file without its folder, and on Linux a backslash does not end a folder: a path written as C:\plans\plan.zpp
         // would be one long file name there. Nothing is read from or written to the path.

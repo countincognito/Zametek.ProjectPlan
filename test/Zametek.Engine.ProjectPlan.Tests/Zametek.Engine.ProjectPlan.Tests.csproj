@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <!-- Read a workbook by its XML alone, as the tests of the view models do: a test of a job reads when the workbook was created. -->
-    <Compile Include="..\Zametek.ViewModel.ProjectPlan.Tests\Miscellaneous\XlsxPackageReader.cs" Link="Miscellaneous\XlsxPackageReader.cs" />
+    <Compile Include="..\Zametek.ViewModel.ProjectPlan.Tests\Xlsx\XlsxPackageReader.cs" Link="Xlsx\XlsxPackageReader.cs" />
   </ItemGroup>
 
   <ItemGroup>

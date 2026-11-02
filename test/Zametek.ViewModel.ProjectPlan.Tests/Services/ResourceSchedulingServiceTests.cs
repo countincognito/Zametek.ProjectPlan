@@ -154,7 +154,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             return CreateService().BuildTrackingSeriesSet(
                 CreateActivities(),
                 CreateResourceSettings(),
-                hasResources);
+                hasResources,
+                new PresetColorSequence());
         }
 
         private static double StepValueAt(
@@ -298,21 +299,39 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public void BuildTrackingSeriesSet_GivenResourcesWithoutColors_ThenEachServiceDrawsThePresetsFromTheFirst()
+        public void BuildTrackingSeriesSet_GivenResourcesWithoutColors_ThenEachSequenceDrawsThePresetsFromTheFirst()
         {
-            // A resource without a colour of its own takes the next preset colour.
-            // Each job builds with a service of its own, so the colours one service
-            // draws must never move another's on.
+            // A resource without a colour of its own takes the next preset colour of the sequence that it is given.
+            // The service keeps no sequence, so the colours one build draws never move another's on, even when both
+            // builds use one service.
             ResourceSettingsModel settings = CreateResourceSettings();
             settings = settings with { Resources = [.. settings.Resources.Select(x => x with { ColorFormat = null! })] };
-            List<ColorFormatModel> Colors(ResourceSchedulingService service) =>
-                [.. service.BuildTrackingSeriesSet(CreateActivities(), settings, hasResources: true).ByResource.Select(x => x.ColorFormat)];
+            ResourceSchedulingService service = CreateService();
+            List<ColorFormatModel> Colors(PresetColorSequence presetColors) =>
+                [.. service.BuildTrackingSeriesSet(CreateActivities(), settings, hasResources: true, presetColors).ByResource.Select(x => x.ColorFormat)];
 
-            List<ColorFormatModel> first = Colors(CreateService());
-            List<ColorFormatModel> second = Colors(CreateService());
+            List<ColorFormatModel> first = Colors(new PresetColorSequence());
+            List<ColorFormatModel> second = Colors(new PresetColorSequence());
 
             first.ShouldBe([.. ColorHelper.PresetColors.Take(3).Select(ColorHelper.AvaloniaColorToColorFormatModel)]);
             second.ShouldBe(first);
+        }
+
+        [Fact]
+        public void BuildTrackingSeriesSet_GivenASequenceThatHasDrawn_ThenTheColorsCarryOnFromIt()
+        {
+            // The series of the tracking carry on where the series of the resources stopped, and so they take the
+            // sequence that those used, and they do not start it again.
+            ResourceSettingsModel settings = CreateResourceSettings();
+            settings = settings with { Resources = [.. settings.Resources.Select(x => x with { ColorFormat = null! })] };
+            var presetColors = new PresetColorSequence();
+            presetColors.Next();
+            presetColors.Next();
+
+            List<ColorFormatModel> colors =
+                [.. CreateService().BuildTrackingSeriesSet(CreateActivities(), settings, hasResources: true, presetColors).ByResource.Select(x => x.ColorFormat)];
+
+            colors.ShouldBe([.. ColorHelper.PresetColors.Skip(2).Take(3).Select(ColorHelper.AvaloniaColorToColorFormatModel)]);
         }
 
         [Fact]
@@ -514,7 +533,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             TrackingSeriesSetModel set = CreateService().BuildTrackingSeriesSet(
                 [],
                 CreateResourceSettings(),
-                hasResources: true);
+                hasResources: true,
+                new PresetColorSequence());
 
             set.Plan.ShouldBeEmpty();
             set.Progress.ShouldBeEmpty();

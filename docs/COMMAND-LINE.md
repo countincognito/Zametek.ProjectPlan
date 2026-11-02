@@ -38,7 +38,7 @@ The option `--list-scenarios` prints a table of the scenarios of the plan. This 
 | Beta     | 17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4 |         |         |
 ```
 
-A scenario in a folder, or under another scenario, has a name that shows its location: `Folder/Scenario`.
+A scenario in a folder, or under another scenario, has a name that shows its location: `Folder/Scenario`. A long name stays in one row.
 
 The column **Tracked** shows that the scenario is on the scenario chart. The chart plots the metrics of the scenario as a point, against the metrics of the axes of the chart. The option `--scenario-chart-directory` writes the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any other output holds. It is not the progress tracking of activities.
 
@@ -102,11 +102,13 @@ An activity can have three estimates of its duration: an optimistic, a most like
 
 The settings of the simulation are in the project. They are the iterations, the distribution, its shape value, the seed, whether to draw a new seed each time, and the target finish. You set them in the dock "Simulation" of the desktop application. The application saves them with the project, together with the result of the last run. `zpp` does not have options for them. It uses what the input file holds. A file that was saved before the simulation has the settings of a new scenario: 5000 iterations, the distribution `BetaPert`, and the seed 1.
 
-The option `--run-simulation` runs the simulation after the plan compiles. `zpp` prints the statistics of the finish after the metrics:
+The option `--run-simulation` runs the simulation after the plan compiles. `zpp` prints the statistics of the finish after the metrics, in a table of their own:
 
 ```
 zpp -i plan.zpp --run-simulation
 ```
+
+The statistics are a second table, with the headings "Simulation Metrics" and "Values". A blank line separates it from the table of the metrics. The table of the metrics is the same as for a run with no simulation. A long statistic stays in one row. Both `--metrics-format markdown` (the default) and `--metrics-format table` print the two tables.
 
 The statistics are those of the dock "Simulation Metrics" of the desktop application. They are the seed and the distribution (and the shape value, for the modified beta-PERT), the mean and the standard deviation of the finish, and the earliest and the latest finish. They also have the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles, and the chance that the project finishes by the target. A time is a number of days from the start of the project. A percentile is the smallest finish that at least that share of the iterations reach. When the dates are on display in the plan, each time also has its date. The seed, the distribution and the shape value are those of the run that made the result. A person can change the settings of the project after the run, and the statistics of a saved result do not follow them.
 
@@ -127,6 +129,7 @@ zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --s
 - With `--metrics-format json`, the statistics are one more object, `Simulation`, after the metrics. It has raw values, as the metrics have. The seed is text, because a seed can be larger than every reader of JSON reads without loss. A date is `yyyy-MM-dd`. A project with no result, and no `--run-simulation`, has the JSON that it had before there was a simulation.
 - A run can fail in two ways. The settings of the project can be ones that a run cannot use, for example no iterations or a shape value that is not above 0. Or the simulation cannot run, for example for a plan that has no activities. Then `zpp` writes the reason to the standard error stream and exits with code 1. A plan with no activities still has its metrics printed.
 - `zpp --server` sends the run to the server, and the server limits the iterations of a project that it runs (refer to [Limits](#limits)).
+- [Simulations on the server](CLIENT-SERVER-QUICK-START.md#simulations-on-the-server) is a tutorial with three sample plans of different sizes. It shows the progress of each simulation, and how simulations at the same time share the processors of a server.
 
 ## Exit codes
 
@@ -174,7 +177,7 @@ By default, the server listens on `http://localhost:9770`. Only the computer of 
 
 `zpp` can act as a client of a server and send its runs to it with the option `--server`. Each program that speaks HTTP can also send plan data to the server (refer to [The API](#the-api)).
 
-For a step-by-step guide, refer to the [Client-server quick start](SERVER.md). It shows `zpp serve` on Windows with HTTPS or on a Unix domain socket. It also shows `zpp` when it sends its runs to the server from a second window. It has sample plans to download.
+For a step-by-step guide, refer to the [Client-server quick start](CLIENT-SERVER-QUICK-START.md). It shows `zpp serve` on Windows with HTTPS or on a Unix domain socket. It also shows `zpp` when it sends its runs to the server from a second window. It has sample plans to download, and a tutorial for [simulations on the server](CLIENT-SERVER-QUICK-START.md#simulations-on-the-server).
 
 ### Send runs to a server
 

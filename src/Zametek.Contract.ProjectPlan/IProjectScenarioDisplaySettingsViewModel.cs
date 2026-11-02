@@ -33,8 +33,24 @@ namespace Zametek.Contract.ProjectPlan
         bool GanttChartShowMilestones { get; set; }
         bool GanttChartShowSlack { get; set; }
         bool GanttChartShowNonWorkingDays { get; set; }
-        List<int> GanttChartShowConnections { get; }
-        ReadyToRevise IsReadyToReviseGanttChartShowConnections { get; set; }
+
+        /// <summary>
+        /// The filter of connections. It is replaced as a whole and it never changes in place, and so a reader on any thread
+        /// needs no lock, and it can keep what it has read.
+        /// </summary>
+        IReadOnlyList<int> GanttChartShowConnections { get; }
+
+        /// <summary>
+        /// Replaces the filter of connections, for an edit by the user. It raises nothing, because the edit comes from the
+        /// selector that follows the filter.
+        /// </summary>
+        void SetGanttChartShowConnections(IEnumerable<int> connections);
+
+        /// <summary>
+        /// How many times SetValues has put a filter in GanttChartShowConnections. An edit by the user does not count, because
+        /// it comes from the selector that follows this. Observe changes only.
+        /// </summary>
+        int GanttChartShowConnectionsRevision { get; }
 
 
         AllocationMode ResourceChartAllocationMode { get; set; }
@@ -49,8 +65,24 @@ namespace Zametek.Contract.ProjectPlan
         bool EarnedValueShowMilestones { get; set; }
         bool EarnedValueCombineResources { get; set; }
         bool EarnedValueScaleToOwnPlan { get; set; }
-        List<int> EarnedValueShowResources { get; }
-        ReadyToRevise IsReadyToReviseEarnedValueShowResources { get; set; }
+
+        /// <summary>
+        /// The filter of resources. It is replaced as a whole and it never changes in place, and so a reader on any thread
+        /// needs no lock, and it can keep what it has read.
+        /// </summary>
+        IReadOnlyList<int> EarnedValueShowResources { get; }
+
+        /// <summary>
+        /// Replaces the filter of resources, for an edit by the user. It raises nothing, because the edit comes from the
+        /// selector that follows the filter.
+        /// </summary>
+        void SetEarnedValueShowResources(IEnumerable<int> resources);
+
+        /// <summary>
+        /// How many times SetValues has put a filter in EarnedValueShowResources. An edit by the user does not count, because
+        /// it comes from the selector that follows this. Observe changes only.
+        /// </summary>
+        int EarnedValueShowResourcesRevision { get; }
 
 
         void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated);

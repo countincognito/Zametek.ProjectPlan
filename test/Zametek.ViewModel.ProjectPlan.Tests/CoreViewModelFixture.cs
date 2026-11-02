@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI.Builder;
 using System;
@@ -59,14 +60,70 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// test that builds something else over the same one - as the application does.
         /// </summary>
         public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService(
-            IProjectScenarioFileImport? projectScenarioFileImport = null)
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            ILogger<CoreViewModel>? logger = null)
         {
             (CoreViewModel coreViewModel, ISettingService settingService) = Build(
                 AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
-                projectScenarioFileImport: projectScenarioFileImport);
+                projectScenarioFileImport: projectScenarioFileImport,
+                logger: logger);
 
             coreViewModel.AutoCompile = false;
             return (coreViewModel, settingService);
+        }
+
+        /// <summary>
+        /// Builds a core whose compilations a test can hold part way through, over a graph service whose first build of
+        /// the arrow graph - the first step of the cascade - it can hold in the same way. Nothing is held until the
+        /// test says so.
+        /// </summary>
+        public static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs) CreateGated(
+            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
+        {
+            (GatedCoreViewModel core, GatedGraphCompilationService graphs, _) = BuildGated(compilationTimeoutMilliseconds);
+            return (core, graphs);
+        }
+
+        /// <summary>
+        /// Builds a core as <see cref="CreateGated"/> does, and hands back the settings service it was built over, for a
+        /// test that looks at the id of the scenario, or that builds something else over the same service.
+        /// </summary>
+        public static (GatedCoreViewModel Core, ISettingService SettingService) CreateGatedWithSettingService(
+            int compilationTimeoutMilliseconds,
+            ILogger<CoreViewModel>? logger = null)
+        {
+            (GatedCoreViewModel core, _, ISettingService settingService) = BuildGated(compilationTimeoutMilliseconds, logger);
+            return (core, settingService);
+        }
+
+        private static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs, ISettingService SettingService) BuildGated(
+            int compilationTimeoutMilliseconds,
+            ILogger<CoreViewModel>? logger = null)
+        {
+            EnsureReactiveUIInitialized();
+
+            var mapper = new ProjectPlanMapper();
+            var settingService = new TestSettingService
+            {
+                CompilationTimeoutMilliseconds = compilationTimeoutMilliseconds,
+            };
+            var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
+            var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));
+
+            var coreViewModel = new GatedCoreViewModel(
+                new TestProjectScenarioFileImport(),
+                new TestProjectScenarioFileExport(),
+                settingService,
+                dateTimeCalculator,
+                mapper,
+                graphs,
+                new ResourceSchedulingService(mapper),
+                new MetricCalculationService(mapper, dateTimeCalculator),
+                new TestDataGridScrollManager(),
+                logger ?? NullLogger<CoreViewModel>.Instance);
+
+            coreViewModel.AutoCompile = false;
+            return (coreViewModel, graphs, settingService);
         }
 
         /// <summary>
@@ -122,7 +179,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static (CoreViewModel CoreViewModel, ISettingService SettingService) Build(
             int compilationTimeoutMilliseconds,
             TimeProvider? clock = null,
-            IProjectScenarioFileImport? projectScenarioFileImport = null)
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            ILogger<CoreViewModel>? logger = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -143,7 +201,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 new ResourceSchedulingService(mapper),
                 new MetricCalculationService(mapper, dateTimeCalculator),
                 new TestDataGridScrollManager(),
-                NullLogger<CoreViewModel>.Instance);
+                logger ?? NullLogger<CoreViewModel>.Instance);
 
             return (coreViewModel, settingService);
         }
@@ -235,9 +293,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// <summary>
         /// A plan of chained activities, each targeting one of two resources in turn, so
         /// that a compilation has both a critical path to calculate and a schedule to
-        /// resolve rather than being trivially satisfiable.
+        /// resolve rather than being trivially satisfiable. With <paramref name="coloredResources"/> false the
+        /// resources have no color of their own, and the series take the preset colors for them.
         /// </summary>
-        public static ProjectScenarioModel CreateProjectScenario(int activityCount)
+        public static ProjectScenarioModel CreateProjectScenario(int activityCount, int durationOffset = 0, bool coloredResources = true)
         {
             List<ResourceModel> resources =
                 [.. Enumerable.Range(1, 2).Select(id => new ResourceModel
@@ -246,7 +305,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     Name = $@"Resource {id}",
                     DisplayOrder = id,
                     IsExplicitTarget = false,
-                    ColorFormat = ColorHelper.Random(),
+                    ColorFormat = coloredResources ? ColorHelper.Random() : null!,
                 })];
 
             List<DependentActivityModel> activities =
@@ -257,7 +316,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                         Id = id,
                         DisplayOrder = id,
                         Name = $@"Activity {id}",
-                        Duration = 1 + (id % 5),
+                        Duration = 1 + (id % 5) + durationOffset,
                         TargetResources = [1 + (id % 2)],
                         ColorFormat = ColorHelper.Random(),
                     },
@@ -287,7 +346,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #region Stand-ins
 
-        private sealed class TestSettingService
+        internal sealed class TestSettingService
             : SettingServiceBase
         {
             private string m_ProjectDirectory = string.Empty;
