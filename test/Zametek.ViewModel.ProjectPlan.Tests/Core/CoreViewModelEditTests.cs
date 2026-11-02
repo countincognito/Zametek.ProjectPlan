@@ -34,6 +34,61 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void AddManagedActivity_Given_ALoadedScenario_Then_TheScenarioIsMarkedAsUpdatedAndItsOutputsAsStale()
+        {
+            using CoreViewModel core = CreateCore();
+            core.IsProjectScenarioUpdated.ShouldBeFalse("precondition: a load is not an edit");
+            core.HasStaleOutputs.ShouldBeFalse("precondition: the load compiled the plan");
+
+            int id = core.AddManagedActivity(c_ActivityCount + 1);
+
+            core.RawActivities.Select(x => x.Id).ShouldContain(id);
+            core.IsProjectScenarioUpdated.ShouldBeTrue();
+            core.HasStaleOutputs.ShouldBeTrue("the outputs do not have the new activity");
+        }
+
+        [Fact]
+        public void AddManagedActivities_Given_ALoadedScenario_Then_TheScenarioIsMarkedAsUpdatedAndItsOutputsAsStale()
+        {
+            using CoreViewModel core = CreateCore();
+            core.IsProjectScenarioUpdated.ShouldBeFalse("precondition: a load is not an edit");
+            core.HasStaleOutputs.ShouldBeFalse("precondition: the load compiled the plan");
+
+            core.AddManagedActivities([Model(4)]);
+
+            core.IsProjectScenarioUpdated.ShouldBeTrue();
+            core.HasStaleOutputs.ShouldBeTrue("the outputs do not have the new activity");
+        }
+
+        [Fact]
+        public void ProcessProjectScenario_Given_ActivitiesToAdd_Then_TheScenarioIsNeverMarkedAsUpdated()
+        {
+            // A load adds the activities with AddManagedActivities, as an edit does. The value at the end of the load is not
+            // enough: a mark part way through the load puts an asterisk on the node of the scenario.
+            using CoreViewModel core = CreateCore();
+            List<string> marks = [];
+
+            core.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ICoreViewModel.IsProjectScenarioUpdated) && core.IsProjectScenarioUpdated)
+                {
+                    marks.Add(nameof(ICoreViewModel.IsProjectScenarioUpdated));
+                }
+                else if (e.PropertyName == nameof(ICoreViewModel.HasStaleOutputs) && core.HasStaleOutputs)
+                {
+                    marks.Add(nameof(ICoreViewModel.HasStaleOutputs));
+                }
+            };
+
+            core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(c_ActivityCount + 1), Guid.NewGuid(), @"Other");
+
+            core.RawActivities.Count.ShouldBe(c_ActivityCount + 1);
+            marks.ShouldBeEmpty();
+            core.IsProjectScenarioUpdated.ShouldBeFalse();
+            core.HasStaleOutputs.ShouldBeFalse();
+        }
+
+        [Fact]
         public void RemoveManagedActivities_Given_SomeIds_Then_TheBusySignalIsOnWhileTheyAreRemovedAndOffAfter()
         {
             using CoreViewModel core = CreateCore();

@@ -1646,7 +1646,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     UpdateActivityDisplayOrders();
                     NoteInputsChanged();
-                    //IsProjectScenarioUpdated = true;
+
+                    // A load adds its activities here too. The load stops the tracking of the mark first, and so only
+                    // an edit marks the scenario.
+                    IsProjectScenarioUpdated = true;
                 }
             }
             finally
