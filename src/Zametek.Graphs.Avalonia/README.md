@@ -453,7 +453,8 @@ You can save and restore the node drags and the routing mode. The members for th
 - `void SeedNodeLayout(IReadOnlyList<GraphNodePosition>)` puts an overlay by node `Id` on the next build, on a best-effort basis. The library drops ids that no longer exist. Nodes with no seed keep the new layout.
 - `bool HasManualLayout` is true after the user drags a node. Thus, you save the live arrangement and not a seed that went through a round trip.
 - `event EventHandler LayoutChanged` shows that the end of a drag or a reset changed the arrangement. Seeding does *not* raise it. Capture the arrangement here for persistence.
-- `void ApplyEdgeRoutingMode(GraphEdgeRoutingMode)` restores a saved routing mode.
+- `event EventHandler EdgeRoutingModeChanged` shows that the user changed the routing mode in the context menu. A saved mode does *not* raise it. Capture the mode here for persistence.
+- `void ApplyEdgeRoutingMode(GraphEdgeRoutingMode)` restores a saved routing mode. You can call it on any thread (refer to [Threading and known problems](#threading-and-known-problems)).
 - `void ResetView()` removes the saved zoom and pan. Then the next graph frames itself from the start, for example when a project closes. The control keeps the viewport transform (`ViewZoom`, `ViewPanX`, `ViewPanY` and `HasViewState`) when it re-materializes, with no extra work from you.
 
 ---
@@ -475,6 +476,7 @@ The control provides these items with no extra work:
 - **The layout runs off the UI thread.** Observe `IGraphHost.RebuildRequested` on a background scheduler, for example `TaskPoolScheduler.Default`. Then the MSAGL pass does not block the UI. The view-model itself moves the results back to the UI thread.
 - **Exports render on the UI thread.** The rasterization of the templates must run on it. The built-in copy and save paths do this for you.
 - **Dispatcher.** The view-model reaches the UI thread through an `IGraphDispatcher`. By default, this is `AvaloniaGraphDispatcher` (`Dispatcher.UIThread`).
+- **A saved routing mode can arrive on any thread.** `ApplyEdgeRoutingMode` changes `Configuration` before it returns, and thus the next layout uses the mode. The edges, the change notification and the routing follow on the UI thread. A refresh replaces the edges on the UI thread, and another thread must not read them.
 - **A host that has no UI thread** passes `InlineGraphDispatcher` instead. Examples are an automated export and a server. This dispatcher runs the work at the point of the call. Nothing pumps a dispatcher there. Thus, work that you post to a dispatcher does not run, and it holds the graph for the life of the process. A refresh that is in progress when you dispose the view-model does nothing.
 - **Use immutable brushes only.** Avalonia ties a mutable brush (an `AvaloniaObject`) to the dispatcher of the thread that creates it. The compositor verifies this ownership the first time that it draws the brush. A brush that you create off the UI thread causes a crash of the render loop with the message "The calling thread cannot access this object because a different thread owns it". Each brush that the library creates is an `ImmutableSolidColorBrush`. Also supply immutable brushes in your `GraphAppearance` and `GraphVectorExportStyle` overrides. This matters because a thread other than the UI thread can make your host view-model and its appearance, for example behind a splash screen.
 - **Use `FontFamily` and not `string`** for all font-family properties (refer to the appearance note above).

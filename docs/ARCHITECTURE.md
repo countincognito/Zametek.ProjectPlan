@@ -316,6 +316,16 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     [`CoreViewModelOffLockTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/CoreViewModelOffLockTests.cs) pin this rule. They hold a compilation or a cascade part way through, and then they edit, load and compile. An edit at a random moment almost never meets the short window of a compilation.
 
+15. **A load changes no edge of a graph on its own thread.**
+
+    A load changes the display settings on its own thread. The graph managers apply the routing mode of the settings to the graph at that moment. `Refresh` replaces the edges of the graph on the UI thread. The two threads met in `GraphEdges`, and the load failed with the message `Collection was modified`.
+
+    Thus, [`InteractiveGraphViewModel.ApplyEdgeRoutingMode`](../src/Zametek.Graphs.Avalonia/ViewModels/InteractiveGraphViewModel.cs) has two parts. It changes the configuration at once, because the layout that follows the load must use the new mode. It posts the change of the edges to `IGraphDispatcher`, with the change notification and the routing. The posted work reads the mode when it runs, and thus the last mode wins.
+
+    Only a choice of the user goes back to the display settings, through the event `EdgeRoutingModeChanged`. A posted change raises only the change notification. Thus, it cannot write an older mode over the mode of the next scenario, and it cannot mark the scenario as modified.
+
+    [`GraphRoutingModeTests`](../test/Zametek.View.ProjectPlan.Tests/GraphManagement/GraphRoutingModeTests.cs) pin this rule in the real application, and they record the thread of each change of an edge.
+
 ## 8. `IsBusy` versus `IsBulkUpdating`
 
 They look similar: both use counters, and the application raises both on the outermost transitions. But they have different purposes, and a confusion of them causes bugs that are difficult to find:

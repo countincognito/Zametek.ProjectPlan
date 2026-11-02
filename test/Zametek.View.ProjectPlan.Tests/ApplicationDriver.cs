@@ -8,6 +8,8 @@ using Shouldly;
 using Ursa.Controls;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.Avalonia;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan.Tests
 {
@@ -34,6 +36,8 @@ namespace Zametek.View.ProjectPlan.Tests
             Gantt = container.Resolve<IGanttChartManagerViewModel>();
             EarnedValue = container.Resolve<IEarnedValueChartManagerViewModel>();
             Activities = container.Resolve<IActivitiesManagerViewModel>();
+            ArrowGraph = (InteractiveGraphViewModel)((ArrowGraphManagerViewModel)container.Resolve<IArrowGraphManagerViewModel>()).Interactive;
+            VertexGraph = (InteractiveGraphViewModel)((VertexGraphManagerViewModel)container.Resolve<IVertexGraphManagerViewModel>()).Interactive;
         }
 
         public IMainViewModel Main { get; }
@@ -47,6 +51,10 @@ namespace Zametek.View.ProjectPlan.Tests
         public IEarnedValueChartManagerViewModel EarnedValue { get; }
 
         public IActivitiesManagerViewModel Activities { get; }
+
+        public InteractiveGraphViewModel ArrowGraph { get; }
+
+        public InteractiveGraphViewModel VertexGraph { get; }
 
         public List<IManagedNodeViewModel> Scenarios => [.. Project.RawFlattenedNodes.Where(x => !x.IsFolder)];
 
@@ -216,6 +224,17 @@ namespace Zametek.View.ProjectPlan.Tests
             Selection(chartViewModel).ShouldBe(expected, @"the selection with the dropdown closed");
             ShouldHaveNoErrors();
         }
+
+        private static bool Shows(InteractiveGraphViewModel graph, GraphEdgeRoutingMode mode) =>
+            graph.EdgeRoutingMode == mode
+                && graph.GraphEdges.Count > 0
+                && graph.GraphEdges.All(x => x.RoutingMode == mode);
+
+        /// <summary>
+        /// Each graph gets to this mode, on its edges too. A graph rebuilds its edges after a load, and this waits for that.
+        /// </summary>
+        public Task GraphsShouldShowAsync(GraphEdgeRoutingMode arrow, GraphEdgeRoutingMode vertex) =>
+            UntilAsync(() => Shows(ArrowGraph, arrow) && Shows(VertexGraph, vertex), $@"the graphs with the modes {arrow} and {vertex}");
 
         /// <summary>
         /// What a save would write for this scenario.

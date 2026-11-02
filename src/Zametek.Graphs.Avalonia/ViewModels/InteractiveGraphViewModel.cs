@@ -31,7 +31,9 @@ namespace Zametek.Graphs.Avalonia
 
         // The live per-graph configuration (seeded from the preset passed in). It drives the layout/SVG
         // build and the routing-mode menu; the routing-mode command swaps the whole immutable record.
-        private GraphConfiguration m_Config;
+        // Volatile: a host applies a saved mode on the thread of its load, and a layout reads the
+        // configuration on a pool thread.
+        private volatile GraphConfiguration m_Config;
 
         // The themable appearance handed to every node/edge view-model (brushes, fonts, opacities, shape
         // metrics). Defaults to GraphAppearance.Default (the original look); a consumer re-skins by
@@ -333,6 +335,10 @@ namespace Zametek.Graphs.Avalonia
         // the new layout for persistence. Seeding a saved layout does NOT raise it.
         public event EventHandler? LayoutChanged;
 
+        // Raised when the user changes the edge routing mode (the context menu), so the host can capture
+        // the new mode for persistence. Applying a saved mode does NOT raise it.
+        public event EventHandler? EdgeRoutingModeChanged;
+
         // Raised when ResetView clears the viewport (project scenario reset/closed), so an attached
         // InteractiveGraphView drops its live zoom/pan and re-frames the next graph from scratch.
         public event EventHandler? ViewReset;
@@ -389,11 +395,16 @@ namespace Zametek.Graphs.Avalonia
             GraphRefreshed?.Invoke(this, EventArgs.Empty);
         }
 
-        // Apply a saved edge routing mode (e.g. when a scenario is loaded), swapping the configuration
-        // and updating the existing edges exactly as the context-menu command does.
+        // Apply a saved edge routing mode (e.g. when a scenario is loaded). A host may call this on any
+        // thread. The configuration changes at once, so the layout that follows a load has the mode. The
+        // edges belong to the UI thread, where a rebuild can replace them at any moment, so they follow
+        // through the dispatcher. Nothing goes back to the host: this is not a choice of the user.
         public void ApplyEdgeRoutingMode(GraphEdgeRoutingMode mode)
         {
-            ChangeEdgeRoutingMode(mode);
+            if (SwapEdgeRoutingMode(mode))
+            {
+                m_Dispatcher.Post(ShowEdgeRoutingMode);
+            }
         }
 
         // Grow the workspace immediately while a node is being dragged outward, so it never leaves
@@ -458,18 +469,43 @@ namespace Zametek.Graphs.Avalonia
 
         #region Private Methods
 
-        // Switch the edge routing mode. The whole configuration record is swapped on the view-model (so
-        // a subsequent layout/SVG export follows the new mode), and the existing edges are updated in
-        // place - node positions are independent of the routing mode, so no re-layout is needed. Raising
-        // EdgeRoutingMode lets the context menu's radio items re-evaluate.
+        // The user switches the edge routing mode, on the UI thread (context menu), and the host hears of
+        // it so that it can persist the mode.
         private void ChangeEdgeRoutingMode(GraphEdgeRoutingMode routingMode)
         {
+            if (SwapEdgeRoutingMode(routingMode))
+            {
+                ShowEdgeRoutingMode();
+                EdgeRoutingModeChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        // The whole configuration record is swapped on the view-model (so a subsequent layout/SVG export
+        // follows the new mode).
+        private bool SwapEdgeRoutingMode(GraphEdgeRoutingMode routingMode)
+        {
             if (m_Config.EdgeRoutingMode == routingMode)
+            {
+                return false;
+            }
+
+            m_Config = m_Config with { EdgeRoutingMode = routingMode };
+            return true;
+        }
+
+        // On the UI thread: bring the existing edges to the mode of the configuration, in place - node
+        // positions are independent of the routing mode, so no re-layout is needed. Raising EdgeRoutingMode
+        // lets the context menu's radio items re-evaluate. What a load posts here can run after a later
+        // load has applied another mode (or after the owner has disposed the graph), so this reads the mode
+        // when it runs.
+        private void ShowEdgeRoutingMode()
+        {
+            if (m_Disposed)
             {
                 return;
             }
 
-            m_Config = m_Config with { EdgeRoutingMode = routingMode };
+            GraphEdgeRoutingMode routingMode = EdgeRoutingMode;
             foreach (GraphEdgeViewModel edge in GraphEdges)
             {
                 // Setting the mode drops any exact routed geometry (it was for the old mode), so the

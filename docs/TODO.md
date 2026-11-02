@@ -26,14 +26,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   **Starting points.** Comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock and DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj` mark the places. The bridge `ObservableExtensions.ObserveOn(ISequencer)` is the seam where the unwinding starts.
 
-- [ ] **Apply the edge routing mode of a graph on the UI thread** *(2026-11-01)*
-
-  `ArrowGraphManagerViewModel` and `VertexGraphManagerViewModel` apply the routing mode of the display settings on the thread that changes it. A load changes it in `SetValues`, on the thread of the load. `InteractiveGraphViewModel.ChangeEdgeRoutingMode` then enumerates `GraphEdges` on that thread, and so does the `SnapshotRouting` call that follows. The UI thread can change `GraphEdges` at the same time, and the enumeration then throws `InvalidOperationException` with the message `Collection was modified`.
-
-  The application shows the error, and a project that does not open is reset. The logs of the application have this from manual use on 2026-10-31. It also fails [`ChartFilterTests`](../test/Zametek.View.ProjectPlan.Tests/Controls/ChartFilterTests.cs) in rare runs, and so it can stop the commit hook: once in about 900 test runs of their small plan. With `mobile-app.zpp`, it occurs more often.
-
-  **Starting points.** The push and the apply of the mode make a loop, and a queued apply must not write an old mode back. `Configuration` must have the new mode before the build of the graph that follows the load.
-
 - [ ] **Remove `SyncedMultiComboBox` when Ursa follows `SelectedItems`** *(2026-10-31)*
 
   In Ursa 2.2.0, an item of `MultiComboBox` adds its data to `SelectedItems` when it attaches to the logical tree, if its own `IsSelected` is true. The control also stops listening to `SelectedItems` when it unloads, and it does not listen again. The two chart filters use [`SyncedMultiComboBox`](../src/Zametek.View.ProjectPlan/Controls/SyncedMultiComboBox.cs), and its item corrects `IsSelected` first.
