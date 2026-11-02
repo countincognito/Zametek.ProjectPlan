@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -1224,6 +1225,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
+                    // First of all, as anything below can fail part way. The id says which scenario the core
+                    // holds, and the project scenario manager writes what the core holds over the scenario that
+                    // the id names. Thus, from here until a load ends, the id names no scenario.
+                    m_SettingService.ResetProjectScenario();
+
                     ClearManagedActivities();
 
                     ClearSettings();
@@ -1231,8 +1237,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Drop any cached datagrid scroll positions so grids return to the top
                     // whenever a project or project scenario is loaded or reset.
                     m_DataGridScrollManager.ClearScrollItems();
-
-                    m_SettingService.ResetProjectScenario();
 
                     Metrics = new();
                     ResourceMetrics = [];
@@ -1334,7 +1338,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectScenario();
                     m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    m_SettingService.SetProjectScenarioId(projectScenarioId);
                     m_SettingService.SetProjectScenarioTitle(projectScenarioTitle);
 
                     // Default display mode is required for all file opening and closing.
@@ -1384,6 +1387,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     //// trigger a project scenario updated event if it is different from the compiled metrics.
                     //Metrics = projectScenarioModel.Metrics;
 
+                    // Only now does the core hold the scenario: see ResetProjectScenario.
+                    m_SettingService.SetProjectScenarioId(projectScenarioId);
+
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = true;
                     m_TrackHasStaleOutputs = true;
@@ -1420,7 +1426,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectScenario();
                     m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    m_SettingService.SetProjectScenarioId(projectScenarioId);
                     m_SettingService.SetProjectScenarioTitle(projectScenarioTitle);
 
                     // Default display mode is required for all file opening and closing.
@@ -1476,12 +1481,23 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
-                    RunCompile();
+                    // A compilation that runs past its budget leaves the scenario whole, with no outputs (see
+                    // AbandonCompilation). So the rest of the load goes on, and the caller hears of it at the end.
+                    GraphCompilationTimeoutException? compilationTimeout = null;
 
-                    // The internal Build* subscriptions drop their emissions during a
-                    // bulk update, so run the cascade actively while everything is
-                    // still muted.
-                    RunBuildCascade();
+                    try
+                    {
+                        RunCompile();
+
+                        // The internal Build* subscriptions drop their emissions during a
+                        // bulk update, so run the cascade actively while everything is
+                        // still muted.
+                        RunBuildCascade();
+                    }
+                    catch (GraphCompilationTimeoutException ex)
+                    {
+                        compilationTimeout = ex;
+                    }
 
                     // Metrics.
                     // It is important to put this after the compilation, so it will only
@@ -1502,10 +1518,32 @@ namespace Zametek.ViewModel.ProjectPlan
                     SimulationSettings = projectScenarioModel.SimulationSettings;
                     SimulationSummary = projectScenarioModel.SimulationSummary;
 
+                    // Only now does the core hold the scenario: see ResetProjectScenario.
+                    m_SettingService.SetProjectScenarioId(projectScenarioId);
+
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = true;
+
+                    if (compilationTimeout is not null)
+                    {
+                        // AbandonCompilation could not say this while the load was not tracking it.
+                        HasStaleOutputs = true;
+                        ExceptionDispatchInfo.Capture(compilationTimeout).Throw();
+                    }
                 }
+            }
+            catch (Exception ex) when (ex is not GraphCompilationTimeoutException)
+            {
+                // AbandonCompilation logs the other kind. A load from the scenario tree only shows its error, and
+                // this is the one way into a load.
+                m_Logger.LogError(
+                    ex,
+                    "Failed to load scenario {ScenarioTitle} ({ScenarioId:D})",
+                    projectScenarioTitle,
+                    projectScenarioId);
+
+                throw;
             }
             finally
             {
@@ -1769,10 +1807,23 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
                     Guid projectScenarioId = m_SettingService.ScenarioId;
                     string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                    projectScenarioModel = remap(projectScenarioModel, [.. idMaps]);
-                    ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
+                    ProjectScenarioModel remappedProjectScenarioModel = remap(projectScenarioModel, [.. idMaps]);
 
-                    IsProjectScenarioUpdated = true;
+                    try
+                    {
+                        ProcessProjectScenario(remappedProjectScenarioModel, projectScenarioId, projectScenarioTitle);
+                    }
+                    catch (Exception ex) when (ex is not GraphCompilationTimeoutException)
+                    {
+                        // The load did not end, and so the id names no scenario. The only copy of the edits since the
+                        // last save or load is this one, so the scenario goes back to it.
+                        ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
+                        throw;
+                    }
+                    finally
+                    {
+                        IsProjectScenarioUpdated = true;
+                    }
                 }
             }
             finally

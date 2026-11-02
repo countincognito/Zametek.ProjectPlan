@@ -326,6 +326,20 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     [`GraphRoutingModeTests`](../test/Zametek.View.ProjectPlan.Tests/GraphManagement/GraphRoutingModeTests.cs) pin this rule in the real application, and they record the thread of each change of an edge.
 
+16. **A load that fails changes nothing.**
+
+    A load sets many properties, and each property has subscribers. Thus, a load can fail at any point. `BuildProject()` writes what the core holds over the scenario that `ISettingService.ScenarioId` names. Thus, the id must name a scenario only when the core holds all of it.
+
+    `ResetProjectScenario()` gives the core a new id as its first step, and a load gives the core the id of its scenario at its end. Between these two steps, the id names no node, and `BuildProject()` writes nothing over a scenario. A load that failed part way used to leave the id of a scenario, and the next save wrote the part over the whole scenario.
+
+    `LoadProjectScenarioFileInternal` then loads the scenario that the core had before. `BuildProject()` wrote that scenario to its file at the start of the load, with its edits. The load also puts back `IsProjectScenarioUpdated`, and thus the user does not lose the mark that says that the edits are not saved. `RemapManagedIds` goes back in the same way, from the copy that it made before it changed the ids. If the load back also fails, no node shows as loaded, and a save writes each file as it was.
+
+    A compilation that uses all of its budget is not such a failure. `ProcessProjectScenario` completes the rest of the load, and it throws the exception at its end. The scenario is whole and has its id, and `HasStaleOutputs` is true. The node shows as loaded, and the user can change the plan or compile again. `AbandonCompilation` describes the same state after an edit.
+
+    A project that does not open has no scenario to go back to. `MainViewModel` resets the project, and the file on the disk does not change.
+
+    [`ProjectScenarioManagerLoadFailureTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/ProjectScenarioManagement/ProjectScenarioManagerLoadFailureTests.cs) and [`ScenarioLoadFailureTests`](../test/Zametek.View.ProjectPlan.Tests/ProjectScenarioManagement/ScenarioLoadFailureTests.cs) pin this rule. They make a change of the routing mode throw during the load, at each point where the race used to throw.
+
 ## 8. `IsBusy` versus `IsBulkUpdating`
 
 They look similar: both use counters, and the application raises both on the outermost transitions. But they have different purposes, and a confusion of them causes bugs that are difficult to find:

@@ -106,6 +106,21 @@ namespace Zametek.View.ProjectPlan.Tests
             ShouldHaveNoErrors();
         }
 
+        /// <summary>
+        /// Asks for a load that is to fail, and waits for the error that says so.
+        /// </summary>
+        public async Task FailToLoadAsync(IManagedNodeViewModel scenario)
+        {
+            Select(scenario);
+            Project.LoadSelectedProjectScenarioFileCommand.Execute(null);
+            await UntilAsync(() => m_Dialogs.Errors.Count > 0, $@"the error of the load of {scenario.Name}");
+            m_Dialogs.Errors.ShouldHaveSingleItem();
+            m_Fixture.UnhandledExceptions.ShouldBeEmpty();
+            ForgetErrors();
+        }
+
+        internal RoutingModeFault FailRoutingModeChange(int failingChange) => new(Core, failingChange);
+
         public async Task<IManagedNodeViewModel> DuplicateAsync(IManagedNodeViewModel scenario)
         {
             List<Guid> known = [.. Scenarios.Select(x => x.Id)];
@@ -239,8 +254,14 @@ namespace Zametek.View.ProjectPlan.Tests
         /// <summary>
         /// What a save would write for this scenario.
         /// </summary>
+        public ProjectScenarioModel SavedScenario(IManagedNodeViewModel scenario) =>
+            Project.BuildProject().Files.Single(x => x.NodeId == scenario.Id).Scenario;
+
+        /// <summary>
+        /// The display settings that a save would write for this scenario.
+        /// </summary>
         public ProjectScenarioDisplaySettingsModel SavedDisplaySettings(IManagedNodeViewModel scenario) =>
-            Project.BuildProject().Files.Single(x => x.NodeId == scenario.Id).Scenario.DisplaySettings;
+            SavedScenario(scenario).DisplaySettings;
 
         public void ShouldHaveNoErrors()
         {

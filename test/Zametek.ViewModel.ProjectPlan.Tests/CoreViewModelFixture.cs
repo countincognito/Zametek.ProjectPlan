@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI.Builder;
 using System;
@@ -59,11 +60,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// test that builds something else over the same one - as the application does.
         /// </summary>
         public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService(
-            IProjectScenarioFileImport? projectScenarioFileImport = null)
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            ILogger<CoreViewModel>? logger = null)
         {
             (CoreViewModel coreViewModel, ISettingService settingService) = Build(
                 AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
-                projectScenarioFileImport: projectScenarioFileImport);
+                projectScenarioFileImport: projectScenarioFileImport,
+                logger: logger);
 
             coreViewModel.AutoCompile = false;
             return (coreViewModel, settingService);
@@ -76,6 +79,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs) CreateGated(
             int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
+        {
+            (GatedCoreViewModel core, GatedGraphCompilationService graphs, _) = BuildGated(compilationTimeoutMilliseconds);
+            return (core, graphs);
+        }
+
+        /// <summary>
+        /// Builds a core as <see cref="CreateGated"/> does, and hands back the settings service it was built over, for a
+        /// test that looks at the id of the scenario, or that builds something else over the same service.
+        /// </summary>
+        public static (GatedCoreViewModel Core, ISettingService SettingService) CreateGatedWithSettingService(
+            int compilationTimeoutMilliseconds,
+            ILogger<CoreViewModel>? logger = null)
+        {
+            (GatedCoreViewModel core, _, ISettingService settingService) = BuildGated(compilationTimeoutMilliseconds, logger);
+            return (core, settingService);
+        }
+
+        private static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs, ISettingService SettingService) BuildGated(
+            int compilationTimeoutMilliseconds,
+            ILogger<CoreViewModel>? logger = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -97,10 +120,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 new ResourceSchedulingService(mapper),
                 new MetricCalculationService(mapper, dateTimeCalculator),
                 new TestDataGridScrollManager(),
-                NullLogger<CoreViewModel>.Instance);
+                logger ?? NullLogger<CoreViewModel>.Instance);
 
             coreViewModel.AutoCompile = false;
-            return (coreViewModel, graphs);
+            return (coreViewModel, graphs, settingService);
         }
 
         /// <summary>
@@ -156,7 +179,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static (CoreViewModel CoreViewModel, ISettingService SettingService) Build(
             int compilationTimeoutMilliseconds,
             TimeProvider? clock = null,
-            IProjectScenarioFileImport? projectScenarioFileImport = null)
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            ILogger<CoreViewModel>? logger = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -177,7 +201,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 new ResourceSchedulingService(mapper),
                 new MetricCalculationService(mapper, dateTimeCalculator),
                 new TestDataGridScrollManager(),
-                NullLogger<CoreViewModel>.Instance);
+                logger ?? NullLogger<CoreViewModel>.Instance);
 
             return (coreViewModel, settingService);
         }
