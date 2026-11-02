@@ -26,14 +26,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   **Starting points.** Comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock and DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj` mark the places. The bridge `ObservableExtensions.ObserveOn(ISequencer)` is the seam where the unwinding starts.
 
-- [ ] **Stop a revision of the trackers from changing a list that the UI thread reads** *(2026-11-02)*
-
-  A revision of the trackers changes the lists of a selector on the thread that asks for it. `TimesheetCellViewModel`, `ResourceTrackerSetViewModel.CloneTrackers` and an open dropdown read these lists on the UI thread, and they do not hold the lock of the selector. A read that meets the change throws `Collection was modified`. On the UI thread, nothing handles that exception.
-
-  A test of the real application met this on the old code during a rename, because each revision moved each item of the list. Now, a revision with nothing new changes nothing. A revision that adds or removes an activity still changes the lists, and this occurs only at a command of the user.
-
-  **Starting points.** The display settings solved the same problem: each of the two chart filters is an array, and a change replaces all of it (§7 rule 9 of [ARCHITECTURE](ARCHITECTURE.md)). A selector cannot do that for the lists that a dropdown binds to. It can post the change to the UI thread, as `InteractiveGraphViewModel.ApplyEdgeRoutingMode` does (§7 rule 15), and give the readers on other threads an array of the ids. Each selector already has such an array for its selection.
-
 - [ ] **Keep the open project when an import fails after its checks** *(2026-11-01)*
 
   `MainViewModel.ImportProjectScenarioFileAsync` resets the project for each failure except `ScenarioImportException`. The import asks for a confirmation only if the scenario on show has changes. A later failure can be a compilation that uses all of its budget. This failure drops the changes in the other scenarios that are not saved. The file is as it was at the last save.
@@ -78,7 +70,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The REMAINING sites that call out under a lock are not live bugs, because every remaining edge is one-way with the point fixes in place. A fix for them is hardening. These sites form the deferred surgery. The list that follows has the items in descending order of value:
 
-  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `TrackersRevision`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `TrackersRevision` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. The call to `SetValues` is the Core→DS edge in the second dump.
+  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `TrackersRevision`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `TrackersRevision` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. Since 2026-11-02, the selector of the Gantt chart only reads the plan there, and it takes its lock on the UI thread (§7 rule 17). The days of the resources still take their locks there. The call to `SetValues` is the Core→DS edge in the second dump.
 
      The surgery splits each method into two phases. The state phase runs under the lock. The fan-out phase runs after the release. The state phase collects the pending raises and signals, and the fan-out phase emits them outside the lock. §7 rule 7 makes this safe. Handlers read the live state again, because payloads are stale snapshots. The window of `BeginBulkUpdate` and `EndBulkUpdate` wraps both phases, and thus the semantics of the suppression survive.
   2. `ProjectScenarioDisplaySettingsViewModel.SetValues` assigns about 30 raising setters under the DS lock. Thus, every synchronous observer (the sink gates of ReactiveUI) runs under that lock. The surgery sets the fields and collects the names of the changed properties under the lock. Then it raises all of them after the release. This also removes the re-entrant locking of the setters.
@@ -305,7 +297,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   **The audit found no problem in everything else:**
 
   - The subscription for uncompiled activities is the reference implementation, and a comment says so.
-  - The four subscriptions for selector revision use the payload only as a gate on a readiness flag that they clear themselves. They take every value from a live read.
+  - The subscriptions that followed the readiness flag of the trackers now follow revision counters (§9). The two selectors of activities use the value of `TrackersRevision` only as a trigger, and they read the plan during the raise. The selector of the Gantt chart posts work to the UI thread. On purpose, that work applies the plan of the last revision and not a live read. A load can hold `m_Lock` with an empty plan when the UI thread runs the work (§7 rule 17). The tracker sets and the timesheet follow `GraphCompilation` and `TrackerIndex`, and they read the live state.
   - The title subscription of `MainViewModel` binds the product of its own `Select` and not a snapshot of the state.
   - The internal subscription of `MuteWhile` is the gate at emission time itself.
   - The subscriptions for edge routing of the graphs have no `ObserveOn`, and thus rule 7 never applies to them.

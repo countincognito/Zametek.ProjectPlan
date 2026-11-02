@@ -86,6 +86,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // A rebuild raises the name of the resource of each section, as the last thing it does.
             public int Rebuilds { get; private set; }
 
+            // The bookings of the resource as a save copies them: the percentage for each day and activity.
+            public Dictionary<(int Day, int ActivityId), int> Bookings() =>
+                m_Subscribed.ResourceSettingsManager.RawResources.Single(x => x.Id == c_ResourceId).TrackerSet.CloneTrackers()
+                    .SelectMany(tracker => tracker.ActivityTrackers)
+                    .ToDictionary(x => (x.Time, x.ActivityId), x => x.PercentageWorked);
+
             public void Settle() => Drain(m_Main, m_Pool);
 
             public void Dispose()
@@ -182,6 +188,33 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Settle();
 
             harness.Section.Rows.ShouldBeEmpty("the row of a booking of an activity that the plan no longer has stayed");
+        }
+
+        [Fact]
+        public void PercentageWorked_Given_AnEditOfAnEmptyCell_Then_TheResourceBooksTheActivity()
+        {
+            using var harness = new Harness();
+            ITimesheetCellViewModel cell = harness.Section.Rows.ShouldHaveSingleItem().Cells[0];
+            cell.PercentageWorked.ShouldBeNull("precondition: the booking is on the day after");
+
+            cell.PercentageWorked = 30;
+            harness.Settle();
+
+            cell.PercentageWorked.ShouldBe(30);
+            harness.Bookings().ShouldBe(new Dictionary<(int Day, int ActivityId), int> { [(0, c_BookedActivityId)] = 30, [(1, c_BookedActivityId)] = 50 });
+        }
+
+        [Fact]
+        public void PercentageWorked_Given_AClearedCell_Then_TheBookingGoes()
+        {
+            using var harness = new Harness();
+            ITimesheetCellViewModel cell = harness.Section.Rows.ShouldHaveSingleItem().Cells[1];
+            cell.PercentageWorked.ShouldBe(50, "precondition: the cell shows the booking");
+
+            cell.PercentageWorked = null;
+            harness.Settle();
+
+            harness.Bookings().ShouldBeEmpty();
         }
     }
 }

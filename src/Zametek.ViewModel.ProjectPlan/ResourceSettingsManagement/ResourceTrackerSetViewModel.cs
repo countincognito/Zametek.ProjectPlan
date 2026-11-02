@@ -184,18 +184,20 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+                // One read of the bookings of each day: a revision on another thread can replace them between two reads.
                 return [.. m_ResourceActivitySelectorLookup.Values
-                    .Where(selector => selector.SelectedResourceActivityIds.Count > 0)
-                    .OrderBy(selector => selector.Time)
-                    .Select(selector =>
+                    .Select(selector => (Selector: selector, Bookings: selector.SelectedTargetResourceActivities))
+                    .Where(day => day.Bookings.Count > 0)
+                    .OrderBy(day => day.Selector.Time)
+                    .Select(day =>
                     {
-                        List<ResourceActivityTrackerModel> resourceActivityTrackers = [.. selector.SelectedTargetResourceActivities
+                        List<ResourceActivityTrackerModel> resourceActivityTrackers = [.. day.Bookings
                             .Select(activity =>
                             {
                                 return new ResourceActivityTrackerModel
                                 {
-                                    Time = selector.Time,
-                                    ResourceId = selector.ResourceId,
+                                    Time = day.Selector.Time,
+                                    ResourceId = day.Selector.ResourceId,
                                     ActivityId = activity.Id,
                                     ActivityName = activity.Name,
                                     PercentageWorked = activity.PercentageWorked,
@@ -204,8 +206,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         return new ResourceTrackerModel
                         {
-                            Time = selector.Time,
-                            ResourceId = selector.ResourceId,
+                            Time = day.Selector.Time,
+                            ResourceId = day.Selector.ResourceId,
                             ActivityTrackers = resourceActivityTrackers,
                         };
                     })];

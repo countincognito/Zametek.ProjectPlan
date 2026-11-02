@@ -37,7 +37,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(c_ActivityCount), Guid.NewGuid(), @"Test");
                 Core.AutoCompile = autoCompile;
                 Manager = new ActivitiesManagerViewModel(Core, CoreViewModelFixture.CreateDialogService());
-                Gantt = new GanttActivitySelectorViewModel(Core);
+                Gantt = new GanttActivitySelectorViewModel(Core, CoreViewModelFixture.CreateUIDispatcher());
                 Day = new ResourceActivitySelectorViewModel(Core, new ResourceTrackerModel
                 {
                     Time = 0,

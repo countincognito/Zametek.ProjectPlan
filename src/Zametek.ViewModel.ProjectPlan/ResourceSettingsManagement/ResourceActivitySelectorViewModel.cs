@@ -1,5 +1,4 @@
 using ReactiveUI;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -53,6 +52,16 @@ namespace Zametek.ViewModel.ProjectPlan
                         return x.Id.CompareTo(y.Id);
                     });
 
+        // The lists themselves, which only a holder of m_Lock reads or changes. Each reader gets an array instead (see the
+        // properties). A revision changes the lists on the thread that asks for it, and the cells of the timesheet read them on
+        // the UI thread (ARCHITECTURE section 7 rule 17).
+        private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_TargetResourceActivities;
+        private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_SelectedTargetResourceActivities;
+
+        // Set when a list changes, and cleared when its array is made again. Only a holder of m_Lock uses them.
+        private bool m_AreTargetsChanged;
+        private bool m_IsSelectionChanged;
+
         private readonly IDisposable? m_ReviseResourceActivityTrackersSub;
 
         #endregion
@@ -68,12 +77,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_TargetResourceActivities = new(s_EqualityComparer);
-            m_ReadOnlyTargetResourceActivities = new(m_TargetResourceActivities);
             m_SelectedTargetResourceActivities = new(s_EqualityComparer);
 
             m_Time = resourceTrackerModel.Time;
             m_ResourceId = resourceTrackerModel.ResourceId;
 
+            m_TargetResourceActivities.CollectionChanged += TargetResourceActivities_CollectionChanged;
             m_SelectedTargetResourceActivities.CollectionChanged += SelectedTargetResourceActivities_CollectionChanged;
 
             // Before the read of the activities: a request after that read gives a revision (ARCHITECTURE section 9).
@@ -97,70 +106,169 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Members
 
+        private void TargetResourceActivities_CollectionChanged(
+            object? sender,
+            NotifyCollectionChangedEventArgs e)
+        {
+            m_AreTargetsChanged = true;
+        }
+
         private void SelectedTargetResourceActivities_CollectionChanged(
             object? sender,
             NotifyCollectionChangedEventArgs e)
         {
-            RaiseTargetResourceActivitiesPropertiesChanged();
+            m_IsSelectionChanged = true;
         }
 
-        private void RefreshDerivedProperties()
+        // Makes the arrays of the lists that changed again. Hold m_Lock. A list that did not change keeps its array, and so a
+        // revision with nothing new makes nothing: a plan with bookings has a day for each booked day of each resource.
+        private bool PublishLists()
         {
-            lock (m_Lock)
+            bool isPublished = false;
+
+            if (m_AreTargetsChanged)
             {
-                m_SelectedResourceActivityIds = [.. SelectedTargetResourceActivities.Select(x => x.Id)];
+                m_AreTargetsChanged = false;
+                m_TargetResourceActivitiesSnapshot = [.. m_TargetResourceActivities];
+                isPublished = true;
             }
+
+            if (m_IsSelectionChanged)
+            {
+                m_IsSelectionChanged = false;
+                m_SelectedTargetResourceActivitiesSnapshot = [.. m_SelectedTargetResourceActivities];
+                m_SelectedResourceActivityIds = [.. m_SelectedTargetResourceActivities.Select(x => x.Id)];
+                isPublished = true;
+            }
+
+            return isPublished;
+        }
+
+        // After the release of m_Lock (ARCHITECTURE section 7 rule 6).
+        private void RaiseListsChanged()
+        {
+            this.RaisePropertyChanged(nameof(TargetResourceActivities));
+            this.RaisePropertyChanged(nameof(SelectedTargetResourceActivities));
         }
 
         private void ReviseTrackers(IList<ResourceActivityTrackerModel> resourceActivityTrackers)
         {
-            lock (m_Lock)
-            {
-                HashSet<int> selectedResourceActivityIds = [.. resourceActivityTrackers.Select(x => x.ActivityId)];
+            HashSet<int> selectedResourceActivityIds = [.. resourceActivityTrackers.Select(x => x.ActivityId)];
 
-                Dictionary<int, ResourceActivityTrackerModel> resourceActivityTrackerLookup = resourceActivityTrackers.ToDictionary(x => x.ActivityId);
+            Dictionary<int, ResourceActivityTrackerModel> resourceActivityTrackerLookup = resourceActivityTrackers.ToDictionary(x => x.ActivityId);
 
-                List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    [.. m_CoreViewModel.RawActivities
-                    .Select(activity => new ResourceActivityTrackerModel
-                    {
-                        Time = m_Time,
-                        ResourceId = m_ResourceId,
-                        ActivityId = activity.Id,
-                        ActivityName = activity.Name ?? string.Empty,
-                        PercentageWorked = resourceActivityTrackerLookup.TryGetValue(activity.Id, out ResourceActivityTrackerModel? existingTracker) ? existingTracker.PercentageWorked : 0,
-                    })];
-
-                foreach (ResourceActivityTrackerModel resourceActivityTracker in newResourceActivityTrackers)
+            List<ResourceActivityTrackerModel> newResourceActivityTrackers =
+                [.. m_CoreViewModel.RawActivities
+                .Select(activity => new ResourceActivityTrackerModel
                 {
-                    resourceActivityTrackerLookup[resourceActivityTracker.ActivityId] = resourceActivityTracker;
-                }
+                    Time = m_Time,
+                    ResourceId = m_ResourceId,
+                    ActivityId = activity.Id,
+                    ActivityName = activity.Name ?? string.Empty,
+                    PercentageWorked = resourceActivityTrackerLookup.TryGetValue(activity.Id, out ResourceActivityTrackerModel? existingTracker) ? existingTracker.PercentageWorked : 0,
+                })];
 
-                SetTargetResourceActivities(
-                    resourceActivityTrackerLookup.Values,
-                    selectedResourceActivityIds);
+            foreach (ResourceActivityTrackerModel resourceActivityTracker in newResourceActivityTrackers)
+            {
+                resourceActivityTrackerLookup[resourceActivityTracker.ActivityId] = resourceActivityTracker;
             }
+
+            SetTargetResourceActivities(
+                resourceActivityTrackerLookup.Values,
+                selectedResourceActivityIds);
         }
 
         private void ReviseTrackers()
         {
+            List<ResourceActivityTrackerModel> newResourceActivityTrackers =
+                [.. m_CoreViewModel.RawActivities
+                .Select(activity => new ResourceActivityTrackerModel
+                {
+                    Time = m_Time,
+                    ResourceId = m_ResourceId,
+                    ActivityId = activity.Id,
+                    ActivityName = activity.Name ?? string.Empty,
+                    PercentageWorked = 0
+                })];
+
+            bool isPublished;
+
+            // The read of the bookings and the change are one step, and so an edit in a cell cannot come between them and be lost.
             lock (m_Lock)
             {
-                List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    [.. m_CoreViewModel.RawActivities
-                    .Select(activity => new ResourceActivityTrackerModel
-                    {
-                        Time = m_Time,
-                        ResourceId = m_ResourceId,
-                        ActivityId = activity.Id,
-                        ActivityName = activity.Name ?? string.Empty,
-                        PercentageWorked = 0
-                    })];
-
-                SetTargetResourceActivities(
+                isPublished = SetTargets(
                     newResourceActivityTrackers,
-                    [.. SelectedResourceActivityIds]);
+                    [.. m_SelectedTargetResourceActivities.Select(x => x.Id)]);
             }
+
+            if (isPublished)
+            {
+                RaiseListsChanged();
+            }
+        }
+
+        // Hold m_Lock.
+        private bool SetTargets(
+            IEnumerable<ResourceActivityTrackerModel> targetResourceActivities,
+            HashSet<int> selectedTargetResourceActivities)
+        {
+            {
+                // Find target view models that have been removed.
+                List<ISelectableResourceActivityViewModel> removedViewModels = [.. m_TargetResourceActivities
+                    .ExceptBy(targetResourceActivities.Select(x => x.ActivityId), x => x.Id)];
+
+                // Delete the removed items from the target and selected collections.
+                foreach (ISelectableResourceActivityViewModel vm in removedViewModels)
+                {
+                    m_TargetResourceActivities.Remove(vm);
+                    m_SelectedTargetResourceActivities.Remove(vm);
+                }
+
+                // Find the selected view models that have been removed.
+                List<ISelectableResourceActivityViewModel> removedSelectedViewModels = [.. m_SelectedTargetResourceActivities
+                    .ExceptBy(selectedTargetResourceActivities, x => x.Id)];
+
+                // Delete the removed selected items from the selected collections.
+                foreach (ISelectableResourceActivityViewModel vm in removedSelectedViewModels)
+                {
+                    m_SelectedTargetResourceActivities.Remove(vm);
+                }
+            }
+            {
+                // Find the target models that have been added.
+                List<ResourceActivityTrackerModel> addedModels = [.. targetResourceActivities
+                    .ExceptBy(m_TargetResourceActivities.Select(x => x.Id), x => x.ActivityId)];
+
+                // Create a collection of new view models.
+                foreach (ResourceActivityTrackerModel model in addedModels)
+                {
+                    var vm = new SelectableResourceActivityViewModel(
+                        model.ActivityId,
+                        model.ActivityName,
+                        model.PercentageWorked);
+
+                    m_TargetResourceActivities.Add(vm);
+                    if (selectedTargetResourceActivities.Contains(model.ActivityId))
+                    {
+                        m_SelectedTargetResourceActivities.Add(vm);
+                    }
+                }
+            }
+            {
+                // Update names.
+                Dictionary<int, ResourceActivityTrackerModel> targetResourceActivityLookup = targetResourceActivities.ToDictionary(x => x.ActivityId);
+
+                foreach (ISelectableResourceActivityViewModel vm in m_TargetResourceActivities)
+                {
+                    if (targetResourceActivityLookup.TryGetValue(vm.Id, out ResourceActivityTrackerModel? value))
+                    {
+                        vm.Name = value.ActivityName;
+                    }
+                }
+            }
+
+            m_TargetResourceActivities.Sort(s_SortComparer);
+            return PublishLists();
         }
 
         #endregion
@@ -173,25 +281,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static IResourceActivitySelectorViewModel Empty { get; } = new EmptyResourceActivitySelectorViewModel();
 
-        private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_TargetResourceActivities;
-        private readonly ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> m_ReadOnlyTargetResourceActivities;
-        public ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities => m_ReadOnlyTargetResourceActivities;
+        // Lock-free arrays of the lists, which PublishLists makes again under m_Lock
+        // when a list changes. A reader on any thread gets the whole of one array,
+        // and a change never meets the read. Getters that participate in change
+        // notification must never take m_Lock (ReactiveUI re-reads them under its
+        // own sink gate - see the deadlock note in GanttActivitySelectorViewModel);
+        // the ids are also read inside ResourceTrackerSetViewModel's locked regions,
+        // so the arrays remove a nested cross-object lock as well. They are arrays
+        // so accidental mutation by a caller fails fast.
+        private ISelectableResourceActivityViewModel[] m_TargetResourceActivitiesSnapshot = [];
+        public IReadOnlyList<ISelectableResourceActivityViewModel> TargetResourceActivities => m_TargetResourceActivitiesSnapshot;
 
-        // Use ObservableUniqueCollection to prevent selected
-        // items appearing twice in the Urse MultiComboBox.
-        private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_SelectedTargetResourceActivities;
-        public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities => m_SelectedTargetResourceActivities;
+        private ISelectableResourceActivityViewModel[] m_SelectedTargetResourceActivitiesSnapshot = [];
+        public IReadOnlyList<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities => m_SelectedTargetResourceActivitiesSnapshot;
 
-        // Lock-free snapshot of the selected ids, recomputed under m_Lock by
-        // RefreshDerivedProperties whenever the selection changes. Getters
-        // that participate in change notification must never take m_Lock
-        // (ReactiveUI re-reads them under its own sink gate - see the
-        // deadlock note in GanttActivitySelectorViewModel); this one is also
-        // read inside ResourceTrackerSetViewModel's locked regions, so the
-        // snapshot removes a nested cross-object lock as well. The snapshot
-        // is an array so accidental mutation by a caller fails fast.
         private int[] m_SelectedResourceActivityIds = [];
-
         public IList<int> SelectedResourceActivityIds => m_SelectedResourceActivityIds;
 
         #endregion
@@ -204,74 +308,52 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(targetResourceActivities);
             ArgumentNullException.ThrowIfNull(selectedTargetResourceActivities);
+            bool isPublished;
+
             lock (m_Lock)
             {
-                {
-                    // Find target view models that have been removed.
-                    List<ISelectableResourceActivityViewModel> removedViewModels = [.. m_TargetResourceActivities
-                        .ExceptBy(targetResourceActivities.Select(x => x.ActivityId), x => x.Id)];
-
-                    // Delete the removed items from the target and selected collections.
-                    foreach (ISelectableResourceActivityViewModel vm in removedViewModels)
-                    {
-                        m_TargetResourceActivities.Remove(vm);
-                        m_SelectedTargetResourceActivities.Remove(vm);
-                    }
-
-                    // Find the selected view models that have been removed.
-                    List<ISelectableResourceActivityViewModel> removedSelectedViewModels = [.. m_SelectedTargetResourceActivities
-                        .ExceptBy(selectedTargetResourceActivities, x => x.Id)];
-
-                    // Delete the removed selected items from the selected collections.
-                    foreach (ISelectableResourceActivityViewModel vm in removedSelectedViewModels)
-                    {
-                        m_SelectedTargetResourceActivities.Remove(vm);
-                    }
-                }
-                {
-                    // Find the target models that have been added.
-                    List<ResourceActivityTrackerModel> addedModels = [.. targetResourceActivities
-                        .ExceptBy(m_TargetResourceActivities.Select(x => x.Id), x => x.ActivityId)];
-
-                    List<ISelectableResourceActivityViewModel> addedViewModels = [];
-
-                    // Create a collection of new view models.
-                    foreach (ResourceActivityTrackerModel model in addedModels)
-                    {
-                        var vm = new SelectableResourceActivityViewModel(
-                            model.ActivityId,
-                            model.ActivityName,
-                            model.PercentageWorked);
-
-                        m_TargetResourceActivities.Add(vm);
-                        if (selectedTargetResourceActivities.Contains(model.ActivityId))
-                        {
-                            m_SelectedTargetResourceActivities.Add(vm);
-                        }
-                    }
-                }
-                {
-                    // Update names.
-                    Dictionary<int, ResourceActivityTrackerModel> targetResourceActivityLookup = targetResourceActivities.ToDictionary(x => x.ActivityId);
-
-                    foreach (ISelectableResourceActivityViewModel vm in m_TargetResourceActivities)
-                    {
-                        if (targetResourceActivityLookup.TryGetValue(vm.Id, out ResourceActivityTrackerModel? value))
-                        {
-                            vm.Name = value.ActivityName;
-                        }
-                    }
-                }
-
-                m_TargetResourceActivities.Sort(s_SortComparer);
+                isPublished = SetTargets(targetResourceActivities, selectedTargetResourceActivities);
             }
-            RaiseTargetResourceActivitiesPropertiesChanged();
+
+            if (isPublished)
+            {
+                RaiseListsChanged();
+            }
         }
 
-        public void RaiseTargetResourceActivitiesPropertiesChanged()
+        public bool SetPercentageWorked(int activityId, int? percentageWorked)
         {
-            RefreshDerivedProperties();
-            this.RaisePropertyChanged(nameof(TargetResourceActivities));
+            bool isPublished;
+
+            lock (m_Lock)
+            {
+                ISelectableResourceActivityViewModel? target = m_TargetResourceActivities.FirstOrDefault(x => x.Id == activityId);
+
+                if (target is null)
+                {
+                    return false;
+                }
+
+                if (percentageWorked is null)
+                {
+                    m_SelectedTargetResourceActivities.Remove(target);
+                }
+                else
+                {
+                    // The value first, so that a reader that finds the booking finds its value.
+                    target.PercentageWorked = percentageWorked.GetValueOrDefault();
+                    m_SelectedTargetResourceActivities.Add(target);
+                }
+
+                isPublished = PublishLists();
+            }
+
+            if (isPublished)
+            {
+                RaiseListsChanged();
+            }
+
+            return true;
         }
 
         #endregion
@@ -315,26 +397,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         internal EmptyResourceActivitySelectorViewModel()
         {
-            TargetResourceActivities = new ReadOnlyObservableCollection<ISelectableResourceActivityViewModel>([]);
+            TargetResourceActivities = [];
             SelectedTargetResourceActivities = [];
             SelectedResourceActivityIds = [];
         }
 
-        public ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; init; }
+        public IReadOnlyList<ISelectableResourceActivityViewModel> TargetResourceActivities { get; init; }
 
-        public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; init; }
+        public IReadOnlyList<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; init; }
 
         public IList<int> SelectedResourceActivityIds { get; init; }
-
-        public void RaiseTargetResourceActivitiesPropertiesChanged()
-        {
-        }
 
         public void SetTargetResourceActivities(
             IEnumerable<ResourceActivityTrackerModel> targetResourceActivities,
             HashSet<int> selectedTargetResourceActivities)
         {
         }
+
+        public bool SetPercentageWorked(int activityId, int? percentageWorked) => false;
 
         #region IDisposable Members
 

@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Zametek.Common.ProjectPlan;
+﻿using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -10,14 +9,18 @@ namespace Zametek.Contract.ProjectPlan
 
         int Time { get; }
 
-        ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; }
+        // Each list is an array that a change replaces as a whole. A revision changes a day on the thread that asks for it, and
+        // the UI thread reads the day at the same time (ARCHITECTURE section 7 rule 17).
+        IReadOnlyList<ISelectableResourceActivityViewModel> TargetResourceActivities { get; }
 
-        ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; }
+        IReadOnlyList<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; }
 
         IList<int> SelectedResourceActivityIds { get; }
 
         void SetTargetResourceActivities(IEnumerable<ResourceActivityTrackerModel> targetResourceActivities, HashSet<int> selectedTargetResourceActivities);
 
-        void RaiseTargetResourceActivitiesPropertiesChanged();
+        // Books the activity on this day with this percentage, or takes its booking away when there is no percentage. False if
+        // the activity is not a target of this day.
+        bool SetPercentageWorked(int activityId, int? percentageWorked);
     }
 }
