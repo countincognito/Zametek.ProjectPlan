@@ -137,7 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Rebuild the timesheet sections whenever the visible window
-            // moves, the trackers are revised, or the resource/activity
+            // moves, a compilation publishes, or the resource/activity
             // collections change. The orderable collections are observed so
             // drag-and-drop reordering in the settings grids repositions the
             // sections and rows immediately. Everything runs on the UI thread
@@ -146,7 +146,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TimesheetSub = Observable.Merge(
                     this.WhenAnyValue(tm => tm.m_CoreViewModel.TrackerIndex)
                         .Select(_ => Unit.Default),
-                    this.WhenAnyValue(tm => tm.m_CoreViewModel.IsReadyToReviseTrackers)
+                    this.WhenAnyValue(tm => tm.m_CoreViewModel.GraphCompilation)
                         .Select(_ => Unit.Default),
                     Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
                             handler => ((INotifyCollectionChanged)m_ResourceSettingsManagerViewModel.OrderableResources).CollectionChanged += handler,

@@ -229,7 +229,7 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // We do not need to set IsReadyToReviseTrackers since this is a one step
+                // We do not need to call ReviseTrackers since this is a one step
                 // process (i.e. we are not changing any tracker UI elements).
 
                 core.RunCompile();

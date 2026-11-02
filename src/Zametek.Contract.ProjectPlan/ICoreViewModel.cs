@@ -125,7 +125,17 @@ namespace Zametek.Contract.ProjectPlan
 
         int TrackerIndex { get; set; }
 
-        ReadyToRevise IsReadyToReviseTrackers { get; set; }
+        /// <summary>
+        /// How many times the selectors of activities have been asked to revise. They follow it on the thread that asks. Observe
+        /// changes only.
+        /// </summary>
+        int TrackersRevision { get; }
+
+        /// <summary>
+        /// Makes each selector of activities bring itself into line with the plan, before the call returns. Call it after a
+        /// change of the activities, and before the request for a compilation that follows the change.
+        /// </summary>
+        void ReviseTrackers();
 
         int GetNextActivityId();
 

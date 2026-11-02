@@ -21,9 +21,14 @@ namespace Zametek.ViewModel.ProjectPlan
             List<T> sorted = [.. this];
             sorted.Sort(comparer);
 
+            // A selector sorts its list at each revision, nearly always with nothing to do, and the UI
+            // thread can be reading the list. So nothing moves unless it is out of place.
             for (int i = 0; i < sorted.Count; i++)
             {
-                Move(IndexOf(sorted[i]), i);
+                if (!EqualityComparer<T>.Default.Equals(this[i], sorted[i]))
+                {
+                    Move(IndexOf(sorted[i]), i);
+                }
             }
         }
 

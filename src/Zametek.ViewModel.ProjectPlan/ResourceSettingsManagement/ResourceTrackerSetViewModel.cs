@@ -250,12 +250,11 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DaysSub = this
                 .WhenAnyValue(
                     x => x.m_CoreViewModel.TrackerIndex,
-                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
-                // The pre-compile Yes raise happens before any tracker has
-                // changed, so only the post-compile No transition (and window
-                // moves, which occur while No) can alter what the day cells
-                // show. Skipping Yes halves the per-edit binding fan-out.
-                .Where(x => x.Item2 == ReadyToRevise.No)
+                    x => x.m_CoreViewModel.GraphCompilation)
+                // A request to revise the trackers comes before any tracker has
+                // changed, so only a compilation after it (and window moves) can
+                // alter what the day cells show. Not following the request
+                // halves the per-edit binding fan-out.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());
         }

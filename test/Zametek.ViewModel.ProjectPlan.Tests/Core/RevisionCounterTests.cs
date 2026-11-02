@@ -30,6 +30,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static void SetCompilationRequestRevision(CoreViewModel core, int value) =>
             Field<CoreViewModel>(@"m_CompilationRequestRevision").SetValue(core, value);
 
+        public static void SetTrackersRevision(CoreViewModel core, int value) =>
+            Field<CoreViewModel>(@"m_TrackersRevision").SetValue(core, value);
+
         public static void SetTitleRevision(ProjectScenarioManagerViewModel project, int value) =>
             Field<ProjectScenarioManagerViewModel>(@"m_TitleRevision").SetValue(project, value);
 
@@ -155,6 +158,21 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             raises.ShouldHaveSingleItem().ShouldBe(after);
             core.CompilationRequestRevision.ShouldBe(after);
+        }
+
+        [Theory]
+        [InlineData(int.MaxValue, int.MinValue)]
+        [InlineData(int.MinValue, int.MinValue + 1)]
+        public void TrackersRevision_Given_ARequest_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            RevisionCounters.SetTrackersRevision(core, before);
+            List<int> raises = RecordRaises(core, nameof(ICoreViewModel.TrackersRevision), () => core.TrackersRevision);
+
+            core.ReviseTrackers();
+
+            raises.ShouldHaveSingleItem().ShouldBe(after);
+            core.TrackersRevision.ShouldBe(after);
         }
 
         [Theory]
@@ -326,6 +344,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ShouldNotWaitForTheLock(coreLock, () => core.CompilationOutputRevision);
             ShouldNotWaitForTheLock(coreLock, () => core.CompilationRequestRevision);
             ShouldNotWaitForTheLock(coreLock, () => core.ProjectScenarioRevision);
+            ShouldNotWaitForTheLock(coreLock, () => core.TrackersRevision);
+
+            // The sets of trackers and the timesheet follow it in a chain, in the same way.
+            ShouldNotWaitForTheLock(coreLock, () => core.GraphCompilation.GetHashCode());
         }
 
         [Fact]

@@ -36,6 +36,9 @@ namespace Zametek.View.ProjectPlan.Tests
             Gantt = container.Resolve<IGanttChartManagerViewModel>();
             EarnedValue = container.Resolve<IEarnedValueChartManagerViewModel>();
             Activities = container.Resolve<IActivitiesManagerViewModel>();
+            Resources = container.Resolve<IResourceSettingsManagerViewModel>();
+            Effort = container.Resolve<IEffortTrackingManagerViewModel>();
+            Progress = container.Resolve<IProgressTrackingManagerViewModel>();
             ArrowGraph = (InteractiveGraphViewModel)((ArrowGraphManagerViewModel)container.Resolve<IArrowGraphManagerViewModel>()).Interactive;
             VertexGraph = (InteractiveGraphViewModel)((VertexGraphManagerViewModel)container.Resolve<IVertexGraphManagerViewModel>()).Interactive;
         }
@@ -51,6 +54,12 @@ namespace Zametek.View.ProjectPlan.Tests
         public IEarnedValueChartManagerViewModel EarnedValue { get; }
 
         public IActivitiesManagerViewModel Activities { get; }
+
+        public IResourceSettingsManagerViewModel Resources { get; }
+
+        public IEffortTrackingManagerViewModel Effort { get; }
+
+        public IProgressTrackingManagerViewModel Progress { get; }
 
         public InteractiveGraphViewModel ArrowGraph { get; }
 
@@ -69,7 +78,7 @@ namespace Zametek.View.ProjectPlan.Tests
             }
         }
 
-        private async Task UntilAsync(Func<bool> condition, string what)
+        public async Task UntilAsync(Func<bool> condition, string what)
         {
             var patience = new CancellationTokenSource(s_Patience);
 
@@ -250,6 +259,71 @@ namespace Zametek.View.ProjectPlan.Tests
         /// </summary>
         public Task GraphsShouldShowAsync(GraphEdgeRoutingMode arrow, GraphEdgeRoutingMode vertex) =>
             UntilAsync(() => Shows(ArrowGraph, arrow) && Shows(VertexGraph, vertex), $@"the graphs with the modes {arrow} and {vertex}");
+
+        public IManagedResourceViewModel Resource(int resourceId) => Resources.RawResources.Single(x => x.Id == resourceId);
+
+        /// <summary>
+        /// Selects an activity as a click on its row in the grid does.
+        /// </summary>
+        public void SelectActivity(int activityId)
+        {
+            var manager = (ActivitiesManagerViewModel)Activities;
+            manager.SelectedActivities.Clear();
+            manager.SelectedActivities[activityId] = Core.RawActivities.Single(x => x.Id == activityId);
+            manager.HasSelectedActivities = true;
+        }
+
+        public async Task RemoveActivityAsync(int activityId)
+        {
+            SelectActivity(activityId);
+            Activities.RemoveManagedActivitiesCommand.Execute(null);
+            await UntilAsync(() => Core.RawActivities.All(x => x.Id != activityId), $@"activity {activityId} removed");
+        }
+
+        /// <summary>
+        /// The selector of the Gantt chart and the first day of this resource have each activity of the plan, and nothing else.
+        /// </summary>
+        public Task SelectorsShouldFollowThePlanAsync(int resourceId)
+        {
+            bool Follows()
+            {
+                int[] plan = [.. Core.RawActivities.Select(x => x.Id).Order()];
+
+                try
+                {
+                    return Gantt.ActivitySelector.TargetActivities.Select(x => x.Id).Order().SequenceEqual(plan)
+                        && Resources.RawResources.Any(x => x.Id == resourceId)
+                        && Resource(resourceId).TrackerSet.GetDay(0).TargetResourceActivities.Select(x => x.Id).Order().SequenceEqual(plan);
+                }
+                catch (Exception ex) when (ex is InvalidOperationException or ArgumentOutOfRangeException)
+                {
+                    // A revision changes these lists on its own thread, and this read can meet it. The next read follows it.
+                    return false;
+                }
+            }
+
+            return UntilAsync(Follows, $@"the selectors with the activities of the plan");
+        }
+
+        /// <summary>
+        /// The texts of the day cells with a value in the row of this activity, in the grid of the progress tab, day by day.
+        /// </summary>
+        public List<string> ProgressCellsOf(int activityId)
+        {
+            DataGrid grid = m_Window.GetVisualDescendants().OfType<DataGrid>().First(x => x.Name == @"TrackerActivitiesGrid");
+            DataGridRow? row = grid.GetVisualDescendants().OfType<DataGridRow>()
+                .FirstOrDefault(x => x.DataContext is IManagedActivityViewModel activity && activity.Id == activityId);
+
+            // Only the day cells have this class. Another column of the row shows the last value, also with a percent sign.
+            return row is null
+                ? []
+                : [.. row.GetVisualDescendants().OfType<Grid>()
+                    .Where(x => x.Classes.Contains(@"editable"))
+                    .SelectMany(x => x.Children.OfType<TextBlock>())
+                    .Select(x => x.Text)
+                    .OfType<string>()
+                    .Where(x => x.EndsWith('%'))];
+        }
 
         /// <summary>
         /// What a save would write for this scenario.

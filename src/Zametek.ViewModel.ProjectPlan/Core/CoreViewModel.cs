@@ -1151,14 +1151,18 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_TrackerIndex, value);
         }
 
-        private ReadyToRevise m_IsReadyToReviseTrackers;
-        public ReadyToRevise IsReadyToReviseTrackers
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_TrackersRevision;
+        public int TrackersRevision => Volatile.Read(ref m_TrackersRevision);
+
+        // The selectors of activities revise during the raise, on this thread. A load holds the lock for all that it does, and
+        // the plan is empty part way through it. A revision that saw the empty plan would take away each booking of each selector.
+        public void ReviseTrackers()
         {
-            get => m_IsReadyToReviseTrackers;
-            set
+            lock (m_Lock)
             {
-                m_IsReadyToReviseTrackers = value;
-                this.RaisePropertyChanged();
+                Interlocked.Increment(ref m_TrackersRevision);
+                this.RaisePropertyChanged(nameof(TrackersRevision));
             }
         }
 
@@ -1257,8 +1261,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     VertexGraphLayout = new();
                     ResourceSeriesSet = new();
                     TrackingSeriesSet = new();
-
-                    IsReadyToReviseTrackers = ReadyToRevise.No;
 
                     // The settings that were cleared above armed the compilation, and an empty scenario has nothing
                     // to compile. A compilation that is running finds the scenario changed, and discards its results.
@@ -1469,7 +1471,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
-                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                    ReviseTrackers();
 
                     // Display settings (the rest of the settings).
                     displaySettings = projectScenarioModel.DisplaySettings with
@@ -1687,7 +1689,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (AutoCompile)
                     {
-                        IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                        ReviseTrackers();
                         RequestCompilation();
                     }
                 }
@@ -1996,7 +1998,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             // snapshot. If something has, these results are the newest there are and they stay on
                             // display, but they are stale until the compilation that follows has published.
                             HasStaleOutputs = m_Scheduler.HasMovedOnSince(snapshot);
-                            IsReadyToReviseTrackers = ReadyToRevise.No;
                         }
                     }
                 }
@@ -2207,14 +2208,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 // internal state stays consistent) and before ObserveOn (so the check
                 // runs at emission time, not at deferred delivery time).
                 .Where(_ => !IsBulkUpdating)
+                // At emission time, as the edit has just been made: see the check below.
+                .Select(changeSet => (ChangeSet: changeSet, TrackersRevision))
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(changeSet =>
+                .Subscribe(emission =>
                 {
+                    IChangeSet<IManagedActivityViewModel> changeSet = emission.ChangeSet;
                     CascadeDiagnostics.RecordMarker($@"UncompiledSub fired: Replaced={changeSet.Replaced} Adds={changeSet.Adds} IsBusy={IsBusy} IsBulkUpdating={IsBulkUpdating} AutoCompile={AutoCompile} anyUncompiled={RawActivities.Any(a => !a.IsCompiled)}");
                     if ((changeSet.Replaced + changeSet.Adds + changeSet.Refreshes) > 0)
                     {
                         lock (m_Lock)
                         {
+                            // A revision that has started since the emission has seen
+                            // the edit, and so a burst of edits gives one revision. The
+                            // check of the compilation below does not decide this: a
+                            // compilation that started after the edit has it, and the
+                            // selectors have still not heard of it.
+                            if (AutoCompile && emission.TrackersRevision == TrackersRevision)
+                            {
+                                ReviseTrackers();
+                            }
+
                             // The changeset's uncompiled verdict is baked in at
                             // emission time and may be stale by the time it is
                             // delivered here (e.g. activities added during a load
@@ -2230,18 +2244,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             // would then hide the edit. IsBusy is no help either:
                             // it is set for the whole of a compilation, and a
                             // compilation holds no lock.
-                            if (m_Scheduler.HasUnabsorbedInputs())
+                            if (AutoCompile && m_Scheduler.HasUnabsorbedInputs())
                             {
-                                if (AutoCompile)
-                                {
-                                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                                    RequestCompilation();
-                                    CascadeDiagnostics.RecordMarker(@"UncompiledSub requested a compilation");
-                                }
-                                else
-                                {
-                                    IsReadyToReviseTrackers = ReadyToRevise.No;
-                                }
+                                RequestCompilation();
+                                CascadeDiagnostics.RecordMarker(@"UncompiledSub requested a compilation");
                             }
                         }
                     }
@@ -2250,8 +2256,8 @@ namespace Zametek.ViewModel.ProjectPlan
             // Compile off the requesting thread: the settings-apply subscriptions
             // ask for a compilation on the UI thread, and the compile must never
             // run there. The selector revisions still complete first, because
-            // they run inline during the IsReadyToReviseTrackers raise, which
-            // every request site performs before its request.
+            // they run inline during the call of ReviseTrackers, which an edit
+            // of the activities makes before its request.
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(core => core.CompilationRequestRevision)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)

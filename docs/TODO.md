@@ -26,6 +26,14 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   **Starting points.** Comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock and DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj` mark the places. The bridge `ObservableExtensions.ObserveOn(ISequencer)` is the seam where the unwinding starts.
 
+- [ ] **Stop a revision of the trackers from changing a list that the UI thread reads** *(2026-11-02)*
+
+  A revision of the trackers changes the lists of a selector on the thread that asks for it. `TimesheetCellViewModel`, `ResourceTrackerSetViewModel.CloneTrackers` and an open dropdown read these lists on the UI thread, and they do not hold the lock of the selector. A read that meets the change throws `Collection was modified`. On the UI thread, nothing handles that exception.
+
+  A test of the real application met this on the old code during a rename, because each revision moved each item of the list. Now, a revision with nothing new changes nothing. A revision that adds or removes an activity still changes the lists, and this occurs only at a command of the user.
+
+  **Starting points.** The display settings solved the same problem: each of the two chart filters is an array, and a change replaces all of it (§7 rule 9 of [ARCHITECTURE](ARCHITECTURE.md)). A selector cannot do that for the lists that a dropdown binds to. It can post the change to the UI thread, as `InteractiveGraphViewModel.ApplyEdgeRoutingMode` does (§7 rule 15), and give the readers on other threads an array of the ids. Each selector already has such an array for its selection.
+
 - [ ] **Keep the open project when an import fails after its checks** *(2026-11-01)*
 
   `MainViewModel.ImportProjectScenarioFileAsync` resets the project for each failure except `ScenarioImportException`. The import asks for a confirmation only if the scenario on show has changes. A later failure can be a compilation that uses all of its budget. This failure drops the changes in the other scenarios that are not saved. The file is as it was at the last save.
@@ -70,7 +78,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The REMAINING sites that call out under a lock are not live bugs, because every remaining edge is one-way with the point fixes in place. A fix for them is hardening. These sites form the deferred surgery. The list that follows has the items in descending order of value:
 
-  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `IsReadyToReviseTrackers`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `IsReadyToReviseTrackers` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. The call to `SetValues` is the Core→DS edge in the second dump.
+  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `TrackersRevision`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `TrackersRevision` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. The call to `SetValues` is the Core→DS edge in the second dump.
 
      The surgery splits each method into two phases. The state phase runs under the lock. The fan-out phase runs after the release. The state phase collects the pending raises and signals, and the fan-out phase emits them outside the lock. §7 rule 7 makes this safe. Handlers read the live state again, because payloads are stale snapshots. The window of `BeginBulkUpdate` and `EndBulkUpdate` wraps both phases, and thus the semantics of the suppression survive.
   2. `ProjectScenarioDisplaySettingsViewModel.SetValues` assigns about 30 raising setters under the DS lock. Thus, every synchronous observer (the sink gates of ReactiveUI) runs under that lock. The surgery sets the fields and collects the names of the changed properties under the lock. Then it raises all of them after the release. This also removes the re-entrant locking of the setters.
@@ -110,7 +118,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The measurement is against the source code as it is now. The surgery spans these parts:
 
-  - `CoreViewModel`: 2,453 lines and 66 `lock (m_Lock)` sites. The fan-out of the load is about ninety lines under one lock. These lines contain two `SetValues` calls, four assignments of settings that each raise and fan out, and the assignment to `IsReadyToReviseTrackers`. The `Scheduler.CurrentThread` subscriptions of this assignment run selector revisions synchronously on the raising thread.
+  - `CoreViewModel`: 2,453 lines and 66 `lock (m_Lock)` sites. The fan-out of the load is about ninety lines under one lock. These lines contain two `SetValues` calls, four assignments of settings that each raise and fan out, and the call of `ReviseTrackers()`. The `Scheduler.CurrentThread` subscriptions of this call run selector revisions synchronously on the raising thread.
   - `ProjectScenarioDisplaySettingsViewModel`: 735 lines and 33 lock sites. Its `SetValues` makes sixty property assignments, and each one uses a locked raising setter.
   - The five selector view models: 1,455 lines in total.
   - A handful of trivial splits in the chart managers.

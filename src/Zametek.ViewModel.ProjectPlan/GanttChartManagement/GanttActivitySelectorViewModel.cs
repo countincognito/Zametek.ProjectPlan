@@ -76,6 +76,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_SelectedTargetActivities.CollectionChanged += SelectedTargetActivities_CollectionChanged;
 
+            // Before the read of the activities: a request after that read gives a revision (ARCHITECTURE section 9).
+            int trackersRevision = m_CoreViewModel.TrackersRevision;
+
             // Initial set up. The persisted connections filter is applied here, explicitly, and not left to
             // m_ShowConnectionsSub: a selector that is never started would never see it. It is applied revising,
             // so that it is not mistaken for a user edit and written straight back.
@@ -92,32 +95,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // This needs to be on the current thread because all the tracker updates
-            // need to be completed before a compilation can start.
+            // need to be completed before a compilation can start. The value that a
+            // chain gives when it subscribes says nothing new, unless a request came
+            // after the read above: the constructor has read the activities.
             m_ReviseActivitiesSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                .WhenAnyValue(x => x.m_CoreViewModel.TrackersRevision)
+                .SkipWhile(revision => revision == trackersRevision)
                 .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(isReadyToRevise =>
+                .Subscribe(_ =>
                 {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
+                    try
                     {
-                        try
-                        {
-                            // Guard the revision so any resulting selection changes
-                            // are not mistaken for user edits and do not mark the
-                            // project scenario as updated. The guard is a ref-count
-                            // because revisions overlap across threads (this one
-                            // runs on the scenario-load worker, the connections one
-                            // on the UI thread): a shared bool let one reviser's
-                            // finally clear the other's guard mid-revision, leaking
-                            // a machine-driven change out as a user edit
-                            // (dump-proven 2026-08-17).
-                            Interlocked.Increment(ref m_RevisingCount);
-                            ReviseActivities();
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref m_RevisingCount);
-                        }
+                        // Guard the revision so any resulting selection changes
+                        // are not mistaken for user edits and do not mark the
+                        // project scenario as updated. The guard is a ref-count
+                        // because revisions overlap across threads (this one
+                        // runs on the scenario-load worker, the connections one
+                        // on the UI thread): a shared bool let one reviser's
+                        // finally clear the other's guard mid-revision, leaking
+                        // a machine-driven change out as a user edit
+                        // (dump-proven 2026-08-17).
+                        Interlocked.Increment(ref m_RevisingCount);
+                        ReviseActivities();
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref m_RevisingCount);
                     }
                 });
         }

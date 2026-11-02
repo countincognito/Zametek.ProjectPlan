@@ -76,21 +76,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_SelectedTargetResourceActivities.CollectionChanged += SelectedTargetResourceActivities_CollectionChanged;
 
+            // Before the read of the activities: a request after that read gives a revision (ARCHITECTURE section 9).
+            int trackersRevision = m_CoreViewModel.TrackersRevision;
+
             // Initial set up.
             ReviseTrackers(resourceTrackerModel.ActivityTrackers);
 
             // This needs to be on the current thread because all the tracker updates
-            // need to be completed before a compilation can start.
+            // need to be completed before a compilation can start. The value that a
+            // chain gives when it subscribes says nothing new, unless a request came
+            // after the read above: the constructor has read the activities.
             m_ReviseResourceActivityTrackersSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                .WhenAnyValue(x => x.m_CoreViewModel.TrackersRevision)
+                .SkipWhile(revision => revision == trackersRevision)
                 .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(isReadyToRevise =>
-                {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
-                    {
-                        ReviseTrackers();
-                    }
-                });
+                .Subscribe(_ => ReviseTrackers());
         }
 
         #endregion

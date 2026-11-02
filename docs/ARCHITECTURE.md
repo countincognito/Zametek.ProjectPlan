@@ -36,9 +36,9 @@ These two consequences always apply:
 This is the steady-state flow for a **single edit**. The user changes the duration of an activity, adds a dependency, or edits a resource setting:
 
 1. The edit marks activities as uncompiled, or it raises a settings property.
-2. The uncompiled-activities watcher (`m_AreActivitiesUncompiledSub`) or a settings applier arms the trigger. First, it raises `IsReadyToReviseTrackers`, and the tracker revisions run *inline* during that raise. Then it calls `RequestCompilation()`, which increments the revision counter `CompilationRequestRevision` (§9). Each arm site makes this call **last** on purpose.
+2. The uncompiled-activities watcher (`m_AreActivitiesUncompiledSub`) or a settings applier arms the trigger. The watcher first calls `ReviseTrackers()`, which increments the revision counter `TrackersRevision` (§9), and the tracker revisions run *inline* during that raise. Then it calls `RequestCompilation()`, which increments the revision counter `CompilationRequestRevision` (§9). Each arm site makes this call **last** on purpose.
 3. `m_CompileOnSettingsUpdateSub` observes `CompilationRequestRevision` and moves to the taskpool. Arming happens on the UI thread, but **the compilation must never run there**. The subscription calls `DrainAutoCompiles()`. This method compiles only if `AutoCompile` is enabled and the plan changed since the newest snapshot (§7 rule 14).
-4. `RunCompile()` does three steps between `BeginBusy` and `EndBusy`: snapshot, compile and publish. It holds `m_Lock` for the snapshot and for the publication, and not for the compile. The publication assigns the result to `GraphCompilation`, sets `IsProjectScenarioUpdated`, and sets `IsReadyToReviseTrackers` back to `No`. It sets `HasStaleOutputs` only if an edit arrived during the compile.
+4. `RunCompile()` does three steps between `BeginBusy` and `EndBusy`: snapshot, compile and publish. It holds `m_Lock` for the snapshot and for the publication, and not for the compile. The publication assigns the result to `GraphCompilation` and sets `IsProjectScenarioUpdated`. It sets `HasStaleOutputs` only if an edit arrived during the compile. The day cells and the timesheet of the tracking tabs follow `GraphCompilation`, and they refresh at this point.
 5. The emission of the change of `GraphCompilation` reaches `m_BuildCascadeSub`. On the taskpool, this subscription calls `RunBuildCascade()`. This method copies what the outputs read, builds the seven outputs in dependency order, and publishes them together. The order is `ArrowGraph` → `VertexGraph` → `ResourceSeriesSet` → `TrackingSeriesSet` → `NetworkMetrics` → `RiskMetrics` → the financial metrics. Only the copy and the publication hold `m_Lock`. Then the method increments `CompilationOutputRevision`, the settled signal (§9). It publishes nothing if a newer compilation has published during the build.
 6. The chart manager view models that use `CompilationOutputRevision` as their key rebuild their plots one time, on the taskpool.
 
@@ -340,6 +340,20 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     [`ProjectScenarioManagerLoadFailureTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/ProjectScenarioManagement/ProjectScenarioManagerLoadFailureTests.cs) and [`ScenarioLoadFailureTests`](../test/Zametek.View.ProjectPlan.Tests/ProjectScenarioManagement/ScenarioLoadFailureTests.cs) pin this rule. They make a change of the routing mode throw during the load, at each point where the race used to throw.
 
+17. **A revision of the trackers holds `m_Lock`, and it runs on the thread that asks for it.**
+
+    `GanttActivitySelectorViewModel` and `ResourceActivitySelectorViewModel` watch `TrackersRevision`, and they revise *inline*, during the raise. A revision makes the list of a selector the same as the activities of the plan. It removes each target that the plan does not have, and it removes the booking of that target.
+
+    A load empties the plan and then fills it again, and it holds `m_Lock` for all of this work. A revision that read the empty plan took away each booking of each selector, and the next edit of a resource saved that. A command can ask for a revision at any time, on a thread of its own. Thus, `ReviseTrackers()` takes `m_Lock`, and a request during a load waits for the end of the load. This also makes one revision at a time, and the order of the locks is Core→Selector for each revision.
+
+    The uncompiled-activities watcher keeps the value of `TrackersRevision` from the emission. At the delivery, it asks for a revision only if the value is the same. A revision that starts after the edit sees the edit, and thus a burst of edits gives one revision. The check for a compilation does not decide this. A compilation can include the edit before the delivery, and the selectors then do not know about the edit.
+
+    A compilation does not read the selectors. Each revision still comes before the request for a compilation. The day cells and the timesheet read the selectors after the publication.
+
+    The lists of a selector change on the thread of the revision, and the UI thread can read them at that time. An open dropdown and the cells of the timesheet do this. Thus, a revision with nothing new must change nothing: `ObservableUniqueCollection.Sort` moves only what is out of place. A revision that adds or removes an activity still changes the lists, and [TODO](TODO.md) has an entry for this.
+
+    [`TrackerRevisionTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/TrackerRevisionTests.cs) pin this rule, and [the tests of the same name in the real application](../test/Zametek.View.ProjectPlan.Tests/TrackingManagement/TrackerRevisionTests.cs) work the commands and the tracking tabs.
+
 ## 8. `IsBusy` versus `IsBulkUpdating`
 
 They look similar: both use counters, and the application raises both on the outermost transitions. But they have different purposes, and a confusion of them causes bugs that are difficult to find:
@@ -362,6 +376,10 @@ A `WhenAnyValue` chain drops a value that is the same as its last value. Thus, a
 A consumer can clear the flag, but this has two problems. The consumer writes to one of its own inputs, and the write goes back into its own chain. An arm that arrives before the clear also raises no event, because the flag is still `Yes`. The selectors of the Gantt and earned-value charts used to clear their flags in this way. A selector lost a filter that arrived while it applied the previous filter.
 
 A flag can also stay in the wrong state. `IsReadyToCompile` used to wake the compilation, and it stayed `Yes` if another scenario opened during the compilation. The next edits then raised no event, and they did not compile.
+
+`IsReadyToReviseTrackers` had both problems. It asked the selectors of activities to revise, and a compilation set it back to `No`. An activity that the user added during a compilation found the flag at `Yes`, and the selectors did not hear of the activity.
+
+The day cells followed the same flag for another purpose. With no automatic compilation, the remove command left the flag at `Yes`. The day cells then did not follow the window of days until the next compilation. Now, the selectors follow the counter `TrackersRevision`, and the day cells and the timesheet follow `GraphCompilation`.
 
 A counter has none of these problems. Each event gives a new value, no consumer writes to the counter, and the counter has no state that can stay wrong.
 
@@ -395,15 +413,17 @@ These rules give the form:
 
 A consumer uses a counter in one of two ways:
 
-- **As a trigger.** A `WhenAnyValue` chain watches the counter, and the handler ignores the value. The handler reads the live state (§2). The Gantt chart manager, the selectors of the Gantt and earned-value charts, and the title of the window do this.
-- **As a copy to compare later.** The consumer keeps a copy of the value with the state that it belongs to. If the copy and the counter differ later, at least one event occurred in between. A snapshot does this for a compilation (§7 rule 14). The simulation panel does this for a result and for a run (§7 rule 13).
+- **As a trigger.** A `WhenAnyValue` chain watches the counter, and the handler ignores the value. The handler reads the live state (§2). The Gantt chart manager, the selectors of the charts and of the days of a resource, and the title of the window do this.
+- **As a copy to compare later.** The consumer keeps a copy of the value with the state that it belongs to. If the copy and the counter differ later, at least one event occurred in between. A snapshot does this for a compilation (§7 rule 14). The simulation panel does this for a result and for a run (§7 rule 13). The uncompiled-activities watcher does this for a revision of the trackers (§7 rule 17).
 
 These rules apply to each consumer:
 
 - **Compare only for equality.** Use `==` and `!=`. After a rollover, a newer value is a smaller number, and `>` gives the wrong answer. Do not calculate with the value, do not use it as an index, and do not show it to the user. If you need an order, use a [ticket](#what-is-not-a-revision-counter).
-- **Read the counter before you copy what it guards.** `TakeSnapshot()` reads `m_InputRevision` before it copies the activities. An edit that lands in between is in the copy, and the plan also counts it as not yet seen. This costs one more compilation, and it never loses the edit. The other order loses the edit.
+- **Read the counter before you copy what it guards.** `TakeSnapshot()` reads `m_InputRevision` before it copies the activities. An edit that lands in between is in the copy, and the plan also counts it as not yet seen. This costs one more compilation, and it never loses the edit. The other order loses the edit. The constructor of a selector of activities reads `TrackersRevision` before it reads the activities, for the same reason.
 - **Expect the first value.** A `WhenAnyValue` chain delivers the current value when it subscribes. Thus, a trigger runs one time at the start, whether or not an event occurred. A handler that must not run before the first event tests the value with `!= 0`. This test gives the correct answer after a rollover too. The selectors of the Gantt and earned-value charts use this run: it applies a filter that arrived between the constructor and the start.
+- **Skip the first value if the constructor reads the state.** A selector of activities reads the activities in its constructor, and a plan with bookings makes thousands of these selectors. It skips the value that it read before the activities. Thus, a request that arrived after that read gives a revision.
 - **Expect one delivery for each event.** A flag that is already `Yes` merges events, and a counter does not. Thus, a handler can run again when it has nothing new to do, and it must give the same result. If a run costs too much, compare the delivered value with the getter after `ObserveOn`, and ignore a delivery that does not match. A newer delivery follows, and it reads the same live state. The selectors of the Gantt and earned-value charts do this. A load puts each filter in place three times, and the UI thread can be behind the load.
+- **Keep the requests low if the handler runs inline.** Such a handler cannot wait for a newer delivery, and each request gives a run. §7 rule 17 gives the example.
 
 ### The counters
 
@@ -413,6 +433,7 @@ These rules apply to each consumer:
 | `TitleRevision` | [`ProjectScenarioManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/ProjectScenarioManagement/ProjectScenarioManagerViewModel.cs) | Each arm of the title | The setter of `IsReadyToReviseTitle` | Two triggers: the title of the window in `MainViewModel`, and the name of the scenario in `SimulationManagerViewModel`. |
 | `m_InputRevision` | [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) | Each change of what a compilation reads | `NoteInputsChanged()` | A snapshot keeps a copy. If the value changes, the results are stale and the plan is due another compilation (§7 rule 14). |
 | `CompilationRequestRevision` | `CoreViewModel` | Each request for a compilation, except during a bulk update | `RequestCompilation()` | A trigger: `m_CompileOnSettingsUpdateSub`. The handler reads `m_InputRevision`, which says if the plan is due a compilation. |
+| `TrackersRevision` | `CoreViewModel` | Each request to revise the trackers | `ReviseTrackers()` | Two triggers that run inline: `GanttActivitySelectorViewModel` and `ResourceActivitySelectorViewModel`. A copy: the uncompiled-activities watcher (§7 rule 17). |
 | `CompilationOutputRevision` | `CoreViewModel` | Each cascade that publishes | `RunBuildCascade()` | A trigger: the Gantt chart manager. A copy: the simulation panel marks a result as stale if the value changes (§7 rule 13). |
 | `GanttChartShowConnectionsRevision` | [`ProjectScenarioDisplaySettingsViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/ProjectScenarioDisplaySettingsViewModel.cs) | Each filter of connections that goes into place | `SetValues()` | A trigger: `GanttActivitySelectorViewModel`. The handler reads the filter and applies it. |
 | `EarnedValueShowResourcesRevision` | `ProjectScenarioDisplaySettingsViewModel` | Each filter of resources that goes into place | `SetValues()` | A trigger: `EarnedValueResourceSelectorViewModel`. The handler reads the filter and applies it. |
@@ -429,7 +450,6 @@ These numbers and flags look similar. Their form is different on purpose, and th
 | `m_FramingToken` of `InteractiveGraphView` | A token: the latest request wins | Nothing watches it, and a callback on the UI thread compares it with its copy. A lost increment does no harm, and thus a plain `++` is enough. |
 | `NestingCounter` and `m_RevisingCount` | A level | They go up and down, and their value is a state: zero or more than zero. |
 | `m_Drawn` of `PresetColorSequence` | A count that selects a color | The value itself is important. The count changes to a `uint`, and thus the index stays in range after a rollover. |
-| `IsReadyToReviseTrackers` | A flag for a state | It says that work waits. A publication sets it back to `No`. |
 | `IsReadyToReviseTrackedMetrics` | A flag for a request | The consumer acts on `Yes`, and it then sets the flag back to `No`. Each arm and the clear occur under the lock of `ProjectScenarioManagerViewModel`. An arm occurs before the build takes the lock or after the build releases it, and thus the flag cannot lose an arm. The flag also merges a burst of arms into one build. |
 
 `IsReadyToReviseTitle` is the flag that arms the title. Its setter increments `TitleRevision`, and the consumers follow the counter and not the flag.
@@ -451,7 +471,7 @@ It also checks that a getter does not wait for the lock of its owner. For each f
 
 The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request.
 
-`GanttActivitySelectorViewModelTests` and `EarnedValueResourceSelectorViewModelTests` have the tests for a filter. They also test a load across a rollover, and two deliveries across a rollover. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`.
+`GanttActivitySelectorViewModelTests` and `EarnedValueResourceSelectorViewModelTests` have the tests for a filter. They also test a load across a rollover, and two deliveries across a rollover. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`. `TrackerRevisionTests` has the tests for a request during a compilation and during a load. It also tests the first value and the copy of the watcher, across a rollover.
 
 ### The settled signal
 

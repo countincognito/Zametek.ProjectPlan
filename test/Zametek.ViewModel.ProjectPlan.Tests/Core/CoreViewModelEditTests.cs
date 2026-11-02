@@ -68,11 +68,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using CoreViewModel core = CreateCore();
             core.AutoCompile = true;
             int revision = core.CompilationRequestRevision;
+            int trackersRevision = core.TrackersRevision;
 
             core.UpdateManagedActivities([new UpdateDependentActivityModel { Id = 2, IsNameEdited = true, Name = "Renamed" }]);
 
             core.CompilationRequestRevision.ShouldNotBe(revision);
-            core.IsReadyToReviseTrackers.ShouldBe(ReadyToRevise.Yes);
+            core.TrackersRevision.ShouldNotBe(trackersRevision);
         }
 
         [Fact]
@@ -80,11 +81,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             using CoreViewModel core = CreateCore();
             core.AutoCompile = false;
+            int trackersRevision = core.TrackersRevision;
 
             core.UpdateManagedActivities([new UpdateDependentActivityModel { Id = 2, IsNameEdited = true, Name = "Renamed" }]);
 
-            // The core arms the revision of the trackers with the compilation, and only when automatic compilation is on.
-            core.IsReadyToReviseTrackers.ShouldBe(ReadyToRevise.No);
+            // The core asks for the revision of the trackers with the compilation, and only when automatic compilation is on.
+            core.TrackersRevision.ShouldBe(trackersRevision);
         }
 
         [Fact]

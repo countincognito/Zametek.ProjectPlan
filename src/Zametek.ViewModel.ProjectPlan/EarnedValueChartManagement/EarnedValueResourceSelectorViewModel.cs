@@ -32,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
     /// DisplaySettingsViewModel.SetValues has installed the incoming filter.
     /// Activities live in a DynamicData SourceList that raises nothing when its
     /// contents change, so the Gantt selector needs the explicit
-    /// IsReadyToReviseTrackers signal, which is observed on
+    /// TrackersRevision signal, which is observed on
     /// Scheduler.CurrentThread by design (tracker updates must complete before
     /// a compilation starts) and therefore runs DURING a scenario load, before
     /// SetValues. Its tracker-driven revise must consequently preserve the
