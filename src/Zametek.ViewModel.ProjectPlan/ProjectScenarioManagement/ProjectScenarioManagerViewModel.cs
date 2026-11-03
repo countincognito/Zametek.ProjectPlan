@@ -2406,6 +2406,40 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void ProcessProjectScenarioImport(ProjectScenarioImportModel projectScenarioImportModel)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    BeginBusy();
+
+                    // The import takes the place of the scenario on show, with its id and its title. As for a load, the
+                    // scenario on show goes to its file first, with its edits (see LoadProjectScenarioFileInternal).
+                    BuildProject();
+                    Guid nodeId = m_SettingService.ScenarioId;
+                    string nodeTitle = m_SettingService.ScenarioTitle;
+                    bool wasProjectScenarioUpdated = m_CoreViewModel.IsProjectScenarioUpdated;
+
+                    try
+                    {
+                        m_CoreViewModel.ProcessProjectScenarioImport(projectScenarioImportModel, nodeId, nodeTitle);
+                    }
+                    catch (Exception ex) when (ex is not GraphCompilationTimeoutException)
+                    {
+                        // A compilation that runs past its budget leaves the import whole, under the id. Any other failure
+                        // leaves a part of the import under an id that names no node, and so the scenario goes back.
+                        RestoreProjectScenario(nodeId, wasProjectScenarioUpdated);
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                EndBusy();
+            }
+        }
+
         public IManagedNodeViewModel? GetNode(Guid nodeId)
         {
             if (m_ManagedNodeLookup.TryGetValue(nodeId, out IManagedNodeViewModel? managedNode))

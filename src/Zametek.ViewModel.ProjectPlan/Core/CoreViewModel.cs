@@ -1377,12 +1377,24 @@ namespace Zametek.ViewModel.ProjectPlan
                     SimulationSettings = projectScenarioImportModel.SimulationSettings;
                     SimulationSummary = projectScenarioImportModel.SimulationSummary;
 
-                    RunCompile();
+                    // A compilation that runs past its budget leaves the scenario whole, with no outputs (see
+                    // AbandonCompilation). So the rest of the import goes on, as the rest of a load does, and the caller
+                    // hears of it at the end.
+                    GraphCompilationTimeoutException? compilationTimeout = null;
 
-                    // The internal Build* subscriptions drop their emissions during a
-                    // bulk update, so run the cascade actively while everything is
-                    // still muted.
-                    RunBuildCascade();
+                    try
+                    {
+                        RunCompile();
+
+                        // The internal Build* subscriptions drop their emissions during a
+                        // bulk update, so run the cascade actively while everything is
+                        // still muted.
+                        RunBuildCascade();
+                    }
+                    catch (GraphCompilationTimeoutException ex)
+                    {
+                        compilationTimeout = ex;
+                    }
 
                     //// Metrics.
                     //// It is important to put this after the compilation, so it will only
@@ -1395,6 +1407,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = true;
                     m_TrackHasStaleOutputs = true;
+
+                    if (compilationTimeout is not null)
+                    {
+                        // AbandonCompilation could not say this while the import was not tracking it.
+                        HasStaleOutputs = true;
+                        ExceptionDispatchInfo.Capture(compilationTimeout).Throw();
+                    }
                 }
             }
             finally

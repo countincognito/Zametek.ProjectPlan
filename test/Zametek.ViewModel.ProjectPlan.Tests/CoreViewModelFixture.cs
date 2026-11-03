@@ -86,19 +86,22 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         /// <summary>
         /// Builds a core as <see cref="CreateGated"/> does, and hands back the settings service it was built over, for a
-        /// test that looks at the id of the scenario, or that builds something else over the same service.
+        /// test that looks at the id of the scenario, or that builds something else over the same service. A test that
+        /// imports gives the core the import that it needs.
         /// </summary>
         public static (GatedCoreViewModel Core, ISettingService SettingService) CreateGatedWithSettingService(
             int compilationTimeoutMilliseconds,
-            ILogger<CoreViewModel>? logger = null)
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileImport? projectScenarioFileImport = null)
         {
-            (GatedCoreViewModel core, _, ISettingService settingService) = BuildGated(compilationTimeoutMilliseconds, logger);
+            (GatedCoreViewModel core, _, ISettingService settingService) = BuildGated(compilationTimeoutMilliseconds, logger, projectScenarioFileImport);
             return (core, settingService);
         }
 
         private static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs, ISettingService SettingService) BuildGated(
             int compilationTimeoutMilliseconds,
-            ILogger<CoreViewModel>? logger = null)
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileImport? projectScenarioFileImport = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -111,7 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));
 
             var coreViewModel = new GatedCoreViewModel(
-                new TestProjectScenarioFileImport(),
+                projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
                 new TestProjectScenarioFileExport(),
                 settingService,
                 dateTimeCalculator,

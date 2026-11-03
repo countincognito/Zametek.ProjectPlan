@@ -39,6 +39,30 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static ProjectScenarioModel BrokenScenario() =>
             Scenario() with { DependentActivities = null! };
 
+        private const int c_ImportedActivityCount = 5;
+        private const int c_ImportedIterations = 4321;
+
+        private static ProjectScenarioImportModel Import()
+        {
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(c_ImportedActivityCount);
+
+            return new ProjectScenarioImportModel
+            {
+                ProjectStart = scenario.ProjectStart,
+                Today = scenario.Today,
+                DependentActivities = scenario.DependentActivities,
+                ResourceSettings = scenario.ResourceSettings,
+                SimulationSettings = new SimulationSettingsModel { Iterations = c_ImportedIterations },
+            };
+        }
+
+        private static void ImportShouldBeWhole(ProjectScenarioModel saved)
+        {
+            saved.DependentActivities.Count.ShouldBe(c_ImportedActivityCount);
+            saved.ResourceSettings.Resources.Count.ShouldBe(2);
+            saved.SimulationSettings.Iterations.ShouldBe(c_ImportedIterations);
+        }
+
         private static int[] ActivityIds(ICoreViewModel core) =>
             [.. core.BuildProjectScenario().DependentActivities.Select(x => x.Activity.Id).Order()];
 
@@ -185,6 +209,29 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             core.ProcessProjectScenario(Scenario(), s_SecondId, @"Second");
 
             core.HasStaleOutputs.ShouldBeFalse();
+        }
+
+        // An import keeps its scenario whole in the same way. It takes the place of the scenario on show, and so it is an edit
+        // of that scenario.
+        [Fact]
+        public void ProcessProjectScenarioImport_Given_ACompilationThatOutlastsTheWatchdog_Then_TheImportIsWholeAndHasItsId()
+        {
+            (GatedCoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateGatedWithSettingService(compilationTimeoutMilliseconds: 1_000);
+            using GatedCoreViewModel coreOwner = core;
+            core.ProcessProjectScenario(Scenario(), s_FirstId, @"First");
+            core.AutoCompile = true;
+            core.StallNextCompilation();
+
+            Should.Throw<GraphCompilationTimeoutException>(() => core.ProcessProjectScenarioImport(Import(), s_FirstId, @"First"));
+
+            settings.ScenarioId.ShouldBe(s_FirstId);
+            settings.ScenarioTitle.ShouldBe(@"First");
+            ImportShouldBeWhole(core.BuildProjectScenario());
+            core.HasStaleOutputs.ShouldBeTrue(@"the plan has no outputs");
+            core.AutoCompile.ShouldBeFalse(@"the next edit must not walk back into the same hang");
+            core.IsProjectScenarioUpdated.ShouldBeTrue(@"an import is an edit");
+            core.IsBusy.ShouldBeFalse();
+            core.IsBulkUpdating.ShouldBeFalse();
         }
 
         [Fact]

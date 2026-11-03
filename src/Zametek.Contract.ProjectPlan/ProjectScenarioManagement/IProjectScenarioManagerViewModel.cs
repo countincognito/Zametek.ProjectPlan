@@ -114,6 +114,10 @@ namespace Zametek.Contract.ProjectPlan
 
         void ProcessProject(ProjectModel projectModel);
 
+        // Puts an import in the place of the scenario on show, under its id and its title. An import that fails part way goes
+        // back to the scenario that it replaced (ARCHITECTURE section 7 rule 16).
+        void ProcessProjectScenarioImport(ProjectScenarioImportModel projectScenarioImportModel);
+
         IManagedNodeViewModel? GetNode(Guid nodeId);
 
         IManagedNodeViewModel? GetNodeParent(Guid nodeId);

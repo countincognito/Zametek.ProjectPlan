@@ -26,12 +26,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   **Starting points.** Comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock and DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj` mark the places. The bridge `ObservableExtensions.ObserveOn(ISequencer)` is the seam where the unwinding starts.
 
-- [ ] **Keep the open project when an import fails after its checks** *(2026-11-01)*
-
-  `MainViewModel.ImportProjectScenarioFileAsync` resets the project for each failure except `ScenarioImportException`. The import asks for a confirmation only if the scenario on show has changes. A later failure can be a compilation that uses all of its budget. This failure drops the changes in the other scenarios that are not saved. The file is as it was at the last save.
-
-  **Starting points.** Rule 16 of section 7 in [ARCHITECTURE](ARCHITECTURE.md) gives the method: go back to the scenario that the core had. `ProcessProjectScenario` also keeps a scenario whole when its compilation uses all of its budget, and `ProcessProjectScenarioImport` does not do this.
-
 - [ ] **Remove `SyncedMultiComboBox` when Ursa follows `SelectedItems`** *(2026-10-31)*
 
   In Ursa 2.2.0, an item of `MultiComboBox` adds its data to `SelectedItems` when it attaches to the logical tree, if its own `IsSelected` is true. The control also stops listening to `SelectedItems` when it unloads, and it does not listen again. The two chart filters use [`SyncedMultiComboBox`](../src/Zametek.View.ProjectPlan/Controls/SyncedMultiComboBox.cs), and its item corrects `IsSelected` first.
@@ -431,7 +425,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Report the problems of an MS Project import in the same way** *(2026-10-17)*
 
-  The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The generic catch of `MainViewModel.ImportProjectScenarioFileAsync` then resets the open project. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way, and the open project stays as it is. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
+  The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The open project stays as it is, but the user sees only this message. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
 
 - [ ] **Say where a bad date is in a workbook that counts from 1904** *(2026-10-17)*
 
