@@ -43,7 +43,7 @@ namespace Zametek.View.ProjectPlan.Tests
         public Task Lists_Given_AnActivityWithNoName_Then_TheGanttChartAndTheTimesheetShowItInTheSameWay() =>
             m_Fixture.RunAsync(async app =>
             {
-                string name = app.Core.RawActivities.Single(x => x.Id == c_ActivityWithAName).Name;
+                string? name = app.Core.RawActivities.Single(x => x.Id == c_ActivityWithAName).Name;
                 name.ShouldNotBeNullOrWhiteSpace("precondition: the plan gives the activity a name");
                 string before = CandidateOf(app, c_ActivityToRename);
 
