@@ -191,6 +191,26 @@ namespace Zametek.View.ProjectPlan.Tests
             [.. FilterBoxOnShow(chartViewModel).GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text).OfType<string>()];
 
         /// <summary>
+        /// The text of each item that the open dropdown of the chart shows, by the id of the item. The dropdown makes controls only for
+        /// the items that it shows.
+        /// </summary>
+        public async Task<Dictionary<int, string>> TextsOfTheItemsAsync(object chartViewModel)
+        {
+            await SetDropDownAsync(chartViewModel, true);
+
+            try
+            {
+                return ItemsInTheDropdown(FilterBoxOnShow(chartViewModel)).ToDictionary(
+                    item => IdOf(item.DataContext),
+                    item => item.GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text).OfType<string>().Single());
+            }
+            finally
+            {
+                await SetDropDownAsync(chartViewModel, false);
+            }
+        }
+
+        /// <summary>
         /// Opens the dropdown, clicks the items with these ids, and closes the dropdown.
         /// </summary>
         public async Task ClickItemsAsync(object chartViewModel, params int[] ids)

@@ -13,7 +13,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// <summary>
     /// The timesheet follows the window of days, the compilations, and the lists of resources and activities. A request for a
     /// revision of the trackers does not rebuild it. It used to rebuild for the request and then for the compilation after it,
-    /// on the UI thread, and a compilation with no request before it did not rebuild it at all.
+    /// on the UI thread, and a compilation with no request before it did not rebuild it at all. A row and a candidate show an
+    /// activity as the Show Connections list of the Gantt chart does (ActivityLabelHelper).
     /// </summary>
     public class EffortTrackingManagerViewModelTests
     {
@@ -150,6 +151,44 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             IResourceTimesheetRowViewModel row = harness.Section.Rows.ShouldHaveSingleItem();
             row.ActivityName.ShouldBe(@"Renamed");
             row.ActivityLabel.ShouldBe($@"{c_BookedActivityId} - Renamed");
+        }
+
+        [Fact]
+        public void RunCompile_Given_ARenameToNoName_Then_TheLabelOfTheRowShowsTheNumberTwice()
+        {
+            using var harness = new Harness();
+            harness.Section.Rows.ShouldHaveSingleItem().ActivityName.ShouldBe(@"Activity 2", "precondition: the booking has a row");
+
+            harness.Core.UpdateManagedActivities([new UpdateDependentActivityModel { Id = c_BookedActivityId, IsNameEdited = true, Name = string.Empty }]);
+            harness.Core.RunCompile();
+            harness.Settle();
+
+            IResourceTimesheetRowViewModel row = harness.Section.Rows.ShouldHaveSingleItem();
+            row.ActivityName.ShouldBeEmpty("the cell of the name shows the name, and the column of the number is next to it");
+            row.ActivityLabel.ShouldBe($@"{c_BookedActivityId} - {c_BookedActivityId}", "the Show Connections list of the Gantt chart shows an activity with no name in this way");
+        }
+
+        [Fact]
+        public void AddManagedActivity_Given_NoName_Then_ItsCandidateShowsTheNumberTwice()
+        {
+            using var harness = new Harness();
+
+            int added = harness.Core.AddManagedActivity(c_ActivityCount + 1);
+            harness.Core.ReviseTrackers();
+            harness.Settle();
+
+            harness.Section.CandidateActivities.Single(x => x.Id == added).DisplayName.ShouldBe($@"{added} - {added}");
+        }
+
+        [Fact]
+        public void ReviseTrackers_Given_AnActivityWithAName_Then_ItsCandidateShowsTheNumberAndTheName()
+        {
+            using var harness = new Harness();
+
+            harness.Core.ReviseTrackers();
+            harness.Settle();
+
+            harness.Section.CandidateActivities.Single(x => x.Id == 1).DisplayName.ShouldBe(@"1 - Activity 1");
         }
 
         [Fact]
