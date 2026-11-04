@@ -23,6 +23,7 @@ The application supplies everything that is specific to the application through 
    - [Vector or high-fidelity (raster)](#vector-or-high-fidelity-raster)
    - [`GraphVectorExportStyle`](#graphvectorexportstyle)
    - [Select a mode, and connect copy and save](#select-a-mode-and-connect-copy-and-save)
+   - [The size of a raster image](#the-size-of-a-raster-image)
 6. [Persistence of the arrangement](#persistence-of-the-arrangement)
 7. [Built-in interactions](#built-in-interactions)
 8. [Threading and known problems](#threading-and-known-problems)
@@ -339,7 +340,7 @@ The control can put the graph on the clipboard. It can also save images (PNG, JP
 | Mode | What it draws | Best for |
 |---|---|---|
 | **`Vector`** (default) | The control draws crisp shapes imperatively in SkiaSharp, as a `GraphVectorExportStyle` describes. The shapes are true vector in SVG and PDF. This mode **does not** read your custom templates. | Scalable, razor-sharp output, and an approximation of a custom appearance in vector form |
-| **`Raster`** ("High Fidelity") | The control renders the **real** `NodeTemplate` and `EdgeTemplate` to a bitmap (2× supersampled) and embeds it into the SVG or PDF. It reproduces gradients, shadows and arbitrary shapes exactly. | Pixel-exact reproduction of a bespoke template |
+| **`Raster`** ("High Fidelity") | The control renders the **real** `NodeTemplate` and `EdgeTemplate` to a bitmap (2× supersampled, or less for a very large graph) and embeds it into the SVG or PDF. It reproduces gradients, shadows and arbitrary shapes exactly. | Pixel-exact reproduction of a bespoke template |
 
 The vector renderer cannot read an arbitrary template. Thus, you *describe* the appearance that you want with a `GraphVectorExportStyle`. The raster path needs no configuration, because it uses the templates directly.
 
@@ -442,6 +443,14 @@ await interactive.WriteImageAsync(
 `GraphImageSource.InteractiveCanvas` exports the current arrangement after dragging. `GraphImageSource.FixedLayout` exports the default MSAGL layout.
 
 > The control implements `IGraphImageProvider` and registers itself on the view-model. Thus, the save path of the view-model can render through your templates and mode. But **only a SkiaSharp picture crosses that seam**. No control or template object reaches the view-model. If the view-model has no control, for example in a host that has no UI, Save uses the vector renderer.
+
+### The size of a raster image
+
+A raster image has a limit: 67,108,864 pixels (8,192 × 8,192) at most, and no side longer than 65,500 pixels. The limit applies to the bitmap of the High Fidelity mode and to each PNG and JPEG image. Copy Image puts a PNG image on the clipboard. The JPEG encoder accepts no side longer than 65,500 pixels.
+
+The export draws a graph that is too large for the limit at a smaller scale, so that its image fits. The image shows all of the graph, but its text can be too small to read. The SVG and PDF images of the `Vector` mode have no limit, and they keep all of the detail. Use them for a large graph.
+
+If the export cannot make an image, it does not write an empty image. `WriteImageAsync` throws an exception. The built-in Save sends the error to `IGraphHost.ReportErrorAsync`, and Copy Image sends its own message there.
 
 ---
 

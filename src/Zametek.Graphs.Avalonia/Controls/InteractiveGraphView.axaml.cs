@@ -537,8 +537,9 @@ namespace Zametek.Graphs.Avalonia
                 return null;
             }
 
-            // Raster rasterises the real node/edge templates (highest fidelity, at 2x supersample); Vector
-            // draws crisp imperative shapes per the vector export style.
+            // Raster rasterises the real node/edge templates (highest fidelity, at 2x supersample, or less
+            // for a graph too large for one bitmap); Vector draws crisp imperative shapes per the vector
+            // export style.
             return mode == GraphExportMode.Raster
                 ? InteractiveGraphRasterRenderer.RenderPicture(
                     viewModel.GraphNodes, viewModel.GraphEdges, NodeTemplate, EdgeTemplate, viewModel.Theme, scale: 2.0)
@@ -604,9 +605,15 @@ namespace Zametek.Graphs.Avalonia
         // Assemble a single clipboard item carrying the image in two representations - the platform's
         // native bitmap and raw image/png bytes - so the receiving app can choose. Each representation
         // is added independently; if one cannot be produced on this platform/build the other still
-        // stands. Returns null only when neither could be added.
-        private static DataTransfer? BuildImageDataTransfer(byte[] png)
+        // stands. Returns null when neither could be added, and for an empty image, which is a failure
+        // rather than an image. Internal for the tests.
+        internal static DataTransfer? BuildImageDataTransfer(byte[] png)
         {
+            if (png.Length == 0)
+            {
+                return null;
+            }
+
             var item = new DataTransferItem();
             bool added = false;
 

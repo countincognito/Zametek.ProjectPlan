@@ -48,7 +48,7 @@ namespace Zametek.Graphs.Avalonia
         public static void WritePdf(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            picture.ToPdf(stream, SKColors.White, scaleX, scaleY);
+            ThrowIfNotWritten(picture.ToPdf(stream, SKColors.White, scaleX, scaleY));
         }
 
         public static Task WritePdfAsync(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2) =>
@@ -67,7 +67,7 @@ namespace Zametek.Graphs.Avalonia
         public static void WriteSvg(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            picture.ToSvg(stream, SKColors.White, scaleX, scaleY);
+            ThrowIfNotWritten(picture.ToSvg(stream, SKColors.White, scaleX, scaleY));
         }
 
         public static Task WriteSvgAsync(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2) =>
@@ -104,13 +104,26 @@ namespace Zametek.Graphs.Avalonia
 
         #region Private Members
 
-        // Raster (PNG/JPEG) share one path. Rgba8888 keeps full colour depth so the output stays crisp.
+        // Raster (PNG/JPEG) share one path. Rgba8888 keeps full colour depth so the output stays crisp. A picture too
+        // large for one image at the requested scale is drawn at a smaller scale, so that the image fits RasterSizeLimit.
         private static void WriteRaster(SKPicture picture, Stream stream, SKEncodedImageFormat format, int scaleX, int scaleY)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            picture.ToImage(
-                stream, SKColors.White, format, quality: 100, scaleX: scaleX, scaleY: scaleY,
-                skColorType: SKColorType.Rgba8888, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
+            double fit = RasterSizeLimit.FitScale(
+                (double)picture.CullRect.Width * scaleX, (double)picture.CullRect.Height * scaleY, 1.0);
+            ThrowIfNotWritten(picture.ToImage(
+                stream, SKColors.White, format, quality: 100, scaleX: (float)(scaleX * fit), scaleY: (float)(scaleY * fit),
+                skColorType: SKColorType.Rgba8888, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb()));
+        }
+
+        // Svg.Skia returns false, and writes nothing, when it cannot make the image: for example for a picture with no
+        // area, or when an encoder fails. Say so, rather than leave an empty stream for the caller to save as an image.
+        private static void ThrowIfNotWritten(bool written)
+        {
+            if (!written)
+            {
+                throw new InvalidOperationException(Graphs_Messages.Message_UnableToMakeImage);
+            }
         }
 
         private static byte[] RenderToBytes(SKPicture picture, Action<SKPicture, Stream, int, int> write, int scaleX, int scaleY)

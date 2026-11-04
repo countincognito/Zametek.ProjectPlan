@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
+using SkiaSharp;
 using System.IO.Compression;
 using Xunit;
 using Zametek.Utility;
@@ -522,6 +523,29 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--vertex-directory", m_TempDirectory, @"--vertex-format", @"svg");
 
             exitCode.ShouldBe(1);
+        }
+
+        [Fact]
+        public async Task Main_Given_GraphsTooLargeForOneImage_Then_ImagesFitTheLimit()
+        {
+            // At the scale of 2, the graphs of the largest sample plan are far too large for one image. zpp draws each of
+            // them at a smaller scale, so that the image has at most 67,108,864 pixels (8,192 x 8,192), and no side longer
+            // than 65,500 pixels. Before, zpp wrote empty files and exited with 0.
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"erp-migration.zpp"), @"--arrow-directory", m_TempDirectory, @"--arrow-format", @"png", @"--vertex-directory", m_TempDirectory, @"--vertex-format", @"jpeg"]);
+
+            exitCode.ShouldBe(0);
+            string[] files = Directory.GetFiles(m_TempDirectory);
+            files.Length.ShouldBe(2);
+            foreach (string file in files)
+            {
+                string name = Path.GetFileName(file);
+                byte[] data = File.ReadAllBytes(file);
+                data.ShouldNotBeEmpty($@"{name} holds an image");
+                SKImageInfo image = SKBitmap.DecodeBounds(data);
+                image.Width.ShouldBeGreaterThan(0, $@"{name} decodes");
+                ((long)image.Width * image.Height).ShouldBeLessThanOrEqualTo(8_192L * 8_192L, name);
+                Math.Max(image.Width, image.Height).ShouldBeLessThanOrEqualTo(65_500, name);
+            }
         }
 
         [Fact]

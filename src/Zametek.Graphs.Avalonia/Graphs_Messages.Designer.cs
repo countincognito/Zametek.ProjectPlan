@@ -70,6 +70,15 @@ namespace Zametek.Graphs.Avalonia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to make the graph image..
+        /// </summary>
+        public static string Message_UnableToMakeImage {
+            get {
+                return ResourceManager.GetString("Message_UnableToMakeImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to save file:.
         /// </summary>
         public static string Message_UnableToSaveFile {

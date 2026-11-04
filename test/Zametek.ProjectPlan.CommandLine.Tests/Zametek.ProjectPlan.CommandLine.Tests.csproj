@@ -32,6 +32,10 @@
     <Content Include="Assets\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- The largest sample plan of the documentation: its graphs are too large for one image at the scale of 2. -->
+    <Content Include="..\..\docs\assets\erp-migration.zpp" Link="Assets\erp-migration.zpp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

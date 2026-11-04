@@ -15,6 +15,10 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
     [Collection("Headless rendering")]
     public class InteractiveGraphRasterRendererTests
     {
+        // The limit of a raster image: 67,108,864 pixels (8,192 x 8,192), and no side longer than 65,500 pixels.
+        private const long c_MaxPixelCount = 8_192L * 8_192L;
+        private const int c_MaxSideLength = 65_500;
+
         private readonly HeadlessUnitTestSession m_Session;
 
         public InteractiveGraphRasterRendererTests(HeadlessSessionFixture fixture)
@@ -130,6 +134,80 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
                 }
                 anyContent.ShouldBeTrue();
             }, CancellationToken.None);
+        }
+
+        // A graph too large for one bitmap is drawn at a smaller scale, so that the bitmap fits the limit of a raster image.
+        // The graph keeps its shape, and each node shows in its place.
+        [Fact]
+        public async Task RenderPicture_draws_a_graph_over_the_pixel_limit_at_a_scale_that_fits()
+        {
+            // 5,032 x 5,022 units: 10,064 x 10,044 pixels at the scale of 2.
+            await RenderTwoNodesAsync(farX: 4_960.0, farY: 4_960.0);
+        }
+
+        // As wide as the arrow graph of the sample plan docs/assets/erp-migration.zpp. At the scale of 2, its bitmap needs more
+        // than 61 GB. Avalonia counts the bytes of a bitmap in 32 bits, and so the count wrapped: the bitmap got a buffer that
+        // was too small, and the process crashed when Avalonia cleared it.
+        [Fact]
+        public async Task RenderPicture_draws_a_graph_far_too_large_for_one_bitmap_at_a_scale_that_fits()
+        {
+            await RenderTwoNodesAsync(farX: 148_000.0, farY: 26_000.0);
+        }
+
+        // Two red nodes of 40 x 30 units: one at the origin, and one at (farX, farY).
+        private async Task RenderTwoNodesAsync(double farX, double farY)
+        {
+            await m_Session.Dispatch(() =>
+            {
+                List<GraphNodeViewModel> nodes = [BuildNode(1, 0.0, 0.0), BuildNode(2, farX, farY)];
+                var nodeTemplate = new FuncDataTemplate<GraphNodeViewModel>((_, _) => new Border { Background = Brushes.Red });
+
+                using SKPicture? picture = InteractiveGraphRasterRenderer.RenderPicture(
+                    nodes, [], nodeTemplate, edgeTemplate: null, GraphTheme.Light, scale: 2.0);
+
+                picture.ShouldNotBeNull();
+                double width = picture.CullRect.Width;
+                double height = picture.CullRect.Height;
+                (width * height).ShouldBeLessThanOrEqualTo(c_MaxPixelCount);
+                Math.Max(width, height).ShouldBeLessThanOrEqualTo(c_MaxSideLength);
+                (width * height > 0.99 * c_MaxPixelCount || Math.Max(width, height) > 0.99 * c_MaxSideLength)
+                    .ShouldBeTrue($@"a bitmap of {width} x {height} pixels uses most of the limit");
+
+                // The crop is the box of the nodes, with 16 units on each side. The scale is the same on both axes.
+                double cropWidth = farX + 40.0 + 32.0;
+                double cropHeight = farY + 30.0 + 32.0;
+                double scale = width / cropWidth;
+                (height / cropHeight).ShouldBe(scale, scale * 0.01);
+
+                ShouldBeRed(PixelAt(picture, (16.0 + 20.0) * scale, (16.0 + 15.0) * scale), @"the node at the origin");
+                ShouldBeRed(PixelAt(picture, (16.0 + farX + 20.0) * scale, (16.0 + farY + 15.0) * scale), @"the far node");
+            }, CancellationToken.None);
+        }
+
+        private static GraphNodeViewModel BuildNode(int id, double x, double y) =>
+            new(
+                new GraphNodeLayoutModel { Id = id, X = x, Y = y, Width = 40.0, Height = 30.0, Label = $@"{id}", FillColorHexCode = @"#EAF1FB", BorderColorHexCode = @"#333333", BorderThickness = 1.0 },
+                GraphAppearance.Default);
+
+        // The colour of one pixel of the picture, drawn on white.
+        private static SKColor PixelAt(SKPicture picture, double x, double y)
+        {
+            using var bitmap = new SKBitmap(1, 1);
+            using (var canvas = new SKCanvas(bitmap))
+            {
+                canvas.Clear(SKColors.White);
+                canvas.Translate(-(float)Math.Floor(x), -(float)Math.Floor(y));
+                canvas.DrawPicture(picture);
+            }
+
+            return bitmap.GetPixel(0, 0);
+        }
+
+        private static void ShouldBeRed(SKColor colour, string what)
+        {
+            colour.Red.ShouldBeGreaterThan((byte)150, what);
+            colour.Green.ShouldBeLessThan((byte)120, what);
+            colour.Blue.ShouldBeLessThan((byte)120, what);
         }
     }
 }
