@@ -12,27 +12,27 @@ namespace Zametek.Common.ProjectPlan
         /// <summary>
         /// The statistics of the finish time.
         /// </summary>
-        Statistics = 1,
+        Statistics = 1 << 0,
 
         /// <summary>
         /// The histogram of the finish times, split by critical path.
         /// </summary>
-        Histogram = 2,
+        Histogram = 1 << 1,
 
         /// <summary>
         /// The critical paths.
         /// </summary>
-        Paths = 4,
+        Paths = 1 << 2,
 
         /// <summary>
         /// How often each activity was critical.
         /// </summary>
-        Activities = 8,
+        Activities = 1 << 3,
 
         /// <summary>
         /// Every iteration, with its finish time and its critical paths.
         /// </summary>
-        Iterations = 16,
+        Iterations = 1 << 4,
 
         All = Statistics | Histogram | Paths | Activities | Iterations,
     }

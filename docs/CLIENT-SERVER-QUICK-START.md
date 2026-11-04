@@ -377,26 +377,26 @@ The option `--run-simulation` runs the simulation after the plan compiles. With 
 Then `zpp` prints the metrics of the plan. The statistics of the simulation are a second table, after the table of the metrics:
 
 ```text
-| Simulation Metrics                                  | Values           |
-|-----------------------------------------------------|------------------|
-| Seed                                                | 1                |
-| Distribution                                        | Beta-PERT        |
-| Iterations (valid)                                  | 10000            |
-| Planned finish                                      | 90 (10/05/2027)  |
-| Mean                                                | 94.3             |
-| Standard deviation                                  | 4.37             |
-| Earliest                                            | 81 (27/04/2027)  |
-| Latest                                              | 111 (08/06/2027) |
-| P5                                                  | 88 (06/05/2027)  |
-| P10                                                 | 89 (07/05/2027)  |
-| P25                                                 | 91 (11/05/2027)  |
-| P50                                                 | 94 (14/05/2027)  |
-| P75                                                 | 97 (19/05/2027)  |
-| P80                                                 | 98 (20/05/2027)  |
-| P90                                                 | 100 (24/05/2027) |
-| P95                                                 | 102 (26/05/2027) |
-| P99                                                 | 105 (31/05/2027) |
-| Chance of finishing by the target (96 (18/05/2027)) | 70.0%            |
+| Simulation Metrics                                 | Values           |
+|----------------------------------------------------|------------------|
+| Seed                                               | 1                |
+| Distribution                                       | Beta-PERT        |
+| Iterations (valid)                                 | 10000            |
+| Planned finish                                     | 90 (10/05/2027)  |
+| Mean                                               | 94.3             |
+| Standard deviation                                 | 4.37             |
+| Earliest                                           | 81 (27/04/2027)  |
+| Latest                                             | 111 (08/06/2027) |
+| P5                                                 | 88 (06/05/2027)  |
+| P10                                                | 89 (07/05/2027)  |
+| P25                                                | 91 (11/05/2027)  |
+| P50                                                | 94 (14/05/2027)  |
+| P75                                                | 97 (19/05/2027)  |
+| P80                                                | 98 (20/05/2027)  |
+| P90                                                | 100 (24/05/2027) |
+| P95                                                | 102 (26/05/2027) |
+| P99                                                | 105 (31/05/2027) |
+| Chance of finishing by the target: 96 (18/05/2027) | 70.0%            |
 ```
 
 A time is a number of working days from the start of the project, with its date in parentheses. The planned finish is the finish when each activity takes its expected duration. The mean of the simulation is later. A delay on one path can make the project late, but an early finish on one path does not make the project early.

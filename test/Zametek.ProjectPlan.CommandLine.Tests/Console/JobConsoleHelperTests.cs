@@ -175,7 +175,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // The longest statistic of the panel: the chance of the target, with the target and its date. The table library
             // breaks a cell of more than 40 characters, and then Markdown reads the rest as a row of its own.
-            const string name = @"Chance of finishing by the target (96 (18/05/2027))";
+            const string name = @"Chance of finishing by the target: 96 (18/05/2027)";
             JobSimulationMetrics simulation = s_Simulation with { Statistics = [new SimulationStatisticModel { Name = name, Value = @"70.0%" }] };
 
             string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = simulation }, format);
