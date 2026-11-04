@@ -371,6 +371,12 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Verify the change in two ways. Run `zpp --now` on every sample plan with every output, before and after, and compare the files byte for byte. Also run the parity tests.
 
+- [ ] **Measure how fast `zpp serve` answers a status request while a simulation runs** *(2026-11-04, from a test that timed out in the commit hook)*
+
+  A simulation takes threads of the thread pool. A job that is alone gets one thread for each processor (`SimulationProcessorShare`). In the commit hook, all the test projects run at the same time. There, `ProjectEndpointsJobStatusTests.GetJob_Given_AJobThatRuns_Then_AnswersWithItsStatusAndHowFarItHasGot` twice got no answer to `GET /v1/jobs/{requestId}` within one minute, while a simulation of 1,000,000 iterations ran. Before, it passed in the hook in 20 to 38 seconds. The test client now waits three minutes for each answer (`RunningServer`).
+
+  Find out if the requests wait for threads of the thread pool that the simulation holds. If they do, a client that polls a busy server also waits. Measure the time of a status request while a long simulation runs, first on a machine with no other load. If the time is long, keep a thread free for the requests, or run the simulation on threads of its own.
+
 - [ ] **Hold the API of `zpp serve` to its last release** *(2026-10-04, the end of the API review)*
 
   The API has no release yet. Thus, `/v1` can still change its shape. The `type` URIs of its problems can still change their names. They are the addresses of the sections of [API.md](API.md), and a client branches on them.
