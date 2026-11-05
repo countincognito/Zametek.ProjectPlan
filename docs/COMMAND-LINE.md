@@ -20,6 +20,8 @@ Make chart and graph images. A size is `<width>:<height>` in pixels:
 zpp -i plan.zpp --gantt-directory out --gantt-size 1200:800 --gantt-format png --arrow-directory out --arrow-format svg --scenario-chart-directory out --scenario-chart-size 1200:800
 ```
 
+A PNG or JPEG image of a graph has 67,108,864 pixels (8,192 × 8,192) at most, and no side longer than 65,500 pixels. If a graph is too large for this limit, `zpp` draws it at a smaller scale, so that its image fits. The text of a very large graph can then be too small to read. The SVG and PDF images of a graph have no limit.
+
 To work with scenarios, use these commands. The first command lists the scenarios of a plan. The second command selects a scenario and saves the plan to a new file:
 
 ```

@@ -113,7 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 RevisionCounters.SetTrackersRevision(core, int.MaxValue - 1);
             }
 
-            using var gantt = new GanttActivitySelectorViewModel(core);
+            using var gantt = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             using ResourceActivitySelectorViewModel day = BookedDay(core);
 
             // The first add, as the activities manager makes it.
@@ -207,7 +207,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void ReviseTrackers_Given_ASelector_Then_ItHasRevisedWhenTheCallReturns()
         {
             using GatedCoreViewModel core = CreateLoaded();
-            using var gantt = new GanttActivitySelectorViewModel(core);
+            using var gantt = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             using ResourceActivitySelectorViewModel day = BookedDay(core);
             int added = core.AddManagedActivity(c_ActivityCount + 1);
             Targets(gantt).ShouldNotContain(added, "precondition: nothing told the selector");
@@ -223,10 +223,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void ReviseTrackers_Given_NothingNew_Then_NothingInTheSelectorsChanges()
         {
             // Requests can follow one another with nothing new between them. So a revision that has nothing to do must do nothing.
-            // An open dropdown shows these lists, and the UI thread reads them while a revision runs on another thread.
+            // An open dropdown shows the lists of the Gantt chart, and a plan with bookings has a day for each booked day of each
+            // resource.
             using GatedCoreViewModel core = CreateLoaded();
             core.DisplaySettingsViewModel.SetValues(new ProjectScenarioDisplaySettingsModel { GanttChartShowConnections = [3] });
-            using var gantt = new GanttActivitySelectorViewModel(core);
+            using var gantt = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             using ResourceActivitySelectorViewModel day = BookedDay(core);
             core.IsProjectScenarioUpdated = false;
 
@@ -234,13 +235,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             void Count(object? sender, NotifyCollectionChangedEventArgs e) => changes++;
             ((INotifyCollectionChanged)gantt.TargetActivities).CollectionChanged += Count;
             gantt.SelectedTargetActivities.CollectionChanged += Count;
-            ((INotifyCollectionChanged)day.TargetResourceActivities).CollectionChanged += Count;
-            day.SelectedTargetResourceActivities.CollectionChanged += Count;
+            IReadOnlyList<ISelectableResourceActivityViewModel> targets = day.TargetResourceActivities;
+            IReadOnlyList<ISelectableResourceActivityViewModel> bookings = day.SelectedTargetResourceActivities;
 
             core.ReviseTrackers();
             core.ReviseTrackers();
 
             changes.ShouldBe(0);
+            day.TargetResourceActivities.ShouldBeSameAs(targets, "a revision with nothing new made the targets of the day again");
+            day.SelectedTargetResourceActivities.ShouldBeSameAs(bookings, "a revision with nothing new made the bookings of the day again");
             core.IsProjectScenarioUpdated.ShouldBeFalse("a revision was taken for an edit by the user");
             core.DisplaySettingsViewModel.GanttChartShowConnections.ToArray().ShouldBe(new[] { 3 });
             day.SelectedTargetResourceActivities.Single().PercentageWorked.ShouldBe(50);
@@ -253,7 +256,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // to the persisted filter, and it must not mark the scenario as updated.
             using GatedCoreViewModel core = CreateLoaded();
             core.DisplaySettingsViewModel.SetValues(new ProjectScenarioDisplaySettingsModel { GanttChartShowConnections = [c_BookedActivityId, 3] });
-            using var gantt = new GanttActivitySelectorViewModel(core);
+            using var gantt = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             gantt.SelectedActivityIds.Order().ToArray().ShouldBe(new[] { c_BookedActivityId, 3 }, "precondition: the selector has the filter");
             core.RemoveManagedActivities([c_BookedActivityId]);
             core.IsProjectScenarioUpdated = false;
@@ -351,7 +354,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     core.ReviseTrackers();
                 });
 
-            using var gantt = new GanttActivitySelectorViewModel(proxy);
+            using var gantt = new GanttActivitySelectorViewModel(proxy, CoreViewModelFixture.CreateUIDispatcher());
 
             added.ShouldNotBe(0, "precondition: the request landed");
             Targets(gantt).ShouldContain(added, "the selector lost a request that landed while it read the activities");

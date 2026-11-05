@@ -60,6 +60,27 @@ namespace Zametek.Graphs.Avalonia.Tests.Export
             await Should.ThrowAsync<ArgumentOutOfRangeException>(() => ImageExporter.WriteImageAsync(picture, stream, format));
         }
 
+        [Theory]
+        [InlineData(GraphFileFormat.Jpeg)]
+        [InlineData(GraphFileFormat.Png)]
+        [InlineData(GraphFileFormat.Pdf)]
+        [InlineData(GraphFileFormat.Svg)]
+        public async Task A_picture_that_cannot_be_drawn_is_refused_with_an_error(GraphFileFormat format)
+        {
+            // A picture with no area gives no image. The exporter says so, and it writes nothing, so that the Save-As path
+            // does not make an empty file. Before, the image formats wrote nothing and said nothing.
+            using var recorder = new SKPictureRecorder();
+            recorder.BeginRecording(SKRect.Empty);
+            using SKPicture picture = recorder.EndRecording();
+            using var stream = new MemoryStream();
+
+            InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+                () => ImageExporter.WriteImageAsync(picture, stream, format));
+
+            exception.Message.ShouldBe(Graphs_Messages.Message_UnableToMakeImage);
+            stream.Length.ShouldBe(0L);
+        }
+
         private static async Task<byte[]> WriteAsync(GraphFileFormat format)
         {
             using SKPicture picture = BuildPicture();

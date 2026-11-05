@@ -539,7 +539,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (summary.TargetFinishTime is int target && summary.TargetProbability is double probability)
             {
                 Add(
-                    $@"{Resource.ProjectPlan.Labels.Label_SimulationTargetProbability} ({FormatFinish(target, showDates, projectStart)})",
+                    $@"{Resource.ProjectPlan.Labels.Label_SimulationTargetProbability}: {FormatFinish(target, showDates, projectStart)}",
                     probability.ToString(@"P1", CultureInfo.CurrentCulture));
             }
 
@@ -606,7 +606,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 string title = m_SettingService.ProjectTitle;
                 title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
-                string outputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv}.csv";
+                string outputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv}.{Resource.ProjectPlan.Filters.Filter_CsvFileExtension}";
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(outputFile, directory, s_CsvExportFileFilters);
 
@@ -635,7 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach ((string suffix, SimulationCsvFile file) in files)
                     {
                         FileStreamHelper.Save(
-                            $@"{baseName}{suffix}.csv",
+                            $@"{baseName}{suffix}.{Resource.ProjectPlan.Filters.Filter_CsvFileExtension}",
                             stream => WriteCsv(stream, file, summary, result, names));
                     }
                 });

@@ -77,39 +77,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 // bookings yet.
                 editable.BeginEdit();
 
-                IResourceActivitySelectorViewModel selector = m_Resource.TrackerSet.GetDay(DayOffset);
-                ISelectableResourceActivityViewModel? target = selector.TargetResourceActivities
-                    .FirstOrDefault(x => x.Id == m_ActivityId);
-
-                if (target is null)
+                // The selector makes the change under its own lock: a revision
+                // can change the same day on another thread at the same time.
+                // Clearing the cell removes the booking entirely.
+                if (!m_Resource.TrackerSet.GetDay(DayOffset).SetPercentageWorked(m_ActivityId, value))
                 {
                     // The activity is not selectable (e.g. it no longer exists
                     // in the plan) - abandon the edit.
                     editable.CancelEdit();
                     return;
                 }
-
-                if (value is null)
-                {
-                    // Clearing the cell removes the booking entirely.
-                    ISelectableResourceActivityViewModel? selected = selector.SelectedTargetResourceActivities
-                        .FirstOrDefault(x => x.Id == m_ActivityId);
-
-                    if (selected is not null)
-                    {
-                        selector.SelectedTargetResourceActivities.Remove(selected);
-                    }
-                }
-                else
-                {
-                    if (!selector.SelectedResourceActivityIds.Contains(m_ActivityId))
-                    {
-                        selector.SelectedTargetResourceActivities.Add(target);
-                    }
-                    target.PercentageWorked = value.GetValueOrDefault();
-                }
-
-                selector.RaiseTargetResourceActivitiesPropertiesChanged();
 
                 // EndEdit prunes selectors left with no selections and marks
                 // the resource settings updated, triggering the revise cycle.

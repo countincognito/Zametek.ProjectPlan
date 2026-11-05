@@ -174,6 +174,42 @@ namespace Zametek.View.ProjectPlan.Tests
             await SettleAsync();
         }
 
+        public Task OpenDropDownAsync(object chartViewModel) => SetDropDownAsync(chartViewModel, true);
+
+        public Task CloseDropDownAsync(object chartViewModel) => SetDropDownAsync(chartViewModel, false);
+
+        /// <summary>
+        /// The number of items that the dropdown of the chart has from its list. The dropdown makes controls only for the items
+        /// that it shows.
+        /// </summary>
+        public int ItemCountOfTheDropdown(object chartViewModel) => FilterBoxOnShow(chartViewModel).ItemCount;
+
+        /// <summary>
+        /// The texts that the box of the filter of the chart shows, with its dropdown closed: one for each selected item.
+        /// </summary>
+        public List<string> TextsOfTheBox(object chartViewModel) =>
+            [.. FilterBoxOnShow(chartViewModel).GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text).OfType<string>()];
+
+        /// <summary>
+        /// The text of each item that the open dropdown of the chart shows, by the id of the item. The dropdown makes controls only for
+        /// the items that it shows.
+        /// </summary>
+        public async Task<Dictionary<int, string>> TextsOfTheItemsAsync(object chartViewModel)
+        {
+            await SetDropDownAsync(chartViewModel, true);
+
+            try
+            {
+                return ItemsInTheDropdown(FilterBoxOnShow(chartViewModel)).ToDictionary(
+                    item => IdOf(item.DataContext),
+                    item => item.GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text).OfType<string>().Single());
+            }
+            finally
+            {
+                await SetDropDownAsync(chartViewModel, false);
+            }
+        }
+
         /// <summary>
         /// Opens the dropdown, clicks the items with these ids, and closes the dropdown.
         /// </summary>
@@ -285,21 +321,15 @@ namespace Zametek.View.ProjectPlan.Tests
         /// </summary>
         public Task SelectorsShouldFollowThePlanAsync(int resourceId)
         {
+            // This reads the lists on the UI thread while revisions run on other threads. The list of the Gantt chart changes only on
+            // the UI thread, and a day gives an array that a revision replaces, and so the read never meets a change.
             bool Follows()
             {
                 int[] plan = [.. Core.RawActivities.Select(x => x.Id).Order()];
 
-                try
-                {
-                    return Gantt.ActivitySelector.TargetActivities.Select(x => x.Id).Order().SequenceEqual(plan)
-                        && Resources.RawResources.Any(x => x.Id == resourceId)
-                        && Resource(resourceId).TrackerSet.GetDay(0).TargetResourceActivities.Select(x => x.Id).Order().SequenceEqual(plan);
-                }
-                catch (Exception ex) when (ex is InvalidOperationException or ArgumentOutOfRangeException)
-                {
-                    // A revision changes these lists on its own thread, and this read can meet it. The next read follows it.
-                    return false;
-                }
+                return Gantt.ActivitySelector.TargetActivities.Select(x => x.Id).Order().SequenceEqual(plan)
+                    && Resources.RawResources.Any(x => x.Id == resourceId)
+                    && Resource(resourceId).TrackerSet.GetDay(0).TargetResourceActivities.Select(x => x.Id).Order().SequenceEqual(plan);
             }
 
             return UntilAsync(Follows, $@"the selectors with the activities of the plan");

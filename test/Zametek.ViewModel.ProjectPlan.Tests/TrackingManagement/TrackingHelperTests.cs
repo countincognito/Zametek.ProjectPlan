@@ -41,20 +41,5 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             TrackingHelper.Classify(total).ShouldBe(TimesheetDayLoad.Over);
         }
-
-        [Fact]
-        public void BuildActivityLabel_Given_Name_Then_IdAndName()
-        {
-            TrackingHelper.BuildActivityLabel(12, @"Backend").ShouldBe(@"12 - Backend");
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
-        public void BuildActivityLabel_Given_NoName_Then_IdOnly(string? name)
-        {
-            TrackingHelper.BuildActivityLabel(12, name).ShouldBe(@"12");
-        }
     }
 }

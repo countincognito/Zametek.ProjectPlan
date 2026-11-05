@@ -39,7 +39,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
 
@@ -67,7 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
 
@@ -90,7 +90,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
 
@@ -123,7 +123,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
 
             core.DisplaySettingsViewModel.SetValues(Filter(3));
             Selected(selector).ShouldBeEmpty("precondition: a selector that is not started does not follow a filter");
@@ -140,7 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using CoreViewModel core = CreateLoaded();
             core.DisplaySettingsViewModel.SetValues(Filter(3));
 
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
 
             Selected(selector).ShouldBe(new[] { 3 });
         }
@@ -154,7 +154,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
             core.IsProjectScenarioUpdated.ShouldBeFalse("precondition: nothing has changed since the load");
@@ -174,7 +174,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
 
@@ -195,7 +195,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
 
@@ -218,7 +218,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
             core.DisplaySettingsViewModel.SetValues(Filter(1));
@@ -238,7 +238,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CreateLoaded();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
             core.DisplaySettingsViewModel.SetValues(Filter(1));
@@ -261,7 +261,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var pool = new TaskpoolSequencerScope();
             using CoreViewModel core = CoreViewModelFixture.Create();
             core.StartSubscriptions();
-            using var selector = new GanttActivitySelectorViewModel(core);
+            using var selector = new GanttActivitySelectorViewModel(core, CoreViewModelFixture.CreateUIDispatcher());
             selector.StartSubscriptions();
             Drain(main, pool);
 

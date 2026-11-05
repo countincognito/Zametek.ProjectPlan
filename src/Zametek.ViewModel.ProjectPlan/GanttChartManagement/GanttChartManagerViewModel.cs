@@ -124,7 +124,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
 
-            ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel);
+            ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel, uiDispatcher);
 
             m_GanttChartPlotModel = new Plot();
             m_PlotRetirer = new PlotRetirer(uiDispatcher);

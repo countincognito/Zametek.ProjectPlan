@@ -1,4 +1,6 @@
+using Avalonia.Threading;
 using Shouldly;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -178,6 +180,77 @@ namespace Zametek.View.ProjectPlan.Tests
                 {
                     core.PropertyChanged -= record;
                 }
+            });
+
+        [Fact]
+        public Task Commands_Given_TheDropdownOfTheGanttChartOpen_Then_ItsListsChangeOnTheUIThread() =>
+            RunAsync(true, async app =>
+            {
+                // The commands remove and add an activity on threads of their own, and each asks for a revision there. The open
+                // dropdown shows the lists of the selector, and a bound list can change only on the UI thread.
+                await app.ShowTabAsync(app.Gantt);
+                await app.ClickItemsAsync(app.Gantt, c_ActivityBookedOnce);
+                app.Gantt.ActivitySelector.SelectedActivityIds.ShouldContain(c_ActivityBookedOnce, "precondition: the filter has the activity");
+
+                var offTheUIThread = new List<NotifyCollectionChangedAction>();
+                void Record(object? sender, NotifyCollectionChangedEventArgs e)
+                {
+                    if (!Dispatcher.UIThread.CheckAccess())
+                    {
+                        lock (offTheUIThread)
+                        {
+                            offTheUIThread.Add(e.Action);
+                        }
+                    }
+                }
+
+                var targets = (INotifyCollectionChanged)app.Gantt.ActivitySelector.TargetActivities;
+                targets.CollectionChanged += Record;
+                app.Gantt.ActivitySelector.SelectedTargetActivities.CollectionChanged += Record;
+                await app.OpenDropDownAsync(app.Gantt);
+
+                try
+                {
+                    await app.RemoveActivityAsync(c_ActivityBookedOnce);
+                    await app.SelectorsShouldFollowThePlanAsync(c_ResourceOfThatActivity);
+                    app.Activities.AddManagedActivityCommand.Execute(null);
+                    await app.UntilAsync(() => app.Core.RawActivities.Count == c_Activities, @"an activity added");
+                    await app.SelectorsShouldFollowThePlanAsync(c_ResourceOfThatActivity);
+
+                    app.Gantt.ActivitySelector.SelectedActivityIds.ShouldNotContain(c_ActivityBookedOnce);
+                    app.ItemCountOfTheDropdown(app.Gantt).ShouldBe(c_Activities, @"the open dropdown does not show the plan");
+                }
+                finally
+                {
+                    targets.CollectionChanged -= Record;
+                    app.Gantt.ActivitySelector.SelectedTargetActivities.CollectionChanged -= Record;
+                    await app.CloseDropDownAsync(app.Gantt);
+                }
+
+                lock (offTheUIThread)
+                {
+                    offTheUIThread.ShouldBeEmpty(@"a list of the selector of the Gantt chart changed on a thread that is not the UI thread");
+                }
+            });
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public Task RemoveManagedActivitiesCommand_Given_AnActivityInTheFilterOfTheGanttChart_Then_TheBoxLetsItGo(bool autoCompile) =>
+            RunAsync(autoCompile, async app =>
+            {
+                // With its dropdown closed, the box of the filter shows the selected activities. The command takes one of them away
+                // on a thread of its own.
+                await app.ShowTabAsync(app.Gantt);
+                await app.ClickItemsAsync(app.Gantt, c_ActivityBookedOnce);
+                app.TextsOfTheBox(app.Gantt).ShouldContain(x => x.StartsWith($@"{c_ActivityBookedOnce} - ", StringComparison.Ordinal), @"precondition: the box shows the activity");
+
+                await app.RemoveActivityAsync(c_ActivityBookedOnce);
+                await app.SelectorsShouldFollowThePlanAsync(c_ResourceOfThatActivity);
+
+                app.ShouldHaveNoErrors();
+                app.Gantt.ActivitySelector.SelectedActivityIds.ShouldNotContain(c_ActivityBookedOnce);
+                app.TextsOfTheBox(app.Gantt).ShouldNotContain(x => x.StartsWith($@"{c_ActivityBookedOnce} - ", StringComparison.Ordinal), @"the box still shows the activity");
             });
 
         [Theory]

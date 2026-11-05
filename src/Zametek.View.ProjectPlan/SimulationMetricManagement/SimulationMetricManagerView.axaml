@@ -33,10 +33,10 @@
 				</DataGrid.ContextMenu>
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationStatistic}"
-										Width="*"
+										Width="350"
 										Binding="{Binding Path=Name, Mode=OneWay}" />
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationValue}"
-										Width="150"
+										Width="160"
 										Binding="{Binding Path=Value, Mode=OneWay}" />
 				</DataGrid.Columns>
 			</DataGrid>
@@ -62,12 +62,12 @@
 				</DataGrid.ContextMenu>
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationRank}"
-										Width="58"
+										Width="75"
 										Binding="{Binding Path=Rank, Mode=OneWay}" />
 
 					<!-- A path is its activity IDs in order, which saves space. The tooltip has the names. -->
 					<DataGridTemplateColumn Header="{x:Static resources:Labels.Label_SimulationPath}"
-											Width="*"
+											Width="500"
 											CanUserSort="False"
 											IsReadOnly="True">
 						<DataGridTemplateColumn.CellTemplate>
@@ -108,10 +108,10 @@
 				</DataGrid.ContextMenu>
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_Id}"
-										Width="55"
+										Width="75"
 										Binding="{Binding Path=ActivityId, Mode=OneWay}" />
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationActivity}"
-										Width="*"
+										Width="275"
 										Binding="{Binding Path=Name, Mode=OneWay}" />
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationCriticality}"
 										Width="135"

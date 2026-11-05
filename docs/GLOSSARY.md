@@ -83,7 +83,7 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | drain | To make the compilations that the edits of a plan ask for, one thread at a time, until no edit waits. `CompilationScheduler.Drain` does this, and the core calls it from `DrainAutoCompiles()`. A thread that finds another thread at work leaves at once, and its edit waits in the input revision. The thread at work compares the input revision with that of its snapshot after each compilation, and it compiles again if they differ. Thus the edits that arrive during a compilation wait for the next one, and one compilation takes all of them. |
 | conflate | To keep only the latest of the values that a gate suppresses, and to replay it when the gate opens. `MuteWhile` does this. |
 | settled signal | The revision counter `CompilationOutputRevision`. `RunBuildCascade()` increments it after it builds all the outputs. |
-| revision of the trackers | The step that makes the lists of a selector of activities the same as the activities of the plan. `ReviseTrackers()` asks for it, and the selectors do it during the call. [Architecture](ARCHITECTURE.md#7-threading-and-ordering-rules) |
+| revision of the trackers | The step that makes the lists of a selector of activities the same as the activities of the plan. `ReviseTrackers()` asks for it, and the selectors read the plan during the call. The days of the resources change their lists during the call. The selector of the Gantt chart changes its lists on the UI thread after the call. [Architecture](ARCHITECTURE.md#7-threading-and-ordering-rules) |
 
 ## Abbreviations
 

@@ -120,6 +120,9 @@
   <data name="Message_ClipboardCopyFailed" xml:space="preserve">
     <value>Copying the graph image to the clipboard failed. Use Save Image instead.</value>
   </data>
+  <data name="Message_UnableToMakeImage" xml:space="preserve">
+    <value>Unable to make the graph image.</value>
+  </data>
   <data name="Message_UnableToSaveFile" xml:space="preserve">
     <value>Unable to save file:</value>
   </data>

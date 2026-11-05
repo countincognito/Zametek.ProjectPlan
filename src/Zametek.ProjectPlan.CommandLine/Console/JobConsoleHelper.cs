@@ -201,7 +201,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // A table with a column for each title. The table library breaks a cell of more than 40 characters, which is its
         // default, onto more lines, and Markdown reads a line that continues a cell as a row of its own. A statistic can be
-        // longer (the chance of the target, with the target and its date, has 51 characters), and so can the path of a
+        // longer (the chance of the target, with the target and its date, has 50 characters), and so can the path of a
         // scenario, and so the width has no limit.
         private static ConsoleTable CreateTable(params string[] titles)
         {

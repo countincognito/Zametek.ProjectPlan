@@ -69,15 +69,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await app.StartAsync();
 
             // A Unix domain socket has no address of its own - the web server names one unix: and its path - so the
-            // handler connects to it. A request that is never answered fails its test within a minute, rather than
-            // holding the run up.
+            // handler connects to it. A request that is never answered fails its test within three minutes, rather than
+            // holding the run up. One minute was too short: while a job of a test uses all the processors, and the
+            // other test projects run at the same time, an answer can take longer (refer to docs/TODO.md).
             string address = settings.Listen.Count == 0
                 ? @"http://localhost"
                 : app.Urls.First(x => !x.Contains(@"://unix:", StringComparison.Ordinal));
             server.m_Client = new HttpClient(handler ?? new SocketsHttpHandler())
             {
                 BaseAddress = new Uri(address),
-                Timeout = TimeSpan.FromMinutes(1),
+                Timeout = TimeSpan.FromMinutes(3),
             };
 
             return server;

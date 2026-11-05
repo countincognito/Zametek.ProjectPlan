@@ -26,20 +26,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   **Starting points.** Comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock and DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj` mark the places. The bridge `ObservableExtensions.ObserveOn(ISequencer)` is the seam where the unwinding starts.
 
-- [ ] **Stop a revision of the trackers from changing a list that the UI thread reads** *(2026-11-02)*
-
-  A revision of the trackers changes the lists of a selector on the thread that asks for it. `TimesheetCellViewModel`, `ResourceTrackerSetViewModel.CloneTrackers` and an open dropdown read these lists on the UI thread, and they do not hold the lock of the selector. A read that meets the change throws `Collection was modified`. On the UI thread, nothing handles that exception.
-
-  A test of the real application met this on the old code during a rename, because each revision moved each item of the list. Now, a revision with nothing new changes nothing. A revision that adds or removes an activity still changes the lists, and this occurs only at a command of the user.
-
-  **Starting points.** The display settings solved the same problem: each of the two chart filters is an array, and a change replaces all of it (§7 rule 9 of [ARCHITECTURE](ARCHITECTURE.md)). A selector cannot do that for the lists that a dropdown binds to. It can post the change to the UI thread, as `InteractiveGraphViewModel.ApplyEdgeRoutingMode` does (§7 rule 15), and give the readers on other threads an array of the ids. Each selector already has such an array for its selection.
-
-- [ ] **Keep the open project when an import fails after its checks** *(2026-11-01)*
-
-  `MainViewModel.ImportProjectScenarioFileAsync` resets the project for each failure except `ScenarioImportException`. The import asks for a confirmation only if the scenario on show has changes. A later failure can be a compilation that uses all of its budget. This failure drops the changes in the other scenarios that are not saved. The file is as it was at the last save.
-
-  **Starting points.** Rule 16 of section 7 in [ARCHITECTURE](ARCHITECTURE.md) gives the method: go back to the scenario that the core had. `ProcessProjectScenario` also keeps a scenario whole when its compilation uses all of its budget, and `ProcessProjectScenarioImport` does not do this.
-
 - [ ] **Remove `SyncedMultiComboBox` when Ursa follows `SelectedItems`** *(2026-10-31)*
 
   In Ursa 2.2.0, an item of `MultiComboBox` adds its data to `SelectedItems` when it attaches to the logical tree, if its own `IsSelected` is true. The control also stops listening to `SelectedItems` when it unloads, and it does not listen again. The two chart filters use [`SyncedMultiComboBox`](../src/Zametek.View.ProjectPlan/Controls/SyncedMultiComboBox.cs), and its item corrects `IsSelected` first.
@@ -78,7 +64,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The REMAINING sites that call out under a lock are not live bugs, because every remaining edge is one-way with the point fixes in place. A fix for them is hardening. These sites form the deferred surgery. The list that follows has the items in descending order of value:
 
-  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `TrackersRevision`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `TrackersRevision` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. The call to `SetValues` is the Core→DS edge in the second dump.
+  1. `CoreViewModel.ProcessProjectScenario` and `ResetProjectScenario` hold `m_Lock` across the whole fan-out of a load. The fan-out raises the settings setters, raises `TrackersRevision`, and calls `DisplaySettingsViewModel.SetValues`. The `Scheduler.CurrentThread` subscriptions of `TrackersRevision` run the selector revisions synchronously ON the raising thread. Thus, they take selector locks under the core lock. This is the Core→Selector edge in the first dump. Since 2026-11-02, the selector of the Gantt chart only reads the plan there, and it takes its lock on the UI thread (§7 rule 17). The days of the resources still take their locks there. The call to `SetValues` is the Core→DS edge in the second dump.
 
      The surgery splits each method into two phases. The state phase runs under the lock. The fan-out phase runs after the release. The state phase collects the pending raises and signals, and the fan-out phase emits them outside the lock. §7 rule 7 makes this safe. Handlers read the live state again, because payloads are stale snapshots. The window of `BeginBulkUpdate` and `EndBulkUpdate` wraps both phases, and thus the semantics of the suppression survive.
   2. `ProjectScenarioDisplaySettingsViewModel.SetValues` assigns about 30 raising setters under the DS lock. Thus, every synchronous observer (the sink gates of ReactiveUI) runs under that lock. The surgery sets the fields and collects the names of the changed properties under the lock. Then it raises all of them after the release. This also removes the re-entrant locking of the setters.
@@ -305,7 +291,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   **The audit found no problem in everything else:**
 
   - The subscription for uncompiled activities is the reference implementation, and a comment says so.
-  - The four subscriptions for selector revision use the payload only as a gate on a readiness flag that they clear themselves. They take every value from a live read.
+  - The subscriptions that followed the readiness flag of the trackers now follow revision counters (§9). The two selectors of activities use the value of `TrackersRevision` only as a trigger, and they read the plan during the raise. The selector of the Gantt chart posts work to the UI thread. On purpose, that work applies the plan of the last revision and not a live read. A load can hold `m_Lock` with an empty plan when the UI thread runs the work (§7 rule 17). The tracker sets and the timesheet follow `GraphCompilation` and `TrackerIndex`, and they read the live state.
   - The title subscription of `MainViewModel` binds the product of its own `Select` and not a snapshot of the state.
   - The internal subscription of `MuteWhile` is the gate at emission time itself.
   - The subscriptions for edge routing of the graphs have no `ObserveOn`, and thus rule 7 never applies to them.
@@ -385,6 +371,12 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Verify the change in two ways. Run `zpp --now` on every sample plan with every output, before and after, and compare the files byte for byte. Also run the parity tests.
 
+- [ ] **Measure how fast `zpp serve` answers a status request while a simulation runs** *(2026-11-04, from a test that timed out in the commit hook)*
+
+  A simulation takes threads of the thread pool. A job that is alone gets one thread for each processor (`SimulationProcessorShare`). In the commit hook, all the test projects run at the same time. There, `ProjectEndpointsJobStatusTests.GetJob_Given_AJobThatRuns_Then_AnswersWithItsStatusAndHowFarItHasGot` twice got no answer to `GET /v1/jobs/{requestId}` within one minute, while a simulation of 1,000,000 iterations ran. Before, it passed in the hook in 20 to 38 seconds. The test client now waits three minutes for each answer (`RunningServer`).
+
+  Find out if the requests wait for threads of the thread pool that the simulation holds. If they do, a client that polls a busy server also waits. Measure the time of a status request while a long simulation runs, first on a machine with no other load. If the time is long, keep a thread free for the requests, or run the simulation on threads of its own.
+
 - [ ] **Hold the API of `zpp serve` to its last release** *(2026-10-04, the end of the API review)*
 
   The API has no release yet. Thus, `/v1` can still change its shape. The `type` URIs of its problems can still change their names. They are the addresses of the sections of [API.md](API.md), and a client branches on them.
@@ -439,7 +431,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Report the problems of an MS Project import in the same way** *(2026-10-17)*
 
-  The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The generic catch of `MainViewModel.ImportProjectScenarioFileAsync` then resets the open project. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way, and the open project stays as it is. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
+  The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The open project stays as it is, but the user sees only this message. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
 
 - [ ] **Say where a bad date is in a workbook that counts from 1904** *(2026-10-17)*
 

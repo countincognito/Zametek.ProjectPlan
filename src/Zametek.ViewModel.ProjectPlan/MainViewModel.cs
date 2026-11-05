@@ -499,8 +499,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                Guid projectScenarioId = m_SettingService.ScenarioId;
-                string projectScenarioTitle = m_SettingService.ScenarioTitle;
                 ProjectScenarioImportModel importModel;
 
                 using (FileStream stream = FileStreamHelper.OpenImportFile(filename, format))
@@ -508,7 +506,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     importModel = m_CoreViewModel.ImportProjectScenarioFile(stream, format);
                 }
 
-                m_CoreViewModel.ProcessProjectScenarioImport(importModel, projectScenarioId, projectScenarioTitle);
+                m_ProjectScenarioManagerViewModel.ProcessProjectScenarioImport(importModel);
             }
 
             m_Logger.LogInformation(
@@ -1366,8 +1364,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     catch (ScenarioImportException ex)
                     {
-                        // The file was read in full and found to have problems, and nothing of it was imported. The open
-                        // project is as it was, and so it is not reset, as it is for a failure that may have left it half loaded.
+                        // The file was read in full and found to have problems, and nothing of it was imported.
                         m_Logger.LogError(ex, "Failed to import scenario: {ProblemCount} problems in {ImportFile}", ex.TotalCount, filename);
                         await ImportProblemsPresenter.ShowAsync(m_DialogService, ex, filename, directory);
                         return;
@@ -1378,12 +1375,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                // An import takes the place of the scenario on show only, and so the project stays open whatever the
+                // failure. An import that fails part way goes back to the scenario that it replaced, and an import whose
+                // compilation runs past its budget stays whole (ARCHITECTURE section 7 rule 16).
                 m_Logger.LogError(ex, "Failed to import scenario");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
-                ResetProject();
             }
         }
 

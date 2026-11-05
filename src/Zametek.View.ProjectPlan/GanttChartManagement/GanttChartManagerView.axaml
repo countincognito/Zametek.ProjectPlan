@@ -39,28 +39,15 @@
           <local:SyncedMultiComboBox.SelectedItemTemplate>
             <DataTemplate x:DataType="vm:SelectableActivityViewModel">
               <Grid>
-                <TextBlock>
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0} - {1}">
-                      <Binding Path="Id" Mode="OneWay"/>
-                      <Binding Path="DisplayName" Mode="OneWay"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
+                <TextBlock Text="{Binding Path=Label, Mode=OneWay}"/>
               </Grid>
             </DataTemplate>
           </local:SyncedMultiComboBox.SelectedItemTemplate>
           <local:SyncedMultiComboBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SelectableActivityViewModel">
               <Grid>
-                <TextBlock ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}">
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0} - {1}">
-                      <Binding Path="Id" Mode="OneWay"/>
-                      <Binding Path="DisplayName" Mode="OneWay"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
+                <TextBlock ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}"
+                           Text="{Binding Path=Label, Mode=OneWay}"/>
               </Grid>
             </DataTemplate>
           </local:SyncedMultiComboBox.ItemTemplate>
