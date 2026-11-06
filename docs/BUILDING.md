@@ -104,12 +104,18 @@ The project `Zametek.ProjectPlan.MsiPackager` (in the folder `pkg/`) makes the W
 
 To build the installer in Visual Studio, first install the [WiX Toolset Visual Studio 2022 Extension](https://marketplace.visualstudio.com/items?itemName=WixToolset.WixToolsetVisualStudio2022Extension). This extension makes it possible to use WiX projects in Visual Studio. Then do these steps:
 
-1. Publish the Windows x64 binaries of the desktop application and the command line tool with `make publish-desktop publish-cli ARCH=x64 OS=win` (refer to [The makefile](#the-makefile)). The installer takes its files from these two publish folders. The build does not check that the publish is new.
+1. Publish the Windows x64 binaries of the desktop application and the command line tool with `make publish-desktop publish-cli ARCH=x64 OS=win` (refer to [The makefile](#the-makefile)). The installer takes its files from these two publish folders. The build stops with an error if a file of the publish is not there. It also stops if a file under `src`, or a build file in the root folder, is newer than the publish.
 2. Set the **Configuration** to `Release`.
 3. Set the **Platform** to `x64`.
 4. Build the `Zametek.ProjectPlan.MsiPackager` project.
 
-The installer contains the x64 binaries of the publish, whatever the platform is. Thus, use only the platform `x64`. The platforms `x86` and `ARM64` make an installer that has the name of that platform, but it contains the x64 binaries.
+The installer contains the x64 binaries of the publish. Thus, `x64` is the only platform of the project, and a build for a different platform stops with an error.
+
+You can also build the installer from the command line, without the extension:
+
+```bash
+dotnet build pkg/Zametek.ProjectPlan.MsiPackager/Zametek.ProjectPlan.MsiPackager.wixproj -c Release
+```
 
 The build writes the installer (for example `projectplandotnet.0.10.1.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
 

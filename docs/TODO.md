@@ -202,21 +202,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The packaging projects are outside the filter `Zametek.ProjectPlan.slnf`. Thus, no gate builds or exercises them. The same class of fault can be in the rest of that path. Its sign is a command or a path that seems correct, because its failure mode is silence.
 
-  Read `build-msix.ps1`, the two `.wapproj` files and the WiX project with this specific suspicion. Then ask if a gate can cover any of them.
-
-- [ ] **The MSI installer can have the wrong label, and nothing checks its inputs** *(2026-08-21)*
-
-  `Zametek.ProjectPlan.MsiPackager` declares `<Platforms>x86;x64;ARM64</Platforms>`. It names its output `projectplandotnet.<version>.installer.$(Platform)`. Both component files take their payload from `$(var.<project>.TargetDir)win-x64\publish\`, hard-coded (349baed0, which fixed a path that the publish no longer wrote to). Thus, [Build from source](BUILDING.md#msi-installer-windows) and `readme.txt` tell you to use only the platform `x64`.
-
-  A build of the installer for x86 or ARM64 therefore makes a file with a *name* for that architecture that contains x64 binaries. No error occurs at any point. The packager and WiX both succeed. You can find the wrong label only when you install the file on the computer of the architecture that the name shows.
-
-  There are two ways to fix this. One way drives the RID from `$(Platform)`, and thus the two agree. The other way reduces `<Platforms>` to x64 alone. The present arrangement offers three choices and honors one. If you take the first way, change [Build from source](BUILDING.md#msi-installer-windows) and `readme.txt`. They must then say that the platform is the architecture of the installer.
-
-  A related fact makes the problem easy to miss. The packager uses a publish that nothing enforces. [Build from source](BUILDING.md#msi-installer-windows) and `readme.txt` ask you to run `make publish-desktop publish-cli ARCH=x64 OS=win` first. But the project only reads the files in those folders. A stale publish from a previous version looks the same as a new publish.
-
-  The same is true if there is no new publish and the folder holds an older run. A guard can fail the build when the expected payload is absent or older than the output of the referenced project. The guard changes all of these faults from silent to loud.
-
-  CI does not build the MSI, and the `.slnx` file does not build it (`<Build Project="false" />`). Thus, no gate covers any of this. See the entry for the packaging audit above.
+  Read `build-msix.ps1`, the two `.wapproj` files and the WiX project with this specific suspicion. Then ask if a gate can cover any of them. Since 2026-11-06, the WiX project stops a build for a platform that is not x64. It also stops when a file of its publish is not there or is older than a file under `src` (the target `CheckTheInstallerInputs`).
 
 - [ ] **Add a Debug assertion for the locks that the application holds when it announces a change** *(2026-08-21, extracted from the rule-6 entry as the piece that is worth doing on its own)*
 
