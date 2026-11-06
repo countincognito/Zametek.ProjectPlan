@@ -297,7 +297,7 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 
 The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages.
 
-The maintainer published the packages, and the two package references use version 4.0.0. Use the local file only for a change that needs a version of the library that nobody has published.
+The maintainer published the packages, and the two package references use version 4.0.1. Use the local file only for a change that needs a version of the library that nobody has published.
 
 ## Phase 3: the results
 
@@ -325,7 +325,7 @@ Phase 3 finished on 2026-10-16. All the work is in this repository, on the branc
 ### What is not done
 
 - The settings of the panel are not saved in the plan or in the settings of the application. They start again with the application.
-- A plan that resources decide has very many critical paths that are nearly equal. The sample plan has 92 % of its weight in "Other paths" and about 1 % in each of the eight paths that the chart shows. The chart is correct but it says little. [TODO](TODO.md) has an entry for a grouping that is more useful for such plans.
+- A plan that resources decide has very many critical paths that are nearly equal. The sample plan has 92 % of its weight in "Other paths" and about 1 % in each of the eight paths that the chart shows. The chart is correct but it says little. [TODO](TODO.md) has an entry for a grouping that is more useful for such plans. Later work found that a defect of the library caused most of this. Version 4.0.1 of the library corrects it: refer to [The application uses version 4.0.1 of the library](#the-application-uses-version-401-of-the-library).
 - The criticality table counts each activity in each iteration, one call at a time. This takes seconds for 1,000,000 iterations of a large plan. A method of the library that counts the bits would be faster.
 
 ## Phase 4: the results
@@ -521,6 +521,15 @@ The table library also breaks a cell of more than 40 characters onto more lines.
 - **One block.** The two tables are one `display` block of the console, and so the transcript of a job has one entry for the result, as before. Two blocks put two blank lines between the tables and add a second entry to the transcript.
 - **Where.** `JobConsoleHelper.BuildSimulationTable` builds the second table. `BuildMetricsTable` does not take the simulation any more.
 - **The checks.** The checks of the commit hook passed with 3,339 tests. Six of the new tests failed on the code from before the change. The old and the new `zpp` ran on 30 plans: 205 runs of each, in the three formats, with and without `--run-simulation`. The simulation did not run on the largest plan, and it ran on the next one in Markdown only. The 158 runs in which the text must not change are byte for byte the same. They are the runs without a simulation, the runs in JSON, and 20 runs of a plan that did not compile. In the other 47 runs, the first table has the old rows before the row "Simulation Metrics". The second table has the old rows after it, with each broken row joined again. The team planted 23 faults, one at a time, and the tests found 22 of them. The fault that they did not find changes the alignment of numbers, which has no effect because the cells are text.
+
+### The application uses version 4.0.1 of the library
+
+Version 4.0.1 of the library corrects the critical paths of a simulation. The API does not change. The application moved from version 4.0.0 to version 4.0.1 on 2026-11-05.
+
+- **The defect.** Sometimes one resource does two activities in turn, and the plan also ties them through a milestone. Version 4.0.0 then gave two critical paths with the same activities: one with a resource link, and one with a dependency. `SimulationAnalyzer` splits the weight of an iteration among its paths, and so it split the weight of one chain between the two. Each such step doubled the paths. Four steps of the main chain of the sample plan are like this. Thus, one chain of activities was 16 paths, and the eight paths of the chart were all one chain.
+- **The effect.** The finish times and the criticality of the activities do not change. The paths change. The numbers here are for 3,000 iterations of the sample plan. The plan has the estimates of the tests: O is 0.75 times and P is 1.6 times the duration. The number of paths goes from 1,832 to 475. "Other paths" goes from 92 % to about 54 %. The six heaviest paths have 7 % to 8 % each. They are the chains through each of the three managers to each of the two last activities.
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.0.1, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.0.1.
+- **How it was checked.** The new test `RunSimulationAsync_Given_TheSamplePlan_Then_NoTwoPathsOfTheTableHaveTheSameActivities` runs the sample plan with estimates. It finds that no two rows of the table of the paths have the same activities. With version 4.0.0, the 25 rows were four chains only, and the test failed. With version 4.0.1, it passes. The checks of the commit hook passed with 3,658 tests.
 
 ## Performance work to explore later
 

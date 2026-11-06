@@ -407,9 +407,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Group the critical paths of a simulation in a way that helps for a plan that resources decide** *(2026-10-16)*
 
-  A plan with resources has very many critical paths in a simulation, because the order in which the resources do the work changes from one iteration to the next. For the sample plan, 3,000 iterations give hundreds of distinct paths, and the eight heaviest have 1 % of the weight each. The group "Other paths" has 92 %. The chart is correct, but it does not show the reader what decides the finish.
+  A plan with resources has many critical paths in a simulation, because the resources do the work in a different order in each iteration. For the sample plan, 3,000 iterations give about 475 distinct paths. The six heaviest have 7 % to 8 % of the weight each, and the group "Other paths" has about 54 %. Thus, the chart shows the main chains, but about half of the weight is in one group.
 
-  Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most.
+  Until version 4.0.1 of the library, "Other paths" had 92 %, and the eight paths of the chart were all one chain of activities. A defect of the library caused this ([The plan](SIMULATION-PLAN.md#the-application-uses-version-401-of-the-library) tells how).
+
+  Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most. On the sample plan (2026-11-05), each of the first two choices gives two groups only. The first gives 39 Manual Polishing and 40 System Testing, with about half each. The second gives 7 Dev Training with 96 % and 10 CM and setup with 4 %.
 
 - [ ] **Count the criticality of the activities with the bits of the library** *(2026-10-16)*
 

@@ -213,6 +213,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunSimulationAsync_Given_TheSamplePlan_Then_NoTwoPathsOfTheTableHaveTheSameActivities()
+        {
+            // In the sample plan, one resource does some activities in turn that the plan also ties through a milestone.
+            // The library gives one path for each chain of activities, and not one for each kind of link at such a step
+            // (Zametek.Maths.Graphs 4.0.1). Thus, the weight of a chain is not split, and the table shows each chain once.
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+
+            await panel.RunSimulationAsync();
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            string[] chains = [.. panel.Summary.ShouldNotBeNull().Paths.Select(x => x.IdLabel.Replace(@" ~> ", @" > ", StringComparison.Ordinal))];
+            chains.ShouldNotBeEmpty();
+            chains.Distinct(StringComparer.Ordinal).Count().ShouldBe(chains.Length, string.Join(Environment.NewLine, chains));
+        }
+
+        [Fact]
         public async Task RunSimulationAsync_Given_ADistributionWithoutAShapeValue_Then_TheResultHasNoShapeValue()
         {
             using Harness harness = await Harness.MakeAsync();
