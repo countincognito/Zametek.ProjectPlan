@@ -250,6 +250,51 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Beta-PERT.
+        /// </summary>
+        public static string Enum_DurationDistribution_BetaPert {
+            get {
+                return ResourceManager.GetString("Enum_DurationDistribution_BetaPert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified beta-PERT.
+        /// </summary>
+        public static string Enum_DurationDistribution_ModifiedBetaPert {
+            get {
+                return ResourceManager.GetString("Enum_DurationDistribution_ModifiedBetaPert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        public static string Enum_DurationDistribution_Normal {
+            get {
+                return ResourceManager.GetString("Enum_DurationDistribution_Normal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Triangular.
+        /// </summary>
+        public static string Enum_DurationDistribution_Triangular {
+            get {
+                return ResourceManager.GetString("Enum_DurationDistribution_Triangular", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uniform.
+        /// </summary>
+        public static string Enum_DurationDistribution_Uniform {
+            get {
+                return ResourceManager.GetString("Enum_DurationDistribution_Uniform", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string Enum_GroupByMode_None {

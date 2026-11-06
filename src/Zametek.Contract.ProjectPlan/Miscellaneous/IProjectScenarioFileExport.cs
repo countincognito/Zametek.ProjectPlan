@@ -4,10 +4,7 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectScenarioFileExport
     {
-        void ExportProjectScenarioFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
-
-        Task ExportProjectScenarioFileAsync(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
-
-        void ExportProjectScenarioXlsxFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
+        // Writes the project scenario to the stream in the given format. The caller owns the stream, which is left open.
+        void ExportProjectScenarioFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, Stream stream, ProjectScenarioExportFormat format);
     }
 }

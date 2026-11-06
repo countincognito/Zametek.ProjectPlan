@@ -61,20 +61,29 @@ namespace Zametek.Graphs.Avalonia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copying the graph image to the clipboard failed. Use Save Image instead..
+        ///   Looks up a localized string similar to Copying the graph image to the clipboard failed. Use Save As instead..
         /// </summary>
         public static string Message_ClipboardCopyFailed {
             get {
                 return ResourceManager.GetString("Message_ClipboardCopyFailed", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Empty filename.
+        ///   Looks up a localized string similar to The graph has no nodes, and so it has no image to copy or save..
         /// </summary>
-        public static string Message_EmptyFilename {
+        public static string Message_GraphHasNoImage {
             get {
-                return ResourceManager.GetString("Message_EmptyFilename", resourceCulture);
+                return ResourceManager.GetString("Message_GraphHasNoImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to make the graph image..
+        /// </summary>
+        public static string Message_UnableToMakeImage {
+            get {
+                return ResourceManager.GetString("Message_UnableToMakeImage", resourceCulture);
             }
         }
         

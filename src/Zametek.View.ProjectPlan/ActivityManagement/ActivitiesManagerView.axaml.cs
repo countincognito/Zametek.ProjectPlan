@@ -22,7 +22,11 @@ namespace Zametek.View.ProjectPlan
         [
             (Resource.ProjectPlan.Labels.Label_Id, static x => x.Id),
             (Resource.ProjectPlan.Labels.Label_ActivityName, static x => x.Name),
-            (Resource.ProjectPlan.Labels.Label_Duration, static x => x.Duration),
+            (Resource.ProjectPlan.Labels.Label_MostLikelyDuration, static x => x.MostLikelyDuration),
+            (Resource.ProjectPlan.Labels.Label_OptimisticDuration, static x => x.OptimisticDuration),
+            (Resource.ProjectPlan.Labels.Label_PessimisticDuration, static x => x.PessimisticDuration),
+            (Resource.ProjectPlan.Labels.Label_ExpectedDuration, static x => x.Duration),
+            (Resource.ProjectPlan.Labels.Label_StandardDeviation, static x => x.StandardDeviation),
             (Resource.ProjectPlan.Labels.Label_Dependencies, static x => x.DependenciesString),
             (Resource.ProjectPlan.Labels.Label_PlanningDependencies, static x => x.PlanningDependenciesString),
             (Resource.ProjectPlan.Labels.Label_ResourceDependencies, static x => x.ResourceDependenciesString),

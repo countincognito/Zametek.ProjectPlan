@@ -1,0 +1,1869 @@
+openapi: 3.1.0
+info:
+  title: zpp serve API
+  summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
+  description: |
+    The HTTP API of `zpp serve`, which starts `zpp` as a web server. Each request carries its project, because the server keeps
+    nothing between requests. The server answers with the metrics of the project, the statistics of the simulation of its schedule
+    if the request runs one or the project holds a result, and the outputs that the request asks for. These outputs are the project
+    file, charts and graphs, an Excel export, and the chart and the CSV files of the simulation.
+
+    This description is the source of truth for programs. [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md)
+    is the written reference. It has the changelog, the security review and the deviations from the
+    [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md), which the API
+    follows. The `type` URIs of the problems are the addresses of the sections of that reference.
+
+    The server supplies this description itself, at `GET /v1/openapi`, without an API key. It is the file of the repository, in the
+    version from the time of the build of the server. A description that you read from the repository names no server of its own,
+    and thus a tool receives the address of a server. A description that you fetch from a server describes that server.
+
+    Each response, including a problem, has `Request-Id`. This is 32 hexadecimal characters. It is the `traceId` of a problem. It is
+    also the trace id on each line of the server log that belongs to the request. A request that has a `traceparent` keeps
+    the trace that it names.
+
+    The server stores nothing, and thus it is safe to send each POST again. The same request has the same result.
+
+    ## Deviations from the RESTful API Guide
+
+    The API follows the [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md), version 1.2. The guide asks that the description records each deviation. A deviation is a rule that the API does not follow, or an option that a rule gives to the API. The description gives the reason for each deviation ([DOC-2](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance),
+    [section 0.5](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#05-deviations)):
+
+    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead. While a job runs, `GET /v1/jobs/{requestId}` tells how far it has got (ASY-2). The server keeps this status only for as long as the job runs.
+    - [**REP-7**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#3-representations) - The costs, billings and margins in `metrics` are floating-point numbers. The engine calculates them in this way, and a project has no currency. They are estimates in the unit of the figures of the project, and not amounts of money. REP-7 lets such values be JSON numbers.
+    - [**COL-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#51-the-collection-representation), [**COL-2**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) - `scenarios` and `outputs` are plain arrays and not paged `items`. They are bounded parts of what the caller sent, and not collections that the server holds. COL-1 says that a bounded array inside a representation is a plain array under a descriptive name.
+    - [**ACT-4**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [**REQ-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#4-requests) - `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. A project is a file, and a file cannot go in a URL.
+    - [**RL-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection) - The API has no `RateLimit` fields. They are still an Internet-Draft. The limit is a cap on the jobs at one time, and not a rate. `Retry-After` and `limits` give the other information.
+    - [**OPS-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#14-operations) - The API has no availability objective. `zpp serve` is a tool that its users operate for themselves, and `jobTimeout` limits its latency.
+    - [**ERR-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#7-errors) - `408`, `414` and `431`, and a request that the web server cannot read, have no body. The web server answers them before the API gets them, and it cannot write a body.
+    - [**SEC-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#101-transport), [**SEC-15**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#104-input-and-resources) - The API has no HSTS and no CORS. No browser calls this API. A proxy that ends TLS can add HSTS.
+  version: 1.0.0
+  contact:
+    name: Zametek.ProjectPlan
+    url: https://github.com/countincognito/Zametek.ProjectPlan
+  license:
+    name: BSD 2-Clause License
+    identifier: BSD-2-Clause
+servers:
+  - url: /
+    description: The server from which a client fetches this description
+  - url: http://localhost:9770
+    description: The default address of `zpp serve`, on this computer
+tags:
+  - name: Projects
+    description: What the API does with a project.
+  - name: Jobs
+    description: A job that the server runs now.
+  - name: Server
+    description: Information about the server.
+  - name: Probes
+    description: Health checks, which need no API key.
+security:
+  - apiKey: []
+paths:
+  /v1/projects/compile:
+    post:
+      operationId: compileProject
+      tags: [Projects]
+      summary: Compile a project
+      description: |
+        This operation compiles the project in the request. The request can have an Excel workbook instead, which the server imports
+        into a new project. The server answers with the metrics of the project and the outputs that the options ask for. If the options
+        run the simulation, the server runs it after the project compiles, with the settings that the project holds, and the answer has
+        its statistics. If they do not, and the project holds the result of an earlier run, the answer has the statistics of that
+        result. The status is `200`
+        only when the project compiled and the job produced each output. Each other result is a problem, and its status shows the
+        reason.
+
+        With `Accept: application/zip`, the answer is a zip. It contains each output as a file, with the name that `zpp` gives it. It also
+        contains `result.json`, which is the JSON answer without the contents of the files.
+      parameters:
+        - $ref: '#/components/parameters/Include'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CompileRequest'
+            encoding:
+              project:
+                contentType: application/octet-stream
+              import:
+                contentType: application/octet-stream
+              options:
+                contentType: application/json
+      responses:
+        '200':
+          description: The project compiled, and the job produced each output that the request asked for.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Vary:
+              description: The answer varies with what the request accepts.
+              required: true
+              schema:
+                type: string
+                const: Accept
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompileResponse'
+              examples:
+                compiled:
+                  $ref: '#/components/examples/CompiledProject'
+                compiledWithOutputs:
+                  $ref: '#/components/examples/CompiledProjectWithOutputs'
+                compiledWithSimulation:
+                  $ref: '#/components/examples/CompiledProjectWithSimulation'
+            application/zip:
+              schema:
+                type: string
+                contentMediaType: application/zip
+        '400':
+          $ref: '#/components/responses/MalformedRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerFailed'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    options:
+      operationId: optionsCompileProject
+      tags: [Projects]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the other operations under `/v1` do.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsPost'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/projects/scenarios:
+    post:
+      operationId: listScenarios
+      tags: [Projects]
+      summary: List a project's scenarios
+      description: |
+        This operation lists the scenarios of the project in the request, as `zpp --list-scenarios` does. It only reads. It does not
+        change or keep anything.
+      parameters:
+        - $ref: '#/components/parameters/Include'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScenariosRequest'
+            encoding:
+              project:
+                contentType: application/octet-stream
+      responses:
+        '200':
+          description: The scenarios of the project.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenariosResponse'
+              examples:
+                twoScenarios:
+                  $ref: '#/components/examples/TwoScenarios'
+        '400':
+          $ref: '#/components/responses/MalformedRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/ServerFailed'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    options:
+      operationId: optionsListScenarios
+      tags: [Projects]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes a POST, and what it takes in one. It needs the API key, as the other operations under `/v1` do.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsPost'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/info:
+    get:
+      operationId: getInfo
+      tags: [Server]
+      summary: Ask what the server is
+      description: |
+        This operation gives the version of the server, the culture in which it writes numbers and dates, its time zone, and its limits.
+        This information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for
+        one minute.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: Information about the server.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Cache-Control:
+              description: The client that asked can keep the response for one minute.
+              required: true
+              schema:
+                type: string
+                const: private, max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoResponse'
+              examples:
+                server:
+                  $ref: '#/components/examples/Server'
+        '304':
+          description: The client has the current information about the server, as the `ETag` shows.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    head:
+      operationId: headInfo
+      tags: [Server]
+      summary: The headers of the information about the server
+      description: This operation answers with the headers of `GET`, with the `ETag`, and with no body.
+      responses:
+        '200':
+          description: The headers of `GET`, and no body.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    options:
+      operationId: optionsInfo
+      tags: [Server]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes `GET` and `HEAD`. It needs the API key, as the other operations under `/v1` do.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/jobs/{requestId}:
+    parameters:
+      - $ref: '#/components/parameters/RequestIdPath'
+    get:
+      operationId: getJob
+      tags: [Jobs]
+      summary: Ask how far a job that runs has got
+      description: |
+        This operation tells how far a job has got. The job is a request to compile a project, and its id is the id of the request: the
+        trace id that the request gave in its `traceparent`. The server answers the request when the job ends. A caller that waits for
+        the answer can ask here, as often as `Retry-After` says, how many iterations of the simulation have run.
+
+        The server keeps nothing of a job after it ends. Thus, a job that has not begun, and a job that has ended, have no status (`404`),
+        and the answer to the request of the job is the only word of its end. A request that has no `traceparent` has a trace id that the
+        server chooses, and the caller does not know it before the answer comes. This operation is not for such a request. The operation
+        does not use a place among the jobs. Thus, it answers also when all the jobs at one time run.
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: The job runs.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+              examples:
+                running:
+                  $ref: '#/components/examples/JobRunning'
+        '400':
+          $ref: '#/components/responses/MalformedRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    options:
+      operationId: optionsGetJob
+      tags: [Jobs]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes `GET`. It needs the API key, as the other operations under `/v1` do.
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGetOnly'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/openapi:
+    get:
+      operationId: getDescription
+      tags: [Server]
+      summary: Fetch the description of this API
+      description: |
+        This operation gives this description as YAML, in the version from the time of the build of the server. It is the file of the
+        repository. Thus, a server describes what it takes, and not what a different version of it took. The description holds only what
+        is in the repository, and thus it needs no API key. It cannot change while the server operates. Thus, the response has a strong
+        `ETag`, and any cache can keep it for one hour.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: This description.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Cache-Control:
+              description: Any cache can keep the response for one hour.
+              required: true
+              schema:
+                type: string
+                const: public, max-age=3600
+            Vary:
+              description: The answer varies with what the request accepts.
+              required: true
+              schema:
+                type: string
+                const: Accept
+          content:
+            application/openapi+yaml:
+              schema:
+                type: string
+              examples:
+                start:
+                  summary: The start of the description
+                  value: |
+                    openapi: 3.1.0
+                    info:
+                      title: zpp serve API
+                      summary: Compile Zametek Project Plan projects, and list their scenarios, over HTTP.
+            application/yaml:
+              schema:
+                type: string
+        '304':
+          description: The client has this description, as the `ETag` shows.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    head:
+      operationId: headDescription
+      tags: [Server]
+      summary: The headers of the description
+      description: This operation answers with the headers of `GET`, with the `ETag`, and with no body. It needs no API key.
+      security: []
+      responses:
+        '200':
+          description: The headers of `GET`, and no body.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+    options:
+      operationId: optionsDescription
+      tags: [Server]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes `GET` and `HEAD`. It needs no API key, because they need none.
+      security: []
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGet'
+  /health/live:
+    get:
+      operationId: getLive
+      tags: [Probes]
+      summary: Is the server listening
+      description: This operation answers 200 when the server listens. It needs no API key, and thus a load balancer or an orchestrator can ask.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+  /health/ready:
+    get:
+      operationId: getReady
+      tags: [Probes]
+      summary: Is the server ready
+      description: This operation answers 200 after the warm-up of the server with a sample project, which takes some seconds after the start, and 503 before that. It needs no API key.
+      security: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+        '503':
+          description: The warm-up of the server is not complete.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              $ref: '#/components/headers/NoStore'
+          content:
+            text/plain:
+              schema:
+                type: string
+                const: Unhealthy
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: |
+        The API key of the server. It has a minimum of 32 characters, and `openssl rand -base64 32` makes such a key. A server that only
+        this computer can reach needs no key.
+  parameters:
+    Include:
+      name: include
+      in: query
+      description: |
+        What the server adds to the answer, as a comma-separated list. The value `console` adds the text and the exit code of a local run
+        of `zpp` to the answer or to the problem. Any other value and any other query parameter is a problem with the request.
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum: [console]
+    Traceparent:
+      name: traceparent
+      in: header
+      description: The W3C trace context of the request. The request keeps its trace id, which is its `Request-Id`.
+      required: false
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$'
+    RequestIdPath:
+      name: requestId
+      in: path
+      description: The id of the request that began the job. It is the trace id that the request gave in its `traceparent`.
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{32}$'
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      description: The `ETag` that the client has. The server answers `304` if the `ETag` is current.
+      required: false
+      schema:
+        type: string
+  headers:
+    RequestId:
+      description: The id of the request. It is the trace id of the request and the `traceId` of its problem.
+      required: true
+      schema:
+        $ref: '#/components/schemas/TraceId'
+    ETag:
+      description: A strong validator of the response.
+      required: true
+      schema:
+        type: string
+        pattern: '^"[0-9a-f]{32}"$'
+    RetryAfter:
+      description: The number of seconds to wait before you send the request again.
+      required: true
+      schema:
+        type: integer
+        minimum: 0
+    NoStore:
+      description: A cache must not keep the response.
+      required: true
+      schema:
+        type: string
+        const: no-store
+  responses:
+    MalformedRequest:
+      description: The server cannot understand the request.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/MalformedRequestProblem'
+          examples:
+            malformedRequest:
+              $ref: '#/components/examples/MalformedRequest'
+    Unauthorized:
+      description: The request needs the API key, and it does not have the key or it has an incorrect key.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        WWW-Authenticate:
+          description: How to authenticate.
+          required: true
+          schema:
+            type: string
+            const: Bearer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            unauthorized:
+              $ref: '#/components/examples/Unauthorized'
+    NotFound:
+      description: No job with this id runs now. It has not begun, or it has ended.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            jobNotRunning:
+              $ref: '#/components/examples/JobNotRunning'
+    NotAcceptable:
+      description: '`Accept` offers nothing that the operation can answer with. `detail` says what it can answer with.'
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            notAcceptable:
+              $ref: '#/components/examples/NotAcceptable'
+    PayloadTooLarge:
+      description: The request is larger than the server accepts, or its `options` are larger than 64 KB.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+    UnsupportedMediaType:
+      description: The request is not `multipart/form-data`, or the file to import is not an Excel workbook.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            notMultipart:
+              $ref: '#/components/examples/NotMultipart'
+            notAWorkbook:
+              $ref: '#/components/examples/NotAWorkbook'
+    Unprocessable:
+      description: |
+        The server understands the request, but what it says is not valid, or the server cannot process the project or what the request
+        asks for. `type` shows which.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ValidationFailedProblem'
+              - $ref: '#/components/schemas/ProjectNotReadableProblem'
+              - $ref: '#/components/schemas/CompilationFailedProblem'
+              - $ref: '#/components/schemas/CompilationTimedOutProblem'
+              - $ref: '#/components/schemas/ScenarioNotSelectableProblem'
+              - $ref: '#/components/schemas/SimulationNotPossibleProblem'
+          examples:
+            validationFailed:
+              $ref: '#/components/examples/ValidationFailed'
+            projectNotReadable:
+              $ref: '#/components/examples/ProjectNotReadable'
+            projectNotReadableWorkbook:
+              $ref: '#/components/examples/ProjectNotReadableWorkbook'
+            compilationFailed:
+              $ref: '#/components/examples/CompilationFailed'
+            compilationTimedOut:
+              $ref: '#/components/examples/CompilationTimedOut'
+            scenarioNotSelectable:
+              $ref: '#/components/examples/ScenarioNotSelectable'
+            simulationNotPossible:
+              $ref: '#/components/examples/SimulationNotPossible'
+    ServerFailed:
+      description: The server failed. `type` shows if the job did not produce an output, or if something happened that nobody expected.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/OutputFailedProblem'
+              - $ref: '#/components/schemas/UnexpectedErrorProblem'
+          examples:
+            outputFailed:
+              $ref: '#/components/examples/OutputFailed'
+            unexpectedError:
+              $ref: '#/components/examples/UnexpectedError'
+    Unavailable:
+      description: The server is busy, or the job used more time than the server allows. `type` shows which.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BusyProblem'
+              - $ref: '#/components/schemas/JobTimeoutProblem'
+          examples:
+            busy:
+              $ref: '#/components/examples/Busy'
+            jobTimeout:
+              $ref: '#/components/examples/JobTimeout'
+    OptionsGet:
+      description: What the endpoint takes.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Allow:
+          description: The methods it takes.
+          required: true
+          schema:
+            type: string
+            const: GET, HEAD, OPTIONS
+    OptionsGetOnly:
+      description: What the endpoint takes.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Allow:
+          description: The methods it takes.
+          required: true
+          schema:
+            type: string
+            const: GET, OPTIONS
+    OptionsPost:
+      description: What the endpoint takes.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Allow:
+          description: The methods it takes.
+          required: true
+          schema:
+            type: string
+            const: POST, OPTIONS
+        Accept-Post:
+          description: The media type of what it takes.
+          required: true
+          schema:
+            type: string
+            const: multipart/form-data
+    Healthy:
+      description: The server operates.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Cache-Control:
+          $ref: '#/components/headers/NoStore'
+      content:
+        text/plain:
+          schema:
+            type: string
+            const: Healthy
+  examples:
+    CompiledProject:
+      summary: A project that compiled, with no outputs asked for
+      value:
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        outputs: []
+    CompiledProjectWithOutputs:
+      summary: A project that compiled, with its project file and its Gantt chart (their contents shortened)
+      value:
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        outputs:
+          - kind: project
+            fileName: two-scenarios.zpp
+            contentType: application/json
+            content: eyJWZXJzaW9uIjogIjAuNi4xIn0=
+          - kind: ganttChart
+            fileName: two-scenarios-gantt.png
+            contentType: image/png
+            content: iVBORw0KGgo=
+    CompiledProjectWithSimulation:
+      summary: A project that compiled, with the statistics of its simulation and the statistics file (its content shortened)
+      value:
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        simulation:
+          iterations: 5000
+          validIterations: 5000
+          failedIterations: 0
+          seed: '1'
+          distribution: betaPert
+          modifiedBetaShape: null
+          plannedFinishDays: 26
+          plannedFinishDate: '2024-01-27'
+          meanDays: 26.4
+          standardDeviationDays: 3.1
+          earliestFinishDays: 17
+          earliestFinishDate: '2024-01-18'
+          latestFinishDays: 41
+          latestFinishDate: '2024-02-11'
+          percentiles:
+            - { percentile: 5, finishDays: 21, finishDate: '2024-01-22' }
+            - { percentile: 10, finishDays: 22, finishDate: '2024-01-23' }
+            - { percentile: 25, finishDays: 24, finishDate: '2024-01-25' }
+            - { percentile: 50, finishDays: 26, finishDate: '2024-01-27' }
+            - { percentile: 75, finishDays: 28, finishDate: '2024-01-29' }
+            - { percentile: 80, finishDays: 29, finishDate: '2024-01-30' }
+            - { percentile: 90, finishDays: 31, finishDate: '2024-02-01' }
+            - { percentile: 95, finishDays: 33, finishDate: '2024-02-03' }
+            - { percentile: 99, finishDays: 37, finishDate: '2024-02-07' }
+          targetFinishDays: 30
+          targetFinishDate: '2024-01-31'
+          targetProbability: 0.86
+        outputs:
+          - kind: simulationStatistics
+            fileName: two-scenarios-simulation-statistics.csv
+            contentType: text/csv
+            content: 77u/U3RhdGlzdGljLFZhbHVlCg==
+    TwoScenarios:
+      summary: The scenarios of a project
+      value:
+        scenarios:
+          - path: Alpha
+            id: 8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5
+            isTracked: true
+            isCurrent: true
+          - path: Beta
+            id: 17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4
+            isTracked: false
+            isCurrent: false
+    Server:
+      summary: A server with the limits that it has at its start
+      value:
+        version: 0.11.0-alpha
+        culture: en-GB
+        timeZone: Europe/London
+        limits:
+          maxJobs: 4
+          maxQueue: 8
+          maxUploadMegabytes: 50
+          maxChartWidth: 5000
+          maxChartHeight: 5000
+          maxSimulationIterations: 100000
+          jobTimeout: PT2M
+          maxCompileTimeout: PT1M
+    JobRunning:
+      summary: A simulation that has run 2,340 of its 5,000 iterations
+      value:
+        id: 4bf92f3577b34da6a3ce929d0e0e4736
+        state: running
+        startedAt: '2026-10-18T09:00:00+01:00'
+        elapsed: PT12.5S
+        progress:
+          done: 2340
+          total: 5000
+    JobNotRunning:
+      summary: A job that has not begun, or that has ended
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.5
+        title: Not Found
+        status: 404
+        detail: No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it.
+        traceId: 8c2b5e1d0f4a47b69a3e7d51c0f2a9b4
+    MalformedRequest:
+      summary: Options that are not JSON, and an `include` value that the server does not know
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#malformed-request
+        title: The request could not be understood
+        status: 400
+        detail: The request has 2 problems.
+        traceId: 56a374c353c621113aedeb980f329e0b
+        errors:
+          - parameter: include
+            code: notAllowed
+            detail: "'metrics' is not something the answer can include: use console"
+          - pointer: '#/options'
+            code: invalidFormat
+            detail: must be valid JSON (line 2, position 1)
+    ValidationFailed:
+      summary: Four problems with the options, listed together
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#validation-failed
+        title: The request is not valid
+        status: 422
+        detail: The request has 4 problems.
+        traceId: 5c69656d2c55ff91fe9b25ed75481324
+        errors:
+          - pointer: '#/options/compileTimeout'
+            code: outOfRange
+            detail: must be from PT0.001S to PT1M
+          - pointer: '#/options/outputs/ganttChart/width'
+            code: outOfRange
+            detail: must be from 1 to 5000 pixels
+          - pointer: '#/options/outputs/ev'
+            code: unknownProperty
+            detail: 'is not known here: check its spelling'
+          - pointer: '#/options/colour'
+            code: unknownProperty
+            detail: 'is not known here: check its spelling'
+    ProjectNotReadable:
+      summary: A workbook sent as the project, with the console
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable
+        title: The project could not be read
+        status: 422
+        detail: The file could not be read as a project.
+        traceId: d7edba72f6893b71f0d947b1e0bb763d
+        errors:
+          - pointer: '#/project'
+            code: unreadable
+            detail: The file could not be read as a project.
+        console:
+          exitCode: 1
+          standardOutput: ''
+          standardError: "Unexpected character encountered while parsing value: P. Path '', line 0, position 0.\n"
+          transcript:
+            - kind: errorLine
+              text: "Unexpected character encountered while parsing value: P. Path '', line 0, position 0."
+    ProjectNotReadableWorkbook:
+      summary: A workbook to import, with two cells that are not numbers
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable
+        title: The project could not be read
+        status: 422
+        detail: 'The import was cancelled and nothing was changed. Problems found in the file: 2.'
+        traceId: 8f1c0f3b3a5b4f0f8ad1c9c5a0f2b7e4
+        errors:
+          - pointer: '#/import'
+            code: notAWholeNumber
+            detail: 'Activities!C2 (Duration, Design the wall): "soon" is not a whole number.'
+          - pointer: '#/import'
+            code: notAWholeNumber
+            detail: 'Activities!C3 (Duration, Build the wall): "later" is not a whole number.'
+    CompilationFailed:
+      summary: A project with an activity that depends on an activity that does not exist
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed
+        title: The project did not compile
+        status: 422
+        detail: The project has a compilation error.
+        traceId: 75343173ee6b17eac0d809a803f55737
+        errors:
+          - pointer: '#/project'
+            code: P0010
+            detail: |-
+              Invalid activity dependencies:
+              999 is invalid but referenced by: 1
+    CompilationTimedOut:
+      summary: A compilation that did not end within its time limit
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-timed-out
+        title: The compilation ran out of time
+        status: 422
+        detail: The compilation did not finish within its time limit.
+        traceId: 9f1c0e3a5d7b4c28a6e41b0d93f2c7a8
+    ScenarioNotSelectable:
+      summary: A scenario that is not in the project
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#scenario-not-selectable
+        title: The scenario cannot be selected
+        status: 422
+        detail: No scenario matches 'Gamma'
+        traceId: 51205d67f2ec394b8a00ec1b86f88e4c
+        errors:
+          - pointer: '#/options/scenario'
+            code: notFound
+            detail: No scenario matches 'Gamma'
+    SimulationNotPossible:
+      summary: The outputs of a simulation, for a project that holds no result, with no run
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#simulation-not-possible
+        title: The simulation cannot be done
+        status: 422
+        detail: The plan has no simulation result to make the outputs from, and the simulation was not asked to run.
+        traceId: 7d31c8a4f2e94b0c9a65d2e17b8f40c3
+        errors:
+          - pointer: '#/options/outputs/simulation'
+            code: noResult
+            detail: The plan has no simulation result to make the outputs from, and the simulation was not asked to run.
+    OutputFailed:
+      summary: A project that compiled, where the job did not produce the Gantt chart but produced the project file
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#output-failed
+        title: An output could not be produced
+        status: 500
+        detail: The gantt chart could not be produced.
+        traceId: c40b7e9a21d84f6b8d35a7e0f1926b4d
+        errors:
+          - pointer: '#/options/outputs/ganttChart'
+            code: failed
+            detail: The gantt chart could not be produced.
+        metrics:
+          activityRisk: 1
+          activityRiskWithStandardDeviationCorrection: 1
+          criticalityRisk: 1
+          fibonacciRisk: 1
+          geometricActivityRisk: 1
+          geometricCriticalityRisk: 1
+          geometricFibonacciRisk: 1
+          networkCyclomaticComplexity: 1
+          networkDuration: 5
+          networkDurationManMonths: 0.1643835616438356
+          projectFinishDays: 5
+          projectFinishDate: '2024-01-06'
+          effortEfficiency: 1
+          activityEffort: 5
+          directEffort: 5
+          indirectEffort: 0
+          otherEffort: 0
+          totalEffort: 5
+          directCost: 0
+          indirectCost: 0
+          otherCost: 0
+          totalCost: 0
+          directBilling: 0
+          indirectBilling: 0
+          otherBilling: 0
+          totalBilling: 0
+          directMargin: 0
+          indirectMargin: 0
+          otherMargin: 0
+          totalMargin: 0
+          directMarginAbsolute: 0
+          indirectMarginAbsolute: 0
+          otherMarginAbsolute: 0
+          totalMarginAbsolute: 0
+        outputs:
+          - kind: project
+            fileName: two-scenarios.zpp
+            contentType: application/json
+            content: eyJWZXJzaW9uIjogIjAuNi4xIn0=
+    UnexpectedError:
+      summary: A failure that nobody expected. The answer says only that it happened
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#unexpected-error
+        title: The server could not process the request
+        status: 500
+        detail: The server failed to process the request. Its log says why, under the request's trace id.
+        traceId: 7be0d4a91c3f4e5a8b26f9d1c0e7a354
+    Busy:
+      summary: The server runs the maximum number of jobs at one time, and the maximum number of jobs wait
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#busy
+        title: The server is busy
+        status: 503
+        detail: The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.
+        traceId: 002ff9eeea0321b50b20f508d7d0b4e6
+    JobTimeout:
+      summary: A job that used more time than the server allows
+      value:
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout
+        title: The job took too long
+        status: 503
+        detail: The job ran for longer than the server's limit of 120 seconds, and was stopped.
+        traceId: 4879f96e5055e1e6d6c598b43dee3fe0
+    Unauthorized:
+      summary: A request without the API key
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.2
+        title: Unauthorized
+        status: 401
+        detail: 'The request needs the server''s API key, as Authorization: Bearer <key>.'
+        traceId: f9e88ee6a376f8b7f7abc3e52fad53ef
+    NotAcceptable:
+      summary: An `Accept` that the operation cannot meet
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.7
+        title: Not Acceptable
+        status: 406
+        detail: The server can answer as application/json, application/zip.
+        traceId: b05ecb18da1c42bdcf4b8b057cad979d
+    NotMultipart:
+      summary: A body that is not multipart/form-data
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.16
+        title: Unsupported Media Type
+        status: 415
+        detail: "Send the request as multipart/form-data: the project as a file named 'project' - or a workbook to import, named 'import' - and its options as JSON in a part named 'options'."
+        traceId: 6a8d9949ba40d0e24f35c51c3e4ff571
+    NotAWorkbook:
+      summary: A project sent as the workbook to import
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.16
+        title: Unsupported Media Type
+        status: 415
+        detail: 'zpp serve imports .xlsx files only: import two-scenarios.zpp with zpp itself.'
+        traceId: 79cc58f8f0fa67194a853ef1067445f7
+        errors:
+          - pointer: '#/import'
+            code: unsupportedFormat
+            detail: must be an Excel workbook (.xlsx)
+  schemas:
+    TraceId:
+      type: string
+      pattern: '^[0-9a-f]{32}$'
+      description: A trace id, as 32 hexadecimal characters.
+    Duration:
+      type: string
+      pattern: '^P(?=\d|T\d)(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$'
+      description: |
+        An ISO 8601 duration in days, hours, minutes and seconds, and not in longer units. The server writes and reads it in this form:
+        `PT5S`, `PT2M`, `P1DT2H`, `PT0.001S`. Seconds can have a fraction, which the `duration` format of JSON Schema does not allow.
+    CompileRequest:
+      description: |
+        The request as OpenAPI models a multipart body: an object whose properties are its parts. The pointers in the errors of a
+        problem point into it (`#/options/outputs/ganttChart/width`).
+      type: object
+      additionalProperties: false
+      properties:
+        project:
+          type: string
+          contentMediaType: application/octet-stream
+          description: A project (`.zpp`). Its file needs a name, because the outputs get their names from it.
+        import:
+          type: string
+          contentMediaType: application/octet-stream
+          description: An Excel workbook (`.xlsx`) to import into a new project.
+        options:
+          $ref: '#/components/schemas/CompileOptions'
+      oneOf:
+        - required: [project]
+        - required: [import]
+    ScenariosRequest:
+      type: object
+      additionalProperties: false
+      required: [project]
+      properties:
+        project:
+          type: string
+          contentMediaType: application/octet-stream
+          description: A project (`.zpp`).
+    CompileOptions:
+      description: The options of `zpp`, without the paths. The maximum size is 64 KB, and the maximum nesting depth is 16. Each member can be `null`, which is the same as if the request does not give it.
+      type: object
+      additionalProperties: false
+      properties:
+        scenario:
+          type: [string, 'null']
+          description: The scenario to load, by name or by id. The id is the whole id, or a unique prefix of it of a minimum of four hexadecimal characters. Only with a `project`.
+        baseTheme:
+          type: [string, 'null']
+          enum: [light, dark, null]
+          default: light
+        metricsFormat:
+          type: [string, 'null']
+          enum: [markdown, table, json, null]
+          default: markdown
+          description: How the console shows the metrics. It has no other effect.
+        compileTimeout:
+          anyOf:
+            - $ref: '#/components/schemas/Duration'
+            - type: 'null'
+          examples: [PT5S]
+          description: From `PT0.001S` to the `maxCompileTimeout` of the server. Without it, the value is `PT5S`, or the limit if that is shorter.
+        now:
+          type: [string, 'null']
+          format: date-time
+          description: A time with its offset from UTC. The job uses it in place of the clock.
+        runSimulation:
+          type: [boolean, 'null']
+          default: false
+          description: |
+            Run the simulation of the schedule after the project compiles, as `zpp --run-simulation` does. The run uses the settings that
+            the project holds (the iterations, the distribution, its shape value and the target) and the seed that it has saved, also
+            when it is set to draw a new seed each time, and thus the same project gives the same result each time. A project with more
+            iterations than the `maxSimulationIterations` of the server is a problem with the type `validation-failed`, at this member.
+            Without this member, the server does not run the simulation, and the answer has the statistics of the result that the
+            project holds, if it holds one.
+        outputs:
+          oneOf:
+            - $ref: '#/components/schemas/OutputsOptions'
+            - type: 'null'
+    OutputsOptions:
+      description: |
+        The outputs to produce, in the order in which the job produces them. The job produces an output that the request gives. The
+        output `simulation` is one request for the chart of the simulation and its CSV files, which are the statistics of the finish, its
+        histogram split by critical path, the critical paths, and how often each activity was critical, and, for a run, every
+        iteration. The answer lists each file as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`,
+        `simulationPaths`, `simulationActivities` and `simulationIterations`). They are made from the result of the run of the request
+        (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
+        project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
+
+        The output `simulationWorkbook` is the same result as one Excel workbook: a sheet for the settings and for each of the CSV files
+        above (`Simulation Settings`, `Simulation Statistics`, `Simulation Percentiles`, `Simulation Histogram`, `Simulation Paths`
+        and `Simulation Criticalities`), and, for a run, the sheet `Simulation Iterations`. It is an output of its own, and a request can
+        ask for it with or without `simulation`. A project that holds no result, with no run, is the same problem.
+      type: object
+      additionalProperties: false
+      properties:
+        project:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        scenarioExport:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+        ganttChart:
+          $ref: '#/components/schemas/ChartOptions'
+        arrowGraph:
+          $ref: '#/components/schemas/GraphOptions'
+        vertexGraph:
+          $ref: '#/components/schemas/GraphOptions'
+        resourceChart:
+          $ref: '#/components/schemas/ChartOptions'
+        earnedValueChart:
+          $ref: '#/components/schemas/ChartOptions'
+        scenarioChart:
+          $ref: '#/components/schemas/ChartOptions'
+        simulation:
+          $ref: '#/components/schemas/ChartOptions'
+        simulationWorkbook:
+          $ref: '#/components/schemas/OutputWithoutSettings'
+    OutputWithoutSettings:
+      description: An output with no settings at this time. The request gives it as an empty object, which can carry settings later.
+      type: [object, 'null']
+      additionalProperties: false
+    ChartOptions:
+      type: [object, 'null']
+      additionalProperties: false
+      required: [width, height]
+      properties:
+        format:
+          type: [string, 'null']
+          enum: [jpeg, png, bmp, webp, svg, null]
+          default: jpeg
+        width:
+          type: [integer, 'null']
+          minimum: 1
+          description: In pixels. The maximum is the `maxChartWidth` of the server.
+        height:
+          type: [integer, 'null']
+          minimum: 1
+          description: In pixels. The maximum is the `maxChartHeight` of the server.
+    GraphOptions:
+      type: [object, 'null']
+      additionalProperties: false
+      properties:
+        format:
+          type: [string, 'null']
+          enum: [jpeg, png, pdf, svg, graphml, dot, null]
+          default: jpeg
+    CompileResponse:
+      type: object
+      required: [metrics, outputs]
+      properties:
+        metrics:
+          $ref: '#/components/schemas/Metrics'
+        simulation:
+          $ref: '#/components/schemas/Simulation'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Output'
+        console:
+          $ref: '#/components/schemas/Console'
+    Metrics:
+      description: |
+        The metrics of a compiled project. The names are words in `lowerCamelCase`, and the values are numbers and not the text that
+        `zpp` prints. A metric that the server cannot calculate is `null`. The costs, billings and margins are estimates, and they have
+        no currency.
+      type: object
+      required:
+        - activityRisk
+        - activityRiskWithStandardDeviationCorrection
+        - criticalityRisk
+        - fibonacciRisk
+        - geometricActivityRisk
+        - geometricCriticalityRisk
+        - geometricFibonacciRisk
+        - networkCyclomaticComplexity
+        - networkDuration
+        - networkDurationManMonths
+        - projectFinishDays
+        - projectFinishDate
+        - effortEfficiency
+        - activityEffort
+        - directEffort
+        - indirectEffort
+        - otherEffort
+        - totalEffort
+        - directCost
+        - indirectCost
+        - otherCost
+        - totalCost
+        - directBilling
+        - indirectBilling
+        - otherBilling
+        - totalBilling
+        - directMargin
+        - indirectMargin
+        - otherMargin
+        - totalMargin
+        - directMarginAbsolute
+        - indirectMarginAbsolute
+        - otherMarginAbsolute
+        - totalMarginAbsolute
+      properties:
+        activityRisk: { type: [number, 'null'] }
+        activityRiskWithStandardDeviationCorrection: { type: [number, 'null'] }
+        criticalityRisk: { type: [number, 'null'] }
+        fibonacciRisk: { type: [number, 'null'] }
+        geometricActivityRisk: { type: [number, 'null'] }
+        geometricCriticalityRisk: { type: [number, 'null'] }
+        geometricFibonacciRisk: { type: [number, 'null'] }
+        networkCyclomaticComplexity: { type: [integer, 'null'] }
+        networkDuration:
+          type: [integer, 'null']
+          description: In days.
+        networkDurationManMonths: { type: [number, 'null'] }
+        projectFinishDays:
+          type: [integer, 'null']
+          description: The number of days from the start of the project to its finish. `null` when the project has no duration.
+        projectFinishDate:
+          type: [string, 'null']
+          format: date
+          description: The date on which the project finishes, in the working calendar of the project. `null` when the project has no duration.
+        effortEfficiency: { type: [number, 'null'] }
+        activityEffort: { type: [number, 'null'] }
+        directEffort: { type: [number, 'null'] }
+        indirectEffort: { type: [number, 'null'] }
+        otherEffort: { type: [number, 'null'] }
+        totalEffort: { type: [number, 'null'] }
+        directCost: { type: [number, 'null'] }
+        indirectCost: { type: [number, 'null'] }
+        otherCost: { type: [number, 'null'] }
+        totalCost: { type: [number, 'null'] }
+        directBilling: { type: [number, 'null'] }
+        indirectBilling: { type: [number, 'null'] }
+        otherBilling: { type: [number, 'null'] }
+        totalBilling: { type: [number, 'null'] }
+        directMargin: { type: [number, 'null'] }
+        indirectMargin: { type: [number, 'null'] }
+        otherMargin: { type: [number, 'null'] }
+        totalMargin: { type: [number, 'null'] }
+        directMarginAbsolute: { type: [number, 'null'] }
+        indirectMarginAbsolute: { type: [number, 'null'] }
+        otherMarginAbsolute: { type: [number, 'null'] }
+        totalMarginAbsolute: { type: [number, 'null'] }
+    Simulation:
+      description: |
+        What the simulation found. It is in the answer when the request runs the simulation, or the project holds a result. Like the
+        metrics, the names are words in
+        `lowerCamelCase`, and the values are numbers and not the text that `zpp` prints. Every time is in days from the start of the
+        project, with the date on which it falls in the working calendar of the project. An iteration that the scheduler cannot
+        place every activity in is a failed iteration, and it is in none of the statistics. A simulation in which every iteration
+        fails has no statistics, and thus `null` values for them.
+      type: object
+      required:
+        - iterations
+        - validIterations
+        - failedIterations
+        - seed
+        - distribution
+        - modifiedBetaShape
+        - plannedFinishDays
+        - plannedFinishDate
+        - meanDays
+        - standardDeviationDays
+        - earliestFinishDays
+        - earliestFinishDate
+        - latestFinishDays
+        - latestFinishDate
+        - percentiles
+        - targetFinishDays
+        - targetFinishDate
+        - targetProbability
+      properties:
+        iterations:
+          type: integer
+          description: The number of iterations that the simulation ran, with the failed ones.
+        validIterations:
+          type: integer
+          description: The number of iterations that gave a finish. Each statistic uses these.
+        failedIterations:
+          type: integer
+        seed:
+          type: string
+          pattern: '^[0-9]{1,20}$'
+          description: The seed that the simulation used, as text.
+        distribution:
+          type: string
+          enum: [betaPert, modifiedBetaPert, triangular, normal, uniform]
+        modifiedBetaShape:
+          type: [number, 'null']
+          description: The shape value that the simulation used. Only the distribution `modifiedBetaPert` has one.
+        plannedFinishDays:
+          type: integer
+          description: The finish of the project as it stands, with the expected duration of each activity.
+        plannedFinishDate:
+          type: string
+          format: date
+        meanDays:
+          type: [number, 'null']
+        standardDeviationDays:
+          type: [number, 'null']
+          description: The deviation of the population, which divides by the number of valid iterations.
+        earliestFinishDays:
+          type: [integer, 'null']
+        earliestFinishDate:
+          type: [string, 'null']
+          format: date
+        latestFinishDays:
+          type: [integer, 'null']
+        latestFinishDate:
+          type: [string, 'null']
+          format: date
+        percentiles:
+          type: array
+          description: The 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. The array is empty when the simulation has no statistics.
+          items:
+            $ref: '#/components/schemas/SimulationPercentile'
+        targetFinishDays:
+          type: [integer, 'null']
+          description: The target that the request gave.
+        targetFinishDate:
+          type: [string, 'null']
+          format: date
+        targetProbability:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: The share of the valid iterations that finish by the target, from 0 to 1.
+    SimulationPercentile:
+      type: object
+      required: [percentile, finishDays, finishDate]
+      properties:
+        percentile:
+          type: integer
+          minimum: 1
+          maximum: 99
+        finishDays:
+          type: integer
+          description: The smallest finish that at least this share of the valid iterations reach (the nearest rank).
+        finishDate:
+          type: string
+          format: date
+    Output:
+      type: object
+      required: [kind, fileName, contentType]
+      properties:
+        kind:
+          type: string
+          enum:
+            - project
+            - scenarioExport
+            - ganttChart
+            - arrowGraph
+            - vertexGraph
+            - resourceChart
+            - earnedValueChart
+            - scenarioChart
+            - simulationChart
+            - simulationStatistics
+            - simulationHistogram
+            - simulationPaths
+            - simulationActivities
+            - simulationIterations
+            - simulationWorkbook
+        fileName:
+          type: string
+          description: The name that `zpp` gives to the file.
+        contentType:
+          type: string
+        content:
+          type: string
+          contentEncoding: base64
+          description: The file. The `result.json` of a zip does not have it, because the zip contains the file itself.
+    Console:
+      description: |
+        The text and the exit code of a local run of `zpp`, for a client that prints and writes exactly this, as `zpp --server` does. The
+        console is in the answer when the request asks for it with `?include=console`.
+      type: object
+      required: [exitCode, standardOutput, standardError, transcript]
+      properties:
+        exitCode:
+          type: integer
+          description: The exit code of `zpp` in a local run.
+        standardOutput:
+          type: string
+          description: Each line ends with `\n`.
+        standardError:
+          type: string
+        transcript:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranscriptEntry'
+    TranscriptEntry:
+      description: One step of the job, in the order in which the job did it.
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [line, display, errorLine, output]
+        text:
+          type: string
+          description: The text that a line or a block printed.
+        hasErrors:
+          type: boolean
+          description: Shows if a block reports errors. The entry does not have it when the block reports no errors.
+        index:
+          type: integer
+          minimum: 0
+          description: The output that the job produced, by its index in `outputs`.
+    ScenariosResponse:
+      type: object
+      required: [scenarios]
+      properties:
+        scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scenario'
+        console:
+          $ref: '#/components/schemas/Console'
+    Scenario:
+      type: object
+      required: [path, id, isTracked, isCurrent]
+      properties:
+        path:
+          type: string
+          description: The name of the scenario, with the names of the scenarios that it is a child of.
+        id:
+          type: string
+          format: uuid
+        isTracked:
+          type: boolean
+          description: |
+            Shows if the scenario is tracked. The scenario chart shows the metrics of a tracked scenario as a point, against the metrics of
+            the axes of the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any
+            other output holds. It is not the progress tracking of activities.
+        isCurrent:
+          type: boolean
+          description: |
+            Shows if the scenario is the current scenario of the project. This is the scenario that was open when a user saved the project.
+            `zpp` loads it when the request does not name a scenario. A project has a maximum of one current scenario.
+    JobStatus:
+      description: |
+        A job that the server runs now. The server has a status for a job only while the job runs, and thus `state` has one value.
+      type: object
+      required: [id, state, startedAt, elapsed, progress]
+      properties:
+        id:
+          $ref: '#/components/schemas/TraceId'
+          description: The id of the job. It is the id of the request that began it.
+        state:
+          type: string
+          enum: [running]
+        startedAt:
+          type: string
+          format: date-time
+          description: When the server began the job.
+        elapsed:
+          $ref: '#/components/schemas/Duration'
+          description: The time since the server began the job.
+        progress:
+          description: How far the job has got in the simulation. It is `null` when the job does not run a simulation, and before the simulation begins.
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/JobProgress'
+    JobProgress:
+      type: object
+      required: [done, total]
+      properties:
+        done:
+          type: integer
+          minimum: 0
+          description: The iterations that have run.
+        total:
+          type: integer
+          minimum: 1
+          description: The iterations that the simulation has.
+    InfoResponse:
+      type: object
+      required: [version, culture, timeZone, limits]
+      properties:
+        version:
+          type: string
+        culture:
+          type: string
+          description: The culture in which the server writes numbers and dates.
+        timeZone:
+          type: string
+          description: The time zone in which the server writes times, by its IANA name.
+        limits:
+          $ref: '#/components/schemas/Limits'
+    Limits:
+      type: object
+      required: [maxJobs, maxQueue, maxUploadMegabytes, maxChartWidth, maxChartHeight, maxSimulationIterations, jobTimeout, maxCompileTimeout]
+      properties:
+        maxJobs:
+          type: integer
+          minimum: 1
+          description: Jobs that run at one time.
+        maxQueue:
+          type: integer
+          minimum: 0
+          description: Jobs that wait for a free place. The server turns away more requests.
+        maxUploadMegabytes:
+          type: integer
+          minimum: 1
+          description: The largest request, in megabytes of 1,048,576 bytes.
+        maxChartWidth:
+          type: integer
+          minimum: 1
+        maxChartHeight:
+          type: integer
+          minimum: 1
+        maxSimulationIterations:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: The most iterations that a simulation of a project can have for the server to run it. The `jobTimeout` also stops a simulation that is too slow.
+        jobTimeout:
+          $ref: '#/components/schemas/Duration'
+          description: The time that a job can use before the server stops it.
+        maxCompileTimeout:
+          $ref: '#/components/schemas/Duration'
+          description: The longest compile timeout that a request can give.
+    ProblemError:
+      type: object
+      required: [detail]
+      properties:
+        pointer:
+          type: string
+          description: The location of the problem, as a JSON pointer in URI-fragment form into the request (`CompileRequest`).
+        parameter:
+          type: string
+          description: The query parameter that has the problem, in place of `pointer`.
+        code:
+          description: |
+            The rule that the request breaks, for programs. It is one of the codes in the list. For a project that did not compile, it is the
+            code of the compiler for the error, for example `P0010`.
+          anyOf:
+            - type: string
+              enum:
+                - required
+                - unknownProperty
+                - wrongType
+                - notAllowed
+                - invalidFormat
+                - outOfRange
+                - notAllowedWithImport
+                - noResult
+                - tooLarge
+                - unsupportedFormat
+                - unreadable
+                - noKnownSheet
+                - missingHeader
+                - missingColumn
+                - duplicateColumn
+                - missingValue
+                - duplicateId
+                - unknownActivity
+                - excelError
+                - notAWholeNumber
+                - notANumber
+                - notTrueOrFalse
+                - notADate
+                - notAChoice
+                - notAColor
+                - notFound
+                - ambiguous
+                - hasNoData
+                - failed
+            - type: string
+              pattern: '^[A-Z][0-9]{4}$'
+              description: The code of the compiler for an error, for example `P0010`.
+        detail:
+          type: string
+          description: What is wrong, for persons. It is a phrase that continues from the location.
+    Problem:
+      description: Problem details, as RFC 9457 gives them.
+      type: object
+      required: [type, title, status, traceId]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          description: The same for each problem of its type.
+        status:
+          type: integer
+        detail:
+          type: string
+          description: What is wrong this time, for persons.
+        traceId:
+          $ref: '#/components/schemas/TraceId'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemError'
+        console:
+          $ref: '#/components/schemas/Console'
+    StatusProblem:
+      description: A problem that has only its status, with the type that RFC 9110 gives to the status.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+    MalformedRequestProblem:
+      description: The server cannot understand the request.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#malformed-request
+            status:
+              const: 400
+    ValidationFailedProblem:
+      description: The server understands the request, but what it says is not valid. `errors` has each problem.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#validation-failed
+            status:
+              const: 422
+    ProjectNotReadableProblem:
+      description: |
+        The server cannot read the file that the request sends as the project or as the workbook to import. A workbook that has
+        problems in its cells is read in full and not imported: `errors` has one error for each problem, at `#/import`, up to 100.
+        The `detail` of each error gives the place of the problem (the sheet and the cell, the title of the column, and the name
+        of the row) and says what is wrong. The `detail` of the problem gives the number of problems.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable
+            status:
+              const: 422
+    CompilationFailedProblem:
+      description: The project has compilation errors. `errors` has each error with the code of the compiler.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed
+            status:
+              const: 422
+    CompilationTimedOutProblem:
+      description: The compilation did not end within its time limit. This does not show if the project is valid.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-timed-out
+            status:
+              const: 422
+    ScenarioNotSelectableProblem:
+      description: The server cannot select the scenario that the request names.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#scenario-not-selectable
+            status:
+              const: 422
+    SimulationNotPossibleProblem:
+      description: The simulation that the request asks for cannot be done with the project. Its settings are not ones that a run can use, or the request asks for the outputs of a simulation, and the project holds no result and the request does not run the simulation.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#simulation-not-possible
+            status:
+              const: 422
+    OutputFailedProblem:
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, and the outputs that the job produced.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#output-failed
+            status:
+              const: 500
+            metrics:
+              $ref: '#/components/schemas/Metrics'
+            simulation:
+              $ref: '#/components/schemas/Simulation'
+            outputs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Output'
+    UnexpectedErrorProblem:
+      description: A failure that the server did not expect. The cause is in the log of the server, under the trace id of the request. It is not in the answer.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#unexpected-error
+            status:
+              const: 500
+    BusyProblem:
+      description: The server runs the maximum number of jobs at one time, and the maximum number of jobs wait. Send the request again after the time in `Retry-After`.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#busy
+            status:
+              const: 503
+    JobTimeoutProblem:
+      description: The job used more time than the server allows for a job, and the server stopped it. If you send the request again without a change, the job reaches the time limit again.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            type:
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout
+            status:
+              const: 503

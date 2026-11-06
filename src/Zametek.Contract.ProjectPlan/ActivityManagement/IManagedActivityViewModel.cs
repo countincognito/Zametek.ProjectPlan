@@ -4,8 +4,31 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedActivityViewModel
-        : IDependentActivity, IDisposable, INotifyPropertyChanged, IKillSubscriptions, IMuteEdits
+        : IDependentActivity, IDisposable, INotifyPropertyChanged, IStartSubscriptions, IKillSubscriptions, IMuteEdits
     {
+        // The optimistic and the pessimistic duration that the activity has: the ones the user gave
+        // it, and where the user gave none, its most likely duration. The rule is
+        // 0 <= O <= ML <= P, and 0 and 0 when ML is 0. A value outside the rule is moved to the
+        // nearest one inside it, and the activity reports an error for that property.
+        int OptimisticDuration { get; set; }
+
+        int PessimisticDuration { get; set; }
+
+        // The PERT standard deviation of the estimates, (P - O) / 6.
+        double StandardDeviation { get; }
+
+        // Whether the user gave the activity an optimistic or a pessimistic duration of its own.
+        bool HasOwnEstimates { get; }
+
+        // Takes the optimistic and the pessimistic duration back to the most likely duration, so
+        // that they follow it again.
+        void ResetEstimates();
+
+        // Gives the activity the duration that a drag of the end of its bar on the Gantt chart asks
+        // for. The optimistic, most likely and pessimistic durations move by the same number of days,
+        // and they stop where the optimistic duration reaches 0, or the most likely reaches 1.
+        void MoveEstimatesForDuration(int duration);
+
         bool IsIsolated { get; }
 
         bool IsCompiled { get; }
@@ -52,6 +75,15 @@ namespace Zametek.Contract.ProjectPlan
         void SetResourceSettings(ResourceSettingsModel resourceSettings);
 
         void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
+
+        // Likewise for the date-derived compiler inputs. The minimum earliest start time
+        // and maximum latest finish time the compiler reads are integers measured from
+        // the project start along the working calendar, so a change to either invalidates
+        // them; these two recalculate them where the change is made, before the same
+        // caller arms a compile.
+        void SetProjectStart(DateTimeOffset projectStart);
+
+        void UpdateEarliestStartAndLatestFinishDateTimes();
 
         // The two halves of a compilation: CloneObject (from IHaveCloneableObject) hands
         // the compiler an independent copy of this activity, and this applies the results

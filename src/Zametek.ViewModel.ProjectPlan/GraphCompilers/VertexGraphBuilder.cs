@@ -8,9 +8,9 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Ctors
 
-        public VertexGraphBuilder(IIdGenerator<int> edgeIdGenerator)
+        public VertexGraphBuilder(IIdGeneratorFactory<int> edgeIdGeneratorFactory)
             : base(
-                  edgeIdGenerator,
+                  edgeIdGeneratorFactory,
                   new RemovableEventGenerator<int>(),
                   new VertexTarjanStronglyConnectedComponentsFinder<int, int, int, IDependentActivity>(),
                   new VertexCriticalPathEngine<int, int, int, IDependentActivity>(),
@@ -20,10 +20,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public VertexGraphBuilder(
             Graph<int, IEvent<int>, IDependentActivity> graph,
-            IIdGenerator<int> edgeIdGenerator)
+            IIdGeneratorFactory<int> edgeIdGeneratorFactory)
             : base(
                   graph,
-                  edgeIdGenerator,
+                  edgeIdGeneratorFactory,
                   new RemovableEventGenerator<int>(),
                   new VertexTarjanStronglyConnectedComponentsFinder<int, int, int, IDependentActivity>(),
                   new VertexCriticalPathEngine<int, int, int, IDependentActivity>(),
@@ -45,16 +45,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        // The IDs of the events count down from -1. When a builder loads a graph, the factory starts them under the
+        // lowest ID that the graph holds, so the IDs of a clone follow the IDs of its original without a gap.
         public static VertexGraphBuilder CreateDependentActivityVertexGraphBuilder()
         {
-            int edgeId = default;
-            return new VertexGraphBuilder(new PreviousIdGenerator<int>(edgeId));
+            return new VertexGraphBuilder(new PreviousIdGeneratorFactory<int>());
         }
 
         public static VertexGraphBuilder CreateDependentActivityVertexGraphBuilder(Graph<int, IEvent<int>, IDependentActivity> vertexGraph)
         {
-            int edgeId = vertexGraph.Edges.Select(x => x.Id).DefaultIfEmpty().Min();
-            return new VertexGraphBuilder(vertexGraph, new PreviousIdGenerator<int>(edgeId));
+            return new VertexGraphBuilder(vertexGraph, new PreviousIdGeneratorFactory<int>());
         }
 
         #region Overrides

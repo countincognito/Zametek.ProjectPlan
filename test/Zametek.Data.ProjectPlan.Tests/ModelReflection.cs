@@ -85,6 +85,10 @@ namespace Zametek.Data.ProjectPlan.Tests
             {
                 return (long)n;
             }
+            if (type == typeof(ulong))
+            {
+                return (ulong)n;
+            }
             if (type == typeof(short))
             {
                 return (short)n;

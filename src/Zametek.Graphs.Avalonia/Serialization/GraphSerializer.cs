@@ -21,7 +21,10 @@ namespace Zametek.Graphs.Avalonia
             xmlSerializer.Serialize(ms, graphML);
             ms.Position = 0;
             using var sr = new StreamReader(ms);
-            string content = sr.ReadToEnd();
+
+            // XmlSerializer indents with the platform's line end, which it offers no way to change short of replacing
+            // its writer - and with it the XML declaration.
+            string content = NewLineHelper.NormalizeNewLines(sr.ReadToEnd());
             return content.StringToByteArray();
         }
 

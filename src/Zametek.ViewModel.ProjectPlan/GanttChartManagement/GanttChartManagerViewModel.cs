@@ -83,7 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
-        private readonly IDisposable? m_BuildGanttChartPlotModelSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildGanttChartPlotModelSub;
 
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
@@ -106,13 +108,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
-            IScottPlotImageExporter scottPlotImageExporter)
+            IScottPlotImageExporter scottPlotImageExporter,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -120,10 +124,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
 
-            ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel);
+            ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel, uiDispatcher);
 
             m_GanttChartPlotModel = new Plot();
-            m_PlotRetirer = new PlotRetirer();
+            m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
             ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
             ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);
@@ -221,26 +225,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         return BoolToggle.Up;
                     })
                 .ToProperty(this, rcm => rcm.BoolAccumulator);
-
-            m_BuildGanttChartPlotModelSub = this
-                .WhenAnyValue(
-                    // The settled signal: one raise per compile, after every
-                    // compilation output (resource series, metrics, project
-                    // finish) is in place - so one compile means one rebuild.
-                    rcm => rcm.m_CoreViewModel.CompilationOutputRevision,
-                    rcm => rcm.m_CoreViewModel.ResourceSettings,
-                    rcm => rcm.m_CoreViewModel.GraphSettings,
-                    rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.Today,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    rcm => rcm.GroupByMode,
-                    rcm => rcm.AnnotationStyle,
-                    rcm => rcm.BoolAccumulator,
-                    rcm => rcm.ActivitySelector.TargetActivitiesString,
-                    (x, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -1165,7 +1149,22 @@ namespace Zametek.ViewModel.ProjectPlan
                     activity.Duration,
                     dateTimeCalculator);
 
-                string barAnnotation = $"{Resource.ProjectPlan.Labels.Label_Activity}: {label}\n{Resource.ProjectPlan.Labels.Label_Start}: {from}\n{Resource.ProjectPlan.Labels.Label_End}: {to}";
+                string barAnnotation = NewLineHelper.JoinLines(
+                    $"{Resource.ProjectPlan.Labels.Label_Activity}: {label}",
+                    $"{Resource.ProjectPlan.Labels.Label_Start}: {from}",
+                    $"{Resource.ProjectPlan.Labels.Label_End}: {to}");
+
+                // The shortest bar that a drag of its end can give: the three estimates move together, and they stop where
+                // the optimistic duration reaches 0, or the most likely reaches 1.
+                int minimumDuration = EstimateHelper.ShortestDurationOfADrag(
+                    activity.MostLikelyDuration,
+                    activity.OwnOptimisticDuration,
+                    activity.OwnPessimisticDuration);
+                double minimumEnd = ChartHelper.CalculateChartFinishTimeXValue(
+                    activity.EarliestStartTime.GetValueOrDefault() + minimumDuration,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
 
                 var item = new AnnotatedBar
                 {
@@ -1173,6 +1172,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ActivityId = activity.Id,
                     StartTime = activity.EarliestStartTime,
                     Duration = activity.Duration,
+                    MinimumDuration = minimumDuration,
+                    MinimumValue = minimumEnd,
                     ValueBase = start,
                     Value = end,
                     FillColor = backgroundColor,
@@ -1468,8 +1469,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+                    ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);
 
-                    await SaveGanttChartImageFileAsync(filename, boundedWidth, boundedHeight);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteGanttChartImageAsync(stream, format, boundedWidth, boundedHeight));
                 }
             }
             catch (Exception ex)
@@ -1599,33 +1603,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeAnnotationStyleCommand { get; }
 
-        public async Task SaveGanttChartImageFileAsync(
-            string? filename,
+        public async Task WriteGanttChartImageAsync(
+            Stream stream,
+            ChartImageFormat format,
             int width,
             int height)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    int calculatedHeight = CalculatedExportHeight(height);
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(GanttChartPlotModel, filename, width, calculatedHeight);
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            int calculatedHeight = CalculatedExportHeight(height);
+            await m_ScottPlotImageExporter.WritePlotImageAsync(GanttChartPlotModel, stream, format, width, calculatedHeight);
         }
 
         // The exported/copied image shows every bar at a readable fixed height (so a large chart is not
@@ -1731,10 +1716,47 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The selector it made for itself starts first, as it was made first.
+            ActivitySelector.StartSubscriptions();
+
+            m_BuildGanttChartPlotModelSub = this
+                .WhenAnyValue(
+                    // The settled signal: one raise per compile, after every
+                    // compilation output (resource series, metrics, project
+                    // finish) is in place - so one compile means one rebuild.
+                    rcm => rcm.m_CoreViewModel.CompilationOutputRevision,
+                    rcm => rcm.m_CoreViewModel.ResourceSettings,
+                    rcm => rcm.m_CoreViewModel.GraphSettings,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Today,
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    rcm => rcm.GroupByMode,
+                    rcm => rcm.AnnotationStyle,
+                    rcm => rcm.BoolAccumulator,
+                    rcm => rcm.ActivitySelector.TargetActivitiesString,
+                    (x, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
+            ActivitySelector.KillSubscriptions();
             m_BuildGanttChartPlotModelSub?.Dispose();
         }
 

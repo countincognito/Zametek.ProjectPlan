@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using ReactiveUI.Avalonia;
 using System;
-using Zametek.ProjectPlan.Core;
+using Zametek.Shell.ProjectPlan;
 
 namespace Zametek.ProjectPlan.Desktop
 {
@@ -31,6 +31,7 @@ namespace Zametek.ProjectPlan.Desktop
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
+                .WithInterFont()
 #if DEBUG
                 .WithDeveloperTools()
 #endif

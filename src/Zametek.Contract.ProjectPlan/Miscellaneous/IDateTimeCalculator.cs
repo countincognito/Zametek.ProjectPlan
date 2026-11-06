@@ -18,7 +18,11 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetNonWorkingDayCalendarEvents(List<HolidayModel> nonWorkingDayCalendarEvents);
 
+        TimeZoneInfo LocalTimeZone { get; }
+
         DateTimeOffset GetLocalNow();
+
+        DateTimeOffset GetLocalToday();
 
         DateTimeOffset GetLocal(DateTime dateTime);
 

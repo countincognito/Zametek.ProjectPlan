@@ -61,6 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             public void RemoveChildren(IEnumerable<Guid> managedNodeIds) => throw new NotSupportedException();
             public void ClearChildren() => throw new NotSupportedException();
             public void ReloadChildren() => throw new NotSupportedException();
+            public void StartSubscriptions() => throw new NotSupportedException();
             public void KillSubscriptions() => throw new NotSupportedException();
             public void Dispose() => throw new NotSupportedException();
         }

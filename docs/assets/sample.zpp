@@ -1,0 +1,3805 @@
+{
+  "Version": "v0.6.1",
+  "Id": "cc97a26a-f661-4a5a-8c01-f302f69b2c4d",
+  "Root": "6aac8a88-171b-48ee-8436-6f648ecef3b7",
+  "Current": "095b9e95-fae6-40d1-bb9f-7c4747895d43",
+  "Nodes": [
+    {
+      "Id": "095b9e95-fae6-40d1-bb9f-7c4747895d43",
+      "ParentId": "6aac8a88-171b-48ee-8436-6f648ecef3b7",
+      "NodeType": 0,
+      "Name": "Base",
+      "CreatedOn": "2026-04-21T23:45:15.7394574+01:00",
+      "IsTracked": true,
+      "ModifiedOn": "2026-08-19T18:59:05.5460218+01:00"
+    }
+  ],
+  "Files": [
+    {
+      "NodeId": "095b9e95-fae6-40d1-bb9f-7c4747895d43",
+      "Scenario": {
+        "ProjectStart": "2023-05-01T00:00:00+01:00",
+        "Today": "2023-05-01T00:00:00+01:00",
+        "DependentActivities": [
+          {
+            "Activity": {
+              "Id": 1,
+              "DisplayOrder": 0,
+              "Name": "Start",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 0,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              2
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 2,
+              "DisplayOrder": 1,
+              "Name": "Requirements & Architecture",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                13,
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                13,
+                15
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 25,
+              "FreeSlack": 0,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 25,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": [
+                {
+                  "Time": 0,
+                  "ActivityId": 2,
+                  "PercentageComplete": 5
+                },
+                {
+                  "Time": 1,
+                  "ActivityId": 2,
+                  "PercentageComplete": 10
+                },
+                {
+                  "Time": 2,
+                  "ActivityId": 2,
+                  "PercentageComplete": 15
+                },
+                {
+                  "Time": 3,
+                  "ActivityId": 2,
+                  "PercentageComplete": 20
+                },
+                {
+                  "Time": 4,
+                  "ActivityId": 2,
+                  "PercentageComplete": 25
+                }
+              ]
+            },
+            "Dependencies": [
+              1
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              3,
+              5
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 3,
+              "DisplayOrder": 2,
+              "Name": "Project Planning",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                13,
+                14,
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                13,
+                14,
+                15
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 0,
+              "EarliestStartTime": 25,
+              "LatestFinishTime": 40,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              2
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              2
+            ],
+            "Successors": [
+              4
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 4,
+              "DisplayOrder": 3,
+              "Name": "Management Education",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                13,
+                14,
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                13,
+                14,
+                15
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 40,
+              "LatestFinishTime": 45,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              3
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              3
+            ],
+            "Successors": [
+              5
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 5,
+              "DisplayOrder": 4,
+              "Name": "SDP Review",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                13,
+                14,
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 45,
+              "LatestFinishTime": 45,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              2,
+              4
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              7,
+              10
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 6,
+              "DisplayOrder": 5,
+              "Name": "UX Design",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 0,
+              "EarliestStartTime": 50,
+              "LatestFinishTime": 145,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              7
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              11
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 7,
+              "DisplayOrder": 6,
+              "Name": "Dev Training",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                15
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 45,
+              "LatestFinishTime": 50,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              5
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              4
+            ],
+            "Successors": [
+              6,
+              8,
+              13,
+              14,
+              15
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 8,
+              "DisplayOrder": 7,
+              "Name": "Test Plan",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                3
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                3
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 25,
+              "FreeSlack": 0,
+              "EarliestStartTime": 50,
+              "LatestFinishTime": 165,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              7
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              9
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 9,
+              "DisplayOrder": 8,
+              "Name": "Test Harness",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                3
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                3
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 25,
+              "FreeSlack": 90,
+              "EarliestStartTime": 75,
+              "LatestFinishTime": 190,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              8
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              8
+            ],
+            "Successors": [
+              40
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 10,
+              "DisplayOrder": 9,
+              "Name": "CM and setup",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                12
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                12
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 19,
+              "FreeSlack": 6,
+              "EarliestStartTime": 45,
+              "LatestFinishTime": 70,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              5
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              16,
+              17,
+              18,
+              19,
+              21,
+              42
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 11,
+              "DisplayOrder": 10,
+              "Name": "UI Design",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                2
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                2
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 20,
+              "FreeSlack": 0,
+              "EarliestStartTime": 65,
+              "LatestFinishTime": 165,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              6
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              6
+            ],
+            "Successors": [
+              12,
+              36,
+              37,
+              38
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 12,
+              "DisplayOrder": 11,
+              "Name": "Manual",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                13
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                13
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 20,
+              "FreeSlack": 85,
+              "EarliestStartTime": 85,
+              "LatestFinishTime": 190,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              11
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              4
+            ],
+            "Successors": [
+              41
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 13,
+              "DisplayOrder": 12,
+              "Name": "Logging",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 10,
+              "EarliestStartTime": 50,
+              "LatestFinishTime": 70,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              7
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              16,
+              17,
+              18,
+              19,
+              21,
+              42
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 14,
+              "DisplayOrder": 13,
+              "Name": "Message Bus",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                15
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 5,
+              "EarliestStartTime": 50,
+              "LatestFinishTime": 70,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              7
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              7
+            ],
+            "Successors": [
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              42
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 15,
+              "DisplayOrder": 14,
+              "Name": "Security",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 20,
+              "FreeSlack": 0,
+              "EarliestStartTime": 50,
+              "LatestFinishTime": 70,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              7
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              16,
+              17,
+              18,
+              19,
+              21,
+              42
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 16,
+              "DisplayOrder": 15,
+              "Name": "Metrics DB ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 15,
+              "EarliestStartTime": 70,
+              "LatestFinishTime": 90,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              13,
+              14,
+              15,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              22,
+              23,
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 17,
+              "DisplayOrder": 16,
+              "Name": "Members DB ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 75,
+              "LatestFinishTime": 80,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              13,
+              14,
+              15,
+              21,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              21
+            ],
+            "Successors": [
+              18,
+              22,
+              24,
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 18,
+              "DisplayOrder": 17,
+              "Name": "Portfolios DB ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 80,
+              "LatestFinishTime": 85,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              13,
+              14,
+              15,
+              17,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              17
+            ],
+            "Successors": [
+              19,
+              22,
+              25,
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 19,
+              "DisplayOrder": 18,
+              "Name": "Profiles DB ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 85,
+              "LatestFinishTime": 90,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              13,
+              14,
+              15,
+              18,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              18
+            ],
+            "Successors": [
+              22,
+              26,
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 20,
+              "DisplayOrder": 19,
+              "Name": "Workflows Repository",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 5,
+              "EarliestStartTime": 70,
+              "LatestFinishTime": 90,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              14,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              13
+            ],
+            "Successors": [
+              27,
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 21,
+              "DisplayOrder": 20,
+              "Name": "Regulations DB",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 70,
+              "LatestFinishTime": 75,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              13,
+              14,
+              15,
+              42
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              15
+            ],
+            "Successors": [
+              17,
+              22,
+              28,
+              43
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 22,
+              "DisplayOrder": 21,
+              "Name": "Data Migration",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 90,
+              "EarliestStartTime": 100,
+              "LatestFinishTime": 200,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              16,
+              17,
+              18,
+              19,
+              21,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              25
+            ],
+            "Successors": [
+              41
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 23,
+              "DisplayOrder": 22,
+              "Name": "Metrics Access ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 90,
+              "LatestFinishTime": 100,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              16,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              20
+            ],
+            "Successors": [
+              33,
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 24,
+              "DisplayOrder": 23,
+              "Name": "Members Access ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 90,
+              "LatestFinishTime": 100,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              17,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              16
+            ],
+            "Successors": [
+              30,
+              33,
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 25,
+              "DisplayOrder": 24,
+              "Name": "Portfolios Access ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                6
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 90,
+              "LatestFinishTime": 110,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              18,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              30,
+              31,
+              34,
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 26,
+              "DisplayOrder": 25,
+              "Name": "Profiles Access ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 100,
+              "LatestFinishTime": 110,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              19,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              23
+            ],
+            "Successors": [
+              31,
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 27,
+              "DisplayOrder": 26,
+              "Name": "Workflows Access ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 20,
+              "FreeSlack": 0,
+              "EarliestStartTime": 90,
+              "LatestFinishTime": 110,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              20,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              19
+            ],
+            "Successors": [
+              32,
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 28,
+              "DisplayOrder": 27,
+              "Name": "Regulations Access",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 100,
+              "LatestFinishTime": 110,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              21,
+              43
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              24
+            ],
+            "Successors": [
+              29,
+              44
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 29,
+              "DisplayOrder": 28,
+              "Name": "Regulations Engine ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 30,
+              "FreeSlack": 0,
+              "EarliestStartTime": 110,
+              "LatestFinishTime": 140,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              28,
+              44
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              27
+            ],
+            "Successors": [
+              31,
+              33
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 30,
+              "DisplayOrder": 29,
+              "Name": "Search Engine ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 30,
+              "EarliestStartTime": 110,
+              "LatestFinishTime": 155,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              24,
+              25,
+              44
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              28
+            ],
+            "Successors": [
+              34,
+              45
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 31,
+              "DisplayOrder": 30,
+              "Name": "Analysis Engine",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 0,
+              "EarliestStartTime": 140,
+              "LatestFinishTime": 155,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              25,
+              26,
+              29,
+              44
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              29
+            ],
+            "Successors": [
+              34,
+              45
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 32,
+              "DisplayOrder": 31,
+              "Name": "Abstract Manager",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 30,
+              "FreeSlack": 15,
+              "EarliestStartTime": 110,
+              "LatestFinishTime": 155,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              27,
+              44
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              26
+            ],
+            "Successors": [
+              33,
+              34,
+              35,
+              45
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 33,
+              "DisplayOrder": 32,
+              "Name": "Membership Manager ",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 155,
+              "LatestFinishTime": 165,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              23,
+              24,
+              29,
+              32,
+              44,
+              45
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              31
+            ],
+            "Successors": [
+              36,
+              37,
+              38,
+              46
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 34,
+              "DisplayOrder": 33,
+              "Name": "Market Manager",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 155,
+              "LatestFinishTime": 165,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              25,
+              30,
+              31,
+              32,
+              44,
+              45
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              32
+            ],
+            "Successors": [
+              36,
+              37,
+              38,
+              46
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 35,
+              "DisplayOrder": 34,
+              "Name": "Performance Manager",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 155,
+              "LatestFinishTime": 165,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              32,
+              45
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              30
+            ],
+            "Successors": [
+              36,
+              37,
+              38,
+              46
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 36,
+              "DisplayOrder": 35,
+              "Name": "Investor Portal",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                8
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 10,
+              "EarliestStartTime": 165,
+              "LatestFinishTime": 190,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              11,
+              33,
+              34,
+              35,
+              46
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              34
+            ],
+            "Successors": [
+              39,
+              40
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 37,
+              "DisplayOrder": 36,
+              "Name": "Investee Portal",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                7
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 15,
+              "FreeSlack": 10,
+              "EarliestStartTime": 165,
+              "LatestFinishTime": 190,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              11,
+              33,
+              34,
+              35,
+              46
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              35
+            ],
+            "Successors": [
+              39,
+              40
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 38,
+              "DisplayOrder": 37,
+              "Name": "Mobile App",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                9
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 25,
+              "FreeSlack": 0,
+              "EarliestStartTime": 165,
+              "LatestFinishTime": 190,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              11,
+              33,
+              34,
+              35,
+              46
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              33
+            ],
+            "Successors": [
+              39,
+              40
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 39,
+              "DisplayOrder": 38,
+              "Name": "Manual Polishing",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                13
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                13
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 190,
+              "LatestFinishTime": 200,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              36,
+              37,
+              38
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              12
+            ],
+            "Successors": [
+              41
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 40,
+              "DisplayOrder": 39,
+              "Name": "System Testing",
+              "Notes": "",
+              "TargetWorkStreams": [
+                1
+              ],
+              "TargetResources": [
+                10,
+                11
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                10,
+                11
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 190,
+              "LatestFinishTime": 200,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              9,
+              36,
+              37,
+              38
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              41
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 41,
+              "DisplayOrder": 40,
+              "Name": "System Rollout",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [
+                12,
+                13,
+                14,
+                15
+              ],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                12,
+                13,
+                14,
+                15
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "FreeSlack": 0,
+              "EarliestStartTime": 200,
+              "LatestFinishTime": 210,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              12,
+              22,
+              39,
+              40
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [
+              4,
+              10,
+              14,
+              39
+            ],
+            "Successors": []
+          },
+          {
+            "Activity": {
+              "Id": 42,
+              "DisplayOrder": 41,
+              "Name": "iFX Milestone",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 70,
+              "LatestFinishTime": 70,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              10,
+              13,
+              14,
+              15
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 43,
+              "DisplayOrder": 42,
+              "Name": "DB Milestone",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 90,
+              "LatestFinishTime": 90,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 44,
+              "DisplayOrder": 43,
+              "Name": "Access Milestone",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 110,
+              "LatestFinishTime": 110,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 45,
+              "DisplayOrder": 44,
+              "Name": "Engine Milestone",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 155,
+              "LatestFinishTime": 155,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              30,
+              31,
+              32
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              33,
+              34,
+              35
+            ]
+          },
+          {
+            "Activity": {
+              "Id": 46,
+              "DisplayOrder": 45,
+              "Name": "Manager Milestone",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 0,
+              "FreeSlack": 0,
+              "EarliestStartTime": 165,
+              "LatestFinishTime": 165,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [
+              33,
+              34,
+              35
+            ],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": [
+              36,
+              37,
+              38
+            ]
+          }
+        ],
+        "GraphSettings": {
+          "ActivitySeverities": [
+            {
+              "SlackLimit": 0,
+              "CriticalityWeight": 4.0,
+              "FibonacciWeight": 4.23606797749979,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 10,
+              "CriticalityWeight": 3.0,
+              "FibonacciWeight": 2.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 25,
+              "CriticalityWeight": 2.0,
+              "FibonacciWeight": 1.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 215,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 2147483647,
+              "CriticalityWeight": 1.0,
+              "FibonacciWeight": 1.0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 128,
+                "B": 0
+              }
+            }
+          ],
+          "EdgeTypeFormats": [
+            {
+              "EdgeType": 0,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 1,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 1
+            },
+            {
+              "EdgeType": 2,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 3,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 1
+            }
+          ],
+          "NodeTypeFormats": [
+            {
+              "NodeType": 0,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 1,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 1
+            },
+            {
+              "NodeType": 2,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 3,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            }
+          ]
+        },
+        "ResourceSettings": {
+          "Resources": [
+            {
+              "Id": 1,
+              "Name": "DBA",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 2,
+              "InterActivityAllocationType": 0,
+              "InterActivityPhases": [],
+              "UnitCost": 700.0,
+              "UnitBilling": 700.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 14,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 0,
+                "B": 255
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 2,
+              "Name": "UX",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 2,
+              "InterActivityAllocationType": 0,
+              "InterActivityPhases": [],
+              "UnitCost": 650.0,
+              "UnitBilling": 650.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 13,
+              "ColorFormat": {
+                "A": 255,
+                "R": 138,
+                "G": 43,
+                "B": 226
+              },
+              "Trackers": [
+                {
+                  "Time": 0,
+                  "ResourceId": 2,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 0,
+                      "ResourceId": 2,
+                      "ActivityId": 1,
+                      "PercentageWorked": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Id": 3,
+              "Name": "TE",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 650.0,
+              "UnitBilling": 650.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 12,
+              "ColorFormat": {
+                "A": 255,
+                "R": 144,
+                "G": 238,
+                "B": 144
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 4,
+              "Name": "DEV6",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 600.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 6,
+              "DisplayOrder": 11,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 5,
+              "Name": "DEV5",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 600.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 5,
+              "DisplayOrder": 10,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 6,
+              "Name": "DEV4",
+              "Notes": "",
+              "IsExplicitTarget": false,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 600.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 4,
+              "DisplayOrder": 9,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 7,
+              "Name": "DEV3",
+              "Notes": "",
+              "IsExplicitTarget": false,
+              "IsInactive": false,
+              "ActivityAllocationType": 1,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 600.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 3,
+              "DisplayOrder": 8,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 8,
+              "Name": "DEV2",
+              "Notes": "",
+              "IsExplicitTarget": false,
+              "IsInactive": false,
+              "ActivityAllocationType": 1,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 700.0,
+              "UnitBilling": 700.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 2,
+              "DisplayOrder": 7,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 9,
+              "Name": "DEV1",
+              "Notes": "",
+              "IsExplicitTarget": false,
+              "IsInactive": false,
+              "ActivityAllocationType": 1,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 750.0,
+              "UnitBilling": 750.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 1,
+              "DisplayOrder": 6,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 10,
+              "Name": "QA2",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 1,
+              "InterActivityAllocationType": 1,
+              "InterActivityPhases": [],
+              "UnitCost": 600.0,
+              "UnitBilling": 600.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 5,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 206,
+                "B": 209
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 11,
+              "Name": "QA1",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 2,
+              "InterActivityPhases": [
+                1
+              ],
+              "UnitCost": 600.0,
+              "UnitBilling": 600.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 4,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 206,
+                "B": 209
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 12,
+              "Name": "CM",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 2,
+              "InterActivityPhases": [
+                1
+              ],
+              "UnitCost": 650.0,
+              "UnitBilling": 650.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 3,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 139,
+                "B": 139
+              },
+              "Trackers": []
+            },
+            {
+              "Id": 13,
+              "Name": "PO",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 2,
+              "InterActivityPhases": [],
+              "UnitCost": 1000.0,
+              "UnitBilling": 1000.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 2,
+              "ColorFormat": {
+                "A": 255,
+                "R": 220,
+                "G": 20,
+                "B": 60
+              },
+              "Trackers": [
+                {
+                  "Time": 0,
+                  "ResourceId": 13,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 0,
+                      "ResourceId": 13,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 1,
+                  "ResourceId": 13,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 1,
+                      "ResourceId": 13,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 2,
+                  "ResourceId": 13,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 2,
+                      "ResourceId": 13,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 3,
+                  "ResourceId": 13,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 3,
+                      "ResourceId": 13,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 4,
+                  "ResourceId": 13,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 4,
+                      "ResourceId": 13,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Id": 14,
+              "Name": "PM",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 2,
+              "InterActivityPhases": [],
+              "UnitCost": 1000.0,
+              "UnitBilling": 1000.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 1,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 165,
+                "B": 0
+              },
+              "Trackers": [
+                {
+                  "Time": 0,
+                  "ResourceId": 14,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 0,
+                      "ResourceId": 14,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 1,
+                  "ResourceId": 14,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 1,
+                      "ResourceId": 14,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 2,
+                  "ResourceId": 14,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 2,
+                      "ResourceId": 14,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 3,
+                  "ResourceId": 14,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 3,
+                      "ResourceId": 14,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 4,
+                  "ResourceId": 14,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 4,
+                      "ResourceId": 14,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Id": 15,
+              "Name": "ARC",
+              "Notes": "",
+              "IsExplicitTarget": true,
+              "IsInactive": false,
+              "ActivityAllocationType": 0,
+              "InterActivityAllocationType": 2,
+              "InterActivityPhases": [],
+              "UnitCost": 1000.0,
+              "UnitBilling": 1000.0,
+              "FixedCost": 0.0,
+              "FixedBilling": 0.0,
+              "AllocationOrder": 0,
+              "DisplayOrder": 0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 154,
+                "G": 205,
+                "B": 50
+              },
+              "Trackers": [
+                {
+                  "Time": 0,
+                  "ResourceId": 15,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 0,
+                      "ResourceId": 15,
+                      "ActivityId": 2,
+                      "PercentageWorked": 90
+                    }
+                  ]
+                },
+                {
+                  "Time": 1,
+                  "ResourceId": 15,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 1,
+                      "ResourceId": 15,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 2,
+                  "ResourceId": 15,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 2,
+                      "ResourceId": 15,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 3,
+                  "ResourceId": 15,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 3,
+                      "ResourceId": 15,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                },
+                {
+                  "Time": 4,
+                  "ResourceId": 15,
+                  "ActivityTrackers": [
+                    {
+                      "Time": 4,
+                      "ResourceId": 15,
+                      "ActivityId": 2,
+                      "PercentageWorked": 100
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "DefaultUnitCost": 1.0,
+          "DefaultUnitBilling": 1.0,
+          "AreDisabled": false
+        },
+        "WorkStreamSettings": {
+          "WorkStreams": [
+            {
+              "Id": 1,
+              "Name": "Development",
+              "IsPhase": true,
+              "DisplayOrder": 0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 78,
+                "G": 193,
+                "B": 20
+              }
+            }
+          ]
+        },
+        "HolidaySettings": {
+          "Holidays": [
+            {
+              "Id": 1,
+              "Name": "Weekends",
+              "Notes": "",
+              "RecurrencePattern": "FREQ=WEEKLY;BYDAY=SA,SU"
+            },
+            {
+              "Id": 2,
+              "Name": "Christmas Day",
+              "Notes": "",
+              "RecurrencePattern": "FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25"
+            }
+          ]
+        },
+        "Metrics": {
+          "Risks": {
+            "Criticality": 0.7948717948717948,
+            "Fibonacci": 0.7626319432371281,
+            "Activity": 0.8202279202279202,
+            "ActivityStdDevCorrection": 0.7828696126568467,
+            "GeometricCriticality": 0.7146207348082395,
+            "GeometricFibonacci": 0.6737875187561889,
+            "GeometricActivity": 0.9701567459354624
+          },
+          "Costs": {
+            "Direct": 307350.0,
+            "Indirect": 835400.0,
+            "Other": 22750.0,
+            "Total": 1165500.0
+          },
+          "Billings": {
+            "Direct": 307350.0,
+            "Indirect": 835400.0,
+            "Other": 22750.0,
+            "Total": 1165500.0
+          },
+          "Margins": {
+            "Direct": 0.0,
+            "Indirect": 0.0,
+            "Other": 0.0,
+            "Total": 0.0,
+            "DirectAbsolute": 0.0,
+            "IndirectAbsolute": 0.0,
+            "OtherAbsolute": 0.0,
+            "TotalAbsolute": 0.0
+          },
+          "Efforts": {
+            "Direct": 374.0,
+            "Indirect": 1036.0,
+            "Other": 35.0,
+            "Total": 1445.0,
+            "Activity": 649.0,
+            "Efficiency": 0.4491349480968858
+          },
+          "Network": {
+            "CyclomaticComplexity": 24,
+            "Duration": 210,
+            "DurationManMonths": 9.665753424657535
+          }
+        },
+        "ResourceMetrics": [
+          {
+            "ResourceId": 2,
+            "ResourceName": "UX",
+            "Costs": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 22750.0,
+              "Total": 22750.0
+            },
+            "Billings": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 22750.0,
+              "Total": 22750.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 35.0,
+              "Total": 35.0,
+              "Activity": 35.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 3,
+            "ResourceName": "TE",
+            "Costs": {
+              "Direct": 32500.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 32500.0
+            },
+            "Billings": {
+              "Direct": 32500.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 32500.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 50.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 50.0,
+              "Activity": 50.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 6,
+            "ResourceName": "DEV4",
+            "Costs": {
+              "Direct": 12000.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 12000.0
+            },
+            "Billings": {
+              "Direct": 12000.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 12000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 20.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 20.0,
+              "Activity": 20.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 7,
+            "ResourceName": "DEV3",
+            "Costs": {
+              "Direct": 27000.0,
+              "Indirect": 39000.0,
+              "Other": 0.0,
+              "Total": 66000.0
+            },
+            "Billings": {
+              "Direct": 27000.0,
+              "Indirect": 39000.0,
+              "Other": 0.0,
+              "Total": 66000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 45.0,
+              "Indirect": 65.0,
+              "Other": 0.0,
+              "Total": 110.0,
+              "Activity": 65.0,
+              "Efficiency": 0.5909090909090909
+            }
+          },
+          {
+            "ResourceId": 8,
+            "ResourceName": "DEV2",
+            "Costs": {
+              "Direct": 21000.0,
+              "Indirect": 70000.0,
+              "Other": 0.0,
+              "Total": 91000.0
+            },
+            "Billings": {
+              "Direct": 21000.0,
+              "Indirect": 70000.0,
+              "Other": 0.0,
+              "Total": 91000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 30.0,
+              "Indirect": 100.0,
+              "Other": 0.0,
+              "Total": 130.0,
+              "Activity": 100.0,
+              "Efficiency": 0.7692307692307693
+            }
+          },
+          {
+            "ResourceId": 9,
+            "ResourceName": "DEV1",
+            "Costs": {
+              "Direct": 0.0,
+              "Indirect": 105000.0,
+              "Other": 0.0,
+              "Total": 105000.0
+            },
+            "Billings": {
+              "Direct": 0.0,
+              "Indirect": 105000.0,
+              "Other": 0.0,
+              "Total": 105000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 0.0,
+              "Indirect": 140.0,
+              "Other": 0.0,
+              "Total": 140.0,
+              "Activity": 140.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 10,
+            "ResourceName": "QA2",
+            "Costs": {
+              "Direct": 0.0,
+              "Indirect": 6000.0,
+              "Other": 0.0,
+              "Total": 6000.0
+            },
+            "Billings": {
+              "Direct": 0.0,
+              "Indirect": 6000.0,
+              "Other": 0.0,
+              "Total": 6000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 0.0,
+              "Indirect": 10.0,
+              "Other": 0.0,
+              "Total": 10.0,
+              "Activity": 10.0,
+              "Efficiency": 1.0
+            }
+          },
+          {
+            "ResourceId": 11,
+            "ResourceName": "QA1",
+            "Costs": {
+              "Direct": 6000.0,
+              "Indirect": 87000.0,
+              "Other": 0.0,
+              "Total": 93000.0
+            },
+            "Billings": {
+              "Direct": 6000.0,
+              "Indirect": 87000.0,
+              "Other": 0.0,
+              "Total": 93000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 10.0,
+              "Indirect": 145.0,
+              "Other": 0.0,
+              "Total": 155.0,
+              "Activity": 10.0,
+              "Efficiency": 0.06451612903225806
+            }
+          },
+          {
+            "ResourceId": 12,
+            "ResourceName": "CM",
+            "Costs": {
+              "Direct": 18850.0,
+              "Indirect": 88400.0,
+              "Other": 0.0,
+              "Total": 107250.0
+            },
+            "Billings": {
+              "Direct": 18850.0,
+              "Indirect": 88400.0,
+              "Other": 0.0,
+              "Total": 107250.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 29.0,
+              "Indirect": 136.0,
+              "Other": 0.0,
+              "Total": 165.0,
+              "Activity": 29.0,
+              "Efficiency": 0.17575757575757575
+            }
+          },
+          {
+            "ResourceId": 13,
+            "ResourceName": "PO",
+            "Costs": {
+              "Direct": 85000.0,
+              "Indirect": 125000.0,
+              "Other": 0.0,
+              "Total": 210000.0
+            },
+            "Billings": {
+              "Direct": 85000.0,
+              "Indirect": 125000.0,
+              "Other": 0.0,
+              "Total": 210000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 85.0,
+              "Indirect": 125.0,
+              "Other": 0.0,
+              "Total": 210.0,
+              "Activity": 85.0,
+              "Efficiency": 0.40476190476190477
+            }
+          },
+          {
+            "ResourceId": 14,
+            "ResourceName": "PM",
+            "Costs": {
+              "Direct": 30000.0,
+              "Indirect": 180000.0,
+              "Other": 0.0,
+              "Total": 210000.0
+            },
+            "Billings": {
+              "Direct": 30000.0,
+              "Indirect": 180000.0,
+              "Other": 0.0,
+              "Total": 210000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 30.0,
+              "Indirect": 180.0,
+              "Other": 0.0,
+              "Total": 210.0,
+              "Activity": 30.0,
+              "Efficiency": 0.14285714285714285
+            }
+          },
+          {
+            "ResourceId": 15,
+            "ResourceName": "ARC",
+            "Costs": {
+              "Direct": 75000.0,
+              "Indirect": 135000.0,
+              "Other": 0.0,
+              "Total": 210000.0
+            },
+            "Billings": {
+              "Direct": 75000.0,
+              "Indirect": 135000.0,
+              "Other": 0.0,
+              "Total": 210000.0
+            },
+            "Margins": {
+              "Direct": 0.0,
+              "Indirect": 0.0,
+              "Other": 0.0,
+              "Total": 0.0,
+              "DirectAbsolute": 0.0,
+              "IndirectAbsolute": 0.0,
+              "OtherAbsolute": 0.0,
+              "TotalAbsolute": 0.0
+            },
+            "Efforts": {
+              "Direct": 75.0,
+              "Indirect": 135.0,
+              "Other": 0.0,
+              "Total": 210.0,
+              "Activity": 75.0,
+              "Efficiency": 0.35714285714285715
+            }
+          }
+        ],
+        "DisplaySettings": {
+          "ShowDates": false,
+          "UseClassicDates": false,
+          "NonWorkingDayMode": 1,
+          "HideCost": false,
+          "HideBilling": false,
+          "ArrowGraphShowNames": true,
+          "VertexGraphShowNames": false,
+          "ArrowGraphEdgeRoutingMode": 1,
+          "VertexGraphEdgeRoutingMode": 4,
+          "GanttChartGroupByMode": 1,
+          "GanttChartAnnotationStyle": 2,
+          "GanttChartShowGroupLabels": true,
+          "GanttChartShowProjectFinish": true,
+          "GanttChartShowTracking": true,
+          "GanttChartShowToday": false,
+          "GanttChartShowMilestones": false,
+          "GanttChartShowSlack": false,
+          "GanttChartShowNonWorkingDays": false,
+          "GanttChartShowConnections": [],
+          "ResourceChartAllocationMode": 0,
+          "ResourceChartScheduleMode": 0,
+          "ResourceChartDisplayStyle": 1,
+          "ResourceChartShowToday": false,
+          "ResourceChartShowMilestones": false,
+          "EarnedValueShowProjections": true,
+          "EarnedValueShowToday": false,
+          "EarnedValueShowMilestones": false,
+          "EarnedValueCombineResources": false,
+          "EarnedValueScaleToOwnPlan": false,
+          "EarnedValueShowResources": []
+        },
+        "ArrowGraphLayout": {
+          "Nodes": [
+            {
+              "Id": 23,
+              "X": 2949.2819903745194,
+              "Y": -28.311048812735407
+            },
+            {
+              "Id": -89,
+              "X": 3327.7665441176478,
+              "Y": 139.5
+            },
+            {
+              "Id": 30,
+              "X": 3833.531250000001,
+              "Y": 139.5
+            },
+            {
+              "Id": 14,
+              "X": 1351.8298837986013,
+              "Y": 174.5736351795531
+            },
+            {
+              "Id": 0,
+              "X": 15.0,
+              "Y": 110.99999999999977
+            },
+            {
+              "Id": 11,
+              "X": 4652.971791863858,
+              "Y": 210.84447559363252
+            },
+            {
+              "Id": 12,
+              "X": 5682.314337992652,
+              "Y": 180.8160220908503
+            },
+            {
+              "Id": 7,
+              "X": 851.606431513485,
+              "Y": 266.2837524037973
+            },
+            {
+              "Id": 24,
+              "X": 2946.5028959131787,
+              "Y": 75.66990882558775
+            },
+            {
+              "Id": -11,
+              "X": 727.7647058823513,
+              "Y": 110.99999999999977
+            },
+            {
+              "Id": 37,
+              "X": 5115.23586313948,
+              "Y": 414.3419413264787
+            },
+            {
+              "Id": -93,
+              "X": 4821.590073529412,
+              "Y": 265.5
+            },
+            {
+              "Id": 38,
+              "X": 5587.382287356279,
+              "Y": 329.86098368815556
+            },
+            {
+              "Id": 9,
+              "X": 5975.248140522469,
+              "Y": 509.2621757749671
+            },
+            {
+              "Id": 16,
+              "X": 2393.7610400328845,
+              "Y": -9.249263785249127
+            },
+            {
+              "Id": 10,
+              "X": 1099.2812079696155,
+              "Y": -473.75857603152576
+            },
+            {
+              "Id": 25,
+              "X": 2935.3865180678154,
+              "Y": -132.2920064510588
+            },
+            {
+              "Id": 26,
+              "X": 3168.7665441176478,
+              "Y": 139.5
+            },
+            {
+              "Id": 4,
+              "X": 612.8823529411757,
+              "Y": 110.99999999999977
+            },
+            {
+              "Id": 36,
+              "X": 5399.310344461342,
+              "Y": 404.98561558077995
+            },
+            {
+              "Id": 18,
+              "X": 2332.293417455432,
+              "Y": 151.0118501520667
+            },
+            {
+              "Id": 17,
+              "X": 2100.1055197862834,
+              "Y": 188.02370030413294
+            },
+            {
+              "Id": 8,
+              "X": 5459.5439421346055,
+              "Y": 580.6777522809989
+            },
+            {
+              "Id": 21,
+              "X": 1811.7102590151562,
+              "Y": 156.52729640893813
+            },
+            {
+              "Id": -85,
+              "X": 1607.5484235397066,
+              "Y": 75.40666557993882
+            },
+            {
+              "Id": -91,
+              "X": 4020.0263323952995,
+              "Y": 71.83658362897836
+            },
+            {
+              "Id": -87,
+              "X": 2707.8253676470604,
+              "Y": 126.0
+            },
+            {
+              "Id": 20,
+              "X": 2161.1601684151933,
+              "Y": -453.7509739085525
+            },
+            {
+              "Id": 32,
+              "X": 3604.107826348114,
+              "Y": -1.6748446072979277
+            },
+            {
+              "Id": 6,
+              "X": 4359.943014705883,
+              "Y": 265.5
+            },
+            {
+              "Id": 22,
+              "X": 5962.059752607813,
+              "Y": -82.14742136696509
+            },
+            {
+              "Id": 33,
+              "X": 4576.74704780415,
+              "Y": -35.0038577743112
+            },
+            {
+              "Id": 2,
+              "X": 294.17647058823513,
+              "Y": 110.99999999999977
+            },
+            {
+              "Id": -3,
+              "X": 129.88235294117567,
+              "Y": 110.99999999999977
+            },
+            {
+              "Id": 15,
+              "X": 1433.6474818946817,
+              "Y": -5.586547169271171
+            },
+            {
+              "Id": 29,
+              "X": 3615.2371323529424,
+              "Y": 192.0
+            },
+            {
+              "Id": 35,
+              "X": 4156.514322994091,
+              "Y": 183.0391465610046
+            },
+            {
+              "Id": 34,
+              "X": 4359.943014705883,
+              "Y": 144.0
+            },
+            {
+              "Id": 41,
+              "X": 6162.413602941176,
+              "Y": 229.50000000000023
+            },
+            {
+              "Id": 3,
+              "X": 458.4705882352946,
+              "Y": 110.99999999999977
+            }
+          ]
+        },
+        "VertexGraphLayout": {
+          "Nodes": [
+            {
+              "Id": 23,
+              "X": 2289.84375,
+              "Y": 282.5
+            },
+            {
+              "Id": 16,
+              "X": 1941.40625,
+              "Y": 200.0
+            },
+            {
+              "Id": 42,
+              "X": 1301.2002397929482,
+              "Y": 536.1207908039487
+            },
+            {
+              "Id": 32,
+              "X": 2986.71875,
+              "Y": 282.5
+            },
+            {
+              "Id": 29,
+              "X": 2812.5,
+              "Y": 465.0
+            },
+            {
+              "Id": 8,
+              "X": 3509.375,
+              "Y": 545.0
+            },
+            {
+              "Id": 4,
+              "X": 547.65625,
+              "Y": 475.0
+            },
+            {
+              "Id": 46,
+              "X": 3509.375,
+              "Y": 382.5
+            },
+            {
+              "Id": 20,
+              "X": 1941.40625,
+              "Y": 300.0
+            },
+            {
+              "Id": 33,
+              "X": 3335.15625,
+              "Y": 382.5
+            },
+            {
+              "Id": 38,
+              "X": 3683.59375,
+              "Y": 320.0
+            },
+            {
+              "Id": 3,
+              "X": 373.4375,
+              "Y": 475.0
+            },
+            {
+              "Id": 9,
+              "X": 3683.59375,
+              "Y": 545.0
+            },
+            {
+              "Id": 21,
+              "X": 1402.060023517674,
+              "Y": 354.69863526225754
+            },
+            {
+              "Id": 5,
+              "X": 721.875,
+              "Y": 475.0
+            },
+            {
+              "Id": 35,
+              "X": 3335.15625,
+              "Y": 282.5
+            },
+            {
+              "Id": 45,
+              "X": 3160.9375,
+              "Y": 382.5
+            },
+            {
+              "Id": 40,
+              "X": 3857.8125,
+              "Y": 320.0
+            },
+            {
+              "Id": 2,
+              "X": 199.21875,
+              "Y": 475.0
+            },
+            {
+              "Id": 31,
+              "X": 2986.71875,
+              "Y": 482.5
+            },
+            {
+              "Id": 28,
+              "X": 2464.0625,
+              "Y": 382.5
+            },
+            {
+              "Id": 44,
+              "X": 2638.28125,
+              "Y": 382.5
+            },
+            {
+              "Id": 19,
+              "X": 1941.40625,
+              "Y": 400.0
+            },
+            {
+              "Id": 14,
+              "X": 1070.3125,
+              "Y": 300.0
+            },
+            {
+              "Id": 18,
+              "X": 1767.1875,
+              "Y": 400.0
+            },
+            {
+              "Id": 24,
+              "X": 2289.84375,
+              "Y": 382.5
+            },
+            {
+              "Id": 27,
+              "X": 2464.0625,
+              "Y": 482.5
+            },
+            {
+              "Id": 22,
+              "X": 3805.358288198403,
+              "Y": -156.50682368871162
+            },
+            {
+              "Id": 10,
+              "X": 896.09375,
+              "Y": 475.0
+            },
+            {
+              "Id": 26,
+              "X": 2464.0625,
+              "Y": 282.5
+            },
+            {
+              "Id": 30,
+              "X": 2986.71875,
+              "Y": 382.5
+            },
+            {
+              "Id": 7,
+              "X": 896.09375,
+              "Y": 375.0
+            },
+            {
+              "Id": 17,
+              "X": 1616.8115735461797,
+              "Y": 435.76423531927026
+            },
+            {
+              "Id": 39,
+              "X": 3857.8125,
+              "Y": 170.0
+            },
+            {
+              "Id": 43,
+              "X": 2115.625,
+              "Y": 300.0
+            },
+            {
+              "Id": 13,
+              "X": 1070.3125,
+              "Y": 400.0
+            },
+            {
+              "Id": 12,
+              "X": 3683.59375,
+              "Y": -5.879952964652375
+            },
+            {
+              "Id": 36,
+              "X": 3683.59375,
+              "Y": 220.0
+            },
+            {
+              "Id": 11,
+              "X": 3361.549494013683,
+              "Y": 106.92141177308986
+            },
+            {
+              "Id": 41,
+              "X": 4032.03125,
+              "Y": 170.0
+            },
+            {
+              "Id": 15,
+              "X": 1070.3125,
+              "Y": 199.99999999999977
+            },
+            {
+              "Id": 1,
+              "X": 25.0,
+              "Y": 474.9999999999998
+            },
+            {
+              "Id": 34,
+              "X": 3335.15625,
+              "Y": 482.5
+            },
+            {
+              "Id": 25,
+              "X": 2464.0625,
+              "Y": 182.5
+            },
+            {
+              "Id": 37,
+              "X": 3683.59375,
+              "Y": 445.0
+            },
+            {
+              "Id": 6,
+              "X": 1280.29548531927,
+              "Y": -47.01548246864331
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "Tags": [],
+  "DisplaySettings": {
+    "ProjectScenarioSortMode": 0,
+    "ProjectScenarioSortDirection": 0,
+    "ScenarioChartTrackedMetricXAxis": 1,
+    "ScenarioChartTrackedMetricY1Axis": 0,
+    "ScenarioChartTrackedMetricY2Axis": 0,
+    "ScenarioChartCurveFittingTypeY1": 0,
+    "ScenarioChartCurveFittingTypeY2": 0,
+    "ScenarioChartShowNamesY1": false,
+    "ScenarioChartShowNamesY2": false,
+    "ScenarioChartShowDerivativeY1": false,
+    "ScenarioChartShowDerivativeY2": false,
+    "ScenarioChartAbsoluteCurveFittingY1": false,
+    "ScenarioChartAbsoluteCurveFittingY2": false
+  }
+}

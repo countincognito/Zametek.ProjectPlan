@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current.
+        /// </summary>
+        public static string Title_Current {
+            get {
+                return ResourceManager.GetString("Title_Current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Title_DeleteNodes {
@@ -187,6 +196,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        public static string Title_Id {
+            get {
+                return ResourceManager.GetString("Title_Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import problems.
+        /// </summary>
+        public static string Title_ImportProblems {
+            get {
+                return ResourceManager.GetString("Title_ImportProblems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Metrics.
         /// </summary>
         public static string Title_Metrics {
@@ -268,6 +295,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scenario.
+        /// </summary>
+        public static string Title_Scenario {
+            get {
+                return ResourceManager.GetString("Title_Scenario", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scenario Chart.
         /// </summary>
         public static string Title_ScenarioChartView {
@@ -282,6 +318,43 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Title_ScenarioUnsavedChanges {
             get {
                 return ResourceManager.GetString("Title_ScenarioUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation.
+        /// </summary>
+        public static string Title_Simulation {
+            get {
+                return ResourceManager.GetString("Title_Simulation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Chart.
+        /// </summary>
+        public static string Title_SimulationChart {
+            get {
+                return ResourceManager.GetString("Title_SimulationChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simulation Metrics.
+        /// </summary>
+        public static string Title_SimulationMetrics {
+            get {
+                return ResourceManager.GetString("Title_SimulationMetrics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tracked.
+        /// </summary>
+        public static string Title_Tracked {
+            get {
+                return ResourceManager.GetString("Title_Tracked", resourceCulture);
             }
         }
         

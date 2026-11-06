@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Media.Immutable;
 using SkiaSharp;
@@ -115,15 +114,17 @@ namespace Zametek.Graphs.Avalonia
             };
 
             // Lay the throwaway tree out (so the built visuals measure/arrange and their bindings settle),
-            // then render it to a bitmap at the requested supersample scale.
+            // then render it to a bitmap at the requested supersample scale - or at a smaller scale, if the
+            // graph is too large for one bitmap at the requested one (see RasterSizeLimit).
             var size = new Size(width, height);
             root.Measure(size);
             root.Arrange(new Rect(size));
 
+            double fittedScale = RasterSizeLimit.FitScale(width, height, scale);
             var pixelSize = new PixelSize(
-                Math.Max(1, (int)Math.Ceiling(width * scale)),
-                Math.Max(1, (int)Math.Ceiling(height * scale)));
-            var dpi = new Vector(96.0 * scale, 96.0 * scale);
+                Math.Max(1, (int)Math.Ceiling(width * fittedScale)),
+                Math.Max(1, (int)Math.Ceiling(height * fittedScale)));
+            var dpi = new Vector(96.0 * fittedScale, 96.0 * fittedScale);
 
             using var renderBitmap = new RenderTargetBitmap(pixelSize, dpi);
             renderBitmap.Render(root);

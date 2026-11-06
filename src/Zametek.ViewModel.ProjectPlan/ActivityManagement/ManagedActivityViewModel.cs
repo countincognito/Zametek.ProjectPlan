@@ -34,8 +34,9 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private readonly Lock m_DataLock;
 
-        private readonly IDisposable? m_ProjectStartSub;
-        private readonly IDisposable? m_DateTimeCalculatorCalculatorModeSub;
+        // Its two subscriptions deliver on the current thread, so the constructor makes them. What it starts is the
+        // tracker set it makes for itself: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
         private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
         private readonly IDisposable? m_CompilationSub;
 
@@ -77,6 +78,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_VertexGraphCompiler = vertexGraphCompiler;
             m_DataLock = dataLock;
 
+            NormaliseEstimates();
+
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
             RefreshResourceSelector();
@@ -116,19 +119,27 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackerSet = new ActivityTrackerSetViewModel(
                 m_CoreViewModel, DependentActivity.Id, trackers ?? []);
 
-            // The subscriptions below observe on Scheduler.CurrentThread so that their
-            // callbacks run inline on whichever thread raises the change, and are
-            // therefore complete before the CoreViewModel can proceed to compilation.
+            // Nothing that mutates the underlying activity is observed here. The
+            // CoreViewModel pushes every such change in synchronously, under its own
+            // lock, so that it is ordered against a compile by m_Lock: resource and
+            // work stream settings through SetResourceSettings/SetWorkStreamSettings,
+            // and the project start and working calendar through SetProjectStart and
+            // UpdateEarliestStartAndLatestFinishDateTimes.
             //
-            // Resource and work stream settings are deliberately NOT observed here:
-            // the CoreViewModel pushes them in synchronously, under its own lock, via
-            // SetResourceSettings/SetWorkStreamSettings. They used to arrive through
-            // subscriptions deferred to the UI thread, which could clear and rebuild
-            // this activity's live target sets while a compile on another thread was
-            // cloning them - the torn-HashSet corruption diagnosed from the
-            // zametek-deadlock-2 dump. Nothing that mutates the underlying activity
-            // may be deferred like that; it must run synchronously wherever the
-            // change is made, so it is ordered against the compile by m_Lock.
+            // The settings pair used to arrive through subscriptions deferred to the UI
+            // thread, which could clear and rebuild this activity's live target sets
+            // while a compile on another thread was cloning them - the torn-HashSet
+            // corruption diagnosed from the zametek-deadlock-2 dump. The project start
+            // and calendar pair used to arrive through subscriptions observing on
+            // Scheduler.CurrentThread, which runs inline only while nothing else holds
+            // the thread's trampoline; a write made from inside another scheduled
+            // delivery queued them behind it instead, so the compile the same setter
+            // armed could start against a minimum earliest start time and maximum
+            // latest finish time still measured along the previous calendar.
+            //
+            // What is left below touches none of it: the property helpers project values
+            // for the view, and the one remaining date subscription only re-raises the
+            // display properties when the way a date is rendered changes.
 
             m_ShowDates = this
                 .WhenAnyValue(x => x.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
@@ -141,19 +152,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasWorkStreams = this
                 .WhenAnyValue(x => x.m_CoreViewModel.HasWorkStreams)
                 .ToProperty(this, x => x.HasWorkStreams);
-
-            m_ProjectStartSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
-                .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(x => ProjectStart = x);
-
-            m_DateTimeCalculatorCalculatorModeSub = this
-                .WhenAnyValue(
-                    x => x.m_DateTimeCalculator.NonWorkingDayMode,
-                    x => x.m_CoreViewModel.HolidaySettings)
-                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(_ => UpdateEarliestStartAndLatestFinishDateTimes());
 
             m_DateTimeCalculatorDisplayModeSub = this
                 .WhenAnyValue(x => x.m_DateTimeCalculator.DisplayMode)
@@ -271,6 +269,82 @@ namespace Zametek.ViewModel.ProjectPlan
             Validate(MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, input);
         }
 
+        /// <summary>
+        /// The one place where the estimates change. It moves the values that the rule asks to be
+        /// moved, works out the duration that follows from them, checks that duration against the
+        /// constraints, writes the four values together, and then announces them.
+        /// </summary>
+        /// <remarks>
+        /// The four values are written under the leaf lock as one, so a compilation that takes its
+        /// copy of the activity never sees a most likely duration of one edit with the duration of
+        /// another. They are announced after the lock is released (ARCHITECTURE section 7 rules 6
+        /// and 11).
+        /// </remarks>
+        private void ApplyEstimates(int mostLikely, int? ownOptimistic, int? ownPessimistic)
+        {
+            (int? optimistic, int? pessimistic) = EstimateHelper.PullToMostLikely(mostLikely, ownOptimistic, ownPessimistic);
+            (int effectiveOptimistic, int effectiveMostLikely, int effectivePessimistic) =
+                EstimateHelper.Effective(mostLikely, optimistic, pessimistic);
+            int duration = EstimateHelper.ExpectedDuration(effectiveOptimistic, effectiveMostLikely, effectivePessimistic);
+
+            ValidateDuration(duration);
+
+            lock (m_DataLock)
+            {
+                DependentActivity.MostLikelyDuration = effectiveMostLikely;
+                DependentActivity.OwnOptimisticDuration = optimistic;
+                DependentActivity.OwnPessimisticDuration = pessimistic;
+                DependentActivity.Duration = duration;
+            }
+
+            this.RaisePropertyChanged(nameof(MostLikelyDuration));
+            this.RaisePropertyChanged(nameof(OwnOptimisticDuration));
+            this.RaisePropertyChanged(nameof(OwnPessimisticDuration));
+            this.RaisePropertyChanged(nameof(OptimisticDuration));
+            this.RaisePropertyChanged(nameof(PessimisticDuration));
+            this.RaisePropertyChanged(nameof(StandardDeviation));
+            this.RaisePropertyChanged(nameof(HasOwnEstimates));
+            this.RaisePropertyChanged(nameof(Duration));
+            this.RaisePropertyChanged(nameof(IsDummy));
+            this.RaisePropertyChanged(nameof(IsCritical));
+            this.RaisePropertyChanged(nameof(EarliestFinishTime));
+            this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
+            this.RaisePropertyChanged(nameof(LatestStartTime));
+            this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
+            this.RaisePropertyChanged(nameof(TotalSlack));
+            this.RaisePropertyChanged(nameof(InterferingSlack));
+        }
+
+        /// <summary>
+        /// Brings the estimates of an activity that has just been made inside the rule, and its
+        /// duration into line with them. The activity comes from a file, an import, a paste or a
+        /// test, and it is only as consistent as its source. A model with no estimates is the
+        /// common case, and for it this changes nothing: the duration is the most likely duration.
+        /// </summary>
+        /// <remarks>
+        /// It announces nothing and checks nothing against the constraints: nobody is listening
+        /// yet, and the constraints are not checked for the values that a plan was saved with
+        /// either.
+        /// </remarks>
+        private void NormaliseEstimates()
+        {
+            lock (m_DataLock)
+            {
+                int mostLikely = Math.Max(0, DependentActivity.MostLikelyDuration);
+                (int? optimistic, int? pessimistic) = EstimateHelper.PullToMostLikely(
+                    mostLikely,
+                    DependentActivity.OwnOptimisticDuration,
+                    DependentActivity.OwnPessimisticDuration);
+                (int effectiveOptimistic, _, int effectivePessimistic) =
+                    EstimateHelper.Effective(mostLikely, optimistic, pessimistic);
+
+                DependentActivity.MostLikelyDuration = mostLikely;
+                DependentActivity.OwnOptimisticDuration = optimistic;
+                DependentActivity.OwnPessimisticDuration = pessimistic;
+                DependentActivity.Duration = EstimateHelper.ExpectedDuration(effectiveOptimistic, mostLikely, effectivePessimistic);
+            }
+        }
+
         private void ValidateMinimumFreeSlack(int? input)
         {
             Validate(input, MinimumEarliestStartTime, MaximumLatestFinishTime, Duration);
@@ -293,6 +367,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int duration)
         {
             ClearErrors(nameof(Duration));
+            ClearErrors(nameof(MostLikelyDuration));
             ClearErrors(nameof(MinimumFreeSlack));
             ClearErrors(nameof(MinimumEarliestStartTime));
             ClearErrors(nameof(MinimumEarliestStartDateTime));
@@ -304,6 +379,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (errorMessage is not null)
                 {
                     SetError(nameof(Duration), errorMessage);
+                    SetError(nameof(MostLikelyDuration), errorMessage);
                     SetError(nameof(MinimumEarliestStartTime), errorMessage);
                     SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
                     SetError(nameof(MaximumLatestFinishTime), errorMessage);
@@ -394,13 +470,6 @@ namespace Zametek.ViewModel.ProjectPlan
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
 
-        private void UpdateEarliestStartAndLatestFinishDateTimes()
-        {
-            RefreshStartAndFinishValues();
-            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
-            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
-        }
-
         private void RefreshStartAndFinishValues()
         {
             this.RaisePropertyChanged(nameof(EarliestStartTime));
@@ -462,10 +531,14 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool HasWorkStreams => m_HasWorkStreams.Value;
 
         private DateTimeOffset m_ProjectStart;
+        /// <summary>
+        /// The project start this activity's dates are measured from. Written only by
+        /// <see cref="SetProjectStart"/>, which the core view model calls synchronously.
+        /// </summary>
         public DateTimeOffset ProjectStart
         {
             get => m_ProjectStart;
-            set
+            private set
             {
                 this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                 RefreshStartAndFinishValues();
@@ -496,7 +569,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // graph edges, so it is a write to the data a compilation snapshots.
                     lock (m_DataLock)
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], PlanningDependencies);
+                        m_VertexGraphCompiler.SetUserDependencies(Id, [.. updatedDependencies], PlanningDependencies);
                     }
                 }
                 this.RaisePropertyChanged();
@@ -520,7 +593,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     lock (m_DataLock)
                     {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
+                        m_VertexGraphCompiler.SetUserDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
                     }
                 }
                 this.RaisePropertyChanged();
@@ -672,32 +745,115 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        /// <summary>
+        /// The duration that the compiler schedules: the PERT expected duration of the estimates,
+        /// rounded to a whole day. For an activity that has no estimates of its own it is the most
+        /// likely duration.
+        /// </summary>
+        /// <remarks>
+        /// Setting it sets the most likely duration, which is what a caller that sets a duration
+        /// means. The duration that the activity then has is the one that its estimates give, and
+        /// that is the value that was set only when the activity has no estimates of its own. A drag
+        /// of the end of a bar on the Gantt chart does not set it: it moves all three estimates
+        /// (<see cref="MoveEstimatesForDuration"/>).
+        /// </remarks>
         public int Duration
         {
             get => DependentActivity.Duration;
+            set => MostLikelyDuration = value;
+        }
+
+        /// <summary>
+        /// The duration that the user expects the activity to take most often. A value that moves
+        /// past an optimistic or a pessimistic duration that the user gave moves that duration to
+        /// the same value.
+        /// </summary>
+        public int MostLikelyDuration
+        {
+            get => DependentActivity.MostLikelyDuration;
+            set => ApplyEstimates(Math.Max(0, value), OwnOptimisticDuration, OwnPessimisticDuration);
+        }
+
+        public int? OwnOptimisticDuration
+        {
+            get => DependentActivity.OwnOptimisticDuration;
+            set => ApplyEstimates(MostLikelyDuration, value, OwnPessimisticDuration);
+        }
+
+        public int? OwnPessimisticDuration
+        {
+            get => DependentActivity.OwnPessimisticDuration;
+            set => ApplyEstimates(MostLikelyDuration, OwnOptimisticDuration, value);
+        }
+
+        public int OptimisticDuration
+        {
+            get => EstimateHelper.Effective(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration).Optimistic;
             set
             {
-                if (value < 0)
+                ClearErrors(nameof(OptimisticDuration));
+
+                int mostLikely = MostLikelyDuration;
+                int limited = Math.Clamp(value, 0, mostLikely);
+                if (limited != value)
                 {
-                    value = 0;
+                    SetError(
+                        nameof(OptimisticDuration),
+                        mostLikely == 0
+                            ? Resource.ProjectPlan.Labels.Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero
+                            : Resource.ProjectPlan.Labels.Label_OptimisticMustBeBetweenZeroAndMostLikely);
                 }
 
-                ValidateDuration(value);
-
-                lock (m_DataLock)
-                {
-                    DependentActivity.Duration = value;
-                }
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(IsDummy));
-                this.RaisePropertyChanged(nameof(IsCritical));
-                this.RaisePropertyChanged(nameof(EarliestFinishTime));
-                this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
-                this.RaisePropertyChanged(nameof(LatestStartTime));
-                this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
-                this.RaisePropertyChanged(nameof(TotalSlack));
-                this.RaisePropertyChanged(nameof(InterferingSlack));
+                ApplyEstimates(mostLikely, limited, OwnPessimisticDuration);
             }
+        }
+
+        public int PessimisticDuration
+        {
+            get => EstimateHelper.Effective(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration).Pessimistic;
+            set
+            {
+                ClearErrors(nameof(PessimisticDuration));
+
+                int mostLikely = MostLikelyDuration;
+                int limited = mostLikely == 0 ? 0 : Math.Max(value, mostLikely);
+                if (limited != value)
+                {
+                    SetError(
+                        nameof(PessimisticDuration),
+                        mostLikely == 0
+                            ? Resource.ProjectPlan.Labels.Label_OptimisticAndPessimisticMustBeZeroWhenMostLikelyIsZero
+                            : Resource.ProjectPlan.Labels.Label_PessimisticMustBeGreaterThanOrEqualToMostLikely);
+                }
+
+                ApplyEstimates(mostLikely, OwnOptimisticDuration, limited);
+            }
+        }
+
+        public double StandardDeviation
+        {
+            get
+            {
+                (int optimistic, _, int pessimistic) =
+                    EstimateHelper.Effective(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration);
+                return EstimateHelper.StandardDeviation(optimistic, pessimistic);
+            }
+        }
+
+        public bool HasOwnEstimates => OwnOptimisticDuration.HasValue || OwnPessimisticDuration.HasValue;
+
+        public void ResetEstimates()
+        {
+            ClearErrors(nameof(OptimisticDuration));
+            ClearErrors(nameof(PessimisticDuration));
+            ApplyEstimates(MostLikelyDuration, null, null);
+        }
+
+        public void MoveEstimatesForDuration(int duration)
+        {
+            (int mostLikely, int? optimistic, int? pessimistic) =
+                EstimateHelper.MoveForDuration(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration, duration);
+            ApplyEstimates(mostLikely, optimistic, pessimistic);
         }
 
         public int? TotalSlack => DependentActivity.TotalSlack;
@@ -1022,6 +1178,35 @@ namespace Zametek.ViewModel.ProjectPlan
             SetNewTargetWorkStreams();
         }
 
+        /// <summary>
+        /// Absorbs a new project start: the date every one of this activity's times is
+        /// measured from, so moving it changes the minimum earliest start time and
+        /// maximum latest finish time the compiler reads. Synchronous for the same
+        /// reason as <see cref="SetResourceSettings"/> - those two are live compiler
+        /// inputs, and the caller arms a compile immediately afterwards.
+        /// </summary>
+        public void SetProjectStart(DateTimeOffset projectStart)
+        {
+            ProjectStart = projectStart;
+        }
+
+        /// <summary>
+        /// Recalculates the times derived from the stored dates, for when the working
+        /// calendar changes underneath them rather than the dates themselves: a holiday
+        /// added or removed, or a switch of non-working day mode. The stored dates are
+        /// what the plan holds, and the integers the compiler reads are counted along
+        /// the calendar between them and the project start, so a calendar change alone
+        /// makes those integers wrong. Validation is skipped: nothing the user typed has
+        /// changed, so a recount must not start reporting errors against values that
+        /// were accepted when they were entered.
+        /// </summary>
+        public void UpdateEarliestStartAndLatestFinishDateTimes()
+        {
+            RefreshStartAndFinishValues();
+            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
+            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
+        }
+
         public DependentActivityModel DeepCopy()
         {
             var activityModel = new ActivityModel
@@ -1039,6 +1224,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 HasNoEffort = HasNoEffort,
                 HasNoRisk = HasNoRisk,
                 Duration = Duration,
+                MostLikelyDuration = MostLikelyDuration,
+                OptimisticDuration = OwnOptimisticDuration,
+                PessimisticDuration = OwnPessimisticDuration,
                 FreeSlack = FreeSlack,
                 TotalSlack = TotalSlack,
                 EarliestStartTime = EarliestStartTime,
@@ -1175,6 +1363,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 UpdateActivityTargetResources();
                 UpdateActivityTargetWorkStreams();
                 TrackerSet.RefreshIndex();
+
+                // First, before anything announces the edit: a compilation that is running has not seen it, and
+                // must not be able to publish and call the plan current in between (ARCHITECTURE section 7 rule 14).
+                // The wait for the core lock that the next line makes used to order the edit after the compilation.
+                if (!IsEditMuted)
+                {
+                    m_CoreViewModel.NoteInputsChanged();
+                }
+
                 m_CoreViewModel.IsProjectScenarioUpdated = true;
 
                 if (!IsEditMuted)
@@ -1202,14 +1399,28 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            TrackerSet.StartSubscriptions();
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
-            m_ProjectStartSub?.Dispose();
-            m_DateTimeCalculatorCalculatorModeSub?.Dispose();
+            m_SubscriptionLifetime.Kill();
             m_DateTimeCalculatorDisplayModeSub?.Dispose();
             m_CompilationSub?.Dispose();
+            TrackerSet.KillSubscriptions();
         }
 
         #endregion

@@ -1,7 +1,10 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2">
   <PropertyGroup>
-    <OutputName>projectplandotnet.0.10.0.installer.$(Platform)</OutputName>
-    <Platforms>x86;x64;ARM64</Platforms>
+    <!-- The installer holds the x64 publish (readme.txt), and so x64 is its only platform, also for a build that names none.
+         CheckTheInstallerInputs stops a build for a different platform. The default comes before OutputName, which uses it. -->
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <Platforms>x64</Platforms>
+    <OutputName>projectplandotnet.0.11.0-alpha.installer.$(Platform)</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>false</SuppressValidation>
@@ -17,7 +20,55 @@
     <PackageReference Include="WixToolset.UI.wixext" Version="[5.0.2,6.0)" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Zametek.ProjectPlan.CommandLine\Zametek.ProjectPlan.CommandLine.csproj" />
-    <ProjectReference Include="..\..\src\Zametek.ProjectPlan.Desktop\Zametek.ProjectPlan.Desktop.csproj" />
+    <!-- The platform of the installer is not the platform of the two projects. Without GlobalPropertiesToRemove, a build with
+         -p:Platform=x64 builds them in bin\x64\, and the installer then looks for the publish there and not in bin\Release\,
+         where the makefile writes it. Visual Studio builds them with the platform that the solution gives them. -->
+    <ProjectReference Include="..\..\src\Zametek.ProjectPlan.CommandLine\Zametek.ProjectPlan.CommandLine.csproj" GlobalPropertiesToRemove="Platform" />
+    <ProjectReference Include="..\..\src\Zametek.ProjectPlan.Desktop\Zametek.ProjectPlan.Desktop.csproj" GlobalPropertiesToRemove="Platform" />
   </ItemGroup>
+  <!--
+    The installer packs what the publish wrote: <name>.exe in win-x64\publish\ of the output folder of each referenced project
+    (CommandLineComponents.wxs, DesktopComponents.wxs). The build does not make the publish, and WiX packs whatever it finds.
+    Thus, this target stops the build if the platform is not x64, if a file of the publish is not there, or if a file under src
+    or a build file at the root is newer than the publish, which then comes from older code. It does not compare the publish
+    with the output of the two projects: the build of the installer builds them again after a change, also after a new publish.
+  -->
+  <Target Name="CheckTheInstallerInputs" BeforeTargets="CoreCompile">
+    <Error Condition=" '$(Platform)' != 'x64' or '$(InstallerPlatform)' != 'x64' "
+           Text="The installer holds the x64 publish only, and so its platform must be x64. The platform is '$(Platform)', and the installer platform is '$(InstallerPlatform)'." />
+    <ItemGroup>
+      <_InstallerCommandLineOutput Include="@(_WixReferencedProjectOutputs)" Condition=" '%(Filename)' == 'zpp' " />
+      <_InstallerDesktopOutput Include="@(_WixReferencedProjectOutputs)" Condition=" '%(Filename)' == 'projectplandotnet' " />
+    </ItemGroup>
+    <Error Condition=" '@(_InstallerCommandLineOutput->Count())' != '1' or '@(_InstallerDesktopOutput->Count())' != '1' "
+           Text="The installer packs zpp.exe and projectplandotnet.exe from the publish of the two referenced projects, but their outputs are '@(_WixReferencedProjectOutputs)'. Change CheckTheInstallerInputs in this project." />
+    <PropertyGroup>
+      <_InstallerCommandLinePublish>@(_InstallerCommandLineOutput->'%(RootDir)%(Directory)win-x64\publish\zpp.exe')</_InstallerCommandLinePublish>
+      <_InstallerDesktopPublish>@(_InstallerDesktopOutput->'%(RootDir)%(Directory)win-x64\publish\projectplandotnet.exe')</_InstallerDesktopPublish>
+    </PropertyGroup>
+    <Error Condition=" !Exists('$(_InstallerCommandLinePublish)') "
+           Text="The installer packs '$(_InstallerCommandLinePublish)', and the file is not there. Publish first: make publish-desktop publish-cli ARCH=x64 OS=win" />
+    <Error Condition=" !Exists('$(_InstallerDesktopPublish)') "
+           Text="The installer packs '$(_InstallerDesktopPublish)', and the file is not there. Publish first: make publish-desktop publish-cli ARCH=x64 OS=win" />
+    <!-- The older file of the two decides. Do not find it with a property in batches: each batch sees the value from before
+         the batches, and so the property keeps the value of the last batch and not the minimum. -->
+    <PropertyGroup>
+      <_InstallerRepositoryRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', '..'))</_InstallerRepositoryRoot>
+      <_OldestPublishTicks>$([System.IO.File]::GetLastWriteTime('$(_InstallerCommandLinePublish)').Ticks)</_OldestPublishTicks>
+      <_DesktopPublishTicks>$([System.IO.File]::GetLastWriteTime('$(_InstallerDesktopPublish)').Ticks)</_DesktopPublishTicks>
+      <_OldestPublishTicks Condition=" $(_DesktopPublishTicks) &lt; $(_OldestPublishTicks) ">$(_DesktopPublishTicks)</_OldestPublishTicks>
+    </PropertyGroup>
+    <ItemGroup>
+      <_InstallerSource Include="$(_InstallerRepositoryRoot)src\**\*;$(_InstallerRepositoryRoot)Directory.*.props;$(_InstallerRepositoryRoot)Directory.*.targets"
+                        Exclude="$(_InstallerRepositoryRoot)src\**\bin\**;$(_InstallerRepositoryRoot)src\**\obj\**;$(_InstallerRepositoryRoot)src\**\*.user;$(_InstallerRepositoryRoot)src\**\launchSettings.json" />
+      <_SourceNewerThanThePublish Include="@(_InstallerSource)"
+                                  Condition=" $([System.IO.File]::GetLastWriteTime('%(FullPath)').Ticks) &gt; $(_OldestPublishTicks) " />
+    </ItemGroup>
+    <!-- For the same reason, this property in batches is the last newer file: the example in the message. -->
+    <PropertyGroup>
+      <_SourceNewerThanThePublishExample>%(_SourceNewerThanThePublish.FullPath)</_SourceNewerThanThePublishExample>
+    </PropertyGroup>
+    <Error Condition=" '@(_SourceNewerThanThePublish)' != '' "
+           Text="The publish that the installer packs is older than the code. Newer files: @(_SourceNewerThanThePublish->Count()), for example '$(_SourceNewerThanThePublishExample)'. Publish again: make publish-desktop publish-cli ARCH=x64 OS=win" />
+  </Target>
 </Project>

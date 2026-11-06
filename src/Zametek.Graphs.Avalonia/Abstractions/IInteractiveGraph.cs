@@ -25,6 +25,10 @@ namespace Zametek.Graphs.Avalonia
 
         ObservableCollection<GraphEdgeViewModel> GraphEdges { get; }
 
+        // Whether the graph has a node, and thus an image. A graph with no nodes has none: the context menu offers Copy Image
+        // and Save As only while this is true, and the Save commands run only then.
+        bool HasNodes { get; }
+
         // The themable appearance in effect (defaults to GraphAppearance.Default). Read by the export
         // renderer so an appearance re-skin also shows in the copied / saved image.
         GraphAppearance Appearance { get; }
@@ -85,9 +89,10 @@ namespace Zametek.Graphs.Avalonia
         // Rebuild the displayed graph from the host's current data and re-run the layout.
         void Refresh();
 
-        // Export the graph to a file, choosing between the live interactive canvas and the fixed
-        // MSAGL layout. GraphML/GraphViz exports are independent of the chosen source.
-        Task SaveImageAsync(string? filename, GraphImageSource source, FixedLayoutGraphType imageType);
+        // Write the graph to a stream in the given format, choosing between the live interactive canvas and
+        // the fixed MSAGL layout. GraphML/GraphViz exports are independent of the chosen source. The caller
+        // owns the stream, which is left open; a failure is thrown rather than reported.
+        Task WriteImageAsync(Stream stream, GraphFileFormat format, GraphImageSource source, FixedLayoutGraphType imageType);
 
         // Surface an error to the user.
         Task ReportErrorAsync(string message);

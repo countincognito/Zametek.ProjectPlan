@@ -9,8 +9,12 @@ namespace Zametek.Graphs.Avalonia
     // public IMsaglSvgRenderer seam was removed for that reason).
     internal static class MsaglSvgRenderer
     {
+        // The nodes and edges are written in the order given (the diagram's), not in the order the graph
+        // enumerates them, which follows MSAGL's Hashtable of node ids and so differs between processes.
         public static byte[] RenderToSvg(
             Microsoft.Msagl.Drawing.Graph graph,
+            IReadOnlyList<Microsoft.Msagl.Drawing.Node> nodes,
+            IReadOnlyList<Microsoft.Msagl.Drawing.Edge> edges,
             GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(graph);
@@ -19,7 +23,7 @@ namespace Zametek.Graphs.Avalonia
             using var writer = new StreamWriter(ms);
 
             var svgWriter = new MsaglSvgGraphWriter(writer.BaseStream, graph);
-            svgWriter.Write();
+            svgWriter.WriteInOrder(nodes, edges);
             ms.Position = 0;
             using var sr = new StreamReader(ms);
 

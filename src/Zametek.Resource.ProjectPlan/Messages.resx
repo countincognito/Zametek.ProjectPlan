@@ -117,6 +117,48 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Message_ServeErrorMustBeABoolean" xml:space="preserve">
+    <value>must be true or false</value>
+  </data>
+  <data name="Message_ServeLimitTooHigh" xml:space="preserve">
+    <value>{0} ({1}) must be at most {2}.</value>
+  </data>
+  <data name="Message_ServeTitleSimulationNotPossible" xml:space="preserve">
+    <value>The simulation cannot be done</value>
+  </data>
+  <data name="Message_SimulationCompilationErrors" xml:space="preserve">
+    <value>The plan has compilation errors, and cannot be simulated.</value>
+  </data>
+  <data name="Message_SimulationFilesSaved" xml:space="preserve">
+    <value>{0} files were saved in {1}.</value>
+  </data>
+  <data name="Message_SimulationIterationsAboveLimit" xml:space="preserve">
+    <value>The simulation of the plan has {0} iterations, and a run can have {1} at most.</value>
+  </data>
+  <data name="Message_SimulationIterationsOutOfRange" xml:space="preserve">
+    <value>The number of iterations must be from 1 to {0}.</value>
+  </data>
+  <data name="Message_SimulationNoActivities" xml:space="preserve">
+    <value>The plan has no activities to simulate.</value>
+  </data>
+  <data name="Message_SimulationNoIterations" xml:space="preserve">
+    <value>The iterations of a run are not in a project file. Run the simulation again to have them.</value>
+  </data>
+  <data name="Message_SimulationNoResult" xml:space="preserve">
+    <value>There is no simulation result.</value>
+  </data>
+  <data name="Message_SimulationOutputsNeedAResult" xml:space="preserve">
+    <value>The plan has no simulation result to make the outputs from, and the simulation was not asked to run.</value>
+  </data>
+  <data name="Message_SimulationShapeOutOfRange" xml:space="preserve">
+    <value>The shape value must be a number above 0.</value>
+  </data>
+  <data name="Message_TransitiveReductionCompilationErrors" xml:space="preserve">
+    <value>The plan has compilation errors, and the transitive reduction cannot be made. Nothing was changed.</value>
+  </data>
+  <data name="Message_TransitiveReductionPlanChanged" xml:space="preserve">
+    <value>The dependencies of the plan were changed while the transitive reduction was made. Nothing was changed. Make the transitive reduction again.</value>
+  </data>
   <data name="Message_VertexGraphDataContainsNoEndNodes" xml:space="preserve">
     <value>Vertex Graph Data contains no End nodes</value>
   </data>
@@ -365,5 +407,401 @@
   </data>
   <data name="Message_CompilationTimedOut" xml:space="preserve">
     <value>The compilation did not complete within the time limit of {0} ms and was cancelled. Raise the compilation timeout to allow longer.</value>
+  </data>
+  <data name="Message_SpecifyEitherOptionNotBoth" xml:space="preserve">
+    <value>Specify either {0} or {1}, but not both.</value>
+  </data>
+  <data name="Message_OptionsOnlyValidWithOption" xml:space="preserve">
+    <value>{0} and {1} are only valid with {2}.</value>
+  </data>
+  <data name="Message_OptionCannotBeNegative" xml:space="preserve">
+    <value>{0} cannot be negative (use 0 for no limit).</value>
+  </data>
+  <data name="Message_OptionMustBeADateTimeWithOffset" xml:space="preserve">
+    <value>{0} must be a date and time with its offset from UTC, such as 2026-09-27T12:00:00+01:00 or 2026-09-27T11:00:00Z.</value>
+  </data>
+  <data name="Message_OptionRequiredWithOption" xml:space="preserve">
+    <value>{0} is required when {1} is specified.</value>
+  </data>
+  <data name="Message_DirectoryDoesNotExist" xml:space="preserve">
+    <value>Directory {0} does not exist</value>
+  </data>
+  <data name="Message_NoScenarioMatches" xml:space="preserve">
+    <value>No scenario matches '{0}' - use {1} to see what the project contains</value>
+  </data>
+  <data name="Message_SeveralScenariosMatch" xml:space="preserve">
+    <value>'{0}' matches {1} scenarios - use {2} and select one by id</value>
+  </data>
+  <data name="Message_ScenarioHasNoScenarioData" xml:space="preserve">
+    <value>Scenario '{0}' has no scenario data in the project file</value>
+  </data>
+  <data name="Message_UnknownProjectFileVersion" xml:space="preserve">
+    <value>Unable to open file: unknown version '{0}'</value>
+  </data>
+  <data name="Message_NoScenarioMatchesSelector" xml:space="preserve">
+    <value>No scenario matches '{0}'</value>
+  </data>
+  <data name="Message_SeveralScenariosMatchSelector" xml:space="preserve">
+    <value>'{0}' matches {1} scenarios</value>
+  </data>
+  <data name="Message_FileIsEmpty" xml:space="preserve">
+    <value>{0} is empty.</value>
+  </data>
+  <data name="Message_CultureNotKnown" xml:space="preserve">
+    <value>'{0}' is not a culture this machine knows.</value>
+  </data>
+  <data name="Message_ServeListenAddressNotValid" xml:space="preserve">
+    <value>'{0}' is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770 - or unix: and the path of a socket.</value>
+  </data>
+  <data name="Message_ServeNeedsApiKey" xml:space="preserve">
+    <value>Other machines can reach {0}, so zpp serve needs an API key to listen there: set {1}, or use {2}.</value>
+  </data>
+  <data name="Message_ServeHttpsNeedsCertificate" xml:space="preserve">
+    <value>{0} needs a certificate: use {1}.</value>
+  </data>
+  <data name="Message_ServeCertificateNeedsHttps" xml:space="preserve">
+    <value>{0} is only valid with an https address to listen on.</value>
+  </data>
+  <data name="Message_ServeSettingsNotValid" xml:space="preserve">
+    <value>The limits in {0} or in the {1} environment variables could not be read: {2}</value>
+  </data>
+  <data name="Message_ServeLimitTooLow" xml:space="preserve">
+    <value>{0} ({1}) must be at least {2}.</value>
+  </data>
+  <data name="Message_ServeCannotImport" xml:space="preserve">
+    <value>zpp serve imports .xlsx files only: import {0} with zpp itself.</value>
+  </data>
+  <data name="Message_ServeRequestTooLarge" xml:space="preserve">
+    <value>The request is larger than the {0} MB the server accepts.</value>
+  </data>
+  <data name="Message_ServeRequestNotReadable" xml:space="preserve">
+    <value>The request could not be read as multipart/form-data.</value>
+  </data>
+  <data name="Message_ServeJobTimedOut" xml:space="preserve">
+    <value>The job ran for longer than the server's limit of {0} seconds, and was stopped.</value>
+  </data>
+  <data name="Message_ServeApiKeyRequired" xml:space="preserve">
+    <value>The request needs the server's API key, as Authorization: Bearer &lt;key&gt;.</value>
+  </data>
+  <data name="Message_ServeBusy" xml:space="preserve">
+    <value>The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.</value>
+  </data>
+  <data name="Message_ServeUnixSocketNeedsPath" xml:space="preserve">
+    <value>'{0}' gives no path for the socket: give unix: and the path of the socket to listen on, such as unix:/tmp/zpp.sock.</value>
+  </data>
+  <data name="Message_ServerNotValid" xml:space="preserve">
+    <value>'{0}', from {1}, is not a server zpp can run on: give its http or https address, such as http://localhost:9770, or unix: and the path of its socket.</value>
+  </data>
+  <data name="Message_OptionOnlyValidWithServer" xml:space="preserve">
+    <value>{0} is only valid when zpp runs on a server: use {1}, or set {2}.</value>
+  </data>
+  <data name="Message_ServerCannotImport" xml:space="preserve">
+    <value>zpp serve imports .xlsx files only: to import {0}, run zpp without {1}.</value>
+  </data>
+  <data name="Message_ServerFromEnvironmentCannotImport" xml:space="preserve">
+    <value>{0} is set, so zpp runs on a server, which imports .xlsx files only: to import {1}, use {2}.</value>
+  </data>
+  <data name="Message_ServerUnreachable" xml:space="preserve">
+    <value>zpp could not reach the server at {0}: {1}</value>
+  </data>
+  <data name="Message_ServerRefused" xml:space="preserve">
+    <value>The server at {0} did not run the job: {1}</value>
+  </data>
+  <data name="Message_ServerNeedsApiKey" xml:space="preserve">
+    <value>The server at {0} needs its API key: set {1}, or use {2}.</value>
+  </data>
+  <data name="Message_ServerRefusedApiKey" xml:space="preserve">
+    <value>The server at {0} did not accept the API key.</value>
+  </data>
+  <data name="Message_ServerStayedBusy" xml:space="preserve">
+    <value>The server at {0} was still busy after {1} seconds, so the job did not run.</value>
+  </data>
+  <data name="Message_ServerAnswerNotValid" xml:space="preserve">
+    <value>The server at {0} gave an answer zpp cannot read: {1}</value>
+  </data>
+  <data name="Message_ServerAnswerDoesNotMatchJob" xml:space="preserve">
+    <value>it does not match the job zpp sent.</value>
+  </data>
+  <data name="Message_ServerSocketNotThere" xml:space="preserve">
+    <value>there is no socket at {0}.</value>
+  </data>
+  <data name="Message_OptionNeedsValue" xml:space="preserve">
+    <value>{0} needs a value.</value>
+  </data>
+  <data name="Message_OptionTakesNoValue" xml:space="preserve">
+    <value>{0} takes no value.</value>
+  </data>
+  <data name="Message_OptionTakesAtMostValues" xml:space="preserve">
+    <value>{0} takes at most {1} values.</value>
+  </data>
+  <data name="Message_ArgumentNotOptionOrValue" xml:space="preserve">
+    <value>'{0}' is not an option, nor the value of one: {1} lists the options.</value>
+  </data>
+  <data name="Message_OptionGivenMoreThanOnce" xml:space="preserve">
+    <value>{0} can only be given once.</value>
+  </data>
+  <data name="Message_ServeUnixSocketListedTwice" xml:space="preserve">
+    <value>The socket {0} is listed more than once.</value>
+  </data>
+  <data name="Message_UnixSocketPathTooLong" xml:space="preserve">
+    <value>'{0}' is too long to be the path of a socket.</value>
+  </data>
+  <data name="Message_ServeUnixSocketCannotTell" xml:space="preserve">
+    <value>zpp serve cannot tell whether a server is listening on the socket {0}: {1}</value>
+  </data>
+  <data name="Message_ServeUnixSocketFolderNotThere" xml:space="preserve">
+    <value>There is no folder {0} for the socket {1}.</value>
+  </data>
+  <data name="Message_ServeUnixSocketInUse" xml:space="preserve">
+    <value>A server is already listening on the socket {0}.</value>
+  </data>
+  <data name="Message_ServeUnixSocketIsAFile" xml:space="preserve">
+    <value>{0} is a file, not a socket left behind by a server, and zpp serve does not remove it.</value>
+  </data>
+  <data name="Message_ServeUnixSocketIsAFolder" xml:space="preserve">
+    <value>{0} is a folder, not a socket.</value>
+  </data>
+  <data name="Message_ServeUnixSocketCannotRestrict" xml:space="preserve">
+    <value>zpp serve cannot restrict the socket {0} to its owner: {1}</value>
+  </data>
+  <data name="Message_ServeTitleMalformedRequest" xml:space="preserve">
+    <value>The request could not be understood</value>
+  </data>
+  <data name="Message_ServeTitleValidationFailed" xml:space="preserve">
+    <value>The request is not valid</value>
+  </data>
+  <data name="Message_ServeTitleProjectNotReadable" xml:space="preserve">
+    <value>The project could not be read</value>
+  </data>
+  <data name="Message_ServeTitleCompilationFailed" xml:space="preserve">
+    <value>The project did not compile</value>
+  </data>
+  <data name="Message_ServeTitleCompilationTimedOut" xml:space="preserve">
+    <value>The compilation ran out of time</value>
+  </data>
+  <data name="Message_ServeTitleScenarioNotSelectable" xml:space="preserve">
+    <value>The scenario cannot be selected</value>
+  </data>
+  <data name="Message_ServeTitleOutputFailed" xml:space="preserve">
+    <value>An output could not be produced</value>
+  </data>
+  <data name="Message_ServeTitleUnexpectedError" xml:space="preserve">
+    <value>The server could not process the request</value>
+  </data>
+  <data name="Message_ServeTitleBusy" xml:space="preserve">
+    <value>The server is busy</value>
+  </data>
+  <data name="Message_ServeTitleJobTimeout" xml:space="preserve">
+    <value>The job took too long</value>
+  </data>
+  <data name="Message_ServeRequestHasAProblem" xml:space="preserve">
+    <value>The request has a problem.</value>
+  </data>
+  <data name="Message_ServeRequestHasProblems" xml:space="preserve">
+    <value>The request has {0} problems.</value>
+  </data>
+  <data name="Message_ServeRequestNotMultipartCompile" xml:space="preserve">
+    <value>Send the request as multipart/form-data: the project as a file named 'project' - or a workbook to import, named 'import' - and its options as JSON in a part named 'options'.</value>
+  </data>
+  <data name="Message_ServeRequestNotMultipartScenarios" xml:space="preserve">
+    <value>Send the request as multipart/form-data: the project as a file named 'project'.</value>
+  </data>
+  <data name="Message_ServeNotAcceptable" xml:space="preserve">
+    <value>The server can answer as {0}.</value>
+  </data>
+  <data name="Message_ServeOptionsTooLarge" xml:space="preserve">
+    <value>The options are larger than the {0} KB the server accepts.</value>
+  </data>
+  <data name="Message_ServeProjectNotReadable" xml:space="preserve">
+    <value>The file could not be read as a project.</value>
+  </data>
+  <data name="Message_ServeWorkbookNotReadable" xml:space="preserve">
+    <value>The file could not be read as a workbook.</value>
+  </data>
+  <data name="Message_ServeProjectHasACompilationError" xml:space="preserve">
+    <value>The project has a compilation error.</value>
+  </data>
+  <data name="Message_ServeProjectHasCompilationErrors" xml:space="preserve">
+    <value>The project has {0} compilation errors.</value>
+  </data>
+  <data name="Message_ServeCompilationTimedOut" xml:space="preserve">
+    <value>The compilation did not finish within its time limit.</value>
+  </data>
+  <data name="Message_ServeAnOutputFailed" xml:space="preserve">
+    <value>An output could not be produced.</value>
+  </data>
+  <data name="Message_ServeOutputFailed" xml:space="preserve">
+    <value>The {0} could not be produced.</value>
+  </data>
+  <data name="Message_ServeOutputsFailed" xml:space="preserve">
+    <value>{0} outputs could not be produced.</value>
+  </data>
+  <data name="Message_ServeUnexpectedError" xml:space="preserve">
+    <value>The server failed to process the request. Its log says why, under the request's trace id.</value>
+  </data>
+  <data name="Message_ServeUnexpectedErrorConsole" xml:space="preserve">
+    <value>The server failed to process the request (trace id {0}).</value>
+  </data>
+  <data name="Message_ServerReasonWithRequestId" xml:space="preserve">
+    <value>{0} (trace id {1})</value>
+  </data>
+  <data name="Message_ServeErrorRequired" xml:space="preserve">
+    <value>is required</value>
+  </data>
+  <data name="Message_ServeErrorProjectRequired" xml:space="preserve">
+    <value>is required: send the project as a file named 'project', or a workbook to import as 'import'</value>
+  </data>
+  <data name="Message_ServeErrorProjectRequiredForScenarios" xml:space="preserve">
+    <value>is required: send the project as a file named 'project'</value>
+  </data>
+  <data name="Message_ServeErrorProjectOrImport" xml:space="preserve">
+    <value>send a project or a workbook to import, not both</value>
+  </data>
+  <data name="Message_ServeErrorFileNeedsName" xml:space="preserve">
+    <value>needs a name: the outputs are named after it</value>
+  </data>
+  <data name="Message_ServeErrorPartNotKnown" xml:space="preserve">
+    <value>'{0}' is not a part this endpoint takes</value>
+  </data>
+  <data name="Message_ServeErrorParameterNotKnown" xml:space="preserve">
+    <value>is not a parameter this endpoint takes</value>
+  </data>
+  <data name="Message_ServeErrorIncludeNotKnown" xml:space="preserve">
+    <value>'{0}' is not something the answer can include: use console</value>
+  </data>
+  <data name="Message_ServeErrorNotKnown" xml:space="preserve">
+    <value>is not known here: check its spelling</value>
+  </data>
+  <data name="Message_ServeErrorOnlyWithProject" xml:space="preserve">
+    <value>is only valid with a project sent as 'project'</value>
+  </data>
+  <data name="Message_ServeErrorOptionsTooLarge" xml:space="preserve">
+    <value>must be at most {0} KB</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAFile" xml:space="preserve">
+    <value>must be a file</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAWorkbook" xml:space="preserve">
+    <value>must be an Excel workbook (.xlsx)</value>
+  </data>
+  <data name="Message_ServeErrorMustBeMultipart" xml:space="preserve">
+    <value>must be valid multipart/form-data</value>
+  </data>
+  <data name="Message_ServeErrorMustBeJson" xml:space="preserve">
+    <value>must be valid JSON (line {0}, position {1})</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAnObject" xml:space="preserve">
+    <value>must be a JSON object</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAString" xml:space="preserve">
+    <value>must be a string</value>
+  </data>
+  <data name="Message_ServeErrorMustBeAWholeNumber" xml:space="preserve">
+    <value>must be a whole number</value>
+  </data>
+  <data name="Message_ServeErrorMustBeOneOf" xml:space="preserve">
+    <value>must be one of: {0}</value>
+  </data>
+  <data name="Message_ServeErrorMustBeADuration" xml:space="preserve">
+    <value>must be a duration of days, hours, minutes and seconds, such as PT5S</value>
+  </data>
+  <data name="Message_ServeErrorMustBeADateTimeWithOffset" xml:space="preserve">
+    <value>must be a date and time with its offset from UTC, such as 2026-10-03T09:00:00+01:00</value>
+  </data>
+  <data name="Message_ServeErrorDurationOutOfRange" xml:space="preserve">
+    <value>must be from {0} to {1}</value>
+  </data>
+  <data name="Message_ServeErrorPixelsOutOfRange" xml:space="preserve">
+    <value>must be from 1 to {0} pixels</value>
+  </data>
+  <data name="Message_ServeApiKeyTooShort" xml:space="preserve">
+    <value>The API key must be at least {0} characters. A random 256-bit key is 44: make one with openssl rand -base64 32.</value>
+  </data>
+  <data name="Message_ServePlainHttpBeyondThisMachine" xml:space="preserve">
+    <value>{0} is plain http, which sends the API key and every project in the clear to any machine on the way. Listen on https instead - or, if a proxy in front of zpp serve ends TLS and only the proxy can reach this address, say so with {1}.</value>
+  </data>
+  <data name="Message_ServeBehindTlsProxyNeedsHttp" xml:space="preserve">
+    <value>{0} is only valid with an http address that other machines can reach to listen on: it says that a proxy in front of zpp serve ends TLS.</value>
+  </data>
+  <data name="Message_ServePlainHttpBesideTls" xml:space="preserve">
+    <value>{0} is plain http and {1} is https, and other machines can reach both: a client could use the one that is not protected. Listen beyond this machine on one kind of address.</value>
+  </data>
+  <data name="Message_ImportNotAWholeNumber" xml:space="preserve">
+    <value>"{0}" is not a whole number.</value>
+  </data>
+  <data name="Message_ImportNotANumber" xml:space="preserve">
+    <value>"{0}" is not a number.</value>
+  </data>
+  <data name="Message_ImportNotTrueOrFalse" xml:space="preserve">
+    <value>"{0}" is not TRUE or FALSE.</value>
+  </data>
+  <data name="Message_ImportNotADate" xml:space="preserve">
+    <value>"{0}" is not a date.</value>
+  </data>
+  <data name="Message_ImportNotAChoice" xml:space="preserve">
+    <value>"{0}" is not one of these choices: {1}.</value>
+  </data>
+  <data name="Message_ImportNotAColor" xml:space="preserve">
+    <value>"{0}" is not a color in the form #RRGGBB or #RRGGBBAA.</value>
+  </data>
+  <data name="Message_ImportExcelError" xml:space="preserve">
+    <value>The cell holds the Excel error {0}.</value>
+  </data>
+  <data name="Message_ImportMissingValue" xml:space="preserve">
+    <value>The cell is blank, but this column needs a value.</value>
+  </data>
+  <data name="Message_ImportDuplicateId" xml:space="preserve">
+    <value>The Id {0} is also the Id of row {1}.</value>
+  </data>
+  <data name="Message_ImportUnknownActivity" xml:space="preserve">
+    <value>The workbook has no activity with the Id {0}.</value>
+  </data>
+  <data name="Message_ImportMissingColumn" xml:space="preserve">
+    <value>The sheet has no column with the title "{0}".</value>
+  </data>
+  <data name="Message_ImportDuplicateColumn" xml:space="preserve">
+    <value>The title "{0}" is also the title of column {1}.</value>
+  </data>
+  <data name="Message_ImportMissingHeader" xml:space="preserve">
+    <value>The sheet has no row of titles.</value>
+  </data>
+  <data name="Message_ImportNoKnownSheet" xml:space="preserve">
+    <value>The workbook has none of the sheets that the import reads.</value>
+  </data>
+  <data name="Message_ImportUnreadableWorkbook" xml:space="preserve">
+    <value>The file cannot be read as a workbook. {0}</value>
+  </data>
+  <data name="Message_ImportProblemsFound" xml:space="preserve">
+    <value>The import was cancelled and nothing was changed. Problems found in the file: {0}.</value>
+  </data>
+  <data name="Message_ImportMoreProblems" xml:space="preserve">
+    <value>And {0} more.</value>
+  </data>
+  <data name="Message_ImportSaveReport" xml:space="preserve">
+    <value>Do you want to save a report of all {0} problems?</value>
+  </data>
+  <data name="Message_ImportFirstProblemsListed" xml:space="preserve">
+    <value>The first {0} are listed.</value>
+  </data>
+  <data name="Message_RunCancelled" xml:space="preserve">
+    <value>The run was cancelled.</value>
+  </data>
+  <data name="Message_RunStopping" xml:space="preserve">
+    <value>Stopping after the step that is in progress. Press Ctrl+C again to stop at once.</value>
+  </data>
+  <data name="Message_SimulationThreadsOutOfRange" xml:space="preserve">
+    <value>The number of threads must be -1 (all the processors), or 1 or more.</value>
+  </data>
+  <data name="Message_ServeErrorJobIdNotValid" xml:space="preserve">
+    <value>must be the 32 hexadecimal characters of the trace id that the request which began the job gave</value>
+  </data>
+  <data name="Message_ServeJobNotRunning" xml:space="preserve">
+    <value>No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it.</value>
+  </data>
+  <data name="Message_SimulationWorkbookSaved" xml:space="preserve">
+    <value>The workbook was saved as {0}.</value>
+  </data>
+  <data name="Message_SimulationIterationsFitNoSheet" xml:space="preserve">
+    <value>The result has {0} iterations, and a sheet of Excel has room for {1}.</value>
   </data>
 </root>

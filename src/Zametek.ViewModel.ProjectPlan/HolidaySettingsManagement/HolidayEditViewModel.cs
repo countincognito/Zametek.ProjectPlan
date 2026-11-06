@@ -13,10 +13,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
-        private readonly IDisposable? m_ReviseRecurrencePattern01Sub;
-        private readonly IDisposable? m_ReviseRecurrencePattern02Sub;
-        private readonly IDisposable? m_ReviseRecurrencePattern03Sub;
-        private readonly IDisposable? m_ReviseRecurrencePattern04Sub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ReviseRecurrencePattern01Sub;
+        private IDisposable? m_ReviseRecurrencePattern02Sub;
+        private IDisposable? m_ReviseRecurrencePattern03Sub;
+        private IDisposable? m_ReviseRecurrencePattern04Sub;
 
         #endregion
 
@@ -70,53 +72,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_RecurrenceRule = managedHolidayViewModel.RecurrenceRule ?? new RecurrenceRuleModel();
             LoadFromRecurrenceRule();
-
-            m_ReviseRecurrencePattern01Sub = this
-                .WhenAnyValue(
-                    x => x.StartDateTime,
-                    x => x.RecurrenceFrequency,
-                    x => x.Interval,
-                    x => x.IsEndNever,
-                    x => x.IsEndUntil,
-                    x => x.IsEndCount,
-                    x => x.Until)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RebuildRecurrenceRule());
-
-            m_ReviseRecurrencePattern02Sub = this
-                .WhenAnyValue(
-                    x => x.ByWeekDaysMonday,
-                    x => x.ByWeekDaysTuesday,
-                    x => x.ByWeekDaysWednesday,
-                    x => x.ByWeekDaysThursday,
-                    x => x.ByWeekDaysFriday,
-                    x => x.ByWeekDaysSaturday,
-                    x => x.ByWeekDaysSunday)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RebuildRecurrenceRule());
-
-            m_ReviseRecurrencePattern03Sub = this
-                .WhenAnyValue(
-                    x => x.Count,
-                    x => x.IsMonthDay,
-                    x => x.IsMonthWeekday,
-                    x => x.ByMonthDay,
-                    x => x.ByMonthSetPosSelection,
-                    x => x.ByMonthWeekdaySelection)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RebuildRecurrenceRule());
-
-            m_ReviseRecurrencePattern04Sub = this
-                .WhenAnyValue(
-                    x => x.IsYearlyMonthDay,
-                    x => x.IsYearlyMonthWeekday,
-                    x => x.YearlyDayOfMonth,
-                    x => x.YearlySetPosSelection,
-                    x => x.YearlyWeekdaySelection,
-                    x => x.YearlyMonthSelection)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RebuildRecurrenceRule());
-
         }
 
         #endregion
@@ -987,10 +942,69 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_ReviseRecurrencePattern01Sub = this
+                .WhenAnyValue(
+                    x => x.StartDateTime,
+                    x => x.RecurrenceFrequency,
+                    x => x.Interval,
+                    x => x.IsEndNever,
+                    x => x.IsEndUntil,
+                    x => x.IsEndCount,
+                    x => x.Until)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrenceRule());
+
+            m_ReviseRecurrencePattern02Sub = this
+                .WhenAnyValue(
+                    x => x.ByWeekDaysMonday,
+                    x => x.ByWeekDaysTuesday,
+                    x => x.ByWeekDaysWednesday,
+                    x => x.ByWeekDaysThursday,
+                    x => x.ByWeekDaysFriday,
+                    x => x.ByWeekDaysSaturday,
+                    x => x.ByWeekDaysSunday)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrenceRule());
+
+            m_ReviseRecurrencePattern03Sub = this
+                .WhenAnyValue(
+                    x => x.Count,
+                    x => x.IsMonthDay,
+                    x => x.IsMonthWeekday,
+                    x => x.ByMonthDay,
+                    x => x.ByMonthSetPosSelection,
+                    x => x.ByMonthWeekdaySelection)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrenceRule());
+
+            m_ReviseRecurrencePattern04Sub = this
+                .WhenAnyValue(
+                    x => x.IsYearlyMonthDay,
+                    x => x.IsYearlyMonthWeekday,
+                    x => x.YearlyDayOfMonth,
+                    x => x.YearlySetPosSelection,
+                    x => x.YearlyWeekdaySelection,
+                    x => x.YearlyMonthSelection)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrenceRule());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ReviseRecurrencePattern01Sub?.Dispose();
             m_ReviseRecurrencePattern02Sub?.Dispose();
             m_ReviseRecurrencePattern03Sub?.Dispose();

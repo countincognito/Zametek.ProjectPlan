@@ -32,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
     /// DisplaySettingsViewModel.SetValues has installed the incoming filter.
     /// Activities live in a DynamicData SourceList that raises nothing when its
     /// contents change, so the Gantt selector needs the explicit
-    /// IsReadyToReviseTrackers signal, which is observed on
+    /// TrackersRevision signal, which is observed on
     /// Scheduler.CurrentThread by design (tracker updates must complete before
     /// a compilation starts) and therefore runs DURING a scenario load, before
     /// SetValues. Its tracker-driven revise must consequently preserve the
@@ -44,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </para>
     /// </remarks>
     public class EarnedValueResourceSelectorViewModel
-        : ResourceSelectorViewModel, IKillSubscriptions, IDisposable
+        : ResourceSelectorViewModel, IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         #region Fields
 
@@ -75,8 +75,10 @@ namespace Zametek.ViewModel.ProjectPlan
         // thread today, but the shape is kept uniform with that fix.
         private int m_RevisingCount;
 
-        private readonly IDisposable? m_ResourceSettingsSub;
-        private readonly IDisposable? m_ShowResourcesSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ResourceSettingsSub;
+        private IDisposable? m_ShowResourcesSub;
 
         #endregion
 
@@ -91,10 +93,9 @@ namespace Zametek.ViewModel.ProjectPlan
             SelectedTargetResources.CollectionChanged += SelectedTargetResources_CollectionChanged;
 
             // Initial set up. The seed is explicit rather than left to
-            // SetTargetResources so that it still works when this selector is
-            // constructed after a project scenario has already been loaded, in
-            // which case the revise signal below has been consumed already and
-            // will never fire.
+            // SetTargetResources, which only selects resources that are new to
+            // the selector, or to m_ShowResourcesSub, because a selector that is
+            // never started would never see it.
             try
             {
                 Interlocked.Increment(ref m_RevisingCount);
@@ -106,55 +107,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 Interlocked.Decrement(ref m_RevisingCount);
             }
-
-            m_ResourceSettingsSub = this
-                .WhenAnyValue(rs => rs.m_CoreViewModel.ResourceSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    try
-                    {
-                        // The resource set changed, not the filter, so refresh
-                        // the target list and keep the current selection (less
-                        // any resources that no longer exist). The persisted
-                        // filter is left alone: it tracks the selection, so it
-                        // is already in step with it.
-                        Interlocked.Increment(ref m_RevisingCount);
-                        ReviseResources();
-                    }
-                    finally
-                    {
-                        Interlocked.Decrement(ref m_RevisingCount);
-                    }
-                });
-
-            m_ShowResourcesSub = this
-                .WhenAnyValue(rs => rs.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseEarnedValueShowResources)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(isReadyToRevise =>
-                {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
-                    {
-                        try
-                        {
-                            // The persisted filter changed - a scenario was
-                            // loaded, or its resource ids were remapped - so it
-                            // is the authority here: refresh the target list,
-                            // then apply the filter explicitly. Leaving this to
-                            // SetTargetResources is not enough, because it only
-                            // selects resources that are new to the selector.
-                            Interlocked.Increment(ref m_RevisingCount);
-                            ReviseResources();
-                            SetSelectedTargetResources(
-                                [.. m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources]);
-                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseEarnedValueShowResources = ReadyToRevise.No;
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref m_RevisingCount);
-                        }
-                    }
-                });
         }
 
         #endregion
@@ -175,8 +127,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // of GanttChartShowConnections.
             if (m_RevisingCount == 0)
             {
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(SelectedResourceIds);
+                m_CoreViewModel.DisplaySettingsViewModel.SetEarnedValueShowResources(SelectedResourceIds);
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
         }
@@ -204,10 +155,74 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_ResourceSettingsSub = this
+                .WhenAnyValue(rs => rs.m_CoreViewModel.ResourceSettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        // The resource set changed, not the filter, so refresh
+                        // the target list and keep the current selection (less
+                        // any resources that no longer exist). The persisted
+                        // filter is left alone: it tracks the selection, so it
+                        // is already in step with it.
+                        Interlocked.Increment(ref m_RevisingCount);
+                        ReviseResources();
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref m_RevisingCount);
+                    }
+                });
+
+            // The handler reads the live filter, and so a delivery that a newer
+            // one follows has nothing to do: a load puts a filter in place three
+            // times, and the UI thread can be behind it. The first value runs the
+            // handler one time at the start, which applies a filter that arrived
+            // after the constructor.
+            m_ShowResourcesSub = this
+                .WhenAnyValue(rs => rs.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResourcesRevision)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Where(revision => revision == m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResourcesRevision)
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        // The persisted filter changed - a scenario was
+                        // loaded, or its resource ids were remapped - so it
+                        // is the authority here: refresh the target list,
+                        // then apply the filter explicitly. Leaving this to
+                        // SetTargetResources is not enough, because it only
+                        // selects resources that are new to the selector.
+                        Interlocked.Increment(ref m_RevisingCount);
+                        ReviseResources();
+                        SetSelectedTargetResources(
+                            [.. m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources]);
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref m_RevisingCount);
+                    }
+                });
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ResourceSettingsSub?.Dispose();
             m_ShowResourcesSub?.Dispose();
         }

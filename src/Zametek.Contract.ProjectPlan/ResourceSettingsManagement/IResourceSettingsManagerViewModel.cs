@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceSettingsManagerViewModel
+        : IStartSubscriptions, IKillSubscriptions
     {
         bool IsBusy { get; }
 
@@ -42,6 +44,11 @@ namespace Zametek.Contract.ProjectPlan
         ICommand EditManagedResourcesCommand { get; }
 
         ICommand RenumberResourcesCommand { get; }
+
+        // Invoked synchronously by the work stream settings manager when the work
+        // streams change, mirroring the way CoreViewModel pushes them into the
+        // activities. Never observed from here - see the note on the call site.
+        void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
 
         Task ReportErrorAsync(string message);
     }

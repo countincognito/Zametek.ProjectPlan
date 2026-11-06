@@ -86,7 +86,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IServiceProvider m_ServiceProvider;
         private readonly ILogger<MainViewModel> m_Logger;
 
-        private readonly IDisposable? m_ProjectTitleUpdateSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ProjectTitleUpdateSub;
 
         #endregion
 
@@ -308,39 +310,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, main => main.BaseTheme);
 
-            m_ProjectTitleUpdateSub = this
-                .WhenAnyValue(
-                    main => main.ProjectHasChanges,
-                    main => main.m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle,
-                    (projectHasChanges, isReadyToReviseTitle) =>
-                    {
-                        string newTitle = ProjectTitle;
-
-                        if (isReadyToReviseTitle == ReadyToRevise.Yes
-                            || projectHasChanges)
-                        {
-                            string projectTitle = m_SettingService.ProjectTitle;
-                            string scenarioTitle = m_SettingService.ScenarioTitle;
-                            Guid projectScenarioId = m_SettingService.ScenarioId;
-
-                            string scenario = projectScenarioId.ToShortString();
-                            if (!string.IsNullOrWhiteSpace(scenarioTitle))
-                            {
-                                scenario = scenarioTitle;
-                            }
-
-                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {scenario} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
-                            m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.No;
-                        }
-
-                        return newTitle;
-                    })
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(projectTitle =>
-                {
-                    ProjectTitle = projectTitle;
-                });
-
             m_CoreViewModel.AutoCompile = true;
 
             ResetProject();
@@ -526,12 +495,18 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger.LogInformation("Importing scenario from {ImportFile}", filename);
             long startTimestamp = Stopwatch.GetTimestamp();
 
+            ProjectScenarioImportFormat format = FileFormatHelper.GetProjectScenarioImportFormat(filename);
+
             lock (m_Lock)
             {
-                Guid projectScenarioId = m_SettingService.ScenarioId;
-                string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                ProjectScenarioImportModel importModel = m_CoreViewModel.ImportProjectScenarioFile(filename);
-                m_CoreViewModel.ProcessProjectScenarioImport(importModel, projectScenarioId, projectScenarioTitle);
+                ProjectScenarioImportModel importModel;
+
+                using (FileStream stream = FileStreamHelper.OpenImportFile(filename, format))
+                {
+                    importModel = m_CoreViewModel.ImportProjectScenarioFile(stream, format);
+                }
+
+                m_ProjectScenarioManagerViewModel.ProcessProjectScenarioImport(importModel);
             }
 
             m_Logger.LogInformation(
@@ -548,15 +523,20 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Logger.LogInformation("Exporting scenario to {ExportFile}", filename);
             long startTimestamp = Stopwatch.GetTimestamp();
 
+            ProjectScenarioExportFormat format = FileFormatHelper.GetProjectScenarioExportFormat(filename);
+
             lock (m_Lock)
             {
                 ProjectScenarioModel projectScenarioModel = m_CoreViewModel.BuildProjectScenario();
-                m_CoreViewModel.ExportProjectScenarioFile(
-                    projectScenarioModel,
-                    m_CoreViewModel.ResourceSeriesSet,
-                    m_CoreViewModel.TrackingSeriesSet,
-                    ShowDates,
-                    filename);
+                FileStreamHelper.Save(
+                    filename,
+                    stream => m_CoreViewModel.ExportProjectScenarioFile(
+                        projectScenarioModel,
+                        m_CoreViewModel.ResourceSeriesSet,
+                        m_CoreViewModel.TrackingSeriesSet,
+                        ShowDates,
+                        stream,
+                        format));
             }
 
             m_Logger.LogInformation(
@@ -585,9 +565,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await Task.Run(async () =>
                 {
-                    // We set this flag to force revision of trackers in case there
-                    // changes to activities or resources have occurred since the last compile.
-                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                    // We force a revision of the trackers in case changes to
+                    // activities or resources have occurred since the last compile.
+                    m_CoreViewModel.ReviseTrackers();
 
                     await RunCompileAsync(); // Need to force a compilation here.
                 });
@@ -668,7 +648,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Logger.LogInformation("Opening project {ProjectFile}", filename);
                 long startTimestamp = Stopwatch.GetTimestamp();
 
-                ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
+                ProjectModel projectModel;
+
+                await using (FileStream stream = File.OpenRead(filename))
+                {
+                    projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(stream);
+                }
 
                 // First process the project. The load cascade (reset, scenario
                 // processing, compile, output builds) must not run on the UI
@@ -703,7 +688,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 long startTimestamp = Stopwatch.GetTimestamp();
 
                 ProjectModel projectModel = await BuildProjectAsync();
-                await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
+                await FileStreamHelper.SaveAsync(filename, stream => m_ProjectFileSave.SaveProjectFileAsync(projectModel, stream));
                 // Clear the node markers BEFORE the scenario flag: the nodes'
                 // IsUpdated latch subscriptions observe the flag, so clearing
                 // the flag first would interleave their (async) delivery with
@@ -1373,18 +1358,31 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await ProjectScenarioImportAsync(filename);
+                    try
+                    {
+                        await ProjectScenarioImportAsync(filename);
+                    }
+                    catch (ScenarioImportException ex)
+                    {
+                        // The file was read in full and found to have problems, and nothing of it was imported.
+                        m_Logger.LogError(ex, "Failed to import scenario: {ProblemCount} problems in {ImportFile}", ex.TotalCount, filename);
+                        await ImportProblemsPresenter.ShowAsync(m_DialogService, ex, filename, directory);
+                        return;
+                    }
+
                     await RunAutoCompileAsync();
                 }
             }
             catch (Exception ex)
             {
+                // An import takes the place of the scenario on show only, and so the project stays open whatever the
+                // failure. An import that fails part way goes back to the scenario that it replaced, and an import whose
+                // compilation runs past its budget stays whole (ARCHITECTURE section 7 rule 16).
                 m_Logger.LogError(ex, "Failed to import scenario");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
-                ResetProject();
             }
         }
 
@@ -1554,10 +1552,73 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Arming the title is an edge, not a level, and the chain follows a counter,
+            // TitleRevision, that every arm increments. IsReadyToReviseTitle cannot be the
+            // input: a WhenAnyValue chain drops a value that has not changed, and the flag
+            // is never cleared, so once it was Yes every later arm was lost, and a project
+            // that was closed or loaded without an edit kept its old title until an edit
+            // changed ProjectHasChanges. (The flag used to be cleared from inside the
+            // selector, which made a projection mutate one of its own inputs and so
+            // re-enter the chain it belongs to. A counter has no such write.) The title is
+            // recomputed from live setting-service state every time either input is
+            // raised, and can never go stale.
+            m_ProjectTitleUpdateSub = this
+                .WhenAnyValue(
+                    main => main.ProjectHasChanges,
+                    main => main.m_ProjectScenarioManagerViewModel.TitleRevision,
+                    (projectHasChanges, titleRevision) =>
+                    {
+                        string newTitle = ProjectTitle;
+
+                        if (titleRevision != 0
+                            || projectHasChanges)
+                        {
+                            string projectTitle = m_SettingService.ProjectTitle;
+                            string scenarioTitle = m_SettingService.ScenarioTitle;
+                            Guid projectScenarioId = m_SettingService.ScenarioId;
+
+                            string scenario = projectScenarioId.ToShortString();
+                            if (!string.IsNullOrWhiteSpace(scenarioTitle))
+                            {
+                                scenario = scenarioTitle;
+                            }
+
+                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {scenario} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                        }
+
+                        return newTitle;
+                    })
+                // The title is a bound window property, so the assignment belongs on the
+                // UI thread. This used to run on the taskpool, which raised
+                // PropertyChanged for a binding to Window.Title from a background
+                // thread; it survived on Win32 because SetWindowText posts rather than
+                // blocks, but nothing guaranteed it, and the browser head has no
+                // taskpool thread to run it on. The title itself is still computed at
+                // emission time by the selector above, so nothing moved onto the UI
+                // thread except the assignment.
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(projectTitle =>
+                {
+                    ProjectTitle = projectTitle;
+                });
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ProjectTitleUpdateSub?.Dispose();
         }
 

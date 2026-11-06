@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IActivitySelectorViewModel
-        : IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         //IReadOnlyList<ISelectableActivityViewModel> RawTargetActivities { get; }
 

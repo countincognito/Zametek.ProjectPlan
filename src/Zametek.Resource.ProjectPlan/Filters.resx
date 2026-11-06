@@ -123,6 +123,15 @@
   <data name="Filter_AllFileType" xml:space="preserve">
     <value>All Files</value>
   </data>
+  <data name="Filter_CsvFileExtension" xml:space="preserve">
+    <value>csv</value>
+  </data>
+  <data name="Filter_CsvFilePattern" xml:space="preserve">
+    <value>*.csv</value>
+  </data>
+  <data name="Filter_CsvFileType" xml:space="preserve">
+    <value>CSV Files (*.csv)</value>
+  </data>
   <data name="Filter_ExcelFileType" xml:space="preserve">
     <value>Excel</value>
   </data>

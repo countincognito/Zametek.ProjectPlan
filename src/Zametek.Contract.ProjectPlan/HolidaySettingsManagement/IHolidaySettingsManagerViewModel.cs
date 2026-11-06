@@ -4,6 +4,7 @@ using System.Windows.Input;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IHolidaySettingsManagerViewModel
+        : IStartSubscriptions, IKillSubscriptions
     {
         bool IsBusy { get; }
 

@@ -17,6 +17,7 @@
     <None Remove="TestFiles\test_v0_3_1.zpp" />
     <None Remove="TestFiles\test_v0_3_2.zpp" />
     <None Remove="TestFiles\test_v0_6_0.zpp" />
+    <None Remove="TestFiles\test_v0_6_2.zpp" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,6 +72,9 @@
     <Content Include="TestFiles\test_v0_3_2.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestFiles\test_v0_6_2.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestFiles\test_v0_6_1.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -80,7 +84,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />

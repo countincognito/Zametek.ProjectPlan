@@ -85,7 +85,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
-        private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
         private const float c_ArrowHeadWidth = 6.0f;
         private const float c_ArrowHeadLength = 14.0f;
@@ -103,7 +105,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
             IScottPlotImageExporter scottPlotImageExporter,
-            IResourceSchedulingService resourceSchedulingService)
+            IResourceSchedulingService resourceSchedulingService,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
@@ -111,6 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             ArgumentNullException.ThrowIfNull(resourceSchedulingService);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -119,7 +123,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceSchedulingService = resourceSchedulingService;
             m_EarnedValueChartPlotModel = new Plot();
-            m_PlotRetirer = new PlotRetirer();
+            m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
             m_ResourceSelector = new EarnedValueResourceSelectorViewModel(coreViewModel);
             ResourceSelector = m_ResourceSelector;
@@ -177,30 +181,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         || combineResources
                         || ResourceSelector.SelectedResourceIds.Count <= 1)
                 .ToProperty(this, evc => evc.HasSingleTrackingSeriesSet);
-
-            m_BuildEarnedValueChartPlotModelSub = Observable.Merge(
-                    this.WhenAnyValue(
-                        evc => evc.m_CoreViewModel.TrackingSeriesSet,
-                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
-                        evc => evc.ShowToday,
-                        evc => evc.ShowMilestones,
-                        evc => evc.m_CoreViewModel.ProjectStart,
-                        evc => evc.m_CoreViewModel.Today,
-                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
-                        evc => evc.m_CoreViewModel.BaseTheme,
-                        (_, _, _, _, _, _, _, _, _, _) => Unit.Default),
-                    // The resource filter and its display modes are view-side state:
-                    // changing them only replots the chart, it never recompiles.
-                    this.WhenAnyValue(
-                        evc => evc.ResourceSelector.TargetResourcesString,
-                        evc => evc.CombineResources,
-                        evc => evc.ScaleToOwnPlan,
-                        (_, _, _) => Unit.Default))
-                .MuteWhile(this.WhenAnyValue(evc => evc.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler) // Plot models have no UI-thread affinity; the property raise marshals to the UI through the binding.
-                .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_EarnedValueChartView;
             Title = Resource.ProjectPlan.Titles.Title_EarnedValueChartView;
@@ -796,8 +776,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+                    ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);
 
-                    await SaveEarnedValueChartImageFileAsync(filename, boundedWidth, boundedHeight);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteEarnedValueChartImageAsync(stream, format, boundedWidth, boundedHeight));
                 }
             }
             catch (Exception ex)
@@ -887,32 +870,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
-        public async Task SaveEarnedValueChartImageFileAsync(
-            string? filename,
+        public async Task WriteEarnedValueChartImageAsync(
+            Stream stream,
+            ChartImageFormat format,
             int width,
             int height)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(EarnedValueChartPlotModel, filename, width, height);
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            await m_ScottPlotImageExporter.WritePlotImageAsync(EarnedValueChartPlotModel, stream, format, width, height);
         }
 
         public void BuildEarnedValueChartPlotModel()
@@ -980,10 +944,50 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The selector it made for itself starts first, as it was made first.
+            m_ResourceSelector.StartSubscriptions();
+
+            m_BuildEarnedValueChartPlotModelSub = Observable.Merge(
+                    this.WhenAnyValue(
+                        evc => evc.m_CoreViewModel.TrackingSeriesSet,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
+                        evc => evc.ShowToday,
+                        evc => evc.ShowMilestones,
+                        evc => evc.m_CoreViewModel.ProjectStart,
+                        evc => evc.m_CoreViewModel.Today,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
+                        evc => evc.m_CoreViewModel.BaseTheme,
+                        (_, _, _, _, _, _, _, _, _, _) => Unit.Default),
+                    // The resource filter and its display modes are view-side state:
+                    // changing them only replots the chart, it never recompiles.
+                    this.WhenAnyValue(
+                        evc => evc.ResourceSelector.TargetResourcesString,
+                        evc => evc.CombineResources,
+                        evc => evc.ScaleToOwnPlan,
+                        (_, _, _) => Unit.Default))
+                .MuteWhile(this.WhenAnyValue(evc => evc.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler) // Plot models have no UI-thread affinity; the property raise marshals to the UI through the binding.
+                .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_ResourceSelector.KillSubscriptions();
             m_BuildEarnedValueChartPlotModelSub?.Dispose();
         }

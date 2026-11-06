@@ -5,7 +5,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IHolidayEditViewModel
-        : IDisposable, INotifyPropertyChanged, IKillSubscriptions
+        : IDisposable, INotifyPropertyChanged, IStartSubscriptions, IKillSubscriptions
     {
         DateTime? StartDateTime { get; set; }
 

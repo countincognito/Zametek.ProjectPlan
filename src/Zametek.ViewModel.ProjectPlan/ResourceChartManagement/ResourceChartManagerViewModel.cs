@@ -83,7 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
         private readonly PlotRetirer m_PlotRetirer;
 
-        private readonly IDisposable? m_BuildResourceChartPlotModelSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_BuildResourceChartPlotModelSub;
 
         private const float c_ScatterLineWidth = 5.0f;
 
@@ -98,13 +100,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
-            IScottPlotImageExporter scottPlotImageExporter)
+            IScottPlotImageExporter scottPlotImageExporter,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -112,7 +116,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceChartPlotModel = new Plot();
-            m_PlotRetirer = new PlotRetirer();
+            m_PlotRetirer = new PlotRetirer(uiDispatcher);
 
             ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
 
@@ -156,25 +160,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ShowMilestones = this
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowMilestones)
                 .ToProperty(this, rcm => rcm.ShowMilestones);
-
-            m_BuildResourceChartPlotModelSub = this
-                .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
-                    rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.Today,
-                    rcm => rcm.AllocationMode,
-                    rcm => rcm.ScheduleMode,
-                    rcm => rcm.DisplayStyle,
-                    rcm => rcm.ShowToday,
-                    rcm => rcm.ShowMilestones,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;
             Title = Resource.ProjectPlan.Titles.Title_ResourceChartView;
@@ -595,8 +580,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+                    ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);
 
-                    await SaveResourceChartImageFileAsync(filename, boundedWidth, boundedHeight);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteResourceChartImageAsync(stream, format, boundedWidth, boundedHeight));
                 }
             }
             catch (Exception ex)
@@ -681,32 +669,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeDisplayStyleCommand { get; }
 
-        public async Task SaveResourceChartImageFileAsync(
-            string? filename,
+        public async Task WriteResourceChartImageAsync(
+            Stream stream,
+            ChartImageFormat format,
             int width,
             int height)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(ResourceChartPlotModel, filename, width, height);
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            await m_ScottPlotImageExporter.WritePlotImageAsync(ResourceChartPlotModel, stream, format, width, height);
         }
 
         public void BuildResourceChartPlotModel()
@@ -773,10 +742,42 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_BuildResourceChartPlotModelSub = this
+                .WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Today,
+                    rcm => rcm.AllocationMode,
+                    rcm => rcm.ScheduleMode,
+                    rcm => rcm.DisplayStyle,
+                    rcm => rcm.ShowToday,
+                    rcm => rcm.ShowMilestones,
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
             m_BuildResourceChartPlotModelSub?.Dispose();
         }
 

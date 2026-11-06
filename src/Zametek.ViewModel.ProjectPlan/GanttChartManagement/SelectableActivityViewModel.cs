@@ -1,5 +1,4 @@
 ﻿using ReactiveUI;
-using System.Globalization;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -34,16 +33,13 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 this.RaiseAndSetIfChanged(ref m_Name, value);
                 this.RaisePropertyChanged(nameof(DisplayName));
+                this.RaisePropertyChanged(nameof(Label));
             }
         }
 
-        public string DisplayName
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(Name) ? Id.ToString(CultureInfo.InvariantCulture) : Name;
-            }
-        }
+        public string DisplayName => ActivityLabelHelper.BuildDisplayName(Id, Name);
+
+        public string Label => ActivityLabelHelper.BuildLabel(Id, Name);
 
         #endregion
     }

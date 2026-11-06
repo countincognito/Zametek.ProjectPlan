@@ -44,6 +44,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand AddMilestoneCommand { get; }
 
+        // Takes the optimistic and the pessimistic duration of the selected activities back to their most likely duration.
+        ICommand ResetEstimatesCommand { get; }
+
         Task ReportErrorAsync(string message);
     }
 }

@@ -1,9 +1,10 @@
 ﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IEarnedValueChartManagerViewModel
-        : IKillSubscriptions, IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 
@@ -31,7 +32,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveEarnedValueChartImageFileCommand { get; }
 
-        Task SaveEarnedValueChartImageFileAsync(string? filename, int width, int height);
+        // Writes the chart to the stream at the given size. The caller owns the stream, which is left open.
+        Task WriteEarnedValueChartImageAsync(Stream stream, ChartImageFormat format, int width, int height);
 
         void BuildEarnedValueChartPlotModel();
     }

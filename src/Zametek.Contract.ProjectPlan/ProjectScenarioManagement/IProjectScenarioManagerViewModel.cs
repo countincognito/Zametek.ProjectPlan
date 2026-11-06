@@ -5,11 +5,16 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectScenarioManagerViewModel
-        : IKillSubscriptions, IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 
+        // Arms the title: it is made again from the settings every time this is set, whatever it was set to before.
         ReadyToRevise IsReadyToReviseTitle { get; set; }
+
+        // How many times the title has been armed. A value that does not change raises no event in WhenAnyValue, and so
+        // a flag that is already Yes cannot say that it was armed again. This one changes each time. Observe changes only.
+        int TitleRevision { get; }
 
         ReadyToRevise IsReadyToReviseTrackedMetrics { get; set; }
 
@@ -108,6 +113,10 @@ namespace Zametek.Contract.ProjectPlan
         void ResetProject();
 
         void ProcessProject(ProjectModel projectModel);
+
+        // Puts an import in the place of the scenario on show, under its id and its title. An import that fails part way goes
+        // back to the scenario that it replaced (ARCHITECTURE section 7 rule 16).
+        void ProcessProjectScenarioImport(ProjectScenarioImportModel projectScenarioImportModel);
 
         IManagedNodeViewModel? GetNode(Guid nodeId);
 

@@ -16,6 +16,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly Lock m_Lock;
         private int m_RevisingCount;
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IUIDispatcher m_UIDispatcher;
 
         private static readonly EqualityComparer<ISelectableActivityViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableActivityViewModel>.Create(
@@ -53,79 +54,69 @@ namespace Zametek.ViewModel.ProjectPlan
                         return x.Id.CompareTo(y.Id);
                     });
 
+        // Delivers on the current thread, so the constructor makes it.
         private readonly IDisposable? m_ReviseActivitiesSub;
-        private readonly IDisposable? m_ShowConnectionsSub;
+
+        // The activities that the last revision of the trackers read, until the UI thread applies them.
+        private List<TargetActivityModel>? m_RevisedActivities;
+
+        // Delivers on another thread, so StartSubscriptions makes it and not the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ShowConnectionsSub;
 
         #endregion
 
         #region Ctors
 
-        public GanttActivitySelectorViewModel(ICoreViewModel coreViewModel)
+        public GanttActivitySelectorViewModel(
+            ICoreViewModel coreViewModel,
+            IUIDispatcher uiDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(uiDispatcher);
             m_Lock = new();
             m_RevisingCount = 0;
             m_CoreViewModel = coreViewModel;
+            m_UIDispatcher = uiDispatcher;
             m_TargetActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetActivities = new(m_TargetActivities);
             m_SelectedTargetActivities = new(s_EqualityComparer);
 
             m_SelectedTargetActivities.CollectionChanged += SelectedTargetActivities_CollectionChanged;
 
-            // Initial set up.
-            ReviseActivities();
+            // Before the read of the activities: a request after that read gives a revision (ARCHITECTURE section 9).
+            int trackersRevision = m_CoreViewModel.TrackersRevision;
 
-            // This needs to be on the current thread because all the tracker updates
-            // need to be completed before a compilation can start.
+            // Initial set up. The persisted connections filter is applied here, explicitly, and not left to
+            // m_ShowConnectionsSub: a selector that is never started would never see it. It is applied revising,
+            // so that it is not mistaken for a user edit and written straight back.
+            try
+            {
+                Interlocked.Increment(ref m_RevisingCount);
+                ReviseActivities();
+                SetSelectedTargetActivities(
+                    [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref m_RevisingCount);
+            }
+
+            // This needs to be on the current thread because a revision of the
+            // trackers holds the lock of the core, and so the activities read here
+            // are a whole plan (ARCHITECTURE section 7 rule 17). The value that a
+            // chain gives when it subscribes says nothing new, unless a request came
+            // after the read above: the constructor has read the activities. A
+            // dropdown shows the lists, and so they change on the UI thread: the
+            // posted work applies the activities of the last revision.
             m_ReviseActivitiesSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                .WhenAnyValue(x => x.m_CoreViewModel.TrackersRevision)
+                .SkipWhile(revision => revision == trackersRevision)
                 .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(isReadyToRevise =>
+                .Subscribe(_ =>
                 {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
-                    {
-                        try
-                        {
-                            // Guard the revision so any resulting selection changes
-                            // are not mistaken for user edits and do not mark the
-                            // project scenario as updated. The guard is a ref-count
-                            // because revisions overlap across threads (this one
-                            // runs on the scenario-load worker, the connections one
-                            // on the UI thread): a shared bool let one reviser's
-                            // finally clear the other's guard mid-revision, leaking
-                            // a machine-driven change out as a user edit
-                            // (dump-proven 2026-08-17).
-                            Interlocked.Increment(ref m_RevisingCount);
-                            ReviseActivities();
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref m_RevisingCount);
-                        }
-                    }
-                });
-
-            m_ShowConnectionsSub = this
-                .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(isReadyToRevise =>
-                {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
-                    {
-                        try
-                        {
-                            Interlocked.Increment(ref m_RevisingCount);
-                            ReviseActivities();
-                            SetSelectedTargetActivities(
-                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
-                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
-                        }
-                        finally
-                        {
-                            Interlocked.Decrement(ref m_RevisingCount);
-                        }
-                    }
+                    Volatile.Write(ref m_RevisedActivities, ReadActivities());
+                    m_UIDispatcher.Defer(ApplyRevisedActivities);
                 });
         }
 
@@ -181,28 +172,62 @@ namespace Zametek.ViewModel.ProjectPlan
             // selector briefly empties out).
             if (m_RevisingCount == 0)
             {
-                m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
-                m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
+                m_CoreViewModel.DisplaySettingsViewModel.SetGanttChartShowConnections(SelectedActivityIds);
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
             RaiseTargetActivitiesPropertiesChanged();
         }
 
-        private void ReviseActivities()
+        private List<TargetActivityModel> ReadActivities() =>
+            [.. m_CoreViewModel.RawActivities
+                .Select(activity => new TargetActivityModel
+                {
+                    Id = activity.Id,
+                    Name = activity.Name ?? string.Empty
+                })];
+
+        private void ReviseActivities() => ReviseActivities(ReadActivities());
+
+        private void ReviseActivities(List<TargetActivityModel> activities)
         {
             lock (m_Lock)
             {
-                List<TargetActivityModel> newActivities =
-                    [.. m_CoreViewModel.RawActivities
-                        .Select(activity => new TargetActivityModel
-                        {
-                            Id = activity.Id,
-                            Name = activity.Name ?? string.Empty
-                        })];
-
                 SetTargetActivities(
-                    newActivities,
+                    activities,
                     [.. SelectedActivityIds]);
+            }
+        }
+
+        // The work that a revision of the trackers posts to the UI thread. Each revision posts its own, and the first to run
+        // takes the activities of the last revision.
+        private void ApplyRevisedActivities()
+        {
+            List<TargetActivityModel>? activities = Interlocked.Exchange(ref m_RevisedActivities, null);
+
+            if (activities is null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Guard the revision so any resulting selection changes
+                // are not mistaken for user edits and do not mark the
+                // project scenario as updated. The guard is a ref-count
+                // because revisions used to overlap across threads (this
+                // one ran on the scenario-load worker, the connections one
+                // on the UI thread): a shared bool let one reviser's
+                // finally clear the other's guard mid-revision, leaking
+                // a machine-driven change out as a user edit
+                // (dump-proven 2026-08-17). With an inline dispatcher (a
+                // job, a test), this one still runs on the thread of the
+                // revision.
+                Interlocked.Increment(ref m_RevisingCount);
+                ReviseActivities(activities);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref m_RevisingCount);
             }
         }
 
@@ -335,6 +360,55 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The handler reads the live filter, and so a delivery that a newer one follows has nothing to do: a load puts a
+            // filter in place three times, and the UI thread can be behind it. The first value runs the handler one time at
+            // the start, which applies a filter that arrived after the constructor.
+            m_ShowConnectionsSub = this
+                .WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnectionsRevision)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Where(revision => revision == m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnectionsRevision)
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        Interlocked.Increment(ref m_RevisingCount);
+                        ReviseActivities();
+                        SetSelectedTargetActivities(
+                            [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref m_RevisingCount);
+                    }
+                });
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_ReviseActivitiesSub?.Dispose();
+            m_ShowConnectionsSub?.Dispose();
+
+            // The work of a revision that is still on its way then changes nothing.
+            Interlocked.Exchange(ref m_RevisedActivities, null);
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -348,8 +422,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_ReviseActivitiesSub?.Dispose();
-                m_ShowConnectionsSub?.Dispose();
+                KillSubscriptions();
             }
 
             m_Disposed = true;

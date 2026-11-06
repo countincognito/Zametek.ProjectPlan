@@ -25,11 +25,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
-        private readonly IDisposable? m_ReadOnlyResourcesSub;
-        private readonly IDisposable? m_OrderableResourcesSub;
-        private readonly IDisposable? m_ProcessResourceSettingsSub;
-        private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
-        private readonly IDisposable? m_UpdateResourceSettingsSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_ReadOnlyResourcesSub;
+        private IDisposable? m_OrderableResourcesSub;
+        private IDisposable? m_ProcessResourceSettingsSub;
+        private IDisposable? m_UpdateResourceSettingsSub;
 
         #endregion
 
@@ -87,18 +88,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     rm => rm.DisableResources,
                     (disabled) => !disabled));
 
-            // Create read-only view to the source list.
-            m_ReadOnlyResourcesSub = m_Resources.Connect()
-               .ObserveOn(RxSchedulers.MainThreadScheduler)
-               .Bind(out m_ReadOnlyResources)
-               .Subscribe();
-
-            m_OrderableResourcesSub = m_Resources.Connect()
-               //.ObserveOn(Scheduler.CurrentThread)
-               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
-               .Bind(m_OrderableResources)          // Bind to the mutable collection
-               .DisposeMany()                        // Clean up resources
-               .Subscribe();
+            // The read-only views of the source lists are made here, empty, so that they can be read and observed from
+            // the start. The binds that fill them deliver on the UI thread and are made by StartSubscriptions.
+            m_BoundResources = [];
+            m_ReadOnlyResources = new ReadOnlyObservableCollection<IManagedResourceViewModel>(m_BoundResources);
 
             m_IsBusy = this
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.IsBusy)
@@ -120,46 +113,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
                 .ToProperty(this, rsm => rsm.HideBilling);
 
-            m_ProcessResourceSettingsSub = this
-                .WhenAnyValue(rsm => rsm.m_CoreViewModel.ResourceSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(rs =>
-                {
-                    if (m_Current != rs)
-                    {
-                        ProcessSettings(rs);
-                    }
-                });
-
-            // One subscription here, fanning out synchronously to the resources, rather
-            // than one subscription inside each resource: the resources absorb the change
-            // together, in a single pass, on the thread that delivers it. See the note in
-            // the ManagedResourceViewModel constructor.
-            m_ProcessWorkStreamSettingsSub = this
-                .WhenAnyValue(rsm => rsm.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(wss =>
-                {
-                    lock (m_Lock)
-                    {
-                        foreach (IManagedResourceViewModel resource in RawResources)
-                        {
-                            resource.SetWorkStreamSettings(wss);
-                        }
-                    }
-                });
-
-            m_UpdateResourceSettingsSub = this
-                .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(areUpdated =>
-                {
-                    if (areUpdated)
-                    {
-                        UpdateResourceSettingsToCore();
-                    }
-                });
-
             ProcessSettings(m_SettingService.DefaultResourceSettings);
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceSettingsView;
@@ -175,6 +128,20 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        // Every managed resource this manager makes comes through here, so that each is started as it is made when
+        // this has been started: see IStartSubscriptions.
+        private ManagedResourceViewModel MakeManagedResource(ResourceModel resource)
+        {
+            var managedResource = new ManagedResourceViewModel(m_CoreViewModel, this, resource);
+
+            if (m_SubscriptionLifetime.IsStarted)
+            {
+                managedResource.StartSubscriptions();
+            }
+
+            return managedResource;
+        }
 
         private int GetNextId()
         {
@@ -218,9 +185,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         int resourceId = GetNextId();
                         resources.Add(
-                            new ManagedResourceViewModel(
-                                m_CoreViewModel,
-                                this,
+                            MakeManagedResource(
                                 new ResourceModel
                                 {
                                     Id = resourceId,
@@ -312,9 +277,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         };
 
                         resources.Add(
-                            new ManagedResourceViewModel(
-                                m_CoreViewModel,
-                                this,
+                            MakeManagedResource(
                                 duplicateModel));
                     });
 
@@ -411,7 +374,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.UpdateManagedResourceIds(mappedIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -549,9 +512,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     foreach (ResourceModel resouce in orderedResourceModels)
                     {
-                        resources.Add(new ManagedResourceViewModel(
-                            m_CoreViewModel,
-                            this,
+                        resources.Add(MakeManagedResource(
                             resouce));
                     }
                 });
@@ -685,6 +646,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedResourceViewModel> m_Resources;
         public IReadOnlyList<IManagedResourceViewModel> RawResources => m_Resources.Items;
 
+        private readonly ObservableCollectionExtended<IManagedResourceViewModel> m_BoundResources;
         private readonly ReadOnlyObservableCollection<IManagedResourceViewModel> m_ReadOnlyResources;
         public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ReadOnlyResources;
 
@@ -703,6 +665,39 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand RenumberResourcesCommand { get; }
 
+        /// <summary>
+        /// Fans new work stream settings out to every resource, so each reconciles its
+        /// inter-activity phases against the work streams that now exist. Called
+        /// synchronously by the work stream settings manager on the thread that made the
+        /// change, rather than observed - see the note in the constructor.
+        /// </summary>
+        /// <remarks>
+        /// Only the work stream settings manager needs to call this. Every other route
+        /// that changes the work streams (a reset, opening a project, switching or
+        /// importing a scenario, renumbering) goes on to assign the resource settings as
+        /// well, which rebuilds these view models from scratch, and each one seeds itself
+        /// from the live work stream settings in its constructor.
+        /// </remarks>
+        public void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings)
+        {
+            ArgumentNullException.ThrowIfNull(workStreamSettings);
+            IReadOnlyList<IManagedResourceViewModel> resources;
+
+            lock (m_Lock)
+            {
+                resources = [.. RawResources];
+            }
+
+            // Outside the lock: absorbing the settings raises change notifications, and
+            // an announcement made while holding one of our own locks is the shape that
+            // deadlocked against ReactiveUI's sink gate before (ARCHITECTURE section 7
+            // rules 9 and 11).
+            foreach (IManagedResourceViewModel resource in resources)
+            {
+                resource.SetWorkStreamSettings(workStreamSettings);
+            }
+        }
+
         public Task ReportErrorAsync(string message)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(message);
@@ -710,6 +705,98 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Titles.Title_Error,
                 string.Empty,
                 message);
+        }
+
+        #endregion
+
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // Create read-only view to the source list.
+            m_ReadOnlyResourcesSub = m_Resources.Connect()
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
+               .Bind(m_BoundResources)
+               .Subscribe();
+
+            m_OrderableResourcesSub = m_Resources.Connect()
+               //.ObserveOn(Scheduler.CurrentThread)
+               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableResources)          // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
+               .Subscribe();
+
+            m_ProcessResourceSettingsSub = this
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.ResourceSettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than act on the delivered snapshot (rule 7). The
+                    // guard still earns its keep: UpdateResourceSettingsToCore assigns
+                    // one instance to both m_Current and the core property, so its own
+                    // echo compares reference-equal here and this manager does not
+                    // rebuild its grid - discarding selection and in-progress edits -
+                    // in response to an edit it made itself.
+                    ResourceSettingsModel resourceSettings = m_CoreViewModel.ResourceSettings;
+
+                    if (m_Current != resourceSettings)
+                    {
+                        ProcessSettings(resourceSettings);
+                    }
+                });
+
+            // Work stream settings are deliberately NOT observed here; the work stream
+            // settings manager calls SetWorkStreamSettings directly. An observed value
+            // arrives as a snapshot captured when it was raised, and the scheduler
+            // decides when to deliver it: during a load the worker thread writes the
+            // settings four times (reset clears both, then the scenario supplies both)
+            // before the UI thread drains either queue, and because the resource
+            // settings queue is scheduled first it drains in full - rebuilding every
+            // resource correctly from live state - before the work stream queue
+            // delivers its first, now stale, empty snapshot. That snapshot reconciled
+            // each resource's phases against no work streams and emptied them, and the
+            // real value arriving behind it could not restore a selection that had
+            // already been destroyed. See ARCHITECTURE section 7 rules 7 and 10.
+            m_UpdateResourceSettingsSub = this
+                .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Re-read rather than trust the delivered flag (rule 7). Both
+                    // ProcessSettings and UpdateResourceSettingsToCore clear it, so a
+                    // queued true routinely outlives its own clearing: arm an edit,
+                    // then open a project, and the stale true arrives after the load
+                    // has rebuilt these view models, pushing them straight back to the
+                    // core and marking a freshly opened project as modified.
+                    if (AreSettingsUpdated)
+                    {
+                        UpdateResourceSettingsToCore();
+                    }
+                });
+
+            // The resources made before the start start with it; those made after it start as they are made.
+            foreach (IManagedResourceViewModel resource in RawResources)
+            {
+                resource.StartSubscriptions();
+            }
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_ReadOnlyResourcesSub?.Dispose();
+            m_OrderableResourcesSub?.Dispose();
+            m_ProcessResourceSettingsSub?.Dispose();
+            m_UpdateResourceSettingsSub?.Dispose();
         }
 
         #endregion
@@ -732,11 +819,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_HideCost?.Dispose();
                 m_HideBilling?.Dispose();
-                m_ReadOnlyResourcesSub?.Dispose();
-                m_OrderableResourcesSub?.Dispose();
-                m_ProcessResourceSettingsSub?.Dispose();
-                m_ProcessWorkStreamSettingsSub?.Dispose();
-                m_UpdateResourceSettingsSub?.Dispose();
+                KillSubscriptions();
                 ClearManagedResources();
                 m_Resources?.Dispose();
             }

@@ -42,6 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan
             RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasSelectedActivities));
             EditManagedActivitiesCommand = ReactiveCommand.CreateFromTask(EditManagedActivitiesAsync, this.WhenAnyValue(am => am.HasSelectedActivities));
             DuplicateManagedActivityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivityAsync, this.WhenAnyValue(am => am.HasSelectedActivity));
+            ResetEstimatesCommand = ReactiveCommand.CreateFromTask(ResetEstimatesAsync, this.WhenAnyValue(am => am.HasSelectedActivities));
 
             m_IsBusy = this
                 .WhenAnyValue(am => am.m_CoreViewModel.IsBusy)
@@ -143,7 +144,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Max(x => x?.DisplayOrder ?? 0) + 1;
 
                 m_CoreViewModel.AddManagedActivity(displayOrder);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -181,7 +182,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 int newId = m_CoreViewModel.AddManagedActivity(newDisplayOrder);
 
                 m_CoreViewModel.UpdateManagedActivityIds([(newId, selectedId)]);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -232,9 +233,42 @@ namespace Zametek.ViewModel.ProjectPlan
                 };
 
                 m_CoreViewModel.AddManagedActivities([duplicateModel]);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
 
+            m_CoreViewModel.RunAutoCompile();
+        }
+
+        private async Task ResetEstimatesAsync()
+        {
+            try
+            {
+                await ResetEstimatesInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ResetEstimatesInternalAsync() => await Task.Run(ResetEstimatesInternal);
+
+        private void ResetEstimatesInternal()
+        {
+            lock (m_Lock)
+            {
+                ICollection<int> activityIds = SelectedActivities.Keys;
+
+                if (activityIds.Count == 0)
+                {
+                    return;
+                }
+
+                m_CoreViewModel.ResetActivityEstimates(activityIds);
+            }
             m_CoreViewModel.RunAutoCompile();
         }
 
@@ -267,7 +301,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.RemoveManagedActivities(activityIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -360,7 +394,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.UpdateManagedActivityIds(mappedIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -395,7 +429,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_CoreViewModel.AddMilestone(activityIds);
-                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                m_CoreViewModel.ReviseTrackers();
             }
             m_CoreViewModel.RunAutoCompile();
         }
@@ -471,6 +505,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RenumberActivitiesCommand { get; }
 
         public ICommand AddMilestoneCommand { get; }
+
+        public ICommand ResetEstimatesCommand { get; }
 
         public Task ReportErrorAsync(string message)
         {

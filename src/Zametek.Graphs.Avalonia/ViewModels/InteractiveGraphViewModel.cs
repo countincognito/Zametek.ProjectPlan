@@ -1,12 +1,10 @@
 using Avalonia;
-using Avalonia.Threading;
 using ReactiveUI;
 using SkiaSharp;
 using Svg.Skia;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using Zametek.Utility;
 
 namespace Zametek.Graphs.Avalonia
 {
@@ -28,9 +26,14 @@ namespace Zametek.Graphs.Avalonia
         private readonly IGraphSerializer m_Serializer;
         private readonly IInteractiveEdgeRouter m_EdgeRouter;
 
+        // Where the work that a UI host may only do on its UI thread goes (see IGraphDispatcher).
+        private readonly IGraphDispatcher m_Dispatcher;
+
         // The live per-graph configuration (seeded from the preset passed in). It drives the layout/SVG
         // build and the routing-mode menu; the routing-mode command swaps the whole immutable record.
-        private GraphConfiguration m_Config;
+        // Volatile: a host applies a saved mode on the thread of its load, and a layout reads the
+        // configuration on a pool thread.
+        private volatile GraphConfiguration m_Config;
 
         // The themable appearance handed to every node/edge view-model (brushes, fonts, opacities, shape
         // metrics). Defaults to GraphAppearance.Default (the original look); a consumer re-skins by
@@ -73,22 +76,25 @@ namespace Zametek.Graphs.Avalonia
             IGraphLayoutEngine layoutEngine,
             IGraphSerializer serializer,
             GraphConfiguration configuration,
-            GraphAppearance? appearance = null)
-            : this(host, layoutEngine, serializer, configuration, edgeRouter: null, appearance)
+            GraphAppearance? appearance = null,
+            IGraphDispatcher? dispatcher = null)
+            : this(host, layoutEngine, serializer, configuration, edgeRouter: null, appearance, dispatcher)
         {
         }
 
         // Router-injecting overload: supply a custom IInteractiveEdgeRouter (e.g. a future B that keeps a
         // persistent live router and reroutes only the dragged node's incident edges) or pass null to use
         // the default MSAGL router. Also used by the tests. The optional GraphAppearance re-skins the
-        // node/edge presentation (null = the original look).
+        // node/edge presentation (null = the original look), and the optional IGraphDispatcher says where
+        // the work a UI host may only do on its UI thread goes (null = Avalonia's UI thread).
         public InteractiveGraphViewModel(
             IGraphHost host,
             IGraphLayoutEngine layoutEngine,
             IGraphSerializer serializer,
             GraphConfiguration configuration,
             IInteractiveEdgeRouter? edgeRouter,
-            GraphAppearance? appearance = null)
+            GraphAppearance? appearance = null,
+            IGraphDispatcher? dispatcher = null)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(layoutEngine);
@@ -102,9 +108,13 @@ namespace Zametek.Graphs.Avalonia
             // Defaulted (not injected) so the manager view-models stay simple; a future B (live
             // rerouting) can inject a persistent router behind the same interface.
             m_EdgeRouter = edgeRouter ?? new MsaglInteractiveEdgeRouter();
+            // Defaulted to the UI thread, which is where all but a headless host wants this work.
+            m_Dispatcher = dispatcher ?? new AvaloniaGraphDispatcher();
 
-            SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(() => SaveInteractiveImageAsync(DefaultExportMode));
-            SaveGraphImageWithModeCommand = ReactiveCommand.CreateFromTask<GraphExportMode>(SaveInteractiveImageAsync);
+            // A graph with no nodes has no image, and so nothing to save.
+            IObservable<bool> hasNodes = this.WhenAnyValue(x => x.HasNodes);
+            SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(() => SaveInteractiveImageAsync(DefaultExportMode), hasNodes);
+            SaveGraphImageWithModeCommand = ReactiveCommand.CreateFromTask<GraphExportMode>(SaveInteractiveImageAsync, hasNodes);
             ChangeEdgeRoutingModeCommand = ReactiveCommand.Create<GraphEdgeRoutingMode>(ChangeEdgeRoutingMode);
 
             // The host pre-throttles/schedules the trigger; we simply rebuild on each notification.
@@ -143,6 +153,14 @@ namespace Zametek.Graphs.Avalonia
         public ObservableCollection<GraphNodeViewModel> GraphNodes { get; } = [];
 
         public ObservableCollection<GraphEdgeViewModel> GraphEdges { get; } = [];
+
+        // Set where the nodes are made (PopulateInteractiveGraph), on the thread that owns them.
+        private bool m_HasNodes;
+        public bool HasNodes
+        {
+            get => m_HasNodes;
+            private set => this.RaiseAndSetIfChanged(ref m_HasNodes, value);
+        }
 
         private double m_GraphWidth;
         public double GraphWidth
@@ -208,15 +226,28 @@ namespace Zametek.Graphs.Avalonia
         #region Public Methods
 
         // Rebuild the interactive node/edge view-models from a fresh MSAGL layout. Called on the
-        // host's rebuild notification (off the UI thread); the populate is marshalled to the UI
-        // thread. Re-raises Theme/ShowNames so the background and the menu check-box stay in step.
+        // host's rebuild notification (off the UI thread); the populate is marshalled through the
+        // dispatcher. Re-raises Theme/ShowNames so the background and the menu check-box stay in step.
         public void Refresh()
         {
+            // The host's first notification fires as this view-model subscribes to it and arrives on
+            // a pool thread, so a refresh can still be on its way when the owner disposes the graph -
+            // which is what a host that only exports does, immediately. What it would populate then
+            // has nothing left to draw it, and what it would report has no one left to report to.
+            if (m_Disposed)
+            {
+                return;
+            }
+
             try
             {
                 GraphLayoutModel layout = BuildLayout();
-                Dispatcher.UIThread.Invoke(() =>
+                m_Dispatcher.Invoke(() =>
                 {
+                    if (m_Disposed)
+                    {
+                        return;
+                    }
                     PopulateInteractiveGraph(layout);
                     this.RaisePropertyChanged(nameof(Theme));
                     this.RaisePropertyChanged(nameof(ShowNames));
@@ -226,65 +257,42 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                Dispatcher.UIThread.Post(async () => await m_Host.ReportErrorAsync(ex.Message));
+                if (!m_Disposed)
+                {
+                    m_Dispatcher.Post(async () => await m_Host.ReportErrorAsync(ex.Message));
+                }
             }
         }
 
-        // Interface entry point: save at the default export mode (the attached view's ExportMode, or Vector
+        // Interface entry point: write at the default export mode (the attached view's ExportMode, or Vector
         // when headless).
-        public Task SaveImageAsync(
-            string? filename,
+        public Task WriteImageAsync(
+            Stream stream,
+            GraphFileFormat format,
             GraphImageSource source,
             FixedLayoutGraphType imageType) =>
-            SaveImageAsync(filename, source, imageType, DefaultExportMode);
+            WriteImageAsync(stream, format, source, imageType, DefaultExportMode);
 
-        private async Task SaveImageAsync(
-            string? filename,
+        private async Task WriteImageAsync(
+            Stream stream,
+            GraphFileFormat format,
             GraphImageSource source,
             FixedLayoutGraphType imageType,
             GraphExportMode mode)
         {
-            if (string.IsNullOrWhiteSpace(filename))
+            ArgumentNullException.ThrowIfNull(stream);
+
+            switch (format)
             {
-                await m_Host.ReportErrorAsync(Graphs_Messages.Message_EmptyFilename);
-                return;
-            }
-
-            try
-            {
-                string fileExtension = Path.GetExtension(filename);
-                byte[]? data = null;
-                bool isImageFormat = false;
-
-                fileExtension.ValueSwitchOn()
-                    .Case($".{GraphFileExtensions.Jpeg}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.Png}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.Pdf}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.Svg}", _ => isImageFormat = true)
-                    .Case($".{GraphFileExtensions.GraphML}", _ =>
-                    {
-                        data = m_Serializer.BuildGraphMLData(m_Host.BuildDiagram(multiLineEdgeLabels: true));
-                    })
-                    .Case($".{GraphFileExtensions.GraphViz}", _ =>
-                    {
-                        data = m_Serializer.BuildGraphVizData(m_Host.BuildDiagram(multiLineEdgeLabels: true));
-                    })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));
-
-                if (isImageFormat)
-                {
-                    await SaveImageFormatAsync(filename, fileExtension, source, imageType, mode);
-                }
-
-                if (data is not null)
-                {
-                    using var stream = File.OpenWrite(filename);
-                    await stream.WriteAsync(data);
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_Host.ReportErrorAsync(ex.Message);
+                case GraphFileFormat.GraphML:
+                    await stream.WriteAsync(m_Serializer.BuildGraphMLData(m_Host.BuildDiagram(multiLineEdgeLabels: true)));
+                    break;
+                case GraphFileFormat.GraphViz:
+                    await stream.WriteAsync(m_Serializer.BuildGraphVizData(m_Host.BuildDiagram(multiLineEdgeLabels: true)));
+                    break;
+                default:
+                    await WriteImageFormatAsync(stream, format, source, imageType, mode);
+                    break;
             }
         }
 
@@ -336,6 +344,10 @@ namespace Zametek.Graphs.Avalonia
         // Raised when the user changes the arrangement (a drag-end or a reset), so the host can capture
         // the new layout for persistence. Seeding a saved layout does NOT raise it.
         public event EventHandler? LayoutChanged;
+
+        // Raised when the user changes the edge routing mode (the context menu), so the host can capture
+        // the new mode for persistence. Applying a saved mode does NOT raise it.
+        public event EventHandler? EdgeRoutingModeChanged;
 
         // Raised when ResetView clears the viewport (project scenario reset/closed), so an attached
         // InteractiveGraphView drops its live zoom/pan and re-frames the next graph from scratch.
@@ -393,11 +405,16 @@ namespace Zametek.Graphs.Avalonia
             GraphRefreshed?.Invoke(this, EventArgs.Empty);
         }
 
-        // Apply a saved edge routing mode (e.g. when a scenario is loaded), swapping the configuration
-        // and updating the existing edges exactly as the context-menu command does.
+        // Apply a saved edge routing mode (e.g. when a scenario is loaded). A host may call this on any
+        // thread. The configuration changes at once, so the layout that follows a load has the mode. The
+        // edges belong to the UI thread, where a rebuild can replace them at any moment, so they follow
+        // through the dispatcher. Nothing goes back to the host: this is not a choice of the user.
         public void ApplyEdgeRoutingMode(GraphEdgeRoutingMode mode)
         {
-            ChangeEdgeRoutingMode(mode);
+            if (SwapEdgeRoutingMode(mode))
+            {
+                m_Dispatcher.Post(ShowEdgeRoutingMode);
+            }
         }
 
         // Grow the workspace immediately while a node is being dragged outward, so it never leaves
@@ -462,18 +479,43 @@ namespace Zametek.Graphs.Avalonia
 
         #region Private Methods
 
-        // Switch the edge routing mode. The whole configuration record is swapped on the view-model (so
-        // a subsequent layout/SVG export follows the new mode), and the existing edges are updated in
-        // place - node positions are independent of the routing mode, so no re-layout is needed. Raising
-        // EdgeRoutingMode lets the context menu's radio items re-evaluate.
+        // The user switches the edge routing mode, on the UI thread (context menu), and the host hears of
+        // it so that it can persist the mode.
         private void ChangeEdgeRoutingMode(GraphEdgeRoutingMode routingMode)
         {
+            if (SwapEdgeRoutingMode(routingMode))
+            {
+                ShowEdgeRoutingMode();
+                EdgeRoutingModeChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        // The whole configuration record is swapped on the view-model (so a subsequent layout/SVG export
+        // follows the new mode).
+        private bool SwapEdgeRoutingMode(GraphEdgeRoutingMode routingMode)
+        {
             if (m_Config.EdgeRoutingMode == routingMode)
+            {
+                return false;
+            }
+
+            m_Config = m_Config with { EdgeRoutingMode = routingMode };
+            return true;
+        }
+
+        // On the UI thread: bring the existing edges to the mode of the configuration, in place - node
+        // positions are independent of the routing mode, so no re-layout is needed. Raising EdgeRoutingMode
+        // lets the context menu's radio items re-evaluate. What a load posts here can run after a later
+        // load has applied another mode (or after the owner has disposed the graph), so this reads the mode
+        // when it runs.
+        private void ShowEdgeRoutingMode()
+        {
+            if (m_Disposed)
             {
                 return;
             }
 
-            m_Config = m_Config with { EdgeRoutingMode = routingMode };
+            GraphEdgeRoutingMode routingMode = EdgeRoutingMode;
             foreach (GraphEdgeViewModel edge in GraphEdges)
             {
                 // Setting the mode drops any exact routed geometry (it was for the old mode), so the
@@ -523,7 +565,11 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                await m_Host.ReportErrorAsync(ex.Message);
+                // Once the graph is disposed there is no one left to report to (see Refresh).
+                if (!m_Disposed)
+                {
+                    await m_Host.ReportErrorAsync(ex.Message);
+                }
             }
             finally
             {
@@ -660,6 +706,7 @@ namespace Zametek.Graphs.Avalonia
             m_Adjacency = adjacency;
             GraphWidth = layout.Width;
             GraphHeight = layout.Height;
+            HasNodes = GraphNodes.Count > 0;
             RecomputeWorkspace();
 
             // Restore the previous selection if that node survived the re-layout.
@@ -811,7 +858,10 @@ namespace Zametek.Graphs.Avalonia
                 string? filename = await m_Host.PickSaveFileAsync();
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await SaveImageAsync(filename, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None, mode);
+                    GraphFileFormat format = GraphFileExtensions.GetFileFormat(filename);
+                    await FileStreamHelper.SaveAsync(
+                        filename,
+                        stream => WriteImageAsync(stream, format, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None, mode));
                 }
             }
             catch (Exception ex)
@@ -820,44 +870,44 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        private async Task SaveImageFormatAsync(
-            string filename,
-            string fileExtension,
+        private async Task WriteImageFormatAsync(
+            Stream stream,
+            GraphFileFormat format,
             GraphImageSource source,
             FixedLayoutGraphType imageType,
             GraphExportMode mode)
         {
             if (source == GraphImageSource.InteractiveCanvas)
             {
-                await SaveInteractiveCanvasImageFormatAsync(filename, mode);
+                await WriteInteractiveCanvasImageFormatAsync(stream, format, mode);
                 return;
             }
             else if (source == GraphImageSource.FixedLayout)
             {
                 if (imageType == FixedLayoutGraphType.Arrow)
                 {
-                    await SaveFixedLayoutImageFormatAsync(
+                    await WriteFixedLayoutImageFormatAsync(
                         m_Host,
                         m_LayoutEngine,
                         GraphConfigurations.Arrow,
-                        filename,
-                        fileExtension);
+                        stream,
+                        format);
                     return;
                 }
                 else if (imageType == FixedLayoutGraphType.Vertex)
                 {
-                    await SaveFixedLayoutImageFormatAsync(
+                    await WriteFixedLayoutImageFormatAsync(
                         m_Host,
                         m_LayoutEngine,
                         GraphConfigurations.Vertex,
-                        filename,
-                        fileExtension);
+                        stream,
+                        format);
                     return;
                 }
             }
         }
 
-        private async Task SaveInteractiveCanvasImageFormatAsync(string filename, GraphExportMode mode)
+        private async Task WriteInteractiveCanvasImageFormatAsync(Stream stream, GraphFileFormat format, GraphExportMode mode)
         {
             // Render the current interactive arrangement (the user's dragged layout) in the requested mode:
             // Vector produces a crisp vector picture; Raster (from a live control's provider) rasterises the
@@ -866,29 +916,45 @@ namespace Zametek.Graphs.Avalonia
             GraphExportMode effectiveMode = provider is not null ? mode : GraphExportMode.Vector;
 
             SKPicture? picture = null;
-            Dispatcher.UIThread.Invoke(() =>
-                picture = provider is not null
-                    ? provider.RenderPicture(effectiveMode)
-                    : InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, GraphVectorExportStyle.Default, m_Appearance, Theme));
-
-            if (picture is not null)
+            bool hasNodes = false;
+            m_Dispatcher.Invoke(() =>
             {
-                using (picture)
+                hasNodes = GraphNodes.Count > 0;
+                if (hasNodes)
                 {
-                    // A raster picture already carries its pixel scale (export 1:1); a vector picture is
-                    // supersampled on export so PNG/JPEG stay crisp.
-                    int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
-                    await ImageExporter.SaveImageAsync(picture, filename, scaleX: scale, scaleY: scale);
+                    picture = provider is not null
+                        ? provider.RenderPicture(effectiveMode)
+                        : InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, GraphVectorExportStyle.Default, m_Appearance, Theme);
                 }
+            });
+
+            // A graph with no nodes has no image, and an empty file is not an image: the export fails, and it writes nothing.
+            // The menu does not offer the export then, but the graph can lose its nodes while the user picks a file.
+            if (!hasNodes)
+            {
+                throw new InvalidOperationException(Graphs_Messages.Message_GraphHasNoImage);
+            }
+
+            if (picture is null)
+            {
+                throw new InvalidOperationException(Graphs_Messages.Message_UnableToMakeImage);
+            }
+
+            using (picture)
+            {
+                // A raster picture already carries its pixel scale (export 1:1); a vector picture is
+                // supersampled on export so PNG/JPEG stay crisp.
+                int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
+                await ImageExporter.WriteImageAsync(picture, stream, format, scaleX: scale, scaleY: scale);
             }
         }
 
-        private static async Task SaveFixedLayoutImageFormatAsync(
+        private static async Task WriteFixedLayoutImageFormatAsync(
             IGraphHost graphHost,
             IGraphLayoutEngine layoutEngine,
             GraphConfiguration graphConfiguration,
-            string filename,
-            string fileExtension)
+            Stream stream,
+            GraphFileFormat format)
         {
             ArgumentNullException.ThrowIfNull(graphHost);
             ArgumentNullException.ThrowIfNull(layoutEngine);
@@ -905,21 +971,21 @@ namespace Zametek.Graphs.Avalonia
                 graphConfiguration,
                 graphHost.Theme);
 
-            if (string.Equals(fileExtension, $".{GraphFileExtensions.Svg}", StringComparison.OrdinalIgnoreCase))
+            if (format == GraphFileFormat.Svg)
             {
                 // Write the MSAGL SVG verbatim so its text stays crisp (no rasterisation).
-                using var stream = File.OpenWrite(filename);
                 await stream.WriteAsync(svgData);
                 return;
             }
 
-            // Rasterise the SVG into a picture for the PNG/JPEG/PDF formats.
-            using var svg = new SKSvg();
+            // Rasterise the SVG into a picture for the PNG/JPEG/PDF formats, with the labels drawn from the
+            // bundled font files rather than whatever the machine has installed.
+            using SKSvg svg = GraphFonts.CreateSvg();
             using var svgStream = new MemoryStream(svgData);
             svg.Load(svgStream);
             if (svg.Picture is not null)
             {
-                await ImageExporter.SaveImageAsync(svg.Picture, filename, scaleX: 2, scaleY: 2);
+                await ImageExporter.WriteImageAsync(svg.Picture, stream, format, scaleX: 2, scaleY: 2);
             }
         }
 
@@ -927,7 +993,9 @@ namespace Zametek.Graphs.Avalonia
 
         #region IDisposable Members
 
-        private bool m_Disposed = false;
+        // Volatile: Refresh reads it from whichever thread the host's rebuild notification arrives
+        // on, while the owner disposes the graph from its own.
+        private volatile bool m_Disposed = false;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -935,6 +1003,10 @@ namespace Zametek.Graphs.Avalonia
             {
                 return;
             }
+
+            // Set before anything is torn down, so that a refresh still on its way sees it and
+            // leaves the node and edge view-models alone (see Refresh).
+            m_Disposed = true;
 
             if (disposing)
             {
@@ -946,8 +1018,6 @@ namespace Zametek.Graphs.Avalonia
                     edge.Dispose();
                 }
             }
-
-            m_Disposed = true;
         }
 
         public void Dispose()

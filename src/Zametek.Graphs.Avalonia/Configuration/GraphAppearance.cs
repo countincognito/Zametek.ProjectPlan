@@ -43,7 +43,9 @@ namespace Zametek.Graphs.Avalonia
 
         public double NodeDimmedOpacity { get; init; } = 0.25;
 
-        public FontFamily NodeLabelFontFamily { get; init; } = new(@"Consolas");
+        // Both label fonts default to the bundled Cascadia Mono (see GraphFonts), so the labels look the same
+        // on every machine; a family the library does not ship is looked up on the system as usual.
+        public FontFamily NodeLabelFontFamily { get; init; } = GraphFonts.LabelFontFamily;
 
         public double NodeLabelFontSize { get; init; } = 11.0;
 
@@ -60,7 +62,7 @@ namespace Zametek.Graphs.Avalonia
 
         public IBrush EdgeDarkLabelBrush { get; init; } = new ImmutableSolidColorBrush(Colors.White);
 
-        public FontFamily EdgeLabelFontFamily { get; init; } = new(@"Consolas");
+        public FontFamily EdgeLabelFontFamily { get; init; } = GraphFonts.LabelFontFamily;
 
         public double EdgeLabelFontSize { get; init; } = 12.0;
 

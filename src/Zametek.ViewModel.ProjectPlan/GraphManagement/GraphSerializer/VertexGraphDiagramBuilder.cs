@@ -141,13 +141,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 leftColumnWidth = Math.Max(leftColumnWidth, rightColumnWidth);
                 rightColumnWidth = leftColumnWidth;
 
-                var label = new StringBuilder();
-
-                label.Append($"|{est.PadLeft(leftColumnWidth)}|{id.PadLeft(middleColumnWidth)}|{eft.PadLeft(rightColumnWidth)}|\n");
-                label.Append($"+{new string('-', leftColumnWidth)}+{new string('-', middleColumnWidth)}+{new string('-', rightColumnWidth)}+\n");
-                label.Append($"|{lst.PadLeft(leftColumnWidth)}|{duration.PadLeft(middleColumnWidth)}|{lft.PadLeft(rightColumnWidth)}|");
-
-                labelText = label.ToString();
+                labelText = NewLineHelper.JoinLines(
+                    $"|{est.PadLeft(leftColumnWidth)}|{id.PadLeft(middleColumnWidth)}|{eft.PadLeft(rightColumnWidth)}|",
+                    $"+{new string('-', leftColumnWidth)}+{new string('-', middleColumnWidth)}+{new string('-', rightColumnWidth)}+",
+                    $"|{lst.PadLeft(leftColumnWidth)}|{duration.PadLeft(middleColumnWidth)}|{lft.PadLeft(rightColumnWidth)}|");
             }
 
             return labelText;

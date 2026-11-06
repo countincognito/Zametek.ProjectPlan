@@ -1,12 +1,12 @@
-Be sure to include the following lines in the .wapproj file:
+Include these lines in the .wapproj file:
 
   <Target Name="ResolveIkvmRuntimeAssembly" />
   <Target Name="_UpdateIkvmReferenceItemsMetadata" />
 
-This will ensure that the IKVN runtime assemblies (IKVM.Runtime.dll) are included in the package when using MPXJ.Net.
+These lines put the IKVM runtime assemblies (IKVM.Runtime.dll) in the package. This is necessary when the application uses MPXJ.Net.
 
-See:
+For more information, see:
 https://github.com/joniles/MPXJ.Net/issues/27
 
-For app certification checks:
+For the checks for app certification, see:
 https://learn.microsoft.com/en-gb/windows/uwp/debug-test-perf/windows-app-certification-kit

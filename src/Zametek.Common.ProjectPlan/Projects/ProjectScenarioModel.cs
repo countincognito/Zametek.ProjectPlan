@@ -21,6 +21,11 @@
 
         public List<ResourceMetricsModel> ResourceMetrics { get; init; } = [];
 
+        public SimulationSettingsModel SimulationSettings { get; init; } = new();
+
+        // What the last run of the simulation found, or null when the scenario has none.
+        public SimulationSummaryModel? SimulationSummary { get; init; }
+
         public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
 
         public GraphLayoutModel ArrowGraphLayout { get; init; } = new();

@@ -196,6 +196,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected duration, (O + 4 ML + P) / 6 rounded to a whole day. This is the duration that is scheduled.
+        /// </summary>
+        public static string ToolTip_ExpectedDuration {
+            get {
+                return ResourceManager.GetString("ToolTip_ExpectedDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fibonacci Weight.
         /// </summary>
         public static string ToolTip_FibonacciWeight {
@@ -448,6 +457,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Most likely duration (ML).
+        /// </summary>
+        public static string ToolTip_MostLikelyDuration {
+            get {
+                return ResourceManager.GetString("ToolTip_MostLikelyDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimistic duration (O). It follows the most likely duration until you edit it.
+        /// </summary>
+        public static string ToolTip_OptimisticDuration {
+            get {
+                return ResourceManager.GetString("ToolTip_OptimisticDuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Override Color.
         /// </summary>
         public static string ToolTip_OverrideColor {
@@ -462,6 +489,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_PercentageCompleted {
             get {
                 return ResourceManager.GetString("ToolTip_PercentageCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pessimistic duration (P). It follows the most likely duration until you edit it.
+        /// </summary>
+        public static string ToolTip_PessimisticDuration {
+            get {
+                return ResourceManager.GetString("ToolTip_PessimisticDuration", resourceCulture);
             }
         }
         
@@ -507,6 +543,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_SlackLimit {
             get {
                 return ResourceManager.GetString("ToolTip_SlackLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard deviation of the duration, (P - O) / 6.
+        /// </summary>
+        public static string ToolTip_StandardDeviation {
+            get {
+                return ResourceManager.GetString("ToolTip_StandardDeviation", resourceCulture);
             }
         }
         

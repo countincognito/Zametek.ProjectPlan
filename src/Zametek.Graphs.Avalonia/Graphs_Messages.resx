@@ -118,10 +118,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Message_ClipboardCopyFailed" xml:space="preserve">
-    <value>Copying the graph image to the clipboard failed. Use Save Image instead.</value>
+    <value>Copying the graph image to the clipboard failed. Use Save As instead.</value>
   </data>
-  <data name="Message_EmptyFilename" xml:space="preserve">
-    <value>Empty filename</value>
+  <data name="Message_GraphHasNoImage" xml:space="preserve">
+    <value>The graph has no nodes, and so it has no image to copy or save.</value>
+  </data>
+  <data name="Message_UnableToMakeImage" xml:space="preserve">
+    <value>Unable to make the graph image.</value>
   </data>
   <data name="Message_UnableToSaveFile" xml:space="preserve">
     <value>Unable to save file:</value>

@@ -290,3 +290,6 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# A local link to the source of Zametek.Maths.Graphs (see Directory.Build.targets)
+Zametek.Maths.Graphs.local.targets

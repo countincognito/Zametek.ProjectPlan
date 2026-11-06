@@ -18,7 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private IResourceActivitySelectorViewModel? m_LastResourceActivitySelector;
 
-        private readonly IDisposable? m_DaysSub;
+        // The reactive pipelines, made by StartSubscriptions and not by the constructor: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private IDisposable? m_DaysSub;
 
         #endregion
 
@@ -50,18 +52,6 @@ namespace Zametek.ViewModel.ProjectPlan
             SetLastResourceActivitySelector();
 
             SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
-
-            m_DaysSub = this
-                .WhenAnyValue(
-                    x => x.m_CoreViewModel.TrackerIndex,
-                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
-                // The pre-compile Yes raise happens before any tracker has
-                // changed, so only the post-compile No transition (and window
-                // moves, which occur while No) can alter what the day cells
-                // show. Skipping Yes halves the per-edit binding fan-out.
-                .Where(x => x.Item2 == ReadyToRevise.No)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => RefreshDays());
         }
 
         #endregion
@@ -194,18 +184,20 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+                // One read of the bookings of each day: a revision on another thread can replace them between two reads.
                 return [.. m_ResourceActivitySelectorLookup.Values
-                    .Where(selector => selector.SelectedResourceActivityIds.Count > 0)
-                    .OrderBy(selector => selector.Time)
-                    .Select(selector =>
+                    .Select(selector => (Selector: selector, Bookings: selector.SelectedTargetResourceActivities))
+                    .Where(day => day.Bookings.Count > 0)
+                    .OrderBy(day => day.Selector.Time)
+                    .Select(day =>
                     {
-                        List<ResourceActivityTrackerModel> resourceActivityTrackers = [.. selector.SelectedTargetResourceActivities
+                        List<ResourceActivityTrackerModel> resourceActivityTrackers = [.. day.Bookings
                             .Select(activity =>
                             {
                                 return new ResourceActivityTrackerModel
                                 {
-                                    Time = selector.Time,
-                                    ResourceId = selector.ResourceId,
+                                    Time = day.Selector.Time,
+                                    ResourceId = day.Selector.ResourceId,
                                     ActivityId = activity.Id,
                                     ActivityName = activity.Name,
                                     PercentageWorked = activity.PercentageWorked,
@@ -214,8 +206,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         return new ResourceTrackerModel
                         {
-                            Time = selector.Time,
-                            ResourceId = selector.ResourceId,
+                            Time = day.Selector.Time,
+                            ResourceId = day.Selector.ResourceId,
                             ActivityTrackers = resourceActivityTrackers,
                         };
                     })];
@@ -248,6 +240,39 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            m_DaysSub = this
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.TrackerIndex,
+                    x => x.m_CoreViewModel.GraphCompilation)
+                // A request to revise the trackers comes before any tracker has
+                // changed, so only a compilation after it (and window moves) can
+                // alter what the day cells show. Not following the request
+                // halves the per-edit binding fan-out.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Subscribe(_ => RefreshDays());
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_SubscriptionLifetime.Kill();
+            m_DaysSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -261,7 +286,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_DaysSub?.Dispose();
+                KillSubscriptions();
                 foreach (IResourceActivitySelectorViewModel selector in m_ResourceActivitySelectorLookup.Values)
                 {
                     selector.Dispose();

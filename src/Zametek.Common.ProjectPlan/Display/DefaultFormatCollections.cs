@@ -2,7 +2,9 @@
 {
     public static class DefaultFormatCollections
     {
-        public readonly static List<EdgeTypeFormatModel> EdgeTypeFormats =
+        // Each read builds the lists afresh, so settings given the defaults own their copy: a change to one
+        // project's formats can never reach another project's, or the defaults themselves.
+        public static List<EdgeTypeFormatModel> EdgeTypeFormats =>
              [
                 new()
                 {
@@ -30,7 +32,7 @@
                 }
             ];
 
-        public readonly static List<NodeTypeFormatModel> NodeTypeFormats =
+        public static List<NodeTypeFormatModel> NodeTypeFormats =>
             [
                 new()
                 {

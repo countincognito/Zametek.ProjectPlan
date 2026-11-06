@@ -70,6 +70,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not an option, nor the value of one: {1} lists the options..
+        /// </summary>
+        public static string Message_ArgumentNotOptionOrValue {
+            get {
+                return ResourceManager.GetString("Message_ArgumentNotOptionOrValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Arrow Graph Data contain more than one End node.
         /// </summary>
         public static string Message_ArrowGraphDataContainMultipleEndNodes {
@@ -214,6 +223,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a culture this machine knows..
+        /// </summary>
+        public static string Message_CultureNotKnown {
+            get {
+                return ResourceManager.GetString("Message_CultureNotKnown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Christmas Day.
         /// </summary>
         public static string Message_DefaultChristmasDayName {
@@ -273,6 +291,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_DeleteTag {
             get {
                 return ResourceManager.GetString("Message_DeleteTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Directory {0} does not exist.
+        /// </summary>
+        public static string Message_DirectoryDoesNotExist {
+            get {
+                return ResourceManager.GetString("Message_DirectoryDoesNotExist", resourceCulture);
             }
         }
         
@@ -358,6 +385,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} is empty..
+        /// </summary>
+        public static string Message_FileIsEmpty {
+            get {
+                return ResourceManager.GetString("Message_FileIsEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fixed Billing must be equal to or greater than 0 .
         /// </summary>
         public static string Message_FixedBillingMustBeZeroOrGreater {
@@ -372,6 +408,177 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_FixedCostMustBeZeroOrGreater {
             get {
                 return ResourceManager.GetString("Message_FixedCostMustBeZeroOrGreater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The title "{0}" is also the title of column {1}..
+        /// </summary>
+        public static string Message_ImportDuplicateColumn {
+            get {
+                return ResourceManager.GetString("Message_ImportDuplicateColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Id {0} is also the Id of row {1}..
+        /// </summary>
+        public static string Message_ImportDuplicateId {
+            get {
+                return ResourceManager.GetString("Message_ImportDuplicateId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cell holds the Excel error {0}..
+        /// </summary>
+        public static string Message_ImportExcelError {
+            get {
+                return ResourceManager.GetString("Message_ImportExcelError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The first {0} are listed..
+        /// </summary>
+        public static string Message_ImportFirstProblemsListed {
+            get {
+                return ResourceManager.GetString("Message_ImportFirstProblemsListed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sheet has no column with the title "{0}"..
+        /// </summary>
+        public static string Message_ImportMissingColumn {
+            get {
+                return ResourceManager.GetString("Message_ImportMissingColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sheet has no row of titles..
+        /// </summary>
+        public static string Message_ImportMissingHeader {
+            get {
+                return ResourceManager.GetString("Message_ImportMissingHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cell is blank, but this column needs a value..
+        /// </summary>
+        public static string Message_ImportMissingValue {
+            get {
+                return ResourceManager.GetString("Message_ImportMissingValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to And {0} more..
+        /// </summary>
+        public static string Message_ImportMoreProblems {
+            get {
+                return ResourceManager.GetString("Message_ImportMoreProblems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook has none of the sheets that the import reads..
+        /// </summary>
+        public static string Message_ImportNoKnownSheet {
+            get {
+                return ResourceManager.GetString("Message_ImportNoKnownSheet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not one of these choices: {1}..
+        /// </summary>
+        public static string Message_ImportNotAChoice {
+            get {
+                return ResourceManager.GetString("Message_ImportNotAChoice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a color in the form #RRGGBB or #RRGGBBAA..
+        /// </summary>
+        public static string Message_ImportNotAColor {
+            get {
+                return ResourceManager.GetString("Message_ImportNotAColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a date..
+        /// </summary>
+        public static string Message_ImportNotADate {
+            get {
+                return ResourceManager.GetString("Message_ImportNotADate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a number..
+        /// </summary>
+        public static string Message_ImportNotANumber {
+            get {
+                return ResourceManager.GetString("Message_ImportNotANumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a whole number..
+        /// </summary>
+        public static string Message_ImportNotAWholeNumber {
+            get {
+                return ResourceManager.GetString("Message_ImportNotAWholeNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not TRUE or FALSE..
+        /// </summary>
+        public static string Message_ImportNotTrueOrFalse {
+            get {
+                return ResourceManager.GetString("Message_ImportNotTrueOrFalse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The import was cancelled and nothing was changed. Problems found in the file: {0}..
+        /// </summary>
+        public static string Message_ImportProblemsFound {
+            get {
+                return ResourceManager.GetString("Message_ImportProblemsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to save a report of all {0} problems?.
+        /// </summary>
+        public static string Message_ImportSaveReport {
+            get {
+                return ResourceManager.GetString("Message_ImportSaveReport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook has no activity with the Id {0}..
+        /// </summary>
+        public static string Message_ImportUnknownActivity {
+            get {
+                return ResourceManager.GetString("Message_ImportUnknownActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file cannot be read as a workbook. {0}.
+        /// </summary>
+        public static string Message_ImportUnreadableWorkbook {
+            get {
+                return ResourceManager.GetString("Message_ImportUnreadableWorkbook", resourceCulture);
             }
         }
         
@@ -502,6 +709,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No scenario matches &apos;{0}&apos; - use {1} to see what the project contains.
+        /// </summary>
+        public static string Message_NoScenarioMatches {
+            get {
+                return ResourceManager.GetString("Message_NoScenarioMatches", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No scenario matches &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_NoScenarioMatchesSelector {
+            get {
+                return ResourceManager.GetString("Message_NoScenarioMatchesSelector", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No Window icon available.
         /// </summary>
         public static string Message_NoWindowIconAvailable {
@@ -516,6 +741,92 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_NumberOfTrackersAcrossAllActivitiesNotIdentical {
             get {
                 return ResourceManager.GetString("Message_NumberOfTrackersAcrossAllActivitiesNotIdentical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot be negative (use 0 for no limit)..
+        /// </summary>
+        public static string Message_OptionCannotBeNegative {
+            get {
+                return ResourceManager.GetString("Message_OptionCannotBeNegative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} can only be given once..
+        /// </summary>
+        public static string Message_OptionGivenMoreThanOnce {
+            get {
+                return ResourceManager.GetString("Message_OptionGivenMoreThanOnce", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be a date and time with its offset from UTC, such as 2026-09-27T12:00:00+01:00 or 2026-09-27T11:00:00Z..
+        /// </summary>
+        public static string Message_OptionMustBeADateTimeWithOffset {
+            get {
+                return ResourceManager.GetString("Message_OptionMustBeADateTimeWithOffset", resourceCulture);
+            }
+        }
+        
+        
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} needs a value..
+        /// </summary>
+        public static string Message_OptionNeedsValue {
+            get {
+                return ResourceManager.GetString("Message_OptionNeedsValue", resourceCulture);
+            }
+        }
+        
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid when zpp runs on a server: use {1}, or set {2}..
+        /// </summary>
+        public static string Message_OptionOnlyValidWithServer {
+            get {
+                return ResourceManager.GetString("Message_OptionOnlyValidWithServer", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is required when {1} is specified..
+        /// </summary>
+        public static string Message_OptionRequiredWithOption {
+            get {
+                return ResourceManager.GetString("Message_OptionRequiredWithOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} are only valid with {2}..
+        /// </summary>
+        public static string Message_OptionsOnlyValidWithOption {
+            get {
+                return ResourceManager.GetString("Message_OptionsOnlyValidWithOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} takes at most {1} values..
+        /// </summary>
+        public static string Message_OptionTakesAtMostValues {
+            get {
+                return ResourceManager.GetString("Message_OptionTakesAtMostValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} takes no value..
+        /// </summary>
+        public static string Message_OptionTakesNoValue {
+            get {
+                return ResourceManager.GetString("Message_OptionTakesNoValue", resourceCulture);
             }
         }
         
@@ -538,6 +849,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The run was cancelled..
+        /// </summary>
+        public static string Message_RunCancelled {
+            get {
+                return ResourceManager.GetString("Message_RunCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping after the step that is in progress. Press Ctrl+C again to stop at once..
+        /// </summary>
+        public static string Message_RunStopping {
+            get {
+                return ResourceManager.GetString("Message_RunStopping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scenario &apos;{0}&apos; has no scenario data in the project file.
+        /// </summary>
+        public static string Message_ScenarioHasNoScenarioData {
+            get {
+                return ResourceManager.GetString("Message_ScenarioHasNoScenarioData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The scenario has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ScenarioUnsavedChanges {
@@ -547,11 +885,964 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An output could not be produced..
+        /// </summary>
+        public static string Message_ServeAnOutputFailed {
+            get {
+                return ResourceManager.GetString("Message_ServeAnOutputFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request needs the server&apos;s API key, as Authorization: Bearer &lt;key&gt;..
+        /// </summary>
+        public static string Message_ServeApiKeyRequired {
+            get {
+                return ResourceManager.GetString("Message_ServeApiKeyRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The API key must be at least {0} characters. A random 256-bit key is 44: make one with openssl rand -base64 32..
+        /// </summary>
+        public static string Message_ServeApiKeyTooShort {
+            get {
+                return ResourceManager.GetString("Message_ServeApiKeyTooShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid with an http address that other machines can reach to listen on: it says that a proxy in front of zpp serve ends TLS..
+        /// </summary>
+        public static string Message_ServeBehindTlsProxyNeedsHttp {
+            get {
+                return ResourceManager.GetString("Message_ServeBehindTlsProxyNeedsHttp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server is running all the jobs it can, with as many waiting as it allows. Try again shortly..
+        /// </summary>
+        public static string Message_ServeBusy {
+            get {
+                return ResourceManager.GetString("Message_ServeBusy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp serve imports .xlsx files only: import {0} with zpp itself..
+        /// </summary>
+        public static string Message_ServeCannotImport {
+            get {
+                return ResourceManager.GetString("Message_ServeCannotImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only valid with an https address to listen on..
+        /// </summary>
+        public static string Message_ServeCertificateNeedsHttps {
+            get {
+                return ResourceManager.GetString("Message_ServeCertificateNeedsHttps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The compilation did not finish within its time limit..
+        /// </summary>
+        public static string Message_ServeCompilationTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServeCompilationTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be from {0} to {1}.
+        /// </summary>
+        public static string Message_ServeErrorDurationOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorDurationOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to needs a name: the outputs are named after it.
+        /// </summary>
+        public static string Message_ServeErrorFileNeedsName {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorFileNeedsName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not something the answer can include: use console.
+        /// </summary>
+        public static string Message_ServeErrorIncludeNotKnown {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorIncludeNotKnown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be the 32 hexadecimal characters of the trace id that the request which began the job gave.
+        /// </summary>
+        public static string Message_ServeErrorJobIdNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorJobIdNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be true or false.
+        /// </summary>
+        public static string Message_ServeErrorMustBeABoolean {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeABoolean", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a date and time with its offset from UTC, such as 2026-10-03T09:00:00+01:00.
+        /// </summary>
+        public static string Message_ServeErrorMustBeADateTimeWithOffset {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeADateTimeWithOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a duration of days, hours, minutes and seconds, such as PT5S.
+        /// </summary>
+        public static string Message_ServeErrorMustBeADuration {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeADuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a file.
+        /// </summary>
+        public static string Message_ServeErrorMustBeAFile {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a JSON object.
+        /// </summary>
+        public static string Message_ServeErrorMustBeAnObject {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAnObject", resourceCulture);
+            }
+        }
+        
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a string.
+        /// </summary>
+        public static string Message_ServeErrorMustBeAString {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be a whole number.
+        /// </summary>
+        public static string Message_ServeErrorMustBeAWholeNumber {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAWholeNumber", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be an Excel workbook (.xlsx).
+        /// </summary>
+        public static string Message_ServeErrorMustBeAWorkbook {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeAWorkbook", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be valid JSON (line {0}, position {1}).
+        /// </summary>
+        public static string Message_ServeErrorMustBeJson {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeJson", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be valid multipart/form-data.
+        /// </summary>
+        public static string Message_ServeErrorMustBeMultipart {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeMultipart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be one of: {0}.
+        /// </summary>
+        public static string Message_ServeErrorMustBeOneOf {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorMustBeOneOf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is not known here: check its spelling.
+        /// </summary>
+        public static string Message_ServeErrorNotKnown {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorNotKnown", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is only valid with a project sent as &apos;project&apos;.
+        /// </summary>
+        public static string Message_ServeErrorOnlyWithProject {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorOnlyWithProject", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be at most {0} KB.
+        /// </summary>
+        public static string Message_ServeErrorOptionsTooLarge {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorOptionsTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is not a parameter this endpoint takes.
+        /// </summary>
+        public static string Message_ServeErrorParameterNotKnown {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorParameterNotKnown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a part this endpoint takes.
+        /// </summary>
+        public static string Message_ServeErrorPartNotKnown {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorPartNotKnown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to must be from 1 to {0} pixels.
+        /// </summary>
+        public static string Message_ServeErrorPixelsOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorPixelsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to send a project or a workbook to import, not both.
+        /// </summary>
+        public static string Message_ServeErrorProjectOrImport {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorProjectOrImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is required: send the project as a file named &apos;project&apos;, or a workbook to import as &apos;import&apos;.
+        /// </summary>
+        public static string Message_ServeErrorProjectRequired {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorProjectRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is required: send the project as a file named &apos;project&apos;.
+        /// </summary>
+        public static string Message_ServeErrorProjectRequiredForScenarios {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorProjectRequiredForScenarios", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is required.
+        /// </summary>
+        public static string Message_ServeErrorRequired {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorRequired", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} needs a certificate: use {1}..
+        /// </summary>
+        public static string Message_ServeHttpsNeedsCertificate {
+            get {
+                return ResourceManager.GetString("Message_ServeHttpsNeedsCertificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No job with this id is running. The job has not begun, or it has ended, and then the answer to its request is the only word of it..
+        /// </summary>
+        public static string Message_ServeJobNotRunning {
+            get {
+                return ResourceManager.GetString("Message_ServeJobNotRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The job ran for longer than the server&apos;s limit of {0} seconds, and was stopped..
+        /// </summary>
+        public static string Message_ServeJobTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServeJobTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}) must be at most {2}..
+        /// </summary>
+        public static string Message_ServeLimitTooHigh {
+            get {
+                return ResourceManager.GetString("Message_ServeLimitTooHigh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}) must be at least {2}..
+        /// </summary>
+        public static string Message_ServeLimitTooLow {
+            get {
+                return ResourceManager.GetString("Message_ServeLimitTooLow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not an address zpp serve can listen on: give http or https, then localhost, an IP address or *, then a port - such as http://localhost:9770 - or unix: and the path of a socket..
+        /// </summary>
+        public static string Message_ServeListenAddressNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeListenAddressNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other machines can reach {0}, so zpp serve needs an API key to listen there: set {1}, or use {2}..
+        /// </summary>
+        public static string Message_ServeNeedsApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServeNeedsApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server can answer as {0}..
+        /// </summary>
+        public static string Message_ServeNotAcceptable {
+            get {
+                return ResourceManager.GetString("Message_ServeNotAcceptable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The options are larger than the {0} KB the server accepts..
+        /// </summary>
+        public static string Message_ServeOptionsTooLarge {
+            get {
+                return ResourceManager.GetString("Message_ServeOptionsTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} could not be produced..
+        /// </summary>
+        public static string Message_ServeOutputFailed {
+            get {
+                return ResourceManager.GetString("Message_ServeOutputFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} outputs could not be produced..
+        /// </summary>
+        public static string Message_ServeOutputsFailed {
+            get {
+                return ResourceManager.GetString("Message_ServeOutputsFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is plain http and {1} is https, and other machines can reach both: a client could use the one that is not protected. Listen beyond this machine on one kind of address..
+        /// </summary>
+        public static string Message_ServePlainHttpBesideTls {
+            get {
+                return ResourceManager.GetString("Message_ServePlainHttpBesideTls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is plain http, which sends the API key and every project in the clear to any machine on the way. Listen on https instead - or, if a proxy in front of zpp serve ends TLS and only the proxy can reach this address, say so with {1}..
+        /// </summary>
+        public static string Message_ServePlainHttpBeyondThisMachine {
+            get {
+                return ResourceManager.GetString("Message_ServePlainHttpBeyondThisMachine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project has a compilation error..
+        /// </summary>
+        public static string Message_ServeProjectHasACompilationError {
+            get {
+                return ResourceManager.GetString("Message_ServeProjectHasACompilationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project has {0} compilation errors..
+        /// </summary>
+        public static string Message_ServeProjectHasCompilationErrors {
+            get {
+                return ResourceManager.GetString("Message_ServeProjectHasCompilationErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file could not be read as a project..
+        /// </summary>
+        public static string Message_ServeProjectNotReadable {
+            get {
+                return ResourceManager.GetString("Message_ServeProjectNotReadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to it does not match the job zpp sent..
+        /// </summary>
+        public static string Message_ServerAnswerDoesNotMatchJob {
+            get {
+                return ResourceManager.GetString("Message_ServerAnswerDoesNotMatchJob", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave an answer zpp cannot read: {1}.
+        /// </summary>
+        public static string Message_ServerAnswerNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServerAnswerNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp serve imports .xlsx files only: to import {0}, run zpp without {1}..
+        /// </summary>
+        public static string Message_ServerCannotImport {
+            get {
+                return ResourceManager.GetString("Message_ServerCannotImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request has a problem..
+        /// </summary>
+        public static string Message_ServeRequestHasAProblem {
+            get {
+                return ResourceManager.GetString("Message_ServeRequestHasAProblem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request has {0} problems..
+        /// </summary>
+        public static string Message_ServeRequestHasProblems {
+            get {
+                return ResourceManager.GetString("Message_ServeRequestHasProblems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send the request as multipart/form-data: the project as a file named &apos;project&apos; - or a workbook to import, named &apos;import&apos; - and its options as JSON in a part named &apos;options&apos;..
+        /// </summary>
+        public static string Message_ServeRequestNotMultipartCompile {
+            get {
+                return ResourceManager.GetString("Message_ServeRequestNotMultipartCompile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send the request as multipart/form-data: the project as a file named &apos;project&apos;..
+        /// </summary>
+        public static string Message_ServeRequestNotMultipartScenarios {
+            get {
+                return ResourceManager.GetString("Message_ServeRequestNotMultipartScenarios", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request could not be read as multipart/form-data..
+        /// </summary>
+        public static string Message_ServeRequestNotReadable {
+            get {
+                return ResourceManager.GetString("Message_ServeRequestNotReadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request is larger than the {0} MB the server accepts..
+        /// </summary>
+        public static string Message_ServeRequestTooLarge {
+            get {
+                return ResourceManager.GetString("Message_ServeRequestTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is set, so zpp runs on a server, which imports .xlsx files only: to import {1}, use {2}..
+        /// </summary>
+        public static string Message_ServerFromEnvironmentCannotImport {
+            get {
+                return ResourceManager.GetString("Message_ServerFromEnvironmentCannotImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} needs its API key: set {1}, or use {2}..
+        /// </summary>
+        public static string Message_ServerNeedsApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServerNeedsApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos;, from {1}, is not a server zpp can run on: give its http or https address, such as http://localhost:9770, or unix: and the path of its socket..
+        /// </summary>
+        public static string Message_ServerNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServerNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} (trace id {1}).
+        /// </summary>
+        public static string Message_ServerReasonWithRequestId {
+            get {
+                return ResourceManager.GetString("Message_ServerReasonWithRequestId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} did not run the job: {1}.
+        /// </summary>
+        public static string Message_ServerRefused {
+            get {
+                return ResourceManager.GetString("Message_ServerRefused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} did not accept the API key..
+        /// </summary>
+        public static string Message_ServerRefusedApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServerRefusedApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to there is no socket at {0}..
+        /// </summary>
+        public static string Message_ServerSocketNotThere {
+            get {
+                return ResourceManager.GetString("Message_ServerSocketNotThere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} was still busy after {1} seconds, so the job did not run..
+        /// </summary>
+        public static string Message_ServerStayedBusy {
+            get {
+                return ResourceManager.GetString("Message_ServerStayedBusy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp could not reach the server at {0}: {1}.
+        /// </summary>
+        public static string Message_ServerUnreachable {
+            get {
+                return ResourceManager.GetString("Message_ServerUnreachable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The limits in {0} or in the {1} environment variables could not be read: {2}.
+        /// </summary>
+        public static string Message_ServeSettingsNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeSettingsNotValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server is busy.
+        /// </summary>
+        public static string Message_ServeTitleBusy {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleBusy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project did not compile.
+        /// </summary>
+        public static string Message_ServeTitleCompilationFailed {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleCompilationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The compilation ran out of time.
+        /// </summary>
+        public static string Message_ServeTitleCompilationTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleCompilationTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The job took too long.
+        /// </summary>
+        public static string Message_ServeTitleJobTimeout {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleJobTimeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request could not be understood.
+        /// </summary>
+        public static string Message_ServeTitleMalformedRequest {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleMalformedRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An output could not be produced.
+        /// </summary>
+        public static string Message_ServeTitleOutputFailed {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleOutputFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project could not be read.
+        /// </summary>
+        public static string Message_ServeTitleProjectNotReadable {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleProjectNotReadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The scenario cannot be selected.
+        /// </summary>
+        public static string Message_ServeTitleScenarioNotSelectable {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleScenarioNotSelectable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The simulation cannot be done.
+        /// </summary>
+        public static string Message_ServeTitleSimulationNotPossible {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleSimulationNotPossible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server could not process the request.
+        /// </summary>
+        public static string Message_ServeTitleUnexpectedError {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleUnexpectedError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request is not valid.
+        /// </summary>
+        public static string Message_ServeTitleValidationFailed {
+            get {
+                return ResourceManager.GetString("Message_ServeTitleValidationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server failed to process the request. Its log says why, under the request&apos;s trace id..
+        /// </summary>
+        public static string Message_ServeUnexpectedError {
+            get {
+                return ResourceManager.GetString("Message_ServeUnexpectedError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server failed to process the request (trace id {0})..
+        /// </summary>
+        public static string Message_ServeUnexpectedErrorConsole {
+            get {
+                return ResourceManager.GetString("Message_ServeUnexpectedErrorConsole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp serve cannot restrict the socket {0} to its owner: {1}.
+        /// </summary>
+        public static string Message_ServeUnixSocketCannotRestrict {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketCannotRestrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to zpp serve cannot tell whether a server is listening on the socket {0}: {1}.
+        /// </summary>
+        public static string Message_ServeUnixSocketCannotTell {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketCannotTell", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no folder {0} for the socket {1}..
+        /// </summary>
+        public static string Message_ServeUnixSocketFolderNotThere {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketFolderNotThere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A server is already listening on the socket {0}..
+        /// </summary>
+        public static string Message_ServeUnixSocketInUse {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketInUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is a file, not a socket left behind by a server, and zpp serve does not remove it..
+        /// </summary>
+        public static string Message_ServeUnixSocketIsAFile {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketIsAFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is a folder, not a socket..
+        /// </summary>
+        public static string Message_ServeUnixSocketIsAFolder {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketIsAFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The socket {0} is listed more than once..
+        /// </summary>
+        public static string Message_ServeUnixSocketListedTwice {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketListedTwice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; gives no path for the socket: give unix: and the path of the socket to listen on, such as unix:/tmp/zpp.sock..
+        /// </summary>
+        public static string Message_ServeUnixSocketNeedsPath {
+            get {
+                return ResourceManager.GetString("Message_ServeUnixSocketNeedsPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file could not be read as a workbook..
+        /// </summary>
+        public static string Message_ServeWorkbookNotReadable {
+            get {
+                return ResourceManager.GetString("Message_ServeWorkbookNotReadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; matches {1} scenarios - use {2} and select one by id.
+        /// </summary>
+        public static string Message_SeveralScenariosMatch {
+            get {
+                return ResourceManager.GetString("Message_SeveralScenariosMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; matches {1} scenarios.
+        /// </summary>
+        public static string Message_SeveralScenariosMatchSelector {
+            get {
+                return ResourceManager.GetString("Message_SeveralScenariosMatchSelector", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The plan has compilation errors, and cannot be simulated..
+        /// </summary>
+        public static string Message_SimulationCompilationErrors {
+            get {
+                return ResourceManager.GetString("Message_SimulationCompilationErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} files were saved in {1}..
+        /// </summary>
+        public static string Message_SimulationFilesSaved {
+            get {
+                return ResourceManager.GetString("Message_SimulationFilesSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The simulation of the plan has {0} iterations, and a run can have {1} at most..
+        /// </summary>
+        public static string Message_SimulationIterationsAboveLimit {
+            get {
+                return ResourceManager.GetString("Message_SimulationIterationsAboveLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The result has {0} iterations, and a sheet of Excel has room for {1}..
+        /// </summary>
+        public static string Message_SimulationIterationsFitNoSheet {
+            get {
+                return ResourceManager.GetString("Message_SimulationIterationsFitNoSheet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of iterations must be from 1 to {0}..
+        /// </summary>
+        public static string Message_SimulationIterationsOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationIterationsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The plan has no activities to simulate..
+        /// </summary>
+        public static string Message_SimulationNoActivities {
+            get {
+                return ResourceManager.GetString("Message_SimulationNoActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The iterations of a run are not in a project file. Run the simulation again to have them..
+        /// </summary>
+        public static string Message_SimulationNoIterations {
+            get {
+                return ResourceManager.GetString("Message_SimulationNoIterations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no simulation result..
+        /// </summary>
+        public static string Message_SimulationNoResult {
+            get {
+                return ResourceManager.GetString("Message_SimulationNoResult", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The plan has no simulation result to make the outputs from, and the simulation was not asked to run..
+        /// </summary>
+        public static string Message_SimulationOutputsNeedAResult {
+            get {
+                return ResourceManager.GetString("Message_SimulationOutputsNeedAResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The shape value must be a number above 0..
+        /// </summary>
+        public static string Message_SimulationShapeOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationShapeOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of threads must be -1 (all the processors), or 1 or more..
+        /// </summary>
+        public static string Message_SimulationThreadsOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_SimulationThreadsOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook was saved as {0}..
+        /// </summary>
+        public static string Message_SimulationWorkbookSaved {
+            get {
+                return ResourceManager.GetString("Message_SimulationWorkbookSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit must be equal or greater than 0.
         /// </summary>
         public static string Message_SlackLimitMustBeEqualOrGreaterThanZero {
             get {
                 return ResourceManager.GetString("Message_SlackLimitMustBeEqualOrGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify either {0} or {1}, but not both..
+        /// </summary>
+        public static string Message_SpecifyEitherOptionNotBoth {
+            get {
+                return ResourceManager.GetString("Message_SpecifyEitherOptionNotBoth", resourceCulture);
             }
         }
         
@@ -588,6 +1879,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_TrackerCountMustBeEqualOrGreaterThanZero {
             get {
                 return ResourceManager.GetString("Message_TrackerCountMustBeEqualOrGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The plan has compilation errors, and the transitive reduction cannot be made. Nothing was changed.
+        /// </summary>
+        public static string Message_TransitiveReductionCompilationErrors {
+            get {
+                return ResourceManager.GetString("Message_TransitiveReductionCompilationErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The dependencies of the plan were changed while the transitive reduction was made. Nothing was changed. Make the transitive reduction again.
+        /// </summary>
+        public static string Message_TransitiveReductionPlanChanged {
+            get {
+                return ResourceManager.GetString("Message_TransitiveReductionPlanChanged", resourceCulture);
             }
         }
         
@@ -682,6 +1991,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is too long to be the path of a socket..
+        /// </summary>
+        public static string Message_UnixSocketPathTooLong {
+            get {
+                return ResourceManager.GetString("Message_UnixSocketPathTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown AllocationMode value:.
         /// </summary>
         public static string Message_UnknownAllocationMode {
@@ -732,6 +2050,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_UnknownNonWorkingDayMode {
             get {
                 return ResourceManager.GetString("Message_UnknownNonWorkingDayMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to open file: unknown version &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_UnknownProjectFileVersion {
+            get {
+                return ResourceManager.GetString("Message_UnknownProjectFileVersion", resourceCulture);
             }
         }
         

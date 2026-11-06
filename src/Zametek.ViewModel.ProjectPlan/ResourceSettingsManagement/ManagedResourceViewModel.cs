@@ -16,6 +16,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
 
+        // The tracker set it makes for itself is the only pipeline it has, and is started with it: see IStartSubscriptions.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+
         #endregion
 
         #region Ctors
@@ -364,10 +367,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            TrackerSet.StartSubscriptions();
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
+            TrackerSet.KillSubscriptions();
         }
 
         #endregion

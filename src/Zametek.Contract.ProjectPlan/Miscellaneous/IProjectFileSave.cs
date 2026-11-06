@@ -4,6 +4,7 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectFileSave
     {
-        Task SaveProjectFileAsync(ProjectModel project, string filename);
+        // Writes the project to the stream. The caller owns the stream, which is left open.
+        Task SaveProjectFileAsync(ProjectModel project, Stream stream);
     }
 }

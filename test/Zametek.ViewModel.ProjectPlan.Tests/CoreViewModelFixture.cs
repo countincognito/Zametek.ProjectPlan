@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI.Builder;
 using System;
@@ -17,10 +18,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// for the file and user interface seams a test never reaches.
     /// </summary>
     /// <remarks>
-    /// The reactive subscriptions are killed immediately, so a test drives the core
-    /// explicitly (RunCompile, the settings setters) rather than waiting on the
-    /// pipeline. That keeps these tests about what the core does with the plan, not
-    /// about when the pipeline decides to do it.
+    /// The core is never started, so it has no reactive pipelines, and a test drives it
+    /// explicitly (RunCompile, the settings setters) rather than waiting on them. That
+    /// keeps these tests about what the core does with the plan, not about when the
+    /// pipeline decides to do it.
     /// </remarks>
     public static class CoreViewModelFixture
     {
@@ -31,9 +32,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// models need in order to be constructed at all. The desktop application gets
         /// this from Avalonia and the command line tool does it directly; a test host has
         /// neither, so it is done here. Process-global, so it must happen exactly once
-        /// however many fixtures a run builds.
+        /// however many fixtures a run builds. It also sets the schedulers, so a test that
+        /// installs its own must call this first.
         /// </summary>
-        private static void EnsureReactiveUIInitialized()
+        internal static void EnsureReactiveUIInitialized()
         {
             if (Interlocked.Exchange(ref s_ReactiveUIInitialized, 1) == 0)
             {
@@ -44,7 +46,62 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         public static CoreViewModel Create(
+            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+            TimeProvider? clock = null)
+        {
+            (CoreViewModel coreViewModel, _) = Build(compilationTimeoutMilliseconds, clock);
+
+            coreViewModel.AutoCompile = false;
+            return coreViewModel;
+        }
+
+        /// <summary>
+        /// Builds a core as <see cref="Create"/> does, and hands back the settings service it was built over, for a
+        /// test that builds something else over the same one - as the application does.
+        /// </summary>
+        public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService(
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            ILogger<CoreViewModel>? logger = null)
+        {
+            (CoreViewModel coreViewModel, ISettingService settingService) = Build(
+                AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+                projectScenarioFileImport: projectScenarioFileImport,
+                logger: logger);
+
+            coreViewModel.AutoCompile = false;
+            return (coreViewModel, settingService);
+        }
+
+        /// <summary>
+        /// Builds a core whose compilations a test can hold part way through, over a graph service whose first build of
+        /// the arrow graph - the first step of the cascade - it can hold in the same way. Nothing is held until the
+        /// test says so.
+        /// </summary>
+        public static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs) CreateGated(
             int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
+        {
+            (GatedCoreViewModel core, GatedGraphCompilationService graphs, _) = BuildGated(compilationTimeoutMilliseconds);
+            return (core, graphs);
+        }
+
+        /// <summary>
+        /// Builds a core as <see cref="CreateGated"/> does, and hands back the settings service it was built over, for a
+        /// test that looks at the id of the scenario, or that builds something else over the same service. A test that
+        /// imports gives the core the import that it needs.
+        /// </summary>
+        public static (GatedCoreViewModel Core, ISettingService SettingService) CreateGatedWithSettingService(
+            int compilationTimeoutMilliseconds,
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileImport? projectScenarioFileImport = null)
+        {
+            (GatedCoreViewModel core, _, ISettingService settingService) = BuildGated(compilationTimeoutMilliseconds, logger, projectScenarioFileImport);
+            return (core, settingService);
+        }
+
+        private static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs, ISettingService SettingService) BuildGated(
+            int compilationTimeoutMilliseconds,
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileImport? projectScenarioFileImport = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -54,9 +111,91 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 CompilationTimeoutMilliseconds = compilationTimeoutMilliseconds,
             };
             var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
+            var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));
+
+            var coreViewModel = new GatedCoreViewModel(
+                projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
+                new TestProjectScenarioFileExport(),
+                settingService,
+                dateTimeCalculator,
+                mapper,
+                graphs,
+                new ResourceSchedulingService(mapper),
+                new MetricCalculationService(mapper, dateTimeCalculator),
+                new TestDataGridScrollManager(),
+                logger ?? NullLogger<CoreViewModel>.Instance);
+
+            coreViewModel.AutoCompile = false;
+            return (coreViewModel, graphs, settingService);
+        }
+
+        /// <summary>
+        /// Builds the core and the settings managers that sit on top of it with their
+        /// reactive subscriptions <em>started</em>, as the application's container starts
+        /// them, for the tests that are about when the pipeline delivers rather than what
+        /// the core computes.
+        /// </summary>
+        /// <remarks>
+        /// The opposite of <see cref="Create"/>, and deliberately so. Never starting the
+        /// subscriptions makes a test independent of the scheduler, which is what nearly
+        /// every test here wants; but a whole class of defect lives in the deferral
+        /// itself, and none of it is reachable without them. Pair this with a
+        /// <c>MainThreadSequencerScope</c> so the deferred deliveries queue up and the
+        /// test says when they run.
+        /// <para>
+        /// Auto compilation is left off so a test is not racing background compiles it
+        /// did not ask for; a scenario load still compiles, because
+        /// <c>ProcessProjectScenario</c> runs one explicitly.
+        /// </para>
+        /// </remarks>
+        public static SubscribedHarness CreateWithSubscriptions(
+            int compilationTimeoutMilliseconds = AppSettingsModel.DefaultCompilationTimeoutMilliseconds)
+        {
+            (CoreViewModel coreViewModel, ISettingService settingService) = Build(compilationTimeoutMilliseconds);
+
+            // Each is started as soon as it is made, in the order they are made, as the application's container does it.
+            coreViewModel.StartSubscriptions();
+            coreViewModel.AutoCompile = false;
+
+            var dialogService = new TestDialogService();
+
+            var resourceSettingsManagerViewModel = new ResourceSettingsManagerViewModel(
+                coreViewModel,
+                settingService,
+                dialogService);
+            resourceSettingsManagerViewModel.StartSubscriptions();
+
+            var workStreamSettingsManagerViewModel = new WorkStreamSettingsManagerViewModel(
+                coreViewModel,
+                resourceSettingsManagerViewModel,
+                settingService,
+                dialogService);
+            workStreamSettingsManagerViewModel.StartSubscriptions();
+
+            return new SubscribedHarness(
+                coreViewModel,
+                settingService,
+                resourceSettingsManagerViewModel,
+                workStreamSettingsManagerViewModel);
+        }
+
+        private static (CoreViewModel CoreViewModel, ISettingService SettingService) Build(
+            int compilationTimeoutMilliseconds,
+            TimeProvider? clock = null,
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            ILogger<CoreViewModel>? logger = null)
+        {
+            EnsureReactiveUIInitialized();
+
+            var mapper = new ProjectPlanMapper();
+            var settingService = new TestSettingService
+            {
+                CompilationTimeoutMilliseconds = compilationTimeoutMilliseconds,
+            };
+            var dateTimeCalculator = new DateTimeCalculator(clock ?? TimeProvider.System);
 
             var coreViewModel = new CoreViewModel(
-                new TestProjectScenarioFileImport(),
+                projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
                 new TestProjectScenarioFileExport(),
                 settingService,
                 dateTimeCalculator,
@@ -65,11 +204,45 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 new ResourceSchedulingService(mapper),
                 new MetricCalculationService(mapper, dateTimeCalculator),
                 new TestDataGridScrollManager(),
-                NullLogger<CoreViewModel>.Instance);
+                logger ?? NullLogger<CoreViewModel>.Instance);
 
-            coreViewModel.KillSubscriptions();
-            coreViewModel.AutoCompile = false;
-            return coreViewModel;
+            return (coreViewModel, settingService);
+        }
+
+        /// <summary>
+        /// The core plus the settings managers built over it, all with live
+        /// subscriptions. Disposing it tears them down in the order the application
+        /// would.
+        /// </summary>
+        public sealed class SubscribedHarness
+            : IDisposable
+        {
+            public SubscribedHarness(
+                CoreViewModel coreViewModel,
+                ISettingService settingService,
+                ResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
+                WorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
+            {
+                Core = coreViewModel;
+                SettingService = settingService;
+                ResourceSettingsManager = resourceSettingsManagerViewModel;
+                WorkStreamSettingsManager = workStreamSettingsManagerViewModel;
+            }
+
+            public CoreViewModel Core { get; }
+
+            public ISettingService SettingService { get; }
+
+            public ResourceSettingsManagerViewModel ResourceSettingsManager { get; }
+
+            public WorkStreamSettingsManagerViewModel WorkStreamSettingsManager { get; }
+
+            public void Dispose()
+            {
+                WorkStreamSettingsManager.Dispose();
+                ResourceSettingsManager.Dispose();
+                Core.Dispose();
+            }
         }
 
         /// <summary>
@@ -80,6 +253,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static GraphSettingsModel DefaultGraphSettings => new TestSettingService().DefaultGraphSettings;
 
         /// <summary>
+        /// The settings the application starts with, for a test that needs a setting
+        /// service but no core.
+        /// </summary>
+        public static ISettingService CreateSettingService() => new TestSettingService();
+
+        /// <summary>
         /// Reads the current scenario out of a project file in TestFiles, through the same
         /// reader the application uses. A real plan carries the shape a hand-built one does
         /// not - dozens of activities, a deep dependency chain, a mixture of activities that
@@ -88,20 +267,39 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public static async Task<ProjectScenarioModel> LoadProjectScenarioAsync(string testFileName)
         {
-            var projectFileOpen = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
-
-            ProjectModel projectModel = await projectFileOpen.OpenProjectFileAsync(
-                Path.Combine(@"TestFiles", testFileName));
-
+            ProjectModel projectModel = await LoadProjectAsync(testFileName);
             return projectModel.Files.Single(x => x.NodeId == projectModel.Current).Scenario;
         }
 
         /// <summary>
+        /// Reads a whole project file in TestFiles, through the same reader the application uses.
+        /// </summary>
+        public static async Task<ProjectModel> LoadProjectAsync(string testFileName)
+        {
+            var projectFileOpen = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
+
+            await using FileStream stream = File.OpenRead(Path.Combine(@"TestFiles", testFileName));
+            return await projectFileOpen.OpenProjectFileAsync(stream);
+        }
+
+        /// <summary>
+        /// A dialog service for a test that never provokes a dialog: any it does provoke throws.
+        /// </summary>
+        public static IDialogService CreateDialogService() => new TestDialogService();
+
+        /// <summary>
+        /// A dispatcher that runs what it is given where it stands, as a job's does, for a test that has no user interface
+        /// thread.
+        /// </summary>
+        public static IUIDispatcher CreateUIDispatcher() => new InlineUIDispatcher();
+
+        /// <summary>
         /// A plan of chained activities, each targeting one of two resources in turn, so
         /// that a compilation has both a critical path to calculate and a schedule to
-        /// resolve rather than being trivially satisfiable.
+        /// resolve rather than being trivially satisfiable. With <paramref name="coloredResources"/> false the
+        /// resources have no color of their own, and the series take the preset colors for them.
         /// </summary>
-        public static ProjectScenarioModel CreateProjectScenario(int activityCount)
+        public static ProjectScenarioModel CreateProjectScenario(int activityCount, int durationOffset = 0, bool coloredResources = true)
         {
             List<ResourceModel> resources =
                 [.. Enumerable.Range(1, 2).Select(id => new ResourceModel
@@ -110,7 +308,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     Name = $@"Resource {id}",
                     DisplayOrder = id,
                     IsExplicitTarget = false,
-                    ColorFormat = ColorHelper.Random(),
+                    ColorFormat = coloredResources ? ColorHelper.Random() : null!,
                 })];
 
             List<DependentActivityModel> activities =
@@ -121,7 +319,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                         Id = id,
                         DisplayOrder = id,
                         Name = $@"Activity {id}",
-                        Duration = 1 + (id % 5),
+                        Duration = 1 + (id % 5) + durationOffset,
                         TargetResources = [1 + (id % 2)],
                         ColorFormat = ColorHelper.Random(),
                     },
@@ -151,7 +349,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #region Stand-ins
 
-        private sealed class TestSettingService
+        internal sealed class TestSettingService
             : SettingServiceBase
         {
             private string m_ProjectDirectory = string.Empty;
@@ -209,30 +407,67 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private sealed class TestProjectScenarioFileImport
             : IProjectScenarioFileImport
         {
-            public ProjectScenarioImportModel ImportProjectScenarioFile(string filename) =>
-                throw new NotSupportedException();
-
-            public Task<ProjectScenarioImportModel> ImportProjectScenarioFileAsync(string filename) =>
-                throw new NotSupportedException();
-
-            public ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename) =>
-                throw new NotSupportedException();
-
-            public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename) =>
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) =>
                 throw new NotSupportedException();
         }
 
         private sealed class TestProjectScenarioFileExport
             : IProjectScenarioFileExport
         {
-            public void ExportProjectScenarioFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
+            public void ExportProjectScenarioFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, Stream stream, ProjectScenarioExportFormat format) =>
+                throw new NotSupportedException();
+        }
+
+        /// <summary>
+        /// Never reached: a test that provokes a dialog has gone wrong, and throwing
+        /// says so rather than letting the run continue past it.
+        /// </summary>
+        private sealed class TestDialogService
+            : IDialogService
+        {
+            public object Parent { set { } }
+
+            public Task ShowNotificationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowErrorAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowWarningAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowInfoAsync(string title, string header, string message, bool showMainPageLink = false) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowInfoAsync(string title, string header, string message, double height, double width, bool showMainPageLink = false) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowContextAsync(string title, string header, string message, object context) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowContextAsync(string title, string header, string message, object context, double height, double width) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowConfirmationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) =>
                 throw new NotSupportedException();
 
-            public Task ExportProjectScenarioFileAsync(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
+            public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters) =>
                 throw new NotSupportedException();
+        }
 
-            public void ExportProjectScenarioXlsxFile(ProjectScenarioModel projectScenario, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename) =>
-                throw new NotSupportedException();
+        private sealed class InlineUIDispatcher
+            : IUIDispatcher
+        {
+            public Task InvokeAsync(Action action)
+            {
+                action();
+                return Task.CompletedTask;
+            }
+
+            public void Defer(Action action) => action();
         }
 
         private sealed class TestDataGridScrollManager

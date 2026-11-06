@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -85,19 +86,26 @@ namespace Zametek.ViewModel.ProjectPlan
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
         private readonly InteractiveGraphViewModel m_Interactive;
 
+        // The reactive pipelines that deliver on another thread, made by StartSubscriptions and not by the constructor:
+        // see IStartSubscriptions. The rebuild trigger reaches the interactive graph through a subject that the
+        // constructor makes, and that stays silent until the pipeline is connected to it.
+        private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
+        private readonly Subject<Unit> m_RebuildRequests;
+        private IDisposable? m_RebuildSub;
+
         // Keep the interactive graph's edge routing mode and the scenario's persisted routing-mode
         // setting in step (see the ctor).
-        private readonly IDisposable m_EdgeRoutingModePushSub;
         private readonly IDisposable m_EdgeRoutingModeApplySub;
 
         // Reset the interactive viewport (zoom x1, default pan, cleared framing) when the project
-        // scenario is reset/closed, signalled by the domain graph going empty (see the ctor).
-        private readonly IDisposable m_ResetViewSub;
+        // scenario is reset/closed, signalled by the domain graph going empty (see StartSubscriptions).
+        private IDisposable? m_ResetViewSub;
 
         // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
-        // load. m_SuppressNextSeed lets the seed ignore the manager's own push echo (see the ctor).
-        private readonly IDisposable m_LayoutSeedSub;
-        private bool m_SuppressNextSeed;
+        // load. m_PushedLayout holds the exact instance this manager last pushed, so the seed can
+        // recognise its own echo by identity (see StartSubscriptions).
+        private IDisposable? m_LayoutSeedSub;
+        private Common.ProjectPlan.GraphLayoutModel? m_PushedLayout;
 
         #endregion
 
@@ -107,12 +115,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IGraphLayoutEngine layoutEngine)
+            IGraphLayoutEngine layoutEngine,
+            IGraphDispatcher graphDispatcher)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(layoutEngine);
+            ArgumentNullException.ThrowIfNull(graphDispatcher);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -141,45 +151,25 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Select(x => x.ToGraphTheme())
                 .ToProperty(this, agm => agm.Theme);
 
-            // The single live rebuild trigger: the domain graph, the graph settings, the theme or the
-            // show-names setting changing. Conflated while a project scenario is loaded/reset, and
-            // delivered off the UI thread. The interactive view-model subscribes to this and runs the
-            // MSAGL layout once per change (the headless SVG is built lazily, only when exporting).
-            m_RebuildRequested = this
-                .WhenAnyValue(
-                    agm => agm.m_CoreViewModel.VertexGraph,
-                    agm => agm.m_CoreViewModel.GraphSettings,
-                    agm => agm.m_CoreViewModel.BaseTheme,
-                    agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
-                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Select(_ => Unit.Default);
+            // What the interactive view-model subscribes to. It is silent until StartSubscriptions connects it to the
+            // pipeline that raises it, so a manager that is never started never rebuilds.
+            m_RebuildRequests = new();
+            m_RebuildRequested = m_RebuildRequests.AsObservable();
 
-            m_Interactive = new InteractiveGraphViewModel(this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex);
+            m_Interactive = new InteractiveGraphViewModel(
+                this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex, dispatcher: graphDispatcher);
 
             // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
-            // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
-            // apply a loaded mode back to the interactive graph (every mode applies, including None).
-            // ApplyEdgeRoutingMode's no-op-on-equal guard stops the push and apply from looping.
-            m_EdgeRoutingModePushSub = m_Interactive
-                .WhenAnyValue(x => x.EdgeRoutingMode)
-                .Skip(1)
-                .Subscribe(mode => m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode = mode.ToEdgeRoutingMode());
+            // setting; apply a loaded mode back to the interactive graph (every mode applies, including
+            // None). A load applies its mode on its own thread, and the graph takes what belongs to the UI
+            // thread there. Only a choice of the user raises EdgeRoutingModeChanged, so opening a scenario
+            // does not mark it modified, and a change that is still on its way to the UI thread cannot
+            // write an older mode back. ApplyEdgeRoutingMode's no-op-on-equal guard ends the push.
+            m_Interactive.EdgeRoutingModeChanged += OnInteractiveEdgeRoutingModeChanged;
 
             m_EdgeRoutingModeApplySub = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode)
                 .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
-
-            // Reset the interactive viewport whenever the domain vertex graph goes empty - the signal for
-            // a project scenario reset/close. Deliberately not gated by IsBulkUpdating, so it also fires
-            // during the reset phase of opening a project (which clears then repopulates inside one bulk
-            // window); the repopulation then auto-fits because the framing was cleared. Marshalled to the
-            // UI thread because ResetView raises ViewReset, which touches the control.
-            m_ResetViewSub = this
-                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraph)
-                .Where(graph => graph.Nodes.Count == 0)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ => m_Interactive.ResetView());
 
             // Persist the interactive arrangement in the scenario. Push the live arrangement to the Core
             // when the user changes it (drag/reset) - which marks the scenario modified - and seed the
@@ -187,19 +177,6 @@ namespace Zametek.ViewModel.ProjectPlan
             // flag set on push lets the seed ignore the manager's own echo so it does not re-seed; ObserveOn
             // keeps the seed (which touches the bound node collection) on the UI thread.
             m_Interactive.LayoutChanged += OnInteractiveLayoutChanged;
-
-            m_LayoutSeedSub = this
-                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraphLayout)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(layout =>
-                {
-                    if (m_SuppressNextSeed)
-                    {
-                        m_SuppressNextSeed = false;
-                        return;
-                    }
-                    m_Interactive.SeedNodeLayout(layout.ToNodePositions());
-                });
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;
             Title = Resource.ProjectPlan.Titles.Title_VertexGraphView;
@@ -294,20 +271,28 @@ namespace Zametek.ViewModel.ProjectPlan
         // Delegates to the interactive viewer's Save-As (which prompts and renders the live canvas).
         public ICommand SaveVertexGraphImageFileCommand => m_Interactive.SaveGraphImageFileCommand;
 
-        // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
+        // Export to a stream. Used by the headless CLI, so it exports the fixed MSAGL layout
         // (which needs no populated interactive surface) rather than the on-screen canvas.
-        public Task SaveFixedLayoutVertexGraphImageFileAsync(string? filename)
+        public Task WriteFixedLayoutVertexGraphImageAsync(Stream stream, GraphExportFormat format)
         {
-            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex);
+            return m_Interactive.WriteImageAsync(stream, format.ToGraphFileFormat(), GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex);
+        }
+
+        // Push a routing mode into the Core (which persists it and marks the scenario modified) when the
+        // user chooses it.
+        private void OnInteractiveEdgeRoutingModeChanged(object? sender, EventArgs e)
+        {
+            m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode = m_Interactive.EdgeRoutingMode.ToEdgeRoutingMode();
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario
-        // modified) whenever the user changes it. m_SuppressNextSeed flags the resulting Core-layout
-        // change as self-induced so the seed subscription ignores it rather than re-seeding.
+        // modified) whenever the user changes it. Recording the pushed instance in m_PushedLayout lets
+        // the seed subscription identify the resulting Core-layout change as self-induced and ignore
+        // it rather than re-seeding.
         private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
         {
             Common.ProjectPlan.GraphLayoutModel pushed = ToGraphLayoutModel(m_Interactive.GetNodeLayout());
-            m_SuppressNextSeed = true;
+            m_PushedLayout = pushed;
             m_CoreViewModel.VertexGraphLayout = pushed;
         }
 
@@ -321,10 +306,78 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IStartSubscriptions Members
+
+        public void StartSubscriptions()
+        {
+            if (!m_SubscriptionLifetime.TryStart())
+            {
+                return;
+            }
+
+            // The single live rebuild trigger: the domain graph, the graph settings, the theme or the
+            // show-names setting changing. Conflated while a project scenario is loaded/reset, and
+            // delivered off the UI thread. The interactive view-model subscribes to this and runs the
+            // MSAGL layout once per change (the headless SVG is built lazily, only when exporting).
+            m_RebuildSub = this
+                .WhenAnyValue(
+                    agm => agm.m_CoreViewModel.VertexGraph,
+                    agm => agm.m_CoreViewModel.GraphSettings,
+                    agm => agm.m_CoreViewModel.BaseTheme,
+                    agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
+                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .Select(_ => Unit.Default)
+                .Subscribe(m_RebuildRequests);
+
+            // Reset the interactive viewport whenever the domain vertex graph goes empty - the signal for
+            // a project scenario reset/close. Deliberately not gated by IsBulkUpdating, so it also fires
+            // during the reset phase of opening a project (which clears then repopulates inside one bulk
+            // window); the repopulation then auto-fits because the framing was cleared. Marshalled to the
+            // UI thread because ResetView raises ViewReset, which touches the control.
+            m_ResetViewSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraph)
+                .Where(graph => graph.Nodes.Count == 0)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ => m_Interactive.ResetView());
+
+            // The arrangement a loaded scenario carries: see the note on LayoutChanged in the constructor.
+            m_LayoutSeedSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraphLayout)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    // Read the Core's current layout rather than the delivered snapshot (section 7
+                    // rule 7), and recognise this manager's own echo by identity rather than with a
+                    // one-shot flag. A bare bool was consumed by whichever delivery arrived next,
+                    // which is not necessarily the echo it was set for: a drag landing while a
+                    // load's layout change was still queued ate the flag on the load's delivery and
+                    // skipped seeding the arrangement that had just been opened. Comparing against
+                    // the instance actually pushed says exactly which delivery is ours - the same
+                    // idiom the settings managers use to avoid rebuilding their grids from their
+                    // own edits.
+                    Common.ProjectPlan.GraphLayoutModel layout = m_CoreViewModel.VertexGraphLayout;
+
+                    if (ReferenceEquals(layout, m_PushedLayout))
+                    {
+                        return;
+                    }
+
+                    m_PushedLayout = null;
+                    m_Interactive.SeedNodeLayout(layout.ToNodePositions());
+                });
+        }
+
+        #endregion
+
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
+            m_SubscriptionLifetime.Kill();
+            m_RebuildSub?.Dispose();
+            m_ResetViewSub?.Dispose();
+            m_LayoutSeedSub?.Dispose();
             m_Interactive.Dispose();
         }
 
@@ -349,11 +402,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_Theme?.Dispose();
-                m_EdgeRoutingModePushSub?.Dispose();
                 m_EdgeRoutingModeApplySub?.Dispose();
                 m_ResetViewSub?.Dispose();
                 m_LayoutSeedSub?.Dispose();
                 m_Interactive.LayoutChanged -= OnInteractiveLayoutChanged;
+                m_Interactive.EdgeRoutingModeChanged -= OnInteractiveEdgeRoutingModeChanged;
             }
 
             m_Disposed = true;

@@ -4,12 +4,7 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectScenarioFileImport
     {
-        ProjectScenarioImportModel ImportProjectScenarioFile(string filename);
-
-        Task<ProjectScenarioImportModel> ImportProjectScenarioFileAsync(string filename);
-
-        ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename);
-
-        ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename);
+        // Reads a project scenario in the given format from the stream. The caller owns the stream, which is left open.
+        ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format);
     }
 }

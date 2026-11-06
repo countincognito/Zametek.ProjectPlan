@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceChartManagerViewModel
-        : IKillSubscriptions, IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 
@@ -32,7 +32,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeDisplayStyleCommand { get; }
 
-        Task SaveResourceChartImageFileAsync(string? filename, int width, int height);
+        // Writes the chart to the stream at the given size. The caller owns the stream, which is left open.
+        Task WriteResourceChartImageAsync(Stream stream, ChartImageFormat format, int width, int height);
 
         void BuildResourceChartPlotModel();
     }

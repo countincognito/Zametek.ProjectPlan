@@ -90,6 +90,37 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
             }, CancellationToken.None);
         }
 
+        [Theory]
+        [InlineData(400)]
+        [InlineData(700)]
+        public async Task Canvas_export_draws_the_default_labels_in_the_bundled_font(int weight)
+        {
+            await m_Session.Dispatch(() =>
+            {
+                SKFont font = InteractiveGraphRenderer.GetLabelFont(GraphAppearance.Default.NodeLabelFontFamily, 11.0, (FontWeight)weight);
+
+                font.Typeface.ShouldBeSameAs(GraphFonts.TryGetLabelTypeface(GraphFonts.LabelFamilyName, weight));
+            }, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task On_screen_labels_resolve_the_bundled_font()
+        {
+            await m_Session.Dispatch(() =>
+            {
+                // What the node and edge label TextBlocks ask Avalonia for.
+                FontManager.Current
+                    .TryGetGlyphTypeface(new Typeface(GraphAppearance.Default.NodeLabelFontFamily), out GlyphTypeface? glyphTypeface)
+                    .ShouldBeTrue();
+
+                // The bundled file rather than a system font of the same name: an installed Cascadia Mono is
+                // another version, with another glyph count, and anything else is another family.
+                glyphTypeface.ShouldNotBeNull();
+                glyphTypeface.FamilyName.ShouldBe(GraphFonts.LabelFamilyName);
+                glyphTypeface.GlyphCount.ShouldBe(GraphFonts.TryGetLabelTypeface(GraphFonts.LabelFamilyName, 400)!.GlyphCount);
+            }, CancellationToken.None);
+        }
+
         // Render a single label-less node and return the colour at its centre.
         // Node centre: padding(16) + Width/2, padding + Height/2 = (46, 36).
         private static SKColor RenderNodeCentre(string fillHexCode, GraphVectorExportStyle style)

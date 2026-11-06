@@ -7,5 +7,7 @@
         string Name { get; set; }
 
         string DisplayName { get; }
+
+        string Label { get; }
     }
 }

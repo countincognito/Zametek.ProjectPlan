@@ -1,11 +1,10 @@
-using System.Globalization;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
     /// Pure helper logic for the tracking panels: the shared day count, plus
-    /// the effort timesheet's day-load classification and row labels.
+    /// the effort timesheet's day-load classification.
     /// </summary>
     public static class TrackingHelper
     {
@@ -48,18 +47,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 return TimesheetDayLoad.Over;
             }
             return TimesheetDayLoad.Full;
-        }
-
-        /// <summary>
-        /// Builds the display label for a timesheet row, e.g. "12 - Backend".
-        /// Falls back to just the ID when the activity has no name.
-        /// </summary>
-        public static string BuildActivityLabel(
-            int activityId,
-            string? activityName)
-        {
-            string id = activityId.ToString(CultureInfo.InvariantCulture);
-            return string.IsNullOrWhiteSpace(activityName) ? id : $@"{id} - {activityName}";
         }
     }
 }

@@ -12,16 +12,55 @@ permissions:
 jobs:
   build-and-test:
     name: Build, Lint, Format & Test
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest, so that the image changes only when this line does.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Lint the API description
+        # docs/openapi.yaml against the rules of .spectral.yaml, on top of Spectral's own for OpenAPI, which also check that every
+        # example fits its schema. Pinned, so that a new version's rules cannot fail the build without a change to the description;
+        # node and npx come with the runner image. OpenApiContractTests hold the same description to the server.
+        run: npx --yes @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset .spectral.yaml --fail-severity warn
+
+      - name: Hold the API description to its last release
+        # oasdiff compares docs/openapi.yaml with the copy in the newest release tag (vX.Y.Z, with no pre-release part), and a
+        # change that breaks a client fails the build (VER-3 of the RESTful API Guide). A release from before the API has no
+        # description. Then the step compares the description with itself, which shows only that oasdiff runs and reads it.
+        # The tool is pinned by version and checksum, so that a new release of oasdiff cannot fail the build without a change
+        # here.
+        env:
+          OASDIFF_VERSION: 1.34.1
+          OASDIFF_SHA256: 75775f65b0adebd26a8e013af51a799342dfdc6262d89efa9e3b7bdf89657d90
+        run: |
+          set -euo pipefail
+          git fetch --quiet --depth=1 --no-tags origin '+refs/tags/v*:refs/tags/v*'
+          base=docs/openapi.yaml
+          for tag in $(git tag --list 'v*' --sort=-v:refname); do
+            if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && git cat-file -e "$tag:docs/openapi.yaml" 2>/dev/null; then
+              git show "$tag:docs/openapi.yaml" > "$RUNNER_TEMP/openapi-release.yaml"
+              base="$RUNNER_TEMP/openapi-release.yaml"
+              echo "The description is compared with the one of $tag."
+              break
+            fi
+          done
+          if [ "$base" = docs/openapi.yaml ]; then
+            echo "No release has docs/openapi.yaml yet, and so the description is compared with itself."
+          fi
+          curl --fail --silent --show-error --location --output "$RUNNER_TEMP/oasdiff.tar.gz" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          echo "${OASDIFF_SHA256}  $RUNNER_TEMP/oasdiff.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/oasdiff.tar.gz" -C "$RUNNER_TEMP" oasdiff
+          "$RUNNER_TEMP/oasdiff" breaking --fail-on ERR "$base" docs/openapi.yaml
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: '10.x'
+          # Pinned rather than '10.x', so that a new SDK's analyzers cannot fail the format checks below without a
+          # change to the code. Bump it deliberately, and in release.yml too.
+          dotnet-version: '10.0.401'
 
       # Zametek.ProjectPlan.Browser targets net10.0-browser and is part of the solution filter, so the
       # WebAssembly toolchain has to be present before restore. Installed explicitly rather than left to
@@ -54,17 +93,16 @@ jobs:
           dotnet build --no-restore --configuration Release Zametek.ProjectPlan.slnf
 
       - name: Run tests
-        # NOTE: 1 test (Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0) has a pre-existing
-        # timezone-sensitive failure. continue-on-error keeps CI green while showing the failure.
-        continue-on-error: true
+        # No --results-directory: each test project then writes its results file into its own TestResults folder.
+        # With one shared folder the projects overwrote each other's file, and only the last to finish was uploaded.
         run: |
           dotnet test --no-build --configuration Release --verbosity normal \
-            --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults \
+            --logger "trx;LogFileName=test-results.trx" \
             Zametek.ProjectPlan.slnf
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: test-results
-          path: ./TestResults/test-results.trx
+          path: test/*/TestResults/test-results.trx

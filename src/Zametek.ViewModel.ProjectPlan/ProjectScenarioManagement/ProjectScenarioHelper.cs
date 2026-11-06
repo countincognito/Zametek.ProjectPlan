@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
@@ -520,6 +521,161 @@ namespace Zametek.ViewModel.ProjectPlan
             };
 
             return projectScenarioModel;
+        }
+
+        // The scenario of a plan that has nothing in it. It starts on the day that it is given,
+        // and it holds the settings that every new plan starts with.
+        public static ProjectScenarioModel CreateEmptyProjectScenario(
+            DateTimeOffset today,
+            ISettingService settingService)
+        {
+            ArgumentNullException.ThrowIfNull(settingService);
+
+            var plan = new ProjectScenarioModel
+            {
+                ProjectStart = today,
+                Today = today,
+                DependentActivities = [],
+                GraphSettings = settingService.DefaultGraphSettings,
+                ResourceSettings = settingService.DefaultResourceSettings,
+                WorkStreamSettings = settingService.DefaultWorkStreamSettings,
+                HolidaySettings = settingService.DefaultHolidaySettings,
+                Metrics = new(),
+                ResourceMetrics = [],
+                DisplaySettings = new ProjectScenarioDisplaySettingsModel
+                {
+                    ShowDates = settingService.DefaultShowDates,
+                    UseClassicDates = settingService.DefaultUseClassicDates,
+                    NonWorkingDayMode = settingService.DefaultNonWorkingDayMode,
+                    HideCost = settingService.DefaultHideCost,
+                    HideBilling = settingService.DefaultHideBilling,
+                },
+            };
+
+            return plan;
+        }
+
+        // The holiday settings of a plan that an import makes. They are the default settings, but
+        // the holidays of the import take the place of the default holidays when the import has
+        // any. The default settings that the function is given do not change.
+        public static HolidaySettingsModel CreateImportedHolidaySettings(
+            HolidaySettingsModel defaultHolidaySettings,
+            ProjectScenarioImportModel projectScenarioImportModel)
+        {
+            ArgumentNullException.ThrowIfNull(defaultHolidaySettings);
+            ArgumentNullException.ThrowIfNull(projectScenarioImportModel);
+
+            HolidaySettingsModel holidaySettings = defaultHolidaySettings.CloneObject();
+
+            if (projectScenarioImportModel.Holidays.Count != 0)
+            {
+                holidaySettings.Holidays.Clear();
+
+                foreach (HolidayModel holiday in projectScenarioImportModel.Holidays)
+                {
+                    holidaySettings.Holidays.Add(holiday);
+                }
+            }
+
+            return holidaySettings;
+        }
+
+        // The work stream settings of a plan that an import makes. They are the default settings,
+        // but the work streams of the import take the place of the default work streams when the
+        // import has any. The default settings that the function is given do not change.
+        public static WorkStreamSettingsModel CreateImportedWorkStreamSettings(
+            WorkStreamSettingsModel defaultWorkStreamSettings,
+            ProjectScenarioImportModel projectScenarioImportModel)
+        {
+            ArgumentNullException.ThrowIfNull(defaultWorkStreamSettings);
+            ArgumentNullException.ThrowIfNull(projectScenarioImportModel);
+
+            WorkStreamSettingsModel workStreamSettings = defaultWorkStreamSettings.CloneObject();
+
+            if (projectScenarioImportModel.WorkStreams.Count != 0)
+            {
+                workStreamSettings.WorkStreams.Clear();
+
+                foreach (WorkStreamModel workStream in projectScenarioImportModel.WorkStreams)
+                {
+                    workStreamSettings.WorkStreams.Add(workStream);
+                }
+            }
+
+            return workStreamSettings;
+        }
+
+        // The resource settings of a plan that an import makes. They are the default settings with
+        // the costs and the disabled flag of the import, and the resources of the import take the
+        // place of the default resources when the import has any. The default settings that the
+        // function is given do not change.
+        public static ResourceSettingsModel CreateImportedResourceSettings(
+            ResourceSettingsModel defaultResourceSettings,
+            ProjectScenarioImportModel projectScenarioImportModel)
+        {
+            ArgumentNullException.ThrowIfNull(defaultResourceSettings);
+            ArgumentNullException.ThrowIfNull(projectScenarioImportModel);
+
+            ResourceSettingsModel resourceSettings = defaultResourceSettings.CloneObject();
+            resourceSettings = resourceSettings with
+            {
+                DefaultUnitCost = projectScenarioImportModel.ResourceSettings.DefaultUnitCost,
+                DefaultUnitBilling = projectScenarioImportModel.ResourceSettings.DefaultUnitBilling,
+                AreDisabled = projectScenarioImportModel.ResourceSettings.AreDisabled,
+            };
+
+            if (projectScenarioImportModel.ResourceSettings.Resources.Count != 0)
+            {
+                resourceSettings.Resources.Clear();
+
+                foreach (ResourceModel resource in projectScenarioImportModel.ResourceSettings.Resources)
+                {
+                    resourceSettings.Resources.Add(resource);
+                }
+            }
+
+            return resourceSettings;
+        }
+
+        // The graph settings of a plan that an import makes. They are the default settings, but
+        // the activity severities of the import take the place of the default ones when the
+        // import has any. The default settings that the function is given do not change.
+        public static GraphSettingsModel CreateImportedGraphSettings(
+            GraphSettingsModel defaultGraphSettings,
+            ProjectScenarioImportModel projectScenarioImportModel)
+        {
+            ArgumentNullException.ThrowIfNull(defaultGraphSettings);
+            ArgumentNullException.ThrowIfNull(projectScenarioImportModel);
+
+            GraphSettingsModel graphSettings = defaultGraphSettings.CloneObject();
+
+            if (projectScenarioImportModel.ActivitySeverities.Count != 0)
+            {
+                graphSettings.ActivitySeverities.Clear();
+
+                foreach (ActivitySeverityModel activitySeverity in projectScenarioImportModel.ActivitySeverities)
+                {
+                    graphSettings.ActivitySeverities.Add(activitySeverity);
+                }
+            }
+
+            return graphSettings;
+        }
+
+        // Puts the dependencies, the planning dependencies, the resource dependencies and the
+        // successors of each activity in the order of their ids, so that they are more readable.
+        // It changes the lists of the models that it is given.
+        public static void SortDependencies(IEnumerable<DependentActivityModel> dependentActivities)
+        {
+            ArgumentNullException.ThrowIfNull(dependentActivities);
+
+            foreach (DependentActivityModel activityModel in dependentActivities)
+            {
+                activityModel.Dependencies.Sort();
+                activityModel.PlanningDependencies.Sort();
+                activityModel.ResourceDependencies.Sort();
+                activityModel.Successors.Sort();
+            }
         }
     }
 }

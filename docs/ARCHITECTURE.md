@@ -1,0 +1,604 @@
+# Reactive update architecture
+
+This document describes how a change of project state moves through the application. It covers the reactive compile pipeline, bulk updates, the suppression mechanisms (`IsBulkUpdating` and `MuteWhile`), and the threading rules that prevent deadlocks. The document reflects the major rework of the UI and the threads after v0.9.3. It describes the source code as of August 2026.
+
+> **Transparency note:** Claude AI (Anthropic) worked alongside the maintainer to develop many of the refinements in this document. These refinements are the bulk-update gating, `MuteWhile`, the threading discipline, and the performance rework that they came from. Claude AI also helped to develop this document itself.
+
+Everything in this document is about [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs). It is the hub that owns the project model. The manager view models connect to it: the Gantt, resource, earned-value and scenario charts, the arrow and vertex graphs, tracking, output and metrics. The schedule simulation also connects to it, but it is not part of the cascade (rule 13). Three docks show it: "Simulation", "Simulation Chart" and "Simulation Metrics".
+
+---
+
+## 1. The moving parts
+
+- **`CoreViewModel`** owns the editable state: the activities, the settings for resources, work streams, graphs and holidays, the project start, and today. The live activities and the live compiler (`m_VertexGraphCompiler`) are in [`PlanGraph`](../src/Zametek.ViewModel.ProjectPlan/Core/PlanGraph.cs), which the core makes. The core also owns the compilation result (`GraphCompilation`), and the derived outputs: `ArrowGraph`, `VertexGraph`, `ResourceSeriesSet`, `TrackingSeriesSet` and the metrics. A single private lock, `m_Lock`, makes each change of that state run one at a time. A compilation and a cascade hold it only to copy what they read and to publish what they build (§7 rule 14).
+- **Manager view models** subscribe to properties of `CoreViewModel` with ReactiveUI `WhenAnyValue` chains. When an input changes, they rebuild their own outputs: plots, graphs and grids. Each of them makes its pipeline in `IStartSubscriptions.StartSubscriptions()` and not in its constructor (§7 rule 12). It disposes the pipeline in `IKillSubscriptions.KillSubscriptions()`.
+- **Schedulers.** Heavy work runs on `RxSchedulers.TaskpoolScheduler`. Heavy work is compilations, the Build\* methods and the builds of chart plots. Only the delivery to the UI uses `RxSchedulers.MainThreadScheduler`. ReactiveUI 24 models the main thread as an `ISequencer` and not as an Rx `IScheduler`. The bridge `ObserveOn(ISequencer)` in [`ObservableExtensions`](../src/Zametek.ViewModel.ProjectPlan/Reactive/ObservableExtensions.cs) is specific to this repository. It exists because an import of `ReactiveUI.Primitives` as a whole makes each call to a core Rx operator ambiguous. `ReactiveUI.Primitives` declares `Select`, `Where`, `Subscribe` and others again.
+
+## 2. Emissions: what they are, and *when* they happen
+
+An **emission** is a value that moves through an observable pipeline. In this codebase, emissions come from two sources:
+
+1. **Property change notifications.** A view model property raises `RaisePropertyChanged`. Then each `WhenAnyValue` chain that watches the property reads the getter again, **synchronously, on the thread that raised the change**. It sends the value down its pipeline. Thus, the raising thread is important, and some getters must be lock-free (refer to §7).
+2. **DynamicData changesets.** The activity collection uses `ToObservableChangeSet()`. `AutoRefresh(activity => activity.IsCompiled)` also emits a *Refresh* change each time that property changes on an activity. The uncompiled-activities watcher in `CoreViewModel` uses this method.
+
+The most important distinction in the design is **emission time versus delivery time**:
+
+- Operators that are **before** `ObserveOn(...)` run at *emission time*. They run synchronously, on the thread that pushed the value, at the moment of the state change.
+- The subscriber callback, and each operator after `ObserveOn`, runs at *delivery time*. This is later, on the thread of the scheduler, when the state can already be different.
+
+These two consequences always apply:
+
+- **Gates must be before `ObserveOn`.** A suppression check such as `.Where(_ => !IsBulkUpdating)` or `.MuteWhile(...)` asks the question "Is a bulk update in progress *now*?". This question has a meaning only at emission time. Suppose the check runs at delivery time. Then the deferred taskpool call often runs after the bulk update window closes. It sees a `false` flag, and it lets a stale trigger through.
+- **Handlers must read the live state again.** A payload that the pipeline delivers is a snapshot from its emission time, and it can be stale. Thus, the Build\* handlers treat the payload as a *trigger* and not as data. They take `m_Lock` and read the current state. The uncompiled-activities subscriber is the standard example. Its changeset says that something became uncompiled. But a load can compile everything before the delivery. Thus, the handler checks `RawActivities.Any(a => !a.IsCompiled)` again before it arms a compilation. A redundant compilation marks the scenario as modified, and this is wrong.
+
+## 3. The regular (reactive) compile path
+
+This is the steady-state flow for a **single edit**. The user changes the duration of an activity, adds a dependency, or edits a resource setting:
+
+1. The edit marks activities as uncompiled, or it raises a settings property.
+2. The uncompiled-activities watcher (`m_AreActivitiesUncompiledSub`) or a settings applier arms the trigger. The watcher first calls `ReviseTrackers()`, which increments the revision counter `TrackersRevision` (§9), and the tracker revisions run *inline* during that raise. The selector of the Gantt chart only reads the plan there, and it changes its lists on the UI thread (§7 rule 17). Then it calls `RequestCompilation()`, which increments the revision counter `CompilationRequestRevision` (§9). Each arm site makes this call **last** on purpose.
+3. `m_CompileOnSettingsUpdateSub` observes `CompilationRequestRevision` and moves to the taskpool. Arming happens on the UI thread, but **the compilation must never run there**. The subscription calls `DrainAutoCompiles()`. This method compiles only if `AutoCompile` is enabled and the plan changed since the newest snapshot (§7 rule 14).
+4. `RunCompile()` does three steps between `BeginBusy` and `EndBusy`: snapshot, compile and publish. It holds `m_Lock` for the snapshot and for the publication, and not for the compile. The publication assigns the result to `GraphCompilation` and sets `IsProjectScenarioUpdated`. It sets `HasStaleOutputs` only if an edit arrived during the compile. The day cells and the timesheet of the tracking tabs follow `GraphCompilation`, and they refresh at this point.
+5. The emission of the change of `GraphCompilation` reaches `m_BuildCascadeSub`. On the taskpool, this subscription calls `RunBuildCascade()`. This method copies what the outputs read, builds the seven outputs in dependency order, and publishes them together. The order is `ArrowGraph` → `VertexGraph` → `ResourceSeriesSet` → `TrackingSeriesSet` → `NetworkMetrics` → `RiskMetrics` → the financial metrics. Only the copy and the publication hold `m_Lock`. Then the method increments `CompilationOutputRevision`, the settled signal (§9). It publishes nothing if a newer compilation has published during the build.
+6. The chart manager view models that use `CompilationOutputRevision` as their key rebuild their plots one time, on the taskpool.
+
+The net result is **one edit, one compilation, one cascade, and one rebuild for each chart.**
+
+There is one deliberate exception: the risk metrics have a trigger that is not a compilation. `m_BuildRiskMetricsSub` watches `GraphSettings` directly. The reason is that the activity-severity settings go into the risk metrics without a new compilation.
+
+## 4. Bulk updates
+
+A **bulk update** is one logical operation that rewrites large parts of the model in sequence. It has three entry points, all in `CoreViewModel`:
+
+- `ResetProjectScenario()` clears everything back to an empty scenario
+- `ProcessProjectScenario(...)` loads a scenario. It is also the single path for each scenario switch, and it logs which scenario is in use
+- `ProcessProjectScenarioImport(...)` imports from MS Project or Excel.
+
+Each of these methods assigns *dozens* of properties. These are the project start, today, and the settings for display, holidays, work streams, resources and graphs. They are also the graph layouts, and then the complete list of activities. Suppose the reactive pipeline stays live. Then each intermediate assignment is a trigger.
+
+The results are many redundant compilations, cascades that run against a state that is only partly filled, and false "scenario modified" flags. An example of a partly filled state is activities that exist before their resource settings, or the reverse.
+
+This is the mechanism:
+
+```csharp
+try
+{
+    BeginBulkUpdate();
+    lock (m_Lock)
+    {
+        BeginBusy();
+        // ... rewrite the model: settings, layouts, activities ...
+
+        RunCompile();
+
+        // The internal Build* subscriptions drop their emissions during a
+        // bulk update, so run the cascade actively while everything is
+        // still muted.
+        RunBuildCascade();
+    }
+}
+finally
+{
+    EndBusy();
+    EndBulkUpdate();
+}
+```
+
+These are the key properties of the mechanism:
+
+- **`IsBulkUpdating` is a gate with a counter.** `BeginBulkUpdate()` and `EndBulkUpdate()` use a [`NestingCounter`](../src/Zametek.ViewModel.ProjectPlan/Miscellaneous/NestingCounter.cs). They raise the property change only at the outermost transitions. Nesting is usual: `ProcessProjectScenario` calls `ResetProjectScenario` inside its own bulk window, and thus both frames hold the gate. Always use Begin and End as a pair in a `try`/`finally`.
+- **The core subscriptions drop their emissions** while the gate is up. They use `.Where(_ => !IsBulkUpdating)`, which is before `ObserveOn` (emission-time check, §2). Dropping is correct, and conflation is not necessary, because the bulk method does the job of the pipeline itself.
+- **The bulk method drives the process explicitly.** When *all* state is in place, it calls `RunCompile()` and then `RunBuildCascade()` directly, inside the window that is still muted. Exactly one compilation and one cascade run, at the one moment when each input is consistent. `ResetProjectScenario` is the exception. It does not compile. It assigns a new empty `GraphCompilation` and clears each output directly.
+- **The bulk method keeps `m_Lock` for all of it.** The compilation and the cascade of a bulk update run under the hold of the bulk method, as they always did. Nothing else must see the model part way. A compilation or a cascade of the pipeline that is still running finds the scenario changed, and it publishes nothing (§7 rule 14).
+
+This table compares the two modes:
+
+| | Regular compilation | Bulk update |
+|---|---|---|
+| Trigger | One edit | A load, an import or a reset |
+| Who drives | The reactive pipeline | The bulk method, with explicit calls |
+| Pipeline state | Live | Muted (`IsBulkUpdating`) |
+| Compilation | `DrainAutoCompiles` through a subscription | `RunCompile()`, called explicitly |
+| Cascade | `m_BuildCascadeSub` through a subscription | `RunBuildCascade()`, called explicitly |
+| Lock | Short steps only | The whole update |
+| Chart rebuilds | One for each settled signal | One, replayed at `EndBulkUpdate` |
+
+```mermaid
+flowchart TB
+    subgraph regular ["Regular edit - the pipeline drives"]
+        A["User edit"] --> B["Emission: IsCompiled / settings change"]
+        B --> C["RequestCompilation<br/>(last step, UI thread)"]
+        C --> D["CompileOnSettingsUpdateSub<br/>(taskpool)"]
+        D --> E["DrainAutoCompiles → RunCompile<br/>(m_Lock for the snapshot and the publication)"]
+        E --> F["GraphCompilation emission"]
+        F --> G["RunBuildCascade<br/>(taskpool, m_Lock for the copy and the publication)"]
+        G --> H["CompilationOutputRevision bump"]
+        H --> I["Chart managers rebuild once"]
+    end
+    subgraph bulk ["Bulk update - the method drives"]
+        J["Load / import / reset"] --> K["BeginBulkUpdate"]
+        K --> L["Rewrite model state<br/>(core emissions dropped,<br/>chart emissions conflated)"]
+        L --> M["RunCompile - explicit"]
+        M --> N["RunBuildCascade - explicit"]
+        N --> O["EndBulkUpdate"]
+        O --> P["MuteWhile falling edge<br/>replays one value"]
+        P --> I
+    end
+```
+
+## 5. Drop versus conflate: two suppression strategies
+
+The two sides of the `IsBulkUpdating` gate suppress in different ways. The difference matches their responsibilities:
+
+- **Core-internal subscriptions DROP** (`.Where(_ => !IsBulkUpdating)`). Their emissions during a bulk update are *redundant*. The bulk method runs the compilation and the cascade itself, and thus the loss of these emissions has no effect.
+- **Manager view models CONFLATE** (`.MuteWhile(...)`). Nothing else rebuilds a Gantt plot for the chart view model. Suppose the application drops the triggers of the chart view model silently. Then the chart still shows the previous project after a load. Thus, the pipeline conflates the muted emissions to one remembered value. The pipeline replays this value when the gate falls, and this gives exactly one rebuild at the end.
+
+Use this rule of thumb when you add a new subscription. If the bulk update methods already produce your output for you, drop. If you are the only producer of your output, conflate with `MuteWhile`.
+
+## 6. `MuteWhile`: what it is and how it works
+
+`MuteWhile` (in [`ObservableExtensions`](../src/Zametek.ViewModel.ProjectPlan/Reactive/ObservableExtensions.cs)) is a custom Rx operator. It suppresses a source sequence while the latest value of a boolean gate sequence is `true`. It remembers only the most recent value that it suppressed. It replays that one value when the gate goes back to `false`.
+
+This is the behavior for each state of the gate:
+
+- **Gate `false` (unmuted):** The operator forwards each source value immediately, on the thread that emitted it.
+- **Gate `true` (muted):** The operator swallows the source values. It remembers only the latest value, and each new value replaces the last (conflation).
+- **Falling edge (`true` → `false`):** If a value arrived during the mute, the operator forwards the remembered value one time, on the thread that changed the gate. This is the single "active trigger" at the end of a bulk update. If no value arrived, the operator forwards nothing.
+
+These implementation details are important for correct operation:
+
+- The operator filters the gate with `DistinctUntilChanged()`. A gate that raises `true` again and again must not replay the pending value two times.
+- The operator subscribes to the gate **before** the source. Thus, an initial gate value, for example a `WhenAnyValue` seed, is in place before the first emission of the source. Otherwise, that first value can pass a gate that must already block it.
+- Each subscription has its own private state (`Observable.Create` factory).
+- All state transitions occur under a small internal lock. But the operator **always calls** `observer.OnNext` **outside the lock**. The downstream handlers run arbitrary logic, and this logic must never run while the operator holds its lock.
+- The replayed value is a snapshot from its original emission time. The downstream handlers must read the live state and not trust the payload (§2). The Build\* manager subscriptions do this.
+
+This is the standard usage (from [`GanttChartManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/GanttChartManagement/GanttChartManagerViewModel.cs)):
+
+```csharp
+m_BuildGanttChartPlotModelSub = this
+    .WhenAnyValue(
+        rcm => rcm.m_CoreViewModel.CompilationOutputRevision,   // settled signal
+        rcm => rcm.m_CoreViewModel.ResourceSettings,
+        // ... further inputs ...
+        (x, ...) => x)
+    .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating))
+    .ObserveOn(RxSchedulers.TaskpoolScheduler)
+    .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
+```
+
+Note the order of the operators: inputs → `MuteWhile` → `ObserveOn` → handler. Thus, the decision to mute occurs at emission time (§2).
+
+## 7. Threading and ordering rules
+
+These rules are important. Several of them came from deadlocks and double-build bugs during the rework after v0.9.3.
+
+1. **`m_Lock` runs the model changes one at a time.** Each mutation of the state of `CoreViewModel` runs under it. So do the short steps of a compilation and of a cascade, which copy what they read and publish what they build. The long steps do not (rule 14). A bulk update holds the lock for all of it, and the compilation and the cascade of the update run under that hold. Each Build\* method that the engine or a test calls runs under the lock.
+2. **Compilations and cascades never run on the UI thread.** The arm sites raise triggers on any thread, often the UI thread. The subscriptions move to `RxSchedulers.TaskpoolScheduler` before they do work. The UI bindings compete for `m_Lock` at the same time. Thus, nothing that is avoidable occurs inside the locked sections. For example, `RunCompile` captures values under the lock, but it writes the log after it releases the lock.
+3. **Suppression gates are before `ObserveOn`**, and thus they run at emission time (§2). This applies to `.Where(_ => !IsBulkUpdating)` and to `.MuteWhile(...)`.
+4. **The getters of `IsBusy` and `IsBulkUpdating` are lock-free** (`Volatile.Read` on an `Interlocked` counter). The `WhenAnyValue` observers read a raised property again *synchronously on the raising thread*. Suppose these getters take `m_Lock`. Then each raise connects those observers to the lock, and this can cause a deadlock.
+5. **Never call `BeginBulkUpdate` or `EndBulkUpdate` while you hold `m_Lock`.** When the application raises `IsBulkUpdating`, the property-chain observers read its getter again, synchronously, on the raising thread. Suppose that thread holds `m_Lock`. Then it can deadlock with the Build\* subscriptions that wait for `m_Lock`. For this reason, the bulk methods call `BeginBulkUpdate()` *before* `lock (m_Lock)`. They call `EndBulkUpdate()` in the `finally` block, after they release the lock.
+6. **Never call unknown source code while you hold an internal lock.** `MuteWhile` makes its decision under its lock, but it forwards the value (`observer.OnNext`) outside the lock. `NestingCounter` does not use a lock. Its `End` method uses a defensive lock-free CAS loop, which does not go below zero. `EndBusy` and `EndBulkUpdate` call it.
+7. **Handlers read the live state again, because payloads are stale snapshots** (§2).
+8. **The busy and bulk scopes use counters and are safe when an exception occurs.** `BeginBusy` and `EndBusy`, and `BeginBulkUpdate` and `EndBulkUpdate`, nest without restriction. The busy sections usually call each other. The application always uses each pair in `try`/`finally`. Thus, an exception during a load cannot leave the UI busy or the pipeline muted for all time.
+9. **A property getter that takes part in change notification never takes an application lock.** Rule 4 is the general law, and it is not a special case for `IsBusy`. The team learned it again from a hard case.
+
+   A captured dump (2026-08) showed the cause. The UI thread was inside a ReactiveUI expression-chain sink. This sink holds its own internal gate while it reads the observed getter again by reflection. The UI thread waited for the `m_Lock` of `GanttActivitySelectorViewModel`. At the same time, the worker thread that held this lock raised `PropertyChanged` into the same sink and waited for the gate of the sink.
+
+   This is a standard ABBA deadlock. An `ObservableCollection.CollectionChanged` handler caused the raise under the lock without any visible sign. The handler ran synchronously inside a locked block of changes.
+
+   A getter cannot control which locks its readers already hold. Thus, the application calculates derived values under the lock *at write time*. Derived values include joined display strings and lists of selected ids. The application publishes them as immutable snapshots: a plain string, or an `int[]` that the application replaces as a whole. The getter returns the snapshot with a lock-free read.
+
+   Refer to `RefreshDerivedProperties()` of the selector view models, which their `Raise*PropertiesChanged()` methods call first. Refer also to the references of the tracker sets in the style of `m_LastTracker`, which the application only replaces. An atomic read of such a reference needs no lock.
+
+   The filters `GanttChartShowConnections` and `EarnedValueShowResources` of the display settings have the same form. They used to be plain lists. A handler on the UI thread read a list while a load changed it on another thread. The handler then threw an exception, and its pipeline stopped.
+
+   Plain Avalonia bindings, sort comparers and copy-table readers hold no gate. At worst, they compete for a short time. Only a getter that takes a lock can complete a deadlock cycle.
+
+10. **Live activity state is compiler state, and no deferred callback ever changes it.**
+
+    The vertex graph compiler holds the `ManagedActivityViewModel` instances themselves (`IManagedActivityViewModel` extends `IDependentActivity`). Thus, the object that a compilation clones for scheduling is a live object. The compilation also writes its results back into this object. The grids edit the same object, and the bindings read it.
+
+    `m_Lock` runs the compilation side one operation at a time (rule 1). But the mutators on the UI side hold no lock at all: the `EndEdit` of a grid commit and the scalar property setters. Ordering keeps them away from the data of the compiler, and not exclusion. They run on the UI thread, and the application arms a compilation only *after* they finish. A mutation that the application *defers* breaks this ordering. To defer a mutation is to queue it to a different scheduler between the change and the write.
+
+    The ClrMD analysis of `zametek-deadlock-2.dmp` on 2026-08-18 found the consequence directly. The application deferred a settings subscription of one activity to the UI thread with `ObserveOn`. The subscription ran `HashSet.Clear()` on the `TargetResources` of a live activity. At the same moment, a scenario-load compilation on a worker thread cloned that activity.
+
+    The copy constructor of `HashSet` copies the internal memory. `Clear()` sets the buckets to zero before the entries. Thus, the clone captured a set that enumerates correctly and reports the correct `Count`, but `Contains()` is always false. This starved the resource scheduler, which controls the assignment with `Contains`. The scheduler entered the unbounded loop that the team earlier recorded as the "third dump" edge case. The corruption window is a few instructions wide, and thus the failure occurred rarely and at random.
+
+    This rule follows from the incident. Anything that changes the underlying `IDependentActivity` of an activity must run synchronously on the thread that decides the change. This includes target sets, dependencies and scalars. `m_Lock` orders such a change against compilations, or the application arms the compilation only afterwards. It must never use an `ObserveOn` deferral.
+
+    Thus, settings changes no longer use subscriptions of single activities. The setters of `ResourceSettings` and `WorkStreamSettings` push the settings into every activity inline (`SetResourceSettings` and `SetWorkStreamSettings`). They do this under `m_Lock`, *before* `RequestCompilation()` asks for the compilation. Each activity fills itself from the current settings in its constructor. This includes the write-back that removes target ids that refer to resources that no longer exist.
+
+    The date-derived scalars were the last subscriptions of single activities. They taught the second half of the rule: **`Scheduler.CurrentThread` is also a deferral.** `MinimumEarliestStartTime` and `MaximumLatestFinishTime` count from the project start along the working calendar. Thus, the project start, the holiday settings and the non-working day mode each make them invalid. All three came through `ObserveOn(Scheduler.CurrentThread)`.
+
+    This looks synchronous, and it usually is. The trampoline runs the action inline when nothing else holds it. But it queues the work behind the current action when the application makes the write from inside a different scheduled delivery. This is the usual case when the cascade runs. Then the delivery occurs *after* the same setter arms the compilation. Thus, a compilation can start with counts that belong to the previous calendar.
+
+    Three tests found this on all three triggers. The tests make the change from inside `Scheduler.CurrentThread.Schedule`, and they read the activity before that action returns.
+
+    These values now go in synchronously, as the settings do. `ProjectStart` calls `SetProjectStart`. `HolidaySettings` calls `UpdateEarliestStartAndLatestFinishDateTimes`. `ProjectScenarioDisplaySettingsViewModel.NonWorkingDayMode` calls `UpdateEarliestStartAndLatestFinishDateTimes` through a core callback that takes no lock.
+
+    The reason is that this setter can still be inside the display settings lock. If it takes `m_Lock` there, it creates again the lock-order edge of rule 6. The application can still defer one item. This item changes nothing: the *display* mode of the calculator, which only raises the properties that show a date again. Rule 11 closes the remaining cases.
+
+11. **A compilation reads and writes a copy of the plan, and never the live activities.**
+
+    Rule 10 removed the systematic cause of the failures, but it left the ordinary one. The compilation runs on the taskpool. Suppose a grid commits an edit while an earlier armed compilation is still in progress. Then the edit changes the activity that the compiler clones. The compiler also writes its results (the times, the slack, the allocated resources, the resource dependencies and the successors) into the live activities while it calculates. This races the reads of the bindings and the `DeepCopy()` saves for the whole time of the compilation.
+
+    Thus, [`RunCompile`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) does three steps: **snapshot, compile, publish**. `TakeSnapshot()` copies every activity (`CloneObject()`) through [`PlanGraph`](../src/Zametek.ViewModel.ProjectPlan/Core/PlanGraph.cs), and the compilation builds a throwaway `VertexGraphCompiler` from the copies. The compilation runs against those copies. `PlanGraph.PublishCompilation()` gives each live activity its own results back through `SetCompiledValues`.
+
+    The activities own both halves of this exchange. Thus, the list of the fields that a compilation produces is next to the fields themselves, and not in a loop somewhere else. An activity can also assert that the results it receives are its own. Publishing writes *only* what a compilation produces. It never writes an input of an activity, such as the duration, the targets, the constraints and the dependencies that the user set. Thus, an edit that the user makes during a compilation survives the compilation.
+
+    This is a key point: **the publication writes the times through the setters of the activity.** These setters are the way in which the results of a compilation have always reached the view. The compiler held the view models *themselves* as its graph nodes. Thus, `node.Content.EarliestStartTime = ...` was a call to the setter of `ManagedActivityViewModel`. This setter announces the value and everything that derives from it. This includes the date offsets, the latest start, the total and interfering slack, the criticality, and the strings for dependencies and successors.
+
+    A write below these setters leaves the values correct but not announced. The charts and the output window still update, because they read the published `GraphCompilation`. But the activities grid continues to show the numbers of the previous compilation. The collections are the only part that the application writes directly, because they have no setters of their own. The application writes them first. Thus, the announcements that the times make cover the strings that derive from the collections.
+
+    For the same reason, `PlanGraph.PublishCompilation` does **not** hold the leaf lock during its pass. Publishing announces, and the application must not announce anything under that lock. Thus, each activity takes the lock for its own writes and announces after it releases the lock. The results arrive one activity at a time, in the same way as when the compiler wrote them while it calculated.
+
+    None of this arms another compilation. An activity arms a compilation only when the application marks it as uncompiled. The commit of an edit (`IEditableObject.EndEdit`) causes this, and the announcement of a value never causes it (`m_AreActivitiesUncompiledSub` auto-refreshes on `IsCompiled` only).
+
+    **Exclusion is a leaf lock** (`m_ActivityDataLock`). `PlanGraph` creates it and shares it with every activity. The application holds it around the snapshot pass, the publish pass, and the change by a transitive reduction. It also holds it around every write to the live graph, and around each single write inside an activity.
+
+    The application *never* holds it around a raise, a call to anything else, or another lock. It is strictly inside `m_Lock` in the lock order, and it is the only lock that the activities take. Thus, it cannot complete a cycle.
+
+    The lock is reentrant. Thus, an activity that takes it again inside a publish pass has no cost. The outer acquisition keeps the whole pass atomic. The one exception to the rule above is a call to the live compiler, which the application makes under the leaf lock. The compiler takes the leaf lock again only to call an activity back (`RemoveActivity` calls `SetAsRemovable`).
+
+    Two consequences are important. First, the application must make the copies **in the order in which the live graph holds its activities** (`VertexGraphCompiler.ActivityIds`). The reason is that the scheduling priority list gives a slack tie to the activity that it meets first. Second, a compilation that stops before the end, by a timeout or a failure, now publishes *nothing*. Thus, the previous results stay in place as a whole and are not half overwritten.
+
+    The live compiler keeps its own graph for everything between compilations: `GetNextActivityId`, dependency edits and `IsIsolated`. It stays correct without compiling, for two reasons. The graph holds the dependencies that the user entered, and no other link. The compiler also derives the project start and finish by reading them from the live activities that the publication updated before.
+
+    The graph must hold the dependencies that the user entered, and no link that only a resource gave. The library makes the links of an activity from its dependencies, its planning dependencies *and* its resource dependencies. It reads the resource dependencies from the activity, and the publication writes them there. Thus, the library wires them into the graph when the application sets the dependencies of an activity. A compilation works on a copy, and so it does not take them out again. When a compilation ran on the graph itself, it took them out at its end.
+
+    `VertexGraphCompiler.SetUserDependencies` sets the dependencies, and then it takes out the links that only a resource gave. Without it, an activity that only a resource links to another one is not isolated. Also, a dependency that the user takes away stays as a link. Every write to the graph holds the leaf lock. The lock of the compiler is private to the library, and so it cannot cover this second step.
+
+    The transitive reduction does not read this graph. It reduces a copy with `CompilationScheduler.ReduceTransitively`, and the compilation of the copy takes the resource dependencies out first. The activities take the result with `PlanGraph.TryApplyReduction`, and only if their dependencies are still those of the copy.
+
+    One item is not covered. The tracker sets guard their own state and hold immutable records. The compilation itself runs without `m_Lock` (rule 14).
+
+12. **A constructor starts no pipeline that delivers on another thread. `StartSubscriptions()` does.**
+
+    Suppose a constructor makes a subscription that moves to another thread, with `ObserveOn` for the task pool or the main-thread scheduler. Then the subscription hands its current value to another thread at once. This occurs while the constructor still runs, and whether or not anyone wanted the value.
+
+    On the desktop, this was latent. The constructors subscribed last by chance, and thus each object was complete when the UI thread delivered. In a host that has no UI thread, this was not the case, because the main-thread scheduler there is the thread pool. Each such pipeline raced the job that had just built the view model.
+
+    The engine killed each view model when it resolved it, but this did not stop a delivery that was already on its way. In about two of five jobs, a job built the outputs of the compilation a second time. In up to half of the jobs, it built the plot of a chart again. This happened on a pool thread, next to the build and the export of the job itself. A cancellation test that failed on the CI build server counted those builds.
+
+    Thus, a view model prepares its state and its *inert* plumbing in its constructor. It prepares its pipelines in [`StartSubscriptions()`](../src/Zametek.Contract.ProjectPlan/IStartSubs.cs). This method does its work one time, and it does nothing after `KillSubscriptions()`.
+
+    The desktop and the browser start each view model that their container builds. They start it as soon as the container builds it and before they hand it on. Thus, each view model starts in the order in which the constructors ran ([`StartSubscriptionsModule`](../src/Zametek.Shell.ProjectPlan/StartSubscriptionsModule.cs)).
+
+    A view model can make other view models for itself. Examples are the activities of the core, the nodes of the project manager, and the selector of a chart manager. It starts them when it starts, or as it makes them if it already started. The engine starts none.
+
+    These items stay in a constructor, because they deliver on the thread that raised the change:
+
+    - `ToProperty` helpers
+    - `Scheduler.CurrentThread` subscriptions
+    - The events between a view model and its own collections.
+
+    Thus, a view model that nobody starts is inert, but it is still correct. The converse is a trap. An engine must do explicitly each item that it needs a pipeline to deliver, because the pipeline does not deliver it. For this reason, the Gantt and EV selectors take the filter that a plan saves in their constructors. The EV selector always did this. The Gantt selector relied on a delivery to the pool that won its race against the build of the job.
+
+    [`UnstartedViewModelTests`](../test/Zametek.Engine.ProjectPlan.Tests/UnstartedViewModelTests.cs) holds both schedulers while a job runs on a real plan. It fails if a view model hands anything to either scheduler. It also fails if the outputs of the job differ from the outputs of the same job when the schedulers are free. [`StartableViewModelTests`](../test/Zametek.Engine.ProjectPlan.Tests/StartableViewModelTests.cs) and the `*StartTests` of the view model tests say this for each view model on its own. They also say the other half: starting a view model starts what it must start, one time, and killing it stops what it started.
+
+13. **A simulation reads a copy of the plan, and it runs outside the build cascade.**
+
+    The schedule simulation takes seconds to minutes. Each iteration schedules the whole plan again, and it costs about as much as a compile. Thus, the simulation panel is not part of the build cascade. It runs only when the user asks.
+
+    [`CaptureSimulationInput()`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) takes the copy, with the same steps as `TakeSnapshot()` (rule 11). It holds `m_Lock`. [`PlanGraph.CopySimulationActivities()`](../src/Zametek.ViewModel.ProjectPlan/Core/PlanGraph.cs) then takes the leaf lock `m_ActivityDataLock`, and it copies the activities in the order of the live graph. It also takes the resources and the work streams that a compile uses, the three estimates and the name of each activity, and `CompilationOutputRevision`. The simulation changes the durations of the copies. It never reads a live activity again, and thus an edit during a run cannot reach it.
+
+    A run reports its progress from the threads of the simulation, and it builds the statistics and the chart on the task pool. A bound control can change only on the UI thread. Thus, the panel hands each change that the UI shows to `IUIDispatcher.Defer`. The dispatcher keeps the order of the changes, and thus the last word of a run (done, or cancelled) cannot be overwritten by a report that was still on its way. A progress bar that is bound to a property that the simulation threads set throws an exception.
+
+    A command raises `CanExecuteChanged` on the thread that changed the state that it observes. A button or a menu item that handles the event belongs to the UI thread. The core changes the result and the compilation errors on other threads, and a project closes on the task pool. A menu item that was open then threw "The calling thread cannot access this object because a different thread owns it". Thus, the panel gives the can-execute state of each of its commands to `ForTheUiThread`, which hands each state to `IUIDispatcher.Defer`. It is inline in a job, and thus a job still starts nothing on another thread. A new command that observes state of the core must do the same.
+
+    The panel marks a result as stale when `CompilationOutputRevision` is not the revision of the copy, or when `HasStaleOutputs` is true. It never starts a run by itself.
+
+    The core owns the settings of the simulation (`SimulationSettings`) and its last result (`SimulationSummary`), as it owns the metrics. Both belong to the scenario, and the project file holds them. A setter marks the scenario as modified, except while a scenario loads or resets, and a getter takes no lock. `ResetProjectScenario()` puts back the defaults and no result, and it adds one to `ProjectScenarioRevision`. A run records that revision. When it changes, the run stops and its result is thrown away.
+
+    The panel keeps no state of its own for this. Three docks show the one view model, `SimulationChartManagerViewModel`. It is the dock "Simulation Chart". The docks "Simulation" and "Simulation Metrics" are thin view models that hold it. The name of the scenario in the first of them follows `TitleRevision`, as the title bar does. A result that a file holds reaches the panel through a pipeline of its own. The panel decides whether it made a result with `ReferenceEquals`, and not with the pipeline that presents the display settings.
+
+14. **A compilation and its cascade run without `m_Lock`. Four checks decide what happens to their results.**
+
+    A compilation of a large plan takes 100 to 200 ms, and its cascade takes about 600 ms. Suppose both held `m_Lock`. Then each setter of the core waits for them, and the UI thread stops. Thus, each of them copies what it reads in one short step under the lock. It builds on the copy without the lock. Then it publishes in another short step under the lock.
+
+    On the largest sample plan (985 activities), the short steps take 10 to 20 ms. The lock also did three other jobs, and the checks replace them. First, a grid commit takes the lock when it sets `IsProjectScenarioUpdated`. Thus, the commit used to wait until the compilation ended. This ordered the commit after the moment when the publication marks every activity as compiled. Without the wait, the commit can mark an activity as uncompiled too early, and the publication hides the edit.
+
+    Second, the lock stopped a load from changing the scenario while a compilation ran. Third, it kept two compilations from publishing in the wrong order. These four checks replace the lock for all three jobs:
+
+    - **The input revision.** [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) keeps the revision counter `m_InputRevision` (§9). It counts each change of what a compilation reads. `NoteInputsChanged()` adds one. The commit of an edit calls it *first*, before anything announces the edit. Each call of `RequestCompilation()`, each call of `RunAutoCompile`, and each change of the structure of the plan call it too. A snapshot reads the revision before it copies the activities. The plan is stale, and due another compilation, when the revision differs from that of the snapshot.
+    - **The ticket.** `CompilationScheduler` gives each snapshot a number. A compilation publishes only if no later snapshot published before it. Thus, an older result never replaces a newer result.
+    - **The scenario.** A load or a reset changes `ProjectScenarioRevision`. A compilation or a cascade that started before the change publishes nothing. A result also goes only to the live activity that its copy came from. An activity that took the id of a removed activity gets nothing.
+    - **The compilation.** The cascade publishes only if `GraphCompilation` is still the compilation that it started from. A newer compilation has a cascade of its own, and the old outputs show a state that is out of date. `m_CascadedCompilation` tells the queued cascades that the first of them already built the newest compilation.
+
+    The publication sets `HasStaleOutputs` to true if the revision moved on during the compile. The results stay on display, because they are the newest there are. They are stale until the next compilation publishes. One thread at a time makes the compilations that the edits ask for (`CompilationScheduler.Drain`). The other threads leave their request in the revision and return. The thread that compiles compares the revision with that of its snapshot after each publication, and it compiles again if they differ.
+
+    Thus, one compilation after it takes all the edits made during a compilation. The application loses no edit and cancels no compilation. A compilation that someone starts by hand does the same check when it ends, if automatic compilation is on. The check of the revision replaces the checks of `IsBusy` in the two handlers that arm a compilation. `IsBusy` is true for the whole of a compilation, and a compilation holds no lock.
+
+    A bulk update keeps `m_Lock` for all of it, and thus its compilation and its cascade run under that hold. The transitive reduction does the same. Such an update does not wait for a compilation in progress. That compilation finds the scenario changed, and it publishes nothing. The update does not wait for a cascade in progress either. That cascade finds the scenario changed, and it publishes nothing.
+
+    A build draws colors from a sequence that it owns. The series of the resources start the sequence again from its first color, and the series of the tracking carry on where those stopped. A cascade makes one sequence for its two series ([`CompilationOutputService`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationOutputService.cs)). The Build methods of the core use one sequence of their own. Thus, the call for the tracking carries on from the call for the resources. A cascade and these methods share no sequence, and thus no build waits for another build.
+
+    [`CoreViewModelOffLockTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/CoreViewModelOffLockTests.cs) pin this rule. They hold a compilation or a cascade part way through, and then they edit, load and compile. An edit at a random moment almost never meets the short window of a compilation.
+
+15. **A load changes no edge of a graph on its own thread.**
+
+    A load changes the display settings on its own thread. The graph managers apply the routing mode of the settings to the graph at that moment. `Refresh` replaces the edges of the graph on the UI thread. The two threads met in `GraphEdges`, and the load failed with the message `Collection was modified`.
+
+    Thus, [`InteractiveGraphViewModel.ApplyEdgeRoutingMode`](../src/Zametek.Graphs.Avalonia/ViewModels/InteractiveGraphViewModel.cs) has two parts. It changes the configuration at once, because the layout that follows the load must use the new mode. It posts the change of the edges to `IGraphDispatcher`, with the change notification and the routing. The posted work reads the mode when it runs, and thus the last mode wins.
+
+    Only a choice of the user goes back to the display settings, through the event `EdgeRoutingModeChanged`. A posted change raises only the change notification. Thus, it cannot write an older mode over the mode of the next scenario, and it cannot mark the scenario as modified.
+
+    [`GraphRoutingModeTests`](../test/Zametek.View.ProjectPlan.Tests/GraphManagement/GraphRoutingModeTests.cs) pin this rule in the real application, and they record the thread of each change of an edge.
+
+16. **A load that fails changes nothing.**
+
+    A load sets many properties, and each property has subscribers. Thus, a load can fail at any point. `BuildProject()` writes what the core holds over the scenario that `ISettingService.ScenarioId` names. Thus, the id must name a scenario only when the core holds all of it.
+
+    `ResetProjectScenario()` gives the core a new id as its first step, and a load gives the core the id of its scenario at its end. Between these two steps, the id names no node, and `BuildProject()` writes nothing over a scenario. A load that failed part way used to leave the id of a scenario, and the next save wrote the part over the whole scenario.
+
+    `LoadProjectScenarioFileInternal` then loads the scenario that the core had before. `BuildProject()` wrote that scenario to its file at the start of the load, with its edits. The load also puts back `IsProjectScenarioUpdated`, and thus the user does not lose the mark that says that the edits are not saved. `RemapManagedIds` goes back in the same way, from the copy that it made before it changed the ids. If the load back also fails, no node shows as loaded, and a save writes each file as it was.
+
+    A compilation that uses all of its budget is not such a failure. `ProcessProjectScenario` completes the rest of the load, and it throws the exception at its end. The scenario is whole and has its id, and `HasStaleOutputs` is true. The node shows as loaded, and the user can change the plan or compile again. `AbandonCompilation` describes the same state after an edit.
+
+    An import takes the place of the scenario on show, and it keeps the id and the title of that scenario. [`ProjectScenarioManagerViewModel.ProcessProjectScenarioImport`](../src/Zametek.ViewModel.ProjectPlan/ProjectScenarioManagement/ProjectScenarioManagerViewModel.cs) goes back in the same way as a load. `BuildProject()` writes the scenario on show to its file first, with its edits. An import that fails part way loads that scenario again.
+
+    A compilation that uses all of its budget keeps the import. `ProcessProjectScenarioImport` of the core completes the rest of the import, as `ProcessProjectScenario` does. The imported scenario is whole and has its id, and `IsProjectScenarioUpdated` and `HasStaleOutputs` are true.
+
+    A project that does not open has no scenario to go back to. `MainViewModel` resets the project, and the file on the disk does not change. An import changes only the scenario on show. Thus, `MainViewModel` does not reset the project after an import fails, for each type of failure. Some failures occur before the import changes the core, for example a file that the import cannot read. These failures change nothing.
+
+    [`ProjectScenarioManagerLoadFailureTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/ProjectScenarioManagement/ProjectScenarioManagerLoadFailureTests.cs) and [`ScenarioLoadFailureTests`](../test/Zametek.View.ProjectPlan.Tests/ProjectScenarioManagement/ScenarioLoadFailureTests.cs) pin this rule. They make a change of the routing mode throw during the load, at each point where the race used to throw. [`MainViewModelImportFailureTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/MainViewModelImportFailureTests.cs) pin the rule for an import. They use the same fault and a file that the import cannot read. They also make a compilation use all of its budget, during the import and after it.
+
+17. **A revision of the trackers holds `m_Lock`, and it runs on the thread that asks for it.**
+
+    `GanttActivitySelectorViewModel` and `ResourceActivitySelectorViewModel` watch `TrackersRevision`, and they read the activities of the plan *inline*, during the raise. A revision makes the list of a selector the same as the activities of the plan. It removes each target that the plan does not have, and it removes the booking of that target.
+
+    A load empties the plan and then fills it again, and it holds `m_Lock` for all of this work. A revision that read the empty plan took away each booking of each selector, and the next edit of a resource saved that. A command can ask for a revision at any time, on a thread of its own. Thus, `ReviseTrackers()` takes `m_Lock`, and a request during a load waits for the end of the load. This also makes one revision at a time, and the order of the locks is Core→Selector for each revision.
+
+    The uncompiled-activities watcher keeps the value of `TrackersRevision` from the emission. At the delivery, it asks for a revision only if the value is the same. A revision that starts after the edit sees the edit, and thus a burst of edits gives one revision. The check for a compilation does not decide this. A compilation can include the edit before the delivery, and the selectors then do not know about the edit.
+
+    A compilation does not read the selectors. Each revision still comes before the request for a compilation. The day cells and the timesheet read the selectors after the publication.
+
+    The UI thread reads the lists of the selectors while a revision runs on another thread. An open dropdown reads the lists of the Gantt chart. The cells of the timesheet and a copy of the trackers read the days of the resources. A read that met a change threw `Collection was modified`, and on the UI thread nothing caught it. Thus, the two selectors keep their lists away from the revision in two different ways:
+
+    - The dropdown binds to the lists of `GanttActivitySelectorViewModel`, and a bound list can change only on the UI thread. The revision reads the activities, and it posts the change of the lists to `IUIDispatcher.Defer`. Each revision posts its own work, and the first work to run applies the activities of the last revision. The work does not read the plan itself, because a load can hold `m_Lock` with an empty plan when the UI thread runs it. A compilation does not read this selector, and a change of its selection builds the chart again.
+    - Nothing binds to the lists of `ResourceActivitySelectorViewModel`. A day keeps its lists to itself, and each reader gets an array that a change replaces as a whole (rule 9). The revision changes the day during the raise, because the timesheet reads the days after the publication. An edit in a cell changes the day with `SetPercentageWorked`, under the lock of the day. Thus, an edit cannot come between the read of the bookings by a revision and its change.
+
+    A revision with nothing new changes nothing. `ObservableUniqueCollection.Sort` moves only what is out of place, and a day keeps its arrays.
+
+    [`TrackerRevisionTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/TrackerRevisionTests.cs) pin this rule, and [the tests of the same name in the real application](../test/Zametek.View.ProjectPlan.Tests/TrackingManagement/TrackerRevisionTests.cs) work the commands and the tracking tabs. One of them keeps the dropdown open during the commands. [`GanttActivitySelectorRevisionTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/GanttChartManagement/GanttActivitySelectorRevisionTests.cs) and [`ResourceActivitySelectorViewModelTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/ResourceSettingsManagement/ResourceActivitySelectorViewModelTests.cs) pin the two ways.
+
+## 8. `IsBusy` versus `IsBulkUpdating`
+
+They look similar: both use counters, and the application raises both on the outermost transitions. But they have different purposes, and a confusion of them causes bugs that are difficult to find:
+
+- **`IsBusy` is a signal for the UI only.** It controls the busy indicators and the disabled controls. It must **never** gate reactive behavior. Use `IsBulkUpdating` or dedicated flags for that. The documentation comment of `IsBusy` in `CoreViewModel` states this contract.
+- **`IsBulkUpdating` is the behavioral gate** that §4 and §5 describe.
+
+[`MainViewModel`](../src/Zametek.ViewModel.ProjectPlan/MainViewModel.cs) has a refinement for the use of `IsBusy` in the UI. The busy overlay shows *immediately* for long operations: project loads and scenario processing (`IsMainBusy` and the `IsBusy` of the scenario manager). For the core compile signal, it shows *after a delay of 250 ms*. A `Timer`/`Switch` pipeline makes the delay.
+
+Quick automatic compilations end well inside the delay. Thus, an ordinary edit never switches the overlay on and off. Such switching changes the style of large parts of the window. The overlay clears immediately. Quick changes between busy and idle inside the delay have no visible effect.
+
+## 9. Revision counters and the settled signal
+
+A **revision counter** is an `int` that counts how many times an event occurred. A flag records a state, and a revision counter records an event. The application has several revision counters, and they all have the same form. This section gives the form, the rules for the consumers, and the counters. It also lists the numbers and flags that look similar but are different. One of the counters is the settled signal, and [it has its own part](#the-settled-signal) at the end.
+
+### Why a counter and not a flag
+
+A `WhenAnyValue` chain drops a value that is the same as its last value. Thus, a flag that is already `Yes` cannot say that the event occurred again. The title of the window had this problem. The flag `IsReadyToReviseTitle` never went back to `No`, and thus only the first arm reached the title. A project that closed or loaded with no edit kept its old title.
+
+A consumer can clear the flag, but this has two problems. The consumer writes to one of its own inputs, and the write goes back into its own chain. An arm that arrives before the clear also raises no event, because the flag is still `Yes`. The selectors of the Gantt and earned-value charts used to clear their flags in this way. A selector lost a filter that arrived while it applied the previous filter.
+
+A flag can also stay in the wrong state. `IsReadyToCompile` used to wake the compilation, and it stayed `Yes` if another scenario opened during the compilation. The next edits then raised no event, and they did not compile.
+
+`IsReadyToReviseTrackers` had both problems. It asked the selectors of activities to revise, and a compilation set it back to `No`. An activity that the user added during a compilation found the flag at `Yes`, and the selectors did not hear of the activity.
+
+The day cells followed the same flag for another purpose. With no automatic compilation, the remove command left the flag at `Yes`. The day cells then did not follow the window of days until the next compilation. Now, the selectors follow the counter `TrackersRevision`, and the day cells and the timesheet follow `GraphCompilation`.
+
+A counter has none of these problems. Each event gives a new value, no consumer writes to the counter, and the counter has no state that can stay wrong.
+
+### The form
+
+A counter has a field, a getter, and an increment for each event:
+
+```csharp
+// A revision counter (ARCHITECTURE section 9).
+private int m_SomethingRevision;
+public int SomethingRevision => Volatile.Read(ref m_SomethingRevision);
+
+// At the event, when the state that the event changes is in place:
+Interlocked.Increment(ref m_SomethingRevision);
+this.RaisePropertyChanged(nameof(SomethingRevision));
+```
+
+A counter that only its owner reads has no public property, and it raises nothing. `m_InputRevision` is an example.
+
+These rules give the form:
+
+- **The getter takes no lock.** A `WhenAnyValue` chain reads the getter again, synchronously, on the thread that raises the change (§7 rules 4 and 9). `Volatile.Read` gives the latest value without a lock.
+- **The increment is atomic, also under a lock.** The readers do not hold the lock. `ProjectScenarioRevision` and `CompilationOutputRevision` increment under `m_Lock`, and they still use `Interlocked.Increment`.
+- **The raise has no guard.** Do not use `RaiseAndSetIfChanged`. Each increment gives a new value, and thus a guard has nothing to skip. One event gives one raise.
+- **The increment comes after the state that the event changes.** A consumer reads the live state when the raise reaches it (§2). If the raise comes first, the consumer reads the old state, and no other raise follows. Thus, `RunBuildCascade()` publishes the seven outputs before it increments `CompilationOutputRevision`. A consumer that only compares a copy does not depend on this order. For example, `ResetProjectScenario()` increments `ProjectScenarioRevision` part way through, under `m_Lock`.
+- **The value only moves forward.** Do not set a counter back to zero, and do not wrap it at a constant. A copy of the value must not meet that value again, and a small range makes this occur early. `CompilationOutputRevision` used to wrap at 1,000,000. A result that stayed stale for exactly that many compilations then looked current.
+- **The counter rolls over at the end of its range.** `Interlocked.Increment` takes `int.MaxValue` to `int.MinValue`, and it throws no exception. The compiler settings have no effect on this. The value repeats only after 4,294,967,296 increments. At one increment each second, this takes about 136 years.
+- **The value has no meaning outside its owner.** Each owner starts at zero. The desktop application makes one core when it starts, and each job of the engine makes its own. The project file holds no revision.
+
+### How to use a counter
+
+A consumer uses a counter in one of two ways:
+
+- **As a trigger.** A `WhenAnyValue` chain watches the counter, and the handler ignores the value. The handler reads the live state (§2). The Gantt chart manager, the selectors of the charts and of the days of a resource, and the title of the window do this.
+- **As a copy to compare later.** The consumer keeps a copy of the value with the state that it belongs to. If the copy and the counter differ later, at least one event occurred in between. A snapshot does this for a compilation (§7 rule 14). The simulation panel does this for a result and for a run (§7 rule 13). The uncompiled-activities watcher does this for a revision of the trackers (§7 rule 17).
+
+These rules apply to each consumer:
+
+- **Compare only for equality.** Use `==` and `!=`. After a rollover, a newer value is a smaller number, and `>` gives the wrong answer. Do not calculate with the value, do not use it as an index, and do not show it to the user. If you need an order, use a [ticket](#what-is-not-a-revision-counter).
+- **Read the counter before you copy what it guards.** `TakeSnapshot()` reads `m_InputRevision` before it copies the activities. An edit that lands in between is in the copy, and the plan also counts it as not yet seen. This costs one more compilation, and it never loses the edit. The other order loses the edit. The constructor of a selector of activities reads `TrackersRevision` before it reads the activities, for the same reason.
+- **Expect the first value.** A `WhenAnyValue` chain delivers the current value when it subscribes. Thus, a trigger runs one time at the start, whether or not an event occurred. A handler that must not run before the first event tests the value with `!= 0`. This test gives the correct answer after a rollover too. The selectors of the Gantt and earned-value charts use this run: it applies a filter that arrived between the constructor and the start.
+- **Skip the first value if the constructor reads the state.** A selector of activities reads the activities in its constructor, and a plan with bookings makes thousands of these selectors. It skips the value that it read before the activities. Thus, a request that arrived after that read gives a revision.
+- **Expect one delivery for each event.** A flag that is already `Yes` merges events, and a counter does not. Thus, a handler can run again when it has nothing new to do, and it must give the same result. If a run costs too much, compare the delivered value with the getter after `ObserveOn`, and ignore a delivery that does not match. A newer delivery follows, and it reads the same live state. The selectors of the Gantt and earned-value charts do this. A load puts each filter in place three times, and the UI thread can be behind the load.
+- **Keep the requests low if the handler runs inline.** Such a handler cannot wait for a newer delivery, and each request gives a run. §7 rule 17 gives the example.
+
+### The counters
+
+| Counter | Owner | What it counts | What increments it | Its consumers |
+| --- | --- | --- | --- | --- |
+| `ProjectScenarioRevision` | [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) | Each load and reset of a scenario | `ResetProjectScenario()` | A snapshot and a cascade keep a copy, and they publish nothing if the value changes (§7 rule 14). A run of the simulation keeps a copy, and it stops if the value changes (§7 rule 13). |
+| `TitleRevision` | [`ProjectScenarioManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/ProjectScenarioManagement/ProjectScenarioManagerViewModel.cs) | Each arm of the title | The setter of `IsReadyToReviseTitle` | Two triggers: the title of the window in `MainViewModel`, and the name of the scenario in `SimulationManagerViewModel`. |
+| `m_InputRevision` | [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) | Each change of what a compilation reads | `NoteInputsChanged()` | A snapshot keeps a copy. If the value changes, the results are stale and the plan is due another compilation (§7 rule 14). |
+| `CompilationRequestRevision` | `CoreViewModel` | Each request for a compilation, except during a bulk update | `RequestCompilation()` | A trigger: `m_CompileOnSettingsUpdateSub`. The handler reads `m_InputRevision`, which says if the plan is due a compilation. |
+| `TrackersRevision` | `CoreViewModel` | Each request to revise the trackers | `ReviseTrackers()` | Two triggers that run inline: `GanttActivitySelectorViewModel`, which then changes its lists on the UI thread, and `ResourceActivitySelectorViewModel`. A copy: the uncompiled-activities watcher (§7 rule 17). |
+| `CompilationOutputRevision` | `CoreViewModel` | Each cascade that publishes | `RunBuildCascade()` | A trigger: the Gantt chart manager. A copy: the simulation panel marks a result as stale if the value changes (§7 rule 13). |
+| `GanttChartShowConnectionsRevision` | [`ProjectScenarioDisplaySettingsViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/ProjectScenarioDisplaySettingsViewModel.cs) | Each filter of connections that goes into place | `SetValues()` | A trigger: `GanttActivitySelectorViewModel`. The handler reads the filter and applies it. |
+| `EarnedValueShowResourcesRevision` | `ProjectScenarioDisplaySettingsViewModel` | Each filter of resources that goes into place | `SetValues()` | A trigger: `EarnedValueResourceSelectorViewModel`. The handler reads the filter and applies it. |
+
+The other names that end with `Revision` hold copies, and nothing increments them. They are `InputRevision` and `ScenarioRevision` of `CompilationSnapshot`, `ScenarioRevision` of `CascadeInputs`, `CompilationOutputRevision` of `SimulationInputModel` and `SimulationOutcome`, `m_SnapshotRevision` of `CompilationScheduler`, and `ResultRevision` and `m_RunScenarioRevision` of `SimulationChartManagerViewModel`.
+
+### What is not a revision counter
+
+These numbers and flags look similar. Their form is different on purpose, and the rules above do not apply to them.
+
+| Name | What it is | Why its form is different |
+| --- | --- | --- |
+| `m_SnapshotTicket` and `m_PublishedTicket` of `CompilationScheduler` | A **ticket**: a number that gives an order | A result publishes only if its ticket is larger than the last ticket that published (§7 rule 14). An order needs `>`, and thus a rollover stops all publication. This needs 2,147,483,647 snapshots of one core, and thus it does not occur in practice. `CompilationScheduler` uses both only under `m_Lock`. |
+| `m_FramingToken` of `InteractiveGraphView` | A token: the latest request wins | Nothing watches it, and a callback on the UI thread compares it with its copy. A lost increment does no harm, and thus a plain `++` is enough. |
+| `NestingCounter` and `m_RevisingCount` | A level | They go up and down, and their value is a state: zero or more than zero. |
+| `m_Drawn` of `PresetColorSequence` | A count that selects a color | The value itself is important. The count changes to a `uint`, and thus the index stays in range after a rollover. |
+| `IsReadyToReviseTrackedMetrics` | A flag for a request | The consumer acts on `Yes`, and it then sets the flag back to `No`. Each arm and the clear occur under the lock of `ProjectScenarioManagerViewModel`. An arm occurs before the build takes the lock or after the build releases it, and thus the flag cannot lose an arm. The flag also merges a burst of arms into one build. |
+
+`IsReadyToReviseTitle` is the flag that arms the title. Its setter increments `TitleRevision`, and the consumers follow the counter and not the flag.
+
+### How to add a counter
+
+1. Make sure that the consumers need to know about an event. Use a flag for a state, and a ticket for an order.
+2. Add the field and the getter in [the form above](#the-form). End the name with `Revision`.
+3. Add the increment and the raise, after the state that the event changes.
+4. If an interface declares the property, write "Observe changes only." in its documentation comment.
+5. Add the counter to [the table of the counters](#the-counters).
+6. Add its tests to [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs).
+
+### How the tests hold the rules
+
+No test can make two billion increments. Thus, a test sets the private field near the end of the range by reflection, and it then does the real action. [`RevisionCounterTests`](../test/Zametek.ViewModel.ProjectPlan.Tests/Core/RevisionCounterTests.cs) does this for each counter. It checks that the value rolls over, that one event gives one raise, and that the getter has the new value when the raise occurs.
+
+It also checks that a getter does not wait for the lock of its owner. For each filter of the display settings, it checks that the filter is in place when the raise occurs. A further case takes `CompilationOutputRevision` past 1,000,000, where it used to wrap.
+
+The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request.
+
+`GanttActivitySelectorViewModelTests` and `EarnedValueResourceSelectorViewModelTests` have the tests for a filter. They also test a load across a rollover, and two deliveries across a rollover. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`. `TrackerRevisionTests` has the tests for a request during a compilation and during a load. It also tests the first value and the copy of the watcher, across a rollover.
+
+### The settled signal
+
+`CompilationOutputRevision` is the settled signal. A compilation produces its outputs in seven Build\* steps. Suppose a chart watches `ResourceSeriesSet` *and* `GraphCompilation`. Then it rebuilds two times for each compilation, one time for each input. In between, it can see a mix of generations of the state.
+
+Thus, `RunBuildCascade()` increments `CompilationOutputRevision` **after all seven outputs are in place**. The Gantt chart reads several outputs, and thus its manager keys its rebuild pipeline on this revision and not on the single outputs. One compilation gives exactly one settled raise, and one settled raise gives exactly one rebuild. The other charts follow one output each: `ResourceSeriesSet`, `TrackingSeriesSet` or `TrackedMetricsSet`. A cascade that a newer compilation overtakes publishes nothing and gives no raise (rule 14). The cascade of the newer compilation gives it.
+
+## 10. Display order: input surfaces versus display-only surfaces
+
+Several panels show rows or sections "in resource order". This is the order that the user arranged in the Resource Settings grid. The user drags rows to change the order. [`UpdateDisplayOrders`](../src/Zametek.ViewModel.ProjectPlan/ResourceSettingsManagement/ResourceSettingsManagerViewModel.cs) stamps `DisplayOrder` as a *descending* rank, and thus the top row of the grid has the highest value. Two different mechanisms keep that order correct. The side of the compilation on which the surface is decides which mechanism applies.
+
+**Input surfaces mirror the live settings collections.** The effort timesheet ([`EffortTrackingManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/TrackingManagement/EffortTrackingManagerViewModel.cs)) shows the live `IManagedResourceViewModel` instances themselves. Its sections bind to the same objects that the settings grid edits, and there is no compiled snapshot in between. Thus, it observes `OrderableResources` of the settings panel and `OrderableActivities` of the core. It does this through `Observable.FromEventPattern` bridges for collection changes. The application merges these bridges into its refresh trigger.
+
+The timesheet rebuilds its sections at the moment when a drag ends. There is one data source, and thus the live mirror of the order is unambiguous. `RefreshTimesheet` compares the live *instances* and not ids. This also prevents the sections from driving stale, disposed view models after a scenario switch.
+
+**Display-only surfaces take their order from the cascade.** The compiled outputs are the charts, the Metrics panel and the Resource Metrics panel. They are snapshots that the Build\* cascade produces, and the rebuilt output itself holds their order.
+
+The metrics for each resource are the standard example. `MetricCalculationService.BuildFinancialMetrics` emits the `ResourceMetrics` list with the same sort order as the rows of the settings grid. The order is descending `DisplayOrder`. A tie goes to the descending resource id, which puts the implicit and spare series at the bottom. Thus, the panel only shows the order of the list, and the persisted scenario stores the same order. There are no `Orderable*` event bridges, no connection between sibling view models, and no second source of truth to reconcile.
+
+A display-only surface must not use the technique of the input surfaces. The reason is epoch consistency. The ids of the resources *as of the last compilation* are the keys of a compiled snapshot. But the live collections change ids and membership immediately.
+
+A renumbering rewrites all ids at one time. Additions and deletions of resources make rows with no snapshot entry, or entries with no row. A join of the live order with the snapshot values breaks in each stale window. It also needs bookkeeping of the last known order to prevent temporary scrambles.
+
+The cascade route avoids all of this. A reorder or a renumbering uses `UpdateResourceSettingsToCore()`. The setter of `ResourceSettings` calls `RequestCompilation()`, and the automatic compilation runs. The rebuild then delivers the ids, the values and the order together, atomically. `HasStaleOutputs` marks the gap in between.
+
+A pure drag-reorder does cause a full recompilation, because the comparison of the settings record sees the change of `DisplayOrder`. This is the existing cost, and the team accepts it to keep everything downstream consistent.
+
+Use this rule of thumb: **If a surface shows the live settings objects, mirror the `Orderable*` collections. If it shows compiled output, put the order into the output at build time.**
+
+## 11. The engine: the pattern at its extreme
+
+The engine ([`JobRunner`](../src/Zametek.Engine.ProjectPlan/JobRunner.cs)) has no UI. The `zpp` command line tool uses it. It runs one job for each process, or many jobs side by side in the server `zpp serve`. The engine takes the idea of the bulk update to its logical end. Each job runs in a dependency injection scope of its own, and the engine disposes the scope when the job ends.
+
+In the scope, the engine resolves each view model and never starts it (§7 rule 12). Thus, none of their reactive pipelines exists. The engine sets `core.AutoCompile = false` and drives everything explicitly. It calls `RunCompile()` and then the Build\* methods, in the same dependency order as `RunBuildCascade`.
+
+This needs public seams for items that only the reactive pipeline reached before. An example is `IProjectScenarioManagerViewModel.BuildTrackedMetrics()`. The GUI calls it through a subscription, but the engine must call it directly before it builds the scenario chart.
+
+A job can also run the schedule simulation (`JobRequest.RunSimulation`). The engine does not make a second simulator. It resolves the same panel view model as the desktop (`ISimulationChartManagerViewModel`). The settings are those of the scenario that the job loads. The job calls `RunSimulationWithSavedSeedAsync()`, which uses the saved seed and leaves the settings as they are. The job checks what the request asks of the simulation as soon as the plan is read (`SimulationException`). The simulation runs after the compile and before the project and the scenario are written, so that they hold its result. Its statistics go into `JobResult.Simulation`. A job that does not run the simulation still gives the statistics of a result that the scenario holds. It makes the outputs from that result. The chart and the CSV files are outputs of the job (`JobOutput.SimulationChart` and the files that follow it). They come last. The panel, `zpp` and the server thus make the same numbers in the same way. The engine registers the token of the job with `CancelSimulation()`, and so a simulation stops between two chunks of its iterations. A step that is in progress ends first for every other step, but a simulation is the exception, because it is the one step that can take minutes.
+
+Jobs run side by side, and each job produces exactly the same result as when it runs alone. Thus, two rules apply to everything that a job reaches:
+
+- **No view model calls `Dispatcher.UIThread`.** The application sends work that only the UI thread can do to [`IUIDispatcher`](../src/Zametek.Contract.ProjectPlan/Miscellaneous/IUIDispatcher.cs) and, inside the graph library, to [`IGraphDispatcher`](../src/Zametek.Graphs.Avalonia/Abstractions/IGraphDispatcher.cs). The implementations of the desktop are the UI thread, as before. The implementations of the engine run the work inline. A job has no UI thread, and nothing pumps one. Work that the application posts there stays in the queue with the whole scope of the job, for the life of the process. The UI components continue to use the dispatcher directly.
+- **Nothing reads the wall clock.** The time comes from `IDateTimeCalculator` of the scope (`GetLocalNow()` and `GetLocalToday()`). The application never uses `DateTime.Now`, `DateTime.Today` or `DateTimeOffset.Now`. A library that stamps the clock itself, for example ClosedXML on each workbook that it writes, receives an override. The calculator of a job reads a `JobClock`. This is the clock of the host, unless the request fixes the time at which the job runs (`JobRequest.Now`, `zpp --now`). The time zone also comes from the calculator (`LocalTimeZone`). A file older than v0.3.0 holds its times without an offset from UTC. The engine reads them in that zone when it opens such a file.
+
+**The import of a workbook is all or nothing.** [`XlsxScenarioFileImporter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxScenarioFileImporter.cs) reads the whole workbook into tables of typed cells (`ImportTable`). [`XlsxWorkbookReader`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxWorkbookReader.cs) makes the tables. It is the one class that knows the library that reads the file. [`XlsxWorkbookWriter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxWorkbookWriter.cs) is the same for the library that writes the file: the exporter gives it text, numbers, truth values and dates, in four looks, and it gives back the zipped package, stamped with the clock of the calculator. The titles of the columns are the structure of a sheet. The importer finds a column by its title, and it leaves alone a column or a sheet that it does not know. Thus, a workbook that has more than the exporter writes can still be imported. The importer reads each cell as what it is: a number, a date, a truth value, a formula (its result) or text. A blank cell is not a value that was given. A cell with a value of the wrong kind is a problem. The importer collects every problem (`ImportIssue`, with the sheet, the cell, the title of the column and the name of the row) and does not stop at the first. If it finds one or more, it throws a `ScenarioImportException` with the list, and it imports nothing. Each host says the problems in its own way:
+
+- The desktop shows an error with the first ten, and it offers a CSV report of all of them ([`ImportProblemsPresenter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/ImportProblemsPresenter.cs)). The open project does not change, because the import fails before it changes anything.
+- `zpp` writes one line for each problem to the standard error stream and exits with code 1.
+- The server answers with the problem `project-not-readable` and an error for each of the first 100 problems.
+
+**ClosedXML reads and writes the workbooks.** Only `XlsxWorkbookReader` and `XlsxWorkbookWriter` use it. Some rules follow from how the library works:
+
+- **A number has 15 digits.** The library writes a number to 15 digits, as Excel does. Thus `0.1 + 0.2` is `0.3` after an export and an import. A seed has up to 20 digits, and thus it is text.
+- **The writer writes an error for a number that has no value.** `NaN` is `#NUM!`, and infinity is `#DIV/0!`. A number that is too large for 15 digits is `#NUM!` also, because the library cannot read such a number.
+- **A text keeps the apostrophe at its start.** The library removes the first apostrophe of a text. The writer adds one, to keep the text as it is.
+- **A formula is its result.** When the file keeps no result, the library calculates it. A formula that the library cannot calculate is the error `#VALUE!`.
+- **A date is a number that a calendar has.** A number with the format of a date is a date if a calendar has it. A number before the first day of Excel is not a date, and a number after the year 9999 is not a date. A time of the day is a number also.
+- **The library does not search the fonts.** [`XlsxGraphicEngine`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxGraphicEngine.cs) gives it fixed measures of text. This saves about 0.2 seconds at the first read of a process. The library reads a workbook without it.
+- **The package has fixed names.** The library gives the properties part a random name, and it gives two relationships a random identifier. It also writes its own times. `XlsxWorkbookWriter.Save` replaces them with fixed names and the times of the calculator. Thus, a workbook that is written at a given time has the same parts on every platform. The bytes of the zip are not always the same, because each runtime compresses in its own way.
+
+The ids that a job makes are the one documented exception to identical outputs. A job makes ids for the new project and scenario of an import, and when it upgrades a file from before v0.6. These ids stay random.
+
+These rules are important for `zpp serve` ([`JobServer`](../src/Zametek.ProjectPlan.CommandLine/Server/JobServer.cs), with its API in [`ProjectEndpoints`](../src/Zametek.ProjectPlan.CommandLine/Server/ProjectEndpoints.cs)). [API.md](API.md) documents the API, and [openapi.yaml](openapi.yaml) describes it. The server is one process with one engine container for its whole life. It runs as many jobs at one time as its limits allow, each in its own scope.
+
+The same source code builds the container as for `zpp` (`Program.BuildServices`), but the server validates it as it builds it. Thus, a singleton that holds a service of a job scope prevents the start of the server. Such a singleton carries the state of one job into each other job. The web host has a container of its own, and it takes only the `JobRunner` from the container of the engine.
+
+The server stops a job when its caller leaves or the job reaches its time limit. It uses the token that `JobRunner.RunAsync` checks between steps. A step that is in progress, a compilation or the drawing of a chart, ends first. The watchdog limits the compilation. A simulation stops between two chunks of its iterations. The server also limits the number of iterations that a request can ask for (`MaxSimulationIterations`), because a simulation of a large plan can take far more time than the other steps. The limit of time (`JobTimeoutSeconds`) is the one that stops a simulation of a large plan, and the limit of iterations is the one that stops a request for a simulation that is too large for any plan. The iterations of a job run on all the processors, as the iterations of the panel do. Thus, a server with many jobs asks more threads of the pool than it has processors. The result does not change.
+
+The server knows one thing about a job while it runs: how far it has got. `RunningJobs` is a singleton that holds the jobs that run now, each under the trace id of its request, with the time it began and the last `JobProgress` that the engine reported (`JobRequest.Progress`). `ProjectEndpoints` registers a compile after it has a place among the jobs and removes it when the answer is ready. `GET /v1/jobs/{requestId}` reads the list, and it does not use one of the places. The list is the one piece of state of the server that outlives no request, and a job leaves nothing in it. `zpp --server -v` asks it every two seconds (`JobClient`).
+
+Two more rules keep the answers of the server exactly the same as what `zpp` prints and writes, and they keep its jobs apart:
+
+- **All text that `zpp` prints uses [`IJobConsole`](../src/Zametek.ProjectPlan.CommandLine/Contracts/IJobConsole.cs).** The console of `zpp` belongs to the process, and its [`IJobSink`](../src/Zametek.Engine.ProjectPlan/Contracts/IJobSink.cs) writes files. The console and the sink of the server belong to one job, and they are in memory. The console records each call, with each output at the point where the job produced it. This record is the transcript of the answer, and a client plays it back through the own console and sink of `zpp`. The text that both print comes from [`JobConsoleHelper`](../src/Zametek.ProjectPlan.CommandLine/Console/JobConsoleHelper.cs). Thus, text that the application writes directly to `Console` reaches the terminal of `zpp` and never the answer of the server. `ProjectEndpointsParityTests` runs `zpp` and the server on the same plans. It compares the exit codes, the text and each file, byte for byte.
+- **A job chooses nothing that the process holds.** The culture belongs to the process. The server sets it one time, when it starts and before anything formats a date, because `DateTimeCalculator` reads its date formats in its type initializer. The time zone also belongs to the process (`TimeZoneInfo.Local`). A job can fix the time at which it runs, because its clock belongs to its scope. But a job cannot select its culture or its time zone. These belong to the server. `--culture` sets the culture, and `TZ` sets the time zone where the platform reads it. `/v1/info` reports both.
+
+When the server listens on a Unix domain socket, the socket is its access control. Thus, the server gives the socket to its user before anybody can connect to it. [`UnixSocketFileHelper`](../src/Zametek.ProjectPlan.CommandLine/Sockets/UnixSocketFileHelper.cs) is the `CreateBoundListenSocket` of the socket transport. It binds the socket, restricts its file, and only then lets Kestrel listen.
+
+On Windows, a socket has the access of its folder, and the helper restricts the file to an access list that holds only that user. On other platforms, it sets mode 600. A socket that the server binds but does not yet listen on refuses each connection. Thus, there is no moment at which another user can connect. A server that cannot restrict its socket does not start.
+
+The same class prepares the path before the engine starts. It removes the socket that a killed server left behind, and nothing else. It removes a socket only when nothing answers on it and the file is empty (and, on Windows, only when the file is a socket).
+
+`zpp --server` ([`JobClient`](../src/Zametek.ProjectPlan.CommandLine/Client/JobClient.cs)) is the other half of the server. It sends a run to a server as a job. It plays the transcript of the answer back through the own console and file sink of `zpp` ([`JobTranscriptHelper`](../src/Zametek.ProjectPlan.CommandLine/Client/JobTranscriptHelper.cs)). Thus, the run prints, writes and exits as it does on the local computer.
+
+It also fails in the same way as a local run. If `zpp` cannot write a chart or a graph, it reports this and the run continues. If `zpp` cannot write a plan or an export, this stops the run.
+
+A server that does not run the job ends the run with its own exit code, 5. Thus, a pipeline can tell the difference between two cases. One case is a server that it can try again or do without. The other case is a job that failed. 
+
+`JobClientParityTests` runs `Main` of `zpp` on the local computer and on a server, with the same command lines. It compares the exit codes, the text and each file, byte for byte. The client has two rules of its own to keep this equality:
+
+- **The client names its files, and it does the checks of `zpp` itself.** It writes each output where the options of `zpp` say. It uses the name that `Program.BuildOutputFilenames` gives, as a local run names it. It never uses the name in the answer. The server chose that name without knowledge of this computer, and an answer can write anywhere through it. `zpp` refuses some items before a job runs. These are its options, a missing plan or directory, and an export to a file that it does not write. The client refuses the same items before it sends anything, in the same way as `zpp`. The server cannot do these checks, because it never receives the paths.
+- **The client never touches the engine.** `Main` decides where the run goes after it parses and checks the options. This is before anything builds the engine or loads its container. A local run is a method of its own (`RunHereAsync`). The client takes only types and file-name helpers from the assemblies of the engine, and they load nothing of the view models ([`FileFormatHelper`](../src/Zametek.ViewModel.ProjectPlan/Files/FileFormatHelper.cs)). A run on a server loads no ReactiveUI, Avalonia, Skia or ASP.NET Core. The client can move into a binary of its own without a redesign, if computers appear that only send runs to a server.
+
+The API of the server has one description, [openapi.yaml](openapi.yaml), and one reference, [API.md](API.md). Tests hold both to the server. Thus, neither of them is what somebody remembered last about the API. The server supplies the description itself at `/v1/openapi`, from a copy of the file that the build embeds in the server. Thus, a server describes what its build takes.
+
+CI checks the description with Spectral. It uses the rules of the [RESTful API Guide](RESTFUL-API-GUIDE.md) that apply to a description, in [`.spectral.yaml`](../.spectral.yaml), and also the rules of Spectral itself. These include the rule that each example fits its schema.
+
+[`OpenApiContractTests`](../test/Zametek.ProjectPlan.CommandLine.Tests/Server/OpenApiContractTests.cs) read the description and the reference next to the server. The description has the routes that the server maps, and no other routes. Each response that the description names is a response that the server gives. This includes its status, its headers, the type of its body, and a body that fits the schema. The schema refuses a member that it does not name. Each response that the server gives in those tests is in the description.
+
+Each kind of problem, code, metric, option, limit and enumeration is in the description as it is in the source code. Each kind of problem has its section in the reference, at the address that its `type` names. Thus, a change to the API is a change to the description and to the changelog of the reference, in the same commit. If not, the build fails.
+
+## 12. Diagnostics
+
+[`CascadeDiagnostics`](../src/Zametek.ViewModel.ProjectPlan/Diagnostics/CascadeDiagnostics.cs) is a dormant tracing facility. The team left it in place from the performance investigation. Call sites in the cascade record markers, build counts, notifications of collection changes and stack traces. But the compiler removes each call unless you define the symbol `CASCADE_DIAGNOSTICS`. The class comment gives the instructions.
+
+The output goes to `Debug.WriteLine`, and it is also written to `zametek-cascade-diagnostics.log` in the temp directory of the user. Thus, you can run a Debug build without a debugger and collect the trace from the file afterwards. Switch the facility on again when you verify the gating behavior, for example that a load produces exactly one compilation and one cascade. Also use it when you look for redundant rebuilds and deadlocks.
+
+[`ThreadTrace`](../src/Zametek.ViewModel.ProjectPlan/Diagnostics/ThreadTrace.cs) is a second dormant tracer. It answers questions about threads, and it writes through `PerfTelemetry` to `ProjectPlanPerf_<pid>.log` in the temp directory. A line from the UI thread has a `*` after the thread number. Nothing runs until the application calls `ThreadTrace.Enable()`. The class comment gives the steps.
+
+Use the real application for a question about threads, and not a headless test. On 2026-10-17 a headless test of a chart view threw "The calling thread cannot access this object because a different thread owns it". This happened when the view model published a plot from a thread of the pool. A trace of the real application showed that the four older charts do publish from the pool. The view handles each change on the UI thread, and no exception occurs. Thus, the bindings of the real application move the change of a property to the UI thread, and a headless test does not.
+
+A change that an event carries is not moved. The state of a command (`CanExecuteChanged`) reached an open menu item on the thread that raised it. Rule 13 of section 7 describes this fault. Hand the state of a command to `IUIDispatcher`.
+
+## 13. Where a file goes
+
+The large projects group their files by function. The command line, view model and view projects each have a folder for every feature. They also have a folder for every group of classes that work together. Examples are `ActivityManagement`, `Xlsx`, `Server`, `Charts` and `DataGrid`. Records, helpers and enums of one function sit side by side in its folder.
+
+`Miscellaneous` holds only the files that have no function of their own. These are the stand-ins of the host, such as `AvaloniaUIDispatcher` and `DialogService`, and small helpers for dates and text. A helper that one dock alone uses sits in the folder of that dock. A helper that several folders use stays in `Miscellaneous`, unless it has a function of its own.
+
+`Contracts` and `Exceptions` stay folders by kind, even when they hold one file. The root of a project holds its top-level classes, such as `Program` and `MainViewModel`. A small project, such as the engine, groups its files by kind: `Contracts`, `Models`, `Exceptions` and `Miscellaneous`.
+
+The namespace of a project stays flat. Thus, a move between folders changes no code. A test project has the same folders as the project that it tests, and its shared fixtures stay at its root.

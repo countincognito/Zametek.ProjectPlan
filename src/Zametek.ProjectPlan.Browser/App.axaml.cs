@@ -11,7 +11,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
-using Zametek.ProjectPlan.Core;
+using Zametek.Shell.ProjectPlan;
 using Zametek.View.ProjectPlan;
 
 namespace Zametek.ProjectPlan.Browser

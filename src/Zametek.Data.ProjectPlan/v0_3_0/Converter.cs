@@ -56,7 +56,7 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
 
             return new ProjectModel
             {
-                ProjectStart = project.ProjectStart,
+                ProjectStart = mapper.FromV0_2_1ToV0_3_0(project.ProjectStart),
                 DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_2_1ToV0_3_0)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
                 ResourceSettings = project.ResourceSettings ?? new v0_1_0.ResourceSettingsModel(),

@@ -1,0 +1,97 @@
+# Glossary
+
+This document lists the terms that the other documents use in a special way. It also states the rules for the language of the documentation.
+
+## Language of the documentation
+
+The documentation follows the writing rules of [ASD-STE100 Simplified Technical English Issue 9](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf) loosely. These points show what loosely means:
+
+- **Sentences.** A sentence has a maximum of 20 words in a procedure and 25 words in a description. A paragraph has a maximum of six sentences, and its first sentence gives the topic. The text uses the active voice and the simple tenses, with one idea in each sentence.
+- **Vocabulary.** The text uses ordinary technical words. It does not limit itself to the approved words of the STE dictionary. Where an approved word is natural, the text uses it. The dictionary has its own copyright, and thus this repository does not include it.
+- **Words with another meaning.** Some words have an approved STE meaning that is different from their meaning in software. The documentation avoids three of these words (refer to [Words that the documentation avoids](#words-that-the-documentation-avoids)).
+- **Words for requirements.** The [RESTful API Guide](RESTFUL-API-GUIDE.md) uses MUST, MUST NOT, SHOULD, SHOULD NOT and MAY in capitals, as RFC 2119 and RFC 8174 define them. They are defined terms of the guide. The documentation keeps them, although STE does not approve "should" and "may".
+- **Spelling.** The documentation uses American English.
+- **Text that does not change.** Source code, command lines, output of programs, quotations and the titles of works keep their original form. The text that programs print does not follow these rules. Examples are the output of `--help`, error messages and resource files.
+- **The README.** The file [README.md](../README.md) is also a page for the brand of the project. Its text keeps the style that the owner chose, and this style can differ from these rules.
+
+### Words that the documentation avoids
+
+| Word | Reason | Use this |
+| --- | --- | --- |
+| view | In software, a view is a part of the user interface. STE approves "view" only for the ability to see something. | "UI component". The names of types (for example `MainView`) and the term "view model" stay. |
+| solution | In software, a solution is a set of projects that a tool builds together. STE approves "solution" for a liquid with a dissolved material and for the answer to a problem. | The name of the file, for example `Zametek.ProjectPlan.slnx`. |
+| code | In software, code is the text of a program. STE approves "code" for a sequence of symbols that identifies something. A "status code" or an "error code" has this meaning and stays. | "Source code". |
+
+## Terms for plans
+
+| Term | Meaning |
+| --- | --- |
+| plan | The data of a project plan. The application stores a plan in a `.zpp` file. The HTTP API uses the word "project" for a plan. |
+| project | In most documents, a .NET project: one `.csproj` file with the source files that belong to it. In the HTTP API, a plan. |
+| scenario | A version of a plan. A plan has one or more scenarios. |
+| tracked scenario | A scenario that the scenario chart shows as a point. Tracking does only this. It is not the progress tracking of activities. |
+| current scenario | The scenario that was open when a user saved the plan. `zpp` loads it when a request does not name a scenario. A plan has a maximum of one current scenario. |
+| activity | A task in a plan. |
+| compile | To calculate the schedule of a scenario with the vertex-graph compiler. The result is the compilation (`GraphCompilation`). |
+| build cascade | The seven outputs that `RunBuildCascade()` builds after a compile. They are the arrow graph, the vertex graph, the series for resources and tracking, and the three kinds of metrics. `RunBuildCascade()` copies what they read, `CompilationOutputService` builds them from the copy, and `RunBuildCascade()` publishes them together. |
+| output | A result that the desktop application, `zpp` or the server makes from a compiled plan. Examples are the metrics, a chart, a graph and an exported plan. |
+| metrics | The numbers that describe a compiled scenario. There are network, risk and financial metrics. |
+| estimates | The three durations of an activity: the optimistic duration (O), the most likely duration (ML) and the pessimistic duration (P). The rule is 0 ≤ O ≤ ML ≤ P. The compiler schedules the expected duration, (O + 4 ML + P) / 6, rounded to the nearest whole day, with halves up. |
+| simulation | A Monte Carlo simulation of the schedule of a plan. Each iteration draws a duration for each activity from its estimates and schedules the plan again, onto its resources. |
+| iteration | One draw and one schedule in a simulation. A simulation has many iterations, and each gives a finish time. |
+| seed | The number that starts the random numbers of a simulation. The same plan, the same settings and the same seed give the same result, for any number of threads. The project saves it. |
+| simulation settings | The iterations, the distribution, its shape value, the seed, "New seed each run" and the target finish. They belong to the scenario, and the project file holds them. `zpp` and the server use them, and they do not have options for them. |
+| simulation result | The statistics, the percentiles, the histogram, the critical paths and the criticalities of the last run of a simulation. The project file holds it, but it does not hold the iterations. |
+| critical path (of an iteration) | A chain of critical activities in which each activity starts when the one before it finishes. The chain has only the activities that take time. A link is a dependency of the plan, or a resource link. When several chains have the same length, the iteration has several critical paths. |
+| chart | A plot of data, for example the Gantt chart, the earned value chart, the resource chart or the scenario chart. |
+| graph | A diagram of the activities and their dependencies. The arrow graph is activity-on-arrow. The vertex graph is activity-on-vertex. |
+
+## Terms for the software
+
+| Term | Meaning |
+| --- | --- |
+| host | A project that starts the shared parts of the application on one kind of platform. `Zametek.ProjectPlan.Desktop` is the desktop host. `Zametek.ProjectPlan.Browser` is the web host. [TODO](TODO.md) also calls a host a "head". |
+| view model | An object that holds the state and the logic of a part of the UI, with no UI elements of its own. |
+| core | The view model `CoreViewModel`. It owns the editable state of a plan and the outputs that the compiler gives. It makes a plan graph for the activities. |
+| plan graph | The class `PlanGraph`. It holds the live activities of the core and the live compiler, and it holds the views of the activities that the UI binds to. It adds, removes and updates the activities, and it makes the copies that a compile and a simulation take. It gives the results of a compile back to the live activities. |
+| manager | A view model that subscribes to the core and rebuilds its own outputs when an input changes. The outputs are plots, graphs and grids. |
+| engine | The library `Zametek.Engine.ProjectPlan`. It runs a job with no user interface. `zpp` and `zpp serve` use it. |
+| `zpp` | The command line tool of the repository. It has no user interface. |
+| `zpp serve` | The mode of `zpp` that starts a web server with an HTTP API. |
+| `zpp --server` | The option that sends the jobs of `zpp` to a server. |
+| job | One request for work. A job loads a plan, compiles it and makes the requested outputs. |
+| warm server | A server that did its warm-up with a sample plan at start-up. A job on a warm server does not pay the start-up cost of `zpp`. |
+| problem | An error response in the format of RFC 9457 (`application/problem+json`). The `type` of a problem is a URI that points to a section of [API.md](API.md). |
+| deviation | A rule of the [RESTful API Guide](RESTFUL-API-GUIDE.md) that the API does not follow. [API.md](API.md) and [openapi.yaml](openapi.yaml) record each deviation. |
+
+## Terms for the reactive pipeline
+
+[Architecture](ARCHITECTURE.md) explains these terms in full.
+
+| Term | Meaning |
+| --- | --- |
+| emission | A value that moves through an observable pipeline. |
+| emission time | The moment when a state change pushes a value into a pipeline. The operators before `ObserveOn` run at this time. |
+| delivery time | The later moment when the scheduler runs the subscriber. The operators after `ObserveOn` run at this time. |
+| payload | The value that a pipeline delivers to a subscriber. It is a snapshot from the emission time, and thus it can be stale. |
+| gate | In a pipeline, a check that suppresses emissions, for example `.Where(_ => !IsBulkUpdating)` or `MuteWhile`. In [TODO](TODO.md), it is a check that the pre-commit hook runs. It is also a condition that must be true before a task can start, for example the release of a package. |
+| bulk update | One logical operation that rewrites large parts of the model in sequence: a load, an import or a reset. |
+| snapshot | The copy of the plan that a compile works on. The core takes it in one short step under its lock, and it compiles the copy without the lock. |
+| revision counter | An `int` that counts how many times an event occurred. A consumer follows its changes, or it keeps a copy and compares the copy later for equality. [Architecture](ARCHITECTURE.md#9-revision-counters-and-the-settled-signal) gives the form and the rules. |
+| ticket | A number that gives an order to the snapshots of `CompilationScheduler`. A result publishes only if its ticket is larger than the last ticket that published. |
+| input revision | The revision counter `m_InputRevision` of `CompilationScheduler`. It counts each change of what a compile reads. A compile that finishes after the counter moved on publishes stale results, and the plan is compiled again. |
+| drain | To make the compilations that the edits of a plan ask for, one thread at a time, until no edit waits. `CompilationScheduler.Drain` does this, and the core calls it from `DrainAutoCompiles()`. A thread that finds another thread at work leaves at once, and its edit waits in the input revision. The thread at work compares the input revision with that of its snapshot after each compilation, and it compiles again if they differ. Thus the edits that arrive during a compilation wait for the next one, and one compilation takes all of them. |
+| conflate | To keep only the latest of the values that a gate suppresses, and to replay it when the gate opens. `MuteWhile` does this. |
+| settled signal | The revision counter `CompilationOutputRevision`. `RunBuildCascade()` increments it after it builds all the outputs. |
+| revision of the trackers | The step that makes the lists of a selector of activities the same as the activities of the plan. `ReviseTrackers()` asks for it, and the selectors read the plan during the call. The days of the resources change their lists during the call. The selector of the Gantt chart changes its lists on the UI thread after the call. [Architecture](ARCHITECTURE.md#7-threading-and-ordering-rules) |
+
+## Abbreviations
+
+| Abbreviation | Meaning |
+| --- | --- |
+| CI | Continuous integration. |
+| DAG | Directed acyclic graph. |
+| DS | The display settings view model, `ProjectScenarioDisplaySettingsViewModel`. |
+| GC | Garbage collector. |
+| R2R | ReadyToRun, a form of ahead-of-time compilation in .NET. |
+| RID | Runtime identifier, for example `win-x64`. |

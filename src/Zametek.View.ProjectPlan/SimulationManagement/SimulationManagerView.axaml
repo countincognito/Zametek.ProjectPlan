@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:resources="using:Zametek.Resource.ProjectPlan"
+             xmlns:local="using:Zametek.View.ProjectPlan"
+             xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+             xmlns:u="https://irihi.tech/ursa"
+             xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
+             x:DataType="vm:SimulationManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
+             x:Class="Zametek.View.ProjectPlan.SimulationManagerView">
+	<UserControl.Styles>
+		<!-- The colour coding of the Activity Manager: an input that a user can change has the background of an editable cell, and an input that a user cannot change has none. -->
+		<Style Selector="Grid.editable">
+			<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
+		</Style>
+	</UserControl.Styles>
+
+	<!-- The dock "Simulation": the scenario, the settings of a run and the buttons that start and stop it. The progress is fixed at the bottom. -->
+	<DockPanel Margin="7"
+			   Background="Transparent">
+
+		<!-- The progress of a run, what it said last, and whether the result still belongs to the plan. -->
+		<StackPanel DockPanel.Dock="Bottom"
+					Margin="0,7,0,0"
+					Spacing="4">
+			<ProgressBar Height="14"
+						 Minimum="0"
+						 Maximum="1"
+						 Value="{Binding Path=Simulation.Progress, Mode=OneWay}"
+						 IsVisible="{Binding Path=Simulation.IsRunning, Mode=OneWay}" />
+			<TextBlock TextWrapping="Wrap"
+					   Text="{Binding Path=Simulation.StatusText, Mode=OneWay}" />
+			<TextBlock TextWrapping="Wrap"
+					   FontWeight="Bold"
+					   Text="{x:Static resources:Labels.Label_SimulationStale}"
+					   IsVisible="{Binding Path=Simulation.IsResultStale, Mode=OneWay}" />
+		</StackPanel>
+
+		<ScrollViewer HorizontalScrollBarVisibility="Disabled">
+			<StackPanel Spacing="7">
+
+				<!-- The scenario that a run simulates. -->
+				<StackPanel Spacing="2"
+							IsVisible="{Binding Path=HasScenarioTitle, Mode=OneWay}">
+					<TextBlock Text="{x:Static resources:Labels.Label_SimulationScenario}" />
+					<TextBlock FontWeight="Bold"
+							   TextWrapping="Wrap"
+							   Text="{Binding Path=ScenarioTitle, Mode=OneWay}" />
+				</StackPanel>
+
+				<!-- The settings. A run in progress keeps the settings that it began with, and thus they wait until it ends. -->
+				<StackPanel Spacing="7"
+							IsEnabled="{Binding Path=!Simulation.IsRunning, Mode=OneWay}">
+
+					<StackPanel Spacing="2">
+						<TextBlock Text="{x:Static resources:Labels.Label_SimulationIterations}" />
+						<Grid Classes="editable">
+							<u:NumericIntUpDown Value="{Binding Path=Simulation.Iterations, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="1"
+												Maximum="{x:Static zmg:GraphLimits.MaximumSimulationIterations}"/>
+						</Grid>
+					</StackPanel>
+
+					<StackPanel Spacing="2">
+						<TextBlock Text="{x:Static resources:Labels.Label_SimulationDistribution}" />
+						<Grid Classes="editable">
+							<ComboBox HorizontalAlignment="Stretch"
+									  VerticalContentAlignment="Center"
+									  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:DurationDistribution}}}"
+									  SelectedItem="{Binding Path=Simulation.Distribution, Mode=TwoWay}">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock VerticalAlignment="Center"
+												   Classes="displayOnly"
+												   Text="{Binding Converter={x:Static local:StringConverters.DurationDistributionValue}, Mode=OneWay}" />
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+						</Grid>
+					</StackPanel>
+
+					<StackPanel Spacing="2"
+								IsVisible="{Binding Path=Simulation.IsModifiedBetaDistribution, Mode=OneWay}">
+						<TextBlock Text="{x:Static resources:Labels.Label_SimulationShape}" />
+						<Grid Classes="editable">
+							<TextBox HorizontalAlignment="Stretch"
+									 VerticalContentAlignment="Center"
+									 Text="{Binding Path=Simulation.ModifiedBetaShape, Mode=TwoWay}" />
+						</Grid>
+					</StackPanel>
+
+					<!-- The seed can be changed only when "New seed each run" is off. A run that draws its own seed shows the seed that it drew. -->
+					<StackPanel Spacing="2">
+						<TextBlock Text="{x:Static resources:Labels.Label_SimulationSeed}" />
+						<Grid Classes.editable="{Binding Path=!Simulation.UseRandomSeed, Mode=OneWay}">
+							<u:NumericULongUpDown Value="{Binding Path=Simulation.Seed, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												  IsReadOnly="{Binding Path=Simulation.UseRandomSeed, Mode=OneWay}"
+												  VerticalAlignment="Center"
+												  ShowButtonSpinner="False"
+												  Focusable="True"
+												  Margin="0"
+												  Padding="0"/>
+						</Grid>
+						<CheckBox IsChecked="{Binding Path=Simulation.UseRandomSeed, Mode=TwoWay}"
+								  Content="{x:Static resources:Labels.Label_SimulationRandomSeed}" />
+					</StackPanel>
+
+					<StackPanel Spacing="2">
+						<TextBlock Text="{x:Static resources:Labels.Label_SimulationTarget}" />
+						<Grid Classes="editable">
+							<u:NumericIntUpDown IsVisible="{Binding Path=!Simulation.ShowDates, Mode=OneWay}"
+												Value="{Binding Path=Simulation.TargetFinishTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="0"
+												Maximum="{x:Static zmg:GraphLimits.MaximumTimeValue}"/>
+							<DatePicker IsVisible="{Binding Path=Simulation.ShowDates, Mode=OneWay}"
+										HorizontalAlignment="Stretch"
+										SelectedDate="{Binding Path=Simulation.TargetFinishDate, Mode=TwoWay}"/>
+						</Grid>
+					</StackPanel>
+				</StackPanel>
+
+				<!-- The buttons stay enabled while a run is in progress: one of them stops it. -->
+				<StackPanel Orientation="Horizontal"
+							Spacing="7">
+					<Button VerticalContentAlignment="Center"
+							Command="{Binding Path=Simulation.RunSimulationCommand, Mode=OneWay}"
+							Content="{x:Static resources:Menus.Menu_RunSimulation}" />
+					<Button VerticalContentAlignment="Center"
+							Command="{Binding Path=Simulation.CancelSimulationCommand, Mode=OneWay}"
+							Content="{x:Static resources:Menus.Menu_CancelSimulation}" />
+				</StackPanel>
+			</StackPanel>
+		</ScrollViewer>
+	</DockPanel>
+</UserControl>

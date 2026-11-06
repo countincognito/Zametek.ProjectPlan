@@ -28,10 +28,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
             IEnumerable<ResourceScheduleModel> resourceSchedules,
-            ResourceSettingsModel resourceSettings)
+            ResourceSettingsModel resourceSettings,
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(resourceSchedules);
             ArgumentNullException.ThrowIfNull(resourceSettings);
+            ArgumentNullException.ThrowIfNull(presetColors);
             var resourceSeriesSet = new ResourceSeriesSetModel();
 
             IList<ResourceModel> resources = resourceSettings.Resources;
@@ -53,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Where(x => x.Resource.InterActivityAllocationType == InterActivityAllocationType.None || x.Resource.InterActivityAllocationType == InterActivityAllocationType.Direct);
 
                 // Make 'random' colors seem consistent.
-                ColorHelper.PresetReset();
+                presetColors.Reset();
 
                 foreach (ResourceScheduleModel scheduledResourceSchedule in noneAndDirectResourceSchedules)
                 {
@@ -62,7 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         var stringBuilder = new StringBuilder();
                         ActivityAllocationType activityAllocationType = ActivityAllocationType.Direct;
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
-                        ColorFormatModel color = ColorHelper.Preset();
+                        ColorFormatModel color = presetColors.Next();
                         double unitCost = defaultUnitCost;
                         double unitBilling = defaultUnitBilling;
                         double fixedCost = 0.0;
@@ -152,7 +154,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             ActivityAllocationType = resource.ActivityAllocationType,
                             InterActivityAllocationType = resource.InterActivityAllocationType,
                             ResourceSchedule = resourceSchedule,
-                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat with { } : ColorHelper.Preset(),
+                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat with { } : presetColors.Next(),
                             UnitCost = resource.UnitCost,
                             UnitBilling = resource.UnitBilling,
                             FixedCost = resource.FixedCost,
@@ -238,10 +240,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private static TrackingSeriesSetModel CalculateTrackingSeriesSet(
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
-            bool hasResources)
+            bool hasResources,
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resourceSettings);
+            ArgumentNullException.ThrowIfNull(presetColors);
 
             List<ResourceModel> resources = resourceSettings.Resources;
 
@@ -304,7 +308,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // lists above).
                 ByResource = [.. resourceTrackingLookup.Values
                     .OrderBy(x => x.Resource.DisplayOrder)
-                    .Select(x => x.ToModel())],
+                    .Select(x => x.ToModel(presetColors))],
             };
 
             if (!orderedActivities.Any())
@@ -958,26 +962,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ResourceSeriesSetModel BuildResourceSeriesSet(
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            ResourceSettingsModel resourceSettings)
+            ResourceSettingsModel resourceSettings,
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(graphCompilation);
             ArgumentNullException.ThrowIfNull(resourceSettings);
+            ArgumentNullException.ThrowIfNull(presetColors);
 
             IList<ResourceScheduleModel> resourceScheduleModels =
                 [.. m_Mapper.ToResourceScheduleModels(graphCompilation)];
 
-            return CalculateResourceSeriesSet(resourceScheduleModels, resourceSettings);
+            return CalculateResourceSeriesSet(resourceScheduleModels, resourceSettings, presetColors);
         }
 
         public TrackingSeriesSetModel BuildTrackingSeriesSet(
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
-            bool hasResources)
+            bool hasResources,
+            IPresetColorSequence presetColors)
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resourceSettings);
+            ArgumentNullException.ThrowIfNull(presetColors);
 
-            return CalculateTrackingSeriesSet(activities, resourceSettings, hasResources);
+            return CalculateTrackingSeriesSet(activities, resourceSettings, hasResources, presetColors);
         }
 
         /// <summary>
@@ -1131,13 +1139,13 @@ namespace Zametek.ViewModel.ProjectPlan
             public List<TrackingPointModel> Effort { get; } = [];
             public List<TrackingPointModel> EffortProjection { get; } = [];
 
-            public ResourceTrackingSeriesModel ToModel()
+            public ResourceTrackingSeriesModel ToModel(IPresetColorSequence presetColors)
             {
                 return new ResourceTrackingSeriesModel
                 {
                     ResourceId = Resource.Id,
                     ResourceName = Resource.Name,
-                    ColorFormat = Resource.ColorFormat != null ? Resource.ColorFormat with { } : ColorHelper.Preset(),
+                    ColorFormat = Resource.ColorFormat != null ? Resource.ColorFormat with { } : presetColors.Next(),
                     DisplayOrder = Resource.DisplayOrder,
                     TotalWorkingTime = TotalWorkingTime,
                     Plan = Plan,

@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IScenarioChartManagerViewModel
-        : IKillSubscriptions, IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 
@@ -56,7 +56,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeCurveFittingTypeY2Command { get; }
 
-        Task SaveScenarioChartImageFileAsync(string? filename, int width, int height);
+        // Writes the chart to the stream at the given size. The caller owns the stream, which is left open.
+        Task WriteScenarioChartImageAsync(Stream stream, ChartImageFormat format, int width, int height);
 
         void BuildScenarioChartPlotModel();
     }

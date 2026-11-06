@@ -1,15 +1,14 @@
 using SkiaSharp;
 using Svg.Skia;
-using Zametek.Utility;
 
 namespace Zametek.Graphs.Avalonia
 {
     // Writes or renders a recorded SKPicture (the interactive canvas, or a rasterised MSAGL SVG) as a
     // JPEG, PNG, PDF or SVG. Each format offers Write* (to a Stream) and RenderTo* (to a byte[]), each
-    // with an async variant; SaveImageAsync picks the format from a file's extension. An internal
+    // with an async variant; WriteImageAsync picks the writer for a GraphFileFormat. An internal
     // SkiaSharp implementation detail of the export / clipboard paths - it takes an SKPicture, so it is
     // not part of the framework-neutral public surface. The neutral public export entry point is
-    // IInteractiveGraph.SaveImageAsync(filename, source, imageType).
+    // IInteractiveGraph.WriteImageAsync(stream, format, source, imageType).
     internal static class ImageExporter
     {
         #region Png
@@ -49,7 +48,7 @@ namespace Zametek.Graphs.Avalonia
         public static void WritePdf(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            picture.ToPdf(stream, SKColors.White, scaleX, scaleY);
+            ThrowIfNotWritten(picture.ToPdf(stream, SKColors.White, scaleX, scaleY));
         }
 
         public static Task WritePdfAsync(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2) =>
@@ -68,7 +67,7 @@ namespace Zametek.Graphs.Avalonia
         public static void WriteSvg(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            picture.ToSvg(stream, SKColors.White, scaleX, scaleY);
+            ThrowIfNotWritten(picture.ToSvg(stream, SKColors.White, scaleX, scaleY));
         }
 
         public static Task WriteSvgAsync(SKPicture picture, Stream stream, int scaleX = 2, int scaleY = 2) =>
@@ -82,55 +81,49 @@ namespace Zametek.Graphs.Avalonia
 
         #endregion
 
-        #region File save
+        #region Any image format
 
-        // Convenience entry point: pick the format from the file's extension and write it. Used by the
-        // on-screen Save-As path.
-        public static async Task SaveImageAsync(SKPicture picture, string filename, int scaleX = 2, int scaleY = 2)
+        // Write the picture in one of the image formats. GraphML and GraphViz are data formats, built from the diagram
+        // rather than drawn from a picture, so they have no writer here.
+        public static Task WriteImageAsync(SKPicture picture, Stream stream, GraphFileFormat format, int scaleX = 2, int scaleY = 2)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
+            ArgumentNullException.ThrowIfNull(stream);
 
-            await Task.Run(() =>
+            return format switch
             {
-                string fileExtension = Path.GetExtension(filename);
-
-                fileExtension.ValueSwitchOn()
-                    .Case($".{GraphFileExtensions.Jpeg}", _ =>
-                    {
-                        using var stream = File.OpenWrite(filename);
-                        WriteJpeg(picture, stream, scaleX, scaleY);
-                    })
-                    .Case($".{GraphFileExtensions.Png}", _ =>
-                    {
-                        using var stream = File.OpenWrite(filename);
-                        WritePng(picture, stream, scaleX, scaleY);
-                    })
-                    .Case($".{GraphFileExtensions.Pdf}", _ =>
-                    {
-                        using var stream = File.OpenWrite(filename);
-                        WritePdf(picture, stream, scaleX, scaleY);
-                    })
-                    .Case($".{GraphFileExtensions.Svg}", _ =>
-                    {
-                        using var stream = File.OpenWrite(filename);
-                        WriteSvg(picture, stream, scaleX, scaleY);
-                    })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));
-            });
+                GraphFileFormat.Jpeg => WriteJpegAsync(picture, stream, scaleX, scaleY),
+                GraphFileFormat.Png => WritePngAsync(picture, stream, scaleX, scaleY),
+                GraphFileFormat.Pdf => WritePdfAsync(picture, stream, scaleX, scaleY),
+                GraphFileFormat.Svg => WriteSvgAsync(picture, stream, scaleX, scaleY),
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
+            };
         }
 
         #endregion
 
         #region Private Members
 
-        // Raster (PNG/JPEG) share one path. Rgba8888 keeps full colour depth so the output stays crisp.
+        // Raster (PNG/JPEG) share one path. Rgba8888 keeps full colour depth so the output stays crisp. A picture too
+        // large for one image at the requested scale is drawn at a smaller scale, so that the image fits RasterSizeLimit.
         private static void WriteRaster(SKPicture picture, Stream stream, SKEncodedImageFormat format, int scaleX, int scaleY)
         {
             ArgumentNullException.ThrowIfNull(picture);
-            picture.ToImage(
-                stream, SKColors.White, format, quality: 100, scaleX: scaleX, scaleY: scaleY,
-                skColorType: SKColorType.Rgba8888, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
+            double fit = RasterSizeLimit.FitScale(
+                (double)picture.CullRect.Width * scaleX, (double)picture.CullRect.Height * scaleY, 1.0);
+            ThrowIfNotWritten(picture.ToImage(
+                stream, SKColors.White, format, quality: 100, scaleX: (float)(scaleX * fit), scaleY: (float)(scaleY * fit),
+                skColorType: SKColorType.Rgba8888, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb()));
+        }
+
+        // Svg.Skia returns false, and writes nothing, when it cannot make the image: for example for a picture with no
+        // area, or when an encoder fails. Say so, rather than leave an empty stream for the caller to save as an image.
+        private static void ThrowIfNotWritten(bool written)
+        {
+            if (!written)
+            {
+                throw new InvalidOperationException(Graphs_Messages.Message_UnableToMakeImage);
+            }
         }
 
         private static byte[] RenderToBytes(SKPicture picture, Action<SKPicture, Stream, int, int> write, int scaleX, int scaleY)

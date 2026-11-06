@@ -168,8 +168,10 @@
 
           <!-- Copy / Save each offer explicit Vector and High-Fidelity entries; which appear is gated by
                ShowVectorExportOptions / ShowRasterExportOptions (applied in code-behind by the Tag, to
-               avoid binding a control property across the context-menu popup boundary). -->
-          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_CopyImage}">
+               avoid binding a control property across the context-menu popup boundary). Both are
+               available only while the graph has a node (HasNodes): a graph with no nodes has no image. -->
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_CopyImage}"
+                    IsEnabled="{Binding Path=HasNodes, Mode=OneWay}">
             <MenuItem Tag="export-vector"
                       Header="{x:Static g:Graphs_Menus.Menu_ExportVector}"
                       Click="CopyVector_Click"/>
@@ -178,7 +180,8 @@
                       Click="CopyRaster_Click"/>
           </MenuItem>
 
-          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_SaveAs}">
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_SaveAs}"
+                    IsEnabled="{Binding Path=HasNodes, Mode=OneWay}">
             <MenuItem Tag="export-vector"
                       Header="{x:Static g:Graphs_Menus.Menu_ExportVector}"
                       Command="{Binding Path=SaveGraphImageWithModeCommand, Mode=OneWay}"

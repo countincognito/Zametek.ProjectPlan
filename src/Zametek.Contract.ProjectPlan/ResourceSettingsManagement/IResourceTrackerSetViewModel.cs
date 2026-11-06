@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceTrackerSetViewModel
-        : IDisposable
+        : IStartSubscriptions, IKillSubscriptions, IDisposable
     {
         int ResourceId { get; }
 

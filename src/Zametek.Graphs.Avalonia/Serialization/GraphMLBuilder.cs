@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Zametek.Graphs.Avalonia
 {
     public static class GraphMLBuilder
@@ -52,10 +54,10 @@ namespace Zametek.Graphs.Avalonia
                     {
                         Geometry = new ShapeNodeGeometry
                         {
-                            height = $@"{diagramNode.Height}",
-                            width = $@"{diagramNode.Width}",
-                            x = $@"{diagramNode.X}",
-                            y = $@"{diagramNode.Y}"
+                            height = FormatNumber(diagramNode.Height),
+                            width = FormatNumber(diagramNode.Width),
+                            x = FormatNumber(diagramNode.X),
+                            y = FormatNumber(diagramNode.Y)
                         },
                         Fill = new ShapeNodeFill
                         {
@@ -67,7 +69,7 @@ namespace Zametek.Graphs.Avalonia
                         {
                             color = diagramNode.BorderColorHexCode,
                             type = borderDashStyle,
-                            width = $@"{diagramNode.BorderThickness}"
+                            width = FormatNumber(diagramNode.BorderThickness)
                         },
                         Shape = new ShapeNodeShape
                         {
@@ -151,7 +153,7 @@ namespace Zametek.Graphs.Avalonia
                     {
                         color = diagramEdge.ForegroundColorHexCode,
                         type = dashStyle,
-                        width = $@"{diagramEdge.StrokeThickness}"
+                        width = FormatNumber(diagramEdge.StrokeThickness)
                     },
                     Arrows = new PolyLineEdgeArrows
                     {
@@ -209,6 +211,13 @@ namespace Zametek.Graphs.Avalonia
         private static string FormatGraphEdgeId(int id)
         {
             return $@"e{id}";
+        }
+
+        // GraphML is a file for other programs to read, so its numbers are written the same whatever the culture:
+        // 1.5, never 1,5.
+        private static string FormatNumber(double value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
         }
 
         #endregion

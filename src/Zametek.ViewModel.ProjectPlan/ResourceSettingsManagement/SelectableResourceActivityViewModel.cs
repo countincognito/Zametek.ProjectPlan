@@ -1,5 +1,4 @@
 ﻿using ReactiveUI;
-using System.Globalization;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -39,13 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string DisplayName
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(Name) ? Id.ToString(CultureInfo.InvariantCulture) : Name;
-            }
-        }
+        public string DisplayName => ActivityLabelHelper.BuildDisplayName(Id, Name);
 
         private int m_PercentageWorked;
         public int PercentageWorked
