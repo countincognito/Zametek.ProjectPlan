@@ -104,7 +104,7 @@ The maintainer made these decisions on 2026-10-15.
 How a managed activity behaves, as built:
 
 - The activity writes the most likely duration, the two estimates that the user gave, and `Duration` together, under one lock. A compilation therefore never copies a mix of two edits.
-- Setting `Duration` sets the most likely duration. The Gantt chart sets a duration when a user drags the end of a bar, and so it sets the most likely duration too. An activity with estimates of its own then shows the expected duration. This can differ from the length that the user dragged to. The maintainer wants to decide this again later (refer to the entry in [TODO](TODO.md)).
+- Setting `Duration` sets the most likely duration. The Gantt chart set a duration when a user dragged the end of a bar, and so it set the most likely duration too. An activity with estimates of its own then showed the expected duration. This could differ from the length that the user dragged to. Later work changed the drag: refer to [A drag of a bar moves the three estimates](#a-drag-of-a-bar-moves-the-three-estimates).
 - A value outside the rule is limited to the nearest value inside it, and the activity reports an error for that property. A milestone (a most likely duration of 0) has an optimistic and a pessimistic duration of 0.
 - When the most likely duration moves past an optimistic or pessimistic duration that the user gave, that duration moves to it. A value that the user did not give follows the most likely duration.
 - An activity that is made from a model takes its estimates from the model, and it works its `Duration` out from them. When a model's `Duration` and its estimates disagree, the estimates win.
@@ -530,6 +530,16 @@ Version 4.0.1 of the library corrects the critical paths of a simulation. The AP
 - **The effect.** The finish times and the criticality of the activities do not change. The paths change. The numbers here are for 3,000 iterations of the sample plan. The plan has the estimates of the tests: O is 0.75 times and P is 1.6 times the duration. The number of paths goes from 1,832 to 475. "Other paths" goes from 92 % to about 54 %. The six heaviest paths have 7 % to 8 % each. They are the chains through each of the three managers to each of the two last activities.
 - **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.0.1, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.0.1.
 - **How it was checked.** The new test `RunSimulationAsync_Given_TheSamplePlan_Then_NoTwoPathsOfTheTableHaveTheSameActivities` runs the sample plan with estimates. It finds that no two rows of the table of the paths have the same activities. With version 4.0.0, the 25 rows were four chains only, and the test failed. With version 4.0.1, it passes. The checks of the commit hook passed with 3,658 tests.
+
+### A drag of a bar moves the three estimates
+
+A user drags the end of a bar on the Gantt chart to change the duration of an activity. The drag set the most likely duration (ML). An activity with estimates of its own then showed the expected duration, (O + 4 ML + P) / 6. This was not the length that the user dragged to. The maintainer chose a new rule on 2026-11-06.
+
+- **The rule.** The drag moves the optimistic duration (O), ML and the pessimistic duration (P) by the same number of days. Thus, the expected duration moves by that number of days too, and the bar ends where the user lets go. The spread of the estimates does not change. An O or a P that follows ML moves with ML.
+- **The limit.** The estimates stop where O reaches 0, or where ML reaches 1. A drag to a shorter length gives the shortest bar that the estimates allow, and the tooltip of the drag shows that length. A drag cannot make an activity with an O of 0 shorter. To make it shorter, change its estimates in the grid of the activities. An activity with no estimates of its own behaves as before: the drag sets ML, and the bar has 1 day at the least.
+- **Why not the other choices.** A drag that keeps ML and moves only O and P moves the expected duration by a third of the drag. A drag that makes O and P follow ML again loses the estimates that the user gave.
+- **Where.** `EstimateHelper.MoveForDuration` and `EstimateHelper.ShortestDurationOfADrag` hold the rule. `CoreViewModel.SetActivityDuration` calls `IManagedActivityViewModel.MoveEstimatesForDuration`. Each bar of the chart (`AnnotatedBar`) gives its shortest duration and the point where it ends then, and the drag stops there. A caller that sets `Duration` still sets ML, but the drag does not set it.
+- **How it was checked.** Two of the new tests failed on the code from before. There, a drag to 13 days gave 12 days, and a drag to 2 days gave 4 days. A test of the rule goes through 13,728 cases. They are all the estimates with an ML up to 12 days, and durations from -2 to 30 days. The test finds the spread kept, the rule kept, and the duration that the drag asked for, or the shortest. A test of the chart finds where the shortest bar ends, in days and in dates.
 
 ## Performance work to explore later
 

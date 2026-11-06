@@ -1154,12 +1154,26 @@ namespace Zametek.ViewModel.ProjectPlan
                     $"{Resource.ProjectPlan.Labels.Label_Start}: {from}",
                     $"{Resource.ProjectPlan.Labels.Label_End}: {to}");
 
+                // The shortest bar that a drag of its end can give: the three estimates move together, and they stop where
+                // the optimistic duration reaches 0, or the most likely reaches 1.
+                int minimumDuration = EstimateHelper.ShortestDurationOfADrag(
+                    activity.MostLikelyDuration,
+                    activity.OwnOptimisticDuration,
+                    activity.OwnPessimisticDuration);
+                double minimumEnd = ChartHelper.CalculateChartFinishTimeXValue(
+                    activity.EarliestStartTime.GetValueOrDefault() + minimumDuration,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+
                 var item = new AnnotatedBar
                 {
                     Annotation = barAnnotation,
                     ActivityId = activity.Id,
                     StartTime = activity.EarliestStartTime,
                     Duration = activity.Duration,
+                    MinimumDuration = minimumDuration,
+                    MinimumValue = minimumEnd,
                     ValueBase = start,
                     Value = end,
                     FillColor = backgroundColor,

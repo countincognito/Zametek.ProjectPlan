@@ -150,6 +150,114 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             pessimistic.ShouldBe(expectedPessimistic);
         }
 
+        [Theory]
+        // Nothing of the activity's own: ML is the duration, and O and P follow it.
+        [InlineData(10, null, null, 4, 4, null, null)]
+        [InlineData(10, null, null, 15, 15, null, null)]
+        // O = 4, ML = 10, P = 16 is 10 days. Each estimate moves by the same number of days as the duration.
+        [InlineData(10, 4, 16, 13, 13, 7, 19)]
+        [InlineData(10, 4, 16, 7, 7, 1, 13)]
+        // O of its own only, 9 days: P follows ML, and so it moves with it.
+        [InlineData(10, 4, null, 12, 13, 7, null)]
+        // P of its own only, 12 days: O follows ML.
+        [InlineData(10, null, 22, 9, 7, null, 19)]
+        // A milestone becomes an activity of the length asked for.
+        [InlineData(0, null, null, 3, 3, null, null)]
+        public void MoveForDuration_Given_ADuration_Then_MovesTheEstimatesByTheSameNumberOfDays(
+            int mostLikely,
+            int? ownOptimistic,
+            int? ownPessimistic,
+            int duration,
+            int expectedMostLikely,
+            int? expectedOptimistic,
+            int? expectedPessimistic)
+        {
+            (int ml, int? optimistic, int? pessimistic) = EstimateHelper.MoveForDuration(mostLikely, ownOptimistic, ownPessimistic, duration);
+
+            (ml, optimistic, pessimistic).ShouldBe((expectedMostLikely, expectedOptimistic, expectedPessimistic));
+        }
+
+        [Theory]
+        // The move stops where O reaches 0: O = 4, ML = 10, P = 16 can be 6 days at the shortest.
+        [InlineData(10, 4, 16, 5, 6, 0, 12)]
+        [InlineData(10, 4, 16, -3, 6, 0, 12)]
+        // An O of 0 cannot move down, and so a drag cannot make the activity shorter.
+        [InlineData(5, 0, 10, 3, 5, 0, 10)]
+        // When O follows ML, the move stops where ML reaches 1: O = ML = 10, P = 22 can be 3 days at the shortest.
+        [InlineData(10, null, 22, 1, 1, null, 13)]
+        // Nothing of its own: the shortest is 1 day, as it always was.
+        [InlineData(10, null, null, 0, 1, null, null)]
+        public void MoveForDuration_Given_ADurationShorterThanTheEstimatesAllow_Then_StopsAtTheShortest(
+            int mostLikely,
+            int? ownOptimistic,
+            int? ownPessimistic,
+            int duration,
+            int expectedMostLikely,
+            int? expectedOptimistic,
+            int? expectedPessimistic)
+        {
+            (int ml, int? optimistic, int? pessimistic) = EstimateHelper.MoveForDuration(mostLikely, ownOptimistic, ownPessimistic, duration);
+
+            (ml, optimistic, pessimistic).ShouldBe((expectedMostLikely, expectedOptimistic, expectedPessimistic));
+        }
+
+        [Theory]
+        [InlineData(10, null, null, 1)]
+        [InlineData(10, 4, 16, 6)]
+        [InlineData(10, 4, null, 5)]
+        [InlineData(10, null, 22, 3)]
+        [InlineData(5, 0, 10, 5)]
+        [InlineData(0, null, null, 1)]
+        public void ShortestDurationOfADrag_Given_Estimates_Then_IsTheDurationWhereOReachesZeroOrMlReachesOne(
+            int mostLikely,
+            int? ownOptimistic,
+            int? ownPessimistic,
+            int expected)
+        {
+            EstimateHelper.ShortestDurationOfADrag(mostLikely, ownOptimistic, ownPessimistic).ShouldBe(expected);
+        }
+
+        [Fact]
+        public void MoveForDuration_Given_AnyEstimatesInsideTheRule_Then_KeepsTheSpreadAndGivesTheDurationAskedForOrTheShortest()
+        {
+            int checkedCount = 0;
+
+            for (int mostLikely = 1; mostLikely <= 12; mostLikely++)
+            {
+                for (int optimistic = 0; optimistic <= mostLikely; optimistic++)
+                {
+                    for (int pessimistic = mostLikely; pessimistic <= 20; pessimistic += 3)
+                    {
+                        int shortest = EstimateHelper.ShortestDurationOfADrag(mostLikely, optimistic, pessimistic);
+
+                        for (int duration = -2; duration <= 30; duration++)
+                        {
+                            (int ml, int? o, int? p) = EstimateHelper.MoveForDuration(mostLikely, optimistic, pessimistic, duration);
+                            int newOptimistic = o.ShouldNotBeNull();
+                            int newPessimistic = p.ShouldNotBeNull();
+
+                            // Inside the rule, and not a milestone.
+                            newOptimistic.ShouldBeGreaterThanOrEqualTo(0);
+                            newOptimistic.ShouldBeLessThanOrEqualTo(ml);
+                            ml.ShouldBeGreaterThanOrEqualTo(1);
+                            newPessimistic.ShouldBeGreaterThanOrEqualTo(ml);
+
+                            // The same spread.
+                            (ml - newOptimistic).ShouldBe(mostLikely - optimistic);
+                            (newPessimistic - ml).ShouldBe(pessimistic - mostLikely);
+
+                            // The duration that was asked for, or the shortest that the estimates allow.
+                            EstimateHelper.ExpectedDuration(newOptimistic, ml, newPessimistic).ShouldBe(Math.Max(duration, shortest));
+                            checkedCount++;
+                        }
+                    }
+                }
+            }
+
+            // Guards the guard.
+            checkedCount.ShouldBeGreaterThan(10_000);
+        }
+
         #endregion
 
         #region An activity that has no estimates of its own
@@ -202,8 +310,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Duration_WhenSet_Then_SetsTheMostLikelyDuration()
         {
-            // What a caller that sets a duration means. The Gantt chart sets it when a user drags
-            // the end of a bar.
+            // What a caller that sets a duration means. A drag of the end of a bar on the Gantt chart
+            // does not set it: it moves all three estimates (EstimateHelper.MoveForDuration).
             using CoreViewModel core = CreateCore(new ActivityModel { Id = c_Id, Duration = 7 });
             IManagedActivityViewModel activity = core.RawActivities.Single();
 
@@ -323,6 +431,48 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             activity.OwnPessimisticDuration.ShouldBe(0);
             activity.Duration.ShouldBe(0);
             activity.IsDummy.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void SetActivityDuration_Given_AnActivityWithEstimates_Then_MovesThemAllAndTheDurationIsTheOneAskedFor()
+        {
+            // The Gantt chart calls it when a user drags the end of a bar, and the bar then ends where the user let go.
+            using CoreViewModel core = CreateCore(new ActivityModel
+            {
+                Id = c_Id,
+                Duration = 10,
+                MostLikelyDuration = 10,
+                OptimisticDuration = 4,
+                PessimisticDuration = 16,
+            });
+            core.IsProjectScenarioUpdated = false;
+
+            core.SetActivityDuration(c_Id, 13);
+
+            IManagedActivityViewModel activity = core.RawActivities.Single();
+            activity.Duration.ShouldBe(13);
+            (activity.OwnOptimisticDuration, activity.MostLikelyDuration, activity.OwnPessimisticDuration).ShouldBe(((int?)7, 13, (int?)19));
+            core.IsProjectScenarioUpdated.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void SetActivityDuration_Given_ADurationShorterThanTheEstimatesAllow_Then_TheActivityHasTheShortest()
+        {
+            // O = 4, ML = 10, P = 16 move down by 4 days at most, and then O is 0.
+            using CoreViewModel core = CreateCore(new ActivityModel
+            {
+                Id = c_Id,
+                Duration = 10,
+                MostLikelyDuration = 10,
+                OptimisticDuration = 4,
+                PessimisticDuration = 16,
+            });
+
+            core.SetActivityDuration(c_Id, 2);
+
+            IManagedActivityViewModel activity = core.RawActivities.Single();
+            activity.Duration.ShouldBe(6);
+            (activity.OwnOptimisticDuration, activity.MostLikelyDuration, activity.OwnPessimisticDuration).ShouldBe(((int?)0, 6, (int?)12));
         }
 
         [Fact]

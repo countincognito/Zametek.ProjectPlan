@@ -80,5 +80,49 @@ namespace Zametek.ViewModel.ProjectPlan
                 ownOptimistic.HasValue ? Math.Clamp(ownOptimistic.Value, 0, ml) : null,
                 ownPessimistic.HasValue ? Math.Max(ownPessimistic.Value, ml) : null);
         }
+
+        /// <summary>
+        /// The estimates that an activity has when a drag of the end of its bar on the Gantt chart asks for the given
+        /// duration. The drag moves O, ML and P by the same number of days. Thus, the expected duration moves by that number
+        /// of days too, and the spread of the estimates stays as it was. An O or a P that follows ML stays null, and so it
+        /// moves with ML.
+        /// </summary>
+        /// <remarks>
+        /// The move stops where O reaches 0, or where ML reaches 1, and so a drag never changes the spread. A duration that is
+        /// shorter gives the shortest duration that the estimates can have (<see cref="ShortestDurationOfADrag"/>). For an
+        /// activity with no estimates of its own, this sets ML to the duration, and not to less than 1, as the drag did before
+        /// the estimates existed.
+        /// </remarks>
+        public static (int MostLikely, int? Optimistic, int? Pessimistic) MoveForDuration(
+            int mostLikely,
+            int? ownOptimistic,
+            int? ownPessimistic,
+            int duration)
+        {
+            (int optimistic, int ml, int pessimistic) = Effective(mostLikely, ownOptimistic, ownPessimistic);
+            int days = Math.Max(duration, ShortestDurationOfADrag(mostLikely, ownOptimistic, ownPessimistic))
+                - ExpectedDuration(optimistic, ml, pessimistic);
+
+            return (
+                ml + days,
+                ownOptimistic.HasValue ? optimistic + days : null,
+                ownPessimistic.HasValue ? pessimistic + days : null);
+        }
+
+        /// <summary>
+        /// The shortest duration that a drag of the end of the bar of an activity can give (<see cref="MoveForDuration"/>):
+        /// the expected duration where O reaches 0, or where ML reaches 1. It is never less than 1.
+        /// </summary>
+        public static int ShortestDurationOfADrag(
+            int mostLikely,
+            int? ownOptimistic,
+            int? ownPessimistic)
+        {
+            (int optimistic, int ml, int pessimistic) = Effective(mostLikely, ownOptimistic, ownPessimistic);
+
+            // Each day that the three estimates move down takes one day off the expected duration. O can move down to 0, and
+            // ML to 1. A milestone (ML = 0) can only move up, to 1 day at the least.
+            return ExpectedDuration(optimistic, ml, pessimistic) - Math.Min(optimistic, ml - 1);
+        }
     }
 }
