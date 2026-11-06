@@ -336,7 +336,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 ```json
 {
-  "version": "0.11.0",
+  "version": "0.11.0-alpha",
   "culture": "en-GB",
   "timeZone": "Europe/London",
   "limits": {
@@ -767,7 +767,7 @@ The API has one version for the whole API, in its path (`/v1`), as [VER-1 to VER
 
 ### 1.0.0
 
-This is the first version of the API. It is in version 0.11.0 of `zpp`.
+This is the first version of the API. Version 0.11.0-alpha is the first release of `zpp` that has it.
 
 - The operations `POST /v1/projects/compile`, `POST /v1/projects/scenarios`, `GET /v1/info` and `GET /v1/openapi`, the methods `HEAD` and `OPTIONS`, and the health probes.
 - The status shows the result. `200` is for a project that compiled and where the job produced each output. `422` is for a project that the server cannot process. `500` is for a server that failed. `503` is for a server that is busy or ran out of time. Each problem is `application/problem+json`, with the id of its request and a list of each error.

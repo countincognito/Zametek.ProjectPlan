@@ -567,7 +567,7 @@ curl.exe -s http://localhost:9770/v1/info
 ```
 
 ```text
-{"version":"0.11.0","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
+{"version":"0.11.0-alpha","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"maxSimulationIterations":100000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
 ```
 
 The server also supplies its own description, for each tool that reads OpenAPI. This description is the file `openapi.yaml` of the [API reference](API.md), in the version from the time when you built the server. A request for it needs no key:
