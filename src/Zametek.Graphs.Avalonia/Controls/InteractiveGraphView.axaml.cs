@@ -552,13 +552,14 @@ namespace Zametek.Graphs.Avalonia
 
         private async void CopyRaster_Click(object? sender, RoutedEventArgs e) => await CopyImageAsync(GraphExportMode.Raster);
 
-        // Copy the whole graph (the bounding-box-cropped render, matching the Save-Image export, not the
+        // Copy the whole graph (the bounding-box-cropped render, matching the Save As export, not the
         // current viewport) to the clipboard as an image, in the given mode (defaults to ExportMode). Built
         // defensively for cross-platform use: the payload offers both the native bitmap representation
         // (preferred where the backend supports it) and the raw image/png bytes (broadly readable, e.g. on
         // X11/Wayland), so the OS picks whichever it understands. Best-effort - if a clipboard backend
-        // cannot accept an image it fails quietly rather than crashing, and Save-Image remains the
-        // guaranteed path.
+        // cannot accept an image it reports the failure rather than crashing, and Save As remains the
+        // guaranteed path. A graph with no nodes has no image: the menu does not offer the copy then, and a
+        // caller of this method is told so.
         public async Task CopyImageAsync(GraphExportMode? mode = null)
         {
             if (DataContext is not IInteractiveGraph viewModel)
@@ -578,6 +579,9 @@ namespace Zametek.Graphs.Avalonia
                 using SKPicture? picture = RenderPicture(effectiveMode);
                 if (picture is null)
                 {
+                    await viewModel.ReportErrorAsync(viewModel.HasNodes
+                        ? Graphs_Messages.Message_UnableToMakeImage
+                        : Graphs_Messages.Message_GraphHasNoImage);
                     return;
                 }
 

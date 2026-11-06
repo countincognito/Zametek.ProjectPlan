@@ -111,8 +111,10 @@ namespace Zametek.Graphs.Avalonia
             // Defaulted to the UI thread, which is where all but a headless host wants this work.
             m_Dispatcher = dispatcher ?? new AvaloniaGraphDispatcher();
 
-            SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(() => SaveInteractiveImageAsync(DefaultExportMode));
-            SaveGraphImageWithModeCommand = ReactiveCommand.CreateFromTask<GraphExportMode>(SaveInteractiveImageAsync);
+            // A graph with no nodes has no image, and so nothing to save.
+            IObservable<bool> hasNodes = this.WhenAnyValue(x => x.HasNodes);
+            SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(() => SaveInteractiveImageAsync(DefaultExportMode), hasNodes);
+            SaveGraphImageWithModeCommand = ReactiveCommand.CreateFromTask<GraphExportMode>(SaveInteractiveImageAsync, hasNodes);
             ChangeEdgeRoutingModeCommand = ReactiveCommand.Create<GraphEdgeRoutingMode>(ChangeEdgeRoutingMode);
 
             // The host pre-throttles/schedules the trigger; we simply rebuild on each notification.
@@ -151,6 +153,14 @@ namespace Zametek.Graphs.Avalonia
         public ObservableCollection<GraphNodeViewModel> GraphNodes { get; } = [];
 
         public ObservableCollection<GraphEdgeViewModel> GraphEdges { get; } = [];
+
+        // Set where the nodes are made (PopulateInteractiveGraph), on the thread that owns them.
+        private bool m_HasNodes;
+        public bool HasNodes
+        {
+            get => m_HasNodes;
+            private set => this.RaiseAndSetIfChanged(ref m_HasNodes, value);
+        }
 
         private double m_GraphWidth;
         public double GraphWidth
@@ -696,6 +706,7 @@ namespace Zametek.Graphs.Avalonia
             m_Adjacency = adjacency;
             GraphWidth = layout.Width;
             GraphHeight = layout.Height;
+            HasNodes = GraphNodes.Count > 0;
             RecomputeWorkspace();
 
             // Restore the previous selection if that node survived the re-layout.
@@ -905,20 +916,36 @@ namespace Zametek.Graphs.Avalonia
             GraphExportMode effectiveMode = provider is not null ? mode : GraphExportMode.Vector;
 
             SKPicture? picture = null;
+            bool hasNodes = false;
             m_Dispatcher.Invoke(() =>
-                picture = provider is not null
-                    ? provider.RenderPicture(effectiveMode)
-                    : InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, GraphVectorExportStyle.Default, m_Appearance, Theme));
-
-            if (picture is not null)
             {
-                using (picture)
+                hasNodes = GraphNodes.Count > 0;
+                if (hasNodes)
                 {
-                    // A raster picture already carries its pixel scale (export 1:1); a vector picture is
-                    // supersampled on export so PNG/JPEG stay crisp.
-                    int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
-                    await ImageExporter.WriteImageAsync(picture, stream, format, scaleX: scale, scaleY: scale);
+                    picture = provider is not null
+                        ? provider.RenderPicture(effectiveMode)
+                        : InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, GraphVectorExportStyle.Default, m_Appearance, Theme);
                 }
+            });
+
+            // A graph with no nodes has no image, and an empty file is not an image: the export fails, and it writes nothing.
+            // The menu does not offer the export then, but the graph can lose its nodes while the user picks a file.
+            if (!hasNodes)
+            {
+                throw new InvalidOperationException(Graphs_Messages.Message_GraphHasNoImage);
+            }
+
+            if (picture is null)
+            {
+                throw new InvalidOperationException(Graphs_Messages.Message_UnableToMakeImage);
+            }
+
+            using (picture)
+            {
+                // A raster picture already carries its pixel scale (export 1:1); a vector picture is
+                // supersampled on export so PNG/JPEG stay crisp.
+                int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
+                await ImageExporter.WriteImageAsync(picture, stream, format, scaleX: scale, scaleY: scale);
             }
         }
 

@@ -25,6 +25,10 @@ namespace Zametek.Graphs.Avalonia
 
         ObservableCollection<GraphEdgeViewModel> GraphEdges { get; }
 
+        // Whether the graph has a node, and thus an image. A graph with no nodes has none: the context menu offers Copy Image
+        // and Save As only while this is true, and the Save commands run only then.
+        bool HasNodes { get; }
+
         // The themable appearance in effect (defaults to GraphAppearance.Default). Read by the export
         // renderer so an appearance re-skin also shows in the copied / saved image.
         GraphAppearance Appearance { get; }
