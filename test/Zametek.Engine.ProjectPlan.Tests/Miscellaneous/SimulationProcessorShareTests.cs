@@ -65,6 +65,57 @@ namespace Zametek.Engine.ProjectPlan.Tests
             third.Threads.ShouldBe(4);
         }
 
+        [Theory]
+        [InlineData(4, 0, 0)]
+        [InlineData(4, 1, 4)]
+        [InlineData(4, 2, 6)]
+        [InlineData(4, 4, 8)]
+        [InlineData(4, 8, 12)]
+        [InlineData(8, 4, 16)]
+        [InlineData(1, 3, 3)]
+        public void MostThreads_Given_SimulationsThatRunAtOneTime_Then_IsWhatTheirSharesAddUpToWhenTheyBeginOneAfterTheOther(
+            int processors,
+            int simulations,
+            int expected)
+        {
+            // 4 + 2 + 1 + 1 for four simulations on four processors, and 8 + 4 + 2 + 2 on eight.
+            new SimulationProcessorShare(processors).MostThreads(simulations).ShouldBe(expected);
+        }
+
+        [Fact]
+        public void MostThreads_Given_SimulationsThatBeginAndEndInAnyOrder_Then_TheirThreadsNeverAddUpToMore()
+        {
+            // Six processors, and at most four simulations at one time. They begin and end in a random order.
+            var share = new SimulationProcessorShare(6);
+            int most = share.MostThreads(4);
+            var random = new Random(1);
+            var running = new List<SimulationProcessorShare.Lease>();
+            int highest = 0;
+
+            for (int step = 0; step < 10_000; step++)
+            {
+                if (running.Count < 4 && (running.Count == 0 || random.Next(2) == 0))
+                {
+                    running.Add(share.Begin());
+                }
+                else
+                {
+                    int index = random.Next(running.Count);
+                    running[index].Dispose();
+                    running.RemoveAt(index);
+                }
+
+                int threads = running.Sum(x => x.Threads);
+                threads.ShouldBeLessThanOrEqualTo(most);
+                highest = Math.Max(highest, threads);
+            }
+
+            running.ForEach(x => x.Dispose());
+
+            // Guards the guard: 6 + 3 + 2 + 1, which four simulations that begin one after the other take.
+            highest.ShouldBe(most);
+        }
+
         [Fact]
         public void Dispose_Given_TheSameLeaseTwice_Then_FreesItsPlaceOnce()
         {

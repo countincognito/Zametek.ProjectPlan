@@ -541,6 +541,24 @@ A user drags the end of a bar on the Gantt chart to change the duration of an ac
 - **Where.** `EstimateHelper.MoveForDuration` and `EstimateHelper.ShortestDurationOfADrag` hold the rule. `CoreViewModel.SetActivityDuration` calls `IManagedActivityViewModel.MoveEstimatesForDuration`. Each bar of the chart (`AnnotatedBar`) gives its shortest duration and the point where it ends then, and the drag stops there. A caller that sets `Duration` still sets ML, but the drag does not set it.
 - **How it was checked.** Two of the new tests failed on the code from before. There, a drag to 13 days gave 12 days, and a drag to 2 days gave 4 days. A test of the rule goes through 13,728 cases. They are all the estimates with an ML up to 12 days, and durations from -2 to 30 days. The test finds the spread kept, the rule kept, and the duration that the drag asked for, or the shortest. A test of the chart finds where the shortest bar ends, in days and in dates.
 
+### The server keeps threads for its requests
+
+A test of `zpp serve` timed out two times in the commit hook. A request for the status of a job got no answer within one minute, while a simulation ran. [TODO](TODO.md) had an entry to measure this.
+
+- **The measurement.** The machine had four processors and no other load. The server ran from a Debug build. The job was a simulation of 1,000,000 iterations of `website-refresh.zpp`, on four threads. A client asked for the status of the job about four times a second for 150 seconds. Each 15 seconds, eight requests went at the same time.
+
+| Server | Requests | Median | 99th percentile | Longest | Longest of eight at once |
+| --- | --- | --- | --- | --- | --- |
+| No job | 40 | 1.6 ms | 55 ms | 55 ms | - |
+| A simulation, before | 72 | 4.7 ms | 18.9 s | 18.9 s | 10.6 s |
+| A simulation, at least 12 threads in the pool (a test only) | 162 | 4.0 ms | 35 ms | 40 ms | 53 ms |
+| A simulation, after | 217 | 3.3 ms | 8.4 ms | 21 ms | 28 ms |
+
+- **The cause.** The server took less than 21 ms for each request. The time went before the server started on the request, because the request waited for a thread of the thread pool. The simulator of the library runs its iterations in `Parallel.For`, on the thread pool. The loop gives its next part to the thread that has just finished one. Thus, it keeps each thread that it takes until its end. The pool does not see that it has no free thread, and it adds a thread only now and then.
+- **The change.** `zpp serve` raises the minimum of the thread pool when it starts. The pool then starts threads at once, up to the minimum, and a request does not wait. The minimum is a thread for each processor, plus the most threads that the simulations of all the jobs can take (`SimulationProcessorShare.MostThreads`). With four processors and four jobs, this is 4 + (4 + 2 + 1 + 1) = 12. The minimum only goes up.
+- **Why not threads of its own.** A scheduler with threads of its own would keep the loop away from the pool, also in the desktop application. But `Parallel.For` does not use the scheduler of the task that calls it, and the library sets no scheduler. [TODO](TODO.md) has an entry for this.
+- **How it was checked.** The new test of the server failed on the code from before: the minimum was 4, and the test wanted 11 for three jobs. A test of the share begins and ends simulations 10,000 times in a random order. Their threads never added up to more than `MostThreads`. The runs above do not measure the speed of the simulation, because the client asked more often when the answers came at once.
+
 ## Performance work to explore later
 
 The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.

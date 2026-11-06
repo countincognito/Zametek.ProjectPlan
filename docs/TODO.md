@@ -371,11 +371,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Verify the change in two ways. Run `zpp --now` on every sample plan with every output, before and after, and compare the files byte for byte. Also run the parity tests.
 
-- [ ] **Measure how fast `zpp serve` answers a status request while a simulation runs** *(2026-11-04, from a test that timed out in the commit hook)*
+- [ ] **Run the parallel loop of the simulation on threads of its own** *(2026-11-06, after the measurement of `zpp serve`)*
 
-  A simulation takes threads of the thread pool. A job that is alone gets one thread for each processor (`SimulationProcessorShare`). In the commit hook, all the test projects run at the same time. There, `ProjectEndpointsJobStatusTests.GetJob_Given_AJobThatRuns_Then_AnswersWithItsStatusAndHowFarItHasGot` twice got no answer to `GET /v1/jobs/{requestId}` within one minute, while a simulation of 1,000,000 iterations ran. Before, it passed in the hook in 20 to 38 seconds. The test client now waits three minutes for each answer (`RunningServer`).
+  The simulator of the library runs its iterations in `Parallel.For`, on the thread pool. The loop keeps each thread that it takes until its end, and other work of the process waits for a thread. `zpp serve` now keeps more threads in the pool (`JobServer.KeepThreadsForRequests`), and so its requests do not wait ([The plan](SIMULATION-PLAN.md#the-server-keeps-threads-for-its-requests) has the measurement). The desktop application does not keep more threads, and a simulation there takes a thread for each processor. Nobody measured if its compilations and its charts wait while a simulation runs.
 
-  Find out if the requests wait for threads of the thread pool that the simulation holds. If they do, a client that polls a busy server also waits. Measure the time of a status request while a long simulation runs, first on a machine with no other load. If the time is long, keep a thread free for the requests, or run the simulation on threads of its own.
+  A `TaskScheduler` with threads of its own would keep the loop away from the pool. But `Parallel.For` uses `ParallelOptions.TaskScheduler`, or the scheduler of the thread pool when that is null. It does not use the scheduler of the task that calls it (tested on .NET 10, 2026-11-06). The library sets no scheduler. Thus, the change needs an option in the library, for example in `SimulationSettings`, and a release of the library.
 
 - [ ] **Hold the API of `zpp serve` to its last release** *(2026-10-04, the end of the API review)*
 
