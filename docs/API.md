@@ -398,7 +398,7 @@ When the server cannot answer a request, it answers with [problem details](https
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed",
   "title": "The project did not compile",
   "status": 422,
   "detail": "The project has a compilation error.",
@@ -457,7 +457,7 @@ A client cannot correct this by a change to what it says. It must correct how it
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#malformed-request",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#malformed-request",
   "title": "The request could not be understood",
   "status": 400,
   "detail": "The request has 2 problems.",
@@ -483,7 +483,7 @@ A client cannot correct this by a change to what it says. It must correct how it
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#validation-failed",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#validation-failed",
   "title": "The request is not valid",
   "status": 422,
   "detail": "The request has 4 problems.",
@@ -503,7 +503,7 @@ A client cannot correct this by a change to what it says. It must correct how it
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable",
   "title": "The project could not be read",
   "status": 422,
   "detail": "The file could not be read as a project.",
@@ -526,7 +526,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable",
   "title": "The project could not be read",
   "status": 422,
   "detail": "The import was cancelled and nothing was changed. Problems found in the file: 2.",
@@ -548,7 +548,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-timed-out",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-timed-out",
   "title": "The compilation ran out of time",
   "status": 422,
   "detail": "The compilation did not finish within its time limit.",
@@ -562,7 +562,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#scenario-not-selectable",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#scenario-not-selectable",
   "title": "The scenario cannot be selected",
   "status": 422,
   "detail": "No scenario matches 'Gamma'",
@@ -579,7 +579,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#simulation-not-possible",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#simulation-not-possible",
   "title": "The simulation cannot be done",
   "status": 422,
   "detail": "The plan has no simulation result to make the outputs from, and the simulation was not asked to run.",
@@ -596,7 +596,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#output-failed",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#output-failed",
   "title": "An output could not be produced",
   "status": 500,
   "detail": "The gantt chart could not be produced.",
@@ -617,7 +617,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unexpected-error",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#unexpected-error",
   "title": "The server could not process the request",
   "status": 500,
   "detail": "The server failed to process the request. Its log says why, under the request's trace id.",
@@ -631,7 +631,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#busy",
   "title": "The server is busy",
   "status": 503,
   "detail": "The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.",
@@ -645,7 +645,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 ```json
 {
-  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#job-timeout",
+  "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout",
   "title": "The job took too long",
   "status": 503,
   "detail": "The job ran for longer than the server's limit of 120 seconds, and was stopped.",
@@ -763,11 +763,11 @@ The API follows the [RESTful API Guide](RESTFUL-API-GUIDE.md), version 1.2. This
 
 ## Changelog
 
-The API has one version for the whole API, in its path (`/v1`), as [VER-1 to VER-3](RESTFUL-API-GUIDE.md#12-versioning-and-evolution) of the guide require. A change that breaks a client makes a new version. Examples: a member that you remove or rename, a changed status or problem `type`, or a stricter rule. A member or an operation that you add does not make a new version.
+The API has one version for the whole API, in its path (`/v1`), as [VER-1 to VER-3](RESTFUL-API-GUIDE.md#12-versioning-and-evolution) of the guide require. A change that breaks a client makes a new version. Examples: a member that you remove or rename, a changed status or problem `type`, or a stricter rule. A member or an operation that you add does not make a new version. CI compares `docs/openapi.yaml` with the copy in the last release, and a change that breaks a client fails the build ([oasdiff](https://github.com/oasdiff/oasdiff)).
 
-### Unreleased
+### 1.0.0
 
-This is the first version of the API.
+This is the first version of the API. It is in version 0.11.0 of `zpp`.
 
 - The operations `POST /v1/projects/compile`, `POST /v1/projects/scenarios`, `GET /v1/info` and `GET /v1/openapi`, the methods `HEAD` and `OPTIONS`, and the health probes.
 - The status shows the result. `200` is for a project that compiled and where the job produced each output. `422` is for a project that the server cannot process. `500` is for a server that failed. `503` is for a server that is busy or ran out of time. Each problem is `application/problem+json`, with the id of its request and a list of each error.

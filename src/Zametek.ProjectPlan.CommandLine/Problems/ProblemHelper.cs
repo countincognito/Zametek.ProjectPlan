@@ -15,7 +15,7 @@ namespace Zametek.ProjectPlan.CommandLine
         public const string MediaType = @"application/problem+json";
 
         // The base of the types of the problems of ProblemKind, which each add its slug: where docs/API.md documents it.
-        public const string TypeBase = @"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#";
+        public const string TypeBase = @"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#";
 
         // The base of the types RFC 9110 gives the statuses.
         private const string c_StatusTypeBase = @"https://tools.ietf.org/html/rfc9110#section-";

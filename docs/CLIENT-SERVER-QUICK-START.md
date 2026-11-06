@@ -638,7 +638,7 @@ curl.exe -s --fail-with-body -F project=@broken-dependency.zpp http://localhost:
 ```
 
 ```text
-{"type":"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed","title":"The project did not compile","status":422,"detail":"The project has a compilation error.","traceId":"559274683d3853c6df668cfbb50aab4f","errors":[{"pointer":"#/project","code":"P0010","detail":"Invalid activity dependencies:\n999 is invalid but referenced by: 1"}]}
+{"type":"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed","title":"The project did not compile","status":422,"detail":"The project has a compilation error.","traceId":"559274683d3853c6df668cfbb50aab4f","errors":[{"pointer":"#/project","code":"P0010","detail":"Invalid activity dependencies:\n999 is invalid but referenced by: 1"}]}
 22
 ```
 

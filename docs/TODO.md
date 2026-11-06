@@ -377,18 +377,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   A `TaskScheduler` with threads of its own would keep the loop away from the pool. But `Parallel.For` uses `ParallelOptions.TaskScheduler`, or the scheduler of the thread pool when that is null. It does not use the scheduler of the task that calls it (tested on .NET 10, 2026-11-06). The library sets no scheduler. Thus, the change needs an option in the library, for example in `SimulationSettings`, and a release of the library.
 
-- [ ] **Hold the API of `zpp serve` to its last release** *(2026-10-04, the end of the API review)*
-
-  The API has no release yet. Thus, `/v1` can still change its shape. The `type` URIs of its problems can still change their names. They are the addresses of the sections of [API.md](API.md), and a client branches on them.
-
-  The first release that contains the server ends this freedom. From then on, nobody renames or removes a type, a status, a member or a code ([VER-3](RESTFUL-API-GUIDE.md#12-versioning-and-evolution) of the [RESTful API Guide](RESTFUL-API-GUIDE.md)). A change that breaks a client is a new version of the path.
-
-  Do these actions before that release:
-
-  1. Add [oasdiff](https://github.com/oasdiff/oasdiff) to CI. It runs `breaking` on `docs/openapi.yaml` against the file in the latest release tag. Thus, a change that breaks a client fails the build, and nobody needs to notice it. `OpenApiContractTests` hold the description to the server, and Spectral holds it to the rules of the guide. But nothing holds it to its past.
-  2. Give `info.version` of the description and the heading `Unreleased` of the changelog the version of the release.
-  3. Decide if the `type` URIs must point to a copy that cannot move. They point to the copy of API.md on the `develop` branch now. A copy in a release tag, or a page that nobody renames, can be this copy. A client that stored a type must never find that its address is dead.
-
 - [ ] **Group the critical paths of a simulation in a way that helps for a plan that resources decide** *(2026-10-16)*
 
   A plan with resources has many critical paths in a simulation, because the resources do the work in a different order in each iteration. For the sample plan, 3,000 iterations give about 475 distinct paths. The six heaviest have 7 % to 8 % of the weight each, and the group "Other paths" has about 54 %. Thus, the chart shows the main chains, but about half of the weight is in one group.
