@@ -1872,6 +1872,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // A drag of the end of a bar on the Gantt chart. The activity gets the duration that the drag asks for: its three
+        // estimates move by the same number of days, as far as they can (IManagedActivityViewModel.MoveEstimatesForDuration).
         public void SetActivityDuration(int activityId, int newDuration)
         {
             try
@@ -1887,7 +1889,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     editable.BeginEdit();
-                    activity.Duration = Math.Max(1, newDuration);
+                    activity.MoveEstimatesForDuration(newDuration);
                     editable.EndEdit();
 
                     IsProjectScenarioUpdated = true;

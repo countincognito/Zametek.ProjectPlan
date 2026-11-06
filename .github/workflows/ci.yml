@@ -25,6 +25,36 @@ jobs:
         # node and npx come with the runner image. OpenApiContractTests hold the same description to the server.
         run: npx --yes @stoplight/spectral-cli@6.15.0 lint docs/openapi.yaml --ruleset .spectral.yaml --fail-severity warn
 
+      - name: Hold the API description to its last release
+        # oasdiff compares docs/openapi.yaml with the copy in the newest release tag (vX.Y.Z, with no pre-release part), and a
+        # change that breaks a client fails the build (VER-3 of the RESTful API Guide). A release from before the API has no
+        # description. Then the step compares the description with itself, which shows only that oasdiff runs and reads it.
+        # The tool is pinned by version and checksum, so that a new release of oasdiff cannot fail the build without a change
+        # here.
+        env:
+          OASDIFF_VERSION: 1.34.1
+          OASDIFF_SHA256: 75775f65b0adebd26a8e013af51a799342dfdc6262d89efa9e3b7bdf89657d90
+        run: |
+          set -euo pipefail
+          git fetch --quiet --depth=1 --no-tags origin '+refs/tags/v*:refs/tags/v*'
+          base=docs/openapi.yaml
+          for tag in $(git tag --list 'v*' --sort=-v:refname); do
+            if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && git cat-file -e "$tag:docs/openapi.yaml" 2>/dev/null; then
+              git show "$tag:docs/openapi.yaml" > "$RUNNER_TEMP/openapi-release.yaml"
+              base="$RUNNER_TEMP/openapi-release.yaml"
+              echo "The description is compared with the one of $tag."
+              break
+            fi
+          done
+          if [ "$base" = docs/openapi.yaml ]; then
+            echo "No release has docs/openapi.yaml yet, and so the description is compared with itself."
+          fi
+          curl --fail --silent --show-error --location --output "$RUNNER_TEMP/oasdiff.tar.gz" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          echo "${OASDIFF_SHA256}  $RUNNER_TEMP/oasdiff.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/oasdiff.tar.gz" -C "$RUNNER_TEMP" oasdiff
+          "$RUNNER_TEMP/oasdiff" breaking --fail-on ERR "$base" docs/openapi.yaml
+
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:

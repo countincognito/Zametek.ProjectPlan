@@ -65,7 +65,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public void GetType_Given_EveryKind_Then_ItsSlugUnderTheDocumentationsAddress()
         {
-            ProblemHelper.TypeBase.ShouldBe(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#");
+            ProblemHelper.TypeBase.ShouldBe(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#");
 
             foreach (ProblemKind kind in Enum.GetValues<ProblemKind>())
             {
@@ -97,11 +97,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"")]
         [InlineData(@"about:blank")]
         [InlineData(@"https://tools.ietf.org/html/rfc9110#section-15.5.21")]
-        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#")]
-        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unknown-kind")]
-        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#Busy")]
-        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy ")]
-        [InlineData(@"HTTPS://GITHUB.COM/COUNTINCOGNITO/ZAMETEK.PROJECTPLAN/BLOB/DEVELOP/DOCS/API.MD#BUSY")]
+        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#")]
+        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#unknown-kind")]
+        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#Busy")]
+        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#busy ")]
+        [InlineData(@"https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy")]
+        [InlineData(@"HTTPS://GITHUB.COM/COUNTINCOGNITO/ZAMETEK.PROJECTPLAN/BLOB/MASTER/DOCS/API.MD#BUSY")]
         public void TryGetKind_Given_AnyOtherType_Then_NoKind(string? type)
         {
             ProblemHelper.TryGetKind(type, out ProblemKind kind).ShouldBeFalse();

@@ -24,6 +24,11 @@ namespace Zametek.Contract.ProjectPlan
         // that they follow it again.
         void ResetEstimates();
 
+        // Gives the activity the duration that a drag of the end of its bar on the Gantt chart asks
+        // for. The optimistic, most likely and pessimistic durations move by the same number of days,
+        // and they stop where the optimistic duration reaches 0, or the most likely reaches 1.
+        void MoveEstimatesForDuration(int duration);
+
         bool IsIsolated { get; }
 
         bool IsCompiled { get; }

@@ -421,6 +421,8 @@ await graphView.CopyImageAsync(GraphExportMode.Raster);  // or omit the arg to u
 - `SaveGraphImageFileCommand` saves in the default mode.
 - `SaveGraphImageWithModeCommand` saves in an explicit `GraphExportMode`. Give the mode as the command parameter.
 
+The two commands can run only while the graph has nodes (`HasNodes` is true).
+
 ```xml
 <Button Content="Save (vector)"
         Command="{Binding Interactive.SaveGraphImageWithModeCommand}"
@@ -452,6 +454,8 @@ The export draws a graph that is too large for the limit at a smaller scale, so 
 
 If the export cannot make an image, it does not write an empty image. `WriteImageAsync` throws an exception. The built-in Save sends the error to `IGraphHost.ReportErrorAsync`, and Copy Image sends its own message there.
 
+A graph with no nodes has no image. This occurs for an empty plan, and for a plan that does not compile. While `HasNodes` is false, the context menu disables *Copy Image* and *Save As…*, and the two Save commands cannot run. An export of the interactive canvas of such a graph throws an exception, and it writes nothing.
+
 ---
 
 ## Persistence of the arrangement
@@ -475,7 +479,7 @@ The control provides these items with no extra work:
 - **Drag** nodes. The workspace grows, and thus the control does not cut off a dragged node.
 - **Click** a node to highlight it, its edges and its neighbors. Everything else dims. Click empty space to remove the highlight.
 - **Pan** (drag empty space) and **zoom** (mouse wheel or the slider) with no limits.
-- **Context menu:** The menu has the edge routing modes, *Fit to View*, *Reset Layout*, *Copy Image* and *Save As…*. Copy and Save each offer Vector and High Fidelity. When the configuration supports it, the menu also has the toggle for the names.
+- **Context menu:** The menu has the edge routing modes, *Fit to View*, *Reset Layout*, *Copy Image* and *Save As…*. Copy and Save each offer Vector and High Fidelity, while the graph has nodes. When the configuration supports it, the menu also has the toggle for the names.
 - The control frames the graph when it loads. It keeps the pan and zoom of the user through each new layout.
 
 ---

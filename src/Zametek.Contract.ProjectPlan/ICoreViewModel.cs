@@ -175,6 +175,8 @@ namespace Zametek.Contract.ProjectPlan
 
         void ClearManagedActivities();
 
+        // Gives the activity the duration that a drag of the end of its bar on the Gantt chart asks for: its optimistic, most
+        // likely and pessimistic durations move by the same number of days, as far as they can.
         void SetActivityDuration(int activityId, int newDuration);
 
         // Takes the optimistic and the pessimistic duration of each of the activities back to its most likely duration.

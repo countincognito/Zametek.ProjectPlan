@@ -166,6 +166,26 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
+        // Keeps threads of the thread pool for the requests, while the jobs simulate. The simulator runs its iterations in
+        // Parallel.For on the threads of the pool, and it keeps each thread that it takes until its end. The pool did not see
+        // this as a pool that has no free thread, and so it added a thread only now and then: a request for the status of a
+        // job waited up to 19 seconds. Thus, the pool starts at once, beyond a thread for each processor, a thread for each
+        // thread that the simulations of maxJobs jobs can take (SimulationProcessorShare.MostThreads). The minimum only goes
+        // up, so that a second server in the same process cannot take threads from the first. Returns the minimum.
+        internal static int KeepThreadsForRequests(int maxJobs)
+        {
+            int wanted = Environment.ProcessorCount + new SimulationProcessorShare().MostThreads(maxJobs);
+            ThreadPool.GetMinThreads(out int workers, out int completionPorts);
+
+            if (workers < wanted)
+            {
+                ThreadPool.SetMinThreads(wanted, completionPorts);
+                ThreadPool.GetMinThreads(out workers, out _);
+            }
+
+            return workers;
+        }
+
         // The server, ready to start: it listens where the settings say, and runs its jobs on jobRunner. Only a server
         // that warms up ever says it is ready.
         internal static WebApplication Build(
@@ -178,6 +198,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
             ServeLimits limits = settings.Limits;
             long maxRequestBodySize = limits.MaxUploadMegabytes * c_Megabyte;
+
+            KeepThreadsForRequests(limits.MaxJobs);
 
             // Empty, so that it reads nothing it is not given: no appsettings.json - watching it for changes is what
             // makes the generic host slow to start on Linux - and nothing from the environment but what

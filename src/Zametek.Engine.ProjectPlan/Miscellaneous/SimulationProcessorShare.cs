@@ -32,6 +32,23 @@ namespace Zametek.Engine.ProjectPlan
         // The number of simulations that run now.
         public int Running => Volatile.Read(ref m_Running);
 
+        // The most threads that the given number of simulations can take at one time. Of the simulations that run, the one
+        // that began i-th began when at least i ran, and so it took the processors divided by i at most, and one at least.
+        // Thus, their threads add up to the processors / 1 + the processors / 2 + ... at most, when they begin one after the
+        // other.
+        public int MostThreads(int simulations)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(simulations);
+            int threads = 0;
+
+            for (int i = 1; i <= simulations; i++)
+            {
+                threads += Math.Max(1, m_Processors / i);
+            }
+
+            return threads;
+        }
+
         // A simulation begins. The lease says how many threads it may use, and it ends when the lease is disposed of.
         public Lease Begin()
         {

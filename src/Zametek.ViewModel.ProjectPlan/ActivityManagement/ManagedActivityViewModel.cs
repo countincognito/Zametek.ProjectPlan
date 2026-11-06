@@ -753,7 +753,9 @@ namespace Zametek.ViewModel.ProjectPlan
         /// <remarks>
         /// Setting it sets the most likely duration, which is what a caller that sets a duration
         /// means. The duration that the activity then has is the one that its estimates give, and
-        /// that is the value that was set only when the activity has no estimates of its own.
+        /// that is the value that was set only when the activity has no estimates of its own. A drag
+        /// of the end of a bar on the Gantt chart does not set it: it moves all three estimates
+        /// (<see cref="MoveEstimatesForDuration"/>).
         /// </remarks>
         public int Duration
         {
@@ -845,6 +847,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ClearErrors(nameof(OptimisticDuration));
             ClearErrors(nameof(PessimisticDuration));
             ApplyEstimates(MostLikelyDuration, null, null);
+        }
+
+        public void MoveEstimatesForDuration(int duration)
+        {
+            (int mostLikely, int? optimistic, int? pessimistic) =
+                EstimateHelper.MoveForDuration(MostLikelyDuration, OwnOptimisticDuration, OwnPessimisticDuration, duration);
+            ApplyEstimates(mostLikely, optimistic, pessimistic);
         }
 
         public int? TotalSlack => DependentActivity.TotalSlack;

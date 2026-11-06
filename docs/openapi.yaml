@@ -8,9 +8,9 @@ info:
     if the request runs one or the project holds a result, and the outputs that the request asks for. These outputs are the project
     file, charts and graphs, an Excel export, and the chart and the CSV files of the simulation.
 
-    This description is the source of truth for programs. [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md)
+    This description is the source of truth for programs. [docs/API.md](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md)
     is the written reference. It has the changelog, the security review and the deviations from the
-    [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), which the API
+    [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md), which the API
     follows. The `type` URIs of the problems are the addresses of the sections of that reference.
 
     The server supplies this description itself, at `GET /v1/openapi`, without an API key. It is the file of the repository, in the
@@ -25,17 +25,17 @@ info:
 
     ## Deviations from the RESTful API Guide
 
-    The API follows the [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md), version 1.2. The guide asks that the description records each deviation. A deviation is a rule that the API does not follow, or an option that a rule gives to the API. The description gives the reason for each deviation ([DOC-2](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance),
-    [section 0.5](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#05-deviations)):
+    The API follows the [RESTful API Guide](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md), version 1.2. The guide asks that the description records each deviation. A deviation is a rule that the API does not follow, or an option that a rule gives to the API. The description gives the reason for each deviation ([DOC-2](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#13-documentation-testing-and-governance),
+    [section 0.5](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#05-deviations)):
 
-    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead. While a job runs, `GET /v1/jobs/{requestId}` tells how far it has got (ASY-2). The server keeps this status only for as long as the job runs.
-    - [**REP-7**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#3-representations) - The costs, billings and margins in `metrics` are floating-point numbers. The engine calculates them in this way, and a project has no currency. They are estimates in the unit of the figures of the project, and not amounts of money. REP-7 lets such values be JSON numbers.
-    - [**COL-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#51-the-collection-representation), [**COL-2**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) - `scenarios` and `outputs` are plain arrays and not paged `items`. They are bounded parts of what the caller sent, and not collections that the server holds. COL-1 says that a bounded array inside a representation is a plain array under a descriptive name.
-    - [**ACT-4**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [**REQ-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#4-requests) - `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. A project is a file, and a file cannot go in a URL.
-    - [**RL-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection) - The API has no `RateLimit` fields. They are still an Internet-Draft. The limit is a cap on the jobs at one time, and not a rate. `Retry-After` and `limits` give the other information.
-    - [**OPS-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#14-operations) - The API has no availability objective. `zpp serve` is a tool that its users operate for themselves, and `jobTimeout` limits its latency.
-    - [**ERR-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#7-errors) - `408`, `414` and `431`, and a request that the web server cannot read, have no body. The web server answers them before the API gets them, and it cannot write a body.
-    - [**SEC-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#101-transport), [**SEC-15**](https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/RESTFUL-API-GUIDE.md#104-input-and-resources) - The API has no HSTS and no CORS. No browser calls this API. A proxy that ends TLS can add HSTS.
+    - [**ASY-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#9-long-running-and-bulk-operations) - The API answers a job in its request, and `jobTimeout` limits the job. If a job uses more time, the server stops it (`503`) and does not continue it as a `202`. The server keeps nothing between requests. To continue a job, the server must keep results, owners and an expiry. ASY-1 lets a service that keeps nothing stop the job at its limit instead. While a job runs, `GET /v1/jobs/{requestId}` tells how far it has got (ASY-2). The server keeps this status only for as long as the job runs.
+    - [**REP-7**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#3-representations) - The costs, billings and margins in `metrics` are floating-point numbers. The engine calculates them in this way, and a project has no currency. They are estimates in the unit of the figures of the project, and not amounts of money. REP-7 lets such values be JSON numbers.
+    - [**COL-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#51-the-collection-representation), [**COL-2**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#52-paging-sorting-filtering-and-selection) - `scenarios` and `outputs` are plain arrays and not paged `items`. They are bounded parts of what the caller sent, and not collections that the server holds. COL-1 says that a bounded array inside a representation is a plain array under a descriptive name.
+    - [**ACT-4**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#12-actions-procedural-concepts), [**REQ-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#4-requests) - `POST /v1/projects/scenarios` only reads, and requests are `multipart/form-data`. A project is a file, and a file cannot go in a URL.
+    - [**RL-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection) - The API has no `RateLimit` fields. They are still an Internet-Draft. The limit is a cap on the jobs at one time, and not a rate. `Retry-After` and `limits` give the other information.
+    - [**OPS-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#14-operations) - The API has no availability objective. `zpp serve` is a tool that its users operate for themselves, and `jobTimeout` limits its latency.
+    - [**ERR-1**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#7-errors) - `408`, `414` and `431`, and a request that the web server cannot read, have no body. The web server answers them before the API gets them, and it cannot write a body.
+    - [**SEC-3**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#101-transport), [**SEC-15**](https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/RESTFUL-API-GUIDE.md#104-input-and-resources) - The API has no HSTS and no CORS. No browser calls this API. A proxy that ends TLS can add HSTS.
   version: 1.0.0
   contact:
     name: Zametek.ProjectPlan
@@ -911,7 +911,7 @@ components:
     MalformedRequest:
       summary: Options that are not JSON, and an `include` value that the server does not know
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#malformed-request
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#malformed-request
         title: The request could not be understood
         status: 400
         detail: The request has 2 problems.
@@ -926,7 +926,7 @@ components:
     ValidationFailed:
       summary: Four problems with the options, listed together
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#validation-failed
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#validation-failed
         title: The request is not valid
         status: 422
         detail: The request has 4 problems.
@@ -947,7 +947,7 @@ components:
     ProjectNotReadable:
       summary: A workbook sent as the project, with the console
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable
         title: The project could not be read
         status: 422
         detail: The file could not be read as a project.
@@ -966,7 +966,7 @@ components:
     ProjectNotReadableWorkbook:
       summary: A workbook to import, with two cells that are not numbers
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable
         title: The project could not be read
         status: 422
         detail: 'The import was cancelled and nothing was changed. Problems found in the file: 2.'
@@ -981,7 +981,7 @@ components:
     CompilationFailed:
       summary: A project with an activity that depends on an activity that does not exist
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed
         title: The project did not compile
         status: 422
         detail: The project has a compilation error.
@@ -995,7 +995,7 @@ components:
     CompilationTimedOut:
       summary: A compilation that did not end within its time limit
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-timed-out
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-timed-out
         title: The compilation ran out of time
         status: 422
         detail: The compilation did not finish within its time limit.
@@ -1003,7 +1003,7 @@ components:
     ScenarioNotSelectable:
       summary: A scenario that is not in the project
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#scenario-not-selectable
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#scenario-not-selectable
         title: The scenario cannot be selected
         status: 422
         detail: No scenario matches 'Gamma'
@@ -1015,7 +1015,7 @@ components:
     SimulationNotPossible:
       summary: The outputs of a simulation, for a project that holds no result, with no run
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#simulation-not-possible
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#simulation-not-possible
         title: The simulation cannot be done
         status: 422
         detail: The plan has no simulation result to make the outputs from, and the simulation was not asked to run.
@@ -1027,7 +1027,7 @@ components:
     OutputFailed:
       summary: A project that compiled, where the job did not produce the Gantt chart but produced the project file
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#output-failed
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#output-failed
         title: An output could not be produced
         status: 500
         detail: The gantt chart could not be produced.
@@ -1079,7 +1079,7 @@ components:
     UnexpectedError:
       summary: A failure that nobody expected. The answer says only that it happened
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unexpected-error
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#unexpected-error
         title: The server could not process the request
         status: 500
         detail: The server failed to process the request. Its log says why, under the request's trace id.
@@ -1087,7 +1087,7 @@ components:
     Busy:
       summary: The server runs the maximum number of jobs at one time, and the maximum number of jobs wait
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#busy
         title: The server is busy
         status: 503
         detail: The server is running all the jobs it can, with as many waiting as it allows. Try again shortly.
@@ -1095,7 +1095,7 @@ components:
     JobTimeout:
       summary: A job that used more time than the server allows
       value:
-        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#job-timeout
+        type: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout
         title: The job took too long
         status: 503
         detail: The job ran for longer than the server's limit of 120 seconds, and was stopped.
@@ -1747,7 +1747,7 @@ components:
         - type: object
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#malformed-request
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#malformed-request
             status:
               const: 400
     ValidationFailedProblem:
@@ -1758,7 +1758,7 @@ components:
           required: [errors]
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#validation-failed
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#validation-failed
             status:
               const: 422
     ProjectNotReadableProblem:
@@ -1773,7 +1773,7 @@ components:
           required: [errors]
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#project-not-readable
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#project-not-readable
             status:
               const: 422
     CompilationFailedProblem:
@@ -1784,7 +1784,7 @@ components:
           required: [errors]
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-failed
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed
             status:
               const: 422
     CompilationTimedOutProblem:
@@ -1794,7 +1794,7 @@ components:
         - type: object
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#compilation-timed-out
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-timed-out
             status:
               const: 422
     ScenarioNotSelectableProblem:
@@ -1805,7 +1805,7 @@ components:
           required: [errors]
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#scenario-not-selectable
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#scenario-not-selectable
             status:
               const: 422
     SimulationNotPossibleProblem:
@@ -1816,7 +1816,7 @@ components:
           required: [errors]
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#simulation-not-possible
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#simulation-not-possible
             status:
               const: 422
     OutputFailedProblem:
@@ -1826,7 +1826,7 @@ components:
         - type: object
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#output-failed
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#output-failed
             status:
               const: 500
             metrics:
@@ -1844,7 +1844,7 @@ components:
         - type: object
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#unexpected-error
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#unexpected-error
             status:
               const: 500
     BusyProblem:
@@ -1854,7 +1854,7 @@ components:
         - type: object
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#busy
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#busy
             status:
               const: 503
     JobTimeoutProblem:
@@ -1864,6 +1864,6 @@ components:
         - type: object
           properties:
             type:
-              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/develop/docs/API.md#job-timeout
+              const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout
             status:
               const: 503

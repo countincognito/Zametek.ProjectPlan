@@ -104,7 +104,7 @@ The maintainer made these decisions on 2026-10-15.
 How a managed activity behaves, as built:
 
 - The activity writes the most likely duration, the two estimates that the user gave, and `Duration` together, under one lock. A compilation therefore never copies a mix of two edits.
-- Setting `Duration` sets the most likely duration. The Gantt chart sets a duration when a user drags the end of a bar, and so it sets the most likely duration too. An activity with estimates of its own then shows the expected duration. This can differ from the length that the user dragged to. The maintainer wants to decide this again later (refer to the entry in [TODO](TODO.md)).
+- Setting `Duration` sets the most likely duration. The Gantt chart set a duration when a user dragged the end of a bar, and so it set the most likely duration too. An activity with estimates of its own then showed the expected duration. This could differ from the length that the user dragged to. Later work changed the drag: refer to [A drag of a bar moves the three estimates](#a-drag-of-a-bar-moves-the-three-estimates).
 - A value outside the rule is limited to the nearest value inside it, and the activity reports an error for that property. A milestone (a most likely duration of 0) has an optimistic and a pessimistic duration of 0.
 - When the most likely duration moves past an optimistic or pessimistic duration that the user gave, that duration moves to it. A value that the user did not give follows the most likely duration.
 - An activity that is made from a model takes its estimates from the model, and it works its `Duration` out from them. When a model's `Duration` and its estimates disagree, the estimates win.
@@ -297,7 +297,7 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 
 The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages.
 
-The maintainer published the packages, and the two package references use version 4.0.0. Use the local file only for a change that needs a version of the library that nobody has published.
+The maintainer published the packages, and the two package references use version 4.0.1. Use the local file only for a change that needs a version of the library that nobody has published.
 
 ## Phase 3: the results
 
@@ -325,7 +325,7 @@ Phase 3 finished on 2026-10-16. All the work is in this repository, on the branc
 ### What is not done
 
 - The settings of the panel are not saved in the plan or in the settings of the application. They start again with the application.
-- A plan that resources decide has very many critical paths that are nearly equal. The sample plan has 92 % of its weight in "Other paths" and about 1 % in each of the eight paths that the chart shows. The chart is correct but it says little. [TODO](TODO.md) has an entry for a grouping that is more useful for such plans.
+- A plan that resources decide has very many critical paths that are nearly equal. The sample plan has 92 % of its weight in "Other paths" and about 1 % in each of the eight paths that the chart shows. The chart is correct but it says little. [TODO](TODO.md) has an entry for a grouping that is more useful for such plans. Later work found that a defect of the library caused most of this. Version 4.0.1 of the library corrects it: refer to [The application uses version 4.0.1 of the library](#the-application-uses-version-401-of-the-library).
 - The criticality table counts each activity in each iteration, one call at a time. This takes seconds for 1,000,000 iterations of a large plan. A method of the library that counts the bits would be faster.
 
 ## Phase 4: the results
@@ -521,6 +521,43 @@ The table library also breaks a cell of more than 40 characters onto more lines.
 - **One block.** The two tables are one `display` block of the console, and so the transcript of a job has one entry for the result, as before. Two blocks put two blank lines between the tables and add a second entry to the transcript.
 - **Where.** `JobConsoleHelper.BuildSimulationTable` builds the second table. `BuildMetricsTable` does not take the simulation any more.
 - **The checks.** The checks of the commit hook passed with 3,339 tests. Six of the new tests failed on the code from before the change. The old and the new `zpp` ran on 30 plans: 205 runs of each, in the three formats, with and without `--run-simulation`. The simulation did not run on the largest plan, and it ran on the next one in Markdown only. The 158 runs in which the text must not change are byte for byte the same. They are the runs without a simulation, the runs in JSON, and 20 runs of a plan that did not compile. In the other 47 runs, the first table has the old rows before the row "Simulation Metrics". The second table has the old rows after it, with each broken row joined again. The team planted 23 faults, one at a time, and the tests found 22 of them. The fault that they did not find changes the alignment of numbers, which has no effect because the cells are text.
+
+### The application uses version 4.0.1 of the library
+
+Version 4.0.1 of the library corrects the critical paths of a simulation. The API does not change. The application moved from version 4.0.0 to version 4.0.1 on 2026-11-05.
+
+- **The defect.** Sometimes one resource does two activities in turn, and the plan also ties them through a milestone. Version 4.0.0 then gave two critical paths with the same activities: one with a resource link, and one with a dependency. `SimulationAnalyzer` splits the weight of an iteration among its paths, and so it split the weight of one chain between the two. Each such step doubled the paths. Four steps of the main chain of the sample plan are like this. Thus, one chain of activities was 16 paths, and the eight paths of the chart were all one chain.
+- **The effect.** The finish times and the criticality of the activities do not change. The paths change. The numbers here are for 3,000 iterations of the sample plan. The plan has the estimates of the tests: O is 0.75 times and P is 1.6 times the duration. The number of paths goes from 1,832 to 475. "Other paths" goes from 92 % to about 54 %. The six heaviest paths have 7 % to 8 % each. They are the chains through each of the three managers to each of the two last activities.
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.0.1, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.0.1.
+- **How it was checked.** The new test `RunSimulationAsync_Given_TheSamplePlan_Then_NoTwoPathsOfTheTableHaveTheSameActivities` runs the sample plan with estimates. It finds that no two rows of the table of the paths have the same activities. With version 4.0.0, the 25 rows were four chains only, and the test failed. With version 4.0.1, it passes. The checks of the commit hook passed with 3,658 tests.
+
+### A drag of a bar moves the three estimates
+
+A user drags the end of a bar on the Gantt chart to change the duration of an activity. The drag set the most likely duration (ML). An activity with estimates of its own then showed the expected duration, (O + 4 ML + P) / 6. This was not the length that the user dragged to. The maintainer chose a new rule on 2026-11-06.
+
+- **The rule.** The drag moves the optimistic duration (O), ML and the pessimistic duration (P) by the same number of days. Thus, the expected duration moves by that number of days too, and the bar ends where the user lets go. The spread of the estimates does not change. An O or a P that follows ML moves with ML.
+- **The limit.** The estimates stop where O reaches 0, or where ML reaches 1. A drag to a shorter length gives the shortest bar that the estimates allow, and the tooltip of the drag shows that length. A drag cannot make an activity with an O of 0 shorter. To make it shorter, change its estimates in the grid of the activities. An activity with no estimates of its own behaves as before: the drag sets ML, and the bar has 1 day at the least.
+- **Why not the other choices.** A drag that keeps ML and moves only O and P moves the expected duration by a third of the drag. A drag that makes O and P follow ML again loses the estimates that the user gave.
+- **Where.** `EstimateHelper.MoveForDuration` and `EstimateHelper.ShortestDurationOfADrag` hold the rule. `CoreViewModel.SetActivityDuration` calls `IManagedActivityViewModel.MoveEstimatesForDuration`. Each bar of the chart (`AnnotatedBar`) gives its shortest duration and the point where it ends then, and the drag stops there. A caller that sets `Duration` still sets ML, but the drag does not set it.
+- **How it was checked.** Two of the new tests failed on the code from before. There, a drag to 13 days gave 12 days, and a drag to 2 days gave 4 days. A test of the rule goes through 13,728 cases. They are all the estimates with an ML up to 12 days, and durations from -2 to 30 days. The test finds the spread kept, the rule kept, and the duration that the drag asked for, or the shortest. A test of the chart finds where the shortest bar ends, in days and in dates.
+
+### The server keeps threads for its requests
+
+A test of `zpp serve` timed out two times in the commit hook. A request for the status of a job got no answer within one minute, while a simulation ran. [TODO](TODO.md) had an entry to measure this.
+
+- **The measurement.** The machine had four processors and no other load. The server ran from a Debug build. The job was a simulation of 1,000,000 iterations of `website-refresh.zpp`, on four threads. A client asked for the status of the job about four times a second for 150 seconds. Each 15 seconds, eight requests went at the same time.
+
+| Server | Requests | Median | 99th percentile | Longest | Longest of eight at once |
+| --- | --- | --- | --- | --- | --- |
+| No job | 40 | 1.6 ms | 55 ms | 55 ms | - |
+| A simulation, before | 72 | 4.7 ms | 18.9 s | 18.9 s | 10.6 s |
+| A simulation, at least 12 threads in the pool (a test only) | 162 | 4.0 ms | 35 ms | 40 ms | 53 ms |
+| A simulation, after | 217 | 3.3 ms | 8.4 ms | 21 ms | 28 ms |
+
+- **The cause.** The server took less than 21 ms for each request. The time went before the server started on the request, because the request waited for a thread of the thread pool. The simulator of the library runs its iterations in `Parallel.For`, on the thread pool. The loop gives its next part to the thread that has just finished one. Thus, it keeps each thread that it takes until its end. The pool does not see that it has no free thread, and it adds a thread only now and then.
+- **The change.** `zpp serve` raises the minimum of the thread pool when it starts. The pool then starts threads at once, up to the minimum, and a request does not wait. The minimum is a thread for each processor, plus the most threads that the simulations of all the jobs can take (`SimulationProcessorShare.MostThreads`). With four processors and four jobs, this is 4 + (4 + 2 + 1 + 1) = 12. The minimum only goes up.
+- **Why not threads of its own.** A scheduler with threads of its own would keep the loop away from the pool, also in the desktop application. But `Parallel.For` does not use the scheduler of the task that calls it, and the library sets no scheduler. [TODO](TODO.md) has an entry for this.
+- **How it was checked.** The new test of the server failed on the code from before: the minimum was 4, and the test wanted 11 for three jobs. A test of the share begins and ends simulations 10,000 times in a random order. Their threads never added up to more than `MostThreads`. The runs above do not measure the speed of the simulation, because the client asked more often when the answers came at once.
 
 ## Performance work to explore later
 

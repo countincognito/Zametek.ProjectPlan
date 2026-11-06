@@ -371,45 +371,19 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Verify the change in two ways. Run `zpp --now` on every sample plan with every output, before and after, and compare the files byte for byte. Also run the parity tests.
 
-- [ ] **Measure how fast `zpp serve` answers a status request while a simulation runs** *(2026-11-04, from a test that timed out in the commit hook)*
+- [ ] **Run the parallel loop of the simulation on threads of its own** *(2026-11-06, after the measurement of `zpp serve`)*
 
-  A simulation takes threads of the thread pool. A job that is alone gets one thread for each processor (`SimulationProcessorShare`). In the commit hook, all the test projects run at the same time. There, `ProjectEndpointsJobStatusTests.GetJob_Given_AJobThatRuns_Then_AnswersWithItsStatusAndHowFarItHasGot` twice got no answer to `GET /v1/jobs/{requestId}` within one minute, while a simulation of 1,000,000 iterations ran. Before, it passed in the hook in 20 to 38 seconds. The test client now waits three minutes for each answer (`RunningServer`).
+  The simulator of the library runs its iterations in `Parallel.For`, on the thread pool. The loop keeps each thread that it takes until its end, and other work of the process waits for a thread. `zpp serve` now keeps more threads in the pool (`JobServer.KeepThreadsForRequests`), and so its requests do not wait ([The plan](SIMULATION-PLAN.md#the-server-keeps-threads-for-its-requests) has the measurement). The desktop application does not keep more threads, and a simulation there takes a thread for each processor. Nobody measured if its compilations and its charts wait while a simulation runs.
 
-  Find out if the requests wait for threads of the thread pool that the simulation holds. If they do, a client that polls a busy server also waits. Measure the time of a status request while a long simulation runs, first on a machine with no other load. If the time is long, keep a thread free for the requests, or run the simulation on threads of its own.
-
-- [ ] **Hold the API of `zpp serve` to its last release** *(2026-10-04, the end of the API review)*
-
-  The API has no release yet. Thus, `/v1` can still change its shape. The `type` URIs of its problems can still change their names. They are the addresses of the sections of [API.md](API.md), and a client branches on them.
-
-  The first release that contains the server ends this freedom. From then on, nobody renames or removes a type, a status, a member or a code ([VER-3](RESTFUL-API-GUIDE.md#12-versioning-and-evolution) of the [RESTful API Guide](RESTFUL-API-GUIDE.md)). A change that breaks a client is a new version of the path.
-
-  Do these actions before that release:
-
-  1. Add [oasdiff](https://github.com/oasdiff/oasdiff) to CI. It runs `breaking` on `docs/openapi.yaml` against the file in the latest release tag. Thus, a change that breaks a client fails the build, and nobody needs to notice it. `OpenApiContractTests` hold the description to the server, and Spectral holds it to the rules of the guide. But nothing holds it to its past.
-  2. Give `info.version` of the description and the heading `Unreleased` of the changelog the version of the release.
-  3. Decide if the `type` URIs must point to a copy that cannot move. They point to the copy of API.md on the `develop` branch now. A copy in a release tag, or a page that nobody renames, can be this copy. A client that stored a type must never find that its address is dead.
-
-- [ ] **Decide what dragging the end of a bar on the Gantt chart does to an activity that has estimates** *(2026-10-16, from the review of phase 1 of the simulation work)*
-
-  A user drags the end of a bar to change the duration of an activity. The chart calls `CoreViewModel.SetActivityDuration`, and this sets the most likely duration (ML) of the activity. This is what every caller that sets a duration means. For an activity that has no estimates of its own, it is the same as before.
-
-  An activity can have an optimistic duration (O) or a pessimistic duration (P) of its own. Then the bar shows the expected duration, (O + 4 ML + P) / 6 rounded to a whole day. This can differ from the length that the user dragged to. The maintainer was not sure about this behavior. There was no better solution at the time, and thus the behavior stayed as it is.
-
-  **Choices to consider.**
-
-  - Set ML so that the expected duration is as near as possible to the dragged length. The value of ML would be (6 × length − O − P) / 4, limited to the range from O to P. Rounding and the limits mean that the bar can still miss the dragged length.
-  - Keep ML and move O and P by the same amount as the drag. The spread stays the same, and the expected duration follows the drag exactly.
-  - Make O and P follow ML again, so that the bar has exactly the dragged length. The user loses the estimates that they gave, and thus this needs a warning, or an undo.
-  - Let the drag change an activity with no estimates of its own only. A bar of an activity with estimates would show the expected duration, and a drag would do nothing.
-  - Keep the behavior and change the tooltip of the drag. It would show the expected duration that the drop gives, and not the dragged length.
-
-  **Where.** `GanttChartManagerView.axaml.cs` (the drag), `CoreViewModel.SetActivityDuration` and `ManagedActivityViewModel.Duration`. The test `ActivityEstimatesTests.SetActivityDuration_Given_AnActivityWithNoEstimates_Then_IsTheDurationOfTheActivity` pins the behavior for an activity with no estimates. A new test must pin the choice for an activity with estimates.
+  A `TaskScheduler` with threads of its own would keep the loop away from the pool. But `Parallel.For` uses `ParallelOptions.TaskScheduler`, or the scheduler of the thread pool when that is null. It does not use the scheduler of the task that calls it (tested on .NET 10, 2026-11-06). The library sets no scheduler. Thus, the change needs an option in the library, for example in `SimulationSettings`, and a release of the library.
 
 - [ ] **Group the critical paths of a simulation in a way that helps for a plan that resources decide** *(2026-10-16)*
 
-  A plan with resources has very many critical paths in a simulation, because the order in which the resources do the work changes from one iteration to the next. For the sample plan, 3,000 iterations give hundreds of distinct paths, and the eight heaviest have 1 % of the weight each. The group "Other paths" has 92 %. The chart is correct, but it does not show the reader what decides the finish.
+  A plan with resources has many critical paths in a simulation, because the resources do the work in a different order in each iteration. For the sample plan, 3,000 iterations give about 475 distinct paths. The six heaviest have 7 % to 8 % of the weight each, and the group "Other paths" has about 54 %. Thus, the chart shows the main chains, but about half of the weight is in one group.
 
-  Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most.
+  Until version 4.0.1 of the library, "Other paths" had 92 %, and the eight paths of the chart were all one chain of activities. A defect of the library caused this ([The plan](SIMULATION-PLAN.md#the-application-uses-version-401-of-the-library) tells how).
+
+  Choices: group the paths by the activities that decide the finish (the last activity before the finish that is not shared by all the paths), group them by the first activity that differs, or show the criticality index of the activities as a bar chart next to the histogram. The criticality table already says which activities matter most. On the sample plan (2026-11-05), each of the first two choices gives two groups only. The first gives 39 Manual Polishing and 40 System Testing, with about half each. The second gives 7 Dev Training with 96 % and 10 CM and setup with 4 %.
 
 - [ ] **Count the criticality of the activities with the bits of the library** *(2026-10-16)*
 

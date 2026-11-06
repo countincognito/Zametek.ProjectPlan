@@ -111,7 +111,7 @@ namespace Zametek.View.ProjectPlan
                 && m_ResizingBar is not null)
             {
                 Coordinates coords = plot.Plot.GetCoordinates(mousePixel);
-                double newRightEdge = Math.Max(m_ResizingBar.ValueBase + 1, coords.X);
+                double newRightEdge = Math.Max(MinimumEnd(m_ResizingBar), coords.X);
                 m_ResizingBar.Value = newRightEdge;
                 plot.Refresh();
 
@@ -119,7 +119,9 @@ namespace Zametek.View.ProjectPlan
                     && m_ResizeActivityStartTime is not null
                     && m_DateTimeCalculator is not null)
                 {
-                    int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), m_DateTimeCalculator, vm);
+                    int newDuration = Math.Max(
+                        m_ResizingBar.MinimumDuration,
+                        CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), m_DateTimeCalculator, vm));
 
                     Canvas.SetLeft(dragTooltipBorder, pos.X + c_DragTooltipLeftOffset);
                     Canvas.SetTop(dragTooltipBorder, pos.Y + c_DragTooltipTopOffset);
@@ -177,11 +179,13 @@ namespace Zametek.View.ProjectPlan
                 Coordinates coords = plot.Plot.GetCoordinates(mousePixel);
 
                 double finalX = m_ResizingBar is not null
-                    ? Math.Max(m_ResizingBar.ValueBase + 1, coords.X)
+                    ? Math.Max(MinimumEnd(m_ResizingBar), coords.X)
                     : coords.X;
 
                 int startTimeUnit = m_ResizeActivityStartTime.GetValueOrDefault();
-                int newDuration = CalculateNewDuration(finalX, startTimeUnit, m_DateTimeCalculator, vm);
+                int newDuration = Math.Max(
+                    m_ResizingBar?.MinimumDuration ?? 1,
+                    CalculateNewDuration(finalX, startTimeUnit, m_DateTimeCalculator, vm));
                 vm.SetActivityDuration(m_ResizeActivityId.GetValueOrDefault(), newDuration);
             }
 
@@ -192,6 +196,11 @@ namespace Zametek.View.ProjectPlan
             m_ResizingBar = null;
             Cursor = AvaloniaInput.Cursor.Default;
         }
+
+        // Where the bar ends at the shortest duration that a drag can give (AnnotatedBar.MinimumValue). For an activity with
+        // estimates, the three estimates move together, and they stop where the optimistic duration reaches 0. A bar that
+        // does not say ends one unit after its start.
+        private static double MinimumEnd(AnnotatedBar bar) => bar.MinimumValue ?? (bar.ValueBase + 1);
 
         private static int CalculateNewDuration(
             double finalX,
