@@ -756,7 +756,7 @@ Send a request with the key:
 curl.exe -s -H "@key-header.txt" http://localhost:9770/v1/info
 ```
 
-The answer is the same as the answer without a key. Only the description needs no key: `http://localhost:9770/v1/openapi`. The log of the server shows each refused request with the method and the path, such as `GET /v1/info: refused, no API key`. The log does not show the key. It also shows the id of the request, which the response `401` carried.
+The answer is the same as the answer without a key. Only the description and the schema of a project file need no key: `http://localhost:9770/v1/openapi` and `http://localhost:9770/v1/schemas/project`. The log of the server shows each refused request with the method and the path, such as `GET /v1/info: refused, no API key`. The log does not show the key. It also shows the id of the request, which the response `401` carried.
 
 At the end, stop the server with Ctrl+C in window 1. Delete the folder, and the key with it.
 

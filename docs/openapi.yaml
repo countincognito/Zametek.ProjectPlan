@@ -407,6 +407,81 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/OptionsGet'
+  /v1/schemas/project:
+    get:
+      operationId: getProjectSchema
+      tags: [Projects]
+      summary: Fetch the schema of a project file
+      description: |
+        This operation gives the JSON Schema of the project file (`.zpp`) of the latest version. A program that writes a plan can
+        check it against the schema before it sends the plan. The schema is strict about the names of the members, because the server
+        ignores a member that it does not know. The rules that a schema cannot say are in `docs/PROJECT-FILE.md`. The schema is the
+        file `docs/zpp.schema.json` of the repository, in the version from the time of the build of the server. It holds only what is
+        in the repository, and thus it needs no API key. It cannot change while the server operates. Thus, the response has a strong
+        `ETag`, and any cache can keep it for one hour.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: The schema of the project file.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Cache-Control:
+              description: Any cache can keep the response for one hour.
+              required: true
+              schema:
+                type: string
+                const: public, max-age=3600
+            Vary:
+              description: The answer varies with what the request accepts.
+              required: true
+              schema:
+                type: string
+                const: Accept
+          content:
+            application/schema+json:
+              schema:
+                type: object
+            application/json:
+              schema:
+                type: object
+        '304':
+          description: The client has this schema, as the `ETag` shows.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    head:
+      operationId: headProjectSchema
+      tags: [Projects]
+      summary: The headers of the schema of a project file
+      description: This operation answers with the headers of `GET`, with the `ETag`, and with no body. It needs no API key.
+      security: []
+      responses:
+        '200':
+          description: The headers of `GET`, and no body.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+    options:
+      operationId: optionsProjectSchema
+      tags: [Projects]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes `GET` and `HEAD`. It needs no API key, because they need none.
+      security: []
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGet'
   /health/live:
     get:
       operationId: getLive

@@ -1490,8 +1490,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Resource Settings.
                     ResourceSettings = projectScenarioModel.ResourceSettings;
 
-                    // Graph Settings.
-                    GraphSettings = projectScenarioModel.GraphSettings;
+                    // Graph Settings, with the default ones in place of any that the scenario does not have.
+                    GraphSettings = ProjectScenarioHelper.CompleteGraphSettings(projectScenarioModel.GraphSettings, m_SettingService.DefaultGraphSettings);
 
                     // Interactive graph layouts (node positions). Set before the compile/build cascade so
                     // the graph view-models seed them when their graphs are (re)built.

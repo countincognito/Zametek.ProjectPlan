@@ -83,7 +83,22 @@
     </Content>
   </ItemGroup>
 
+  <!-- The schema of the project file, which a test holds to the classes, and the plans of the tests of zpp, which it checks
+       against the schema. -->
   <ItemGroup>
+    <Content Include="..\..\docs\zpp.schema.json" Link="Docs\zpp.schema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\docs\PROJECT-FILE.md" Link="Docs\PROJECT-FILE.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Zametek.ProjectPlan.CommandLine.Tests\Assets\*.zpp" LinkBase="Assets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Shouldly" Version="4.3.0" />

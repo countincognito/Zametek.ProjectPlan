@@ -17,6 +17,7 @@ The API has five operations, all under `/v1`. The table that follows lists them:
 | [`GET /v1/jobs/{requestId}`](#ask-how-far-a-job-has-got) | This operation tells how far a job that runs now has got. The id of the job is the trace id of the request that began it. |
 | [`GET /v1/info`](#ask-what-the-server-is) | This operation gives information about the server: its version, culture, time zone and limits. |
 | [`GET /v1/openapi`](#fetch-the-description) | This operation gives the description of this API, `openapi.yaml`, for programs. It needs no API key. |
+| [`GET /v1/schemas/project`](#fetch-the-schema-of-a-project-file) | This operation gives the JSON Schema of the project file, `zpp.schema.json`, for programs that write a plan. It needs no API key. |
 
 The server keeps nothing between requests. Each request carries its project, and the server does not store it. The two operations use POST only because a project is a file, and a file cannot go in a URL. A request that you send again has the same result. You can send a request to any server of the same version. The one thing that the server knows about a job is how far it has got while it runs (refer to [Ask how far a job has got](#ask-how-far-a-job-has-got)), and it forgets this when the job ends.
 
@@ -93,7 +94,7 @@ The server refuses a request that names a member that it does not know, with sta
 
 Give the id to the person who operates the server, who can find the request in the log with it. A request that has a [`traceparent`](https://www.w3.org/TR/trace-context/) keeps the trace that it names, and the trace id is the id of the request. The server gives an id of its own to a request that has no `traceparent`.
 
-**Authentication.** A server that only this computer can reach needs no API key. A server that other computers can reach must have a key. Then each path under `/v1` needs the key, in the header `Authorization: Bearer <key>`. A request without the key, or with an incorrect key, gets status `401` with `WWW-Authenticate: Bearer`. The health endpoints and [the description of the API](#fetch-the-description) are the only paths that need no key.
+**Authentication.** A server that only this computer can reach needs no API key. A server that other computers can reach must have a key. Then each path under `/v1` needs the key, in the header `Authorization: Bearer <key>`. A request without the key, or with an incorrect key, gets status `401` with `WWW-Authenticate: Bearer`. The health endpoints, [the description of the API](#fetch-the-description) and [the schema of a project file](#fetch-the-schema-of-a-project-file) are the only paths that need no key.
 
 A key has a minimum of 32 characters. A random 256-bit key in base64 has 44 characters, and `openssl rand -base64 32` makes such a key. The server keeps only a hash of the key and compares it in constant time. It logs each request that it refuses, at warning level, with the method, the path and the trace id, but never the key.
 
@@ -408,7 +409,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 - The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
-`OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, it is `GET, OPTIONS` for `/v1/jobs/{requestId}`, and it is `GET, HEAD, OPTIONS` for `/v1/info` and `/v1/openapi`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi`.
+`OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, it is `GET, OPTIONS` for `/v1/jobs/{requestId}`, and it is `GET, HEAD, OPTIONS` for `/v1/info`, `/v1/openapi` and `/v1/schemas/project`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi` and `/v1/schemas/project`.
 
 ## Fetch the description
 
@@ -433,9 +434,23 @@ X-Content-Type-Options: nosniff
 ```
 
 - The description is YAML. A request asks for it as `application/openapi+yaml`, the media type of a description of OpenAPI, or as `application/yaml`. A request that gives no `Accept` gets `application/openapi+yaml`. Any other `Accept` gets status `406`, and the problem names the types that the server can answer with. The server does not offer the description as JSON.
-- The description needs no API key, and `HEAD` and `OPTIONS` on it need none. It holds only what is in the repository, and a tool must read what a server takes before it receives the key. It is the only path under `/v1` that needs no key.
+- The description needs no API key, and `HEAD` and `OPTIONS` on it need none. It holds only what is in the repository, and a tool must read what a server takes before it receives the key. With the schema of a project file, it is one of the two paths under `/v1` that need no key.
 - The description cannot change while the server operates. Thus, the response has a strong `ETag`, and any cache can keep it for one hour (`Cache-Control: public, max-age=3600`). A request with `If-None-Match` and the `ETag` gets status `304`. The response varies with `Accept` and says so, and the server compresses it for a client that accepts compression. `HEAD` gets the headers only.
 - The first server that the description names is `/`. Thus, the server from which a client fetches the description is the server that the description describes. The file in the repository names no server, and a tool receives the address of a server.
+
+## Fetch the schema of a project file
+
+`GET /v1/schemas/project`
+
+This operation gives the JSON Schema of the project file (`.zpp`), [`zpp.schema.json`](zpp.schema.json), in the version from the time of the build of the server. It is the file of the repository, byte for byte. A program that writes a plan can check the plan against it before it sends the plan. [The project file](PROJECT-FILE.md) gives the rules that a schema cannot say.
+
+```
+curl -s -o zpp.schema.json http://localhost:9770/v1/schemas/project
+```
+
+- The schema describes the latest version of the format. It is strict about the names of the members, because the server ignores a member that it does not know. Thus, a misspelt member changes nothing, and the server does not tell you.
+- A request asks for the schema as `application/schema+json`, the media type of a JSON Schema, or as `application/json`. A request that gives no `Accept` gets `application/schema+json`. Any other `Accept` gets status `406`.
+- The schema needs no API key, as the description needs none. It holds only what is in the repository. It cannot change while the server operates. Thus, the response has a strong `ETag`, any cache can keep it for one hour, and `HEAD` gets the headers only.
 
 ## Probes
 
@@ -788,7 +803,7 @@ This table compares the OWASP API Security Top 10 (2023) with the API in its pre
 | API2 Broken authentication | The API has one shared key. It has a minimum of 32 characters, and the client sends it as a bearer token. The server keeps it as a hash and compares it in constant time. Beyond this computer, TLS protects it. The server logs refusals without the key. A Unix domain socket belongs to the user alone. |
 | API3 Broken object property level authorization | The server checks each member of a request. It refuses a member that it does not know, and thus a request cannot assign a property that it must not assign. The answer holds only what the operation produces. |
 | API4 Unrestricted resource consumption | The server limits the size of a request, the size and the depth of its `options`, and the size of a chart. It also limits the iterations of a simulation, the time of a job and of a compilation, and the number of jobs that run at one time and that wait. It turns away the other requests with `Retry-After`. |
-| API5 Broken function level authorization | The API has one role. Whoever has the key can use each operation. The health endpoints need no key, because they show only if the server is ready. The description of the API needs no key, because it is the description of the repository. |
+| API5 Broken function level authorization | The API has one role. Whoever has the key can use each operation. The health endpoints need no key, because they show only if the server is ready. The description of the API and the schema of a project file need no key, because they are files of the repository. |
 | API6 Unrestricted access to sensitive business flows | The operations calculate from what they receive, and they keep nothing. The limits restrict what one client can ask for. |
 | API7 Server side request forgery | The server never fetches a URL, because nothing in a request names a URL. |
 | API8 Security misconfiguration | The API accepts TLS 1.2 and TLS 1.3. It refuses plain HTTP beyond this computer, unless you say that a proxy ends TLS. It sends no `Server` header. Each response has `nosniff` and `no-store`. The server answers a failure that it did not expect in a generic way, with no information about its paths, types or source code. The API has no CORS, because no browser calls it. |
@@ -830,4 +845,5 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The option `compileTracked` compiles each tracked scenario of the project. The answer and the problem `output-failed` then have the member `trackedScenarios`.
 - The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
+- The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.

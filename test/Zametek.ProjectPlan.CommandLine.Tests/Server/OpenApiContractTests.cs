@@ -166,7 +166,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"description, as JSON", client, Get(@"/v1/openapi", accept: @"application/json"), HttpStatusCode.NotAcceptable);
             await observations.SendAsync(@"description, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"), HttpStatusCode.OK);
 
-            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
+            using HttpResponseMessage schema = await observations.SendAndKeepAsync(@"schema of a project", client, Get(@"/v1/schemas/project"), HttpStatusCode.OK);
+            await observations.SendAsync(@"schema of a project, as JSON", client, Get(@"/v1/schemas/project", accept: @"application/json"), HttpStatusCode.OK);
+            await observations.SendAsync(@"schema of a project, as it was", client, Get(@"/v1/schemas/project", schema.Headers.ETag.ShouldNotBeNull().ToString()), HttpStatusCode.NotModified);
+            await observations.SendAsync(@"schema of a project, as HTML", client, Get(@"/v1/schemas/project", accept: @"text/html"), HttpStatusCode.NotAcceptable);
+            await observations.SendAsync(@"schema of a project, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/schemas/project"), HttpStatusCode.OK);
+
+            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/schemas/project", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
             {
                 await observations.SendAsync($@"what {path} takes", client, new HttpRequestMessage(HttpMethod.Options, path), HttpStatusCode.NoContent);
             }
@@ -285,6 +291,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
 
             await observations.SendAsync(@"what the description takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, @"/v1/openapi"), HttpStatusCode.NoContent);
+
+            // Nor does the schema of a project file, for the same reason.
+            await observations.SendAsync(@"schema of a project, without the key", client, Get(@"/v1/schemas/project"), HttpStatusCode.OK);
+            await observations.SendAsync(@"schema of a project, the headers, without the key", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/schemas/project"), HttpStatusCode.OK);
+            await observations.SendAsync(@"what the schema of a project takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, @"/v1/schemas/project"), HttpStatusCode.NoContent);
 
             HttpRequestMessage withTheKey = Get(@"/v1/info");
             withTheKey.Headers.TryAddWithoutValidation(@"Authorization", $@"Bearer {c_ApiKey}");
@@ -492,7 +503,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // An operation that needs no key says so, and has no 401 to describe; every other has one.
             string[] open = [.. Description.Operations.Where(x => x.Operation[@"security"] is JsonArray { Count: 0 }).Select(x => $@"{x.Method} {x.Path}")];
-            open.ShouldBe([@"GET /health/live", @"GET /health/ready", @"GET /v1/openapi", @"HEAD /v1/openapi", @"OPTIONS /v1/openapi"], ignoreOrder: true);
+            open.ShouldBe(
+                [
+                    @"GET /health/live", @"GET /health/ready", @"GET /v1/openapi", @"HEAD /v1/openapi", @"OPTIONS /v1/openapi",
+                    @"GET /v1/schemas/project", @"HEAD /v1/schemas/project", @"OPTIONS /v1/schemas/project",
+                ],
+                ignoreOrder: true);
 
             string[] refusable = [.. Description.Operations.Where(x => x.Operation[@"responses"]!.AsObject().ContainsKey(@"401")).Select(x => $@"{x.Method} {x.Path}")];
             refusable.ShouldBe([.. Description.Operations.Select(x => $@"{x.Method} {x.Path}").Except(open)], ignoreOrder: true);
@@ -952,6 +968,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                             CheckJson(situation, content[@"application/json"]![@"schema"]!, stream.ToArray(), response, isProblem: false);
                         }
 
+                        break;
+                    case @"application/schema+json":
+                        // The schema of a project file is the file of the repository, byte for byte, and JSON.
+                        if (!body.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Docs", @"zpp.schema.json"))))
+                        {
+                            m_Problems.Add($@"{situation}: is not the file docs/zpp.schema.json");
+                        }
+
+                        CheckJson(situation, schema, body, response, isProblem: false);
                         break;
                     case @"application/openapi+yaml":
                     case @"application/yaml":

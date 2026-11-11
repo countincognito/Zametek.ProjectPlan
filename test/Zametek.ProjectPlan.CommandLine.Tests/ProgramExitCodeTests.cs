@@ -482,6 +482,48 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_TheExampleOfTheRulesOfTheProjectFile_Then_TheScheduleIsWhatThePageSays()
+        {
+            // docs/PROJECT-FILE.md gives a plan that a program can write, and says what zpp makes of it: the first activity has
+            // its most likely duration of 5 days, the second has only a Duration, which is its most likely duration of 3 days,
+            // and the third has the three estimates 2, 4 and 12, which give (2 + 4 × 4 + 12 + 3) / 6 = 5 days in whole days. In a
+            // chain, they finish on day 13.
+            string page = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Docs", @"PROJECT-FILE.md"));
+            int start = page.IndexOf("```json\n", StringComparison.Ordinal) + "```json\n".Length;
+            string plan = page[start..page.IndexOf("```", start, StringComparison.Ordinal)];
+
+            // The page also says that zpp calculates the duration and the times again: a stale Duration beside a most likely
+            // duration, and a stale earliest start, change nothing.
+            JObject stale = JObject.Parse(plan);
+            JToken activities = stale[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]!;
+            activities[0]![@"Activity"]![@"Duration"] = 99;
+            activities[1]![@"Activity"]![@"EarliestStartTime"] = 40;
+
+            foreach (string text in new[] { plan, stale.ToString() })
+            {
+                string directory = Path.Combine(Path.GetTempPath(), $@"zpp-rules-{Guid.NewGuid():N}");
+                Directory.CreateDirectory(directory);
+                try
+                {
+                    string input = Path.Combine(directory, @"plan.zpp");
+                    File.WriteAllText(input, text);
+
+                    (int exitCode, string output) = await RunCapturedAsync(@"-i", input, @"--data-directory", directory, @"--metrics-format", @"json");
+
+                    exitCode.ShouldBe(0);
+                    JObject.Parse(output)[@"NetworkDuration"]!.Value<int>().ShouldBe(13);
+
+                    string[][] schedule = [.. File.ReadAllLines(Path.Combine(directory, @"plan-schedule.csv")).Skip(1).Select(x => x.Split(','))];
+                    schedule.Select(x => (x[0], x[2], x[3])).ShouldBe([(@"1", @"5", @"0"), (@"2", @"3", @"5"), (@"3", @"5", @"8")]);
+                }
+                finally
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
         public async Task Main_Given_JsonMetricsFormat_Then_EmitsParseableJson()
         {
             (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"--metrics-format", @"json");

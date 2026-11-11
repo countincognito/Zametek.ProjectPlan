@@ -662,6 +662,34 @@ namespace Zametek.ViewModel.ProjectPlan
             return graphSettings;
         }
 
+        // The graph settings of a scenario, with the default list in place of each list that it does not have, as an import
+        // has them. A plan that a program writes can leave them out (docs/PROJECT-FILE.md), and the risk metrics need the
+        // severities: the criticality risk takes the weight of the most critical one.
+        public static GraphSettingsModel CompleteGraphSettings(
+            GraphSettingsModel? graphSettings,
+            GraphSettingsModel defaultGraphSettings)
+        {
+            ArgumentNullException.ThrowIfNull(defaultGraphSettings);
+
+            if (graphSettings is not null
+                && graphSettings.ActivitySeverities.Count != 0
+                && graphSettings.EdgeTypeFormats.Count != 0
+                && graphSettings.NodeTypeFormats.Count != 0)
+            {
+                return graphSettings;
+            }
+
+            GraphSettingsModel given = graphSettings ?? new GraphSettingsModel();
+            GraphSettingsModel defaults = defaultGraphSettings.CloneObject();
+
+            return given with
+            {
+                ActivitySeverities = given.ActivitySeverities.Count != 0 ? given.ActivitySeverities : defaults.ActivitySeverities,
+                EdgeTypeFormats = given.EdgeTypeFormats.Count != 0 ? given.EdgeTypeFormats : defaults.EdgeTypeFormats,
+                NodeTypeFormats = given.NodeTypeFormats.Count != 0 ? given.NodeTypeFormats : defaults.NodeTypeFormats,
+            };
+        }
+
         // Puts the dependencies, the planning dependencies, the resource dependencies and the
         // successors of each activity in the order of their ids, so that they are more readable.
         // It changes the lists of the models that it is given.

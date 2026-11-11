@@ -55,6 +55,13 @@
     <Content Include="..\..\docs\RESTFUL-API-GUIDE.md" Link="Docs\RESTFUL-API-GUIDE.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- The schema of the project file, which the server serves, and the page of its rules, whose example zpp compiles. -->
+    <Content Include="..\..\docs\zpp.schema.json" Link="Docs\zpp.schema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\docs\PROJECT-FILE.md" Link="Docs\PROJECT-FILE.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

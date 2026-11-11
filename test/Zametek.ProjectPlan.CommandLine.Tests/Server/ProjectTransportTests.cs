@@ -84,6 +84,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [InlineData(@"/v1/projects/scenarios", @"POST, OPTIONS", @"multipart/form-data")]
         [InlineData(@"/v1/info", @"GET, HEAD, OPTIONS", null)]
         [InlineData(@"/v1/openapi", @"GET, HEAD, OPTIONS", null)]
+        [InlineData(@"/v1/schemas/project", @"GET, HEAD, OPTIONS", null)]
         public async Task Options_Given_AnEndpoint_Then_NoContentAndWhatItTakes(string path, string allow, string? acceptPost)
         {
             using HttpResponseMessage response = await SendAsync(HttpMethod.Options, path);
@@ -347,6 +348,95 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             head.StatusCode.ShouldBe(HttpStatusCode.OK);
             options.StatusCode.ShouldBe(HttpStatusCode.NoContent);
             info.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task ProjectSchema_Given_AGet_Then_TheSchemaOfTheProjectFileThatWasEmbedded()
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/schemas/project");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(@"application/schema+json");
+            (await response.Content.ReadAsByteArrayAsync()).ShouldBe(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Docs", @"zpp.schema.json")));
+            response.Headers.Vary.ShouldContain(@"Accept");
+
+            // It cannot change while the server runs, as the description cannot.
+            response.Headers.ETag.ShouldNotBeNull().IsWeak.ShouldBeFalse();
+            response.Headers.CacheControl.ShouldNotBeNull().MaxAge.ShouldBe(TimeSpan.FromHours(1));
+            response.Headers.CacheControl.Public.ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(null, @"application/schema+json")]
+        [InlineData(@"*/*", @"application/schema+json")]
+        [InlineData(@"application/json", @"application/json")]
+        [InlineData(@"application/json, application/schema+json;q=0.5", @"application/json")]
+        public async Task ProjectSchema_Given_AnAccept_Then_TheOfferedTypeItPrefers(string? accept, string expected)
+        {
+            using HttpResponseMessage response = await SendAsync(
+                HttpMethod.Get,
+                @"/v1/schemas/project",
+                headers =>
+                {
+                    if (accept is not null)
+                    {
+                        headers.TryAddWithoutValidation(@"Accept", accept);
+                    }
+                });
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(expected);
+        }
+
+        [Fact]
+        public async Task ProjectSchema_Given_AnAcceptItCannotMeet_Then_NotAcceptableSayingWhatItCanBe()
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/schemas/project", headers => headers.TryAddWithoutValidation(@"Accept", @"text/html"));
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.NotAcceptable);
+            problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeNotAcceptable, @"application/schema+json, application/json"));
+        }
+
+        [Fact]
+        public async Task ProjectSchema_Given_TheETagOfTheSchema_Then_NotModified()
+        {
+            using HttpResponseMessage first = await SendAsync(HttpMethod.Get, @"/v1/schemas/project");
+
+            using HttpResponseMessage response = await SendAsync(
+                HttpMethod.Get,
+                @"/v1/schemas/project",
+                headers => headers.TryAddWithoutValidation(@"If-None-Match", first.Headers.ETag.ShouldNotBeNull().Tag));
+
+            response.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+            (await response.Content.ReadAsByteArrayAsync()).ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task ProjectSchema_Given_AHead_Then_TheHeadersOfAGetAndNoBody()
+        {
+            using HttpResponseMessage get = await SendAsync(HttpMethod.Get, @"/v1/schemas/project");
+            using HttpResponseMessage head = await SendAsync(HttpMethod.Head, @"/v1/schemas/project");
+
+            head.StatusCode.ShouldBe(HttpStatusCode.OK);
+            (await head.Content.ReadAsByteArrayAsync()).ShouldBeEmpty();
+            head.Headers.ETag.ShouldBe(get.Headers.ETag);
+            head.Content.Headers.ContentLength.ShouldBe((await get.Content.ReadAsByteArrayAsync()).Length);
+        }
+
+        [Fact]
+        public async Task ProjectSchema_Given_AServerThatHasAKey_Then_NeedsNoneForIt_AsTheDescriptionNeedsNone()
+        {
+            // It holds nothing that the repository does not.
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner, new ServeSettings { ApiKey = @"0123456789abcdef0123456789abcdef" });
+
+            using HttpResponseMessage get = await server.Client.GetAsync(@"/v1/schemas/project");
+            using HttpResponseMessage head = await server.Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, @"/v1/schemas/project"));
+            using HttpResponseMessage options = await server.Client.SendAsync(new HttpRequestMessage(HttpMethod.Options, @"/v1/schemas/project"));
+
+            get.StatusCode.ShouldBe(HttpStatusCode.OK);
+            head.StatusCode.ShouldBe(HttpStatusCode.OK);
+            options.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         }
 
         [Theory]

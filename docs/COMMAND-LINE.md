@@ -58,6 +58,8 @@ zpp -i plan.zpp --compile-tracked -o plan.zpp
 - When the scenario chart of the plan has axes, `zpp` prints the table "Scenario Chart" after the table of the tracked scenarios. It has the metric of each axis, and the formula of each fit and of its derivative, as the dock "Scenario Chart" shows them. In JSON, the data of the chart is in `ScenarioChart` (refer to [The data of the scenario chart](#the-data-of-the-scenario-chart)).
 - An imported plan has no tracked scenarios.
 
+A program can also write a plan as JSON, and give it to `zpp -i`. [The project file](PROJECT-FILE.md) gives the rules of the format and its JSON Schema.
+
 To get metrics that a program can read, use JSON. The standard output has only the JSON document, and thus you can send it through a pipe:
 
 ```
@@ -301,6 +303,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | `POST /v1/projects/scenarios` | This endpoint lists the scenarios of a plan. |
 | `GET /v1/info` | This endpoint gives the version of the server, the culture and time zone for its jobs, and its limits. |
 | `GET /v1/openapi` | This endpoint gives the description of this API (OpenAPI 3.1, in YAML). It needs no API key. |
+| `GET /v1/schemas/project` | This endpoint gives the JSON Schema of the project file. It needs no API key. Refer to [The project file](PROJECT-FILE.md). |
 | `GET /health/live` | This endpoint answers 200 when the server listens. |
 | `GET /health/ready` | This endpoint answers 200 after the warm-up of the server, and 503 before it. |
 
@@ -347,7 +350,7 @@ zpp serve --listen https://0.0.0.0:9771 --certificate server.pfx --api-key-file 
 - An address that other computers can connect to needs an API key. The key comes from the file that `--api-key-file` gives, or from `ZPP_API_KEY`. The key never comes from the command line, because other users of the computer can see the command line. Without a key, the server refuses to start.
 - A key has a minimum of 32 characters. The server checks this when it starts. A random 256-bit key in base64 has 44 characters, and `openssl rand -base64 32` makes such a key.
 - Each request to `/v1` must then have the key in the header `Authorization: Bearer <key>`. `curl` can read this header from a file with `-H @key-header.txt`. Thus, the key is not on a command line, where other users of the computer can read it.
-- The health endpoints need no key, and thus a load balancer can ask them. The description of the API also needs no key, because a tool reads it before it has the key.
+- The health endpoints need no key, and thus a load balancer can ask them. The description of the API and the schema of a project file also need no key. A tool reads them before it has the key.
 - An `https` address needs `--certificate`. The value is a `.pfx` or `.p12` file, or a `.pem` or `.crt` file. If a `.pfx` or `.p12` file has a password, put the password in `ZPP_CERTIFICATE_PASSWORD`. If the key of a `.pem` or `.crt` file is in a different file, give that file with `--certificate-key`. The server accepts TLS 1.2 and TLS 1.3, and no older version.
 - Plain `http` that other computers can connect to sends the API key and each plan in clear text. Thus, the server refuses to start with such an address.
 - The option `--behind-tls-proxy` is an exception. It says that a proxy in front of the server ends TLS, and that only the proxy can connect to the address: `zpp serve --listen http://10.0.0.5:9770 --api-key-file /etc/zpp/api-key --behind-tls-proxy`. The server then writes a warning to its log each time it starts.

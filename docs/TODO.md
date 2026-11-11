@@ -16,19 +16,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add the deadline to the job: an option such as `--deadline` (`deadline` in the API). The plan does not keep it, and the compile does not change. The answer gives the shortfall: the finish of the plan minus the deadline, or 0. A simulation also gives the share of the iterations that finish by the deadline, as the target of a simulation does now.
 
-- [ ] **Suggestion: describe the .zpp format for other programs** *(2026-11-11, a suggestion from the design of the zpp skill)*
-
-  A program can write a plan as JSON and send it to `zpp serve`. This operates well, and the plan keeps its ids, which an import does not do. But nobody wrote down the rules of the format. For example, in v0.6.2 the compiler schedules from `MostLikelyDuration` when it has a value, and it ignores `Duration`. A file that `zpp` saves has `MostLikelyDuration` on each activity. Thus, a program that changes only `Duration` changes nothing.
-
-  Other rules are not easy to find. The root of the tree of scenarios is not a node, and a folder has no entry in `Files`. Write a JSON Schema next to `openapi.yaml`, and a short page that gives these rules. Then a program can write a plan with confidence.
-
 - [ ] **Do not save the calculated `Duration` in the next version of the file format** *(2026-11-11)*
 
   The estimates are the input: `MostLikelyDuration`, and `OptimisticDuration` and `PessimisticDuration` when the activity has them. `Duration` is the duration that the compiler schedules. It is (O + 4 × ML + P + 3) / 6, which is ML when the activity has no spread. When you edit `Duration` in the application, it sets ML.
 
-  A plan file keeps `Duration` as well as the estimates. When the file has `MostLikelyDuration`, the load calculates `Duration` again and ignores the value in the file. Thus, a program that changes only `Duration` changes nothing (the suggestion above).
+  A plan file keeps `Duration` as well as the estimates. When the file has `MostLikelyDuration`, the load calculates `Duration` again and ignores the value in the file. Thus, a program that changes only `Duration` changes nothing ([The project file](PROJECT-FILE.md) says so).
 
-  In the next version of the file format, save only the estimates. Read `Duration` from the earlier versions. Use it as the most likely duration when `MostLikelyDuration` has no value, as the load does now. Do this only when the format changes for another reason, because each new version needs a mapper step. Until then, the rules page of the suggestion above tells a program to set `MostLikelyDuration`, or to leave it out and set `Duration`.
+  In the next version of the file format, save only the estimates. Read `Duration` from the earlier versions. Use it as the most likely duration when `MostLikelyDuration` has no value, as the load does now. Do this only when the format changes for another reason, because each new version needs a mapper step. Until then, [The project file](PROJECT-FILE.md) tells a program to set `MostLikelyDuration`, or to leave it out and set `Duration`.
 
 - [ ] **Suggestion: find the decision points of the time–cost–risk curve** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
@@ -36,9 +30,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   From its own fits, `zpp` can calculate these points and give them as data. The data of the scenario chart (`scenarioChart` in the API) already gives the coefficients of each fit with all their digits. Keep at least six significant digits in each coefficient, because a cubic fit is sensitive to rounding.
 
+  On 2026-11-11, the maintainer moved this suggestion to a release after 0.11.0. The method uses fits of its own against the duration. The direct cost is a quadratic, the indirect cost is a line, the total cost is their sum, and the risk is a cubic. Two questions are still open. Which metric of risk does the cubic fit (for example, an option with the activity risk as the default)? Where do the points go (the answer, the console, a CSV file or the chart of the application)?
+
 - [ ] **Suggestion: compare the tracked scenarios with a baseline** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
   A decision meeting compares options with the normal plan. It asks how much shorter, how much more expensive and how much riskier each option is. The scenario chart plots the values, but not the differences. An output can list the tracked scenarios with their metrics and their differences from a baseline scenario that the user marks. The compression of an option is then its difference in duration as a percentage.
+
+  On 2026-11-11, the maintainer moved this suggestion to a release after 0.11.0. A question that is still open: how a client marks the baseline. An option of the request, such as `--baseline <scenario>`, does not change the file format. A mark in the plan needs a new version of the format.
 
 - [ ] **Suggestion: a productivity factor for each resource** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
