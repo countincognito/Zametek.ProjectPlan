@@ -26,6 +26,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ModifiedBetaShape = 6.5,
             ValidIterations = 4990,
             FailedIterations = 10,
+            ResourceSchedulingStallIterations = 4,
+            MaximumTimeValueExceededIterations = 0,
+            InvalidConstraintsIterations = 6,
             PlannedFinishDays = 26,
             PlannedFinishDate = new DateOnly(2024, 1, 27),
             MeanDays = 26.4,
@@ -38,6 +41,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             TargetFinishDays = 30,
             TargetFinishDate = new DateOnly(2024, 1, 31),
             TargetProbability = 0.86,
+            MissedMaximumLatestFinishTimes = [new JobSimulationMissedMaximum(7, @"Design review", 6)],
             Statistics =
             [
                 new SimulationStatisticModel { Name = @"Seed", Value = @"18446744073709551615" },
@@ -217,10 +221,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var simulation = (JObject)all[@"Simulation"]!;
             simulation.Properties().Select(x => x.Name).ShouldBe(
             [
-                @"Iterations", @"ValidIterations", @"FailedIterations", @"Seed", @"Distribution", @"ModifiedBetaShape",
+                @"Iterations", @"ValidIterations", @"FailedIterations", @"ResourceSchedulingStallIterations",
+                @"MaximumTimeValueExceededIterations", @"InvalidConstraintsIterations", @"Seed", @"Distribution", @"ModifiedBetaShape",
                 @"PlannedFinishDays", @"PlannedFinishDate", @"MeanDays", @"StandardDeviationDays",
                 @"EarliestFinishDays", @"EarliestFinishDate", @"LatestFinishDays", @"LatestFinishDate",
-                @"Percentiles", @"TargetFinishDays", @"TargetFinishDate", @"TargetProbability",
+                @"Percentiles", @"TargetFinishDays", @"TargetFinishDate", @"TargetProbability", @"MissedMaximumLatestFinishTimes",
             ]);
 
             // A seed can be larger than every reader reads without loss, and so it is text.
@@ -230,12 +235,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             simulation[@"ModifiedBetaShape"]!.Value<double>().ShouldBe(6.5);
             simulation[@"Iterations"]!.Value<int>().ShouldBe(5000);
             simulation[@"ValidIterations"]!.Value<int>().ShouldBe(4990);
+            simulation[@"FailedIterations"]!.Value<int>().ShouldBe(10);
+            simulation[@"ResourceSchedulingStallIterations"]!.Value<int>().ShouldBe(4);
+            simulation[@"MaximumTimeValueExceededIterations"]!.Value<int>().ShouldBe(0);
+            simulation[@"InvalidConstraintsIterations"]!.Value<int>().ShouldBe(6);
             simulation[@"PlannedFinishDate"]!.Type.ShouldBe(JTokenType.String);
             simulation[@"PlannedFinishDate"]!.Value<string>().ShouldBe(@"2024-01-27");
             simulation[@"MeanDays"]!.Value<double>().ShouldBe(26.4);
             simulation[@"TargetProbability"]!.Value<double>().ShouldBe(0.86);
             ((JArray)simulation[@"Percentiles"]!).Select(x => x[@"Percentile"]!.Value<int>()).ShouldBe([50, 80]);
             ((JArray)simulation[@"Percentiles"]!)[1][@"FinishDate"]!.Value<string>().ShouldBe(@"2024-01-30");
+
+            // Each activity that could not finish by its maximum latest finish time, and in how many iterations.
+            var missed = (JArray)simulation[@"MissedMaximumLatestFinishTimes"]!;
+            missed.Count.ShouldBe(1);
+            ((JObject)missed[0]).Properties().Select(x => x.Name).ShouldBe([@"ActivityId", @"Name", @"Iterations"]);
+            missed[0][@"ActivityId"]!.Value<int>().ShouldBe(7);
+            missed[0][@"Name"]!.Value<string>().ShouldBe(@"Design review");
+            missed[0][@"Iterations"]!.Value<int>().ShouldBe(6);
 
             // The text ends its lines with \n, and so does the text of the metrics without a simulation.
             json.ShouldNotContain('\r');
@@ -252,6 +269,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             simulation[@"EarliestFinishDate"]!.Type.ShouldBe(JTokenType.Null);
             simulation[@"TargetProbability"]!.Type.ShouldBe(JTokenType.Null);
             ((JArray)simulation[@"Percentiles"]!).ShouldBeEmpty();
+            ((JArray)simulation[@"MissedMaximumLatestFinishTimes"]!).ShouldBeEmpty();
         }
 
         [Fact]

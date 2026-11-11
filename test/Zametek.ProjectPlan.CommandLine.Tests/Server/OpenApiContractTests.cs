@@ -590,7 +590,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var console = new ConsoleResponse(0, string.Empty, string.Empty, [transcript]);
             var output = new OutputResponse(JobOutput.Project, @"plan.zpp", @"application/json", [1]);
             var error = new ProblemError { Pointer = @"#/project", Parameter = @"include", Code = @"unreadable", Detail = @"d" };
-            var simulation = new SimulationResponse { Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))] };
+            var simulation = new SimulationResponse
+            {
+                Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))],
+                MissedMaximumLatestFinishTimes = [new SimulationMissedMaximumResponse(2, @"End", 1)],
+            };
             var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
             var jobProgress = new JobProgressResponse(1, 2);
@@ -602,6 +606,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"Simulation")).ShouldBe(Names(simulation, written), ignoreOrder: true);
             Schema(@"Simulation")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(simulation, written), ignoreOrder: true);
             Names(Schema(@"SimulationPercentile")).ShouldBe(Names(simulation.Percentiles[0], written), ignoreOrder: true);
+            Names(Schema(@"SimulationMissedMaximum")).ShouldBe(Names(simulation.MissedMaximumLatestFinishTimes[0], written), ignoreOrder: true);
+            Schema(@"SimulationMissedMaximum")[@"required"]!.AsArray().Select(x => x!.GetValue<string>())
+                .ShouldBe(Names(simulation.MissedMaximumLatestFinishTimes[0], written), ignoreOrder: true);
             Enumerated(Schema(@"Simulation")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Names(Schema(@"ProblemError")).ShouldBe(Names(error, written), ignoreOrder: true);
             Names(Schema(@"Limits")).ShouldBe(Names(limits, written), ignoreOrder: true);

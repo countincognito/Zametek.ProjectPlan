@@ -38,6 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 @"Iteration",
                 @"FinishTime",
                 @"CriticalPaths",
+                @"Failure",
             ];
 
         private static readonly IReadOnlyList<string> s_SettingsColumnTitles =
@@ -55,6 +56,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(SimulationSummaryModel.IterationCount),
                 nameof(SimulationSummaryModel.ValidIterationCount),
                 nameof(SimulationSummaryModel.FailedIterationCount),
+                nameof(SimulationSummaryModel.ResourceSchedulingStallIterationCount),
+                nameof(SimulationSummaryModel.MaximumTimeValueExceededIterationCount),
+                nameof(SimulationSummaryModel.InvalidConstraintsIterationCount),
                 nameof(SimulationSummaryModel.Seed),
                 nameof(SimulationSummaryModel.Distribution),
                 nameof(SimulationSummaryModel.ModifiedBetaShape),
@@ -101,6 +105,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(SimulationActivityCriticalityModel.Name),
                 nameof(SimulationActivityCriticalityModel.CriticalIterationCount),
                 nameof(SimulationActivityCriticalityModel.CriticalityIndex),
+                nameof(SimulationActivityCriticalityModel.MaximumLatestFinishTimeMissCount),
             ];
 
         #region Writing
@@ -156,6 +161,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         summary.IterationCount,
                         summary.ValidIterationCount,
                         summary.FailedIterationCount,
+                        summary.ResourceSchedulingStallIterationCount,
+                        summary.MaximumTimeValueExceededIterationCount,
+                        summary.InvalidConstraintsIterationCount,
                         summary.Seed,
                         summary.Distribution,
                         summary.ModifiedBetaShape,
@@ -205,13 +213,23 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities,
                 s_CriticalityColumnTitles,
-                [.. summary.Activities.Select(x => new object?[] { x.ActivityId, x.Name, x.CriticalIterationCount, x.CriticalityIndex })]);
+                [
+                    .. summary.Activities.Select(x => new object?[]
+                    {
+                        x.ActivityId,
+                        x.Name,
+                        x.CriticalIterationCount,
+                        x.CriticalityIndex,
+                        x.MaximumLatestFinishTimeMissCount,
+                    }),
+                ]);
         }
 
         /// <summary>
         /// Writes the sheet of the iterations of a run: for each iteration, its number, its finish time (a cell with no value when
-        /// the iteration failed) and its critical paths, as the CSV file of the iterations has them. A project does not hold the
-        /// iterations, and so a workbook that is made of a saved result has no such sheet.
+        /// the iteration failed), its critical paths, and why it failed (when it failed and the run recorded the reason), as the
+        /// CSV file of the iterations has them. A project does not hold the iterations, and so a workbook that is made of a saved
+        /// result has no such sheet.
         /// </summary>
         /// <remarks>
         /// A sheet of Excel has <see cref="MaximumRows"/> rows, and so a run of more iterations than that has no sheet (a run has up to
@@ -258,6 +276,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     sheet.Blank(row, 1);
                     sheet.Blank(row, 2);
+
+                    if (result.HasFailureReasons)
+                    {
+                        sheet.Text(row, 3, result.FailureReason(i).ToString());
+                    }
+                    else
+                    {
+                        sheet.Blank(row, 3);
+                    }
+
                     continue;
                 }
 
@@ -271,6 +299,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     sheet.Blank(row, 2);
                 }
+
+                sheet.Blank(row, 3);
             }
         }
 
@@ -428,6 +458,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 IterationCount = row.Int(nameof(SimulationSummaryModel.IterationCount)) ?? summary.IterationCount,
                 ValidIterationCount = row.Int(nameof(SimulationSummaryModel.ValidIterationCount)) ?? summary.ValidIterationCount,
                 FailedIterationCount = row.Int(nameof(SimulationSummaryModel.FailedIterationCount)) ?? summary.FailedIterationCount,
+
+                // A workbook that was made before the result had the reasons of the failures has no columns for them: zero.
+                ResourceSchedulingStallIterationCount = row.Int(nameof(SimulationSummaryModel.ResourceSchedulingStallIterationCount)) ?? 0,
+                MaximumTimeValueExceededIterationCount = row.Int(nameof(SimulationSummaryModel.MaximumTimeValueExceededIterationCount)) ?? 0,
+                InvalidConstraintsIterationCount = row.Int(nameof(SimulationSummaryModel.InvalidConstraintsIterationCount)) ?? 0,
                 PlannedFinishTime = row.Int(nameof(SimulationSummaryModel.PlannedFinishTime)) ?? summary.PlannedFinishTime,
                 TargetFinishTime = row.Int(nameof(SimulationSummaryModel.TargetFinishTime)),
                 TargetProbability = row.Double(nameof(SimulationSummaryModel.TargetProbability)),
@@ -482,6 +517,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = x.Text(nameof(SimulationActivityCriticalityModel.Name)) ?? string.Empty,
                         CriticalIterationCount = x.Int(nameof(SimulationActivityCriticalityModel.CriticalIterationCount)) ?? 0,
                         CriticalityIndex = x.Double(nameof(SimulationActivityCriticalityModel.CriticalityIndex)) ?? 0.0,
+                        MaximumLatestFinishTimeMissCount = x.Int(nameof(SimulationActivityCriticalityModel.MaximumLatestFinishTimeMissCount)) ?? 0,
                     }),
                 ],
             };

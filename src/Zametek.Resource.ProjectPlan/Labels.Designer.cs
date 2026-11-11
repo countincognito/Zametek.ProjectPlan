@@ -1925,6 +1925,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed: resource scheduling.
+        /// </summary>
+        public static string Label_SimulationFailedResourceScheduling {
+            get {
+                return ResourceManager.GetString("Label_SimulationFailedResourceScheduling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed: time limit.
+        /// </summary>
+        public static string Label_SimulationFailedTimeLimit {
+            get {
+                return ResourceManager.GetString("Label_SimulationFailedTimeLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Iterations (valid).
         /// </summary>
         public static string Label_SimulationIterationCount {
@@ -1966,6 +1984,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SimulationMean {
             get {
                 return ResourceManager.GetString("Label_SimulationMean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missed maximum LFT.
+        /// </summary>
+        public static string Label_SimulationMissedMaximumLatestFinishTime {
+            get {
+                return ResourceManager.GetString("Label_SimulationMissedMaximumLatestFinishTime", resourceCulture);
             }
         }
         

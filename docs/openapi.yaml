@@ -834,6 +834,9 @@ components:
           iterations: 5000
           validIterations: 5000
           failedIterations: 0
+          resourceSchedulingStallIterations: 0
+          maximumTimeValueExceededIterations: 0
+          invalidConstraintsIterations: 0
           seed: '1'
           distribution: betaPert
           modifiedBetaShape: null
@@ -858,6 +861,7 @@ components:
           targetFinishDays: 30
           targetFinishDate: '2024-01-31'
           targetProbability: 0.86
+          missedMaximumLatestFinishTimes: []
         outputs:
           - kind: simulationStatistics
             fileName: two-scenarios-simulation-statistics.csv
@@ -1385,14 +1389,19 @@ components:
         What the simulation found. It is in the answer when the request runs the simulation, or the project holds a result. Like the
         metrics, the names are words in
         `lowerCamelCase`, and the values are numbers and not the text that `zpp` prints. Every time is in days from the start of the
-        project, with the date on which it falls in the working calendar of the project. An iteration that the scheduler cannot
-        place every activity in is a failed iteration, and it is in none of the statistics. A simulation in which every iteration
+        project, with the date on which it falls in the working calendar of the project. An iteration fails when the resource
+        scheduler cannot place every activity, when the schedule goes past the limit of time, or when an activity cannot finish
+        by its maximum latest finish time. A failed iteration is in none of the statistics. An iteration that misses a maximum
+        latest finish time is a late one. Thus, when such iterations fail, the statistics are too early. A simulation in which every iteration
         fails has no statistics, and thus `null` values for them.
       type: object
       required:
         - iterations
         - validIterations
         - failedIterations
+        - resourceSchedulingStallIterations
+        - maximumTimeValueExceededIterations
+        - invalidConstraintsIterations
         - seed
         - distribution
         - modifiedBetaShape
@@ -1408,6 +1417,7 @@ components:
         - targetFinishDays
         - targetFinishDate
         - targetProbability
+        - missedMaximumLatestFinishTimes
       properties:
         iterations:
           type: integer
@@ -1417,6 +1427,16 @@ components:
           description: The number of iterations that gave a finish. Each statistic uses these.
         failedIterations:
           type: integer
+          description: The number of iterations that failed. The three counts that follow say why.
+        resourceSchedulingStallIterations:
+          type: integer
+          description: The failed iterations in which the resource scheduler could not place every activity.
+        maximumTimeValueExceededIterations:
+          type: integer
+          description: The failed iterations in which the schedule went past the limit of time.
+        invalidConstraintsIterations:
+          type: integer
+          description: The failed iterations in which an activity could not finish by its maximum latest finish time.
         seed:
           type: string
           pattern: '^[0-9]{1,20}$'
@@ -1464,6 +1484,23 @@ components:
           minimum: 0
           maximum: 1
           description: The share of the valid iterations that finish by the target, from 0 to 1.
+        missedMaximumLatestFinishTimes:
+          type: array
+          description: Each activity that could not finish by its maximum latest finish time in an iteration, the most misses first. The array is empty when no activity missed its maximum.
+          items:
+            $ref: '#/components/schemas/SimulationMissedMaximum'
+    SimulationMissedMaximum:
+      type: object
+      required: [activityId, name, iterations]
+      properties:
+        activityId:
+          type: integer
+        name:
+          type: string
+        iterations:
+          type: integer
+          minimum: 1
+          description: The number of iterations in which the activity could not finish by its maximum latest finish time. Each of them failed.
     SimulationPercentile:
       type: object
       required: [percentile, finishDays, finishDate]

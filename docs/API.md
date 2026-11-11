@@ -233,6 +233,9 @@ The answer has `simulation` when the request ran the simulation, or the project 
   "iterations": 5000,
   "validIterations": 5000,
   "failedIterations": 0,
+  "resourceSchedulingStallIterations": 0,
+  "maximumTimeValueExceededIterations": 0,
+  "invalidConstraintsIterations": 0,
   "seed": "1",
   "distribution": "betaPert",
   "modifiedBetaShape": null,
@@ -250,11 +253,14 @@ The answer has `simulation` when the request ran the simulation, or the project 
   ],
   "targetFinishDays": 30,
   "targetFinishDate": "2024-01-31",
-  "targetProbability": 0.86
+  "targetProbability": 0.86,
+  "missedMaximumLatestFinishTimes": []
 }
 ```
 
-- `iterations` is the number that the simulation ran. An iteration fails when the scheduler cannot place each activity. `failedIterations` counts these, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
+- `iterations` is the number that the simulation ran. `failedIterations` counts the iterations that fail, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
+- An iteration fails for one of three reasons, and each reason has a count. `resourceSchedulingStallIterations` counts the iterations in which the resource scheduler cannot place each activity. `maximumTimeValueExceededIterations` counts the iterations in which the schedule goes past the limit of time. `invalidConstraintsIterations` counts the iterations in which an activity cannot finish by its maximum latest finish time. An iteration that misses a maximum latest finish time is a late one. Thus, when such iterations fail, the statistics are too early.
+- `missedMaximumLatestFinishTimes` lists each activity that cannot finish by its maximum latest finish time in an iteration. An item has the `activityId` and the `name` of the activity, and `iterations`, the number of iterations in which it cannot finish in time. The activity with the most comes first. The list is `[]` when no activity misses its maximum.
 - `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`. A project keeps these values with its result. They stay the same for a result that a project saved before a person changed its settings.
 - `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
 - `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.

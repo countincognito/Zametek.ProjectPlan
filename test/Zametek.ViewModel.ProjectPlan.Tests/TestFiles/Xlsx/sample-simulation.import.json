@@ -3014,6 +3014,9 @@
     "ModifiedBetaShape": 3.25,
     "ValidIterationCount": 1200,
     "FailedIterationCount": 34,
+    "ResourceSchedulingStallIterationCount": 0,
+    "MaximumTimeValueExceededIterationCount": 0,
+    "InvalidConstraintsIterationCount": 0,
     "PlannedFinishTime": 60,
     "TargetFinishTime": 77,
     "TargetProbability": 0.875,
@@ -3083,13 +3086,15 @@
         "ActivityId": 1,
         "Name": "Design",
         "CriticalIterationCount": 1200,
-        "CriticalityIndex": 1.0
+        "CriticalityIndex": 1.0,
+        "MaximumLatestFinishTimeMissCount": 0
       },
       {
         "ActivityId": 3,
         "Name": "Build, with a comma",
         "CriticalIterationCount": 700,
-        "CriticalityIndex": 0.5833
+        "CriticalityIndex": 0.5833,
+        "MaximumLatestFinishTimeMissCount": 0
       }
     ],
     "HasResult": true

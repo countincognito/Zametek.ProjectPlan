@@ -50,9 +50,35 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 [0, 1, 0, 0, 1, 1],
                 [true, true, true, true, true, true]);
 
-        private static (byte[] Workbook, SimulationSummaryModel Summary, SimulationResult<int> Result) Make(bool withIterations = true, DateTimeOffset? now = null)
+        // The same six iterations, from a run that recorded why the third failed: C could not finish by its maximum latest finish time.
+        private static SimulationResult<int> ResultWithTheReasons() =>
+            new(
+                [10, 20, 30],
+                [10, 11, SimulationResult<int>.FailedFinishTime, 12, 12, 11],
+                null,
+                [
+                    new CriticalPath<int>([new CriticalPathStep<int>(10, CriticalPathLink.None), new CriticalPathStep<int>(20, CriticalPathLink.Dependency)]),
+                    new CriticalPath<int>([new CriticalPathStep<int>(10, CriticalPathLink.None), new CriticalPathStep<int>(30, CriticalPathLink.Resource)]),
+                ],
+                [0, 1, 2, 2, 3, 5, 6],
+                [0, 1, 0, 0, 1, 1],
+                [true, true, true, true, true, true],
+                [
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.InvalidConstraints,
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.None,
+                ],
+                [0, 0, 1]);
+
+        private static (byte[] Workbook, SimulationSummaryModel Summary, SimulationResult<int> Result) Make(
+            bool withIterations = true,
+            DateTimeOffset? now = null,
+            bool withTheReasons = false)
         {
-            SimulationResult<int> result = Result();
+            SimulationResult<int> result = withTheReasons ? ResultWithTheReasons() : Result();
             SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 11, 11, s_RunSettings);
             using var stream = new MemoryStream();
             SimulationWorkbook.Write(stream, s_Settings, summary, withIterations ? result : null, s_Names, now ?? s_Now);
@@ -93,7 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             XlsxSheet sheet = XlsxPackageReader.Read(Make().Workbook).Sheet("Simulation Iterations")!;
 
-            sheet.Header().ShouldBe(["Iteration", "FinishTime", "CriticalPaths"]);
+            sheet.Header().ShouldBe(["Iteration", "FinishTime", "CriticalPaths", "Failure"]);
             sheet.LastRow.ShouldBe(7);
 
             sheet.Cell("A2")!.Kind.ShouldBe(XlsxCellKind.Number);
@@ -115,12 +141,31 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             sheet.Cell("A4")!.Number.ShouldBe(3.0);
             IsBlank(sheet.Cell("B4")).ShouldBeTrue();
             IsBlank(sheet.Cell("C4")).ShouldBeTrue();
+
+            // The run did not record why the iteration failed.
+            IsBlank(sheet.Cell("D4")).ShouldBeTrue();
         }
 
         [Fact]
-        public void Write_Given_TheIterations_Then_EachRowSaysWhatTheCsvFileSays()
+        public void Write_Given_AnIterationThatFailedAndItsReason_Then_ItsRowSaysWhyItFailed()
         {
-            (byte[] workbook, _, SimulationResult<int> result) = Make();
+            XlsxSheet sheet = XlsxPackageReader.Read(Make(withTheReasons: true).Workbook).Sheet("Simulation Iterations")!;
+
+            sheet.Cell("A4")!.Number.ShouldBe(3.0);
+            IsBlank(sheet.Cell("B4")).ShouldBeTrue();
+            IsBlank(sheet.Cell("C4")).ShouldBeTrue();
+            sheet.Cell("D4")!.Text.ShouldBe(nameof(SimulationIterationFailure.InvalidConstraints));
+
+            // A valid iteration has no reason.
+            IsBlank(sheet.Cell("D2")).ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Write_Given_TheIterations_Then_EachRowSaysWhatTheCsvFileSays(bool withTheReasons)
+        {
+            (byte[] workbook, _, SimulationResult<int> result) = Make(withTheReasons: withTheReasons);
             using var writer = new StringWriter();
             SimulationCsvWriter.WriteIterations(writer, result, s_Names);
             string[] lines = writer.ToString().TrimEnd('\n').Split('\n');
@@ -144,6 +189,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 }
 
                 (sheet.Cell(row, 3)?.Text ?? string.Empty).ShouldBe(fields[2]);
+                (sheet.Cell(row, 4)?.Text ?? string.Empty).ShouldBe(fields[3]);
             }
         }
 
@@ -181,10 +227,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // The settings of the scenario were changed after the run, and the result says which values made it.
             XlsxSheet sheet = XlsxPackageReader.Read(Make().Workbook).Sheet("Simulation Statistics")!;
 
-            sheet.Header().Skip(3).Take(3).ShouldBe(["Seed", "Distribution", "ModifiedBetaShape"]);
-            sheet.Cell("D2")!.Text.ShouldBe("7");
-            sheet.Cell("E2")!.Text.ShouldBe(nameof(DurationDistribution.Triangular));
-            IsBlank(sheet.Cell("F2")).ShouldBeTrue();
+            sheet.Header().Skip(6).Take(3).ShouldBe(["Seed", "Distribution", "ModifiedBetaShape"]);
+            sheet.Cell("G2")!.Text.ShouldBe("7");
+            sheet.Cell("H2")!.Text.ShouldBe(nameof(DurationDistribution.Triangular));
+            IsBlank(sheet.Cell("I2")).ShouldBeTrue();
         }
 
         [Fact]

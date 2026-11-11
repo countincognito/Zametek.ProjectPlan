@@ -685,24 +685,28 @@ When the loop stops, the answer is in `mobile-app.json`. Its member `simulation`
 ```
 
 ```text
-iterations            : 10000
-validIterations       : 10000
-failedIterations      : 0
-seed                  : 1
-distribution          : betaPert
-modifiedBetaShape     :
-plannedFinishDays     : 150
-plannedFinishDate     : 2027-08-02
-meanDays              : 153.6471
-standardDeviationDays : 3.9877263684961615
-earliestFinishDays    : 139
-earliestFinishDate    : 2027-07-16
-latestFinishDays      : 170
-latestFinishDate      : 2027-08-30
-percentiles           : {@{percentile=5; finishDays=147; finishDate=2027-07-28}, @{percentile=10; finishDays=149; finishDate=2027-07-30}, ...}
-targetFinishDays      : 155
-targetFinishDate      : 2027-08-09
-targetProbability     : 0.6863
+iterations                         : 10000
+validIterations                    : 10000
+failedIterations                   : 0
+resourceSchedulingStallIterations  : 0
+maximumTimeValueExceededIterations : 0
+invalidConstraintsIterations       : 0
+seed                               : 1
+distribution                       : betaPert
+modifiedBetaShape                  :
+plannedFinishDays                  : 150
+plannedFinishDate                  : 2027-08-02
+meanDays                           : 153.6471
+standardDeviationDays              : 3.9877263684961615
+earliestFinishDays                 : 139
+earliestFinishDate                 : 2027-07-16
+latestFinishDays                   : 170
+latestFinishDate                   : 2027-08-30
+percentiles                        : {@{percentile=5; finishDays=147; finishDate=2027-07-28}, @{percentile=10; finishDays=149; finishDate=2027-07-30}, ...}
+targetFinishDays                   : 155
+targetFinishDate                   : 2027-08-09
+targetProbability                  : 0.6863
+missedMaximumLatestFinishTimes     : {}
 ```
 
 These are the statistics that `zpp` prints for this plan in [Simulations on the server](#simulations-on-the-server), as values and not as text. This server has the default time limit for a job, 2 minutes. On a computer with fewer processors, the simulation can take more time. Then the answer is the problem `job-timeout`. Start the server again with `--job-timeout 600`, and send the plan again.

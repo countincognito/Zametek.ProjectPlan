@@ -285,6 +285,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 simulation.Iterations,
                 simulation.ValidIterations,
                 simulation.FailedIterations,
+                simulation.ResourceSchedulingStallIterations,
+                simulation.MaximumTimeValueExceededIterations,
+                simulation.InvalidConstraintsIterations,
                 Seed = simulation.Seed.ToString(CultureInfo.InvariantCulture),
                 Distribution = simulation.Distribution.ToString(),
                 simulation.ModifiedBetaShape,
@@ -300,6 +303,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 simulation.TargetFinishDays,
                 TargetFinishDate = Date(simulation.TargetFinishDate),
                 simulation.TargetProbability,
+                MissedMaximumLatestFinishTimes = simulation.MissedMaximumLatestFinishTimes.Select(x => new { x.ActivityId, x.Name, x.Iterations }).ToArray(),
             };
         }
 

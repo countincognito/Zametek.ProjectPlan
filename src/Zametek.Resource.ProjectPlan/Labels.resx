@@ -399,6 +399,12 @@
   <data name="Label_SimulationFailedIterations" xml:space="preserve">
     <value>Failed iterations</value>
   </data>
+  <data name="Label_SimulationFailedResourceScheduling" xml:space="preserve">
+    <value>Failed: resource scheduling</value>
+  </data>
+  <data name="Label_SimulationFailedTimeLimit" xml:space="preserve">
+    <value>Failed: time limit</value>
+  </data>
   <data name="Label_SimulationIterationCount" xml:space="preserve">
     <value>Iterations (valid)</value>
   </data>
@@ -413,6 +419,9 @@
   </data>
   <data name="Label_SimulationMean" xml:space="preserve">
     <value>Mean</value>
+  </data>
+  <data name="Label_SimulationMissedMaximumLatestFinishTime" xml:space="preserve">
+    <value>Missed maximum LFT</value>
   </data>
   <data name="Label_SimulationNoResult" xml:space="preserve">
     <value>No simulation has run yet.</value>
