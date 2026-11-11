@@ -56,7 +56,7 @@ jobs:
           "$RUNNER_TEMP/oasdiff" breaking --fail-on ERR "$base" docs/openapi.yaml
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           # Pinned rather than '10.x', so that a new SDK's analyzers cannot fail the format checks below without a
           # change to the code. Bump it deliberately, and in release.yml too.
