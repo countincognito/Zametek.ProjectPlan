@@ -189,6 +189,59 @@ namespace Zametek.ViewModel.ProjectPlan
             return (costsModel, billingsModel, marginsModel, effortsModel, resourceMetricsModels);
         }
 
+        // The headcount of a day is the number of resources that are allocated on it (their resource allocation). The days
+        // are those of the longest series, and a shorter series has nobody on the days after its end. A plan that did not
+        // compile, or that has no days, has no headcount.
+        public HeadcountModel BuildHeadcountMetrics(
+            ResourceSeriesSetModel resourceSeriesSet,
+            bool hasCompilationErrors)
+        {
+            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
+
+            if (hasCompilationErrors)
+            {
+                return new HeadcountModel();
+            }
+
+            List<ResourceSeriesModel> series = resourceSeriesSet.Combined;
+            int days = series.Select(static x => x.ResourceSchedule.ResourceAllocation.Count).DefaultIfEmpty().Max();
+
+            if (days == 0)
+            {
+                return new HeadcountModel();
+            }
+
+            int peak = 0;
+            long total = 0;
+
+            for (int day = 0; day < days; day++)
+            {
+                int headcount = 0;
+
+                foreach (ResourceSeriesModel resourceSeries in series)
+                {
+                    List<bool> allocation = resourceSeries.ResourceSchedule.ResourceAllocation;
+
+                    if (day < allocation.Count && allocation[day])
+                    {
+                        headcount++;
+                    }
+                }
+
+                peak = Math.Max(peak, headcount);
+                total += headcount;
+            }
+
+            double average = (double)total / days;
+
+            return new HeadcountModel
+            {
+                Peak = peak,
+                Average = average,
+                PeakToAverageRatio = average > 0.0 ? peak / average : null,
+            };
+        }
+
         #endregion
     }
 }

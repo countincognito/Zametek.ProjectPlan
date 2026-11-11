@@ -19,7 +19,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
 
         public v0_6_0.HolidaySettingsModel HolidaySettings { get; init; } = new();
 
-        public v0_5_0.MetricsModel Metrics { get; init; } = new();
+        public MetricsModel Metrics { get; init; } = new();
 
         public List<v0_6_1.ResourceMetricsModel> ResourceMetrics { get; init; } = [];
 

@@ -723,6 +723,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -762,6 +765,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -809,6 +815,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -1054,6 +1063,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -1352,6 +1364,9 @@ components:
         - projectFinishDays
         - projectFinishDate
         - effortEfficiency
+        - peakHeadcount
+        - averageHeadcount
+        - peakToAverageHeadcount
         - activityEffort
         - directEffort
         - indirectEffort
@@ -1394,6 +1409,15 @@ components:
           format: date
           description: The date on which the project finishes, in the working calendar of the project. `null` when the project has no duration.
         effortEfficiency: { type: [number, 'null'] }
+        peakHeadcount:
+          type: [integer, 'null']
+          description: The most resources that the schedule allocates on one day. `null` when the project did not compile or has no days.
+        averageHeadcount:
+          type: [number, 'null']
+          description: The mean of the number of resources that the schedule allocates on each day.
+        peakToAverageHeadcount:
+          type: [number, 'null']
+          description: The peak headcount divided by the average headcount. `null` when the average is 0.
         activityEffort: { type: [number, 'null'] }
         directEffort: { type: [number, 'null'] }
         indirectEffort: { type: [number, 'null'] }

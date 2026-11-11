@@ -863,6 +863,12 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 tail.FinancialMetricsBuilt();
                 return metrics.BuildFinancialMetrics(resourceSeriesSet, hasCompilationErrors);
             }
+
+            // Built with the financial metrics, from the same resource series, and so not counted on its own.
+            public HeadcountModel BuildHeadcountMetrics(
+                ResourceSeriesSetModel resourceSeriesSet,
+                bool hasCompilationErrors) =>
+                metrics.BuildHeadcountMetrics(resourceSeriesSet, hasCompilationErrors);
         }
 
         // The output manager as the job sees it, which cancels the job when the job builds the compilation output: the

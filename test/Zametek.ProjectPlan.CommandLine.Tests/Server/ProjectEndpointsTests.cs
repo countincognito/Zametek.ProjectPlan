@@ -28,6 +28,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             @"activityRisk", @"activityRiskWithStandardDeviationCorrection", @"criticalityRisk", @"fibonacciRisk",
             @"geometricActivityRisk", @"geometricCriticalityRisk", @"geometricFibonacciRisk", @"networkCyclomaticComplexity",
             @"networkDuration", @"networkDurationManMonths", @"projectFinishDays", @"projectFinishDate", @"effortEfficiency",
+            @"peakHeadcount", @"averageHeadcount", @"peakToAverageHeadcount",
             @"activityEffort", @"directEffort", @"indirectEffort", @"otherEffort", @"totalEffort", @"directCost",
             @"indirectCost", @"otherCost", @"totalCost", @"directBilling", @"indirectBilling", @"otherBilling",
             @"totalBilling", @"directMargin", @"indirectMargin", @"otherMargin", @"totalMargin", @"directMarginAbsolute",

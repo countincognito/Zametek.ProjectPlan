@@ -151,11 +151,33 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             XlsxBook book = await ExportAsync(showDates: false);
 
             // The allocations of the resources to the activities, and the efforts, are truth values: a resource is at work or it is not. The costs are numbers.
+            // The last column is the total of each day, a number.
             XlsxSheet activity = Sheet(book, Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartActivity);
+            XlsxSheet cost = Sheet(book, Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCost);
+            XlsxSheet effort = Sheet(book, Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartEffort);
             activity.Header()[0].ShouldBe(Resource.ProjectPlan.Reporting.Reporting_Time);
-            activity.Cells.Where(x => x.Row > 1 && x.Column > 1).ShouldAllBe(x => x.Kind == XlsxCellKind.Boolean);
-            Sheet(book, Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCost).Cells.Where(x => x.Row > 1 && x.Column > 1).ShouldAllBe(x => x.Kind == XlsxCellKind.Number);
-            Sheet(book, Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartEffort).Cells.Where(x => x.Row > 1 && x.Column > 1).ShouldAllBe(x => x.Kind == XlsxCellKind.Boolean);
+            activity.Cells.Where(x => x.Row > 1 && x.Column > 1 && x.Column < activity.LastColumn).ShouldAllBe(x => x.Kind == XlsxCellKind.Boolean);
+            cost.Cells.Where(x => x.Row > 1 && x.Column > 1).ShouldAllBe(x => x.Kind == XlsxCellKind.Number);
+            effort.Cells.Where(x => x.Row > 1 && x.Column > 1 && x.Column < effort.LastColumn).ShouldAllBe(x => x.Kind == XlsxCellKind.Boolean);
+
+            foreach (XlsxSheet sheet in new[] { activity, cost, effort })
+            {
+                sheet.Header()[^1].ShouldBe(Resource.ProjectPlan.Reporting.Reporting_Total, sheet.Name);
+
+                // The total of a day is the number of resources that are at work on it, or the cost of the day.
+                for (int row = 2; row <= sheet.LastRow; row++)
+                {
+                    double expected = sheet.Cells
+                        .Where(x => x.Row == row && x.Column > 1 && x.Column < sheet.LastColumn)
+                        .Sum(x => x.Kind == XlsxCellKind.Boolean ? (x.Boolean ? 1.0 : 0.0) : x.Number);
+                    XlsxCell total = sheet.Cell(row, sheet.LastColumn)!;
+                    total.Kind.ShouldBe(XlsxCellKind.Number, sheet.Name);
+                    total.Number.ShouldBe(expected, 1e-9, sheet.Name);
+                }
+            }
+
+            // On some day, more than one resource is at work.
+            activity.Cells.Where(x => x.Row > 1 && x.Column == activity.LastColumn).Max(x => x.Number).ShouldBeGreaterThan(1.0);
 
             // The time runs down the first column from 0, a day to a row, in the look of a title.
             activity.Cells.Where(x => x.Row > 1 && x.Column == 1).Select(x => x.Number).ShouldBe(Enumerable.Range(0, activity.LastRow - 1).Select(x => (double)x));

@@ -37,5 +37,8 @@
         NetworkCyclomaticComplexity,
         NetworkDuration,
         NetworkDurationManMonths,
+        HeadcountPeak,
+        HeadcountAverage,
+        HeadcountPeakToAverageRatio,
     }
 }

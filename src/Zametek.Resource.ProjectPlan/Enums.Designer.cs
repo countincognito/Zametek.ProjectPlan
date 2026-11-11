@@ -565,6 +565,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average Headcount.
+        /// </summary>
+        public static string Enum_TrackedMetric_HeadcountAverage {
+            get {
+                return ResourceManager.GetString("Enum_TrackedMetric_HeadcountAverage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Headcount.
+        /// </summary>
+        public static string Enum_TrackedMetric_HeadcountPeak {
+            get {
+                return ResourceManager.GetString("Enum_TrackedMetric_HeadcountPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak to Average Headcount.
+        /// </summary>
+        public static string Enum_TrackedMetric_HeadcountPeakToAverageRatio {
+            get {
+                return ResourceManager.GetString("Enum_TrackedMetric_HeadcountPeakToAverageRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Direct Margin.
         /// </summary>
         public static string Enum_TrackedMetric_MarginsDirect {

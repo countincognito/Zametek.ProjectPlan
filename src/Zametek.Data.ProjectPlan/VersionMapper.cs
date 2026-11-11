@@ -671,7 +671,10 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_5_0.ProjectModel FromV0_4_4ToV0_5_0(v0_4_4.ProjectModel src);
         public partial v0_4_4.ProjectModel FromV0_5_0ToV0_4_4(v0_5_0.ProjectModel src);
 
+        // The headcount is new in v0.6.2, and the metrics of v0.5.0 have none.
+        [MapperIgnoreSource(nameof(MetricsModel.Headcount))]
         public partial v0_5_0.MetricsModel FromCurrentToV0_5_0(MetricsModel src);
+        [MapperIgnoreTarget(nameof(MetricsModel.Headcount))]
         public partial MetricsModel FromV0_5_0ToCurrent(v0_5_0.MetricsModel src);
 
         public partial v0_5_0.RisksModel FromCurrentToV0_5_0(RisksModel src);
@@ -929,6 +932,17 @@ namespace Zametek.Data.ProjectPlan
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioFileModel FromV0_6_2ToCurrent(v0_6_2.ProjectScenarioFileModel src);
 
+        // The metrics of v0.6.2 are those of v0.5.0 and the headcount.
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.MetricsModel FromCurrentToV0_6_2(MetricsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial MetricsModel FromV0_6_2ToCurrent(v0_6_2.MetricsModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.HeadcountModel FromCurrentToV0_6_2(HeadcountModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial HeadcountModel FromV0_6_2ToCurrent(v0_6_2.HeadcountModel src);
+
         // Upgrading from v0.6.1: the estimates are new in v0.6.2, so they are intentionally left
         // null, and an activity follows its Duration. Going the other way drops them, and the
         // Duration that stays is the one the compiler scheduled. The scenario gains the settings of the
@@ -944,5 +958,12 @@ namespace Zametek.Data.ProjectPlan
 
         public partial v0_6_2.ProjectScenarioFileModel FromV0_6_1ToV0_6_2(v0_6_1.ProjectScenarioFileModel src);
         public partial v0_6_1.ProjectScenarioFileModel FromV0_6_2ToV0_6_1(v0_6_2.ProjectScenarioFileModel src);
+
+        // The metrics of v0.6.1 are those of v0.5.0. An upgrade leaves the headcount empty, and the first compile works it
+        // out. Going the other way drops it.
+        [MapperIgnoreTarget(nameof(v0_6_2.MetricsModel.Headcount))]
+        public partial v0_6_2.MetricsModel FromV0_5_0ToV0_6_2(v0_5_0.MetricsModel src);
+        [MapperIgnoreSource(nameof(v0_6_2.MetricsModel.Headcount))]
+        public partial v0_5_0.MetricsModel FromV0_6_2ToV0_5_0(v0_6_2.MetricsModel src);
     }
 }

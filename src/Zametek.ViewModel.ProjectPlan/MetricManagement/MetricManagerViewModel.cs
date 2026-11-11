@@ -243,6 +243,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.NetworkMetrics, network => network.DurationManMonths)
                 .ToProperty(this, mm => mm.NetworkDurationManMonths);
 
+            m_PeakHeadcount = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Headcount.Peak)
+                .ToProperty(this, mm => mm.PeakHeadcount);
+
+            m_AverageHeadcount = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Headcount.Average)
+                .ToProperty(this, mm => mm.AverageHeadcount);
+
+            m_PeakToAverageHeadcount = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Headcount.PeakToAverageRatio)
+                .ToProperty(this, mm => mm.PeakToAverageHeadcount);
+
             m_ProjectFinish = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinish)
                 .ToProperty(this, mm => mm.ProjectFinish);
@@ -335,6 +347,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<double?> m_NetworkDurationManMonths;
         public double? NetworkDurationManMonths => m_NetworkDurationManMonths.Value;
+
+        private readonly ObservableAsPropertyHelper<int?> m_PeakHeadcount;
+        public int? PeakHeadcount => m_PeakHeadcount.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_AverageHeadcount;
+        public double? AverageHeadcount => m_AverageHeadcount.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_PeakToAverageHeadcount;
+        public double? PeakToAverageHeadcount => m_PeakToAverageHeadcount.Value;
 
         private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
         public string ProjectFinish => m_ProjectFinish.Value;
@@ -470,6 +491,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_NetworkCyclomaticComplexity?.Dispose();
                 m_NetworkDuration?.Dispose();
                 m_NetworkDurationManMonths?.Dispose();
+                m_PeakHeadcount?.Dispose();
+                m_AverageHeadcount?.Dispose();
+                m_PeakToAverageHeadcount?.Dispose();
                 m_ProjectFinish?.Dispose();
                 m_ProjectFinishDays?.Dispose();
                 m_ProjectFinishDate?.Dispose();

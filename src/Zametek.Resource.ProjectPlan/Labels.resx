@@ -519,6 +519,12 @@
   <data name="Label_OtherCost" xml:space="preserve">
     <value>Other Cost</value>
   </data>
+  <data name="Label_PeakHeadcount" xml:space="preserve">
+    <value>Peak headcount</value>
+  </data>
+  <data name="Label_PeakToAverageHeadcount" xml:space="preserve">
+    <value>Peak to average headcount</value>
+  </data>
   <data name="Label_PercentageAxisTitle" xml:space="preserve">
     <value>Percentage (%)</value>
   </data>
@@ -794,6 +800,9 @@
   </data>
   <data name="Label_SelectManagedScenario" xml:space="preserve">
     <value>Select</value>
+  </data>
+  <data name="Label_AverageHeadcount" xml:space="preserve">
+    <value>Average headcount</value>
   </data>
   <data name="Label_BaseNode" xml:space="preserve">
     <value>Base</value>

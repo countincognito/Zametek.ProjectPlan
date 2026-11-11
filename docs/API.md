@@ -218,6 +218,9 @@ The answer has each metric of the project, as a number or `null`. The names are 
 | `projectFinishDays` | The number of days from the start of the project to its finish. This is the duration of the network. |
 | `projectFinishDate` | The date on which the project finishes, in the working calendar of the project, as a date (`2024-01-06`). The value is `null`, with `projectFinishDays`, when the project has no duration. |
 | `effortEfficiency` | The efficiency of the effort. |
+| `peakHeadcount` | The most resources that the schedule allocates on one day. |
+| `averageHeadcount` | The mean of the number of resources that the schedule allocates on each day. |
+| `peakToAverageHeadcount` | The peak headcount divided by the average headcount. A high value is a team that grows fast for a short time. |
 | `activityEffort`, `directEffort`, `indirectEffort`, `otherEffort`, `totalEffort` | The effort. |
 | `directCost`, `indirectCost`, `otherCost`, `totalCost` | The costs. |
 | `directBilling`, `indirectBilling`, `otherBilling`, `totalBilling` | The billings. |

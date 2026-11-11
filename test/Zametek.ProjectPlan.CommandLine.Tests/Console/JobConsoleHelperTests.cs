@@ -257,7 +257,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // Nothing follows the table: no other table, and no count of its rows, which the table library adds by default.
             text.ShouldNotContain(NewLineHelper.NewLine + NewLineHelper.NewLine);
-            text.ShouldNotContain(@"Count");
+            text.ShouldNotContain(@"Count: ");
         }
 
         [Theory]

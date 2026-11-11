@@ -204,6 +204,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 (Resource.ProjectPlan.Labels.Label_ProjectFinish, Value(x => $@"{x.ProjectFinish}")),
                 (Resource.ProjectPlan.Labels.Label_EffortEfficiency, Value(x => $@"{x.EffortEfficiency:F3}")),
 
+                (Resource.ProjectPlan.Labels.Label_PeakHeadcount, Value(x => $@"{x.PeakHeadcount}")),
+                (Resource.ProjectPlan.Labels.Label_AverageHeadcount, Value(x => $@"{x.AverageHeadcount:F1}")),
+                (Resource.ProjectPlan.Labels.Label_PeakToAverageHeadcount, Value(x => $@"{x.PeakToAverageHeadcount:F2}")),
+
                 (Resource.ProjectPlan.Labels.Label_DirectEffort, Value(x => $@"{x.DirectEffort:F0}")),
                 (Resource.ProjectPlan.Labels.Label_IndirectEffort, Value(x => $@"{x.IndirectEffort:F0}")),
                 (Resource.ProjectPlan.Labels.Label_OtherEffort, Value(x => $@"{x.OtherEffort:F0}")),
@@ -320,6 +324,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 metrics.NetworkDurationManMonths,
                 metrics.ProjectFinish,
                 metrics.EffortEfficiency,
+                metrics.PeakHeadcount,
+                metrics.AverageHeadcount,
+                metrics.PeakToAverageHeadcount,
                 metrics.ActivityEffort,
                 metrics.DirectEffort,
                 metrics.IndirectEffort,

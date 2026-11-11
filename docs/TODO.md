@@ -20,10 +20,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add the deadline to the job: an option such as `--deadline` (`deadline` in the API). The plan does not keep it, and the compile does not change. The answer gives the shortfall: the finish of the plan minus the deadline, or 0. A simulation also gives the share of the iterations that finish by the deadline, as the target of a simulation does now.
 
-- [ ] **Suggestion: give the headcount for each day, and its peak and average** *(2026-11-11, a suggestion from the design of the zpp skill)*
-
-  The sheets "Resource Chart (Activity)", "Resource Chart (Cost)" and "Resource Chart (Effort)" of the Excel export have one column for each resource. They have no total. Add a total column for each day. Also add the peak headcount, the average headcount and their ratio to the metrics. Righting Software uses this ratio to find options that need a team that grows too fast. Then a client does not add the columns itself.
-
 - [ ] **Suggestion: give the schedule and its series as data in the API** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
   The Excel export holds the whole table of the critical path method. It has the total slack, the free slack and the earliest and latest start and finish of each activity. It also holds the series of the resource chart and the planned earned value. The saved plan holds only the free slack, the earliest start and the latest finish. Thus, a client must open a workbook to get the total slack.

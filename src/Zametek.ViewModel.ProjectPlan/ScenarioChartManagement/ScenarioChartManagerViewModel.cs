@@ -925,7 +925,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static Func<MetricsModel, double> GetMetricFunction(TrackedMetrics metric)
+        // How the chart reads a metric from the metrics of a scenario. A value that the metrics do not have is 0.
+        internal static Func<MetricsModel, double> GetMetricFunction(TrackedMetrics metric)
         {
             return metric switch
             {
@@ -962,6 +963,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 TrackedMetrics.NetworkCyclomaticComplexity => model => model.Network.CyclomaticComplexity.GetValueOrDefault(),
                 TrackedMetrics.NetworkDuration => model => model.Network.Duration.GetValueOrDefault(),
                 TrackedMetrics.NetworkDurationManMonths => model => model.Network.DurationManMonths.GetValueOrDefault(),
+                TrackedMetrics.HeadcountPeak => model => model.Headcount.Peak.GetValueOrDefault(),
+                TrackedMetrics.HeadcountAverage => model => model.Headcount.Average.GetValueOrDefault(),
+                TrackedMetrics.HeadcountPeakToAverageRatio => model => model.Headcount.PeakToAverageRatio.GetValueOrDefault(),
                 _ => throw new ArgumentOutOfRangeException(nameof(metric), @$"{Resource.ProjectPlan.Messages.Message_UnknownTrackedMetric} {metric}"),
             };
         }

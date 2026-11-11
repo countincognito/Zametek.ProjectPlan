@@ -277,6 +277,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average headcount.
+        /// </summary>
+        public static string Label_AverageHeadcount {
+            get {
+                return ResourceManager.GetString("Label_AverageHeadcount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Base.
         /// </summary>
         public static string Label_BaseNode {
@@ -1372,6 +1381,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_PasteNode {
             get {
                 return ResourceManager.GetString("Label_PasteNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak headcount.
+        /// </summary>
+        public static string Label_PeakHeadcount {
+            get {
+                return ResourceManager.GetString("Label_PeakHeadcount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak to average headcount.
+        /// </summary>
+        public static string Label_PeakToAverageHeadcount {
+            get {
+                return ResourceManager.GetString("Label_PeakToAverageHeadcount", resourceCulture);
             }
         }
         

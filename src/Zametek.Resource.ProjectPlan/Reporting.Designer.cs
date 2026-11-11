@@ -68,6 +68,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Reporting_Time", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        public static string Reporting_Total {
+            get {
+                return ResourceManager.GetString("Reporting_Total", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Activities.
