@@ -468,6 +468,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_CompileTracked_Then_PrintsTheMetricsOfEachTrackedScenario()
+        {
+            (int exitCode, string output) = await RunCapturedAsync(
+                @"-i", AssetPath(@"stale-tracked.zpp"), @"--compile-tracked", @"--metrics-format", @"json");
+
+            exitCode.ShouldBe(0);
+
+            // Beta's file holds stale metrics, with no duration. Its compile gives it the duration of its task.
+            JArray tracked = (JArray)JObject.Parse(output)[@"TrackedScenarios"]!;
+            tracked.Select(x => (x[@"Path"]!.Value<string>(), x[@"IsCurrent"]!.Value<bool>(), x[@"Metrics"]![@"NetworkDuration"]!.Value<int>()))
+                .ShouldBe([(@"Alpha", true, 5), (@"Beta", false, 10)]);
+        }
+
+        [Fact]
         public async Task Main_Given_JsonMetricsFormat_Then_EmitsParseableJson()
         {
             (int exitCode, string output) = await RunCapturedAsync(@"-i", AssetPath(@"two-scenarios.zpp"), @"--metrics-format", @"json");

@@ -42,9 +42,20 @@ The option `--list-scenarios` prints a table of the scenarios of the plan. This 
 
 A scenario in a folder, or under another scenario, has a name that shows its location: `Folder/Scenario`. A long name stays in one row.
 
-The column **Tracked** shows that the scenario is on the scenario chart. The chart plots the metrics of the scenario as a point, against the metrics of the axes of the chart. The option `--scenario-chart-directory` writes the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any other output holds. It is not the progress tracking of activities.
+The column **Tracked** shows that the scenario is on the scenario chart. The chart plots the metrics of the scenario as a point, against the metrics of the axes of the chart. The option `--scenario-chart-directory` writes the chart. Tracking does not change how the scenario compiles or what its metrics are. `zpp` compiles the tracked scenarios for the chart and for `--compile-tracked` (refer to the text that follows). Tracking is not the progress tracking of activities.
 
 The column **Current** (`*`) marks the current scenario of the plan. This is the scenario that was open when a user saved the plan. `zpp` loads it when `--scenario` does not name another scenario.
+
+The plan holds the metrics of each scenario from its last compile before a person or a program saved the plan. These metrics can be stale, for example when a program changed a scenario and did not compile it. The option `--compile-tracked` compiles each tracked scenario, and not only the scenario that `zpp` loads:
+
+```
+zpp -i plan.zpp --compile-tracked -o plan.zpp
+```
+
+- `zpp` loads each tracked scenario, compiles it, and replaces its metrics. Then it loads its own scenario again. `-o` saves the new metrics.
+- `zpp` prints the metrics of each tracked scenario after the other tables, in the table "Tracked Scenarios". The table has a column for each scenario and a row for each metric. A scenario that does not compile has no values. In JSON, the metrics are in `TrackedScenarios`, with the `Path`, the `Id` and `IsCurrent` of each scenario. The value of `Metrics` is `null` for a scenario that does not compile.
+- The option `--scenario-chart-directory` compiles the tracked scenarios also without `--compile-tracked`. Thus the chart has no stale points.
+- An imported plan has no tracked scenarios.
 
 To get metrics that a program can read, use JSON. The standard output has only the JSON document, and thus you can send it through a pipe:
 

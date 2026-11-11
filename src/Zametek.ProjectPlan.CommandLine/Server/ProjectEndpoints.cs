@@ -445,6 +445,7 @@ namespace Zametek.ProjectPlan.CommandLine
             var response = new CompileResponse(
                 MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
                 result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
+                TrackedScenarioResponse.From(result.TrackedScenarios),
                 outputs,
                 consoleResponse);
 
@@ -925,7 +926,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     console,
                     MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
                     outputs,
-                    result.Simulation is null ? null : SimulationResponse.From(result.Simulation)),
+                    result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
+                    TrackedScenarioResponse.From(result.TrackedScenarios)),
                 exitCode);
         }
 

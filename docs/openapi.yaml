@@ -1188,6 +1188,14 @@ components:
         scenario:
           type: [string, 'null']
           description: The scenario to load, by name or by id. The id is the whole id, or a unique prefix of it of a minimum of four hexadecimal characters. Only with a `project`.
+        compileTracked:
+          type: [boolean, 'null']
+          default: false
+          description: |
+            Compile each tracked scenario of the project, and not only the scenario that the job loads, as `zpp --compile-tracked`
+            does. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output
+            `project` holds the new metrics, and the answer has `trackedScenarios`. The output `scenarioChart` compiles the tracked
+            scenarios also without this member, and thus the chart has no stale points. An import has no tracked scenarios.
         baseTheme:
           type: [string, 'null']
           enum: [light, dark, null]
@@ -1295,12 +1303,35 @@ components:
           $ref: '#/components/schemas/Metrics'
         simulation:
           $ref: '#/components/schemas/Simulation'
+        trackedScenarios:
+          type: array
+          description: Each tracked scenario of the project, in the order of the project, with its metrics. The answer has this member when the request has `compileTracked`.
+          items:
+            $ref: '#/components/schemas/TrackedScenario'
         outputs:
           type: array
           items:
             $ref: '#/components/schemas/Output'
         console:
           $ref: '#/components/schemas/Console'
+    TrackedScenario:
+      type: object
+      required: [path, id, isCurrent, metrics]
+      properties:
+        path:
+          type: string
+          description: The name of the scenario, after the names of the folders that it is in, as `POST /v1/projects/scenarios` gives it.
+        id:
+          type: string
+          format: uuid
+        isCurrent:
+          type: boolean
+          description: Whether the job loaded this scenario. Then its metrics are the same as the `metrics` of the answer.
+        metrics:
+          oneOf:
+            - $ref: '#/components/schemas/Metrics'
+            - type: 'null'
+          description: The metrics of the scenario, or `null` when it did not compile or the project has no data for it.
     Metrics:
       description: |
         The metrics of a compiled project. The names are words in `lowerCamelCase`, and the values are numbers and not the text that
@@ -1607,8 +1638,8 @@ components:
           type: boolean
           description: |
             Shows if the scenario is tracked. The scenario chart shows the metrics of a tracked scenario as a point, against the metrics of
-            the axes of the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any
-            other output holds. It is not the progress tracking of activities.
+            the axes of the chart. Tracking does not change how the scenario compiles or what its metrics are. The output `scenarioChart`
+            and the option `compileTracked` compile the tracked scenarios. Tracking is not the progress tracking of activities.
         isCurrent:
           type: boolean
           description: |
@@ -1857,7 +1888,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, and the outputs that the job produced.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, and the outputs that the job produced.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1870,6 +1901,10 @@ components:
               $ref: '#/components/schemas/Metrics'
             simulation:
               $ref: '#/components/schemas/Simulation'
+            trackedScenarios:
+              type: array
+              items:
+                $ref: '#/components/schemas/TrackedScenario'
             outputs:
               type: array
               items:

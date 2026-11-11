@@ -29,7 +29,7 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | plan | The data of a project plan. The application stores a plan in a `.zpp` file. The HTTP API uses the word "project" for a plan. |
 | project | In most documents, a .NET project: one `.csproj` file with the source files that belong to it. In the HTTP API, a plan. |
 | scenario | A version of a plan. A plan has one or more scenarios. |
-| tracked scenario | A scenario that the scenario chart shows as a point. Tracking does only this. It is not the progress tracking of activities. |
+| tracked scenario | A scenario that the scenario chart shows as a point. `zpp --compile-tracked` compiles each tracked scenario. Tracking is not the progress tracking of activities. |
 | current scenario | The scenario that was open when a user saved the plan. `zpp` loads it when a request does not name a scenario. A plan has a maximum of one current scenario. |
 | activity | A task in a plan. |
 | compile | To calculate the schedule of a scenario with the vertex-graph compiler. The result is the compilation (`GraphCompilation`). |

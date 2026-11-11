@@ -252,6 +252,19 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             });
         }
 
+        [Fact]
+        public void Read_Given_CompileTracked_Then_ARequestCompilesTheTrackedScenarios()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""compileTracked"":true}");
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldBe(new CompileOptions { CompileTracked = true });
+
+            using var input = new MemoryStream();
+            CompileOptionsHelper.ToJobRequest(options!, input, null, s_Limits).CompileTracked.ShouldBeTrue();
+            CompileOptionsHelper.ToJobRequest(new CompileOptions(), input, null, s_Limits).CompileTracked.ShouldBeFalse();
+        }
+
         [Theory]
         [InlineData(@"{}")]
         [InlineData(@"{""runSimulation"":false}")]
@@ -842,6 +855,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 InputFilename = @"plan.zpp",
                 Scenario = @"Beta",
+                CompileTracked = true,
                 OutputFilename = @"saved.zpp",
                 ExportFilename = @"exported.xlsx",
                 BaseTheme = BaseTheme.Dark,
@@ -869,6 +883,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             CompileOptionsHelper.FromOptions(options).ShouldBe(new CompileOptions
             {
                 Scenario = @"Beta",
+                CompileTracked = true,
                 BaseTheme = BaseTheme.Dark,
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(3),
@@ -909,6 +924,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 InputFilename = @"plan.zpp",
                 Scenario = @"Beta",
+                CompileTracked = true,
                 OutputFilename = @"saved.zpp",
                 ExportFilename = @"exported.xlsx",
                 BaseTheme = BaseTheme.Dark,

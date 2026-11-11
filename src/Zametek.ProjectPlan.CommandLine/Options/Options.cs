@@ -17,6 +17,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ImportLongName = "import";
         private const string c_ScenarioLongName = "scenario";
         private const string c_ListScenariosLongName = "list-scenarios";
+        private const string c_CompileTrackedLongName = "compile-tracked";
         private const string c_OutputLongName = "output";
         private const string c_ExportLongName = "export";
         private const string c_BaseThemeLongName = "base-theme";
@@ -79,6 +80,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option('l', c_ListScenariosLongName, HelpText = "List the input project's scenarios, then exit (only valid with --" + c_InputLongName + ")")]
         public bool ListScenarios { get; set; } = default;
+
+        [Option(c_CompileTrackedLongName, HelpText = "Compile each tracked scenario of the input file, and not only the one that zpp loads, and print the metrics of each in a table of their own, after the other tables. The new metrics replace the ones that the file holds, which can be stale, and --" + c_OutputLongName + " saves them. --" + c_ScenarioChartDirectoryLongName + " compiles the tracked scenarios also without this option, so that the chart has no stale points")]
+        public bool CompileTracked { get; set; } = default;
 
 
 

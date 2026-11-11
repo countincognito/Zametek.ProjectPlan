@@ -145,6 +145,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | Option | Option of zpp | Description |
 | ------ | ------------- | ----------- |
 | `scenario` | `--scenario` | The scenario to load, by name or by id. The name is not case-sensitive. The id is the whole id, or a unique prefix of a minimum of four hexadecimal characters. A name that matches has priority over a prefix. Only with a `project`. |
+| `compileTracked` | `--compile-tracked` | `true` compiles each tracked scenario of the project, and not only the scenario that the job loads. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output `project` holds the new metrics, and the answer has `trackedScenarios`. The output `scenarioChart` compiles the tracked scenarios also without this option. The default is `false`. |
 | `baseTheme` | `--base-theme` | `light` (the default) or `dark`: the theme of the charts and graphs. |
 | `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json`: how the [console](#console) shows the metrics. It has no other effect. |
 | `compileTimeout` | `--compile-timeout` | An ISO 8601 duration, from `PT0.001S` to the limit of the server (`maxCompileTimeout`). Without it, the value is `PT5S` as for `zpp`, or the limit if that is shorter. A request cannot disable the limit, but `zpp` can. |
@@ -199,6 +200,7 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 - `metrics` has the [metrics](#metrics) of the project.
 - `outputs` lists each output, in the order in which the job produced them. This is the order of the table above. The list is `[]` when the request asked for no output. `kind` shows which output it is. `fileName` is the name that `zpp` gives to its file. `contentType` is its media type. `content` is the file, in base64.
 - `simulation` has the [statistics](#simulation) of the simulation. It is in the answer when the request ran the simulation, or the project holds a result.
+- `trackedScenarios` lists each tracked scenario of the project, in the order of the project. It is in the answer when the request has `compileTracked`. An item has the `path` and the `id` of the scenario, `isCurrent`, and its `metrics`. `isCurrent` is `true` for the scenario that the job loaded, and its metrics are then the same as `metrics`. `metrics` is `null` for a scenario that does not compile.
 - With `?include=console`, the answer also has `console` (refer to [console](#console)).
 
 With `Accept: application/zip`, the answer is a zip. `Content-Disposition` names it `<name>.zip`. The zip contains each output as a file, with the name that `zpp` gives it. It also contains `result.json`, which is the answer above without the contents of the files. The time of each entry is the time at which the job ran, or the time that `now` gave.
@@ -305,7 +307,7 @@ The request is a `multipart/form-data` body with a part named `project` and no o
 ```
 
 - `path` names the scenario by its location in the project. A child of another scenario has the path `Alpha/Beta`. `scenario` takes the `path`, and it also takes the `id`.
-- `isTracked` shows that the scenario is *tracked*. The scenario chart shows the metrics of the scenario as a point, against the metrics of the axes of the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any other output holds. It is not the progress tracking of activities.
+- `isTracked` shows that the scenario is *tracked*. The scenario chart shows the metrics of the scenario as a point, against the metrics of the axes of the chart. Tracking does not change how the scenario compiles or what its metrics are. The output `scenarioChart` and the option `compileTracked` compile the tracked scenarios. Tracking is not the progress tracking of activities.
 - `isCurrent` shows that the scenario is the *current* scenario of the project. This is the scenario that was open when a user saved the project. `zpp` loads it when the request does not name a scenario with `scenario`. A project has a maximum of one current scenario.
 
 The problems are the problems of a compile, where they apply.
@@ -598,7 +600,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 #### output-failed
 
-`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
+`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. `trackedScenarios` has the tracked scenarios, when the request has `compileTracked`. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
 
 ```json
 {
@@ -783,3 +785,5 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The output `simulationWorkbook`: the result of the simulation as one Excel workbook (`<name>-simulation.xlsx`). It is a new member of `outputs`, and a new kind of output in the answer.
 - The operation `GET /v1/jobs/{requestId}` tells how far a job that runs has got (the iterations of its simulation). The job is the request, and its id is the trace id that the request gave in its `traceparent`. The server keeps the status only while the job runs.
 - The simulation of the schedule. Its settings are the project's. A request has the option `runSimulation` and the output `simulation`. The answer has the member `simulation`, and it lists the output as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). There is a problem, `simulation-not-possible`, with the code `noResult`, and a limit, `maxSimulationIterations`.
+- The simulation tells why each iteration failed. `simulation` has the members `resourceSchedulingStallIterations`, `maximumTimeValueExceededIterations`, `invalidConstraintsIterations` and `missedMaximumLatestFinishTimes`.
+- The option `compileTracked` compiles each tracked scenario of the project. The answer and the problem `output-failed` then have the member `trackedScenarios`.

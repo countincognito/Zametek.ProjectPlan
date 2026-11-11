@@ -14,7 +14,8 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         // Prints what a job that ran to its end leaves on stdout - the compiler's output when the plan did not compile,
         // and otherwise its metrics, in the format asked for, with the statistics of its simulation after them if it ran
-        // one (in a table of their own, or in JSON as one more object) - and returns the exit code the run ends with.
+        // one, and the metrics of each tracked scenario if it compiled them (each in a table of its own, or in JSON as one
+        // more member) - and returns the exit code the run ends with.
         public static async Task<ExitCode> WriteResultAsync(
             IJobConsole console,
             JobResult result,
@@ -38,14 +39,14 @@ namespace Zametek.ProjectPlan.CommandLine
                     case MetricsExport.Json:
                         // Machine output: undecorated, no colours, no leading
                         // blank line, so it can be piped straight into a parser.
-                        await console.WriteLineAsync(BuildMetricsJson(metrics, result.Simulation));
+                        await console.WriteLineAsync(BuildMetricsJson(metrics, result.Simulation, result.TrackedScenarios));
                         break;
                     case MetricsExport.Table:
-                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, x => x.ToString()), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, x => x.ToString()), hasErrors: false);
                         break;
                     case MetricsExport.Markdown:
                     default:
-                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, x => x.ToMarkDownString()), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, x => x.ToMarkDownString()), hasErrors: false);
                         break;
                 }
             }
@@ -126,19 +127,28 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The tables of a run as one block of text, written as a table or as Markdown: the metrics and, if the job ran a
-        // simulation, its statistics in a table of their own. A table ends its last line, and so one line end more is the
-        // blank line between the two.
+        // The tables of a run as one block of text, written as a table or as Markdown: the metrics, then, if the job ran a
+        // simulation, its statistics, and, if it compiled the tracked scenarios, the metrics of each, each in a table of its
+        // own. A table ends its last line, and so one line end more is the blank line between two tables.
         private static string BuildMetricsText(
             JobMetrics metrics,
             JobSimulationMetrics? simulation,
+            IReadOnlyList<JobTrackedScenario>? trackedScenarios,
             Func<ConsoleTable, string> write)
         {
             string text = write(BuildMetricsTable(metrics));
 
-            return simulation is null
-                ? text
-                : text + NewLineHelper.NewLine + write(BuildSimulationTable(simulation));
+            if (simulation is not null)
+            {
+                text += NewLineHelper.NewLine + write(BuildSimulationTable(simulation));
+            }
+
+            if (trackedScenarios is { Count: > 0 })
+            {
+                text += NewLineHelper.NewLine + write(BuildTrackedScenariosTable(trackedScenarios));
+            }
+
+            return text;
         }
 
         // The metrics as a table, which prints as a table or as Markdown. This and the builders below are internal
@@ -147,42 +157,73 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             ConsoleTable table = CreateTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
 
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRisk, $@"{metrics.ActivityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection, $@"{metrics.ActivityRiskWithStdDevCorrection:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_CriticalityRisk, $@"{metrics.CriticalityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_FibonacciRisk, $@"{metrics.FibonacciRisk:F2}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricActivityRisk, $@"{metrics.GeometricActivityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk, $@"{metrics.GeometricCriticalityRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk, $@"{metrics.GeometricFibonacciRisk:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_CyclomaticComplexity, $@"{metrics.NetworkCyclomaticComplexity}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityEffort, $@"{metrics.ActivityEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DurationManMonths, $@"{metrics.NetworkDurationManMonths:F1}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_ProjectFinish, $@"{metrics.ProjectFinish}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_EffortEfficiency, $@"{metrics.EffortEfficiency:F3}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectEffort, $@"{metrics.DirectEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectEffort, $@"{metrics.IndirectEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherEffort, $@"{metrics.OtherEffort:F0}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalEffort, $@"{metrics.TotalEffort:F0}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectCost, $@"{metrics.DirectCost:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectCost, $@"{metrics.IndirectCost:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherCost, $@"{metrics.OtherCost:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalCost, $@"{metrics.TotalCost:F2}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectBilling, $@"{metrics.DirectBilling:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectBilling, $@"{metrics.IndirectBilling:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherBilling, $@"{metrics.OtherBilling:F2}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalBilling, $@"{metrics.TotalBilling:F2}");
-
-            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectMargin, $@"{metrics.DirectMarginAbsolute:F2}{metrics.DisplayDirectMargin}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectMargin, $@"{metrics.IndirectMarginAbsolute:F2}{metrics.DisplayIndirectMargin}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherMargin, $@"{metrics.OtherMarginAbsolute:F2}{metrics.DisplayOtherMargin}");
-            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalMargin, $@"{metrics.TotalMarginAbsolute:F2}{metrics.DisplayTotalMargin}");
+            foreach ((string label, string value) in MetricRows(metrics))
+            {
+                table.AddRow(label, value);
+            }
 
             return table;
+        }
+
+        // The metrics of each tracked scenario as a table: a column for each scenario, under its path, and a row for each
+        // metric, as the table of the metrics has them. A scenario that did not compile has no values.
+        internal static ConsoleTable BuildTrackedScenariosTable(IReadOnlyList<JobTrackedScenario> trackedScenarios)
+        {
+            ConsoleTable table = CreateTable([Resource.ProjectPlan.Titles.Title_TrackedScenarios, .. trackedScenarios.Select(x => x.Path)]);
+            List<(string Label, string Value)>[] columns = [.. trackedScenarios.Select(x => MetricRows(x.Metrics))];
+            List<(string Label, string Value)> labels = MetricRows(null);
+
+            for (int row = 0; row < labels.Count; row++)
+            {
+                table.AddRow([labels[row].Label, .. columns.Select(x => x[row].Value)]);
+            }
+
+            return table;
+        }
+
+        // The rows of a table of metrics: the label of each metric and its value as zpp prints it, or no value when there are
+        // no metrics.
+        private static List<(string Label, string Value)> MetricRows(JobMetrics? metrics)
+        {
+            string Value(Func<JobMetrics, string> format) => metrics is null ? string.Empty : format(metrics);
+
+            return
+            [
+                (Resource.ProjectPlan.Labels.Label_ActivityRisk, Value(x => $@"{x.ActivityRisk:F2}")),
+                (Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection, Value(x => $@"{x.ActivityRiskWithStdDevCorrection:F2}")),
+                (Resource.ProjectPlan.Labels.Label_CriticalityRisk, Value(x => $@"{x.CriticalityRisk:F2}")),
+                (Resource.ProjectPlan.Labels.Label_FibonacciRisk, Value(x => $@"{x.FibonacciRisk:F2}")),
+
+                (Resource.ProjectPlan.Labels.Label_GeometricActivityRisk, Value(x => $@"{x.GeometricActivityRisk:F2}")),
+                (Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk, Value(x => $@"{x.GeometricCriticalityRisk:F2}")),
+                (Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk, Value(x => $@"{x.GeometricFibonacciRisk:F2}")),
+                (Resource.ProjectPlan.Labels.Label_CyclomaticComplexity, Value(x => $@"{x.NetworkCyclomaticComplexity}")),
+
+                (Resource.ProjectPlan.Labels.Label_ActivityEffort, Value(x => $@"{x.ActivityEffort:F0}")),
+                (Resource.ProjectPlan.Labels.Label_DurationManMonths, Value(x => $@"{x.NetworkDurationManMonths:F1}")),
+                (Resource.ProjectPlan.Labels.Label_ProjectFinish, Value(x => $@"{x.ProjectFinish}")),
+                (Resource.ProjectPlan.Labels.Label_EffortEfficiency, Value(x => $@"{x.EffortEfficiency:F3}")),
+
+                (Resource.ProjectPlan.Labels.Label_DirectEffort, Value(x => $@"{x.DirectEffort:F0}")),
+                (Resource.ProjectPlan.Labels.Label_IndirectEffort, Value(x => $@"{x.IndirectEffort:F0}")),
+                (Resource.ProjectPlan.Labels.Label_OtherEffort, Value(x => $@"{x.OtherEffort:F0}")),
+                (Resource.ProjectPlan.Labels.Label_TotalEffort, Value(x => $@"{x.TotalEffort:F0}")),
+
+                (Resource.ProjectPlan.Labels.Label_DirectCost, Value(x => $@"{x.DirectCost:F2}")),
+                (Resource.ProjectPlan.Labels.Label_IndirectCost, Value(x => $@"{x.IndirectCost:F2}")),
+                (Resource.ProjectPlan.Labels.Label_OtherCost, Value(x => $@"{x.OtherCost:F2}")),
+                (Resource.ProjectPlan.Labels.Label_TotalCost, Value(x => $@"{x.TotalCost:F2}")),
+
+                (Resource.ProjectPlan.Labels.Label_DirectBilling, Value(x => $@"{x.DirectBilling:F2}")),
+                (Resource.ProjectPlan.Labels.Label_IndirectBilling, Value(x => $@"{x.IndirectBilling:F2}")),
+                (Resource.ProjectPlan.Labels.Label_OtherBilling, Value(x => $@"{x.OtherBilling:F2}")),
+                (Resource.ProjectPlan.Labels.Label_TotalBilling, Value(x => $@"{x.TotalBilling:F2}")),
+
+                (Resource.ProjectPlan.Labels.Label_DirectMargin, Value(x => $@"{x.DirectMarginAbsolute:F2}{x.DisplayDirectMargin}")),
+                (Resource.ProjectPlan.Labels.Label_IndirectMargin, Value(x => $@"{x.IndirectMarginAbsolute:F2}{x.DisplayIndirectMargin}")),
+                (Resource.ProjectPlan.Labels.Label_OtherMargin, Value(x => $@"{x.OtherMarginAbsolute:F2}{x.DisplayOtherMargin}")),
+                (Resource.ProjectPlan.Labels.Label_TotalMargin, Value(x => $@"{x.TotalMarginAbsolute:F2}{x.DisplayTotalMargin}")),
+            ];
         }
 
         // The statistics of a simulation as a table of their own, as the panel shows them: the seed and the distribution
@@ -218,18 +259,54 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The metrics as JSON. When the job ran a simulation, its statistics follow as one more object, Simulation: raw values,
         // as the metrics are, with the seed written as text - as the API writes it - because a seed can be larger than
-        // every reader of JSON reads without loss, and the dates as yyyy-MM-dd. Without a simulation the text is what it
-        // was before there was one.
+        // every reader of JSON reads without loss, and the dates as yyyy-MM-dd. When the job compiled the tracked scenarios,
+        // TrackedScenarios follows: for each, its path, its id, whether the job loaded it, and its metrics as the metrics of
+        // the job are written (null for a scenario that did not compile). Without either, the text is what it was before
+        // there was one.
         internal static string BuildMetricsJson(
             JobMetrics metrics,
-            JobSimulationMetrics? simulation = null)
+            JobSimulationMetrics? simulation = null,
+            IReadOnlyList<JobTrackedScenario>? trackedScenarios = null)
+        {
+            object output = BuildMetricsObject(metrics);
+
+            // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
+            // left in the text is indentation.
+            if (simulation is null
+                && trackedScenarios is null)
+            {
+                return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
+            }
+
+            JObject json = JObject.FromObject(output);
+
+            if (simulation is not null)
+            {
+                json[@"Simulation"] = JObject.FromObject(BuildSimulationJson(simulation));
+            }
+
+            if (trackedScenarios is not null)
+            {
+                json[@"TrackedScenarios"] = new JArray(trackedScenarios.Select(x => new JObject
+                {
+                    [@"Path"] = x.Path,
+                    [@"Id"] = x.Id.ToString(),
+                    [@"IsCurrent"] = x.IsCurrent,
+                    [@"Metrics"] = x.Metrics is null ? JValue.CreateNull() : JObject.FromObject(BuildMetricsObject(x.Metrics)),
+                }));
+            }
+
+            return NewLineHelper.NormalizeNewLines(json.ToString(Formatting.Indented));
+        }
+
+        private static object BuildMetricsObject(JobMetrics metrics)
         {
             // Raw values rather than display strings wherever the contract offers
             // them: JSON numbers are culture-invariant by construction, and the
             // *Margin/*MarginAbsolute pairs carry the ratio and the currency value
             // that the table's display strings combine. ProjectFinish is the one
             // exception - the contract only exposes it as a display string.
-            var output = new
+            return new
             {
                 metrics.ActivityRisk,
                 metrics.ActivityRiskWithStdDevCorrection,
@@ -265,17 +342,6 @@ namespace Zametek.ProjectPlan.CommandLine
                 metrics.OtherMarginAbsolute,
                 metrics.TotalMarginAbsolute,
             };
-
-            // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
-            // left in the text is indentation.
-            if (simulation is null)
-            {
-                return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
-            }
-
-            JObject json = JObject.FromObject(output);
-            json[@"Simulation"] = JObject.FromObject(BuildSimulationJson(simulation));
-            return NewLineHelper.NormalizeNewLines(json.ToString(Formatting.Indented));
         }
 
         private static object BuildSimulationJson(JobSimulationMetrics simulation)

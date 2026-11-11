@@ -10,12 +10,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Correct the two pages with the other updates of the wiki.
 
-- [ ] **Suggestion: compile each tracked scenario in one job** *(2026-11-11, a suggestion from the design of the zpp skill)*
-
-  A job compiles the scenario that it loads, and only that scenario gets new stored metrics. For the other tracked scenarios, the scenario chart plots the metrics that the file holds (`BuildTrackedMetrics`). These metrics can be stale, for example after a program writes the plan. A test showed three of four points at their stale values. Today, a client sends one job for each scenario and gives the saved plan to the next job.
-
-  An option such as `--compile-tracked` (`compileTracked` in the API) can compile each tracked scenario and store its metrics. The answer can then give the metrics of each scenario. The output `scenarioChart` can also do this without the option. Then the chart is always correct.
-
 - [ ] **Suggestion: give the data of the scenario chart as an output** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
   The desktop application shows the formula of each fitted curve, with r², below the chart. The exported image does not show the formula, and no other output has it. Add the points, the coefficients of each fit, r² and the coefficients of the derivative to the answer. Also write them as a sheet or a CSV file, as the simulation does. Then a client can read the trade-off between time, cost and risk from zpp and does not fit curves of its own.

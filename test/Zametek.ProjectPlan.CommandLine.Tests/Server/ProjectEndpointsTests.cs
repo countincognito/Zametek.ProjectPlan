@@ -82,6 +82,39 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_CompileTracked_Then_AnswersWithTheMetricsOfEachTrackedScenario()
+        {
+            byte[] plan = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"stale-tracked.zpp"));
+            using var content = RunningServer.CompileContent(plan, @"stale-tracked.zpp", new CompileOptions { CompileTracked = true });
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            string json = await response.Content.ReadAsStringAsync();
+            using JsonDocument document = JsonDocument.Parse(json);
+            document.RootElement.EnumerateObject().Select(x => x.Name).ShouldBe([@"metrics", @"trackedScenarios", @"outputs"]);
+
+            JsonElement[] tracked = [.. document.RootElement.GetProperty(@"trackedScenarios").EnumerateArray()];
+            tracked.Length.ShouldBe(2);
+            tracked[0].EnumerateObject().Select(x => x.Name).ShouldBe([@"path", @"id", @"isCurrent", @"metrics"]);
+            tracked[0].GetProperty(@"metrics").EnumerateObject().Select(x => x.Name).ShouldBe(s_MetricNames);
+
+            // Alpha is the scenario that the job loaded, and Beta, whose stored metrics are stale, has the metrics of its compile.
+            tracked.Select(x => (x.GetProperty(@"path").GetString(), x.GetProperty(@"isCurrent").GetBoolean(), x.GetProperty(@"metrics").GetProperty(@"networkDuration").GetInt32()))
+                .ShouldBe([(@"Alpha", true, 5), (@"Beta", false, 10)]);
+            tracked[1].GetProperty(@"id").GetString().ShouldBe(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4");
+        }
+
+        [Fact]
+        public async Task Compile_Given_NoCompileTracked_Then_TheAnswerHasNoTrackedScenarios()
+        {
+            using HttpResponseMessage response = await PostAsync();
+
+            using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            document.RootElement.TryGetProperty(@"trackedScenarios", out _).ShouldBeFalse();
+        }
+
+        [Fact]
         public async Task Compile_Given_NoOptions_Then_AnswersWithTheMetricsAndNoOutputs()
         {
             using HttpResponseMessage response = await PostAsync();

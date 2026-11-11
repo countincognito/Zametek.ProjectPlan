@@ -108,6 +108,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 Input = input,
                 ImportFormat = importFormat,
                 Scenario = options.Scenario,
+                CompileTracked = options.CompileTracked,
                 BaseTheme = options.BaseTheme,
                 CompileTimeoutMilliseconds = options.CompileTimeout is TimeSpan timeout
                     ? Math.Max(1, (int)timeout.TotalMilliseconds)
@@ -153,6 +154,7 @@ namespace Zametek.ProjectPlan.CommandLine
             return new CompileOptions
             {
                 Scenario = options.Scenario,
+                CompileTracked = options.CompileTracked,
                 BaseTheme = options.BaseTheme,
                 MetricsFormat = options.MetricsFormat,
                 CompileTimeout = TimeSpan.FromMilliseconds(options.CompileTimeoutMilliseconds),
@@ -263,6 +265,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             int before = problems.Errors.Count;
             string? scenario = null;
+            bool compileTracked = false;
             BaseTheme baseTheme = BaseTheme.Light;
             MetricsExport metricsFormat = MetricsExport.Markdown;
             TimeSpan? compileTimeout = null;
@@ -285,6 +288,9 @@ namespace Zametek.ProjectPlan.CommandLine
                         {
                             problems.AddInvalid(Error(pointer, ProblemCodes.NotAllowedWithImport, Resource.ProjectPlan.Messages.Message_ServeErrorOnlyWithProject));
                         }
+                        break;
+                    case @"compileTracked":
+                        compileTracked = ReadBoolean(member.Value, pointer, problems);
                         break;
                     case @"baseTheme":
                         baseTheme = ReadEnum(member.Value, pointer, BaseTheme.Light, problems);
@@ -314,6 +320,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ? new CompileOptions
                 {
                     Scenario = scenario,
+                    CompileTracked = compileTracked,
                     BaseTheme = baseTheme,
                     MetricsFormat = metricsFormat,
                     CompileTimeout = compileTimeout,

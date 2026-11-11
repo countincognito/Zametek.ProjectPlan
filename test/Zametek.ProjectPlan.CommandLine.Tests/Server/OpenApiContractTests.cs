@@ -595,7 +595,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))],
                 MissedMaximumLatestFinishTimes = [new SimulationMissedMaximumResponse(2, @"End", 1)],
             };
-            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, Console = console };
+            var tracked = new TrackedScenarioResponse(@"Plans > Beta", Guid.Empty, false, metrics);
+            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, TrackedScenarios = [tracked], Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
             var jobProgress = new JobProgressResponse(1, 2);
             var jobStatus = new JobStatusResponse(@"i", JobState.Running, DateTimeOffset.UnixEpoch, TimeSpan.Zero, jobProgress);
@@ -620,7 +621,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"InfoResponse")).ShouldBe(Names(new InfoResponse(@"v", @"c", @"z", limits), written), ignoreOrder: true);
             Names(Schema(@"Scenario")).ShouldBe(Names(new ScenarioSummary(@"p", Guid.Empty, true, true), written), ignoreOrder: true);
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
-            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [output], console), written), ignoreOrder: true);
+            Names(Schema(@"TrackedScenario")).ShouldBe(Names(tracked, written), ignoreOrder: true);
+            Schema(@"TrackedScenario")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(tracked, written), ignoreOrder: true);
+            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [tracked], [output], console), written), ignoreOrder: true);
 
             // A problem is the members every one has, and those of the kind that has more.
             string[] problemNames = [.. Names(Schema(@"Problem")), .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject()).Where(x => x is not (@"type" or @"status"))];
@@ -642,6 +645,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 CompileTimeout = TimeSpan.FromSeconds(1),
                 Now = @"2026-10-03T09:00:00+01:00",
                 RunSimulation = true,
+                CompileTracked = true,
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),

@@ -20,6 +20,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private static readonly Dictionary<string, string[]> s_Options = new()
         {
             [@"scenario"] = [@"scenario"],
+            [@"compileTracked"] = [@"compile-tracked"],
             [@"baseTheme"] = [@"base-theme"],
             [@"metricsFormat"] = [@"metrics-format"],
             [@"compileTimeout"] = [@"compile-timeout"],
@@ -56,6 +57,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string json = Serialize(new CompileOptions
             {
                 Scenario = @"Beta",
+                CompileTracked = true,
                 BaseTheme = BaseTheme.Dark,
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(3),
@@ -77,7 +79,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             });
 
             json.ShouldBe(
-                """{"scenario":"Beta","baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulation":{"format":"png","width":400,"height":300},"simulationWorkbook":{}}}""");
+                """{"scenario":"Beta","compileTracked":true,"baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulation":{"format":"png","width":400,"height":300},"simulationWorkbook":{}}}""");
         }
 
         [Fact]

@@ -228,6 +228,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 Input = input,
                 ImportFormat = importFormat,
                 Scenario = options.Scenario,
+                CompileTracked = options.CompileTracked,
                 BaseTheme = options.BaseTheme,
                 CompileTimeoutMilliseconds = options.CompileTimeoutMilliseconds,
                 Now = ToNow(options.Now),

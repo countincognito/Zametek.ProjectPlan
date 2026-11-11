@@ -16,6 +16,13 @@ namespace Zametek.Engine.ProjectPlan
         // the project's current scenario loads. An import has only the one scenario, so it ignores this.
         public string? Scenario { get; init; }
 
+        // Whether to compile each tracked scenario of a project file, and not only the one that the job loads. Each one is
+        // loaded and compiled as the desktop does when a person opens it, and its new metrics replace the ones that the file
+        // holds: those can be stale, for example when a program wrote the file. The job then loads its own scenario again, and
+        // the result has the metrics of each tracked scenario. ScenarioChart compiles the tracked scenarios also without this,
+        // so that the chart has no stale points. An import has no tracked scenario.
+        public bool CompileTracked { get; init; }
+
         public BaseTheme BaseTheme { get; init; } = BaseTheme.Light;
 
         // Milliseconds a compilation may run before it is cancelled, or 0 for no limit.

@@ -116,7 +116,8 @@ namespace Zametek.ProjectPlan.CommandLine
             ConsoleResponse? console = null,
             MetricsResponse? metrics = null,
             IReadOnlyList<OutputResponse>? outputs = null,
-            SimulationResponse? simulation = null)
+            SimulationResponse? simulation = null,
+            IReadOnlyList<TrackedScenarioResponse>? trackedScenarios = null)
         {
             ArgumentNullException.ThrowIfNull(context);
 
@@ -130,6 +131,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 Errors = errors,
                 Metrics = metrics,
                 Simulation = simulation,
+                TrackedScenarios = trackedScenarios,
                 Outputs = outputs,
                 Console = console,
             };

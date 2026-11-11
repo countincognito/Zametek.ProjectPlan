@@ -60,6 +60,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             DisplayTotalMargin = @" (10%)",
         };
 
+        // Two tracked scenarios: the one that the job loaded, and one in a folder that did not compile.
+        private static readonly IReadOnlyList<JobTrackedScenario> s_Tracked =
+        [
+            new JobTrackedScenario(@"Alpha", Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5"), true, s_Metrics),
+            new JobTrackedScenario(@"Plans > Beta", Guid.Parse(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4"), false, null),
+        ];
+
         [Fact]
         public async Task WriteResultAsync_Given_CompilationErrors_Then_DisplaysTheCompilerOutputAsErrors()
         {
@@ -155,6 +162,87 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"Mean | 26.4",
                 @"P80 | 29",
             ]);
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_TrackedScenarios_Then_TheirMetricsAreATableAfterTheOthers(MetricsExport format)
+        {
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation }, format);
+            string with = await DisplayedAsync(
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation, TrackedScenarios = s_Tracked },
+                format);
+
+            // The tables of the run come first, and one blank line sets the next table apart.
+            with.ShouldStartWith(without + NewLineHelper.NewLine);
+            string tracked = with[(without.Length + NewLineHelper.NewLine.Length)..];
+            tracked.ShouldNotStartWith(NewLineHelper.NewLine);
+
+            // A column for each scenario, under its path, and a row for each metric, as the table of the metrics has them. A
+            // scenario that did not compile has no values.
+            string metrics = format == MetricsExport.Table
+                ? JobConsoleHelper.BuildMetricsTable(s_Metrics).ToString()
+                : JobConsoleHelper.BuildMetricsTable(s_Metrics).ToMarkDownString();
+            List<string> rows = Rows(tracked);
+            rows[0].ShouldBe($@"{Resource.ProjectPlan.Titles.Title_TrackedScenarios} | Alpha | Plans > Beta");
+            rows.Skip(1).ShouldBe(Rows(NewLineHelper.NormalizeNewLines(metrics)).Skip(1).Select(x => x + @" | "));
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_NoTrackedScenario_Then_ThereIsNoTableOfThem(MetricsExport format)
+        {
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics }, format);
+
+            string with = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = [] }, format);
+
+            with.ShouldBe(without);
+        }
+
+        [Fact]
+        public async Task WriteResultAsync_Given_TrackedScenariosAndJsonMetrics_Then_WritesThemInTheJson()
+        {
+            var console = new RecordingJobConsole();
+
+            ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(
+                console,
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = s_Tracked },
+                MetricsExport.Json);
+
+            exitCode.ShouldBe(ExitCode.Success);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.Line(JobConsoleHelper.BuildMetricsJson(s_Metrics, null, s_Tracked)));
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_TrackedScenarios_Then_TheyFollowWithTheMetricsOfEach()
+        {
+            JObject all = JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation, s_Tracked));
+
+            all.Properties().Select(x => x.Name).TakeLast(2).ShouldBe([@"Simulation", @"TrackedScenarios"]);
+            var tracked = (JArray)all[@"TrackedScenarios"]!;
+            tracked.Count.ShouldBe(2);
+            ((JObject)tracked[0]).Properties().Select(x => x.Name).ShouldBe([@"Path", @"Id", @"IsCurrent", @"Metrics"]);
+            tracked[0][@"Path"]!.Value<string>().ShouldBe(@"Alpha");
+            tracked[0][@"Id"]!.Value<string>().ShouldBe(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5");
+            tracked[0][@"IsCurrent"]!.Value<bool>().ShouldBeTrue();
+            tracked[1][@"Path"]!.Value<string>().ShouldBe(@"Plans > Beta");
+            tracked[1][@"IsCurrent"]!.Value<bool>().ShouldBeFalse();
+
+            // The metrics of a scenario are what the metrics of a job are, and null for a scenario that did not compile.
+            JToken.DeepEquals(tracked[0][@"Metrics"], JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics))).ShouldBeTrue();
+            tracked[1][@"Metrics"]!.Type.ShouldBe(JTokenType.Null);
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_NoTrackedScenario_Then_AnEmptyListAndNoSimulation()
+        {
+            JObject all = JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, null, []));
+
+            all.Properties().Select(x => x.Name).Last().ShouldBe(@"TrackedScenarios");
+            all.ContainsKey(@"Simulation").ShouldBeFalse();
+            ((JArray)all[@"TrackedScenarios"]!).ShouldBeEmpty();
         }
 
         [Theory]
