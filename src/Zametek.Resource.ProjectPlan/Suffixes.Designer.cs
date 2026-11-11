@@ -79,6 +79,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -earned-value.
+        /// </summary>
+        public static string Suffix_EarnedValueSeries {
+            get {
+                return ResourceManager.GetString("Suffix_EarnedValueSeries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -gantt.
         /// </summary>
         public static string Suffix_GanttChart {
@@ -106,11 +115,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -resources.
+        /// </summary>
+        public static string Suffix_ResourceSeries {
+            get {
+                return ResourceManager.GetString("Suffix_ResourceSeries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -scenario.
         /// </summary>
         public static string Suffix_ScenarioChart {
             get {
                 return ResourceManager.GetString("Suffix_ScenarioChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -schedule.
+        /// </summary>
+        public static string Suffix_Schedule {
+            get {
+                return ResourceManager.GetString("Suffix_Schedule", resourceCulture);
             }
         }
         

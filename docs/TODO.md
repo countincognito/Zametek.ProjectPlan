@@ -20,12 +20,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add the deadline to the job: an option such as `--deadline` (`deadline` in the API). The plan does not keep it, and the compile does not change. The answer gives the shortfall: the finish of the plan minus the deadline, or 0. A simulation also gives the share of the iterations that finish by the deadline, as the target of a simulation does now.
 
-- [ ] **Suggestion: give the schedule and its series as data in the API** *(2026-11-11, a suggestion from the design of the zpp skill)*
-
-  The Excel export holds the whole table of the critical path method. It has the total slack, the free slack and the earliest and latest start and finish of each activity. It also holds the series of the resource chart and the planned earned value. The saved plan holds only the free slack, the earliest start and the latest finish. Thus, a client must open a workbook to get the total slack.
-
-  The API can give the same data as JSON or as CSV files, as it does for the simulation. Examples are the outputs `schedule`, `resourceSeries` and `earnedValueSeries`.
-
 - [ ] **Suggestion: describe the .zpp format for other programs** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
   A program can write a plan as JSON and send it to `zpp serve`. This operates well, and the plan keeps its ids, which an import does not do. But nobody wrote down the rules of the format. For example, in v0.6.2 the compiler schedules from `MostLikelyDuration` when it has a value, and it ignores `Duration`. A file that `zpp` saves has `MostLikelyDuration` on each activity. Thus, a program that changes only `Duration` changes nothing.

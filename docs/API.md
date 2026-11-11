@@ -153,7 +153,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | `runSimulation` | `--run-simulation` | `true` runs the simulation of the schedule after the project compiles (refer to [The simulation](#the-simulation)). The default is `false`. |
 | `outputs` | | What the job produces (refer to the table that follows). |
 
-The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Three outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`).
+The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Four outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). The output `data` is one request for three CSV files, and the answer lists them as `schedule`, `resourceSeries` and `earnedValueSeries`.
 
 | Member | Option of zpp | Produces | Settings |
 | ------ | ------------- | -------- | -------- |
@@ -165,6 +165,7 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `resourceChart` | `--resource-*` | The resource chart (`<name>-resource.<format>`) | A chart |
 | `earnedValueChart` | `--ev-*` | The earned value chart (`<name>-ev.<format>`) | A chart |
 | `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`) | A chart |
+| `data` | `--data-directory` | The data of the compiled scenario as three CSV files: the table of the critical path method (`<name>-schedule.csv`), the series of the resources (`<name>-resources.csv`) and the series of the earned value (`<name>-earned-value.csv`). Refer to [The data of the schedule](COMMAND-LINE.md#the-data-of-the-schedule). | `{}` |
 | `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
 | `simulationWorkbook` | `--simulation-workbook-directory` | The result of the simulation as one Excel workbook (`<name>-simulation.xlsx`), with a sheet for the settings and for each of the CSV files, and, for a run, a sheet for the iterations. It is independent of `simulation`. | `{}` |
 
@@ -790,3 +791,5 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The simulation of the schedule. Its settings are the project's. A request has the option `runSimulation` and the output `simulation`. The answer has the member `simulation`, and it lists the output as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). There is a problem, `simulation-not-possible`, with the code `noResult`, and a limit, `maxSimulationIterations`.
 - The simulation tells why each iteration failed. `simulation` has the members `resourceSchedulingStallIterations`, `maximumTimeValueExceededIterations`, `invalidConstraintsIterations` and `missedMaximumLatestFinishTimes`.
 - The option `compileTracked` compiles each tracked scenario of the project. The answer and the problem `output-failed` then have the member `trackedScenarios`.
+- The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
+- The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.

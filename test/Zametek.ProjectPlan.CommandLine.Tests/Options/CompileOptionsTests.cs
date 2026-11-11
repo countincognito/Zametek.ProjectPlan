@@ -34,6 +34,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             [@"outputs.resourceChart"] = [@"resource-directory", @"resource-format", @"resource-size"],
             [@"outputs.earnedValueChart"] = [@"ev-directory", @"ev-format", @"ev-size"],
             [@"outputs.scenarioChart"] = [@"scenario-chart-directory", @"scenario-chart-format", @"scenario-chart-size"],
+            [@"outputs.data"] = [@"data-directory"],
 
             // The chart of the simulation and its CSV files go to one directory, and a request asks for them with one output.
             [@"outputs.simulation"] = [@"simulation-directory", @"simulation-format", @"simulation-size"],
@@ -73,13 +74,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     ResourceChart = new ChartOptions { Format = PlotExport.Svg, Width = 640, Height = 480 },
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Webp, Width = 320, Height = 240 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Bmp, Width = 100, Height = 50 },
+                    Data = new DataOptions(),
                     Simulation = new ChartOptions { Format = PlotExport.Png, Width = 400, Height = 300 },
                     SimulationWorkbook = new SimulationWorkbookOptions(),
                 },
             });
 
             json.ShouldBe(
-                """{"scenario":"Beta","compileTracked":true,"baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"simulation":{"format":"png","width":400,"height":300},"simulationWorkbook":{}}}""");
+                """{"scenario":"Beta","compileTracked":true,"baseTheme":"dark","metricsFormat":"json","compileTimeout":"PT3S","now":"2026-10-02T09:00:00+01:00","runSimulation":true,"outputs":{"project":{},"scenarioExport":{},"ganttChart":{"format":"png","width":800,"height":600},"arrowGraph":{"format":"graphml"},"vertexGraph":{"format":"dot"},"resourceChart":{"format":"svg","width":640,"height":480},"earnedValueChart":{"format":"webp","width":320,"height":240},"scenarioChart":{"format":"bmp","width":100,"height":50},"data":{},"simulation":{"format":"png","width":400,"height":300},"simulationWorkbook":{}}}""");
         }
 
         [Fact]

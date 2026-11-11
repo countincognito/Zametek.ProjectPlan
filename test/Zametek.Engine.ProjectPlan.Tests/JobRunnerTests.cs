@@ -96,12 +96,56 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 ResourceChart = new ChartOutputRequest(ChartImageFormat.Png, 800, 600),
                 EarnedValueChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                 ScenarioChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
+                DataFiles = true,
                 RunSimulation = true,
                 SimulationSettings = new SimulationSettingsModel { Iterations = 200, Seed = 7, TargetFinishTime = 5 },
                 SimulationChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600),
                 SimulationCsvFiles = SimulationCsvFile.All,
                 SimulationWorkbook = true,
             };
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_TheDataFiles_Then_ProducesTheScheduleTheResourcesAndTheEarnedValueAsCsv()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (JobResult result, MemoryJobSink sink) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"estimated.zpp",
+                input => new JobRequest { Input = input, DataFiles = true });
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            sink.Outputs.Select(x => x.Output).ShouldBe([JobOutput.Schedule, JobOutput.ResourceSeries, JobOutput.EarnedValueSeries]);
+
+            // Each is UTF-8 with a byte order mark, as the CSV files of the simulation are.
+            foreach ((_, byte[] content) in sink.Outputs)
+            {
+                content.Take(3).ShouldBe([(byte)0xEF, (byte)0xBB, (byte)0xBF]);
+            }
+
+            static string[][] Rows(byte[] file) =>
+                [.. Encoding.UTF8.GetString(file, 3, file.Length - 3).Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Split(','))];
+
+            // A row for each activity, and the total slack of each is its latest start minus its earliest start. The project
+            // finishes when the last activity does.
+            string[][] schedule = Rows(sink[JobOutput.Schedule]);
+            schedule[0][..9].ShouldBe([@"Id", @"Name", @"Duration", @"EarliestStartTime", @"EarliestFinishTime", @"LatestStartTime", @"LatestFinishTime", @"TotalSlack", @"FreeSlack"]);
+            schedule.Length.ShouldBeGreaterThan(2);
+            foreach (string[] row in schedule.Skip(1))
+            {
+                (int.Parse(row[5], System.Globalization.CultureInfo.InvariantCulture) - int.Parse(row[3], System.Globalization.CultureInfo.InvariantCulture)).ShouldBe(int.Parse(row[7], System.Globalization.CultureInfo.InvariantCulture), row[1]);
+            }
+            schedule.Skip(1).Max(x => int.Parse(x[4], System.Globalization.CultureInfo.InvariantCulture)).ShouldBe(result.Metrics.ShouldNotBeNull().NetworkDuration.ShouldNotBeNull());
+
+            // A row for each day and resource, and on each day the number of resources that are allocated is at most the peak headcount.
+            string[][] resources = Rows(sink[JobOutput.ResourceSeries]);
+            resources[0].ShouldBe([@"Time", @"ResourceId", @"Resource", @"Allocated", @"Activity", @"Effort", @"Cost"]);
+            resources.Skip(1).GroupBy(x => x[0]).Max(x => x.Count(y => y[3] == @"true")).ShouldBe(result.Metrics.PeakHeadcount.ShouldNotBeNull());
+
+            string[][] earnedValue = Rows(sink[JobOutput.EarnedValueSeries]);
+            earnedValue[0].ShouldBe([@"Series", @"Time", @"ActivityId", @"ActivityName", @"Value", @"ValuePercentage"]);
+            earnedValue.Skip(1).ShouldContain(x => x[0] == @"Plan");
         }
 
         [Fact]

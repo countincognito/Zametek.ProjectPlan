@@ -267,6 +267,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 {
                     Project = new ProjectOptions(),
                     ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    Data = new DataOptions(),
                 },
             });
         }
@@ -530,6 +531,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             AddChart(args, @"resource", outputs.ResourceChart, directory);
             AddChart(args, @"ev", outputs.EarnedValueChart, directory);
             AddChart(args, @"scenario-chart", outputs.ScenarioChart, directory);
+
+            if (outputs.Data is not null)
+            {
+                args.AddRange([@"--data-directory", directory]);
+            }
 
             if (options.RunSimulation)
             {

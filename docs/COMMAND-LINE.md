@@ -109,6 +109,20 @@ A run takes its times from the clock:
 
 The option `--now` gives the run a time of its own. It includes the offset from UTC, for example `--now 2026-09-27T12:00:00+01:00`, or `Z` for UTC itself. Thus, the same command writes the same files at any time. An import is the exception: it gives new ids to the plan that it creates, each time. In all cases, `zpp` shows the times in the time zone of the computer. Thus, two computers write the same times only if they have the same time zone.
 
+## The data of the schedule
+
+The option `--data-directory` writes the data of the compiled scenario as three CSV files in the directory:
+
+```
+zpp -i plan.zpp --data-directory out
+```
+
+- `<name>-schedule.csv` has a row for each activity, in the order of the ids. It has the duration, and the earliest and the latest start and finish. It has the total and the free slack, and the dependencies, also those that the resources add. It has the resources that do the activity, the minimum earliest start and the maximum latest finish.
+- `<name>-resources.csv` has a row for each day and each resource, with the id and the name of the resource. `Allocated`, `Activity` and `Effort` are `true` when the resource is on the project, works on an activity, and has effort on the day. `Cost` is the cost of the resource on the day. The headcount of a day is the number of rows of the day where `Allocated` is `true`. The activities that no resource of the plan does have a series with no id.
+- `<name>-earned-value.csv` has the points of the planned earned value, and then of the effort and of the progress that the trackers record. The first column names the series.
+
+A time is a number of days from the start of the project. A list of ids has a space between two ids. A value that an activity does not have is empty. The files are UTF-8 with a byte order mark, and they use the invariant culture, as the CSV files of the simulation do.
+
 ## Simulate the schedule
 
 An activity can have three estimates of its duration: an optimistic, a most likely and a pessimistic duration. A Monte Carlo simulation of the schedule draws a duration for each activity from its estimates in each iteration. It schedules the resources again, and it finds the finish and its critical path. An activity that has no estimates keeps its duration.

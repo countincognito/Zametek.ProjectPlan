@@ -657,6 +657,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
                     Simulation = new ChartOptions { Width = 1, Height = 1 },
+                    SimulationWorkbook = new SimulationWorkbookOptions(),
+                    Data = new DataOptions(),
                 },
             };
 
@@ -676,9 +678,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string[] outputs = [.. Values<JobOutput>()];
             Enumerated(Schema(@"Output")[@"properties"]![@"kind"]!).ShouldBe(outputs, ignoreOrder: true);
 
-            // The simulation is one output of a request, and the answer lists its chart and its files as the outputs that it makes. Its
-            // workbook is an output of its own.
-            Names(Schema(@"OutputsOptions")).ShouldBe([.. outputs.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation", @"simulationWorkbook"], ignoreOrder: true);
+            // The data and the simulation are each one output of a request, and the answer lists the files that each makes as outputs
+            // of their own. The workbook of the simulation is an output of its own.
+            Names(Schema(@"OutputsOptions")).ShouldBe(
+                [
+                    @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart",
+                    @"scenarioChart", @"data", @"simulation", @"simulationWorkbook",
+                ],
+                ignoreOrder: true);
         }
 
         private static HttpRequestMessage Get(

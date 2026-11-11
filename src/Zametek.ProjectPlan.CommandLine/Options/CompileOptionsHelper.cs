@@ -122,6 +122,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOutputRequest(outputs.ResourceChart),
                 EarnedValueChart = ToChartOutputRequest(outputs.EarnedValueChart),
                 ScenarioChart = ToChartOutputRequest(outputs.ScenarioChart),
+                DataFiles = outputs.Data is not null,
                 RunSimulation = options.RunSimulation,
                 MaximumSimulationIterations = limits.MaxSimulationIterations,
                 SimulationChart = ToChartOutputRequest(outputs.Simulation),
@@ -147,6 +148,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOptions(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
                 EarnedValueChart = ToChartOptions(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOptions(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
+                Data = options.DataDirectory is not null ? new DataOptions() : null,
                 Simulation = ToChartOptions(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
                 SimulationWorkbook = options.SimulationWorkbookDirectory is not null ? new SimulationWorkbookOptions() : null,
             };
@@ -180,6 +182,11 @@ namespace Zametek.ProjectPlan.CommandLine
             AddIf(requested, outputs.ResourceChart, JobOutput.ResourceChart);
             AddIf(requested, outputs.EarnedValueChart, JobOutput.EarnedValueChart);
             AddIf(requested, outputs.ScenarioChart, JobOutput.ScenarioChart);
+
+            // One output of a request is the three files of the data of the schedule.
+            AddIf(requested, outputs.Data, JobOutput.Schedule);
+            AddIf(requested, outputs.Data, JobOutput.ResourceSeries);
+            AddIf(requested, outputs.Data, JobOutput.EarnedValueSeries);
 
             // One output of a request is a chart and its CSV files. The file of the iterations is there only for a run: a project
             // does not hold the iterations of the run that made its result.
@@ -222,6 +229,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 JobOutput.ResourceChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, outputs.ResourceChart),
                 JobOutput.EarnedValueChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, outputs.EarnedValueChart),
                 JobOutput.ScenarioChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, outputs.ScenarioChart),
+                JobOutput.Schedule => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_Schedule),
+                JobOutput.ResourceSeries => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceSeries),
+                JobOutput.EarnedValueSeries => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueSeries),
                 JobOutput.SimulationChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, outputs.Simulation),
                 JobOutput.SimulationStatistics => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics),
                 JobOutput.SimulationHistogram => CsvFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram),
@@ -356,6 +366,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ChartOptions? resourceChart = null;
             ChartOptions? earnedValueChart = null;
             ChartOptions? scenarioChart = null;
+            DataOptions? data = null;
             ChartOptions? simulation = null;
             SimulationWorkbookOptions? simulationWorkbook = null;
 
@@ -389,6 +400,9 @@ namespace Zametek.ProjectPlan.CommandLine
                     case @"scenarioChart":
                         scenarioChart = ReadChart(member.Value, memberPointer, limits, problems);
                         break;
+                    case @"data":
+                        data = ReadEmptyObject(member.Value, memberPointer, problems) ? new DataOptions() : null;
+                        break;
                     case @"simulation":
                         simulation = ReadChart(member.Value, memberPointer, limits, problems);
                         break;
@@ -411,6 +425,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = resourceChart,
                 EarnedValueChart = earnedValueChart,
                 ScenarioChart = scenarioChart,
+                Data = data,
                 Simulation = simulation,
                 SimulationWorkbook = simulationWorkbook,
             };
@@ -752,6 +767,17 @@ namespace Zametek.ProjectPlan.CommandLine
             return graph is null
                 ? null
                 : new GraphOutputRequest(Program.ToGraphExportFormat(graph.Format));
+        }
+
+        // The name of a CSV file of the data of the schedule: the project's title and then the file's own suffix.
+        private static string DataFilename(
+            string projectTitle,
+            string suffix)
+        {
+            return Program.BuildExportFilename(
+                projectTitle,
+                suffix,
+                Resource.ProjectPlan.Filters.Filter_CsvFileExtension);
         }
 
         // The name of a simulation's CSV file: the project's title, the CSV files' suffix and then the file's own.

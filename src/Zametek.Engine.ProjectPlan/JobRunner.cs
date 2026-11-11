@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
+using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.Engine.ProjectPlan
 {
@@ -460,6 +462,32 @@ namespace Zametek.Engine.ProjectPlan
                     cancellationToken);
             }
 
+            // The data of the compiled scenario as CSV files: the table of the critical path method, the series of the
+            // resources, and the series of the earned value.
+            if (request.DataFiles)
+            {
+                ProjectScenarioModel projectScenario = core.BuildProjectScenario();
+
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.Schedule,
+                    writer => ScheduleCsvWriter.WriteSchedule(writer, projectScenario.DependentActivities),
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.ResourceSeries,
+                    writer => ScheduleCsvWriter.WriteResourceSeries(writer, core.ResourceSeriesSet),
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.EarnedValueSeries,
+                    writer => ScheduleCsvWriter.WriteEarnedValueSeries(writer, core.TrackingSeriesSet),
+                    cancellationToken);
+            }
+
             // The chart and the CSV files of the simulation, and its statistics. A result that a run of the job made is the one they
             // come from, or else the one that the scenario held. A project file does not hold the iterations of a run, and so a
             // job that did not run the simulation has no file of them.
@@ -662,6 +690,29 @@ namespace Zametek.Engine.ProjectPlan
                 sink,
                 output,
                 stream => writePlotImageAsync(stream, chart.Format, chart.Width, chart.Height),
+                cancellationToken);
+        }
+
+        // A CSV file, in UTF-8 with a byte order mark, as the CSV files of the simulation are written.
+        private static async Task WriteCsvAsync(
+            IDialogService dialogService,
+            IJobSink sink,
+            JobOutput output,
+            Action<TextWriter> write,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await WriteReportedOutputAsync(
+                dialogService,
+                sink,
+                output,
+                stream =>
+                {
+                    using var writer = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true);
+                    write(writer);
+                    return Task.CompletedTask;
+                },
                 cancellationToken);
         }
 

@@ -51,6 +51,11 @@ namespace Zametek.Engine.ProjectPlan
 
         public ChartOutputRequest? ScenarioChart { get; init; }
 
+        // JobOutput.Schedule, ResourceSeries and EarnedValueSeries: the data of the compiled scenario as three CSV files (see
+        // ScheduleCsvWriter): the table of the critical path method, the series of the resources, and the series of the earned
+        // value.
+        public bool DataFiles { get; init; }
+
         // Whether to run the simulation of the schedule once the plan has compiled. It runs with the settings that the scenario
         // holds (the iterations, the distribution, its shape value and the target), and always with the seed that the scenario
         // has saved, also when "New seed each run" is set, so that a run repeats. The result goes to the scenario, and thus a

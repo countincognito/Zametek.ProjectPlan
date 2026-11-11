@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -12,8 +11,6 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </summary>
     public static class SimulationCsvWriter
     {
-        private static readonly SearchValues<char> s_QuotedCharacters = SearchValues.Create(",\"\r\n");
-
         public static void WriteStatistics(TextWriter writer, SimulationSummaryModel summary)
         {
             ArgumentNullException.ThrowIfNull(writer);
@@ -192,30 +189,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
+        private static string Number(int value) => CsvText.Number(value);
 
-        private static string Number(double value) => value.ToString(@"R", CultureInfo.InvariantCulture);
+        private static string Number(double value) => CsvText.Number(value);
 
-        private static void WriteRow(TextWriter writer, params string[] fields)
-        {
-            for (int i = 0; i < fields.Length; i++)
-            {
-                if (i > 0)
-                {
-                    writer.Write(',');
-                }
-                writer.Write(Quote(fields[i]));
-            }
-            writer.Write(NewLineHelper.NewLine);
-        }
-
-        private static string Quote(string field)
-        {
-            if (field.AsSpan().IndexOfAny(s_QuotedCharacters) < 0)
-            {
-                return field;
-            }
-            return $@"""{field.Replace(@"""", @"""""", StringComparison.Ordinal)}""";
-        }
+        private static void WriteRow(TextWriter writer, params string[] fields) => CsvText.WriteRow(writer, fields);
     }
 }

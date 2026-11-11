@@ -41,6 +41,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ScenarioChartDirectoryLongName = "scenario-chart-directory";
         private const string c_ScenarioChartFormatLongName = "scenario-chart-format";
         private const string c_ScenarioChartSizeLongName = "scenario-chart-size";
+        private const string c_DataDirectoryLongName = "data-directory";
         private const string c_RunSimulationLongName = "run-simulation";
         private const string c_SimulationDirectoryLongName = "simulation-directory";
         private const string c_SimulationFormatLongName = "simulation-format";
@@ -168,6 +169,11 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_ScenarioChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Scenario chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> ScenarioChartSize { get; set; } = [];
+
+
+
+        [Option(c_DataDirectoryLongName, HelpText = "Data output file directory: the CSV files of the schedule (the earliest and latest start and finish, and the total and free slack, of each activity), of the series of the resources (for each day and resource) and of the series of the earned value")]
+        public string? DataDirectory { get; set; } = default;
 
 
 

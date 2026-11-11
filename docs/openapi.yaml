@@ -1251,6 +1251,10 @@ components:
         (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
         project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
 
+        The output `data` is one request for the data of the compiled scenario as three CSV files: the table of the critical path method
+        (`schedule`), the series of the resources (`resourceSeries`) and the series of the earned value (`earnedValueSeries`). The answer
+        lists each file as an output of its own.
+
         The output `simulationWorkbook` is the same result as one Excel workbook: a sheet for the settings and for each of the CSV files
         above (`Simulation Settings`, `Simulation Statistics`, `Simulation Percentiles`, `Simulation Histogram`, `Simulation Paths`
         and `Simulation Criticalities`), and, for a run, the sheet `Simulation Iterations`. It is an output of its own, and a request can
@@ -1274,6 +1278,8 @@ components:
           $ref: '#/components/schemas/ChartOptions'
         scenarioChart:
           $ref: '#/components/schemas/ChartOptions'
+        data:
+          $ref: '#/components/schemas/OutputWithoutSettings'
         simulation:
           $ref: '#/components/schemas/ChartOptions'
         simulationWorkbook:
@@ -1585,6 +1591,9 @@ components:
             - resourceChart
             - earnedValueChart
             - scenarioChart
+            - schedule
+            - resourceSeries
+            - earnedValueSeries
             - simulationChart
             - simulationStatistics
             - simulationHistogram

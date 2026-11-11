@@ -270,6 +270,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                         Project = new ProjectOptions(),
                         Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
                         SimulationWorkbook = new SimulationWorkbookOptions(),
+                        Data = new DataOptions(),
                     },
                 });
 
@@ -285,6 +286,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"image/svg+xml",
                 @"image/svg+xml",
                 @"image/svg+xml",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
                 @"image/svg+xml",
                 @"text/csv",
                 @"text/csv",
