@@ -2,47 +2,13 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Stop the crash of the scheduler when a phase ends on a milestone after its last activity** *(2026-11-11, found during tests for the zpp skill)*
+- [ ] **Correct the wiki about the cyclomatic complexity and the maximum LFT** *(2026-11-11, found during tests for the zpp skill)*
 
-  The compile crashes when two conditions occur together. First, an indirect resource has a phase in its inter-activity phases. Second, an activity of zero duration in that phase finishes after the last activity of the phase that takes time. The library then throws `ArgumentOutOfRangeException` in `ResourceScheduleBuilder.AllocationForUnscheduledActivityTypes`. `zpp` exits with code 1, and `zpp serve` answers `500 unexpected-error`.
+  The wiki page "Project compilation" says that the cyclomatic complexity does not include resource dependencies. A measurement shows that it does. One logical network gave 8 with phantom resources, 6 with three developers and 7 with two developers. Righting Software also counts resource dependencies. On 2026-11-11, the maintainer decided to keep the metric.
 
-  These steps make the crash in a new plan:
+  The wiki page "Activities" says that a maximum LFT can give negative values, as in Microsoft Project. This is not true. A maximum LFT pins an activity. When the plan cannot meet it, the compile reports `C0010`, and an iteration of a simulation fails.
 
-  1. Add the work stream `Build`, and mark it as a phase.
-  2. Add the resource `Dev`, with the inter-activity allocation `Direct`.
-  3. Add the resource `PM` as an explicit target, with the inter-activity allocation `Indirect` and the phase `Build`.
-  4. Add activity 1, with a duration of 5 days, in `Build`.
-  5. Add activity 2, with a duration of 0 days, in `Build`. It depends on 1 and has a minimum EST of 10.
-
-  The compile then fails. When activity 2 is not in `Build`, the compile succeeds, and the plan finishes on day 10.
-
-  A risk decompression finds this problem first. It moves an end milestone later, and a plan often puts that milestone in its last phase. A minimum free slack on the last activity has the same effect. Correct the extent of the phase in the library, in C# and in the Rust port. At a minimum, report a compilation error, and do not throw.
-
-- [ ] **Report a compilation error and not a crash for a maximum LFT that a milestone cannot meet** *(2026-11-11, found during tests for the zpp skill)*
-
-  A maximum LFT on an activity of zero duration crashes the compile when the network cannot meet it. The library throws `InvalidOperationException` in `ResourceScheduleBuilder.ExtractAllocations`. The message is "Requested finish time (5) cannot be less than the actual finish time (10)". The crash also occurs in a plan with no resources, which uses phantom resources. `zpp` exits with code 1, and `zpp serve` answers `500`.
-
-  To make the crash, give activity 1 a duration of 10 days. Give activity 2 a duration of 0 days, a dependency on 1 and a maximum LFT of 5.
-
-  The same constraint on an activity that takes time gives the compilation error `C0010` ("EarliestStartTime cannot be less than zero"). The milestone needs the same check.
-
-  The wiki page for activities says that a maximum LFT can give negative values, as in Microsoft Project. The compile gives an error or a crash instead. Correct the wiki, or make the compile give negative slack. Negative slack is more useful for a deadline (refer to the suggestion "Tell how far a plan misses its deadline" below).
-
-- [ ] **Do not draw a fitted curve that the points of the scenario chart cannot define** *(2026-11-11, found during tests for the zpp skill)*
-
-  A polynomial fit of order n needs n + 1 different values on the X axis. `BuildPolynomialCurveFit` in `ScenarioChartManagerViewModel` checks only the number of points (`xs.Length <= order`). Thus, four tracked scenarios with only three different durations give a singular cubic fit. The chart then draws a curve with no meaning.
-
-  In one plan, the axis of the criticality risk went from -1.6E9 to 1.6E9, and the real risks (0.64 to 0.86) were flat at zero. Four scenarios with the same risk and three different durations give a false wave instead of a flat line.
-
-  Count the different X values, and show only the points when there are too few. The chart already does this when there are too few scenarios. Do the same for the derivatives.
-
-- [ ] **Correct the wiki about the cyclomatic complexity** *(2026-11-11, found during tests for the zpp skill)*
-
-  The wiki page "Project compilation" says that the cyclomatic complexity does not include resource dependencies. A measurement shows that it does. One logical network gave 8 with phantom resources, 6 with three developers and 7 with two developers. Righting Software also counts resource dependencies, and so the metric is probably correct. Decide on the correct behavior, and then correct the wiki or the metric.
-
-- [ ] **Let `zpp -o` write to the file that `-i` reads** *(2026-11-11, found during tests for the zpp skill)*
-
-  `zpp -i plan.zpp -s Beta -o plan.zpp` fails with exit code 1. The message is "The process cannot access the file … because it is being used by another process". `zpp` keeps the input open while it writes the output. Thus, a script that compiles each scenario of a plan in turn must use two files. Read the input and close it before the first output, or write to a temporary file and then replace the input.
+  Correct the two pages with the other updates of the wiki.
 
 - [ ] **Suggestion: compile each tracked scenario in one job** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
@@ -56,7 +22,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Suggestion: tell how far a plan misses its deadline** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
-  A frequent question is "can we finish by day T with these people?". A maximum LFT on the end milestone can ask this question in one compile. Today, a deadline that the plan cannot meet gives an error or a crash. Negative total slack, as in Microsoft Project, tells by how many days the plan misses. A metric for these days, for example `deadlineShortfall`, makes the answer easy for a program to read. This suggestion depends on the entry about the maximum LFT above.
+  A frequent question is "can we finish by day T with these people?". The suggestion was a maximum LFT on the end milestone, with negative total slack as in Microsoft Project. On 2026-11-11, the maintainer decided against it. A maximum LFT pins an activity, and constraints of that kind make the compile too complex. A deadline is only a guideline.
+
+  Add the deadline to the job: an option such as `--deadline` (`deadline` in the API). The plan does not keep it, and the compile does not change. The answer gives the shortfall: the finish of the plan minus the deadline, or 0. A simulation also gives the share of the iterations that finish by the deadline, as the target of a simulation does now.
 
 - [ ] **Suggestion: give the headcount for each day, and its peak and average** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
@@ -73,6 +41,14 @@ This file lists the maintainer-internal engineering intents that must version wi
   A program can write a plan as JSON and send it to `zpp serve`. This operates well, and the plan keeps its ids, which an import does not do. But nobody wrote down the rules of the format. For example, in v0.6.2 the compiler schedules from `MostLikelyDuration` when it has a value, and it ignores `Duration`. A file that `zpp` saves has `MostLikelyDuration` on each activity. Thus, a program that changes only `Duration` changes nothing.
 
   Other rules are not easy to find. The root of the tree of scenarios is not a node, and a folder has no entry in `Files`. Write a JSON Schema next to `openapi.yaml`, and a short page that gives these rules. Then a program can write a plan with confidence.
+
+- [ ] **Do not save the calculated `Duration` in the next version of the file format** *(2026-11-11)*
+
+  The estimates are the input: `MostLikelyDuration`, and `OptimisticDuration` and `PessimisticDuration` when the activity has them. `Duration` is the duration that the compiler schedules. It is (O + 4 × ML + P + 3) / 6, which is ML when the activity has no spread. When you edit `Duration` in the application, it sets ML.
+
+  A plan file keeps `Duration` as well as the estimates. When the file has `MostLikelyDuration`, the load calculates `Duration` again and ignores the value in the file. Thus, a program that changes only `Duration` changes nothing (the suggestion above).
+
+  In the next version of the file format, save only the estimates. Read `Duration` from the earlier versions. Use it as the most likely duration when `MostLikelyDuration` has no value, as the load does now. Do this only when the format changes for another reason, because each new version needs a mapper step. Until then, the rules page of the suggestion above tells a program to set `MostLikelyDuration`, or to leave it out and set `Duration`.
 
 - [ ] **Suggestion: find the decision points of the time–cost–risk curve** *(2026-11-11, a suggestion from the design of the zpp skill)*
 

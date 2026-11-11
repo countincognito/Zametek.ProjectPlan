@@ -164,6 +164,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             saved[@"Current"]!.ToString().ShouldBe(betaId);
         }
 
+        // A script that compiles each scenario of a plan in turn saves the plan over itself. zpp
+        // kept the input open while it wrote the output, and Windows refused the write ("being
+        // used by another process"). Linux allows it, so the test fails only on Windows without
+        // the fix.
+        [Fact]
+        public async Task Main_Given_OutputOverTheInput_Then_SavesThePlanOverItself()
+        {
+            JObject asset = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            string betaId = asset[@"Nodes"]!
+                .First(x => string.Equals((string?)x[@"Name"], @"Beta", StringComparison.Ordinal))[@"Id"]!
+                .ToString();
+            string planFile = Path.Combine(m_TempDirectory, @"plan.zpp");
+            File.Copy(AssetPath(@"two-scenarios.zpp"), planFile);
+
+            int exitCode = await ZppMain.RunAsync([@"-i", planFile, @"-s", @"Beta", @"-o", planFile]);
+
+            exitCode.ShouldBe(0);
+            JObject saved = JObject.Parse(File.ReadAllText(planFile));
+            saved[@"Current"]!.ToString().ShouldBe(betaId);
+        }
+
         [Fact]
         public async Task Main_Given_ScenarioIdPrefix_Then_CurrentPersisted()
         {
@@ -321,6 +342,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"broken-dependency.zpp")]);
 
             exitCode.ShouldBe(3);
+        }
+
+        // A milestone in a phase finishes after the last activity of the phase that takes time, and an indirect resource has
+        // the phase. Up to version 4.0.1, the library threw when it marked the phase of the resource, and zpp exited with 1.
+        [Fact]
+        public async Task Main_Given_AMilestoneInAPhaseAfterItsLastActivity_Then_ExitSuccess()
+        {
+            int exitCode = await ZppMain.RunAsync([@"-i", AssetPath(@"milestone-after-phase.zpp")]);
+
+            exitCode.ShouldBe(0);
+        }
+
+        // A milestone has a maximum LFT that the plan cannot meet. Up to version 4.0.1, the library threw, and zpp exited with
+        // 1. The compile now reports the broken constraints, as it does for an activity that takes time.
+        [Fact]
+        public async Task Main_Given_AMaximumLatestFinishTimeThatAMilestoneCannotMeet_Then_ExitCompilationErrors()
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"unmet-maximum-lft.zpp"));
+
+            exitCode.ShouldBe(3);
+            (output + error).ShouldContain(@"C0010");
         }
 
         [Fact]

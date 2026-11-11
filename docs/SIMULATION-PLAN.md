@@ -297,7 +297,7 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 
 The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages.
 
-The maintainer published the packages, and the two package references use version 4.0.1. Use the local file only for a change that needs a version of the library that nobody has published.
+The maintainer published the packages, and the two package references use version 4.1.0. Use the local file only for a change that needs a version of the library that nobody has published.
 
 ## Phase 3: the results
 
@@ -558,6 +558,15 @@ A test of `zpp serve` timed out two times in the commit hook. A request for the 
 - **The change.** `zpp serve` raises the minimum of the thread pool when it starts. The pool then starts threads at once, up to the minimum, and a request does not wait. The minimum is a thread for each processor, plus the most threads that the simulations of all the jobs can take (`SimulationProcessorShare.MostThreads`). With four processors and four jobs, this is 4 + (4 + 2 + 1 + 1) = 12. The minimum only goes up.
 - **Why not threads of its own.** A scheduler with threads of its own would keep the loop away from the pool, also in the desktop application. But `Parallel.For` does not use the scheduler of the task that calls it, and the library sets no scheduler. [TODO](TODO.md) has an entry for this.
 - **How it was checked.** The new test of the server failed on the code from before: the minimum was 4, and the test wanted 11 for three jobs. A test of the share begins and ends simulations 10,000 times in a random order. Their threads never added up to more than `MostThreads`. The runs above do not measure the speed of the simulation, because the client asked more often when the answers came at once.
+
+### The application uses version 4.1.0 of the library
+
+Version 4.1.0 of the library corrects two crashes of the compile and an error of the simulation. It only adds to the API. The application moved from version 4.0.1 to version 4.1.0 on 2026-11-11. The tests of the zpp skill found the three problems.
+
+- **The crashes.** A milestone in a phase after the last activity of the phase that takes time crashed the compile. A maximum LFT that a milestone cannot meet crashed it too, and `zpp` exited with code 1. The first plan now compiles, and the phase of the indirect resource runs to the milestone. The second plan gives `C0010`, and `zpp` exits with code 3.
+- **The simulation.** An iteration that cannot meet a maximum LFT gave the maximum as its finish time, and so the statistics were too early. In one plan, the 95th percentile was 12 days, and the real value was 15. A minimum EST and a maximum LFT can hold an activity to a window. A draw longer than the window stopped the whole simulation. Such an iteration now fails, and the statistics leave it out.
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.1.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.1.0.
+- **How it was checked.** Two new tests of `zpp` run the plans of the two crashes, `milestone-after-phase.zpp` and `unmet-maximum-lft.zpp`. With version 4.0.1, `zpp` exited with code 1 on both. With version 4.1.0, it exits with code 0 and code 3.
 
 ## Performance work to explore later
 

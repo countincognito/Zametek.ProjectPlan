@@ -198,9 +198,17 @@ namespace Zametek.ProjectPlan.CommandLine
                 ? null
                 : FileFormatHelper.GetProjectScenarioImportFormat(inputFilename);
 
-            await using FileStream input = importFormat is ProjectScenarioImportFormat format
+            // The input is read into memory and closed before the job starts, as the client of a
+            // server does, so that the job can save the plan over the file that it came from.
+            // Windows refuses to write a file that is still open.
+            using var input = new MemoryStream();
+            await using (FileStream file = importFormat is ProjectScenarioImportFormat format
                 ? FileStreamHelper.OpenImportFile(inputFilename, format)
-                : File.OpenRead(inputFilename);
+                : File.OpenRead(inputFilename))
+            {
+                await file.CopyToAsync(input, cancellationToken);
+            }
+            input.Position = 0;
 
             if (options.ListScenarios)
             {

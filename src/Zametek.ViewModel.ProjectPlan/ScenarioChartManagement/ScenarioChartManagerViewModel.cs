@@ -500,7 +500,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return BuildCurveFit(plotModel, markers, curveFittingType, absoluteCurveFitting, yAxis, markerFillColor);
         }
 
-        private static string BuildCurveFit(
+        internal static string BuildCurveFit(
             Plot plotModel,
             List<AnnotatedMarker> markers,
             CurveFittingType curveFittingType,
@@ -514,6 +514,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Debug.Assert(xs.Length == ys.Length);
 
+            // A fit with n parameters needs n different values on the X axis, not n points. Two scenarios with the
+            // same duration are one value, and too few values give a singular fit and a curve with no meaning. Then
+            // the chart shows only the points.
+            int differentXs = xs.Distinct().Count();
+
             // The fits are always computed against the raw data (as are the
             // r² values); the plotted curves are then sampled over an even
             // grid, and the absolute option only passes those sampled outputs
@@ -525,7 +530,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Linear:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
@@ -546,7 +551,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Exponential:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
@@ -567,7 +572,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Logarithmic:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
@@ -588,7 +593,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Power:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
                             double f(double x) => a * Math.Pow(x, b);
@@ -630,7 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return formula;
         }
 
-        private static string BuildCurveFitDerivative(
+        internal static string BuildCurveFitDerivative(
             Plot plotModel,
             List<AnnotatedMarker> markers,
             CurveFittingType curveFittingType,
@@ -644,6 +649,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Debug.Assert(xs.Length == ys.Length);
 
+            // A fit with n parameters needs n different values on the X axis, not n points. Two scenarios with the
+            // same duration are one value, and too few values give a singular fit and a curve with no meaning. Then
+            // the chart shows only the points.
+            int differentXs = xs.Distinct().Count();
+
             // As with the fits themselves, the absolute option only passes
             // the derivative outputs through abs() before they are added to
             // the chart.
@@ -654,7 +664,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Linear:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             // y = bx + a differentiates to the constant y′ = b.
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
@@ -676,7 +686,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Exponential:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             // y = ae^rx differentiates to y′ = are^rx.
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
@@ -698,7 +708,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Logarithmic:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             // y = b·ln(x) + a differentiates to y′ = b/x.
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
@@ -720,7 +730,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.Power:
                     {
-                        if (xs.Length >= 2)
+                        if (differentXs >= 2)
                         {
                             // y = ax^b differentiates to y′ = abx^(b−1).
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
@@ -801,7 +811,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (xs.Length != ys.Length
                 || order < minimumOrder
                 || order > maximumOrder
-                || xs.Length <= order)
+                || xs.Distinct().Count() <= order)
             {
                 return string.Empty;
             }
@@ -847,7 +857,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (xs.Length != ys.Length
                 || order < minimumOrder
                 || order > maximumOrder
-                || xs.Length <= order)
+                || xs.Distinct().Count() <= order)
             {
                 return string.Empty;
             }
