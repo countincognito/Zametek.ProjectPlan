@@ -2,6 +2,92 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Stop the crash of the scheduler when a phase ends on a milestone after its last activity** *(2026-11-11, found during tests for the zpp skill)*
+
+  The compile crashes when two conditions occur together. First, an indirect resource has a phase in its inter-activity phases. Second, an activity of zero duration in that phase finishes after the last activity of the phase that takes time. The library then throws `ArgumentOutOfRangeException` in `ResourceScheduleBuilder.AllocationForUnscheduledActivityTypes`. `zpp` exits with code 1, and `zpp serve` answers `500 unexpected-error`.
+
+  These steps make the crash in a new plan:
+
+  1. Add the work stream `Build`, and mark it as a phase.
+  2. Add the resource `Dev`, with the inter-activity allocation `Direct`.
+  3. Add the resource `PM` as an explicit target, with the inter-activity allocation `Indirect` and the phase `Build`.
+  4. Add activity 1, with a duration of 5 days, in `Build`.
+  5. Add activity 2, with a duration of 0 days, in `Build`. It depends on 1 and has a minimum EST of 10.
+
+  The compile then fails. When activity 2 is not in `Build`, the compile succeeds, and the plan finishes on day 10.
+
+  A risk decompression finds this problem first. It moves an end milestone later, and a plan often puts that milestone in its last phase. A minimum free slack on the last activity has the same effect. Correct the extent of the phase in the library, in C# and in the Rust port. At a minimum, report a compilation error, and do not throw.
+
+- [ ] **Report a compilation error and not a crash for a maximum LFT that a milestone cannot meet** *(2026-11-11, found during tests for the zpp skill)*
+
+  A maximum LFT on an activity of zero duration crashes the compile when the network cannot meet it. The library throws `InvalidOperationException` in `ResourceScheduleBuilder.ExtractAllocations`. The message is "Requested finish time (5) cannot be less than the actual finish time (10)". The crash also occurs in a plan with no resources, which uses phantom resources. `zpp` exits with code 1, and `zpp serve` answers `500`.
+
+  To make the crash, give activity 1 a duration of 10 days. Give activity 2 a duration of 0 days, a dependency on 1 and a maximum LFT of 5.
+
+  The same constraint on an activity that takes time gives the compilation error `C0010` ("EarliestStartTime cannot be less than zero"). The milestone needs the same check.
+
+  The wiki page for activities says that a maximum LFT can give negative values, as in Microsoft Project. The compile gives an error or a crash instead. Correct the wiki, or make the compile give negative slack. Negative slack is more useful for a deadline (refer to the suggestion "Tell how far a plan misses its deadline" below).
+
+- [ ] **Do not draw a fitted curve that the points of the scenario chart cannot define** *(2026-11-11, found during tests for the zpp skill)*
+
+  A polynomial fit of order n needs n + 1 different values on the X axis. `BuildPolynomialCurveFit` in `ScenarioChartManagerViewModel` checks only the number of points (`xs.Length <= order`). Thus, four tracked scenarios with only three different durations give a singular cubic fit. The chart then draws a curve with no meaning.
+
+  In one plan, the axis of the criticality risk went from -1.6E9 to 1.6E9, and the real risks (0.64 to 0.86) were flat at zero. Four scenarios with the same risk and three different durations give a false wave instead of a flat line.
+
+  Count the different X values, and show only the points when there are too few. The chart already does this when there are too few scenarios. Do the same for the derivatives.
+
+- [ ] **Correct the wiki about the cyclomatic complexity** *(2026-11-11, found during tests for the zpp skill)*
+
+  The wiki page "Project compilation" says that the cyclomatic complexity does not include resource dependencies. A measurement shows that it does. One logical network gave 8 with phantom resources, 6 with three developers and 7 with two developers. Righting Software also counts resource dependencies, and so the metric is probably correct. Decide on the correct behavior, and then correct the wiki or the metric.
+
+- [ ] **Let `zpp -o` write to the file that `-i` reads** *(2026-11-11, found during tests for the zpp skill)*
+
+  `zpp -i plan.zpp -s Beta -o plan.zpp` fails with exit code 1. The message is "The process cannot access the file … because it is being used by another process". `zpp` keeps the input open while it writes the output. Thus, a script that compiles each scenario of a plan in turn must use two files. Read the input and close it before the first output, or write to a temporary file and then replace the input.
+
+- [ ] **Suggestion: compile each tracked scenario in one job** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  A job compiles the scenario that it loads, and only that scenario gets new stored metrics. For the other tracked scenarios, the scenario chart plots the metrics that the file holds (`BuildTrackedMetrics`). These metrics can be stale, for example after a program writes the plan. A test showed three of four points at their stale values. Today, a client sends one job for each scenario and gives the saved plan to the next job.
+
+  An option such as `--compile-tracked` (`compileTracked` in the API) can compile each tracked scenario and store its metrics. The answer can then give the metrics of each scenario. The output `scenarioChart` can also do this without the option. Then the chart is always correct.
+
+- [ ] **Suggestion: give the data of the scenario chart as an output** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  The desktop application shows the formula of each fitted curve, with r², below the chart. The exported image does not show the formula, and no other output has it. Add the points, the coefficients of each fit, r² and the coefficients of the derivative to the answer. Also write them as a sheet or a CSV file, as the simulation does. Then a client can read the trade-off between time, cost and risk from zpp and does not fit curves of its own.
+
+- [ ] **Suggestion: tell how far a plan misses its deadline** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  A frequent question is "can we finish by day T with these people?". A maximum LFT on the end milestone can ask this question in one compile. Today, a deadline that the plan cannot meet gives an error or a crash. Negative total slack, as in Microsoft Project, tells by how many days the plan misses. A metric for these days, for example `deadlineShortfall`, makes the answer easy for a program to read. This suggestion depends on the entry about the maximum LFT above.
+
+- [ ] **Suggestion: give the headcount for each day, and its peak and average** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  The sheets "Resource Chart (Activity)", "Resource Chart (Cost)" and "Resource Chart (Effort)" of the Excel export have one column for each resource. They have no total. Add a total column for each day. Also add the peak headcount, the average headcount and their ratio to the metrics. Righting Software uses this ratio to find options that need a team that grows too fast. Then a client does not add the columns itself.
+
+- [ ] **Suggestion: give the schedule and its series as data in the API** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  The Excel export holds the whole table of the critical path method. It has the total slack, the free slack and the earliest and latest start and finish of each activity. It also holds the series of the resource chart and the planned earned value. The saved plan holds only the free slack, the earliest start and the latest finish. Thus, a client must open a workbook to get the total slack.
+
+  The API can give the same data as JSON or as CSV files, as it does for the simulation. Examples are the outputs `schedule`, `resourceSeries` and `earnedValueSeries`.
+
+- [ ] **Suggestion: describe the .zpp format for other programs** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  A program can write a plan as JSON and send it to `zpp serve`. This operates well, and the plan keeps its ids, which an import does not do. But nobody wrote down the rules of the format. For example, in v0.6.2 the compiler schedules from `MostLikelyDuration` when it has a value, and it ignores `Duration`. A file that `zpp` saves has `MostLikelyDuration` on each activity. Thus, a program that changes only `Duration` changes nothing.
+
+  Other rules are not easy to find. The root of the tree of scenarios is not a node, and a folder has no entry in `Files`. Write a JSON Schema next to `openapi.yaml`, and a short page that gives these rules. Then a program can write a plan with confidence.
+
+- [ ] **Suggestion: find the decision points of the time–cost–risk curve** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  Righting Software gets decision points from a fitted direct cost and a fitted risk. They are the maximum risk, the two risk crossover points and the inflection point of the risk. The inflection point is the target for a decompression. The method also finds the minimum direct cost and the minimum total cost. It also asks what total cost a duration needs, to find the death zone.
+
+  From its own fits, `zpp` can calculate these points and give them as data. This suggestion goes together with the suggestion about the data of the scenario chart. Keep at least six significant digits in each coefficient, because a cubic fit is sensitive to rounding.
+
+- [ ] **Suggestion: compare the tracked scenarios with a baseline** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  A decision meeting compares options with the normal plan. It asks how much shorter, how much more expensive and how much riskier each option is. The scenario chart plots the values, but not the differences. An output can list the tracked scenarios with their metrics and their differences from a baseline scenario that the user marks. The compression of an option is then its difference in duration as a percentage.
+
+- [ ] **Suggestion: a productivity factor for each resource** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  Righting Software compresses a plan with better resources. A senior developer finishes an activity sooner, but costs more. zpp cannot show this today. A factor on the resource, for example 0.8, can scale the duration of each activity that the resource does. With the operator `OR`, the duration then depends on the resource that the scheduler selects, and the priority list must allow for this. The simulation and the Rust port must give the same result. Until then, a client gives the activities of the senior shorter estimates and targets them at that resource.
+
 - [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-10-29)*
 
   ReactiveUI 24 no longer uses System.Reactive. But removal has no value while other packages still depend on it. Thus, the assembly ships in all cases.
