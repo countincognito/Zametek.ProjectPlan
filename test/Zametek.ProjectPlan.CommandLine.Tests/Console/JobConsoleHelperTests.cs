@@ -235,6 +235,88 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             tracked[1][@"Metrics"]!.Type.ShouldBe(JTokenType.Null);
         }
 
+        // The data of a scenario chart: the duration against the direct cost, with a linear fit, and against the total cost, with
+        // a fit that the points cannot give.
+        private static readonly ScenarioChartDataModel s_ScenarioChart = new()
+        {
+            XMetric = TrackedMetrics.NetworkDuration,
+            Y1 = new ScenarioChartSeriesModel
+            {
+                Metric = TrackedMetrics.CostsDirect,
+                CurveFittingType = CurveFittingType.Linear,
+                Points =
+                [
+                    new ScenarioChartPointModel { Id = Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5"), Path = @"Alpha", X = 5.0, Y = 100.0 },
+                    new ScenarioChartPointModel { Id = Guid.Parse(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4"), Path = @"Plans > Beta", X = 10.0, Y = 150.0 },
+                ],
+                CurveFit = new CurveFitModel
+                {
+                    CurveFittingType = CurveFittingType.Linear,
+                    Coefficients = [50.0, 10.0],
+                    DerivativeCoefficients = [10.0],
+                    RSquared = 1.0,
+                },
+            },
+            Y2 = new ScenarioChartSeriesModel
+            {
+                Metric = TrackedMetrics.CostsTotal,
+                CurveFittingType = CurveFittingType.PolynomialOrder2,
+                AbsoluteCurveFitting = true,
+                Points = [new ScenarioChartPointModel { Id = Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5"), Path = @"Alpha", X = 5.0, Y = 120.0 }],
+            },
+        };
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_TheDataOfTheScenarioChart_Then_ItsAxesAndItsFormulasAreATableAfterTheOthers(MetricsExport format)
+        {
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = s_Tracked }, format);
+            string with = await DisplayedAsync(
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = s_Tracked, ScenarioChart = s_ScenarioChart },
+                format);
+
+            with.ShouldStartWith(without + NewLineHelper.NewLine);
+
+            // The metric of each axis, and the formulas of a fit as the panel shows them. An axis with no fit has only its metric.
+            CurveFitModel fit = s_ScenarioChart.Y1!.CurveFit!;
+            Rows(with[(without.Length + NewLineHelper.NewLine.Length)..]).ShouldBe(
+            [
+                $@"{Resource.ProjectPlan.Titles.Title_ScenarioChartView} | {Resource.ProjectPlan.Titles.Title_Values}",
+                $@"{Resource.ProjectPlan.Menus.Menu_TrackedMetricXAxis} | {StringConverters.TrackedMetricsValue(TrackedMetrics.NetworkDuration)}",
+                $@"{Resource.ProjectPlan.Menus.Menu_TrackedMetricY1Axis} | {StringConverters.TrackedMetricsValue(TrackedMetrics.CostsDirect)}",
+                $@"{Resource.ProjectPlan.Labels.Label_CurveFittingY1} | {CurveFitCalculator.BuildFormula(fit, false)}",
+                $@"{Resource.ProjectPlan.Labels.Label_CurveFittingDerivativeY1} | {CurveFitCalculator.BuildDerivativeFormula(fit, false)}",
+                $@"{Resource.ProjectPlan.Menus.Menu_TrackedMetricY2Axis} | {StringConverters.TrackedMetricsValue(TrackedMetrics.CostsTotal)}",
+            ]);
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_TheDataOfTheScenarioChart_Then_ItFollowsWithThePointsAndTheFitOfEachAxis()
+        {
+            JObject all = JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, null, s_Tracked, s_ScenarioChart));
+
+            all.Properties().Select(x => x.Name).TakeLast(2).ShouldBe([@"TrackedScenarios", @"ScenarioChart"]);
+            var chart = (JObject)all[@"ScenarioChart"]!;
+            chart.Properties().Select(x => x.Name).ShouldBe([@"XMetric", @"Y1", @"Y2"]);
+            chart[@"XMetric"]!.Value<string>().ShouldBe(@"NetworkDuration");
+
+            var y1 = (JObject)chart[@"Y1"]!;
+            y1.Properties().Select(x => x.Name).ShouldBe([@"Metric", @"CurveFitting", @"Absolute", @"Points", @"Fit"]);
+            y1[@"Metric"]!.Value<string>().ShouldBe(@"DirectCost");
+            y1[@"CurveFitting"]!.Value<string>().ShouldBe(@"Linear");
+            ((JObject)y1[@"Points"]![1]!).Properties().Select(x => x.Name).ShouldBe([@"Id", @"Path", @"X", @"Y"]);
+            y1[@"Points"]![1]![@"Path"]!.Value<string>().ShouldBe(@"Plans > Beta");
+            y1[@"Points"]![1]![@"Y"]!.Value<double>().ShouldBe(150.0);
+            y1[@"Fit"]![@"Coefficients"]!.Values<double>().ShouldBe([50.0, 10.0]);
+            y1[@"Fit"]![@"DerivativeCoefficients"]!.Values<double>().ShouldBe([10.0]);
+            y1[@"Fit"]![@"RSquared"]!.Value<double>().ShouldBe(1.0);
+
+            // An axis with no fit has a null fit.
+            chart[@"Y2"]![@"Absolute"]!.Value<bool>().ShouldBeTrue();
+            chart[@"Y2"]![@"Fit"]!.Type.ShouldBe(JTokenType.Null);
+        }
+
         [Fact]
         public void BuildMetricsJson_Given_NoTrackedScenario_Then_AnEmptyListAndNoSimulation()
         {

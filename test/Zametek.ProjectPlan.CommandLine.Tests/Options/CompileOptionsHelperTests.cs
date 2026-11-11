@@ -783,14 +783,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             names.ShouldBe(
             [
                 @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart", @"scenarioChart",
+                @"scenarioChartPoints", @"scenarioChartFits",
                 @"schedule", @"resourceSeries", @"earnedValueSeries",
                 @"simulationChart", @"simulationStatistics", @"simulationHistogram", @"simulationPaths", @"simulationActivities", @"simulationIterations",
                 @"simulationWorkbook",
             ]);
 
-            // Each output is a member of the outputs a request asks for, but for two members that make more than one. The data is
-            // one member, and its three files are the outputs that it makes. The simulation is one member: its chart and its files
-            // are the outputs that it makes. Its workbook is an output of its own.
+            // Each output is a member of the outputs a request asks for, but for three members that make more than one. The scenario
+            // chart is one member: its image and its two CSV files are the outputs that it makes. The data is one member, and its
+            // three files are the outputs that it makes. The simulation is one member: its chart and its files are the outputs that
+            // it makes. Its workbook is an output of its own.
             string[] members = [.. typeof(OutputsOptions).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(x => ApiNamingPolicy.Instance.ConvertName(x.Name))];
 
@@ -840,6 +842,19 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 CompileOptionsHelper.BuildOutputFilename(output, options, @"plan")
                     .ShouldBe(Path.GetFileName(Program.BuildExportFilePath(@"charts", @"plan", suffix, format)));
             }
+        }
+
+        [Fact]
+        public void GetRequestedOutputs_Given_TheScenarioChart_Then_ItsImageAndItsTwoCsvFiles()
+        {
+            var options = new CompileOptions
+            {
+                Outputs = new OutputsOptions { ScenarioChart = new ChartOptions { Format = PlotExport.Png, Width = 1, Height = 1 } },
+            };
+
+            CompileOptionsHelper.GetRequestedOutputs(options).ShouldBe([JobOutput.ScenarioChart, JobOutput.ScenarioChartPoints, JobOutput.ScenarioChartFits]);
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.ScenarioChartPoints, options, @"plan").ShouldBe(@"plan-scenario-points.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.ScenarioChartFits, options, @"plan").ShouldBe(@"plan-scenario-fits.csv");
         }
 
         [Fact]

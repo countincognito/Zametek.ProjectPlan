@@ -55,6 +55,7 @@ zpp -i plan.zpp --compile-tracked -o plan.zpp
 - `zpp` loads each tracked scenario, compiles it, and replaces its metrics. Then it loads its own scenario again. `-o` saves the new metrics.
 - `zpp` prints the metrics of each tracked scenario after the other tables, in the table "Tracked Scenarios". The table has a column for each scenario and a row for each metric. A scenario that does not compile has no values. In JSON, the metrics are in `TrackedScenarios`, with the `Path`, the `Id` and `IsCurrent` of each scenario. The value of `Metrics` is `null` for a scenario that does not compile.
 - The option `--scenario-chart-directory` compiles the tracked scenarios also without `--compile-tracked`. Thus the chart has no stale points.
+- When the scenario chart of the plan has axes, `zpp` prints the table "Scenario Chart" after the table of the tracked scenarios. It has the metric of each axis, and the formula of each fit and of its derivative, as the dock "Scenario Chart" shows them. In JSON, the data of the chart is in `ScenarioChart` (refer to [The data of the scenario chart](#the-data-of-the-scenario-chart)).
 - An imported plan has no tracked scenarios.
 
 To get metrics that a program can read, use JSON. The standard output has only the JSON document, and thus you can send it through a pipe:
@@ -122,6 +123,25 @@ zpp -i plan.zpp --data-directory out
 - `<name>-earned-value.csv` has the points of the planned earned value, and then of the effort and of the progress that the trackers record. The first column names the series.
 
 A time is a number of days from the start of the project. A list of ids has a space between two ids. A value that an activity does not have is empty. The files are UTF-8 with a byte order mark, and they use the invariant culture, as the CSV files of the simulation do.
+
+## The data of the scenario chart
+
+The option `--scenario-chart-directory` writes the chart, and two CSV files of its data in the same directory. The axes, the fits and the option for absolute values are the settings of the chart that the plan keeps. A person sets them in the dock "Scenario Chart" of the application. Thus, the data and the chart always agree. The dock also saves the two files: right-click the chart, and select **Export CSV Files...**.
+
+- `<name>-scenario-points.csv` has a row for each point of each axis of Y (`Y1` or `Y2`). The rows are in the order of the chart: by X, and then by Y. A row has the id and the path of the tracked scenario, and its values of X and Y. A metric that a scenario does not have is 0, as on the chart.
+- `<name>-scenario-fits.csv` has a row for each axis of Y that has a metric. A row has the metrics of the axes of X and Y, and the fit that the chart asks for. It also shows whether the chart plots the absolute value of the curve. Then it has r², the coefficients of the curve, and the coefficients of its derivative. These three are empty when the axis has no fit.
+
+An axis has no fit when the fit is `None`, or when the points have too few different values of X. A fit with n coefficients needs n different values. An axis also has no fit when the fit is not a curve, for example an exponential fit of a value of 0. The r² of a fit is the square of the correlation of the curve with the points. It is empty when the points have one value of Y. The coefficients go from the constant up, and a space separates two coefficients:
+
+| Fit | Curve | Derivative |
+| --- | ----- | ---------- |
+| Linear | y = c0 + c1·x | y′ = d0 |
+| Exponential | y = c0·e^(c1·x) | y′ = d0·e^(d1·x) |
+| Logarithmic | y = c0 + c1·ln(x) | y′ = d0 / x |
+| Power | y = c0·x^c1 | y′ = d0·x^d1 |
+| Polynomial of the order 2, 3 or 4 | y = Σ ci·x^i | y′ = Σ di·x^i |
+
+The absolute option changes only what the chart shows. The coefficients are those of the curve itself. The metrics have the names of the metrics of the API, for example `DirectCost`. The coefficients have all their digits. Do not round them before you calculate the points of a curve. An example of such a point is the inflection point of a cubic fit of the risk. The files are UTF-8 with a byte order mark, and they use the invariant culture, as the other CSV files do. A chart with no axes gives files that have only their headers.
 
 ## Simulate the schedule
 

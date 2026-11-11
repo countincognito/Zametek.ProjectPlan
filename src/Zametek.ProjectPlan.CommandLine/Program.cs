@@ -461,8 +461,13 @@ namespace Zametek.ProjectPlan.CommandLine
             AddExportFilePath(filenames, JobOutput.ScenarioChart, options.ScenarioChartDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, options.ScenarioChartFormat.GetDescription());
             AddExportFilePath(filenames, JobOutput.SimulationChart, options.SimulationDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, options.SimulationFormat.GetDescription());
 
-            // The CSV files of the simulation, in the directory of its chart. The file of the iterations is written only for a run.
+            // The CSV files of the scenario chart, in the directory of the chart.
             string csv = Resource.ProjectPlan.Filters.Filter_CsvFileExtension;
+            string scenarioChart = Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart;
+            AddExportFilePath(filenames, JobOutput.ScenarioChartPoints, options.ScenarioChartDirectory, projectTitle, scenarioChart + Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartPoints, csv);
+            AddExportFilePath(filenames, JobOutput.ScenarioChartFits, options.ScenarioChartDirectory, projectTitle, scenarioChart + Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartFits, csv);
+
+            // The CSV files of the simulation, in the directory of its chart. The file of the iterations is written only for a run.
             string csvSuffix = Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv;
             AddExportFilePath(filenames, JobOutput.SimulationStatistics, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, csv);
             AddExportFilePath(filenames, JobOutput.SimulationHistogram, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, csv);

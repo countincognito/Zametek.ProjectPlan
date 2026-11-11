@@ -34,6 +34,9 @@ namespace Zametek.ProjectPlan.CommandLine
         public IReadOnlyList<TrackedScenarioResponse>? TrackedScenarios { get; init; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ScenarioChartResponse? ScenarioChart { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyList<OutputResponse>? Outputs { get; init; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

@@ -596,7 +596,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MissedMaximumLatestFinishTimes = [new SimulationMissedMaximumResponse(2, @"End", 1)],
             };
             var tracked = new TrackedScenarioResponse(@"Plans > Beta", Guid.Empty, false, metrics);
-            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, TrackedScenarios = [tracked], Console = console };
+            var curveFit = new CurveFitResponse(1.0, [0.0, 1.0], [1.0]);
+            var point = new ScenarioChartPointResponse(Guid.Empty, @"Alpha", 5.0, 5.0);
+            var series = new ScenarioChartSeriesResponse(@"networkDuration", CurveFittingType.Linear, false, [point], curveFit);
+            var scenarioChart = new ScenarioChartResponse(@"networkDuration", series, series);
+            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, TrackedScenarios = [tracked], ScenarioChart = scenarioChart, Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
             var jobProgress = new JobProgressResponse(1, 2);
             var jobStatus = new JobStatusResponse(@"i", JobState.Running, DateTimeOffset.UnixEpoch, TimeSpan.Zero, jobProgress);
@@ -623,7 +627,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
             Names(Schema(@"TrackedScenario")).ShouldBe(Names(tracked, written), ignoreOrder: true);
             Schema(@"TrackedScenario")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(tracked, written), ignoreOrder: true);
-            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [tracked], [output], console), written), ignoreOrder: true);
+            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [tracked], scenarioChart, [output], console), written), ignoreOrder: true);
+
+            // The data of the scenario chart. An axis of Y and the fit of an axis can be missing.
+            Names(Schema(@"ScenarioChart")).ShouldBe(Names(scenarioChart, written), ignoreOrder: true);
+            Schema(@"ScenarioChart")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe([@"xMetric"]);
+            Names(Schema(@"ScenarioChartSeries")).ShouldBe(Names(series, written), ignoreOrder: true);
+            Schema(@"ScenarioChartSeries")[@"required"]!.AsArray().Select(x => x!.GetValue<string>())
+                .ShouldBe(Names(series, written).Where(x => x != @"fit"), ignoreOrder: true);
+            Names(Schema(@"ScenarioChartPoint")).ShouldBe(Names(point, written), ignoreOrder: true);
+            Schema(@"ScenarioChartPoint")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(point, written), ignoreOrder: true);
+            Names(Schema(@"CurveFit")).ShouldBe(Names(curveFit, written), ignoreOrder: true);
+            Schema(@"CurveFit")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(curveFit, written), ignoreOrder: true);
+            Enumerated(Schema(@"ScenarioChartSeries")[@"properties"]![@"curveFitting"]!).ShouldBe([.. Values<CurveFittingType>()], ignoreOrder: true);
+
+            // A metric of the chart has the name of the metric in the metrics, and so a client finds its value there.
+            string[] chartMetrics = [.. Enum.GetValues<TrackedMetrics>().Where(x => x != TrackedMetrics.None).Select(ScenarioChartResponse.MetricName)];
+            Enumerated(Schema(@"ScenarioChartMetric")).ShouldBe(chartMetrics, ignoreOrder: true);
+            chartMetrics.ShouldBeSubsetOf(metricNames);
 
             // A problem is the members every one has, and those of the kind that has more.
             string[] problemNames = [.. Names(Schema(@"Problem")), .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject()).Where(x => x is not (@"type" or @"status"))];

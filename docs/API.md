@@ -145,7 +145,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | Option | Option of zpp | Description |
 | ------ | ------------- | ----------- |
 | `scenario` | `--scenario` | The scenario to load, by name or by id. The name is not case-sensitive. The id is the whole id, or a unique prefix of a minimum of four hexadecimal characters. A name that matches has priority over a prefix. Only with a `project`. |
-| `compileTracked` | `--compile-tracked` | `true` compiles each tracked scenario of the project, and not only the scenario that the job loads. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output `project` holds the new metrics, and the answer has `trackedScenarios`. The output `scenarioChart` compiles the tracked scenarios also without this option. The default is `false`. |
+| `compileTracked` | `--compile-tracked` | `true` compiles each tracked scenario of the project, and not only the scenario that the job loads. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output `project` holds the new metrics, and the answer has `trackedScenarios`. The answer also has `scenarioChart` when the scenario chart of the project has axes. The output `scenarioChart` compiles the tracked scenarios also without this option. The default is `false`. |
 | `baseTheme` | `--base-theme` | `light` (the default) or `dark`: the theme of the charts and graphs. |
 | `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json`: how the [console](#console) shows the metrics. It has no other effect. |
 | `compileTimeout` | `--compile-timeout` | An ISO 8601 duration, from `PT0.001S` to the limit of the server (`maxCompileTimeout`). Without it, the value is `PT5S` as for `zpp`, or the limit if that is shorter. A request cannot disable the limit, but `zpp` can. |
@@ -153,7 +153,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | `runSimulation` | `--run-simulation` | `true` runs the simulation of the schedule after the project compiles (refer to [The simulation](#the-simulation)). The default is `false`. |
 | `outputs` | | What the job produces (refer to the table that follows). |
 
-The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Four outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). The output `data` is one request for three CSV files, and the answer lists them as `schedule`, `resourceSeries` and `earnedValueSeries`.
+The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Four outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). The output `data` is one request for three CSV files, and the answer lists them as `schedule`, `resourceSeries` and `earnedValueSeries`. The output `scenarioChart` is one request for the chart and two CSV files of its data. The answer lists them as `scenarioChart`, `scenarioChartPoints` and `scenarioChartFits`.
 
 | Member | Option of zpp | Produces | Settings |
 | ------ | ------------- | -------- | -------- |
@@ -164,7 +164,7 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `vertexGraph` | `--vertex-*` | The vertex graph (`<name>-vertex.<format>`) | A graph |
 | `resourceChart` | `--resource-*` | The resource chart (`<name>-resource.<format>`) | A chart |
 | `earnedValueChart` | `--ev-*` | The earned value chart (`<name>-ev.<format>`) | A chart |
-| `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`) | A chart |
+| `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`), and two CSV files of its data: the points (`<name>-scenario-points.csv`) and the fits (`<name>-scenario-fits.csv`). Refer to [The data of the scenario chart](COMMAND-LINE.md#the-data-of-the-scenario-chart). | A chart |
 | `data` | `--data-directory` | The data of the compiled scenario as three CSV files: the table of the critical path method (`<name>-schedule.csv`), the series of the resources (`<name>-resources.csv`) and the series of the earned value (`<name>-earned-value.csv`). Refer to [The data of the schedule](COMMAND-LINE.md#the-data-of-the-schedule). | `{}` |
 | `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
 | `simulationWorkbook` | `--simulation-workbook-directory` | The result of the simulation as one Excel workbook (`<name>-simulation.xlsx`), with a sheet for the settings and for each of the CSV files, and, for a run, a sheet for the iterations. It is independent of `simulation`. | `{}` |
@@ -202,6 +202,7 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 - `outputs` lists each output, in the order in which the job produced them. This is the order of the table above. The list is `[]` when the request asked for no output. `kind` shows which output it is. `fileName` is the name that `zpp` gives to its file. `contentType` is its media type. `content` is the file, in base64.
 - `simulation` has the [statistics](#simulation) of the simulation. It is in the answer when the request ran the simulation, or the project holds a result.
 - `trackedScenarios` lists each tracked scenario of the project, in the order of the project. It is in the answer when the request has `compileTracked`. An item has the `path` and the `id` of the scenario, `isCurrent`, and its `metrics`. `isCurrent` is `true` for the scenario that the job loaded, and its metrics are then the same as `metrics`. `metrics` is `null` for a scenario that does not compile.
+- `scenarioChart` has the [data of the scenario chart](#scenario-chart). It is in the answer when the job compiled the tracked scenarios, and the chart of the project has axes.
 - With `?include=console`, the answer also has `console` (refer to [console](#console)).
 
 With `Accept: application/zip`, the answer is a zip. `Content-Disposition` names it `<name>.zip`. The zip contains each output as a file, with the name that `zpp` gives it. It also contains `result.json`, which is the answer above without the contents of the files. The time of each entry is the time at which the job ran, or the time that `now` gave.
@@ -274,6 +275,42 @@ The answer has `simulation` when the request ran the simulation, or the project 
 - `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the request gave a target. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
 
 The panel of the application, `zpp` and this API make these numbers in the same way. Refer to the [simulation plan](SIMULATION-PLAN.md) for how the simulation works.
+
+#### Scenario chart
+
+The answer has `scenarioChart` when two conditions are true. The job compiled the tracked scenarios (`compileTracked`, or the output `scenarioChart`). The chart of the project has a metric for the axis of X, and for one or two axes of Y. The axes, the fits and the option for absolute values are the settings of the chart that the project keeps. A person sets them in the dock "Scenario Chart" of the application. Thus, the data and the chart always agree:
+
+```json
+"scenarioChart": {
+  "xMetric": "networkDuration",
+  "y1": {
+    "metric": "totalCost",
+    "curveFitting": "polynomialOrder2",
+    "absolute": false,
+    "points": [
+      { "id": "8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5", "path": "Options/Compressed", "x": 90, "y": 21480 },
+      ...
+    ],
+    "fit": { "rSquared": 0.987, "coefficients": [52341.7, -812.5, 4.25], "derivativeCoefficients": [-812.5, 8.5] }
+  }
+}
+```
+
+- `xMetric` and `metric` have the names of the [metrics](#metrics). Thus, a client also finds the values of a scenario there. An axis of Y that has no metric is not in the data.
+- `points` has a point for each tracked scenario, in the order of the chart: by `x`, and then by `y`. A metric that a scenario does not have is 0, as on the chart. A scenario that does not compile has no metrics.
+- `curveFitting` is the fit that the chart asks for: `none`, `linear`, `exponential`, `logarithmic`, `power`, `polynomialOrder2`, `polynomialOrder3` or `polynomialOrder4`. The axis has no `fit` when the fit is `none`, or when the points have too few different values of `x`. A fit with n coefficients needs n different values. The axis also has no `fit` when the fit is not a curve, for example an exponential fit of a value of 0.
+- `coefficients` go from the constant up, and `derivativeCoefficients` are those of the derivative of the curve. The table that follows gives their forms. `rSquared` is the square of the correlation of the curve with the points. It is `null` when the points have one value of `y`.
+- `absolute` shows that the chart plots the absolute value of the curve. The coefficients are those of the curve itself.
+
+| `curveFitting` | Curve | Derivative |
+| -------------- | ----- | ---------- |
+| `linear` | y = c0 + c1·x | y′ = d0 |
+| `exponential` | y = c0·e^(c1·x) | y′ = d0·e^(d1·x) |
+| `logarithmic` | y = c0 + c1·ln(x) | y′ = d0 / x |
+| `power` | y = c0·x^c1 | y′ = d0·x^d1 |
+| `polynomialOrder2`, `polynomialOrder3`, `polynomialOrder4` | y = Σ ci·x^i | y′ = Σ di·x^i |
+
+The coefficients have all their digits. Do not round them before you calculate the points of a curve. An example of such a point is the inflection point of a cubic fit of the risk. The output `scenarioChart` writes the same data as two CSV files (refer to [The data of the scenario chart](COMMAND-LINE.md#the-data-of-the-scenario-chart)).
 
 #### Console
 
@@ -604,7 +641,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 #### output-failed
 
-`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. `trackedScenarios` has the tracked scenarios, when the request has `compileTracked`. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
+`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. `trackedScenarios` has the tracked scenarios, when the request has `compileTracked`. `scenarioChart` has the data of the scenario chart, as the answer has it. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
 
 ```json
 {
@@ -793,3 +830,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The option `compileTracked` compiles each tracked scenario of the project. The answer and the problem `output-failed` then have the member `trackedScenarios`.
 - The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
+- The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.

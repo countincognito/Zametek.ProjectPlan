@@ -10,10 +10,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Correct the two pages with the other updates of the wiki.
 
-- [ ] **Suggestion: give the data of the scenario chart as an output** *(2026-11-11, a suggestion from the design of the zpp skill)*
-
-  The desktop application shows the formula of each fitted curve, with r², below the chart. The exported image does not show the formula, and no other output has it. Add the points, the coefficients of each fit, r² and the coefficients of the derivative to the answer. Also write them as a sheet or a CSV file, as the simulation does. Then a client can read the trade-off between time, cost and risk from zpp and does not fit curves of its own.
-
 - [ ] **Suggestion: tell how far a plan misses its deadline** *(2026-11-11, a suggestion from the design of the zpp skill)*
 
   A frequent question is "can we finish by day T with these people?". The suggestion was a maximum LFT on the end milestone, with negative total slack as in Microsoft Project. On 2026-11-11, the maintainer decided against it. A maximum LFT pins an activity, and constraints of that kind make the compile too complex. A deadline is only a guideline.
@@ -38,7 +34,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Righting Software gets decision points from a fitted direct cost and a fitted risk. They are the maximum risk, the two risk crossover points and the inflection point of the risk. The inflection point is the target for a decompression. The method also finds the minimum direct cost and the minimum total cost. It also asks what total cost a duration needs, to find the death zone.
 
-  From its own fits, `zpp` can calculate these points and give them as data. This suggestion goes together with the suggestion about the data of the scenario chart. Keep at least six significant digits in each coefficient, because a cubic fit is sensitive to rounding.
+  From its own fits, `zpp` can calculate these points and give them as data. The data of the scenario chart (`scenarioChart` in the API) already gives the coefficients of each fit with all their digits. Keep at least six significant digits in each coefficient, because a cubic fit is sensitive to rounding.
 
 - [ ] **Suggestion: compare the tracked scenarios with a baseline** *(2026-11-11, a suggestion from the design of the zpp skill)*
 

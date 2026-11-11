@@ -171,4 +171,10 @@
   <data name="Suffix_Schedule" xml:space="preserve">
     <value>-schedule</value>
   </data>
+  <data name="Suffix_ScenarioChartPoints" xml:space="preserve">
+    <value>-points</value>
+  </data>
+  <data name="Suffix_ScenarioChartFits" xml:space="preserve">
+    <value>-fits</value>
+  </data>
 </root>

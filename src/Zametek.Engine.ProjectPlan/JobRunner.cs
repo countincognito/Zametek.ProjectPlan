@@ -440,17 +440,29 @@ namespace Zametek.Engine.ProjectPlan
                     cancellationToken);
             }
 
-            // Scenario chart export.
-            if (request.ScenarioChart is ChartOutputRequest scenarioChart)
+            // The data of the scenario chart, when the job compiled the tracked scenarios: the chart plots it, and the result
+            // gives it.
+            ScenarioChartDataModel? scenarioChartData = null;
+            IScenarioChartManagerViewModel? scenarios = null;
+
+            if (request.CompileTracked || request.ScenarioChart is not null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IScenarioChartManagerViewModel scenarios = services.GetRequiredService<IScenarioChartManagerViewModel>();
+                scenarios = services.GetRequiredService<IScenarioChartManagerViewModel>();
 
                 // The tracked-metrics set the chart plots is normally assembled by
                 // a reactive pipeline that a job never starts, so build it
                 // explicitly first.
                 project.BuildTrackedMetrics();
+                scenarioChartData = scenarios.BuildScenarioChartData();
+            }
+
+            // Scenario chart export, and its data as two CSV files: the points and the fits.
+            if (request.ScenarioChart is ChartOutputRequest scenarioChart
+                && scenarios is not null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
                 await WriteChartAsync(
                     dialogService,
@@ -459,6 +471,18 @@ namespace Zametek.Engine.ProjectPlan
                     scenarioChart,
                     scenarios.BuildScenarioChartPlotModel,
                     scenarios.WriteScenarioChartImageAsync,
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.ScenarioChartPoints,
+                    writer => ScenarioChartCsvWriter.WritePoints(writer, scenarioChartData),
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.ScenarioChartFits,
+                    writer => ScenarioChartCsvWriter.WriteFits(writer, scenarioChartData),
                     cancellationToken);
             }
 
@@ -560,6 +584,7 @@ namespace Zametek.Engine.ProjectPlan
                             x.Id == loadedScenarioId ? jobMetrics : trackedMetrics.GetValueOrDefault(x.Id))),
                     ]
                     : null,
+                ScenarioChart = scenarioChartData,
             };
         }
 

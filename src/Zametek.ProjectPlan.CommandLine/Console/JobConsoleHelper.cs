@@ -14,8 +14,8 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         // Prints what a job that ran to its end leaves on stdout - the compiler's output when the plan did not compile,
         // and otherwise its metrics, in the format asked for, with the statistics of its simulation after them if it ran
-        // one, and the metrics of each tracked scenario if it compiled them (each in a table of its own, or in JSON as one
-        // more member) - and returns the exit code the run ends with.
+        // one, the metrics of each tracked scenario if it compiled them, and the axes and the fits of the scenario chart if it
+        // has them (each in a table of its own, or in JSON as one more member) - and returns the exit code the run ends with.
         public static async Task<ExitCode> WriteResultAsync(
             IJobConsole console,
             JobResult result,
@@ -39,14 +39,14 @@ namespace Zametek.ProjectPlan.CommandLine
                     case MetricsExport.Json:
                         // Machine output: undecorated, no colours, no leading
                         // blank line, so it can be piped straight into a parser.
-                        await console.WriteLineAsync(BuildMetricsJson(metrics, result.Simulation, result.TrackedScenarios));
+                        await console.WriteLineAsync(BuildMetricsJson(metrics, result.Simulation, result.TrackedScenarios, result.ScenarioChart));
                         break;
                     case MetricsExport.Table:
-                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, x => x.ToString()), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, result.ScenarioChart, x => x.ToString()), hasErrors: false);
                         break;
                     case MetricsExport.Markdown:
                     default:
-                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, x => x.ToMarkDownString()), hasErrors: false);
+                        await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, result.ScenarioChart, x => x.ToMarkDownString()), hasErrors: false);
                         break;
                 }
             }
@@ -128,12 +128,14 @@ namespace Zametek.ProjectPlan.CommandLine
         }
 
         // The tables of a run as one block of text, written as a table or as Markdown: the metrics, then, if the job ran a
-        // simulation, its statistics, and, if it compiled the tracked scenarios, the metrics of each, each in a table of its
-        // own. A table ends its last line, and so one line end more is the blank line between two tables.
+        // simulation, its statistics, if it compiled the tracked scenarios, the metrics of each, and, if the scenario chart has
+        // data, its axes and its fits, each in a table of its own. A table ends its last line, and so one line end more is the
+        // blank line between two tables.
         private static string BuildMetricsText(
             JobMetrics metrics,
             JobSimulationMetrics? simulation,
             IReadOnlyList<JobTrackedScenario>? trackedScenarios,
+            ScenarioChartDataModel? scenarioChart,
             Func<ConsoleTable, string> write)
         {
             string text = write(BuildMetricsTable(metrics));
@@ -148,7 +150,46 @@ namespace Zametek.ProjectPlan.CommandLine
                 text += NewLineHelper.NewLine + write(BuildTrackedScenariosTable(trackedScenarios));
             }
 
+            if (scenarioChart is not null)
+            {
+                text += NewLineHelper.NewLine + write(BuildScenarioChartTable(scenarioChart));
+            }
+
             return text;
+        }
+
+        // The axes and the fits of the scenario chart as a table of their own, as the panel shows them: the metric of each
+        // axis, and for an axis of Y that has a fit, the formula of the curve and of its derivative. The points are in the
+        // table of the tracked scenarios.
+        internal static ConsoleTable BuildScenarioChartTable(ScenarioChartDataModel scenarioChart)
+        {
+            ArgumentNullException.ThrowIfNull(scenarioChart);
+            ConsoleTable table = CreateTable(Resource.ProjectPlan.Titles.Title_ScenarioChartView, Resource.ProjectPlan.Titles.Title_Values);
+            table.AddRow(Resource.ProjectPlan.Menus.Menu_TrackedMetricXAxis, StringConverters.TrackedMetricsValue(scenarioChart.XMetric));
+            AddScenarioChartRows(table, scenarioChart.Y1, Resource.ProjectPlan.Menus.Menu_TrackedMetricY1Axis, Resource.ProjectPlan.Labels.Label_CurveFittingY1, Resource.ProjectPlan.Labels.Label_CurveFittingDerivativeY1);
+            AddScenarioChartRows(table, scenarioChart.Y2, Resource.ProjectPlan.Menus.Menu_TrackedMetricY2Axis, Resource.ProjectPlan.Labels.Label_CurveFittingY2, Resource.ProjectPlan.Labels.Label_CurveFittingDerivativeY2);
+            return table;
+        }
+
+        private static void AddScenarioChartRows(
+            ConsoleTable table,
+            ScenarioChartSeriesModel? series,
+            string metricLabel,
+            string fitLabel,
+            string derivativeLabel)
+        {
+            if (series is null)
+            {
+                return;
+            }
+
+            table.AddRow(metricLabel, StringConverters.TrackedMetricsValue(series.Metric));
+
+            if (series.CurveFit is CurveFitModel fit)
+            {
+                table.AddRow(fitLabel, CurveFitCalculator.BuildFormula(fit, series.AbsoluteCurveFitting));
+                table.AddRow(derivativeLabel, CurveFitCalculator.BuildDerivativeFormula(fit, series.AbsoluteCurveFitting));
+            }
         }
 
         // The metrics as a table, which prints as a table or as Markdown. This and the builders below are internal
@@ -265,19 +306,22 @@ namespace Zametek.ProjectPlan.CommandLine
         // as the metrics are, with the seed written as text - as the API writes it - because a seed can be larger than
         // every reader of JSON reads without loss, and the dates as yyyy-MM-dd. When the job compiled the tracked scenarios,
         // TrackedScenarios follows: for each, its path, its id, whether the job loaded it, and its metrics as the metrics of
-        // the job are written (null for a scenario that did not compile). Without either, the text is what it was before
-        // there was one.
+        // the job are written (null for a scenario that did not compile). When the scenario chart has data, ScenarioChart
+        // follows: the metrics of its axes, and for each axis of Y its points and its fit, with the coefficients as numbers
+        // (null for an axis with no fit). Without any of them, the text is what it was before there was one.
         internal static string BuildMetricsJson(
             JobMetrics metrics,
             JobSimulationMetrics? simulation = null,
-            IReadOnlyList<JobTrackedScenario>? trackedScenarios = null)
+            IReadOnlyList<JobTrackedScenario>? trackedScenarios = null,
+            ScenarioChartDataModel? scenarioChart = null)
         {
             object output = BuildMetricsObject(metrics);
 
             // Json.NET indents with the platform's line end. JSON escapes the line breaks in its strings, so every one
             // left in the text is indentation.
             if (simulation is null
-                && trackedScenarios is null)
+                && trackedScenarios is null
+                && scenarioChart is null)
             {
                 return NewLineHelper.NormalizeNewLines(JsonConvert.SerializeObject(output, Formatting.Indented));
             }
@@ -298,6 +342,16 @@ namespace Zametek.ProjectPlan.CommandLine
                     [@"IsCurrent"] = x.IsCurrent,
                     [@"Metrics"] = x.Metrics is null ? JValue.CreateNull() : JObject.FromObject(BuildMetricsObject(x.Metrics)),
                 }));
+            }
+
+            if (scenarioChart is not null)
+            {
+                json[@"ScenarioChart"] = new JObject
+                {
+                    [@"XMetric"] = TrackedMetricsNames.Get(scenarioChart.XMetric),
+                    [@"Y1"] = BuildScenarioChartSeriesJson(scenarioChart.Y1),
+                    [@"Y2"] = BuildScenarioChartSeriesJson(scenarioChart.Y2),
+                };
             }
 
             return NewLineHelper.NormalizeNewLines(json.ToString(Formatting.Indented));
@@ -348,6 +402,36 @@ namespace Zametek.ProjectPlan.CommandLine
                 metrics.IndirectMarginAbsolute,
                 metrics.OtherMarginAbsolute,
                 metrics.TotalMarginAbsolute,
+            };
+        }
+
+        private static JToken BuildScenarioChartSeriesJson(ScenarioChartSeriesModel? series)
+        {
+            if (series is null)
+            {
+                return JValue.CreateNull();
+            }
+
+            return new JObject
+            {
+                [@"Metric"] = TrackedMetricsNames.Get(series.Metric),
+                [@"CurveFitting"] = series.CurveFittingType.ToString(),
+                [@"Absolute"] = series.AbsoluteCurveFitting,
+                [@"Points"] = new JArray(series.Points.Select(x => new JObject
+                {
+                    [@"Id"] = x.Id.ToString(),
+                    [@"Path"] = x.Path,
+                    [@"X"] = x.X,
+                    [@"Y"] = x.Y,
+                })),
+                [@"Fit"] = series.CurveFit is CurveFitModel fit
+                    ? new JObject
+                    {
+                        [@"RSquared"] = fit.RSquared,
+                        [@"Coefficients"] = new JArray(fit.Coefficients),
+                        [@"DerivativeCoefficients"] = new JArray(fit.DerivativeCoefficients),
+                    }
+                    : JValue.CreateNull(),
             };
         }
 

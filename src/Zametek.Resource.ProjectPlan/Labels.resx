@@ -915,4 +915,10 @@
   <data name="Label_DayTotal" xml:space="preserve">
     <value>Day Total</value>
   </data>
+  <data name="Label_CurveFittingDerivativeY1" xml:space="preserve">
+    <value>Y1 Derivative</value>
+  </data>
+  <data name="Label_CurveFittingDerivativeY2" xml:space="preserve">
+    <value>Y2 Derivative</value>
+  </data>
 </root>

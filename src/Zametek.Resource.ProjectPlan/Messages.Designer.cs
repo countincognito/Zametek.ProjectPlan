@@ -867,6 +867,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} files were saved in {1}..
+        /// </summary>
+        public static string Message_ScenarioChartFilesSaved {
+            get {
+                return ResourceManager.GetString("Message_ScenarioChartFilesSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scenario &apos;{0}&apos; has no scenario data in the project file.
         /// </summary>
         public static string Message_ScenarioHasNoScenarioData {

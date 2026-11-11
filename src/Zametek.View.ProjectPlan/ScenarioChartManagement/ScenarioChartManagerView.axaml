@@ -866,6 +866,11 @@
 
             <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 								  Command="{Binding Path=SaveScenarioChartImageFileCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_ExportCsvFiles}"
+								  Command="{Binding Path=ExportCsvFilesCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

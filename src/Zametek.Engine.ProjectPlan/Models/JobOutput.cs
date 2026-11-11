@@ -11,6 +11,8 @@ namespace Zametek.Engine.ProjectPlan
         ResourceChart,
         EarnedValueChart,
         ScenarioChart,
+        ScenarioChartPoints,
+        ScenarioChartFits,
         Schedule,
         ResourceSeries,
         EarnedValueSeries,

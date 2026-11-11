@@ -133,6 +133,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -fits.
+        /// </summary>
+        public static string Suffix_ScenarioChartFits {
+            get {
+                return ResourceManager.GetString("Suffix_ScenarioChartFits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -points.
+        /// </summary>
+        public static string Suffix_ScenarioChartPoints {
+            get {
+                return ResourceManager.GetString("Suffix_ScenarioChartPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -schedule.
         /// </summary>
         public static string Suffix_Schedule {

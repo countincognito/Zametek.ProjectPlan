@@ -1206,8 +1206,9 @@ components:
           description: |
             Compile each tracked scenario of the project, and not only the scenario that the job loads, as `zpp --compile-tracked`
             does. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output
-            `project` holds the new metrics, and the answer has `trackedScenarios`. The output `scenarioChart` compiles the tracked
-            scenarios also without this member, and thus the chart has no stale points. An import has no tracked scenarios.
+            `project` holds the new metrics, and the answer has `trackedScenarios`. The answer also has `scenarioChart` when the scenario
+            chart of the project has axes. The output `scenarioChart` compiles the tracked scenarios also without this member, and thus
+            the chart has no stale points. An import has no tracked scenarios.
         baseTheme:
           type: [string, 'null']
           enum: [light, dark, null]
@@ -1250,6 +1251,10 @@ components:
         `simulationPaths`, `simulationActivities` and `simulationIterations`). They are made from the result of the run of the request
         (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
         project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
+
+        The output `scenarioChart` is one request for the chart of the tracked scenarios and two CSV files of its data: the points of
+        each axis of Y (`scenarioChartPoints`) and the fit of each axis of Y (`scenarioChartFits`). The answer lists each file as an
+        output of its own, and it has the member `scenarioChart`.
 
         The output `data` is one request for the data of the compiled scenario as three CSV files: the table of the critical path method
         (`schedule`), the series of the resources (`resourceSeries`) and the series of the earned value (`earnedValueSeries`). The answer
@@ -1326,6 +1331,8 @@ components:
           description: Each tracked scenario of the project, in the order of the project, with its metrics. The answer has this member when the request has `compileTracked`.
           items:
             $ref: '#/components/schemas/TrackedScenario'
+        scenarioChart:
+          $ref: '#/components/schemas/ScenarioChart'
         outputs:
           type: array
           items:
@@ -1350,6 +1357,124 @@ components:
             - $ref: '#/components/schemas/Metrics'
             - type: 'null'
           description: The metrics of the scenario, or `null` when it did not compile or the project has no data for it.
+    ScenarioChart:
+      description: |
+        The data of the scenario chart, from the settings of the chart that the project keeps: the metrics of the axes, the fits and
+        the option for absolute values. Thus, the data and the chart always agree. The answer has this member when the job compiles
+        the tracked scenarios (`compileTracked` or the output `scenarioChart`), and the chart has a metric for the axis of X and for
+        one or two axes of Y. An axis of Y that has no metric is not in the data.
+      type: object
+      required: [xMetric]
+      properties:
+        xMetric:
+          $ref: '#/components/schemas/ScenarioChartMetric'
+        y1:
+          $ref: '#/components/schemas/ScenarioChartSeries'
+        y2:
+          $ref: '#/components/schemas/ScenarioChartSeries'
+    ScenarioChartMetric:
+      description: A metric that the scenario chart can plot. It has the name of the metric in `Metrics`.
+      type: string
+      enum:
+        - criticalityRisk
+        - fibonacciRisk
+        - activityRisk
+        - activityRiskWithStandardDeviationCorrection
+        - geometricCriticalityRisk
+        - geometricFibonacciRisk
+        - geometricActivityRisk
+        - directCost
+        - indirectCost
+        - otherCost
+        - totalCost
+        - directBilling
+        - indirectBilling
+        - otherBilling
+        - totalBilling
+        - directMargin
+        - indirectMargin
+        - otherMargin
+        - totalMargin
+        - directMarginAbsolute
+        - indirectMarginAbsolute
+        - otherMarginAbsolute
+        - totalMarginAbsolute
+        - directEffort
+        - indirectEffort
+        - otherEffort
+        - totalEffort
+        - activityEffort
+        - effortEfficiency
+        - networkCyclomaticComplexity
+        - networkDuration
+        - networkDurationManMonths
+        - peakHeadcount
+        - averageHeadcount
+        - peakToAverageHeadcount
+    ScenarioChartSeries:
+      description: An axis of Y of the scenario chart.
+      type: object
+      required: [metric, curveFitting, absolute, points]
+      properties:
+        metric:
+          $ref: '#/components/schemas/ScenarioChartMetric'
+        curveFitting:
+          type: string
+          enum: [none, linear, exponential, logarithmic, power, polynomialOrder2, polynomialOrder3, polynomialOrder4]
+          description: The fit that the chart asks for.
+        absolute:
+          type: boolean
+          description: Whether the chart shows the absolute value of the curve. The coefficients are those of the curve itself.
+        points:
+          type: array
+          description: A point for each tracked scenario, in the order of the chart (by `x`, and then by `y`).
+          items:
+            $ref: '#/components/schemas/ScenarioChartPoint'
+        fit:
+          $ref: '#/components/schemas/CurveFit'
+    ScenarioChartPoint:
+      description: A tracked scenario, and the values of the metrics of the axes. A metric that the scenario does not have is 0, as on the chart. A value that is not a number is `null`.
+      type: object
+      required: [id, path, x, y]
+      properties:
+        id:
+          type: string
+          format: uuid
+        path:
+          type: string
+          description: The name of the scenario, after the names of the folders that it is in.
+        x:
+          type: [number, 'null']
+        y:
+          type: [number, 'null']
+    CurveFit:
+      description: |
+        The fit of an axis of Y. The axis has no fit when `curveFitting` is `none`, when the points have too few different values of
+        `x` (a fit with n coefficients needs n), or when the fit is not a curve (for example, an exponential fit of a value of 0). The
+        coefficients go from the constant up, and the curves are:
+
+        - `linear`: y = c0 + c1·x, and y′ = d0.
+        - `exponential`: y = c0·e^(c1·x), and y′ = d0·e^(d1·x).
+        - `logarithmic`: y = c0 + c1·ln(x), and y′ = d0 / x.
+        - `power`: y = c0·x^c1, and y′ = d0·x^d1.
+        - `polynomialOrder2`, `polynomialOrder3` and `polynomialOrder4`: y = Σ ci·x^i, and y′ = Σ di·x^i.
+
+        The coefficients are numbers with all their digits. A client that finds the points of a curve (for example, the inflection point
+        of a cubic fit of the risk) must not round them first.
+      type: object
+      required: [rSquared, coefficients, derivativeCoefficients]
+      properties:
+        rSquared:
+          type: [number, 'null']
+          description: The square of the correlation of the curve with the points. It is `null` when the points have one value of `y`.
+        coefficients:
+          type: array
+          items:
+            type: number
+        derivativeCoefficients:
+          type: array
+          items:
+            type: number
     Metrics:
       description: |
         The metrics of a compiled project. The names are words in `lowerCamelCase`, and the values are numbers and not the text that
@@ -1591,6 +1716,8 @@ components:
             - resourceChart
             - earnedValueChart
             - scenarioChart
+            - scenarioChartPoints
+            - scenarioChartFits
             - schedule
             - resourceSeries
             - earnedValueSeries
@@ -1921,7 +2048,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, and the outputs that the job produced.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, the data of the scenario chart as the answer has it, and the outputs that the job produced.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1938,6 +2065,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/TrackedScenario'
+            scenarioChart:
+              $ref: '#/components/schemas/ScenarioChart'
             outputs:
               type: array
               items:

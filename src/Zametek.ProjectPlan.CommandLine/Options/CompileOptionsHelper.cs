@@ -181,7 +181,11 @@ namespace Zametek.ProjectPlan.CommandLine
             AddIf(requested, outputs.VertexGraph, JobOutput.VertexGraph);
             AddIf(requested, outputs.ResourceChart, JobOutput.ResourceChart);
             AddIf(requested, outputs.EarnedValueChart, JobOutput.EarnedValueChart);
+
+            // One output of a request is the scenario chart and the two CSV files of its data.
             AddIf(requested, outputs.ScenarioChart, JobOutput.ScenarioChart);
+            AddIf(requested, outputs.ScenarioChart, JobOutput.ScenarioChartPoints);
+            AddIf(requested, outputs.ScenarioChart, JobOutput.ScenarioChartFits);
 
             // One output of a request is the three files of the data of the schedule.
             AddIf(requested, outputs.Data, JobOutput.Schedule);
@@ -229,6 +233,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 JobOutput.ResourceChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceChart, outputs.ResourceChart),
                 JobOutput.EarnedValueChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart, outputs.EarnedValueChart),
                 JobOutput.ScenarioChart => ChartFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, outputs.ScenarioChart),
+                JobOutput.ScenarioChartPoints => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart + Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartPoints),
+                JobOutput.ScenarioChartFits => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart + Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartFits),
                 JobOutput.Schedule => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_Schedule),
                 JobOutput.ResourceSeries => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceSeries),
                 JobOutput.EarnedValueSeries => DataFilename(projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueSeries),
@@ -769,7 +775,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 : new GraphOutputRequest(Program.ToGraphExportFormat(graph.Format));
         }
 
-        // The name of a CSV file of the data of the schedule: the project's title and then the file's own suffix.
+        // The name of a CSV file of the data of the schedule or of the scenario chart: the project's title and then the file's
+        // own suffix.
         private static string DataFilename(
             string projectTitle,
             string suffix)

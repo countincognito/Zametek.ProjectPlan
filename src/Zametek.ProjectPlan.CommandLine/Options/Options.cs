@@ -161,7 +161,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option(c_ScenarioChartDirectoryLongName, HelpText = "Scenario chart output file directory")]
+        [Option(c_ScenarioChartDirectoryLongName, HelpText = "Scenario chart output file directory: the chart, and the CSV files of its points and of its fits (r squared, and the coefficients of each curve and of its derivative)")]
         public string? ScenarioChartDirectory { get; set; } = default;
 
         [Option(c_ScenarioChartFormatLongName, Default = PlotExport.Jpeg, HelpText = "Scenario chart format (Jpeg|Png|Bmp|Webp|Svg)")]

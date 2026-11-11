@@ -2,7 +2,6 @@ using Avalonia;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Plottables;
-using System.Diagnostics;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -73,6 +72,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             ];
 
+        private static readonly IList<IFileFilter> s_CsvExportFileFilters =
+            [
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_CsvFileType,
+                    Patterns = [Resource.ProjectPlan.Filters.Filter_CsvFilePattern]
+                }
+            ];
+
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ISettingService m_SettingService;
@@ -88,18 +96,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private IDisposable? m_BuildScenarioChartPlotModelSub;
 
         private const double c_AnnotatedEllipseRadius = 5.0;
-
-        private static readonly char[] s_PolynomialSuperscripts = ['⁰', '¹', '²', '³', '⁴'];
-
-        // The two ways a formula's numbers can be rounded. Either may be changed on its
-        // own; FormatFormulaValue picks whichever of them suits the value in hand.
-        private const int c_FormulaValueSignificantFigures = 5;
-
-        private const int c_FormulaValueDecimalPlaces = 5;
-
-        private static readonly string s_FormulaValueFixedFormat = $"F{c_FormulaValueDecimalPlaces}";
-
-        private static readonly string s_FormulaValueGeneralFormat = $"G{c_FormulaValueSignificantFigures}";
 
         // The raw scenario xs can be sparse, so fitted curves and their
         // derivatives are sampled over at least this many evenly spaced
@@ -143,6 +139,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ReactiveCommand<RxVoid, RxVoid> saveScenarioChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveScenarioChartImageFileAsync);
                 SaveScenarioChartImageFileCommand = saveScenarioChartImageFileCommand;
+            }
+
+            {
+                ReactiveCommand<RxVoid, RxVoid> exportCsvFilesCommand = ReactiveCommand.CreateFromTask(ExportCsvFilesAsync);
+                ExportCsvFilesCommand = exportCsvFilesCommand;
             }
 
             ResetScenarioChartCommand = ReactiveCommand.Create(ResetScenarioChart);
@@ -255,47 +256,6 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
-
-        /// <summary>
-        /// Formats a number for the fitted curve and derivative formulae shown on the
-        /// chart, keeping either a fixed number of decimal places or a fixed number of
-        /// significant figures - whichever of the two says more about the value in hand.
-        /// </summary>
-        /// <remarks>
-        /// A fixed number of decimal places keeps digits down to a fixed size, however
-        /// large or small the value is, while significant figures keep them down to a size
-        /// that follows the value. So the significant figures are worth having exactly when
-        /// they reach further than the decimal places do, which is what the comparison
-        /// below asks: a coefficient of 0.000012345 is worth more as five figures than as
-        /// five decimal places (which would leave 0.00001), while 620564.12345 is worth
-        /// more the other way round (five figures would leave 620560). A value too small to
-        /// read as a decimal comes out in scientific notation, which is the general
-        /// format's own doing.
-        /// <para>
-        /// This is also the one place the formulae are formatted, because a format cannot
-        /// be given as an interpolation specifier - everything after the colon there is
-        /// literal text, so it could not name these constants. The culture is stated rather
-        /// than left implicit, but it is the current one, so the formulae read in the
-        /// user's own conventions.
-        /// </para>
-        /// </remarks>
-        private static string FormatFormulaValue(double value)
-        {
-            // Zero has no exponent to reason about, and neither do the non-finite values.
-            if (value == 0.0
-                || double.IsNaN(value)
-                || double.IsInfinity(value))
-            {
-                return value.ToString(s_FormulaValueFixedFormat, CultureInfo.CurrentCulture);
-            }
-
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(value)));
-            int significantFigureDecimals = c_FormulaValueSignificantFigures - 1 - exponent;
-
-            return significantFigureDecimals > c_FormulaValueDecimalPlaces
-                ? value.ToString(s_FormulaValueGeneralFormat, CultureInfo.CurrentCulture)
-                : value.ToString(s_FormulaValueFixedFormat, CultureInfo.CurrentCulture);
-        }
 
         private async Task BuildScenarioChartPlotModelAsync()
         {
@@ -500,6 +460,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return BuildCurveFit(plotModel, markers, curveFittingType, absoluteCurveFitting, yAxis, markerFillColor);
         }
 
+        // The fitted curve of an axis, from the calculator: the curve is sampled over an even grid, and the absolute option
+        // only passes the sampled values through abs() before they are added to the chart. The fit and its r² are always
+        // those of the raw points. Without a fit, the chart shows only the points.
         internal static string BuildCurveFit(
             Plot plotModel,
             List<AnnotatedMarker> markers,
@@ -508,133 +471,27 @@ namespace Zametek.ViewModel.ProjectPlan
             IYAxis yAxis,
             Color color)
         {
-            string formula = string.Empty;
             double[] xs = [.. markers.Select(x => x.X)];
-            double[] ys = [.. markers.Select(x => x.Y)];
+            CurveFitModel? fit = CurveFitCalculator.Fit(xs, [.. markers.Select(x => x.Y)], curveFittingType);
 
-            Debug.Assert(xs.Length == ys.Length);
-
-            // A fit with n parameters needs n different values on the X axis, not n points. Two scenarios with the
-            // same duration are one value, and too few values give a singular fit and a curve with no meaning. Then
-            // the chart shows only the points.
-            int differentXs = xs.Distinct().Count();
-
-            // The fits are always computed against the raw data (as are the
-            // r² values); the plotted curves are then sampled over an even
-            // grid, and the absolute option only passes those sampled outputs
-            // through abs() before they are added to the chart.
-
-            switch (curveFittingType)
+            if (fit is null)
             {
-                case CurveFittingType.None:
-                    break;
-                case CurveFittingType.Linear:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
-                            string expression = $"{FormatFormulaValue(b)}x + {FormatFormulaValue(a)}";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] fx = [.. sampleXs.Select(x => a + b * x)];
-
-                            if (absoluteCurveFitting)
-                            {
-                                fx = [.. fx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.Exponential:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
-                            string expression = $"{FormatFormulaValue(a)}e^{FormatFormulaValue(r)}x";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] fx = [.. sampleXs.Select(x => a * Math.Exp(r * x))];
-
-                            if (absoluteCurveFitting)
-                            {
-                                fx = [.. fx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.Logarithmic:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
-                            string expression = $"{FormatFormulaValue(b)}ln(x) + {FormatFormulaValue(a)}";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] fx = [.. sampleXs.Select(x => a + b * Math.Log(x))];
-
-                            if (absoluteCurveFitting)
-                            {
-                                fx = [.. fx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.Power:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
-                            double f(double x) => a * Math.Pow(x, b);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => f(x)));
-                            string expression = $"{FormatFormulaValue(a)}x^{FormatFormulaValue(b)}";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] fx = [.. sampleXs.Select(x => f(x))];
-
-                            if (absoluteCurveFitting)
-                            {
-                                fx = [.. fx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder2:
-                    {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 2, absoluteCurveFitting, yAxis, color);
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder3:
-                    {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 3, absoluteCurveFitting, yAxis, color);
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder4:
-                    {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 4, absoluteCurveFitting, yAxis, color);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(curveFittingType), @$"{Resource.ProjectPlan.Messages.Message_UnknownCurveFittingType} {curveFittingType}");
+                return string.Empty;
             }
 
-            return formula;
+            double[] sampleXs = BuildSampleXs(xs);
+            double[] fx = [.. sampleXs.Select(x => CurveFitCalculator.Evaluate(fit, x))];
+
+            if (absoluteCurveFitting)
+            {
+                fx = [.. fx.Select(Math.Abs)];
+            }
+
+            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
+            return CurveFitCalculator.BuildFormula(fit, absoluteCurveFitting);
         }
 
+        // The derivative of the fitted curve of an axis, as the curve itself is drawn.
         internal static string BuildCurveFitDerivative(
             Plot plotModel,
             List<AnnotatedMarker> markers,
@@ -643,133 +500,24 @@ namespace Zametek.ViewModel.ProjectPlan
             IYAxis yAxis,
             Color color)
         {
-            string formula = string.Empty;
             double[] xs = [.. markers.Select(x => x.X)];
-            double[] ys = [.. markers.Select(x => x.Y)];
+            CurveFitModel? fit = CurveFitCalculator.Fit(xs, [.. markers.Select(x => x.Y)], curveFittingType);
 
-            Debug.Assert(xs.Length == ys.Length);
-
-            // A fit with n parameters needs n different values on the X axis, not n points. Two scenarios with the
-            // same duration are one value, and too few values give a singular fit and a curve with no meaning. Then
-            // the chart shows only the points.
-            int differentXs = xs.Distinct().Count();
-
-            // As with the fits themselves, the absolute option only passes
-            // the derivative outputs through abs() before they are added to
-            // the chart.
-
-            switch (curveFittingType)
+            if (fit is null)
             {
-                case CurveFittingType.None:
-                    break;
-                case CurveFittingType.Linear:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            // y = bx + a differentiates to the constant y′ = b.
-                            (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
-                            string expression = $"{FormatFormulaValue(b)}";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] dfx = [.. sampleXs.Select(_ => b)];
-
-                            if (absoluteCurveFitting)
-                            {
-                                dfx = [.. dfx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.Exponential:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            // y = ae^rx differentiates to y′ = are^rx.
-                            (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
-                            string expression = $"{FormatFormulaValue(a * r)}e^{FormatFormulaValue(r)}x";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] dfx = [.. sampleXs.Select(x => a * r * Math.Exp(r * x))];
-
-                            if (absoluteCurveFitting)
-                            {
-                                dfx = [.. dfx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.Logarithmic:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            // y = b·ln(x) + a differentiates to y′ = b/x.
-                            (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
-                            string expression = $"{FormatFormulaValue(b)}/x";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] dfx = [.. sampleXs.Select(x => b / x)];
-
-                            if (absoluteCurveFitting)
-                            {
-                                dfx = [.. dfx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.Power:
-                    {
-                        if (differentXs >= 2)
-                        {
-                            // y = ax^b differentiates to y′ = abx^(b−1).
-                            (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Pow(x, b)));
-                            string expression = $"{FormatFormulaValue(a * b)}x^{FormatFormulaValue(b - 1.0)}";
-                            double[] sampleXs = BuildSampleXs(xs);
-                            double[] dfx = [.. sampleXs.Select(x => a * b * Math.Pow(x, b - 1.0))];
-
-                            if (absoluteCurveFitting)
-                            {
-                                dfx = [.. dfx.Select(Math.Abs)];
-                                expression = $"|{expression}|";
-                            }
-
-                            formula = $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
-                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
-                        }
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder2:
-                    {
-                        formula = BuildPolynomialCurveFitDerivative(plotModel, xs, ys, 2, absoluteCurveFitting, yAxis, color);
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder3:
-                    {
-                        formula = BuildPolynomialCurveFitDerivative(plotModel, xs, ys, 3, absoluteCurveFitting, yAxis, color);
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder4:
-                    {
-                        formula = BuildPolynomialCurveFitDerivative(plotModel, xs, ys, 4, absoluteCurveFitting, yAxis, color);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(curveFittingType), @$"{Resource.ProjectPlan.Messages.Message_UnknownCurveFittingType} {curveFittingType}");
+                return string.Empty;
             }
 
-            return formula;
+            double[] sampleXs = BuildSampleXs(xs);
+            double[] dfx = [.. sampleXs.Select(x => CurveFitCalculator.EvaluateDerivative(fit, x))];
+
+            if (absoluteCurveFitting)
+            {
+                dfx = [.. dfx.Select(Math.Abs)];
+            }
+
+            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
+            return CurveFitCalculator.BuildDerivativeFormula(fit, absoluteCurveFitting);
         }
 
         private static double[] BuildSampleXs(double[] xs)
@@ -794,135 +542,6 @@ namespace Zametek.ViewModel.ProjectPlan
             line.LinePattern = LinePattern.Dashed;
             line.Color = color;
             line.Axes.YAxis = yAxis;
-        }
-
-        private static string BuildPolynomialCurveFit(
-            Plot plotModel,
-            double[] xs,
-            double[] ys,
-            int order,
-            bool absoluteCurveFitting,
-            IYAxis yAxis,
-            Color color)
-        {
-            int minimumOrder = 0;
-            int maximumOrder = s_PolynomialSuperscripts.Length - 1;
-
-            if (xs.Length != ys.Length
-                || order < minimumOrder
-                || order > maximumOrder
-                || xs.Distinct().Count() <= order)
-            {
-                return string.Empty;
-            }
-
-            double[] coefficients = MathNet.Numerics.Fit.Polynomial(xs, ys, order);
-
-            // The r² describes the fit against the raw outputs.
-            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients)));
-
-            // Build the expression.
-            var expressionBuilder = new StringBuilder();
-            AppendPolynomialTerms(expressionBuilder, coefficients);
-            string expression = expressionBuilder.ToString();
-
-            double[] sampleXs = BuildSampleXs(xs);
-            double[] fx = [.. sampleXs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients))];
-
-            if (absoluteCurveFitting)
-            {
-                fx = [.. fx.Select(Math.Abs)];
-                expression = $"|{expression}|";
-            }
-
-            // Plot the regression curve.
-            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
-
-            return $"y = {expression} (r²={FormatFormulaValue(r2)})";
-        }
-
-        private static string BuildPolynomialCurveFitDerivative(
-            Plot plotModel,
-            double[] xs,
-            double[] ys,
-            int order,
-            bool absoluteCurveFitting,
-            IYAxis yAxis,
-            Color color)
-        {
-            // Differentiating drops one order, so the fit must be at least linear.
-            int minimumOrder = 1;
-            int maximumOrder = s_PolynomialSuperscripts.Length - 1;
-
-            if (xs.Length != ys.Length
-                || order < minimumOrder
-                || order > maximumOrder
-                || xs.Distinct().Count() <= order)
-            {
-                return string.Empty;
-            }
-
-            double[] coefficients = MathNet.Numerics.Fit.Polynomial(xs, ys, order);
-
-            // Σcᵢxⁱ differentiates to Σi·cᵢx⁽ⁱ⁻¹⁾.
-            double[] derivativeCoefficients = new double[coefficients.Length - 1];
-
-            for (int i = 1; i < coefficients.Length; i++)
-            {
-                derivativeCoefficients[i - 1] = i * coefficients[i];
-            }
-
-            double[] sampleXs = BuildSampleXs(xs);
-            double[] dfx = [.. sampleXs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, derivativeCoefficients))];
-
-            // Build the expression. The r² still describes the underlying fit.
-            var expressionBuilder = new StringBuilder();
-            AppendPolynomialTerms(expressionBuilder, derivativeCoefficients);
-            string expression = expressionBuilder.ToString();
-
-            if (absoluteCurveFitting)
-            {
-                dfx = [.. dfx.Select(Math.Abs)];
-                expression = $"|{expression}|";
-            }
-
-            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
-
-            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients)));
-            return $"y′ = {expression} (r²={FormatFormulaValue(r2)})";
-        }
-
-        private static void AppendPolynomialTerms(
-            StringBuilder formula,
-            double[] coefficients)
-        {
-            for (int i = coefficients.Length - 1; i >= 0; i--)
-            {
-                if (i < coefficients.Length - 1)
-                {
-                    if (coefficients[i] < 0)
-                    {
-                        formula.Append(@" - ");
-                    }
-                    else
-                    {
-                        formula.Append(@" + ");
-                    }
-                }
-                else if (coefficients[i] < 0)
-                {
-                    formula.Append('-');
-                }
-
-                if (i > 0)
-                {
-                    formula.Append($"{FormatFormulaValue(Math.Abs(coefficients[i]))}x{s_PolynomialSuperscripts[i]}");
-                }
-                else
-                {
-                    formula.Append($"{FormatFormulaValue(Math.Abs(coefficients[i]))}");
-                }
-            }
         }
 
         // How the chart reads a metric from the metrics of a scenario. A value that the metrics do not have is 0.
@@ -1081,6 +700,68 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The data of the chart as two CSV files, side by side, under one name that the user chooses: the name, then a word for
+        // what the file holds. They are the files that zpp writes with the chart.
+        private async Task ExportCsvFilesAsync()
+        {
+            try
+            {
+                string title = m_SettingService.ProjectTitle;
+                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+                string outputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart}.{Resource.ProjectPlan.Filters.Filter_CsvFileExtension}";
+                string directory = m_SettingService.ProjectDirectory;
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(outputFile, directory, s_CsvExportFileFilters);
+
+                if (string.IsNullOrWhiteSpace(filename))
+                {
+                    return;
+                }
+
+                string baseName = Path.Combine(
+                    Path.GetDirectoryName(filename) ?? string.Empty,
+                    Path.GetFileNameWithoutExtension(filename));
+
+                ScenarioChartDataModel? data = BuildScenarioChartData();
+
+                (string Suffix, Action<TextWriter, ScenarioChartDataModel?> Write)[] files =
+                [
+                    (Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartPoints, ScenarioChartCsvWriter.WritePoints),
+                    (Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartFits, ScenarioChartCsvWriter.WriteFits),
+                ];
+
+                await Task.Run(() =>
+                {
+                    foreach ((string suffix, Action<TextWriter, ScenarioChartDataModel?> write) in files)
+                    {
+                        FileStreamHelper.Save(
+                            $@"{baseName}{suffix}.{Resource.ProjectPlan.Filters.Filter_CsvFileExtension}",
+                            stream =>
+                            {
+                                // A byte order mark leads, so that Excel reads the paths of the scenarios as UTF-8.
+                                using var writer = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true);
+                                write(writer, data);
+                            });
+                    }
+                });
+
+                await m_DialogService.ShowInfoAsync(
+                    Resource.ProjectPlan.Titles.Title_ScenarioChartView,
+                    string.Empty,
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.ProjectPlan.Messages.Message_ScenarioChartFilesSaved,
+                        files.Length,
+                        Path.GetDirectoryName(filename) ?? string.Empty));
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         #endregion
 
         #region IScenarioChartManagerViewModel Members
@@ -1212,6 +893,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SaveScenarioChartImageFileCommand { get; }
 
+        public ICommand ExportCsvFilesCommand { get; }
+
         public ICommand ResetScenarioChartCommand { get; }
 
         public ICommand ChangeTrackedMetricXAxisCommand { get; }
@@ -1258,6 +941,28 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CurveFittingFormulaY2 = value;
                     this.RaisePropertyChanged();
                 }
+            }
+        }
+
+        public ScenarioChartDataModel? BuildScenarioChartData()
+        {
+            lock (m_Lock)
+            {
+                // As the chart, which is empty when the scenario has compilation errors.
+                if (HasCompilationErrors)
+                {
+                    return null;
+                }
+
+                return ScenarioChartDataBuilder.Build(
+                    m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1,
+                    m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2);
             }
         }
 

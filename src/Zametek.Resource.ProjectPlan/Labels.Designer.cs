@@ -376,6 +376,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Y1 Derivative.
+        /// </summary>
+        public static string Label_CurveFittingDerivativeY1 {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingDerivativeY1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y2 Derivative.
+        /// </summary>
+        public static string Label_CurveFittingDerivativeY2 {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingDerivativeY2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Curve Fitting.
         /// </summary>
         public static string Label_CurveFittingType {

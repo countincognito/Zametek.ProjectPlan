@@ -127,6 +127,25 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void BuildOutputFilenames_Given_TheScenarioChartDirectory_Then_TheChartAndItsTwoCsvFiles()
+        {
+            var options = new Options
+            {
+                InputFilename = @"a.zpp",
+                ScenarioChartDirectory = @"charts",
+                ScenarioChartFormat = PlotExport.Png,
+                ScenarioChartSize = [800, 600],
+            };
+
+            Program.BuildOutputFilenames(options, @"plan").ShouldBe(new Dictionary<JobOutput, string>
+            {
+                [JobOutput.ScenarioChart] = Path.Combine(@"charts", @"plan-scenario.png"),
+                [JobOutput.ScenarioChartPoints] = Path.Combine(@"charts", @"plan-scenario-points.csv"),
+                [JobOutput.ScenarioChartFits] = Path.Combine(@"charts", @"plan-scenario-fits.csv"),
+            });
+        }
+
+        [Fact]
         public void ValidateOptions_Given_ADataDirectoryThatIsNotThere_Then_Throws()
         {
             Should.Throw<InvalidOperationException>(() => Program.ValidateOptions(new Options
