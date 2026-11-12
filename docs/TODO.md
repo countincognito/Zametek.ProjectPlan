@@ -28,18 +28,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Find the shape that ScottPlot draws with the paint of the dash. Then, report it to ScottPlot, or draw the fitted curve in a way that does not keep the path effect on the paint. Do not hide the stderr of the native code, because other messages of Skia can be useful.
 
-- [ ] **Keep the font of a chart when the chart goes to SVG** *(2026-11-12, from the smoke test of v0.11.0-beta)*
+- [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 
-  The SVG files of the Gantt chart, the resource chart, the earned value chart, the scenario chart and the simulation chart give only `font-family="Inter"`. They do not contain the font. Windows 11 does not install Inter, and the SVG gives no other font. Thus, a viewer uses its default font. For example, Microsoft Edge shows the Gantt chart of `docs/assets/sample.zpp` with a serif font. The PNG of the same chart shows Inter, because PNG and JPEG use the bundled font.
+  The chart SVG files (Gantt, resource, earned value, scenario and simulation) do not contain the font Inter. Windows 11 does not install Inter. Until 2026-11-12, the SVG named only `Inter`, and thus Microsoft Edge showed the text in its default serif font. Now each text names fallback fonts after Inter (`ChartFonts.SvgFontFamilies`), and Edge shows the text in Segoe UI.
 
-  The SVG also gives the position of each letter, from the measurements of Inter, for example `x="0, 8.897727"`. Thus, with a different font, the spaces between the letters are not regular. For example, Edge shows "Requirements & Architecture" as "Requirements &Architecture". The SVG files of the arrow graph and the vertex graph give `Cascadia Mono, Consolas, monospace`, with a generic family at the end. Thus, they do not have this problem.
+  But the SVG gives the position of each letter from the measurements of Inter, for example `x="0, 8.897727"`. Thus, with a fallback font, the spaces between the letters are not regular. For example, Edge shows "Requirements & Architecture" as "Requirements &Architecture".
 
-  `ScottPlotImageExporter.WriteSvg` already changes the SVG of ScottPlot, because it numbers the clip paths again. Thus, it can also change the font. The desktop app uses the same exporter. Possible changes:
-
-  - Add other fonts with a generic family at the end, for example `Inter, "Segoe UI", Arial, sans-serif`. This change is small, but the letters keep the positions from Inter.
-  - Put Inter into the SVG with `@font-face`. Then the SVG shows the text as the PNG does. But each file becomes larger by the size of the font, unless the export keeps only the letters that the chart uses.
-
-  Skia can change text to paths in an SVG, but SkiaSharp does not give access to this option (checked in 3.119.4 and 4.148.0).
+  To show the text exactly as the PNG does, put Inter into the SVG with `@font-face`. Each file then becomes larger by the size of the font, unless the export keeps only the letters that the chart uses. Skia can change text to paths in an SVG, but SkiaSharp does not give access to this option (checked in 3.119.4 and 4.148.0).
 
 - [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
 

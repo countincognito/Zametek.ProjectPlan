@@ -1,8 +1,10 @@
 using ScottPlot;
 using Shouldly;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -72,6 +74,36 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             Encoding.UTF8.GetString(first).ShouldContain(@"<clipPath id=""cl_0"">");
             second.ShouldBe(first);
+        }
+
+        [Fact]
+        public async Task WritePlotImageAsync_Given_Svg_Then_EachTextNamesInterAndFallbacksThatEndInAGenericFamily()
+        {
+            // Other programs open the SVG, and they cannot see the bundled Inter. With Inter alone, a browser took its default
+            // font, which is a serif font.
+            ChartFonts.Register();
+
+            string svg = Encoding.UTF8.GetString(await WriteAsync(ChartImageFormat.Svg));
+
+            List<string> families = [.. Regex.Matches(svg, @" font-family=""([^""]*)""").Select(x => x.Groups[1].Value)];
+            families.ShouldNotBeEmpty();
+            families.ShouldAllBe(x => x == ChartFonts.SvgFontFamilies);
+            ChartFonts.SvgFontFamilies.ShouldStartWith($@"{ChartFonts.FamilyName}, ");
+            ChartFonts.SvgFontFamilies.ShouldEndWith(@", sans-serif");
+        }
+
+        [Fact]
+        public void WithFallbackFonts_Given_Inter_Then_NamesTheFallbacksAfterIt()
+        {
+            string svg =
+                @"<text font-size=""12"" font-family=""Inter"" x=""0, 7.5, "">Inter</text>" +
+                // Only the attribute that names Inter alone: another family stays, and so does text that looks like the
+                // attribute, which an SVG can only hold with its quotes escaped.
+                @"<text font-family=""Cascadia Mono, Consolas, monospace"">font-family=&quot;Inter&quot;</text>";
+
+            ScottPlotImageExporter.WithFallbackFonts(svg).ShouldBe(
+                $@"<text font-size=""12"" font-family=""{ChartFonts.SvgFontFamilies}"" x=""0, 7.5, "">Inter</text>" +
+                @"<text font-family=""Cascadia Mono, Consolas, monospace"">font-family=&quot;Inter&quot;</text>");
         }
 
         [Fact]

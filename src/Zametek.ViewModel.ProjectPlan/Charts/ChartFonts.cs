@@ -14,6 +14,14 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         public const string FamilyName = @"Inter";
 
+        /// <summary>
+        /// The fonts that a chart in SVG names. Other programs open the file too, and they cannot see the bundled Inter. So
+        /// Inter comes first, for a viewer that has it, and the fallbacks keep the text sans-serif where it is not installed.
+        /// Named alone, Inter left a browser to its default font, which is a serif font. Skia places each letter by the
+        /// measurements of Inter, so a fallback fits those places less well than Inter, but far better than a serif.
+        /// </summary>
+        public const string SvgFontFamilies = FamilyName + @", 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
         private const string c_FontsUri = @"avares://Avalonia.Fonts.Inter/Assets";
 
         private static readonly Lazy<bool> s_Registration = new(RegisterOnce);
