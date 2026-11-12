@@ -10,11 +10,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Correct the two pages with the other updates of the wiki.
 
-- [ ] **Suggestion: tell how far a plan misses its deadline** *(2026-11-11, a suggestion from the design of the zpp skill)*
+- ~~**Suggestion: tell how far a plan misses its deadline**~~ DECLINED on 2026-11-12. *(2026-11-11, a suggestion from the design of the zpp skill)*
 
   A frequent question is "can we finish by day T with these people?". The suggestion was a maximum LFT on the end milestone, with negative total slack as in Microsoft Project. On 2026-11-11, the maintainer decided against it. A maximum LFT pins an activity, and constraints of that kind make the compile too complex. A deadline is only a guideline.
 
   Add the deadline to the job: an option such as `--deadline` (`deadline` in the API). The plan does not keep it, and the compile does not change. The answer gives the shortfall: the finish of the plan minus the deadline, or 0. A simulation also gives the share of the iterations that finish by the deadline, as the target of a simulation does now.
+
+  On 2026-11-12, the maintainer declined the suggestion, because it adds little to the target of the simulation. The target gives the share of the iterations that finish by it. A client can calculate the shortfall from `projectFinishDays`. A deadline lets a request ask about a date without a change to the plan. It also changes a date to working days in the calendar of the plan. These two gains do not justify the change.
 
 - [ ] **Do not save the calculated `Duration` in the next version of the file format** *(2026-11-11)*
 
