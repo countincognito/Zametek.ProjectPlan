@@ -386,7 +386,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 ```json
 {
-  "version": "0.11.0-alpha",
+  "version": "0.11.0-beta",
   "culture": "en-GB",
   "timeZone": "Europe/London",
   "limits": {
