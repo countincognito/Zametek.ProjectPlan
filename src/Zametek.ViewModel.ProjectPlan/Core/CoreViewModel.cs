@@ -1377,12 +1377,20 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Graph settings.
                     GraphSettings = ProjectScenarioHelper.CreateImportedGraphSettings(m_SettingService.DefaultGraphSettings, projectScenarioImportModel);
 
+                    // Display settings, as a load sets them (see ProcessProjectScenario): all but ShowDates and
+                    // UseClassicDates now, so that the calendar of the plan is in force before the activities are made.
+                    DisplaySettingsViewModel.SetValues(projectScenarioImportModel.DisplaySettings with
+                    {
+                        ShowDates = DisplaySettingsViewModel.ShowDates,
+                        UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
+                    });
+
                     // Activities.
                     // Be sure to set the ResourceSettings first, so that the activities know
                     // which resources are being referred to when marking them as selected.
                     AddManagedActivities(projectScenarioImportModel.DependentActivities);
 
-                    // Display settings.
+                    // Display settings (the rest of the settings).
                     DisplaySettingsViewModel.SetValues(projectScenarioImportModel.DisplaySettings);
 
                     // The simulation: its settings, and its last result if the workbook has one. The result is trusted,
@@ -1471,12 +1479,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     Today = projectScenarioModel.Today;
 
-                    // Display settings.
+                    // Display settings. ShowDates and UseClassicDates keep the values of the session until the activities
+                    // are in place (see the rest of the settings below). The non-working day mode must not wait: an activity
+                    // that has only the day number of a constraint turns the number into a date along the calendar in force,
+                    // and counts the number again from that date each time the calendar changes. The reset above put the
+                    // default calendar of the settings in force, so a calendar of the plan that came after the activities
+                    // moved each such number: on a weekend plan that zpp loaded, day 220 became day 158.
                     var displaySettings = projectScenarioModel.DisplaySettings with
                     {
                         ShowDates = DisplaySettingsViewModel.ShowDates,
                         UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
-                        NonWorkingDayMode = DisplaySettingsViewModel.NonWorkingDayMode,
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);

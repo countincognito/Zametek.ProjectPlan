@@ -2,48 +2,6 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Read the day-number constraints as working days when the calendar has non-working days** *(2026-11-12, found during phase 1 of the zpp skill)*
-
-  When the calendar of a scenario has non-working days, `zpp` reads `MinimumEarliestStartTime` and `MaximumLatestFinishTime` as calendar days. This occurs only when the activity has no date for the constraint (`MinimumEarliestStartDateTime` or `MaximumLatestFinishDateTime`). [The project file](PROJECT-FILE.md) says that a time of an activity is a number of working days from `ProjectStart`. Thus, a constraint changes, and nothing tells the user.
-
-  The measurements use the worked example of the zpp skill, with `NonWorkingDayMode` set to `Weekends`:
-
-  - A minimum EST of 160 on the end milestone becomes 114, and 155 becomes 111. The project still finishes on day 150. Thus, a risk decompression has no effect.
-
-  - A maximum LFT of 200 on the end milestone gives `C0010`. Without the constraint, the plan finishes on day 150.
-
-  - A minimum EST of 145 on the activity System Testing has no effect. Its earliest start stays on day 135.
-
-  With `NonWorkingDayMode` set to `None`, each constraint keeps its value. The schedule CSV of `outputs.data` shows the changed value, for example 114. The zpp skill compares this value with the value that it sent, and so it finds the problem.
-
-  A check on the released v0.11.0-beta gives the same result. It uses `docs/assets/sample.zpp`, which has weekends and starts on Monday 2023-05-01:
-
-  - A minimum EST of 220 on System Rollout becomes 158. The activity starts on day 200, as with no constraint.
-
-  - A maximum LFT of 260 on System Rollout gives `C0010` and the exit code 3. The report of `C0010` has 79 lines about the activities before System Rollout, but no line about System Rollout.
-
-  - With the date of the constraint in the plan (2024-03-04), the value stays 220. The app writes this date when it saves a plan.
-
-  - `-o` writes 158 with the date 2023-12-07. Thus, the change stays in the saved plan, and the next load also gives 158.
-
-  The cause is the order of the load in `ProcessProjectScenario` of `CoreViewModel`. First, the reset at the start of the load sets the `NonWorkingDayMode` from the default of the settings. In `zpp`, this default is always `None`. Then the load makes the activities, and after that it sets the mode of the plan.
-
-  Thus, an activity with only a number changes it to a date with the default calendar: 220 days after 2023-05-01 is 2023-12-07. Then the mode of the plan arrives, and each activity counts its number again from that date with the calendar of the plan. This gives 158. `ProcessProjectScenarioImport` makes the activities in the same order.
-
-  The desktop app has the same problem, with the default mode of its settings. A test of the view models (2026-11-12) gave these results:
-
-  - With the default `None`, a weekend plan with 220 and no date gives 158, as in `zpp`.
-
-  - With the default `Weekends`, a plan with no non-working days and 220 with no date gives 308.
-
-  - With the default `Weekends`, a plan from the app with no non-working days, with 12 and the date Saturday 2023-05-13, gives 11 and Friday 2023-05-12. Thus, the problem can also change a plan that the app saved.
-
-  - In each other case, a constraint with its number and its date on a weekday keeps its value.
-
-  Set the `NonWorkingDayMode` of the plan before the activities are made, in the load and in the import. In the same test, the first `SetValues` of the load used the mode of the plan. Then each case kept its value with both defaults, and the tests of the view models and of `zpp` passed. Thus, this one change repairs `zpp`, the server and the desktop app. Also find why the first `SetValues` keeps the default mode, because no test shows a reason.
-
-  Add a test that loads a plan with a weekend calendar and constraints with no date. The test checks the number and the date of each constraint. Also add two tests with the default `Weekends`: a plan with no non-working days and no dates, and a constraint date on a Saturday. Until the change, the zpp skill uses a calendar with no non-working days, or it sends the date of each constraint.
-
 - [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
 
   `outputs.data` writes `-resources.csv`, with one row for each resource on each day. It has no total for each day. The Excel export has this total, in the column `Total` of the sheet "Resource Chart (Activity)". Add the headcount for each day to the data output. For example, add a file `-headcount.csv` with the columns `Time` and `Headcount`.

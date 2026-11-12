@@ -4,6 +4,7 @@ using Shouldly;
 using SkiaSharp;
 using System.IO.Compression;
 using Xunit;
+using Zametek.Common.ProjectPlan;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -46,6 +47,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private static string AssetPath(string filename)
         {
             return Path.Combine(AppContext.BaseDirectory, @"Assets", filename);
+        }
+
+        // The example plan of docs/PROJECT-FILE.md: the first JSON block of the page.
+        private static string ProjectFileExamplePlan()
+        {
+            string page = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Docs", @"PROJECT-FILE.md"));
+            int start = page.IndexOf("```json\n", StringComparison.Ordinal) + "```json\n".Length;
+            return page[start..page.IndexOf("```", start, StringComparison.Ordinal)];
         }
 
         private static async Task<(int ExitCode, string Output)> RunCapturedAsync(params string[] args)
@@ -488,9 +497,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // its most likely duration of 5 days, the second has only a Duration, which is its most likely duration of 3 days,
             // and the third has the three estimates 2, 4 and 12, which give (2 + 4 × 4 + 12 + 3) / 6 = 5 days in whole days. In a
             // chain, they finish on day 13.
-            string page = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Docs", @"PROJECT-FILE.md"));
-            int start = page.IndexOf("```json\n", StringComparison.Ordinal) + "```json\n".Length;
-            string plan = page[start..page.IndexOf("```", start, StringComparison.Ordinal)];
+            string plan = ProjectFileExamplePlan();
 
             // The page also says that zpp calculates the duration and the times again: a stale Duration beside a most likely
             // duration, and a stale earliest start, change nothing.
@@ -521,6 +528,44 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     Directory.Delete(directory, recursive: true);
                 }
             }
+        }
+
+        [Fact]
+        public async Task Main_Given_ConstraintsWithOnlyTheirNumbers_Then_AWeekendCalendarGivesTheSameScheduleInDays()
+        {
+            // A time of an activity is a number of working days from ProjectStart (docs/PROJECT-FILE.md). So, when a plan gives
+            // its constraints only as numbers, its schedule in days is the same with weekends as with no non-working days. zpp
+            // starts each load from the default calendar None. When the calendar of the plan came after the activities, each
+            // number went to a date along every day, and came back along the working days. With weekends, the minimum earliest
+            // start time of 40 became 30, and the maximum latest finish time of 50 became 36, before Test finished on day 38:
+            // the compilation failed with C0010.
+            JObject template = JObject.Parse(ProjectFileExamplePlan());
+            JToken activities = template[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]!;
+            activities[1]![@"Activity"]![@"MinimumEarliestStartTime"] = 40;
+            activities[2]![@"Activity"]![@"MaximumLatestFinishTime"] = 50;
+
+            var schedules = new List<string[][]>();
+            foreach (NonWorkingDayMode mode in new[] { NonWorkingDayMode.None, NonWorkingDayMode.Weekends })
+            {
+                JObject plan = (JObject)template.DeepClone();
+                plan[@"Files"]![0]![@"Scenario"]![@"DisplaySettings"] = new JObject { [@"NonWorkingDayMode"] = (int)mode };
+
+                string directory = Path.Combine(m_TempDirectory, mode.ToString());
+                Directory.CreateDirectory(directory);
+                string input = Path.Combine(directory, @"plan.zpp");
+                File.WriteAllText(input, plan.ToString());
+
+                (int exitCode, _) = await RunCapturedAsync(@"-i", input, @"--data-directory", directory);
+
+                exitCode.ShouldBe(0);
+                schedules.Add([.. File.ReadAllLines(Path.Combine(directory, @"plan-schedule.csv")).Skip(1).Select(x => x.Split(','))]);
+            }
+
+            // Id, EarliestStartTime, LatestFinishTime, MinimumEarliestStartTime and MaximumLatestFinishTime. Build waits for
+            // day 40, and Test follows it, to finish on day 48, before its maximum latest finish time of day 50.
+            schedules[0].Select(x => (x[0], x[3], x[6], x[12], x[13])).ShouldBe(
+                [(@"1", @"0", @"40", @"", @""), (@"2", @"40", @"43", @"40", @""), (@"3", @"43", @"48", @"", @"50")]);
+            schedules[1].ShouldBe(schedules[0]);
         }
 
         [Fact]

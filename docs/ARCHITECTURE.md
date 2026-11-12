@@ -219,6 +219,10 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     The reason is that this setter can still be inside the display settings lock. If it takes `m_Lock` there, it creates again the lock-order edge of rule 6. The application can still defer one item. This item changes nothing: the *display* mode of the calculator, which only raises the properties that show a date again. Rule 11 closes the remaining cases.
 
+    A load and an import must also set the calendar of the plan before they make the activities. Each activity counts its constraints along the calendar in force when the load makes it. An activity that has only the number of a constraint makes the date from the number. A date that is not a working day moves to a working day. The reset at the start of a load puts the default calendar of the settings in force.
+
+    Thus, when the calendar of the plan came after the activities, the recount moved these constraints. On a weekend plan that `zpp` loaded, day 220 became day 158 (2026-11-12). `CoreViewModelConstraintCalendarTests` checks the order in the load and in the import.
+
 11. **A compilation reads and writes a copy of the plan, and never the live activities.**
 
     Rule 10 removed the systematic cause of the failures, but it left the ordinary one. The compilation runs on the taskpool. Suppose a grid commits an edit while an earlier armed compilation is still in progress. Then the edit changes the activity that the compiler clones. The compiler also writes its results (the times, the slack, the allocated resources, the resource dependencies and the successors) into the live activities while it calculates. This races the reads of the bindings and the `DeepCopy()` saves for the whole time of the compilation.
