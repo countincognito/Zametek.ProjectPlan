@@ -2,6 +2,52 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Read the day-number constraints as working days when the calendar has non-working days** *(2026-11-12, found during phase 1 of the zpp skill)*
+
+  When the calendar of a scenario has non-working days, `zpp` reads `MinimumEarliestStartTime` and `MaximumLatestFinishTime` as calendar days. This occurs only when the activity has no date for the constraint (`MinimumEarliestStartDateTime` or `MaximumLatestFinishDateTime`). [The project file](PROJECT-FILE.md) says that a time of an activity is a number of working days from `ProjectStart`. Thus, a constraint changes, and nothing tells the user.
+
+  The measurements use the worked example of the zpp skill, with `NonWorkingDayMode` set to `Weekends`:
+
+  - A minimum EST of 160 on the end milestone becomes 114, and 155 becomes 111. The project still finishes on day 150. Thus, a risk decompression has no effect.
+
+  - A maximum LFT of 200 on the end milestone gives `C0010`. Without the constraint, the plan finishes on day 150.
+
+  - A minimum EST of 145 on the activity System Testing has no effect. Its earliest start stays on day 135.
+
+  With `NonWorkingDayMode` set to `None`, each constraint keeps its value. The schedule CSV of `outputs.data` shows the changed value, for example 114. The zpp skill compares this value with the value that it sent, and so it finds the problem.
+
+  A check on the released v0.11.0-beta gives the same result. It uses `docs/assets/sample.zpp`, which has weekends and starts on Monday 2023-05-01:
+
+  - A minimum EST of 220 on System Rollout becomes 158. The activity starts on day 200, as with no constraint.
+
+  - A maximum LFT of 260 on System Rollout gives `C0010` and the exit code 3. The report of `C0010` has 79 lines about the activities before System Rollout, but no line about System Rollout.
+
+  - With the date of the constraint in the plan (2024-03-04), the value stays 220. The app writes this date when it saves a plan.
+
+  - `-o` writes 158 with the date 2023-12-07. Thus, the change stays in the saved plan, and the next load also gives 158.
+
+  The cause is the order of the load in `ProcessProjectScenario` of `CoreViewModel`. It makes the activities before it sets the `NonWorkingDayMode` of the plan. Until then, `zpp` uses `None`. Thus, an activity with only a number changes it to a date with calendar days: 220 days after 2023-05-01 is 2023-12-07. Then the mode of the plan arrives, and each activity counts its number again from that date with working days. This gives 158.
+
+  A plan from the app has the dates, and so the second count is correct. `ProcessProjectScenarioImport` makes the activities in the same order. In the desktop app, the mode before the load comes from the plan that was open before. A reset does not change this mode. Thus, in the app, the result of a plan with no dates can change with the plan that was open before. This part comes from the code, not from a test.
+
+  Set the `NonWorkingDayMode` of the plan before the activities are made, in the load and in the import. First, find why the load keeps the mode of the session until the activities are in place. Then add a test that loads a plan with a weekend calendar and constraints with no date. The test checks the number and the date of each constraint. Also add a test that opens a plan with no non-working days after a plan with weekends. Until the change, the zpp skill uses a calendar with no non-working days, or it can send the date of each constraint.
+
+- [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
+
+  `outputs.data` writes `-resources.csv`, with one row for each resource on each day. It has no total for each day. The Excel export has this total, in the column `Total` of the sheet "Resource Chart (Activity)". Add the headcount for each day to the data output. For example, add a file `-headcount.csv` with the columns `Time` and `Headcount`.
+
+  The CSV has the data now: on each day, count the rows where `Allocated` is `true`. On `docs/assets/sample.zpp`, this count is the same as the column `Total` on each of the 210 days, and its maximum is the `PeakHeadcount` of 10. But the sheet "Resource Chart (Activity)" counts the column `Allocated`, not the column `Activity`. A count of `Activity` gives a different curve, with a maximum of 6. Thus, the file is a convenience, and it also prevents a count of the wrong column.
+
+- [ ] **Suggestion: let the scheduler prefer task continuity** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
+
+  The priority list gives an activity to the first free resource in the allocation order. Righting Software also asks for task continuity. When activity A depends on activity B, the developer of B also does A. That developer knows the context, and has a stake in B.
+
+  In the worked example of the zpp skill, the developer of Claims Store stops on day 50. Then `zpp` gives ClaimsAccess, which depends on Claims Store, to the developer of Security on day 55. The book keeps the developer of Claims Store, who then waits for 5 days. Thus, the schedule of `zpp` costs 5 person-days less, and the schedule of the book keeps the continuity.
+
+  An option of the scenario can make the scheduler prefer a free resource that did a predecessor of the activity. It must be an option, because it can add idle days.
+
+  The priority list is in the library Zametek.Maths.Graphs (`PriorityListResourceScheduler`, and `scheduling/scheduler.rs` in Rust). Thus, the change starts in the library. Today, `TargetResources` can keep an activity on one resource, but the user must set it on each activity.
+
 - [ ] **Stop the message "Unsupported path effect in addPaint." when a scenario chart goes to SVG** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 
   When `zpp` saves a scenario chart as SVG, and the chart has a fitted curve, `zpp` writes `Unsupported path effect in addPaint.` to stderr. The exit code stays 0. Thus, a script that reads each line on stderr as an error can stop for no cause. The message comes one time in a run, also when the chart shows the derivative, which is also a dashed line. The desktop app probably writes the same message when it saves the chart as SVG, but its stderr is not visible.
@@ -11,6 +57,19 @@ This file lists the maintainer-internal engineering intents that must version wi
   The dashed line of the fitted curve (`LinePattern.Dashed` in `AddCurveFitLine`, since 2026-03-15) causes it: a chart with no fitted curve gives no message. The points and their names give no message. The dashed and dotted lines of the simulation chart give no message. The Gantt chart, the resource chart and the earned value chart of `docs/assets/sample.zpp` give no message as SVG. Thus, the cause is probably in how ScottPlot 5.1.59 draws a scatter line that has a pattern.
 
   Find the shape that ScottPlot draws with the paint of the dash. Then, report it to ScottPlot, or draw the fitted curve in a way that does not keep the path effect on the paint. Do not hide the stderr of the native code, because other messages of Skia can be useful.
+
+- [ ] **Keep the font of a chart when the chart goes to SVG** *(2026-11-12, from the smoke test of v0.11.0-beta)*
+
+  The SVG files of the Gantt chart, the resource chart, the earned value chart, the scenario chart and the simulation chart give only `font-family="Inter"`. They do not contain the font. Windows 11 does not install Inter, and the SVG gives no other font. Thus, a viewer uses its default font. For example, Microsoft Edge shows the Gantt chart of `docs/assets/sample.zpp` with a serif font. The PNG of the same chart shows Inter, because PNG and JPEG use the bundled font.
+
+  The SVG also gives the position of each letter, from the measurements of Inter, for example `x="0, 8.897727"`. Thus, with a different font, the spaces between the letters are not regular. For example, Edge shows "Requirements & Architecture" as "Requirements &Architecture". The SVG files of the arrow graph and the vertex graph give `Cascadia Mono, Consolas, monospace`, with a generic family at the end. Thus, they do not have this problem.
+
+  `ScottPlotImageExporter.WriteSvg` already changes the SVG of ScottPlot, because it numbers the clip paths again. Thus, it can also change the font. The desktop app uses the same exporter. Possible changes:
+
+  - Add other fonts with a generic family at the end, for example `Inter, "Segoe UI", Arial, sans-serif`. This change is small, but the letters keep the positions from Inter.
+  - Put Inter into the SVG with `@font-face`. Then the SVG shows the text as the PNG does. But each file becomes larger by the size of the font, unless the export keeps only the letters that the chart uses.
+
+  Skia can change text to paths in an SVG, but SkiaSharp does not give access to this option (checked in 3.119.4 and 4.148.0).
 
 - [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
 
