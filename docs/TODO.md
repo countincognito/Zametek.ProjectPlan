@@ -2,6 +2,19 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Let the MSI of the final 0.11.0 replace an installed 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
+
+  Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` does not allow an upgrade of the same version, because this is the default of WiX 5. The Upgrade table of the MSI of the beta shows it:
+
+  - One row removes the versions before 0.11.0.0. Its `VersionMax` is 0.11.0.0, and its attributes are 1, which does not include the maximum.
+  - One row only finds the versions after 0.11.0.0.
+
+  Thus, an MSI of 0.11.0.0 with a new product code does not remove an installed 0.11.0.0. It installs as a second product, with a second entry in the installed apps.
+
+  On 2026-11-12, the maintainer removed the MSI files of v0.11.0-alpha and v0.11.0-beta from their releases, and the next pre-releases have no MSI. But a user who installed one of these MSI files has 0.11.0.0. The MSI of the final 0.11.0 would install next to it.
+
+  Before the final release, add `AllowSameVersionUpgrades="yes"` to `<MajorUpgrade>`. WiX then gives the warning ICE61, which is expected for this attribute. Read the Upgrade table of the new MSI: the first row must have the attributes 513, which include the maximum. Then install the final MSI over the beta, and make sure that the installed apps show one entry.
+
 - [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
 
   `outputs.data` writes `-resources.csv`, with one row for each resource on each day. It has no total for each day. The Excel export has this total, in the column `Total` of the sheet "Resource Chart (Activity)". Add the headcount for each day to the data output. For example, add a file `-headcount.csv` with the columns `Time` and `Headcount`.
