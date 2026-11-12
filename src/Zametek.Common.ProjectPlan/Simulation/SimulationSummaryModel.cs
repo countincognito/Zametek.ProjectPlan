@@ -42,10 +42,28 @@ namespace Zametek.Common.ProjectPlan
         public int ValidIterationCount { get; init; }
 
         /// <summary>
-        /// The iterations that failed: the resource scheduler could not place every activity, or the
-        /// schedule ran past the limit.
+        /// The iterations that failed: the resource scheduler could not place every activity, the
+        /// schedule ran past the limit, or an activity could not finish by its maximum latest finish
+        /// time. The three counts that follow say why, for a run that recorded the reasons.
         /// </summary>
         public int FailedIterationCount { get; init; }
+
+        /// <summary>
+        /// The failed iterations in which the resource scheduler could not place every activity.
+        /// </summary>
+        public int ResourceSchedulingStallIterationCount { get; init; }
+
+        /// <summary>
+        /// The failed iterations whose schedule ran past the limit of time of the library.
+        /// </summary>
+        public int MaximumTimeValueExceededIterationCount { get; init; }
+
+        /// <summary>
+        /// The failed iterations in which an activity could not finish by its maximum latest finish
+        /// time. Such an iteration is late, and so the statistics of the valid iterations are too early
+        /// when there are any.
+        /// </summary>
+        public int InvalidConstraintsIterationCount { get; init; }
 
         /// <summary>
         /// The finish time of the plan as it stands, with the expected duration of each activity.
@@ -105,8 +123,10 @@ namespace Zametek.Common.ProjectPlan
         public double OtherPathsWeight { get; init; }
 
         /// <summary>
-        /// How often each activity was critical, from the most often to the least. An activity that was
-        /// never critical is not in the list.
+        /// How often each activity was critical, from the most often to the least, and how often it could
+        /// not finish by its maximum latest finish time. The activities that missed their maximum but were
+        /// never critical come last, the most misses first. An activity that was never critical and never
+        /// missed a maximum is not in the list.
         /// </summary>
         public IReadOnlyList<SimulationActivityCriticalityModel> Activities { get; init; } = [];
 
@@ -211,5 +231,11 @@ namespace Zametek.Common.ProjectPlan
         /// The share of the valid iterations in which the activity was critical.
         /// </summary>
         public double CriticalityIndex { get; init; }
+
+        /// <summary>
+        /// The number of iterations in which the activity could not finish by its maximum latest finish
+        /// time. Each of them failed, and so none is among the valid iterations.
+        /// </summary>
+        public int MaximumLatestFinishTimeMissCount { get; init; }
     }
 }

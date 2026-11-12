@@ -277,6 +277,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average headcount.
+        /// </summary>
+        public static string Label_AverageHeadcount {
+            get {
+                return ResourceManager.GetString("Label_AverageHeadcount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Base.
         /// </summary>
         public static string Label_BaseNode {
@@ -363,6 +372,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_CriticalityWeight {
             get {
                 return ResourceManager.GetString("Label_CriticalityWeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y1 Derivative.
+        /// </summary>
+        public static string Label_CurveFittingDerivativeY1 {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingDerivativeY1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y2 Derivative.
+        /// </summary>
+        public static string Label_CurveFittingDerivativeY2 {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingDerivativeY2", resourceCulture);
             }
         }
         
@@ -1376,6 +1403,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak headcount.
+        /// </summary>
+        public static string Label_PeakHeadcount {
+            get {
+                return ResourceManager.GetString("Label_PeakHeadcount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak to average headcount.
+        /// </summary>
+        public static string Label_PeakToAverageHeadcount {
+            get {
+                return ResourceManager.GetString("Label_PeakToAverageHeadcount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Percentage (%).
         /// </summary>
         public static string Label_PercentageAxisTitle {
@@ -1925,6 +1970,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed: resource scheduling.
+        /// </summary>
+        public static string Label_SimulationFailedResourceScheduling {
+            get {
+                return ResourceManager.GetString("Label_SimulationFailedResourceScheduling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed: time limit.
+        /// </summary>
+        public static string Label_SimulationFailedTimeLimit {
+            get {
+                return ResourceManager.GetString("Label_SimulationFailedTimeLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Iterations (valid).
         /// </summary>
         public static string Label_SimulationIterationCount {
@@ -1966,6 +2029,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SimulationMean {
             get {
                 return ResourceManager.GetString("Label_SimulationMean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missed maximum LFT.
+        /// </summary>
+        public static string Label_SimulationMissedMaximumLatestFinishTime {
+            get {
+                return ResourceManager.GetString("Label_SimulationMissedMaximumLatestFinishTime", resourceCulture);
             }
         }
         

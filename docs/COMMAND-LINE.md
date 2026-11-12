@@ -42,9 +42,23 @@ The option `--list-scenarios` prints a table of the scenarios of the plan. This 
 
 A scenario in a folder, or under another scenario, has a name that shows its location: `Folder/Scenario`. A long name stays in one row.
 
-The column **Tracked** shows that the scenario is on the scenario chart. The chart plots the metrics of the scenario as a point, against the metrics of the axes of the chart. The option `--scenario-chart-directory` writes the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any other output holds. It is not the progress tracking of activities.
+The column **Tracked** shows that the scenario is on the scenario chart. The chart plots the metrics of the scenario as a point, against the metrics of the axes of the chart. The option `--scenario-chart-directory` writes the chart. Tracking does not change how the scenario compiles or what its metrics are. `zpp` compiles the tracked scenarios for the chart and for `--compile-tracked` (refer to the text that follows). Tracking is not the progress tracking of activities.
 
 The column **Current** (`*`) marks the current scenario of the plan. This is the scenario that was open when a user saved the plan. `zpp` loads it when `--scenario` does not name another scenario.
+
+The plan holds the metrics of each scenario from its last compile before a person or a program saved the plan. These metrics can be stale, for example when a program changed a scenario and did not compile it. The option `--compile-tracked` compiles each tracked scenario, and not only the scenario that `zpp` loads:
+
+```
+zpp -i plan.zpp --compile-tracked -o plan.zpp
+```
+
+- `zpp` loads each tracked scenario, compiles it, and replaces its metrics. Then it loads its own scenario again. `-o` saves the new metrics.
+- `zpp` prints the metrics of each tracked scenario after the other tables, in the table "Tracked Scenarios". The table has a column for each scenario and a row for each metric. A scenario that does not compile has no values. In JSON, the metrics are in `TrackedScenarios`, with the `Path`, the `Id` and `IsCurrent` of each scenario. The value of `Metrics` is `null` for a scenario that does not compile.
+- The option `--scenario-chart-directory` compiles the tracked scenarios also without `--compile-tracked`. Thus the chart has no stale points.
+- When the scenario chart of the plan has axes, `zpp` prints the table "Scenario Chart" after the table of the tracked scenarios. It has the metric of each axis, and the formula of each fit and of its derivative, as the dock "Scenario Chart" shows them. In JSON, the data of the chart is in `ScenarioChart` (refer to [The data of the scenario chart](#the-data-of-the-scenario-chart)).
+- An imported plan has no tracked scenarios.
+
+A program can also write a plan as JSON, and give it to `zpp -i`. [The project file](PROJECT-FILE.md) gives the rules of the format and its JSON Schema.
 
 To get metrics that a program can read, use JSON. The standard output has only the JSON document, and thus you can send it through a pipe:
 
@@ -97,6 +111,39 @@ A run takes its times from the clock:
 - An Excel export records the time when `zpp` writes it.
 
 The option `--now` gives the run a time of its own. It includes the offset from UTC, for example `--now 2026-09-27T12:00:00+01:00`, or `Z` for UTC itself. Thus, the same command writes the same files at any time. An import is the exception: it gives new ids to the plan that it creates, each time. In all cases, `zpp` shows the times in the time zone of the computer. Thus, two computers write the same times only if they have the same time zone.
+
+## The data of the schedule
+
+The option `--data-directory` writes the data of the compiled scenario as three CSV files in the directory:
+
+```
+zpp -i plan.zpp --data-directory out
+```
+
+- `<name>-schedule.csv` has a row for each activity, in the order of the ids. It has the duration, and the earliest and the latest start and finish. It has the total and the free slack, and the dependencies, also those that the resources add. It has the resources that do the activity, the minimum earliest start and the maximum latest finish.
+- `<name>-resources.csv` has a row for each day and each resource, with the id and the name of the resource. `Allocated`, `Activity` and `Effort` are `true` when the resource is on the project, works on an activity, and has effort on the day. `Cost` is the cost of the resource on the day. The headcount of a day is the number of rows of the day where `Allocated` is `true`. The activities that no resource of the plan does have a series with no id.
+- `<name>-earned-value.csv` has the points of the planned earned value, and then of the effort and of the progress that the trackers record. The first column names the series.
+
+A time is a number of days from the start of the project. A list of ids has a space between two ids. A value that an activity does not have is empty. The files are UTF-8 with a byte order mark, and they use the invariant culture, as the CSV files of the simulation do.
+
+## The data of the scenario chart
+
+The option `--scenario-chart-directory` writes the chart, and two CSV files of its data in the same directory. The axes, the fits and the option for absolute values are the settings of the chart that the plan keeps. A person sets them in the dock "Scenario Chart" of the application. Thus, the data and the chart always agree. The dock also saves the two files: right-click the chart, and select **Export CSV Files...**.
+
+- `<name>-scenario-points.csv` has a row for each point of each axis of Y (`Y1` or `Y2`). The rows are in the order of the chart: by X, and then by Y. A row has the id and the path of the tracked scenario, and its values of X and Y. A metric that a scenario does not have is 0, as on the chart.
+- `<name>-scenario-fits.csv` has a row for each axis of Y that has a metric. A row has the metrics of the axes of X and Y, and the fit that the chart asks for. It also shows whether the chart plots the absolute value of the curve. Then it has r², the coefficients of the curve, and the coefficients of its derivative. These three are empty when the axis has no fit.
+
+An axis has no fit when the fit is `None`, or when the points have too few different values of X. A fit with n coefficients needs n different values. An axis also has no fit when the fit is not a curve, for example an exponential fit of a value of 0. The r² of a fit is the square of the correlation of the curve with the points. It is empty when the points have one value of Y. The coefficients go from the constant up, and a space separates two coefficients:
+
+| Fit | Curve | Derivative |
+| --- | ----- | ---------- |
+| Linear | y = c0 + c1·x | y′ = d0 |
+| Exponential | y = c0·e^(c1·x) | y′ = d0·e^(d1·x) |
+| Logarithmic | y = c0 + c1·ln(x) | y′ = d0 / x |
+| Power | y = c0·x^c1 | y′ = d0·x^d1 |
+| Polynomial of the order 2, 3 or 4 | y = Σ ci·x^i | y′ = Σ di·x^i |
+
+The absolute option changes only what the chart shows. The coefficients are those of the curve itself. The metrics have the names of the metrics of the API, for example `DirectCost`. The coefficients have all their digits. Do not round them before you calculate the points of a curve. An example of such a point is the inflection point of a cubic fit of the risk. The files are UTF-8 with a byte order mark, and they use the invariant culture, as the other CSV files do. A chart with no axes gives files that have only their headers.
 
 ## Simulate the schedule
 
@@ -256,6 +303,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | `POST /v1/projects/scenarios` | This endpoint lists the scenarios of a plan. |
 | `GET /v1/info` | This endpoint gives the version of the server, the culture and time zone for its jobs, and its limits. |
 | `GET /v1/openapi` | This endpoint gives the description of this API (OpenAPI 3.1, in YAML). It needs no API key. |
+| `GET /v1/schemas/project` | This endpoint gives the JSON Schema of the project file. It needs no API key. Refer to [The project file](PROJECT-FILE.md). |
 | `GET /health/live` | This endpoint answers 200 when the server listens. |
 | `GET /health/ready` | This endpoint answers 200 after the warm-up of the server, and 503 before it. |
 
@@ -302,7 +350,7 @@ zpp serve --listen https://0.0.0.0:9771 --certificate server.pfx --api-key-file 
 - An address that other computers can connect to needs an API key. The key comes from the file that `--api-key-file` gives, or from `ZPP_API_KEY`. The key never comes from the command line, because other users of the computer can see the command line. Without a key, the server refuses to start.
 - A key has a minimum of 32 characters. The server checks this when it starts. A random 256-bit key in base64 has 44 characters, and `openssl rand -base64 32` makes such a key.
 - Each request to `/v1` must then have the key in the header `Authorization: Bearer <key>`. `curl` can read this header from a file with `-H @key-header.txt`. Thus, the key is not on a command line, where other users of the computer can read it.
-- The health endpoints need no key, and thus a load balancer can ask them. The description of the API also needs no key, because a tool reads it before it has the key.
+- The health endpoints need no key, and thus a load balancer can ask them. The description of the API and the schema of a project file also need no key. A tool reads them before it has the key.
 - An `https` address needs `--certificate`. The value is a `.pfx` or `.p12` file, or a `.pem` or `.crt` file. If a `.pfx` or `.p12` file has a password, put the password in `ZPP_CERTIFICATE_PASSWORD`. If the key of a `.pem` or `.crt` file is in a different file, give that file with `--certificate-key`. The server accepts TLS 1.2 and TLS 1.3, and no older version.
 - Plain `http` that other computers can connect to sends the API key and each plan in clear text. Thus, the server refuses to start with such an address.
 - The option `--behind-tls-proxy` is an exception. It says that a proxy in front of the server ends TLS, and that only the proxy can connect to the address: `zpp serve --listen http://10.0.0.5:9770 --api-key-file /etc/zpp/api-key --behind-tls-proxy`. The server then writes a warning to its log each time it starts.

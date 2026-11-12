@@ -357,6 +357,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Title_Tracked", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Tracked Scenarios.
+        /// </summary>
+        public static string Title_TrackedScenarios {
+            get {
+                return ResourceManager.GetString("Title_TrackedScenarios", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Untitled.

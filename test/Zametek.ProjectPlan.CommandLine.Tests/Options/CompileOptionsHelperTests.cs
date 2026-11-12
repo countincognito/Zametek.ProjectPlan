@@ -252,6 +252,35 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             });
         }
 
+        [Fact]
+        public void Read_Given_CompileTracked_Then_ARequestCompilesTheTrackedScenarios()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""compileTracked"":true}");
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldBe(new CompileOptions { CompileTracked = true });
+
+            using var input = new MemoryStream();
+            CompileOptionsHelper.ToJobRequest(options!, input, null, s_Limits).CompileTracked.ShouldBeTrue();
+            CompileOptionsHelper.ToJobRequest(new CompileOptions(), input, null, s_Limits).CompileTracked.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void Read_Given_TheData_Then_ARequestAsksForItsThreeFiles()
+        {
+            (CompileOptions? options, ProblemCollector problems) = Read(@"{""outputs"":{""data"":{}}}");
+
+            problems.HasErrors.ShouldBeFalse();
+            options.ShouldBe(new CompileOptions { Outputs = new OutputsOptions { Data = new DataOptions() } });
+            CompileOptionsHelper.GetRequestedOutputs(options!).ShouldBe([JobOutput.Schedule, JobOutput.ResourceSeries, JobOutput.EarnedValueSeries]);
+
+            using var input = new MemoryStream();
+            CompileOptionsHelper.ToJobRequest(options!, input, null, s_Limits).DataFiles.ShouldBeTrue();
+            CompileOptionsHelper.ToJobRequest(new CompileOptions(), input, null, s_Limits).DataFiles.ShouldBeFalse();
+            CompileOptionsHelper.FromOptions(new Options { InputFilename = @"plan.zpp", DataDirectory = @"data" }).Outputs
+                .ShouldBe(new OutputsOptions { Data = new DataOptions() });
+        }
+
         [Theory]
         [InlineData(@"{}")]
         [InlineData(@"{""runSimulation"":false}")]
@@ -653,6 +682,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 {
                     SimulationWorkbook = new SimulationWorkbookOptions(),
                     Simulation = new ChartOptions { Width = 1, Height = 1 },
+                    Data = new DataOptions(),
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ResourceChart = new ChartOptions { Width = 1, Height = 1 },
@@ -753,16 +783,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             names.ShouldBe(
             [
                 @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart", @"scenarioChart",
+                @"scenarioChartPoints", @"scenarioChartFits",
+                @"schedule", @"resourceSeries", @"earnedValueSeries",
                 @"simulationChart", @"simulationStatistics", @"simulationHistogram", @"simulationPaths", @"simulationActivities", @"simulationIterations",
                 @"simulationWorkbook",
             ]);
 
-            // Each output but those of the simulation is a member of the outputs a request asks for, and each member is one of them.
-            // The simulation is one member: its chart and its files are the outputs that it makes. Its workbook is an output of its own.
+            // Each output is a member of the outputs a request asks for, but for three members that make more than one. The scenario
+            // chart is one member: its image and its two CSV files are the outputs that it makes. The data is one member, and its
+            // three files are the outputs that it makes. The simulation is one member: its chart and its files are the outputs that
+            // it makes. Its workbook is an output of its own.
             string[] members = [.. typeof(OutputsOptions).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(x => ApiNamingPolicy.Instance.ConvertName(x.Name))];
 
-            members.ShouldBe([.. names.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation", @"simulationWorkbook"]);
+            members.ShouldBe(
+            [
+                @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart", @"scenarioChart",
+                @"data", @"simulation", @"simulationWorkbook",
+            ]);
         }
 
         [Theory]
@@ -807,6 +845,19 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void GetRequestedOutputs_Given_TheScenarioChart_Then_ItsImageAndItsTwoCsvFiles()
+        {
+            var options = new CompileOptions
+            {
+                Outputs = new OutputsOptions { ScenarioChart = new ChartOptions { Format = PlotExport.Png, Width = 1, Height = 1 } },
+            };
+
+            CompileOptionsHelper.GetRequestedOutputs(options).ShouldBe([JobOutput.ScenarioChart, JobOutput.ScenarioChartPoints, JobOutput.ScenarioChartFits]);
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.ScenarioChartPoints, options, @"plan").ShouldBe(@"plan-scenario-points.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.ScenarioChartFits, options, @"plan").ShouldBe(@"plan-scenario-fits.csv");
+        }
+
+        [Fact]
         public void BuildOutputFilename_Given_AChartOrGraphNotAskedFor_Then_NamedAsTheDefaultFormatIs()
         {
             CompileOptionsHelper.BuildOutputFilename(JobOutput.GanttChart, new CompileOptions(), @"plan")
@@ -842,6 +893,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 InputFilename = @"plan.zpp",
                 Scenario = @"Beta",
+                CompileTracked = true,
                 OutputFilename = @"saved.zpp",
                 ExportFilename = @"exported.xlsx",
                 BaseTheme = BaseTheme.Dark,
@@ -869,6 +921,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             CompileOptionsHelper.FromOptions(options).ShouldBe(new CompileOptions
             {
                 Scenario = @"Beta",
+                CompileTracked = true,
                 BaseTheme = BaseTheme.Dark,
                 MetricsFormat = MetricsExport.Json,
                 CompileTimeout = TimeSpan.FromSeconds(3),
@@ -909,6 +962,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 InputFilename = @"plan.zpp",
                 Scenario = @"Beta",
+                CompileTracked = true,
                 OutputFilename = @"saved.zpp",
                 ExportFilename = @"exported.xlsx",
                 BaseTheme = BaseTheme.Dark,

@@ -8,8 +8,9 @@ namespace Zametek.Engine.ProjectPlan
 {
     // What a simulation found, copied out of the simulation view-model before the job's scope - and the view-model with it -
     // goes: the settings it ran with, and the statistics of the finish time. Every time is in days from the start of the
-    // project, with the date it falls on in the working calendar of the project. A run in which every iteration failed has
-    // no statistics, and so no values for them.
+    // project, with the date it falls on in the working calendar of the project. A failed iteration is in none of the
+    // statistics, and the metrics say why the iterations failed. A run in which every iteration failed has no statistics, and
+    // so no values for them.
     public record JobSimulationMetrics
     {
         // The iterations that were asked for. ValidIterations of them gave a finish time.
@@ -25,6 +26,15 @@ namespace Zametek.Engine.ProjectPlan
         public int ValidIterations { get; init; }
 
         public int FailedIterations { get; init; }
+
+        // Why the iterations failed: the resource scheduler could not place every activity, the schedule ran past the limit of
+        // time of the library, or an activity could not finish by its maximum latest finish time. A result that a project held
+        // from before the reasons were kept has zeros.
+        public int ResourceSchedulingStallIterations { get; init; }
+
+        public int MaximumTimeValueExceededIterations { get; init; }
+
+        public int InvalidConstraintsIterations { get; init; }
 
         // The finish of the plan as it stands, with the expected duration of each activity.
         public int PlannedFinishDays { get; init; }
@@ -52,6 +62,9 @@ namespace Zametek.Engine.ProjectPlan
         // The share of the valid iterations that finish by the target, from 0 to 1.
         public double? TargetProbability { get; init; }
 
+        // Each activity that could not finish by its maximum latest finish time in an iteration, the most misses first.
+        public IReadOnlyList<JobSimulationMissedMaximum> MissedMaximumLatestFinishTimes { get; init; } = [];
+
         // The statistics as the panel shows them, as text: the seed, the distribution and, for a modified beta-PERT, its shape
         // value, then each of the panel's other lines.
         public IReadOnlyList<SimulationStatisticModel> Statistics { get; init; } = [];
@@ -67,6 +80,9 @@ namespace Zametek.Engine.ProjectPlan
                 && ModifiedBetaShape == other.ModifiedBetaShape
                 && ValidIterations == other.ValidIterations
                 && FailedIterations == other.FailedIterations
+                && ResourceSchedulingStallIterations == other.ResourceSchedulingStallIterations
+                && MaximumTimeValueExceededIterations == other.MaximumTimeValueExceededIterations
+                && InvalidConstraintsIterations == other.InvalidConstraintsIterations
                 && PlannedFinishDays == other.PlannedFinishDays
                 && PlannedFinishDate == other.PlannedFinishDate
                 && MeanDays == other.MeanDays
@@ -79,6 +95,7 @@ namespace Zametek.Engine.ProjectPlan
                 && TargetFinishDays == other.TargetFinishDays
                 && TargetFinishDate == other.TargetFinishDate
                 && TargetProbability == other.TargetProbability
+                && MissedMaximumLatestFinishTimes.SequenceEqual(other.MissedMaximumLatestFinishTimes)
                 && Statistics.SequenceEqual(other.Statistics);
         }
 
@@ -91,6 +108,7 @@ namespace Zametek.Engine.ProjectPlan
             hash.Add(ModifiedBetaShape);
             hash.Add(ValidIterations);
             hash.Add(FailedIterations);
+            hash.Add(InvalidConstraintsIterations);
             hash.Add(PlannedFinishDays);
             hash.Add(MeanDays);
             hash.Add(StandardDeviationDays);
@@ -100,6 +118,11 @@ namespace Zametek.Engine.ProjectPlan
             foreach (JobSimulationPercentile percentile in Percentiles)
             {
                 hash.Add(percentile);
+            }
+
+            foreach (JobSimulationMissedMaximum missed in MissedMaximumLatestFinishTimes)
+            {
+                hash.Add(missed);
             }
 
             foreach (SimulationStatisticModel statistic in Statistics)
@@ -128,6 +151,9 @@ namespace Zametek.Engine.ProjectPlan
                 ModifiedBetaShape = summary.ModifiedBetaShape,
                 ValidIterations = summary.ValidIterationCount,
                 FailedIterations = summary.FailedIterationCount,
+                ResourceSchedulingStallIterations = summary.ResourceSchedulingStallIterationCount,
+                MaximumTimeValueExceededIterations = summary.MaximumTimeValueExceededIterationCount,
+                InvalidConstraintsIterations = summary.InvalidConstraintsIterationCount,
                 PlannedFinishDays = summary.PlannedFinishTime,
                 PlannedFinishDate = simulation.GetFinishDate(summary.PlannedFinishTime),
                 MeanDays = hasResult ? summary.Mean : null,
@@ -140,6 +166,14 @@ namespace Zametek.Engine.ProjectPlan
                 TargetFinishDays = hasResult ? summary.TargetFinishTime : null,
                 TargetFinishDate = hasResult && summary.TargetFinishTime is int target ? simulation.GetFinishDate(target) : null,
                 TargetProbability = hasResult ? summary.TargetProbability : null,
+                MissedMaximumLatestFinishTimes =
+                [
+                    .. summary.Activities
+                        .Where(x => x.MaximumLatestFinishTimeMissCount > 0)
+                        .OrderByDescending(x => x.MaximumLatestFinishTimeMissCount)
+                        .ThenBy(x => x.ActivityId)
+                        .Select(x => new JobSimulationMissedMaximum(x.ActivityId, x.Name, x.MaximumLatestFinishTimeMissCount)),
+                ],
                 Statistics = [.. simulation.Statistics],
             };
         }
@@ -150,4 +184,11 @@ namespace Zametek.Engine.ProjectPlan
         int Percentile,
         int FinishDays,
         DateOnly FinishDate);
+
+    // An activity that could not finish by its maximum latest finish time, and the number of iterations in which it could not.
+    // Each of those iterations failed.
+    public record JobSimulationMissedMaximum(
+        int ActivityId,
+        string Name,
+        int Iterations);
 }

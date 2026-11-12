@@ -650,6 +650,77 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.Statistics.ShouldContain(x => x.Name.StartsWith(Resource.ProjectPlan.Labels.Label_SimulationTargetProbability));
         }
 
+        // Three activities in a chain: 2 days, then 2 to 12 days (4 is the expected duration), then 4 days, and the last must
+        // finish by day 10. The plan finishes on day 10. An iteration in which the second activity takes more than 4 days
+        // cannot finish the third by its maximum latest finish time, and fails.
+        private static ProjectScenarioModel ChainWithAMaximumThatSomeIterationsMiss()
+        {
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(3);
+
+            return scenario with
+            {
+                DependentActivities =
+                [
+                    .. scenario.DependentActivities.Select(x => x.Activity.Id switch
+                    {
+                        2 => x with
+                        {
+                            Activity = x.Activity with
+                            {
+                                Duration = 4,
+                                OptimisticDuration = 2,
+                                MostLikelyDuration = 3,
+                                PessimisticDuration = 12,
+                            },
+                        },
+                        3 => x with { Activity = x.Activity with { MaximumLatestFinishTime = 10 } },
+                        _ => x,
+                    }),
+                ],
+            };
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_AMaximumThatSomeIterationsMiss_Then_TheStatisticsSayHowManyFailedAndWhy()
+        {
+            using Harness harness = await Harness.MakeAsync(ChainWithAMaximumThatSomeIterationsMiss());
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 7;
+
+            await panel.RunSimulationAsync();
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            panel.Summary.ShouldNotBeNull();
+            int failed = panel.Summary.FailedIterationCount;
+            failed.ShouldBeGreaterThan(0);
+            failed.ShouldBeLessThan(c_Iterations);
+            panel.Summary.InvalidConstraintsIterationCount.ShouldBe(failed);
+            (panel.Summary.ResourceSchedulingStallIterationCount, panel.Summary.MaximumTimeValueExceededIterationCount).ShouldBe((0, 0));
+
+            // The count and the share of all the iterations: the statistics are of the others, and those are the early ones.
+            string countAndShare =
+                $@"{failed.ToString(System.Globalization.CultureInfo.CurrentCulture)} ({((double)failed / c_Iterations).ToString(@"P1", System.Globalization.CultureInfo.CurrentCulture)})";
+            panel.Statistics.ShouldContain(new SimulationStatisticModel
+            {
+                Name = Resource.ProjectPlan.Labels.Label_SimulationFailedIterations,
+                Value = countAndShare,
+            });
+            panel.Statistics.ShouldContain(new SimulationStatisticModel
+            {
+                Name = $@"{Resource.ProjectPlan.Labels.Label_SimulationMissedMaximumLatestFinishTime}: Activity 3",
+                Value = countAndShare,
+            });
+
+            // A reason that no iteration had has no row.
+            panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationFailedResourceScheduling);
+            panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationFailedTimeLimit);
+
+            // The activity is in the table of the activities with its misses.
+            panel.Activities.Single(x => x.ActivityId == 3).MaximumLatestFinishTimeMissCount.ShouldBe(failed);
+        }
+
         [Fact]
         public async Task RunSimulationAsync_Given_TheModifiedBetaDistribution_Then_UsesItsShapeValue()
         {

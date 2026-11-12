@@ -44,6 +44,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveScenarioChartImageFileCommand { get; }
 
+        // Saves the data of the chart as two CSV files: the points and the fits.
+        ICommand ExportCsvFilesCommand { get; }
+
         ICommand ResetScenarioChartCommand { get; }
 
         ICommand ChangeTrackedMetricXAxisCommand { get; }
@@ -60,5 +63,10 @@ namespace Zametek.Contract.ProjectPlan
         Task WriteScenarioChartImageAsync(Stream stream, ChartImageFormat format, int width, int height);
 
         void BuildScenarioChartPlotModel();
+
+        // The data of the chart from the settings of the chart that the plan keeps: the points of each axis of Y and its fit.
+        // Null when the chart is empty: the scenario has compilation errors, or the chart has no metric for the axis of X, or for
+        // both axes of Y. A job builds the tracked metrics first, as for the chart.
+        ScenarioChartDataModel? BuildScenarioChartData();
     }
 }

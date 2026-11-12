@@ -26,6 +26,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ModifiedBetaShape = 6.5,
             ValidIterations = 4990,
             FailedIterations = 10,
+            ResourceSchedulingStallIterations = 4,
+            MaximumTimeValueExceededIterations = 0,
+            InvalidConstraintsIterations = 6,
             PlannedFinishDays = 26,
             PlannedFinishDate = new DateOnly(2024, 1, 27),
             MeanDays = 26.4,
@@ -38,6 +41,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             TargetFinishDays = 30,
             TargetFinishDate = new DateOnly(2024, 1, 31),
             TargetProbability = 0.86,
+            MissedMaximumLatestFinishTimes = [new JobSimulationMissedMaximum(7, @"Design review", 6)],
             Statistics =
             [
                 new SimulationStatisticModel { Name = @"Seed", Value = @"18446744073709551615" },
@@ -55,6 +59,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             TotalMarginAbsolute = 100,
             DisplayTotalMargin = @" (10%)",
         };
+
+        // Two tracked scenarios: the one that the job loaded, and one in a folder that did not compile.
+        private static readonly IReadOnlyList<JobTrackedScenario> s_Tracked =
+        [
+            new JobTrackedScenario(@"Alpha", Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5"), true, s_Metrics),
+            new JobTrackedScenario(@"Plans > Beta", Guid.Parse(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4"), false, null),
+        ];
 
         [Fact]
         public async Task WriteResultAsync_Given_CompilationErrors_Then_DisplaysTheCompilerOutputAsErrors()
@@ -156,6 +167,169 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Theory]
         [InlineData(MetricsExport.Markdown)]
         [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_TrackedScenarios_Then_TheirMetricsAreATableAfterTheOthers(MetricsExport format)
+        {
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation }, format);
+            string with = await DisplayedAsync(
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation, TrackedScenarios = s_Tracked },
+                format);
+
+            // The tables of the run come first, and one blank line sets the next table apart.
+            with.ShouldStartWith(without + NewLineHelper.NewLine);
+            string tracked = with[(without.Length + NewLineHelper.NewLine.Length)..];
+            tracked.ShouldNotStartWith(NewLineHelper.NewLine);
+
+            // A column for each scenario, under its path, and a row for each metric, as the table of the metrics has them. A
+            // scenario that did not compile has no values.
+            string metrics = format == MetricsExport.Table
+                ? JobConsoleHelper.BuildMetricsTable(s_Metrics).ToString()
+                : JobConsoleHelper.BuildMetricsTable(s_Metrics).ToMarkDownString();
+            List<string> rows = Rows(tracked);
+            rows[0].ShouldBe($@"{Resource.ProjectPlan.Titles.Title_TrackedScenarios} | Alpha | Plans > Beta");
+            rows.Skip(1).ShouldBe(Rows(NewLineHelper.NormalizeNewLines(metrics)).Skip(1).Select(x => x + @" | "));
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_NoTrackedScenario_Then_ThereIsNoTableOfThem(MetricsExport format)
+        {
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics }, format);
+
+            string with = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = [] }, format);
+
+            with.ShouldBe(without);
+        }
+
+        [Fact]
+        public async Task WriteResultAsync_Given_TrackedScenariosAndJsonMetrics_Then_WritesThemInTheJson()
+        {
+            var console = new RecordingJobConsole();
+
+            ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(
+                console,
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = s_Tracked },
+                MetricsExport.Json);
+
+            exitCode.ShouldBe(ExitCode.Success);
+            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.Line(JobConsoleHelper.BuildMetricsJson(s_Metrics, null, s_Tracked)));
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_TrackedScenarios_Then_TheyFollowWithTheMetricsOfEach()
+        {
+            JObject all = JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation, s_Tracked));
+
+            all.Properties().Select(x => x.Name).TakeLast(2).ShouldBe([@"Simulation", @"TrackedScenarios"]);
+            var tracked = (JArray)all[@"TrackedScenarios"]!;
+            tracked.Count.ShouldBe(2);
+            ((JObject)tracked[0]).Properties().Select(x => x.Name).ShouldBe([@"Path", @"Id", @"IsCurrent", @"Metrics"]);
+            tracked[0][@"Path"]!.Value<string>().ShouldBe(@"Alpha");
+            tracked[0][@"Id"]!.Value<string>().ShouldBe(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5");
+            tracked[0][@"IsCurrent"]!.Value<bool>().ShouldBeTrue();
+            tracked[1][@"Path"]!.Value<string>().ShouldBe(@"Plans > Beta");
+            tracked[1][@"IsCurrent"]!.Value<bool>().ShouldBeFalse();
+
+            // The metrics of a scenario are what the metrics of a job are, and null for a scenario that did not compile.
+            JToken.DeepEquals(tracked[0][@"Metrics"], JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics))).ShouldBeTrue();
+            tracked[1][@"Metrics"]!.Type.ShouldBe(JTokenType.Null);
+        }
+
+        // The data of a scenario chart: the duration against the direct cost, with a linear fit, and against the total cost, with
+        // a fit that the points cannot give.
+        private static readonly ScenarioChartDataModel s_ScenarioChart = new()
+        {
+            XMetric = TrackedMetrics.NetworkDuration,
+            Y1 = new ScenarioChartSeriesModel
+            {
+                Metric = TrackedMetrics.CostsDirect,
+                CurveFittingType = CurveFittingType.Linear,
+                Points =
+                [
+                    new ScenarioChartPointModel { Id = Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5"), Path = @"Alpha", X = 5.0, Y = 100.0 },
+                    new ScenarioChartPointModel { Id = Guid.Parse(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4"), Path = @"Plans > Beta", X = 10.0, Y = 150.0 },
+                ],
+                CurveFit = new CurveFitModel
+                {
+                    CurveFittingType = CurveFittingType.Linear,
+                    Coefficients = [50.0, 10.0],
+                    DerivativeCoefficients = [10.0],
+                    RSquared = 1.0,
+                },
+            },
+            Y2 = new ScenarioChartSeriesModel
+            {
+                Metric = TrackedMetrics.CostsTotal,
+                CurveFittingType = CurveFittingType.PolynomialOrder2,
+                AbsoluteCurveFitting = true,
+                Points = [new ScenarioChartPointModel { Id = Guid.Parse(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5"), Path = @"Alpha", X = 5.0, Y = 120.0 }],
+            },
+        };
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_TheDataOfTheScenarioChart_Then_ItsAxesAndItsFormulasAreATableAfterTheOthers(MetricsExport format)
+        {
+            string without = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = s_Tracked }, format);
+            string with = await DisplayedAsync(
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, TrackedScenarios = s_Tracked, ScenarioChart = s_ScenarioChart },
+                format);
+
+            with.ShouldStartWith(without + NewLineHelper.NewLine);
+
+            // The metric of each axis, and the formulas of a fit as the panel shows them. An axis with no fit has only its metric.
+            CurveFitModel fit = s_ScenarioChart.Y1!.CurveFit!;
+            Rows(with[(without.Length + NewLineHelper.NewLine.Length)..]).ShouldBe(
+            [
+                $@"{Resource.ProjectPlan.Titles.Title_ScenarioChartView} | {Resource.ProjectPlan.Titles.Title_Values}",
+                $@"{Resource.ProjectPlan.Menus.Menu_TrackedMetricXAxis} | {StringConverters.TrackedMetricsValue(TrackedMetrics.NetworkDuration)}",
+                $@"{Resource.ProjectPlan.Menus.Menu_TrackedMetricY1Axis} | {StringConverters.TrackedMetricsValue(TrackedMetrics.CostsDirect)}",
+                $@"{Resource.ProjectPlan.Labels.Label_CurveFittingY1} | {CurveFitCalculator.BuildFormula(fit, false)}",
+                $@"{Resource.ProjectPlan.Labels.Label_CurveFittingDerivativeY1} | {CurveFitCalculator.BuildDerivativeFormula(fit, false)}",
+                $@"{Resource.ProjectPlan.Menus.Menu_TrackedMetricY2Axis} | {StringConverters.TrackedMetricsValue(TrackedMetrics.CostsTotal)}",
+            ]);
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_TheDataOfTheScenarioChart_Then_ItFollowsWithThePointsAndTheFitOfEachAxis()
+        {
+            JObject all = JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, null, s_Tracked, s_ScenarioChart));
+
+            all.Properties().Select(x => x.Name).TakeLast(2).ShouldBe([@"TrackedScenarios", @"ScenarioChart"]);
+            var chart = (JObject)all[@"ScenarioChart"]!;
+            chart.Properties().Select(x => x.Name).ShouldBe([@"XMetric", @"Y1", @"Y2"]);
+            chart[@"XMetric"]!.Value<string>().ShouldBe(@"NetworkDuration");
+
+            var y1 = (JObject)chart[@"Y1"]!;
+            y1.Properties().Select(x => x.Name).ShouldBe([@"Metric", @"CurveFitting", @"Absolute", @"Points", @"Fit"]);
+            y1[@"Metric"]!.Value<string>().ShouldBe(@"DirectCost");
+            y1[@"CurveFitting"]!.Value<string>().ShouldBe(@"Linear");
+            ((JObject)y1[@"Points"]![1]!).Properties().Select(x => x.Name).ShouldBe([@"Id", @"Path", @"X", @"Y"]);
+            y1[@"Points"]![1]![@"Path"]!.Value<string>().ShouldBe(@"Plans > Beta");
+            y1[@"Points"]![1]![@"Y"]!.Value<double>().ShouldBe(150.0);
+            y1[@"Fit"]![@"Coefficients"]!.Values<double>().ShouldBe([50.0, 10.0]);
+            y1[@"Fit"]![@"DerivativeCoefficients"]!.Values<double>().ShouldBe([10.0]);
+            y1[@"Fit"]![@"RSquared"]!.Value<double>().ShouldBe(1.0);
+
+            // An axis with no fit has a null fit.
+            chart[@"Y2"]![@"Absolute"]!.Value<bool>().ShouldBeTrue();
+            chart[@"Y2"]![@"Fit"]!.Type.ShouldBe(JTokenType.Null);
+        }
+
+        [Fact]
+        public void BuildMetricsJson_Given_NoTrackedScenario_Then_AnEmptyListAndNoSimulation()
+        {
+            JObject all = JObject.Parse(JobConsoleHelper.BuildMetricsJson(s_Metrics, null, []));
+
+            all.Properties().Select(x => x.Name).Last().ShouldBe(@"TrackedScenarios");
+            all.ContainsKey(@"Simulation").ShouldBeFalse();
+            ((JArray)all[@"TrackedScenarios"]!).ShouldBeEmpty();
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
         public async Task WriteResultAsync_Given_NoSimulation_Then_TheMetricsAreTheOnlyTable(MetricsExport format)
         {
             string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics }, format);
@@ -165,7 +339,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // Nothing follows the table: no other table, and no count of its rows, which the table library adds by default.
             text.ShouldNotContain(NewLineHelper.NewLine + NewLineHelper.NewLine);
-            text.ShouldNotContain(@"Count");
+            text.ShouldNotContain(@"Count: ");
         }
 
         [Theory]
@@ -217,10 +391,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var simulation = (JObject)all[@"Simulation"]!;
             simulation.Properties().Select(x => x.Name).ShouldBe(
             [
-                @"Iterations", @"ValidIterations", @"FailedIterations", @"Seed", @"Distribution", @"ModifiedBetaShape",
+                @"Iterations", @"ValidIterations", @"FailedIterations", @"ResourceSchedulingStallIterations",
+                @"MaximumTimeValueExceededIterations", @"InvalidConstraintsIterations", @"Seed", @"Distribution", @"ModifiedBetaShape",
                 @"PlannedFinishDays", @"PlannedFinishDate", @"MeanDays", @"StandardDeviationDays",
                 @"EarliestFinishDays", @"EarliestFinishDate", @"LatestFinishDays", @"LatestFinishDate",
-                @"Percentiles", @"TargetFinishDays", @"TargetFinishDate", @"TargetProbability",
+                @"Percentiles", @"TargetFinishDays", @"TargetFinishDate", @"TargetProbability", @"MissedMaximumLatestFinishTimes",
             ]);
 
             // A seed can be larger than every reader reads without loss, and so it is text.
@@ -230,12 +405,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             simulation[@"ModifiedBetaShape"]!.Value<double>().ShouldBe(6.5);
             simulation[@"Iterations"]!.Value<int>().ShouldBe(5000);
             simulation[@"ValidIterations"]!.Value<int>().ShouldBe(4990);
+            simulation[@"FailedIterations"]!.Value<int>().ShouldBe(10);
+            simulation[@"ResourceSchedulingStallIterations"]!.Value<int>().ShouldBe(4);
+            simulation[@"MaximumTimeValueExceededIterations"]!.Value<int>().ShouldBe(0);
+            simulation[@"InvalidConstraintsIterations"]!.Value<int>().ShouldBe(6);
             simulation[@"PlannedFinishDate"]!.Type.ShouldBe(JTokenType.String);
             simulation[@"PlannedFinishDate"]!.Value<string>().ShouldBe(@"2024-01-27");
             simulation[@"MeanDays"]!.Value<double>().ShouldBe(26.4);
             simulation[@"TargetProbability"]!.Value<double>().ShouldBe(0.86);
             ((JArray)simulation[@"Percentiles"]!).Select(x => x[@"Percentile"]!.Value<int>()).ShouldBe([50, 80]);
             ((JArray)simulation[@"Percentiles"]!)[1][@"FinishDate"]!.Value<string>().ShouldBe(@"2024-01-30");
+
+            // Each activity that could not finish by its maximum latest finish time, and in how many iterations.
+            var missed = (JArray)simulation[@"MissedMaximumLatestFinishTimes"]!;
+            missed.Count.ShouldBe(1);
+            ((JObject)missed[0]).Properties().Select(x => x.Name).ShouldBe([@"ActivityId", @"Name", @"Iterations"]);
+            missed[0][@"ActivityId"]!.Value<int>().ShouldBe(7);
+            missed[0][@"Name"]!.Value<string>().ShouldBe(@"Design review");
+            missed[0][@"Iterations"]!.Value<int>().ShouldBe(6);
 
             // The text ends its lines with \n, and so does the text of the metrics without a simulation.
             json.ShouldNotContain('\r');
@@ -252,6 +439,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             simulation[@"EarliestFinishDate"]!.Type.ShouldBe(JTokenType.Null);
             simulation[@"TargetProbability"]!.Type.ShouldBe(JTokenType.Null);
             ((JArray)simulation[@"Percentiles"]!).ShouldBeEmpty();
+            ((JArray)simulation[@"MissedMaximumLatestFinishTimes"]!).ShouldBeEmpty();
         }
 
         [Fact]

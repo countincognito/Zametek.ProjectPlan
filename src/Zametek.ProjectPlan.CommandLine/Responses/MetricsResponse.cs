@@ -36,6 +36,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public double? EffortEfficiency { get; init; }
 
+        // The headcount of the schedule: the most resources on one day, the mean over the days, and the ratio of the two.
+        public int? PeakHeadcount { get; init; }
+
+        public double? AverageHeadcount { get; init; }
+
+        public double? PeakToAverageHeadcount { get; init; }
+
         public double? ActivityEffort { get; init; }
 
         public double? DirectEffort { get; init; }
@@ -99,6 +106,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 ProjectFinishDays = metrics.ProjectFinishDays,
                 ProjectFinishDate = metrics.ProjectFinishDate,
                 EffortEfficiency = Finite(metrics.EffortEfficiency),
+                PeakHeadcount = metrics.PeakHeadcount,
+                AverageHeadcount = Finite(metrics.AverageHeadcount),
+                PeakToAverageHeadcount = Finite(metrics.PeakToAverageHeadcount),
                 ActivityEffort = Finite(metrics.ActivityEffort),
                 DirectEffort = Finite(metrics.DirectEffort),
                 IndirectEffort = Finite(metrics.IndirectEffort),

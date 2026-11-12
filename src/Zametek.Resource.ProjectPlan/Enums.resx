@@ -228,6 +228,15 @@
   <data name="Enum_TrackedMetric_EffortsDirect" xml:space="preserve">
     <value>Direct Effort</value>
   </data>
+  <data name="Enum_TrackedMetric_HeadcountAverage" xml:space="preserve">
+    <value>Average Headcount</value>
+  </data>
+  <data name="Enum_TrackedMetric_HeadcountPeak" xml:space="preserve">
+    <value>Peak Headcount</value>
+  </data>
+  <data name="Enum_TrackedMetric_HeadcountPeakToAverageRatio" xml:space="preserve">
+    <value>Peak to Average Headcount</value>
+  </data>
   <data name="Enum_TrackedMetric_MarginsDirect" xml:space="preserve">
     <value>Direct Margin</value>
   </data>

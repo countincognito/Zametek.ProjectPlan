@@ -17,6 +17,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ImportLongName = "import";
         private const string c_ScenarioLongName = "scenario";
         private const string c_ListScenariosLongName = "list-scenarios";
+        private const string c_CompileTrackedLongName = "compile-tracked";
         private const string c_OutputLongName = "output";
         private const string c_ExportLongName = "export";
         private const string c_BaseThemeLongName = "base-theme";
@@ -40,6 +41,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ScenarioChartDirectoryLongName = "scenario-chart-directory";
         private const string c_ScenarioChartFormatLongName = "scenario-chart-format";
         private const string c_ScenarioChartSizeLongName = "scenario-chart-size";
+        private const string c_DataDirectoryLongName = "data-directory";
         private const string c_RunSimulationLongName = "run-simulation";
         private const string c_SimulationDirectoryLongName = "simulation-directory";
         private const string c_SimulationFormatLongName = "simulation-format";
@@ -79,6 +81,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option('l', c_ListScenariosLongName, HelpText = "List the input project's scenarios, then exit (only valid with --" + c_InputLongName + ")")]
         public bool ListScenarios { get; set; } = default;
+
+        [Option(c_CompileTrackedLongName, HelpText = "Compile each tracked scenario of the input file, and not only the one that zpp loads, and print the metrics of each in a table of their own, after the other tables. The new metrics replace the ones that the file holds, which can be stale, and --" + c_OutputLongName + " saves them. --" + c_ScenarioChartDirectoryLongName + " compiles the tracked scenarios also without this option, so that the chart has no stale points")]
+        public bool CompileTracked { get; set; } = default;
 
 
 
@@ -156,7 +161,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option(c_ScenarioChartDirectoryLongName, HelpText = "Scenario chart output file directory")]
+        [Option(c_ScenarioChartDirectoryLongName, HelpText = "Scenario chart output file directory: the chart, and the CSV files of its points and of its fits (r squared, and the coefficients of each curve and of its derivative)")]
         public string? ScenarioChartDirectory { get; set; } = default;
 
         [Option(c_ScenarioChartFormatLongName, Default = PlotExport.Jpeg, HelpText = "Scenario chart format (Jpeg|Png|Bmp|Webp|Svg)")]
@@ -164,6 +169,11 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_ScenarioChartSizeLongName, Min = 2, Max = 2, Separator = ':', HelpText = "Scenario chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> ScenarioChartSize { get; set; } = [];
+
+
+
+        [Option(c_DataDirectoryLongName, HelpText = "Data output file directory: the CSV files of the schedule (the earliest and latest start and finish, and the total and free slack, of each activity), of the series of the resources (for each day and resource) and of the series of the earned value")]
+        public string? DataDirectory { get; set; } = default;
 
 
 

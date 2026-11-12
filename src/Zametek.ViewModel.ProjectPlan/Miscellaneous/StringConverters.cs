@@ -138,6 +138,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     TrackedMetrics.NetworkCyclomaticComplexity => Enums.Enum_TrackedMetric_NetworkCyclomaticComplexity,
                     TrackedMetrics.NetworkDuration => Enums.Enum_TrackedMetric_NetworkDuration,
                     TrackedMetrics.NetworkDurationManMonths => Enums.Enum_TrackedMetric_NetworkDurationManMonths,
+                    TrackedMetrics.HeadcountPeak => Enums.Enum_TrackedMetric_HeadcountPeak,
+                    TrackedMetrics.HeadcountAverage => Enums.Enum_TrackedMetric_HeadcountAverage,
+                    TrackedMetrics.HeadcountPeakToAverageRatio => Enums.Enum_TrackedMetric_HeadcountPeakToAverageRatio,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 

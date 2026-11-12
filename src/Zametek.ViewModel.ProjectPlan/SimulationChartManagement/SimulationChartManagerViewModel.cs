@@ -511,11 +511,38 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Labels.Label_SimulationIterationCount,
                 summary.ValidIterationCount.ToString(CultureInfo.CurrentCulture));
 
+            // The failed iterations, as a count and a share of all the iterations, and why they failed. The statistics that
+            // follow are of the valid iterations only. An iteration that missed a maximum latest finish time is a late one, and
+            // so the statistics are then too early. A reason that no iteration had has no row.
             if (summary.FailedIterationCount > 0)
             {
                 Add(
                     Resource.ProjectPlan.Labels.Label_SimulationFailedIterations,
-                    summary.FailedIterationCount.ToString(CultureInfo.CurrentCulture));
+                    CountAndShare(summary.FailedIterationCount, summary.IterationCount));
+            }
+
+            if (summary.ResourceSchedulingStallIterationCount > 0)
+            {
+                Add(
+                    Resource.ProjectPlan.Labels.Label_SimulationFailedResourceScheduling,
+                    CountAndShare(summary.ResourceSchedulingStallIterationCount, summary.IterationCount));
+            }
+
+            if (summary.MaximumTimeValueExceededIterationCount > 0)
+            {
+                Add(
+                    Resource.ProjectPlan.Labels.Label_SimulationFailedTimeLimit,
+                    CountAndShare(summary.MaximumTimeValueExceededIterationCount, summary.IterationCount));
+            }
+
+            foreach (SimulationActivityCriticalityModel activity in summary.Activities
+                .Where(x => x.MaximumLatestFinishTimeMissCount > 0)
+                .OrderByDescending(x => x.MaximumLatestFinishTimeMissCount)
+                .ThenBy(x => x.ActivityId))
+            {
+                Add(
+                    $@"{Resource.ProjectPlan.Labels.Label_SimulationMissedMaximumLatestFinishTime}: {activity.Name}",
+                    CountAndShare(activity.MaximumLatestFinishTimeMissCount, summary.IterationCount));
             }
 
             if (!summary.HasResult)
@@ -544,6 +571,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return statistics;
+        }
+
+        // A count of iterations and its share of all the iterations: 82 (41.0 %).
+        private static string CountAndShare(int count, int iterationCount)
+        {
+            string share = ((double)count / iterationCount).ToString(@"P1", CultureInfo.CurrentCulture);
+            return $@"{count.ToString(CultureInfo.CurrentCulture)} ({share})";
         }
 
         private void ResetSimulationChart()

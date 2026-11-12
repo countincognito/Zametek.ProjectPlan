@@ -34,6 +34,7 @@ namespace Zametek.View.ProjectPlan
             (Resource.ProjectPlan.Labels.Label_Id, static x => x.ActivityId),
             (Resource.ProjectPlan.Labels.Label_SimulationActivity, static x => x.Name),
             (Resource.ProjectPlan.Labels.Label_SimulationCriticality, static x => x.CriticalityIndex),
+            (Resource.ProjectPlan.Labels.Label_SimulationMissedMaximumLatestFinishTime, static x => x.MaximumLatestFinishTimeMissCount),
         ];
 
         public SimulationMetricManagerView()

@@ -9,11 +9,12 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
     /// <summary>
-    /// Tests for the six metrics that the core holds (the risk, cost, billing, margin, effort and network metrics): each takes
-    /// a value that differs from the one it holds, and raises its change, and the change of the record as a whole, only then.
+    /// Tests for the seven metrics that the core holds (the risk, cost, billing, margin, effort, network and headcount
+    /// metrics): each takes a value that differs from the one it holds, and raises its change, and the change of the record as
+    /// a whole, only then.
     /// </summary>
     /// <remarks>
-    /// The six are set from the file of a scenario, which sets them one by one after the compilation, and by the builds of
+    /// The seven are set from the file of a scenario, which sets them one by one after the compilation, and by the builds of
     /// the outputs. The tests go through the public members of the core.
     /// </remarks>
     public class CoreViewModelMetricsTests
@@ -28,6 +29,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             nameof(CoreViewModel.MarginMetrics),
             nameof(CoreViewModel.EffortMetrics),
             nameof(CoreViewModel.NetworkMetrics),
+            nameof(CoreViewModel.HeadcountMetrics),
         };
 
         private static readonly string[] s_Names =
@@ -38,6 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             nameof(CoreViewModel.MarginMetrics),
             nameof(CoreViewModel.EffortMetrics),
             nameof(CoreViewModel.NetworkMetrics),
+            nameof(CoreViewModel.HeadcountMetrics),
         ];
 
         #region The file of a scenario
@@ -87,9 +90,50 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
         }
 
+        [Fact]
+        public void ProcessProjectScenario_Given_AFileFromBeforeTheHeadcount_Then_TheHeadcountIsTheOneThatTheCompilationGives()
+        {
+            // A file from before the headcount has an empty one. The other metrics of the file are trusted, as always.
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(3);
+            MetricsModel computed = Computed(scenario);
+            computed.Headcount.Peak.ShouldNotBeNull();
+
+            (_, CoreViewModel core) = Load(scenario with { Metrics = computed with { Headcount = new HeadcountModel() } });
+            using (core)
+            {
+                core.HeadcountMetrics.ShouldBe(computed.Headcount);
+                core.Metrics.ShouldBe(computed);
+                core.IsProjectScenarioUpdated.ShouldBeFalse();
+            }
+        }
+
         #endregion
 
         #region The builds of the outputs
+
+        [Fact]
+        public void BuildFinancialMetrics_Given_ThePlan_Then_TheHeadcountIsThatOfItsResourceSeries()
+        {
+            using CoreViewModel core = Loaded();
+
+            core.BuildFinancialMetrics();
+
+            // The headcount of a day is the number of resources that are allocated on it.
+            List<ResourceSeriesModel> series = core.ResourceSeriesSet.Combined;
+            int days = series.Max(x => x.ResourceSchedule.ResourceAllocation.Count);
+            int[] headcounts =
+            [
+                .. Enumerable.Range(0, days).Select(day => series.Count(x => day < x.ResourceSchedule.ResourceAllocation.Count && x.ResourceSchedule.ResourceAllocation[day])),
+            ];
+            headcounts.Max().ShouldBeGreaterThan(0);
+            core.HeadcountMetrics.ShouldBe(new HeadcountModel
+            {
+                Peak = headcounts.Max(),
+                Average = headcounts.Average(),
+                PeakToAverageRatio = headcounts.Max() / headcounts.Average(),
+            });
+            core.Metrics.Headcount.ShouldBe(core.HeadcountMetrics);
+        }
 
         [Fact]
         public void BuildNetworkMetrics_Given_AChangedNetwork_Then_TheScenarioIsMarkedUpdatedAndTheOutputsAreNotStale()
@@ -253,6 +297,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 nameof(CoreViewModel.MarginMetrics) => metrics with { Margins = metrics.Margins with { Total = c_Distinct } },
                 nameof(CoreViewModel.EffortMetrics) => metrics with { Efforts = metrics.Efforts with { Total = c_Distinct } },
                 nameof(CoreViewModel.NetworkMetrics) => metrics with { Network = metrics.Network with { Duration = (int)c_Distinct } },
+                nameof(CoreViewModel.HeadcountMetrics) => metrics with { Headcount = metrics.Headcount with { Average = c_Distinct } },
                 _ => throw new ArgumentOutOfRangeException(nameof(property), property, null),
             };
     }

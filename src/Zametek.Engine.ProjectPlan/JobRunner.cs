@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
+using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.Engine.ProjectPlan
 {
@@ -174,6 +176,11 @@ namespace Zametek.Engine.ProjectPlan
 
             core.AutoCompile = false;
 
+            // The tracked scenarios of a project file, and the metrics of each that the job compiled before its own.
+            IReadOnlyList<ScenarioSummary> trackedScenarios = [];
+            Guid loadedScenarioId = Guid.Empty;
+            Dictionary<Guid, JobMetrics?> trackedMetrics = [];
+
             // Plan in.
             if (request.ImportFormat is ProjectScenarioImportFormat importFormat)
             {
@@ -206,6 +213,23 @@ namespace Zametek.Engine.ProjectPlan
                 }
 
                 project.ProcessProject(projectModel);
+
+                // The other tracked scenarios, compiled before the job's own, when the request asks or the scenario chart
+                // plots them.
+                loadedScenarioId = settingService.ScenarioId;
+                trackedScenarios = [.. ScenarioSelector.ListScenarios(projectModel).Where(x => x.IsTracked)];
+
+                if (request.CompileTracked || request.ScenarioChart is not null)
+                {
+                    trackedMetrics = CompileTrackedScenarios(
+                        project,
+                        core,
+                        metrics,
+                        projectModel,
+                        [.. trackedScenarios.Where(x => x.Id != loadedScenarioId).Select(x => x.Id)],
+                        loadedScenarioId,
+                        cancellationToken);
+                }
             }
 
             // Base theme.
@@ -416,17 +440,29 @@ namespace Zametek.Engine.ProjectPlan
                     cancellationToken);
             }
 
-            // Scenario chart export.
-            if (request.ScenarioChart is ChartOutputRequest scenarioChart)
+            // The data of the scenario chart, when the job compiled the tracked scenarios: the chart plots it, and the result
+            // gives it.
+            ScenarioChartDataModel? scenarioChartData = null;
+            IScenarioChartManagerViewModel? scenarios = null;
+
+            if (request.CompileTracked || request.ScenarioChart is not null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                IScenarioChartManagerViewModel scenarios = services.GetRequiredService<IScenarioChartManagerViewModel>();
+                scenarios = services.GetRequiredService<IScenarioChartManagerViewModel>();
 
                 // The tracked-metrics set the chart plots is normally assembled by
                 // a reactive pipeline that a job never starts, so build it
                 // explicitly first.
                 project.BuildTrackedMetrics();
+                scenarioChartData = scenarios.BuildScenarioChartData();
+            }
+
+            // Scenario chart export, and its data as two CSV files: the points and the fits.
+            if (request.ScenarioChart is ChartOutputRequest scenarioChart
+                && scenarios is not null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
                 await WriteChartAsync(
                     dialogService,
@@ -435,6 +471,44 @@ namespace Zametek.Engine.ProjectPlan
                     scenarioChart,
                     scenarios.BuildScenarioChartPlotModel,
                     scenarios.WriteScenarioChartImageAsync,
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.ScenarioChartPoints,
+                    writer => ScenarioChartCsvWriter.WritePoints(writer, scenarioChartData),
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.ScenarioChartFits,
+                    writer => ScenarioChartCsvWriter.WriteFits(writer, scenarioChartData),
+                    cancellationToken);
+            }
+
+            // The data of the compiled scenario as CSV files: the table of the critical path method, the series of the
+            // resources, and the series of the earned value.
+            if (request.DataFiles)
+            {
+                ProjectScenarioModel projectScenario = core.BuildProjectScenario();
+
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.Schedule,
+                    writer => ScheduleCsvWriter.WriteSchedule(writer, projectScenario.DependentActivities),
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.ResourceSeries,
+                    writer => ScheduleCsvWriter.WriteResourceSeries(writer, core.ResourceSeriesSet),
+                    cancellationToken);
+                await WriteCsvAsync(
+                    dialogService,
+                    sink,
+                    JobOutput.EarnedValueSeries,
+                    writer => ScheduleCsvWriter.WriteEarnedValueSeries(writer, core.TrackingSeriesSet),
                     cancellationToken);
             }
 
@@ -494,12 +568,72 @@ namespace Zametek.Engine.ProjectPlan
             // A chart or graph export that fails does not throw: WriteReportedOutputAsync
             // reports the failure through the dialog service, as the desktop does. The
             // remaining outputs have still been produced, but the job as a whole has failed.
+            JobMetrics jobMetrics = JobMetrics.From(metrics);
+
             return new JobResult
             {
                 Status = dialogService.HasShownErrors ? JobStatus.CompletedWithErrors : JobStatus.Succeeded,
-                Metrics = JobMetrics.From(metrics),
+                Metrics = jobMetrics,
                 Simulation = simulationMetrics,
+                TrackedScenarios = request.CompileTracked
+                    ? [
+                        .. trackedScenarios.Select(x => new JobTrackedScenario(
+                            x.Path,
+                            x.Id,
+                            x.Id == loadedScenarioId,
+                            x.Id == loadedScenarioId ? jobMetrics : trackedMetrics.GetValueOrDefault(x.Id))),
+                    ]
+                    : null,
+                ScenarioChart = scenarioChartData,
             };
+        }
+
+        // Compiles each of the other tracked scenarios of the project, one at a time, and keeps its new metrics in the project:
+        // the job loads the scenario as the desktop does when a person opens it, compiles it, and builds its metrics, as it
+        // does for its own scenario. A scenario that does not compile gets the empty metrics of a plan that does not compile,
+        // as in the desktop, and the chart of the scenarios plots each value that it does not have as 0. A scenario that the
+        // file has no data for is not loaded: a project
+        // loads another scenario in its place. The job then loads its own scenario again, from the project that holds the new
+        // metrics. Returns the metrics of each scenario that it compiled, or null for one that did not compile.
+        private static Dictionary<Guid, JobMetrics?> CompileTrackedScenarios(
+            IProjectScenarioManagerViewModel project,
+            ICoreViewModel core,
+            IMetricManagerViewModel metrics,
+            ProjectModel projectModel,
+            IReadOnlyList<Guid> scenarioIds,
+            Guid loadedScenarioId,
+            CancellationToken cancellationToken)
+        {
+            var compiled = new Dictionary<Guid, JobMetrics?>();
+            List<Guid> withData = [.. scenarioIds.Where(x => projectModel.Files.Any(file => file.NodeId == x))];
+
+            if (withData.Count == 0)
+            {
+                return compiled;
+            }
+
+            foreach (Guid scenarioId in withData)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                project.ProcessProject(projectModel with { Current = scenarioId });
+
+                // A load keeps the metrics that the file holds (see CoreViewModel.ProcessProjectScenario), and so the job
+                // compiles again and builds them, as for its own scenario.
+                core.RunCompile();
+                core.BuildResourceSeriesSet();
+                core.BuildNetworkMetrics();
+                core.BuildRiskMetrics();
+                core.BuildFinancialMetrics();
+
+                compiled[scenarioId] = core.HasCompilationErrors ? null : JobMetrics.From(metrics);
+                projectModel = project.BuildProject();
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            project.ProcessProject(projectModel with { Current = loadedScenarioId });
+
+            return compiled;
         }
 
         // What the request asks of the simulation, checked against the scenario that the job has loaded. A run needs settings that
@@ -581,6 +715,29 @@ namespace Zametek.Engine.ProjectPlan
                 sink,
                 output,
                 stream => writePlotImageAsync(stream, chart.Format, chart.Width, chart.Height),
+                cancellationToken);
+        }
+
+        // A CSV file, in UTF-8 with a byte order mark, as the CSV files of the simulation are written.
+        private static async Task WriteCsvAsync(
+            IDialogService dialogService,
+            IJobSink sink,
+            JobOutput output,
+            Action<TextWriter> write,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await WriteReportedOutputAsync(
+                dialogService,
+                sink,
+                output,
+                stream =>
+                {
+                    using var writer = new StreamWriter(stream, new UTF8Encoding(true), leaveOpen: true);
+                    write(writer);
+                    return Task.CompletedTask;
+                },
                 cancellationToken);
         }
 

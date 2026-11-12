@@ -29,13 +29,14 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | plan | The data of a project plan. The application stores a plan in a `.zpp` file. The HTTP API uses the word "project" for a plan. |
 | project | In most documents, a .NET project: one `.csproj` file with the source files that belong to it. In the HTTP API, a plan. |
 | scenario | A version of a plan. A plan has one or more scenarios. |
-| tracked scenario | A scenario that the scenario chart shows as a point. Tracking does only this. It is not the progress tracking of activities. |
+| tracked scenario | A scenario that the scenario chart shows as a point. `zpp --compile-tracked` compiles each tracked scenario. Tracking is not the progress tracking of activities. |
 | current scenario | The scenario that was open when a user saved the plan. `zpp` loads it when a request does not name a scenario. A plan has a maximum of one current scenario. |
 | activity | A task in a plan. |
 | compile | To calculate the schedule of a scenario with the vertex-graph compiler. The result is the compilation (`GraphCompilation`). |
 | build cascade | The seven outputs that `RunBuildCascade()` builds after a compile. They are the arrow graph, the vertex graph, the series for resources and tracking, and the three kinds of metrics. `RunBuildCascade()` copies what they read, `CompilationOutputService` builds them from the copy, and `RunBuildCascade()` publishes them together. |
 | output | A result that the desktop application, `zpp` or the server makes from a compiled plan. Examples are the metrics, a chart, a graph and an exported plan. |
-| metrics | The numbers that describe a compiled scenario. There are network, risk and financial metrics. |
+| metrics | The numbers that describe a compiled scenario. There are network, risk, financial and headcount metrics. |
+| headcount | The number of resources that the schedule of a scenario allocates on a day. The metrics give its peak, its average over the days of the schedule, and the ratio of the peak to the average. |
 | estimates | The three durations of an activity: the optimistic duration (O), the most likely duration (ML) and the pessimistic duration (P). The rule is 0 ≤ O ≤ ML ≤ P. The compiler schedules the expected duration, (O + 4 ML + P) / 6, rounded to the nearest whole day, with halves up. |
 | simulation | A Monte Carlo simulation of the schedule of a plan. Each iteration draws a duration for each activity from its estimates and schedules the plan again, onto its resources. |
 | iteration | One draw and one schedule in a simulation. A simulation has many iterations, and each gives a finish time. |

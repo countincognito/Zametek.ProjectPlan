@@ -166,7 +166,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await observations.SendAsync(@"description, as JSON", client, Get(@"/v1/openapi", accept: @"application/json"), HttpStatusCode.NotAcceptable);
             await observations.SendAsync(@"description, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi"), HttpStatusCode.OK);
 
-            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
+            using HttpResponseMessage schema = await observations.SendAndKeepAsync(@"schema of a project", client, Get(@"/v1/schemas/project"), HttpStatusCode.OK);
+            await observations.SendAsync(@"schema of a project, as JSON", client, Get(@"/v1/schemas/project", accept: @"application/json"), HttpStatusCode.OK);
+            await observations.SendAsync(@"schema of a project, as it was", client, Get(@"/v1/schemas/project", schema.Headers.ETag.ShouldNotBeNull().ToString()), HttpStatusCode.NotModified);
+            await observations.SendAsync(@"schema of a project, as HTML", client, Get(@"/v1/schemas/project", accept: @"text/html"), HttpStatusCode.NotAcceptable);
+            await observations.SendAsync(@"schema of a project, the headers", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/schemas/project"), HttpStatusCode.OK);
+
+            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/schemas/project", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
             {
                 await observations.SendAsync($@"what {path} takes", client, new HttpRequestMessage(HttpMethod.Options, path), HttpStatusCode.NoContent);
             }
@@ -285,6 +291,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
 
             await observations.SendAsync(@"what the description takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, @"/v1/openapi"), HttpStatusCode.NoContent);
+
+            // Nor does the schema of a project file, for the same reason.
+            await observations.SendAsync(@"schema of a project, without the key", client, Get(@"/v1/schemas/project"), HttpStatusCode.OK);
+            await observations.SendAsync(@"schema of a project, the headers, without the key", client, new HttpRequestMessage(HttpMethod.Head, @"/v1/schemas/project"), HttpStatusCode.OK);
+            await observations.SendAsync(@"what the schema of a project takes, without the key", client, new HttpRequestMessage(HttpMethod.Options, @"/v1/schemas/project"), HttpStatusCode.NoContent);
 
             HttpRequestMessage withTheKey = Get(@"/v1/info");
             withTheKey.Headers.TryAddWithoutValidation(@"Authorization", $@"Bearer {c_ApiKey}");
@@ -492,7 +503,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // An operation that needs no key says so, and has no 401 to describe; every other has one.
             string[] open = [.. Description.Operations.Where(x => x.Operation[@"security"] is JsonArray { Count: 0 }).Select(x => $@"{x.Method} {x.Path}")];
-            open.ShouldBe([@"GET /health/live", @"GET /health/ready", @"GET /v1/openapi", @"HEAD /v1/openapi", @"OPTIONS /v1/openapi"], ignoreOrder: true);
+            open.ShouldBe(
+                [
+                    @"GET /health/live", @"GET /health/ready", @"GET /v1/openapi", @"HEAD /v1/openapi", @"OPTIONS /v1/openapi",
+                    @"GET /v1/schemas/project", @"HEAD /v1/schemas/project", @"OPTIONS /v1/schemas/project",
+                ],
+                ignoreOrder: true);
 
             string[] refusable = [.. Description.Operations.Where(x => x.Operation[@"responses"]!.AsObject().ContainsKey(@"401")).Select(x => $@"{x.Method} {x.Path}")];
             refusable.ShouldBe([.. Description.Operations.Select(x => $@"{x.Method} {x.Path}").Except(open)], ignoreOrder: true);
@@ -590,8 +606,17 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var console = new ConsoleResponse(0, string.Empty, string.Empty, [transcript]);
             var output = new OutputResponse(JobOutput.Project, @"plan.zpp", @"application/json", [1]);
             var error = new ProblemError { Pointer = @"#/project", Parameter = @"include", Code = @"unreadable", Detail = @"d" };
-            var simulation = new SimulationResponse { Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))] };
-            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, Console = console };
+            var simulation = new SimulationResponse
+            {
+                Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))],
+                MissedMaximumLatestFinishTimes = [new SimulationMissedMaximumResponse(2, @"End", 1)],
+            };
+            var tracked = new TrackedScenarioResponse(@"Plans > Beta", Guid.Empty, false, metrics);
+            var curveFit = new CurveFitResponse(1.0, [0.0, 1.0], [1.0]);
+            var point = new ScenarioChartPointResponse(Guid.Empty, @"Alpha", 5.0, 5.0);
+            var series = new ScenarioChartSeriesResponse(@"networkDuration", CurveFittingType.Linear, false, [point], curveFit);
+            var scenarioChart = new ScenarioChartResponse(@"networkDuration", series, series);
+            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, TrackedScenarios = [tracked], ScenarioChart = scenarioChart, Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
             var jobProgress = new JobProgressResponse(1, 2);
             var jobStatus = new JobStatusResponse(@"i", JobState.Running, DateTimeOffset.UnixEpoch, TimeSpan.Zero, jobProgress);
@@ -602,6 +627,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"Simulation")).ShouldBe(Names(simulation, written), ignoreOrder: true);
             Schema(@"Simulation")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(simulation, written), ignoreOrder: true);
             Names(Schema(@"SimulationPercentile")).ShouldBe(Names(simulation.Percentiles[0], written), ignoreOrder: true);
+            Names(Schema(@"SimulationMissedMaximum")).ShouldBe(Names(simulation.MissedMaximumLatestFinishTimes[0], written), ignoreOrder: true);
+            Schema(@"SimulationMissedMaximum")[@"required"]!.AsArray().Select(x => x!.GetValue<string>())
+                .ShouldBe(Names(simulation.MissedMaximumLatestFinishTimes[0], written), ignoreOrder: true);
             Enumerated(Schema(@"Simulation")[@"properties"]![@"distribution"]!).ShouldBe([.. Values<DurationDistribution>()], ignoreOrder: true);
             Names(Schema(@"ProblemError")).ShouldBe(Names(error, written), ignoreOrder: true);
             Names(Schema(@"Limits")).ShouldBe(Names(limits, written), ignoreOrder: true);
@@ -613,7 +641,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"InfoResponse")).ShouldBe(Names(new InfoResponse(@"v", @"c", @"z", limits), written), ignoreOrder: true);
             Names(Schema(@"Scenario")).ShouldBe(Names(new ScenarioSummary(@"p", Guid.Empty, true, true), written), ignoreOrder: true);
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
-            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [output], console), written), ignoreOrder: true);
+            Names(Schema(@"TrackedScenario")).ShouldBe(Names(tracked, written), ignoreOrder: true);
+            Schema(@"TrackedScenario")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(tracked, written), ignoreOrder: true);
+            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [tracked], scenarioChart, [output], console), written), ignoreOrder: true);
+
+            // The data of the scenario chart. An axis of Y and the fit of an axis can be missing.
+            Names(Schema(@"ScenarioChart")).ShouldBe(Names(scenarioChart, written), ignoreOrder: true);
+            Schema(@"ScenarioChart")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe([@"xMetric"]);
+            Names(Schema(@"ScenarioChartSeries")).ShouldBe(Names(series, written), ignoreOrder: true);
+            Schema(@"ScenarioChartSeries")[@"required"]!.AsArray().Select(x => x!.GetValue<string>())
+                .ShouldBe(Names(series, written).Where(x => x != @"fit"), ignoreOrder: true);
+            Names(Schema(@"ScenarioChartPoint")).ShouldBe(Names(point, written), ignoreOrder: true);
+            Schema(@"ScenarioChartPoint")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(point, written), ignoreOrder: true);
+            Names(Schema(@"CurveFit")).ShouldBe(Names(curveFit, written), ignoreOrder: true);
+            Schema(@"CurveFit")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(curveFit, written), ignoreOrder: true);
+            Enumerated(Schema(@"ScenarioChartSeries")[@"properties"]![@"curveFitting"]!).ShouldBe([.. Values<CurveFittingType>()], ignoreOrder: true);
+
+            // A metric of the chart has the name of the metric in the metrics, and so a client finds its value there.
+            string[] chartMetrics = [.. Enum.GetValues<TrackedMetrics>().Where(x => x != TrackedMetrics.None).Select(ScenarioChartResponse.MetricName)];
+            Enumerated(Schema(@"ScenarioChartMetric")).ShouldBe(chartMetrics, ignoreOrder: true);
+            chartMetrics.ShouldBeSubsetOf(metricNames);
 
             // A problem is the members every one has, and those of the kind that has more.
             string[] problemNames = [.. Names(Schema(@"Problem")), .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject()).Where(x => x is not (@"type" or @"status"))];
@@ -635,6 +682,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 CompileTimeout = TimeSpan.FromSeconds(1),
                 Now = @"2026-10-03T09:00:00+01:00",
                 RunSimulation = true,
+                CompileTracked = true,
                 Outputs = new OutputsOptions
                 {
                     Project = new ProjectOptions(),
@@ -646,6 +694,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     EarnedValueChart = new ChartOptions { Width = 1, Height = 1 },
                     ScenarioChart = new ChartOptions { Width = 1, Height = 1 },
                     Simulation = new ChartOptions { Width = 1, Height = 1 },
+                    SimulationWorkbook = new SimulationWorkbookOptions(),
+                    Data = new DataOptions(),
                 },
             };
 
@@ -665,9 +715,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string[] outputs = [.. Values<JobOutput>()];
             Enumerated(Schema(@"Output")[@"properties"]![@"kind"]!).ShouldBe(outputs, ignoreOrder: true);
 
-            // The simulation is one output of a request, and the answer lists its chart and its files as the outputs that it makes. Its
-            // workbook is an output of its own.
-            Names(Schema(@"OutputsOptions")).ShouldBe([.. outputs.Where(x => !x.StartsWith(@"simulation", StringComparison.Ordinal)), @"simulation", @"simulationWorkbook"], ignoreOrder: true);
+            // The data and the simulation are each one output of a request, and the answer lists the files that each makes as outputs
+            // of their own. The workbook of the simulation is an output of its own.
+            Names(Schema(@"OutputsOptions")).ShouldBe(
+                [
+                    @"project", @"scenarioExport", @"ganttChart", @"arrowGraph", @"vertexGraph", @"resourceChart", @"earnedValueChart",
+                    @"scenarioChart", @"data", @"simulation", @"simulationWorkbook",
+                ],
+                ignoreOrder: true);
         }
 
         private static HttpRequestMessage Get(
@@ -913,6 +968,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                             CheckJson(situation, content[@"application/json"]![@"schema"]!, stream.ToArray(), response, isProblem: false);
                         }
 
+                        break;
+                    case @"application/schema+json":
+                        // The schema of a project file is the file of the repository, byte for byte, and JSON.
+                        if (!body.AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Docs", @"zpp.schema.json"))))
+                        {
+                            m_Problems.Add($@"{situation}: is not the file docs/zpp.schema.json");
+                        }
+
+                        CheckJson(situation, schema, body, response, isProblem: false);
                         break;
                     case @"application/openapi+yaml":
                     case @"application/yaml":

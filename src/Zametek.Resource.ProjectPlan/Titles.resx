@@ -222,6 +222,9 @@
   <data name="Title_Tracked" xml:space="preserve">
     <value>Tracked</value>
   </data>
+  <data name="Title_TrackedScenarios" xml:space="preserve">
+    <value>Tracked Scenarios</value>
+  </data>
   <data name="Title_Current" xml:space="preserve">
     <value>Current</value>
   </data>

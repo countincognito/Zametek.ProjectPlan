@@ -399,6 +399,12 @@
   <data name="Label_SimulationFailedIterations" xml:space="preserve">
     <value>Failed iterations</value>
   </data>
+  <data name="Label_SimulationFailedResourceScheduling" xml:space="preserve">
+    <value>Failed: resource scheduling</value>
+  </data>
+  <data name="Label_SimulationFailedTimeLimit" xml:space="preserve">
+    <value>Failed: time limit</value>
+  </data>
   <data name="Label_SimulationIterationCount" xml:space="preserve">
     <value>Iterations (valid)</value>
   </data>
@@ -413,6 +419,9 @@
   </data>
   <data name="Label_SimulationMean" xml:space="preserve">
     <value>Mean</value>
+  </data>
+  <data name="Label_SimulationMissedMaximumLatestFinishTime" xml:space="preserve">
+    <value>Missed maximum LFT</value>
   </data>
   <data name="Label_SimulationNoResult" xml:space="preserve">
     <value>No simulation has run yet.</value>
@@ -509,6 +518,12 @@
   </data>
   <data name="Label_OtherCost" xml:space="preserve">
     <value>Other Cost</value>
+  </data>
+  <data name="Label_PeakHeadcount" xml:space="preserve">
+    <value>Peak headcount</value>
+  </data>
+  <data name="Label_PeakToAverageHeadcount" xml:space="preserve">
+    <value>Peak to average headcount</value>
   </data>
   <data name="Label_PercentageAxisTitle" xml:space="preserve">
     <value>Percentage (%)</value>
@@ -786,6 +801,9 @@
   <data name="Label_SelectManagedScenario" xml:space="preserve">
     <value>Select</value>
   </data>
+  <data name="Label_AverageHeadcount" xml:space="preserve">
+    <value>Average headcount</value>
+  </data>
   <data name="Label_BaseNode" xml:space="preserve">
     <value>Base</value>
   </data>
@@ -896,5 +914,11 @@
   </data>
   <data name="Label_DayTotal" xml:space="preserve">
     <value>Day Total</value>
+  </data>
+  <data name="Label_CurveFittingDerivativeY1" xml:space="preserve">
+    <value>Y1 Derivative</value>
+  </data>
+  <data name="Label_CurveFittingDerivativeY2" xml:space="preserve">
+    <value>Y2 Derivative</value>
   </data>
 </root>

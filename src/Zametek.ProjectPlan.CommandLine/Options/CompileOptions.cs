@@ -11,6 +11,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // sent as project.
         public string? Scenario { get; init; }
 
+        // --compile-tracked: compile each tracked scenario of the project, and not only the one that the job loads. The answer
+        // has the metrics of each. The output scenarioChart compiles them also without this.
+        public bool CompileTracked { get; init; }
+
         // --base-theme
         public BaseTheme BaseTheme { get; init; } = BaseTheme.Light;
 

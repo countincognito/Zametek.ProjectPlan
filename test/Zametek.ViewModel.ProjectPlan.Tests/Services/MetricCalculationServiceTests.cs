@@ -715,6 +715,83 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
+        #region BuildHeadcountMetrics
+
+        // A series of a resource whose resource allocation is the days given.
+        private static ResourceSeriesModel MakeHeadcountSeries(int resourceId, params bool[] resourceAllocation) =>
+            MakeSeries(new ResourceScheduleModel
+            {
+                Resource = new ResourceModel { Id = resourceId },
+                ResourceAllocation = [.. resourceAllocation],
+            });
+
+        [Fact]
+        public void BuildHeadcountMetrics_Given_NullSeriesSet_Then_Throws()
+        {
+            MetricCalculationService service = CreateService();
+            Should.Throw<ArgumentNullException>(() => service.BuildHeadcountMetrics(null!, false));
+        }
+
+        [Fact]
+        public void BuildHeadcountMetrics_Given_ThreeResources_Then_ThePeakTheAverageAndTheirRatio()
+        {
+            // The headcount of the four days is 1, 2, 3 and 1.
+            MetricCalculationService service = CreateService();
+            ResourceSeriesSetModel seriesSet = MakeSeriesSet(
+                MakeHeadcountSeries(1, true, true, true, true),
+                MakeHeadcountSeries(2, false, true, true, false),
+                MakeHeadcountSeries(3, false, false, true, false));
+
+            HeadcountModel headcount = service.BuildHeadcountMetrics(seriesSet, false);
+
+            headcount.Peak.ShouldBe(3);
+            headcount.Average.ShouldBe(1.75);
+            headcount.PeakToAverageRatio.ShouldBe(3.0 / 1.75);
+        }
+
+        [Fact]
+        public void BuildHeadcountMetrics_Given_ASeriesShorterThanTheOthers_Then_ItCountsForNobodyAfterItsEnd()
+        {
+            MetricCalculationService service = CreateService();
+            ResourceSeriesSetModel seriesSet = MakeSeriesSet(
+                MakeHeadcountSeries(1, true, true, true, true),
+                MakeHeadcountSeries(2, true, true));
+
+            HeadcountModel headcount = service.BuildHeadcountMetrics(seriesSet, false);
+
+            headcount.Peak.ShouldBe(2);
+            headcount.Average.ShouldBe(1.5);
+        }
+
+        [Fact]
+        public void BuildHeadcountMetrics_Given_NobodyOnAnyDay_Then_ThePeakAndTheAverageAreZeroAndThereIsNoRatio()
+        {
+            MetricCalculationService service = CreateService();
+            ResourceSeriesSetModel seriesSet = MakeSeriesSet(MakeHeadcountSeries(1, false, false, false));
+
+            service.BuildHeadcountMetrics(seriesSet, false).ShouldBe(new HeadcountModel { Peak = 0, Average = 0.0, PeakToAverageRatio = null });
+        }
+
+        [Fact]
+        public void BuildHeadcountMetrics_Given_NoSeriesOrNoDays_Then_NoValues()
+        {
+            MetricCalculationService service = CreateService();
+
+            service.BuildHeadcountMetrics(new ResourceSeriesSetModel(), false).ShouldBe(new HeadcountModel());
+            service.BuildHeadcountMetrics(MakeSeriesSet(MakeHeadcountSeries(1)), false).ShouldBe(new HeadcountModel());
+        }
+
+        [Fact]
+        public void BuildHeadcountMetrics_Given_CompilationErrors_Then_NoValues()
+        {
+            MetricCalculationService service = CreateService();
+            ResourceSeriesSetModel seriesSet = MakeSeriesSet(MakeHeadcountSeries(1, true, true));
+
+            service.BuildHeadcountMetrics(seriesSet, true).ShouldBe(new HeadcountModel());
+        }
+
+        #endregion
+
         #region BuildFinancialMetrics - shape
 
         [Fact]

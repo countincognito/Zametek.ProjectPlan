@@ -16,5 +16,6 @@ namespace Zametek.ViewModel.ProjectPlan
         BillingsModel BillingMetrics,
         MarginsModel MarginMetrics,
         EffortsModel EffortMetrics,
-        List<ResourceMetricsModel> ResourceMetrics);
+        List<ResourceMetricsModel> ResourceMetrics,
+        HeadcountModel HeadcountMetrics);
 }

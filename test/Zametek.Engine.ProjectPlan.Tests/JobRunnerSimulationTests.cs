@@ -134,6 +134,9 @@ namespace Zametek.Engine.ProjectPlan.Tests
             simulation.Iterations.ShouldBe(500);
             simulation.ValidIterations.ShouldBe(500);
             simulation.FailedIterations.ShouldBe(0);
+            (simulation.ResourceSchedulingStallIterations, simulation.MaximumTimeValueExceededIterations, simulation.InvalidConstraintsIterations)
+                .ShouldBe((0, 0, 0));
+            simulation.MissedMaximumLatestFinishTimes.ShouldBeEmpty();
             simulation.Seed.ShouldBe(11UL);
             simulation.Distribution.ShouldBe(DurationDistribution.BetaPert);
             simulation.ModifiedBetaShape.ShouldBeNull();
@@ -158,6 +161,31 @@ namespace Zametek.Engine.ProjectPlan.Tests
             simulation.TargetFinishDays.ShouldBe(30);
             simulation.TargetFinishDate.ShouldNotBeNull();
             simulation.TargetProbability.ShouldNotBeNull().ShouldBeInRange(0.0, 1.0);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_AMaximumThatSomeIterationsMiss_Then_TheResultSaysHowManyFailedAndWhy()
+        {
+            await using ServiceProvider services = BuildServices();
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"missed-maximum-lft.zpp",
+                input => Simulate(input, Settings()));
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            JobSimulationMetrics simulation = result.Simulation.ShouldNotBeNull();
+
+            // Work takes more than 12 days in some iterations, and then End cannot finish by its maximum of day 12.
+            simulation.Iterations.ShouldBe(500);
+            simulation.FailedIterations.ShouldBeGreaterThan(0);
+            simulation.ValidIterations.ShouldBe(500 - simulation.FailedIterations);
+            simulation.InvalidConstraintsIterations.ShouldBe(simulation.FailedIterations);
+            (simulation.ResourceSchedulingStallIterations, simulation.MaximumTimeValueExceededIterations).ShouldBe((0, 0));
+            simulation.MissedMaximumLatestFinishTimes.ShouldBe([new JobSimulationMissedMaximum(2, @"End", simulation.FailedIterations)]);
+
+            // The statistics are of the valid iterations, and each of those finishes by the maximum.
+            simulation.LatestFinishDays.ShouldNotBeNull().ShouldBeLessThanOrEqualTo(12);
         }
 
         [Fact]
@@ -499,12 +527,12 @@ namespace Zametek.Engine.ProjectPlan.Tests
             statistics.ShouldContain($@"P80,{simulation.Percentiles.Single(x => x.Percentile == 80).FinishDays}");
 
             string[] iterations = Lines(sink[JobOutput.SimulationIterations]);
-            iterations[0].ShouldBe(@"Iteration,FinishTime,CriticalPaths");
+            iterations[0].ShouldBe(@"Iteration,FinishTime,CriticalPaths,Failure");
             iterations.Length.ShouldBe(401);
 
             Lines(sink[JobOutput.SimulationHistogram])[0].ShouldStartWith(@"FirstFinishTime,LastFinishTime,Count,Share,CumulativeShare");
             Lines(sink[JobOutput.SimulationPaths])[0].ShouldBe(@"Rank,Path,HasResourceLinks,Iterations,Share");
-            Lines(sink[JobOutput.SimulationActivities])[0].ShouldBe(@"ActivityId,Name,CriticalIterations,CriticalityIndex");
+            Lines(sink[JobOutput.SimulationActivities])[0].ShouldBe(@"ActivityId,Name,CriticalIterations,CriticalityIndex,MaximumLatestFinishTimeMisses");
 
             // Release is on every path.
             Lines(sink[JobOutput.SimulationActivities]).ShouldContain(x => x.StartsWith(@"6,Release,400,1", StringComparison.Ordinal));
