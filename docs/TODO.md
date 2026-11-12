@@ -26,11 +26,23 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   - `-o` writes 158 with the date 2023-12-07. Thus, the change stays in the saved plan, and the next load also gives 158.
 
-  The cause is the order of the load in `ProcessProjectScenario` of `CoreViewModel`. It makes the activities before it sets the `NonWorkingDayMode` of the plan. Until then, `zpp` uses `None`. Thus, an activity with only a number changes it to a date with calendar days: 220 days after 2023-05-01 is 2023-12-07. Then the mode of the plan arrives, and each activity counts its number again from that date with working days. This gives 158.
+  The cause is the order of the load in `ProcessProjectScenario` of `CoreViewModel`. First, the reset at the start of the load sets the `NonWorkingDayMode` from the default of the settings. In `zpp`, this default is always `None`. Then the load makes the activities, and after that it sets the mode of the plan.
 
-  A plan from the app has the dates, and so the second count is correct. `ProcessProjectScenarioImport` makes the activities in the same order. In the desktop app, the mode before the load comes from the plan that was open before. A reset does not change this mode. Thus, in the app, the result of a plan with no dates can change with the plan that was open before. This part comes from the code, not from a test.
+  Thus, an activity with only a number changes it to a date with the default calendar: 220 days after 2023-05-01 is 2023-12-07. Then the mode of the plan arrives, and each activity counts its number again from that date with the calendar of the plan. This gives 158. `ProcessProjectScenarioImport` makes the activities in the same order.
 
-  Set the `NonWorkingDayMode` of the plan before the activities are made, in the load and in the import. First, find why the load keeps the mode of the session until the activities are in place. Then add a test that loads a plan with a weekend calendar and constraints with no date. The test checks the number and the date of each constraint. Also add a test that opens a plan with no non-working days after a plan with weekends. Until the change, the zpp skill uses a calendar with no non-working days, or it can send the date of each constraint.
+  The desktop app has the same problem, with the default mode of its settings. A test of the view models (2026-11-12) gave these results:
+
+  - With the default `None`, a weekend plan with 220 and no date gives 158, as in `zpp`.
+
+  - With the default `Weekends`, a plan with no non-working days and 220 with no date gives 308.
+
+  - With the default `Weekends`, a plan from the app with no non-working days, with 12 and the date Saturday 2023-05-13, gives 11 and Friday 2023-05-12. Thus, the problem can also change a plan that the app saved.
+
+  - In each other case, a constraint with its number and its date on a weekday keeps its value.
+
+  Set the `NonWorkingDayMode` of the plan before the activities are made, in the load and in the import. In the same test, the first `SetValues` of the load used the mode of the plan. Then each case kept its value with both defaults, and the tests of the view models and of `zpp` passed. Thus, this one change repairs `zpp`, the server and the desktop app. Also find why the first `SetValues` keeps the default mode, because no test shows a reason.
+
+  Add a test that loads a plan with a weekend calendar and constraints with no date. The test checks the number and the date of each constraint. Also add two tests with the default `Weekends`: a plan with no non-working days and no dates, and a constraint date on a Saturday. Until the change, the zpp skill uses a calendar with no non-working days, or it sends the date of each constraint.
 
 - [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
 
