@@ -804,4 +804,7 @@
   <data name="Message_SimulationIterationsFitNoSheet" xml:space="preserve">
     <value>The result has {0} iterations, and a sheet of Excel has room for {1}.</value>
   </data>
+  <data name="Message_ScenarioChartFilesSaved" xml:space="preserve">
+    <value>{0} files were saved in {1}.</value>
+  </data>
 </root>

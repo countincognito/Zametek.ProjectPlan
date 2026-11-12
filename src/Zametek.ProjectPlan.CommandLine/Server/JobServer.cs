@@ -37,13 +37,17 @@ namespace Zametek.ProjectPlan.CommandLine
         // The first argument that runs zpp as a server rather than once.
         public const string Command = @"serve";
 
-        // Where its API is: everything under it needs the API key, when the server has one - but its description, which holds
-        // nothing that is not in the repository.
+        // Where its API is: everything under it needs the API key, when the server has one - but its description and the schema
+        // of the project file, which hold nothing that is not in the repository.
         public const string ApiPath = @"/v1";
 
         // Where the description of the API is served.
         internal const string DescriptionRoute = @"/openapi";
         internal const string DescriptionPath = ApiPath + DescriptionRoute;
+
+        // Where the schema of the project file is served. Like the description, it needs no API key.
+        internal const string ProjectSchemaRoute = @"/schemas/project";
+        internal const string ProjectSchemaPath = ApiPath + ProjectSchemaRoute;
 
         // Where the status of a job that runs is: the id of the request that began it follows.
         internal const string JobRoute = @"/jobs/{requestId}";
@@ -222,7 +226,7 @@ namespace Zametek.ProjectPlan.CommandLine
             services.AddResponseCompression(compression =>
             {
                 compression.EnableForHttps = true;
-                compression.MimeTypes = [c_JsonMediaType, ProblemHelper.MediaType, .. ProjectEndpoints.DescriptionMediaTypes];
+                compression.MimeTypes = [c_JsonMediaType, ProblemHelper.MediaType, .. ProjectEndpoints.DescriptionMediaTypes, ProjectEndpoints.ProjectSchemaMediaType];
                 compression.Providers.Add<BrotliCompressionProvider>();
                 compression.Providers.Add<GzipCompressionProvider>();
             });
@@ -320,6 +324,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 DescriptionRoute,
                 [HttpMethods.Get, HttpMethods.Head],
                 x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetDescriptionAsync(x));
+            api.MapMethods(
+                ProjectSchemaRoute,
+                [HttpMethods.Get, HttpMethods.Head],
+                x => x.RequestServices.GetRequiredService<ProjectEndpoints>().GetProjectSchemaAsync(x));
 
             // What each takes, for a client that asks: the methods, and what a POST takes.
             api.MapMethods(
@@ -340,6 +348,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 x => ProjectEndpoints.GetOptionsAsync(x, @"GET, OPTIONS"));
             api.MapMethods(
                 DescriptionRoute,
+                [HttpMethods.Options],
+                x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS"));
+            api.MapMethods(
+                ProjectSchemaRoute,
                 [HttpMethods.Options],
                 x => ProjectEndpoints.GetOptionsAsync(x, @"GET, HEAD, OPTIONS"));
 

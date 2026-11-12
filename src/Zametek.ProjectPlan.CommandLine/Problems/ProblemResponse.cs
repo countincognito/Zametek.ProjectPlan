@@ -7,7 +7,7 @@ namespace Zametek.ProjectPlan.CommandLine
     // trace id of the request - which is also its Request-Id header - to find it in the server's log by. Errors lists every
     // problem a request's content has. The members after it are extensions, which only some types have: the console, which
     // a request asked for, and for a project that compiled but could not produce an output, the metrics, the simulation
-    // if there was one, and the outputs that were produced.
+    // if there was one, the tracked scenarios if the request asked to compile them, and the outputs that were produced.
     public record ProblemResponse
     {
         public required string Type { get; init; }
@@ -29,6 +29,12 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public SimulationResponse? Simulation { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public IReadOnlyList<TrackedScenarioResponse>? TrackedScenarios { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ScenarioChartResponse? ScenarioChart { get; init; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyList<OutputResponse>? Outputs { get; init; }

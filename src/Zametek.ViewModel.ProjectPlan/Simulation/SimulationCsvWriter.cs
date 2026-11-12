@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -12,8 +11,6 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </summary>
     public static class SimulationCsvWriter
     {
-        private static readonly SearchValues<char> s_QuotedCharacters = SearchValues.Create(",\"\r\n");
-
         public static void WriteStatistics(TextWriter writer, SimulationSummaryModel summary)
         {
             ArgumentNullException.ThrowIfNull(writer);
@@ -23,6 +20,11 @@ namespace Zametek.ViewModel.ProjectPlan
             WriteRow(writer, @"Iterations", Number(summary.IterationCount));
             WriteRow(writer, @"ValidIterations", Number(summary.ValidIterationCount));
             WriteRow(writer, @"FailedIterations", Number(summary.FailedIterationCount));
+
+            // Why the failed iterations failed. A run that did not record the reasons has zeros here.
+            WriteRow(writer, @"ResourceSchedulingStallIterations", Number(summary.ResourceSchedulingStallIterationCount));
+            WriteRow(writer, @"MaximumTimeValueExceededIterations", Number(summary.MaximumTimeValueExceededIterationCount));
+            WriteRow(writer, @"InvalidConstraintsIterations", Number(summary.InvalidConstraintsIterationCount));
 
             // How the run was set up. The result keeps these values, and the file says which ones made its numbers.
             WriteRow(writer, @"Seed", summary.Seed.ToString(CultureInfo.InvariantCulture));
@@ -120,7 +122,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(writer);
             ArgumentNullException.ThrowIfNull(summary);
 
-            WriteRow(writer, @"ActivityId", @"Name", @"CriticalIterations", @"CriticalityIndex");
+            WriteRow(
+                writer,
+                @"ActivityId",
+                @"Name",
+                @"CriticalIterations",
+                @"CriticalityIndex",
+                @"MaximumLatestFinishTimeMisses");
 
             foreach (SimulationActivityCriticalityModel activity in summary.Activities)
             {
@@ -129,13 +137,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     Number(activity.ActivityId),
                     activity.Name,
                     Number(activity.CriticalIterationCount),
-                    Number(activity.CriticalityIndex));
+                    Number(activity.CriticalityIndex),
+                    Number(activity.MaximumLatestFinishTimeMissCount));
             }
         }
 
         /// <summary>
         /// Every iteration, with its finish time and its critical paths (a path is written as the
-        /// names of its activities, and several paths are separated by a bar).
+        /// names of its activities, and several paths are separated by a bar). A failed iteration has
+        /// no finish time and no paths, and it has the reason why it failed when the run recorded it.
         /// </summary>
         public static void WriteIterations(
             TextWriter writer,
@@ -146,7 +156,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(result);
             ArgumentNullException.ThrowIfNull(activityNames);
 
-            WriteRow(writer, @"Iteration", @"FinishTime", @"CriticalPaths");
+            WriteRow(writer, @"Iteration", @"FinishTime", @"CriticalPaths", @"Failure");
 
             // The label of each path is made once, and not for each iteration that has it.
             string[] labels = result.HasCriticalPaths
@@ -156,45 +166,33 @@ namespace Zametek.ViewModel.ProjectPlan
             for (int i = 0; i < result.IterationCount; i++)
             {
                 int finishTime = result.FinishTimes[i];
+                bool failed = finishTime == SimulationResult<int>.FailedFinishTime;
                 string paths = string.Empty;
+                string failure = string.Empty;
 
-                if (result.HasCriticalPaths && finishTime != SimulationResult<int>.FailedFinishTime)
+                if (result.HasCriticalPaths && !failed)
                 {
                     paths = string.Join(@" | ", result.CriticalPathIndexes(i).ToArray().Select(x => labels[x]));
+                }
+
+                if (failed && result.HasFailureReasons)
+                {
+                    failure = result.FailureReason(i).ToString();
                 }
 
                 WriteRow(
                     writer,
                     Number(i + 1),
-                    finishTime == SimulationResult<int>.FailedFinishTime ? string.Empty : Number(finishTime),
-                    paths);
+                    failed ? string.Empty : Number(finishTime),
+                    paths,
+                    failure);
             }
         }
 
-        private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
+        private static string Number(int value) => CsvText.Number(value);
 
-        private static string Number(double value) => value.ToString(@"R", CultureInfo.InvariantCulture);
+        private static string Number(double value) => CsvText.Number(value);
 
-        private static void WriteRow(TextWriter writer, params string[] fields)
-        {
-            for (int i = 0; i < fields.Length; i++)
-            {
-                if (i > 0)
-                {
-                    writer.Write(',');
-                }
-                writer.Write(Quote(fields[i]));
-            }
-            writer.Write(NewLineHelper.NewLine);
-        }
-
-        private static string Quote(string field)
-        {
-            if (field.AsSpan().IndexOfAny(s_QuotedCharacters) < 0)
-            {
-                return field;
-            }
-            return $@"""{field.Replace(@"""", @"""""", StringComparison.Ordinal)}""";
-        }
+        private static void WriteRow(TextWriter writer, params string[] fields) => CsvText.WriteRow(writer, fields);
     }
 }

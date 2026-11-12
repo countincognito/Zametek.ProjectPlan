@@ -120,6 +120,9 @@
   <data name="Reporting_Time" xml:space="preserve">
     <value>Time</value>
   </data>
+  <data name="Reporting_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
   <data name="Reporting_WorksheetActivities" xml:space="preserve">
     <value>Activities</value>
   </data>

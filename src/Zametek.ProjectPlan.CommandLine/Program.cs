@@ -198,9 +198,17 @@ namespace Zametek.ProjectPlan.CommandLine
                 ? null
                 : FileFormatHelper.GetProjectScenarioImportFormat(inputFilename);
 
-            await using FileStream input = importFormat is ProjectScenarioImportFormat format
+            // The input is read into memory and closed before the job starts, as the client of a
+            // server does, so that the job can save the plan over the file that it came from.
+            // Windows refuses to write a file that is still open.
+            using var input = new MemoryStream();
+            await using (FileStream file = importFormat is ProjectScenarioImportFormat format
                 ? FileStreamHelper.OpenImportFile(inputFilename, format)
-                : File.OpenRead(inputFilename);
+                : File.OpenRead(inputFilename))
+            {
+                await file.CopyToAsync(input, cancellationToken);
+            }
+            input.Position = 0;
 
             if (options.ListScenarios)
             {
@@ -220,6 +228,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 Input = input,
                 ImportFormat = importFormat,
                 Scenario = options.Scenario,
+                CompileTracked = options.CompileTracked,
                 BaseTheme = options.BaseTheme,
                 CompileTimeoutMilliseconds = options.CompileTimeoutMilliseconds,
                 Now = ToNow(options.Now),
@@ -231,6 +240,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ResourceChart = ToChartOutputRequest(options.ResourceDirectory, options.ResourceFormat, options.ResourceSize),
                 EarnedValueChart = ToChartOutputRequest(options.EVDirectory, options.EVFormat, options.EVSize),
                 ScenarioChart = ToChartOutputRequest(options.ScenarioChartDirectory, options.ScenarioChartFormat, options.ScenarioChartSize),
+                DataFiles = options.DataDirectory is not null,
                 RunSimulation = options.RunSimulation,
                 SimulationChart = ToChartOutputRequest(options.SimulationDirectory, options.SimulationFormat, options.SimulationSize),
                 SimulationCsvFiles = options.SimulationDirectory is not null ? SimulationCsvFile.All : SimulationCsvFile.None,
@@ -323,6 +333,7 @@ namespace Zametek.ProjectPlan.CommandLine
             // the run before any file has been written.
             RequireDirectory(options.SimulationDirectory);
             RequireDirectory(options.SimulationWorkbookDirectory);
+            RequireDirectory(options.DataDirectory);
             RequireDirectory(options.GanttDirectory);
             RequireDirectory(options.ArrowGraphDirectory);
             RequireDirectory(options.VertexGraphDirectory);
@@ -450,14 +461,24 @@ namespace Zametek.ProjectPlan.CommandLine
             AddExportFilePath(filenames, JobOutput.ScenarioChart, options.ScenarioChartDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart, options.ScenarioChartFormat.GetDescription());
             AddExportFilePath(filenames, JobOutput.SimulationChart, options.SimulationDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationChart, options.SimulationFormat.GetDescription());
 
-            // The CSV files of the simulation, in the directory of its chart. The file of the iterations is written only for a run.
+            // The CSV files of the scenario chart, in the directory of the chart.
             string csv = Resource.ProjectPlan.Filters.Filter_CsvFileExtension;
+            string scenarioChart = Resource.ProjectPlan.Suffixes.Suffix_ScenarioChart;
+            AddExportFilePath(filenames, JobOutput.ScenarioChartPoints, options.ScenarioChartDirectory, projectTitle, scenarioChart + Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartPoints, csv);
+            AddExportFilePath(filenames, JobOutput.ScenarioChartFits, options.ScenarioChartDirectory, projectTitle, scenarioChart + Resource.ProjectPlan.Suffixes.Suffix_ScenarioChartFits, csv);
+
+            // The CSV files of the simulation, in the directory of its chart. The file of the iterations is written only for a run.
             string csvSuffix = Resource.ProjectPlan.Suffixes.Suffix_SimulationCsv;
             AddExportFilePath(filenames, JobOutput.SimulationStatistics, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationStatistics, csv);
             AddExportFilePath(filenames, JobOutput.SimulationHistogram, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationHistogram, csv);
             AddExportFilePath(filenames, JobOutput.SimulationPaths, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationPaths, csv);
             AddExportFilePath(filenames, JobOutput.SimulationActivities, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationActivities, csv);
             AddExportFilePath(filenames, JobOutput.SimulationIterations, options.SimulationDirectory, projectTitle, csvSuffix + Resource.ProjectPlan.Suffixes.Suffix_SimulationIterations, csv);
+
+            // The data of the schedule, three CSV files in a directory of their own.
+            AddExportFilePath(filenames, JobOutput.Schedule, options.DataDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_Schedule, csv);
+            AddExportFilePath(filenames, JobOutput.ResourceSeries, options.DataDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_ResourceSeries, csv);
+            AddExportFilePath(filenames, JobOutput.EarnedValueSeries, options.DataDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_EarnedValueSeries, csv);
 
             // The workbook of the simulation, in a directory of its own.
             AddExportFilePath(filenames, JobOutput.SimulationWorkbook, options.SimulationWorkbookDirectory, projectTitle, Resource.ProjectPlan.Suffixes.Suffix_SimulationWorkbook, Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension);

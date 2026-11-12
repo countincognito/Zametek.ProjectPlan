@@ -253,6 +253,25 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             });
         }
 
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Json)]
+        public async Task Compile_Given_CompileTrackedAndTheScenarioChart_Then_DoesWhatZppDoes(MetricsExport metricsFormat)
+        {
+            await ShouldDoWhatZppDoesAsync(AssetPath(@"stale-tracked.zpp"), new CompileOptions
+            {
+                CompileTracked = true,
+                MetricsFormat = metricsFormat,
+                Now = c_Now,
+                Outputs = new OutputsOptions
+                {
+                    Project = new ProjectOptions(),
+                    ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 800, Height = 600 },
+                    Data = new DataOptions(),
+                },
+            });
+        }
+
         [Fact]
         public async Task Compile_Given_AScenarioThatIsNotThere_Then_DoesWhatZppDoes()
         {
@@ -485,6 +504,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 args.AddRange([@"--scenario", options.Scenario]);
             }
+            if (options.CompileTracked)
+            {
+                args.Add(@"--compile-tracked");
+            }
             if (outputs.Project is not null)
             {
                 args.AddRange([@"--output", Path.Combine(directory, CompileOptionsHelper.BuildOutputFilename(JobOutput.Project, options, projectTitle))]);
@@ -508,6 +531,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             AddChart(args, @"resource", outputs.ResourceChart, directory);
             AddChart(args, @"ev", outputs.EarnedValueChart, directory);
             AddChart(args, @"scenario-chart", outputs.ScenarioChart, directory);
+
+            if (outputs.Data is not null)
+            {
+                args.AddRange([@"--data-directory", directory]);
+            }
 
             if (options.RunSimulation)
             {

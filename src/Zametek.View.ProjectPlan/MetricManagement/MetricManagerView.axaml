@@ -191,6 +191,48 @@
 					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{Binding Source={x:Static resources:Labels.Label_PeakHeadcount}, StringFormat=\{0\}:}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=PeakHeadcount, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{Binding Source={x:Static resources:Labels.Label_AverageHeadcount}, StringFormat=\{0\}:}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=AverageHeadcount, Mode=OneWay, StringFormat=\{0:N1\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{Binding Source={x:Static resources:Labels.Label_PeakToAverageHeadcount}, StringFormat=\{0\}:}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=PeakToAverageHeadcount, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+			</Grid>
+
+			<Grid Margin="7">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
 

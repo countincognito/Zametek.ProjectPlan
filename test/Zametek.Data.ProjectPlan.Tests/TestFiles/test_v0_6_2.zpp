@@ -116,8 +116,7 @@
             "Dependencies": [],
             "PlanningDependencies": [45],
             "ResourceDependencies": [],
-            "Successors": [],
-            "DisplayOrder": 2
+            "Successors": []
           }, {
             "Activity": {
               "Id": 3,

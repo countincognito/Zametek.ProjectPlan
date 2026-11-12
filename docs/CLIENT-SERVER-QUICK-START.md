@@ -567,7 +567,7 @@ curl.exe -s http://localhost:9770/v1/info
 ```
 
 ```text
-{"version":"0.11.0-alpha","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"maxSimulationIterations":100000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
+{"version":"0.11.0-beta","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"maxSimulationIterations":100000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
 ```
 
 The server also supplies its own description, for each tool that reads OpenAPI. This description is the file `openapi.yaml` of the [API reference](API.md), in the version from the time when you built the server. A request for it needs no key:
@@ -685,24 +685,28 @@ When the loop stops, the answer is in `mobile-app.json`. Its member `simulation`
 ```
 
 ```text
-iterations            : 10000
-validIterations       : 10000
-failedIterations      : 0
-seed                  : 1
-distribution          : betaPert
-modifiedBetaShape     :
-plannedFinishDays     : 150
-plannedFinishDate     : 2027-08-02
-meanDays              : 153.6471
-standardDeviationDays : 3.9877263684961615
-earliestFinishDays    : 139
-earliestFinishDate    : 2027-07-16
-latestFinishDays      : 170
-latestFinishDate      : 2027-08-30
-percentiles           : {@{percentile=5; finishDays=147; finishDate=2027-07-28}, @{percentile=10; finishDays=149; finishDate=2027-07-30}, ...}
-targetFinishDays      : 155
-targetFinishDate      : 2027-08-09
-targetProbability     : 0.6863
+iterations                         : 10000
+validIterations                    : 10000
+failedIterations                   : 0
+resourceSchedulingStallIterations  : 0
+maximumTimeValueExceededIterations : 0
+invalidConstraintsIterations       : 0
+seed                               : 1
+distribution                       : betaPert
+modifiedBetaShape                  :
+plannedFinishDays                  : 150
+plannedFinishDate                  : 2027-08-02
+meanDays                           : 153.6471
+standardDeviationDays              : 3.9877263684961615
+earliestFinishDays                 : 139
+earliestFinishDate                 : 2027-07-16
+latestFinishDays                   : 170
+latestFinishDate                   : 2027-08-30
+percentiles                        : {@{percentile=5; finishDays=147; finishDate=2027-07-28}, @{percentile=10; finishDays=149; finishDate=2027-07-30}, ...}
+targetFinishDays                   : 155
+targetFinishDate                   : 2027-08-09
+targetProbability                  : 0.6863
+missedMaximumLatestFinishTimes     : {}
 ```
 
 These are the statistics that `zpp` prints for this plan in [Simulations on the server](#simulations-on-the-server), as values and not as text. This server has the default time limit for a job, 2 minutes. On a computer with fewer processors, the simulation can take more time. Then the answer is the problem `job-timeout`. Start the server again with `--job-timeout 600`, and send the plan again.
@@ -752,7 +756,7 @@ Send a request with the key:
 curl.exe -s -H "@key-header.txt" http://localhost:9770/v1/info
 ```
 
-The answer is the same as the answer without a key. Only the description needs no key: `http://localhost:9770/v1/openapi`. The log of the server shows each refused request with the method and the path, such as `GET /v1/info: refused, no API key`. The log does not show the key. It also shows the id of the request, which the response `401` carried.
+The answer is the same as the answer without a key. Only the description and the schema of a project file need no key: `http://localhost:9770/v1/openapi` and `http://localhost:9770/v1/schemas/project`. The log of the server shows each refused request with the method and the path, such as `GET /v1/info: refused, no API key`. The log does not show the key. It also shows the id of the request, which the response `401` carried.
 
 At the end, stop the server with Ctrl+C in window 1. Delete the folder, and the key with it.
 

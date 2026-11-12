@@ -93,6 +93,12 @@
 
         double? EffortEfficiency { get; }
 
+        int? PeakHeadcount { get; }
+
+        double? AverageHeadcount { get; }
+
+        double? PeakToAverageHeadcount { get; }
+
         Task ReportErrorAsync(string message);
     }
 }

@@ -2,6 +2,46 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
+
+  On Linux, `zpp` saves a placeholder date of year 1 as `0001-01-01T00:00:00-00:01`. On Windows, it saves the same date as `0001-01-01T00:00:00+00:00`. A plan that a program writes can have such dates in the `CreatedOn` and `ModifiedOn` of its nodes, as the test plans have. The smoke test of v0.11.0-alpha found the difference on 2026-11-06, and on 2026-11-12 Windows still wrote `+00:00`.
+
+  The cause is probably a change to the local time zone. For London in year 1, the time zone data of Linux gives the local mean time (−00:01:15). Windows has no rules before its first rule. Real dates are the same on the two systems. Thus, the difference is harmless, but two computers save two different files from one plan. Find where a date of year 1 becomes a local date, and keep the offset that the file has.
+
+- ~~**Suggestion: tell how far a plan misses its deadline**~~ DECLINED on 2026-11-12. *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  A frequent question is "can we finish by day T with these people?". The suggestion was a maximum LFT on the end milestone, with negative total slack as in Microsoft Project. On 2026-11-11, the maintainer decided against it. A maximum LFT pins an activity, and constraints of that kind make the compile too complex. A deadline is only a guideline.
+
+  Add the deadline to the job: an option such as `--deadline` (`deadline` in the API). The plan does not keep it, and the compile does not change. The answer gives the shortfall: the finish of the plan minus the deadline, or 0. A simulation also gives the share of the iterations that finish by the deadline, as the target of a simulation does now.
+
+  On 2026-11-12, the maintainer declined the suggestion, because it adds little to the target of the simulation. The target gives the share of the iterations that finish by it. A client can calculate the shortfall from `projectFinishDays`. A deadline lets a request ask about a date without a change to the plan. It also changes a date to working days in the calendar of the plan. These two gains do not justify the change.
+
+- [ ] **Do not save the calculated `Duration` in the next version of the file format** *(2026-11-11)*
+
+  The estimates are the input: `MostLikelyDuration`, and `OptimisticDuration` and `PessimisticDuration` when the activity has them. `Duration` is the duration that the compiler schedules. It is (O + 4 × ML + P + 3) / 6, which is ML when the activity has no spread. When you edit `Duration` in the application, it sets ML.
+
+  A plan file keeps `Duration` as well as the estimates. When the file has `MostLikelyDuration`, the load calculates `Duration` again and ignores the value in the file. Thus, a program that changes only `Duration` changes nothing ([The project file](PROJECT-FILE.md) says so).
+
+  In the next version of the file format, save only the estimates. Read `Duration` from the earlier versions. Use it as the most likely duration when `MostLikelyDuration` has no value, as the load does now. Do this only when the format changes for another reason, because each new version needs a mapper step. Until then, [The project file](PROJECT-FILE.md) tells a program to set `MostLikelyDuration`, or to leave it out and set `Duration`.
+
+- [ ] **Suggestion: find the decision points of the time–cost–risk curve** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  Righting Software gets decision points from a fitted direct cost and a fitted risk. They are the maximum risk, the two risk crossover points and the inflection point of the risk. The inflection point is the target for a decompression. The method also finds the minimum direct cost and the minimum total cost. It also asks what total cost a duration needs, to find the death zone.
+
+  From its own fits, `zpp` can calculate these points and give them as data. The data of the scenario chart (`scenarioChart` in the API) already gives the coefficients of each fit with all their digits. Keep at least six significant digits in each coefficient, because a cubic fit is sensitive to rounding.
+
+  On 2026-11-11, the maintainer moved this suggestion to a release after 0.11.0. The method uses fits of its own against the duration. The direct cost is a quadratic, the indirect cost is a line, the total cost is their sum, and the risk is a cubic. Two questions are still open. Which metric of risk does the cubic fit (for example, an option with the activity risk as the default)? Where do the points go (the answer, the console, a CSV file or the chart of the application)?
+
+- [ ] **Suggestion: compare the tracked scenarios with a baseline** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  A decision meeting compares options with the normal plan. It asks how much shorter, how much more expensive and how much riskier each option is. The scenario chart plots the values, but not the differences. An output can list the tracked scenarios with their metrics and their differences from a baseline scenario that the user marks. The compression of an option is then its difference in duration as a percentage.
+
+  On 2026-11-11, the maintainer moved this suggestion to a release after 0.11.0. A question that is still open: how a client marks the baseline. An option of the request, such as `--baseline <scenario>`, does not change the file format. A mark in the plan needs a new version of the format.
+
+- [ ] **Suggestion: a productivity factor for each resource** *(2026-11-11, a suggestion from the design of the zpp skill)*
+
+  Righting Software compresses a plan with better resources. A senior developer finishes an activity sooner, but costs more. zpp cannot show this today. A factor on the resource, for example 0.8, can scale the duration of each activity that the resource does. With the operator `OR`, the duration then depends on the resource that the scheduler selects, and the priority list must allow for this. The simulation and the Rust port must give the same result. Until then, a client gives the activities of the senior shorter estimates and targets them at that resource.
+
 - [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-10-29)*
 
   ReactiveUI 24 no longer uses System.Reactive. But removal has no value while other packages still depend on it. Thus, the assembly ships in all cases.

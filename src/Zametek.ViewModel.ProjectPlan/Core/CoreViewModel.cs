@@ -113,6 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MarginMetrics = new();
             m_EffortMetrics = new();
             m_NetworkMetrics = new();
+            m_HeadcountMetrics = new();
             m_ResourceMetrics = [];
             m_SimulationSettings = new();
 
@@ -417,7 +418,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 outputs.BillingMetrics,
                 outputs.MarginMetrics,
                 outputs.EffortMetrics,
-                outputs.ResourceMetrics);
+                outputs.ResourceMetrics,
+                outputs.HeadcountMetrics);
         }
 
         /// <summary>
@@ -481,13 +483,15 @@ namespace Zametek.ViewModel.ProjectPlan
             BillingsModel billings,
             MarginsModel margins,
             EffortsModel efforts,
-            List<ResourceMetricsModel> resourceMetrics)
+            List<ResourceMetricsModel> resourceMetrics,
+            HeadcountModel headcount)
         {
             CostMetrics = costs;
             BillingMetrics = billings;
             MarginMetrics = margins;
             EffortMetrics = efforts;
             ResourceMetrics = resourceMetrics;
+            HeadcountMetrics = headcount;
             this.RaisePropertyChanged(nameof(Metrics));
         }
 
@@ -871,6 +875,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Margins = MarginMetrics,
                     Efforts = EffortMetrics,
                     Network = NetworkMetrics,
+                    Headcount = HeadcountMetrics,
                 };
             }
             private set
@@ -884,6 +889,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 MarginMetrics = value.Margins;
                 EffortMetrics = value.Efforts;
                 NetworkMetrics = value.Network;
+                HeadcountMetrics = value.Headcount;
                 this.RaisePropertyChanged();
             }
         }
@@ -928,6 +934,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_NetworkMetrics;
             private set => SetMetric(ref m_NetworkMetrics, value);
+        }
+
+        private HeadcountModel m_HeadcountMetrics;
+        public HeadcountModel HeadcountMetrics
+        {
+            get => m_HeadcountMetrics;
+            private set => SetMetric(ref m_HeadcountMetrics, value);
         }
 
         /// <summary>
@@ -1477,8 +1490,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Resource Settings.
                     ResourceSettings = projectScenarioModel.ResourceSettings;
 
-                    // Graph Settings.
-                    GraphSettings = projectScenarioModel.GraphSettings;
+                    // Graph Settings, with the default ones in place of any that the scenario does not have.
+                    GraphSettings = ProjectScenarioHelper.CompleteGraphSettings(projectScenarioModel.GraphSettings, m_SettingService.DefaultGraphSettings);
 
                     // Interactive graph layouts (node positions). Set before the compile/build cascade so
                     // the graph view-models seed them when their graphs are (re)built.
@@ -1523,7 +1536,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Metrics.
                     // It is important to put this after the compilation, so it will only
                     // trigger a project plan updated event if it is different from the compiled metrics.
-                    Metrics = projectScenarioModel.Metrics;
+                    // A file from before the headcount has an empty one, and so the core keeps the one that the
+                    // compilation gave, as it does for the per-resource metrics below.
+                    MetricsModel fileMetrics = projectScenarioModel.Metrics;
+                    if (fileMetrics.Headcount.Peak is null)
+                    {
+                        fileMetrics = fileMetrics with { Headcount = HeadcountMetrics };
+                    }
+                    Metrics = fileMetrics;
 
                     // Files saved before the per-resource metrics existed carry an empty
                     // list, so only restore a stored list that actually has content -
@@ -2204,7 +2224,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceSeriesSet,
                         HasCompilationErrors);
 
-                ApplyFinancialMetrics(costs, billings, margins, efforts, resourceMetrics);
+                // The headcount comes from the same resource series as the financial metrics.
+                HeadcountModel headcount = m_OutputService.ComputeHeadcountMetrics(
+                    ResourceSeriesSet,
+                    HasCompilationErrors);
+
+                ApplyFinancialMetrics(costs, billings, margins, efforts, resourceMetrics, headcount);
             }
         }
 

@@ -109,6 +109,53 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void BuildOutputFilenames_Given_TheDataDirectory_Then_TheThreeCsvFilesNamedAsTheServerNamesThem()
+        {
+            var options = new Options { InputFilename = @"a.zpp", DataDirectory = @"data" };
+
+            Program.BuildOutputFilenames(options, @"plan").ShouldBe(new Dictionary<JobOutput, string>
+            {
+                [JobOutput.Schedule] = Path.Combine(@"data", @"plan-schedule.csv"),
+                [JobOutput.ResourceSeries] = Path.Combine(@"data", @"plan-resources.csv"),
+                [JobOutput.EarnedValueSeries] = Path.Combine(@"data", @"plan-earned-value.csv"),
+            });
+
+            var compileOptions = new CompileOptions { Outputs = new OutputsOptions { Data = new DataOptions() } };
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.Schedule, compileOptions, @"plan").ShouldBe(@"plan-schedule.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.ResourceSeries, compileOptions, @"plan").ShouldBe(@"plan-resources.csv");
+            CompileOptionsHelper.BuildOutputFilename(JobOutput.EarnedValueSeries, compileOptions, @"plan").ShouldBe(@"plan-earned-value.csv");
+        }
+
+        [Fact]
+        public void BuildOutputFilenames_Given_TheScenarioChartDirectory_Then_TheChartAndItsTwoCsvFiles()
+        {
+            var options = new Options
+            {
+                InputFilename = @"a.zpp",
+                ScenarioChartDirectory = @"charts",
+                ScenarioChartFormat = PlotExport.Png,
+                ScenarioChartSize = [800, 600],
+            };
+
+            Program.BuildOutputFilenames(options, @"plan").ShouldBe(new Dictionary<JobOutput, string>
+            {
+                [JobOutput.ScenarioChart] = Path.Combine(@"charts", @"plan-scenario.png"),
+                [JobOutput.ScenarioChartPoints] = Path.Combine(@"charts", @"plan-scenario-points.csv"),
+                [JobOutput.ScenarioChartFits] = Path.Combine(@"charts", @"plan-scenario-fits.csv"),
+            });
+        }
+
+        [Fact]
+        public void ValidateOptions_Given_ADataDirectoryThatIsNotThere_Then_Throws()
+        {
+            Should.Throw<InvalidOperationException>(() => Program.ValidateOptions(new Options
+            {
+                InputFilename = @"a.zpp",
+                DataDirectory = Path.Combine(Path.GetTempPath(), $@"zpp-{Guid.NewGuid():N}"),
+            }));
+        }
+
+        [Fact]
         public void BuildOutputFilenames_Given_TheWorkbookOfTheSimulation_Then_InItsOwnDirectoryNamedAsTheServerNamesIt()
         {
             var options = new Options { InputFilename = @"a.zpp", SimulationWorkbookDirectory = @"workbooks" };

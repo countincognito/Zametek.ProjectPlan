@@ -28,6 +28,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             @"activityRisk", @"activityRiskWithStandardDeviationCorrection", @"criticalityRisk", @"fibonacciRisk",
             @"geometricActivityRisk", @"geometricCriticalityRisk", @"geometricFibonacciRisk", @"networkCyclomaticComplexity",
             @"networkDuration", @"networkDurationManMonths", @"projectFinishDays", @"projectFinishDate", @"effortEfficiency",
+            @"peakHeadcount", @"averageHeadcount", @"peakToAverageHeadcount",
             @"activityEffort", @"directEffort", @"indirectEffort", @"otherEffort", @"totalEffort", @"directCost",
             @"indirectCost", @"otherCost", @"totalCost", @"directBilling", @"indirectBilling", @"otherBilling",
             @"totalBilling", @"directMargin", @"indirectMargin", @"otherMargin", @"totalMargin", @"directMarginAbsolute",
@@ -79,6 +80,111 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             using var content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
             content.Add(new StringContent(optionsJson, Encoding.UTF8, @"application/json"), @"options");
             return await Server.Client.PostAsync($@"/v1/projects/compile{query}", content);
+        }
+
+        [Fact]
+        public async Task Compile_Given_CompileTracked_Then_AnswersWithTheMetricsOfEachTrackedScenario()
+        {
+            byte[] plan = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"stale-tracked.zpp"));
+            using var content = RunningServer.CompileContent(plan, @"stale-tracked.zpp", new CompileOptions { CompileTracked = true });
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            string json = await response.Content.ReadAsStringAsync();
+            using JsonDocument document = JsonDocument.Parse(json);
+            document.RootElement.EnumerateObject().Select(x => x.Name).ShouldBe([@"metrics", @"trackedScenarios", @"outputs"]);
+
+            JsonElement[] tracked = [.. document.RootElement.GetProperty(@"trackedScenarios").EnumerateArray()];
+            tracked.Length.ShouldBe(2);
+            tracked[0].EnumerateObject().Select(x => x.Name).ShouldBe([@"path", @"id", @"isCurrent", @"metrics"]);
+            tracked[0].GetProperty(@"metrics").EnumerateObject().Select(x => x.Name).ShouldBe(s_MetricNames);
+
+            // Alpha is the scenario that the job loaded, and Beta, whose stored metrics are stale, has the metrics of its compile.
+            tracked.Select(x => (x.GetProperty(@"path").GetString(), x.GetProperty(@"isCurrent").GetBoolean(), x.GetProperty(@"metrics").GetProperty(@"networkDuration").GetInt32()))
+                .ShouldBe([(@"Alpha", true, 5), (@"Beta", false, 10)]);
+            tracked[1].GetProperty(@"id").GetString().ShouldBe(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4");
+        }
+
+        [Fact]
+        public async Task Compile_Given_NoCompileTracked_Then_TheAnswerHasNoTrackedScenarios()
+        {
+            using HttpResponseMessage response = await PostAsync();
+
+            using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            document.RootElement.TryGetProperty(@"trackedScenarios", out _).ShouldBeFalse();
+            document.RootElement.TryGetProperty(@"scenarioChart", out _).ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task Compile_Given_CompileTrackedAndAChartWithAxes_Then_AnswersWithTheDataOfTheChart()
+        {
+            // The chart of the plan plots the duration against itself with a linear fit, and the duration in man months with a
+            // fit of the second order, which the two tracked scenarios cannot give.
+            byte[] plan = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"scenario-chart.zpp"));
+            using var content = RunningServer.CompileContent(plan, @"scenario-chart.zpp", new CompileOptions { CompileTracked = true });
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            document.RootElement.EnumerateObject().Select(x => x.Name).ShouldBe([@"metrics", @"trackedScenarios", @"scenarioChart", @"outputs"]);
+
+            JsonElement chart = document.RootElement.GetProperty(@"scenarioChart");
+            chart.EnumerateObject().Select(x => x.Name).ShouldBe([@"xMetric", @"y1", @"y2"]);
+            chart.GetProperty(@"xMetric").GetString().ShouldBe(@"networkDuration");
+
+            JsonElement y1 = chart.GetProperty(@"y1");
+            y1.EnumerateObject().Select(x => x.Name).ShouldBe([@"metric", @"curveFitting", @"absolute", @"points", @"fit"]);
+            (y1.GetProperty(@"metric").GetString(), y1.GetProperty(@"curveFitting").GetString(), y1.GetProperty(@"absolute").GetBoolean())
+                .ShouldBe((@"networkDuration", @"linear", false));
+
+            JsonElement[] points = [.. y1.GetProperty(@"points").EnumerateArray()];
+            points[0].EnumerateObject().Select(x => x.Name).ShouldBe([@"id", @"path", @"x", @"y"]);
+            points.Select(x => (x.GetProperty(@"path").GetString(), x.GetProperty(@"x").GetDouble(), x.GetProperty(@"y").GetDouble()))
+                .ShouldBe([(@"Alpha", 5.0, 5.0), (@"Beta", 10.0, 10.0)]);
+            points[1].GetProperty(@"id").GetString().ShouldBe(@"17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4");
+
+            // The line y = x.
+            JsonElement fit = y1.GetProperty(@"fit");
+            fit.EnumerateObject().Select(x => x.Name).ShouldBe([@"rSquared", @"coefficients", @"derivativeCoefficients"]);
+            fit.GetProperty(@"rSquared").GetDouble().ShouldBe(1.0, 1e-9);
+            double[] coefficients = [.. fit.GetProperty(@"coefficients").EnumerateArray().Select(x => x.GetDouble())];
+            coefficients.Length.ShouldBe(2);
+            coefficients[0].ShouldBe(0.0, 1e-9);
+            coefficients[1].ShouldBe(1.0, 1e-9);
+            fit.GetProperty(@"derivativeCoefficients").EnumerateArray().Single().GetDouble().ShouldBe(1.0, 1e-9);
+
+            // An axis with no fit has no member fit.
+            JsonElement y2 = chart.GetProperty(@"y2");
+            y2.GetProperty(@"metric").GetString().ShouldBe(@"networkDurationManMonths");
+            y2.GetProperty(@"curveFitting").GetString().ShouldBe(@"polynomialOrder2");
+            y2.TryGetProperty(@"fit", out _).ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task Compile_Given_TheScenarioChart_Then_ItsImageAndItsTwoCsvFiles()
+        {
+            byte[] plan = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"scenario-chart.zpp"));
+            using var content = RunningServer.CompileContent(
+                plan,
+                @"scenario-chart.zpp",
+                new CompileOptions { Outputs = new OutputsOptions { ScenarioChart = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 } } });
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Outputs.Select(x => (x.Kind, x.FileName, x.ContentType)).ShouldBe(
+            [
+                (JobOutput.ScenarioChart, @"scenario-chart-scenario.svg", @"image/svg+xml"),
+                (JobOutput.ScenarioChartPoints, @"scenario-chart-scenario-points.csv", @"text/csv"),
+                (JobOutput.ScenarioChartFits, @"scenario-chart-scenario-fits.csv", @"text/csv"),
+            ]);
+
+            // The chart compiles the tracked scenarios, and so the answer has the data of the chart.
+            ScenarioChartResponse chart = compiled.ScenarioChart.ShouldNotBeNull();
+            chart.Y1.ShouldNotBeNull().Points.Count.ShouldBe(2);
         }
 
         [Fact]
@@ -236,6 +342,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                         Project = new ProjectOptions(),
                         Simulation = new ChartOptions { Format = PlotExport.Svg, Width = 100, Height = 100 },
                         SimulationWorkbook = new SimulationWorkbookOptions(),
+                        Data = new DataOptions(),
                     },
                 });
 
@@ -251,6 +358,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 @"image/svg+xml",
                 @"image/svg+xml",
                 @"image/svg+xml",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
+                @"text/csv",
                 @"image/svg+xml",
                 @"text/csv",
                 @"text/csv",

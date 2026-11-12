@@ -73,7 +73,19 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteStatistics(w, summary)));
 
             // The seed and the distribution are there also when every iteration failed: the run was made with them.
-            lines.ShouldBe(["Statistic,Value", "Iterations,1", "ValidIterations,0", "FailedIterations,1", "Seed,7", "Distribution,Triangular", "PlannedFinish,11"]);
+            lines.ShouldBe(
+            [
+                "Statistic,Value",
+                "Iterations,1",
+                "ValidIterations,0",
+                "FailedIterations,1",
+                "ResourceSchedulingStallIterations,0",
+                "MaximumTimeValueExceededIterations,0",
+                "InvalidConstraintsIterations,0",
+                "Seed,7",
+                "Distribution,Triangular",
+                "PlannedFinish,11",
+            ]);
         }
 
         [Fact]
@@ -123,10 +135,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteActivities(w, summary)));
 
-            lines[0].ShouldBe("ActivityId,Name,CriticalIterations,CriticalityIndex");
-            lines[1].ShouldBe("10,A,3,1");
-            lines[2].ShouldBe("30,\"The \"\"big\"\" one\",2,0.6666666666666666");
-            lines[3].ShouldBe("20,\"Fit, test\",1,0.3333333333333333");
+            lines[0].ShouldBe("ActivityId,Name,CriticalIterations,CriticalityIndex,MaximumLatestFinishTimeMisses");
+            lines[1].ShouldBe("10,A,3,1,0");
+            lines[2].ShouldBe("30,\"The \"\"big\"\" one\",2,0.6666666666666666,0");
+            lines[3].ShouldBe("20,\"Fit, test\",1,0.3333333333333333,0");
         }
 
         [Fact]
@@ -136,11 +148,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             lines.ShouldBe(
             [
-                "Iteration,FinishTime,CriticalPaths",
-                "1,10,\"A > Fit, test\"",
-                "2,,",
-                "3,12,\"A ~> The \"\"big\"\" one\"",
-                "4,12,\"A ~> The \"\"big\"\" one\"",
+                "Iteration,FinishTime,CriticalPaths,Failure",
+                "1,10,\"A > Fit, test\",",
+                "2,,,",
+                "3,12,\"A ~> The \"\"big\"\" one\",",
+                "4,12,\"A ~> The \"\"big\"\" one\",",
             ]);
         }
 
@@ -161,7 +173,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             string[] lines = Lines(Write(w => SimulationCsvWriter.WriteIterations(w, result, s_Names)));
 
-            lines[1].ShouldBe("1,9,\"A | Fit, test\"");
+            lines[1].ShouldBe("1,9,\"A | Fit, test\",");
         }
 
         [Fact]
@@ -180,6 +192,72 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             text.ShouldNotContain("\r");
             text.ShouldEndWith("\n");
+        }
+
+        // Four iterations: 10 (A critical), a miss of the maximum of C, a stall of the resource scheduler, and 11 (A critical).
+        private static SimulationResult<int> ResultWithFailures() =>
+            new(
+                [10, 20, 30],
+                [10, -1, -1, 11],
+                [0b001, 0, 0, 0b001],
+                [],
+                null,
+                null,
+                null,
+                [
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.InvalidConstraints,
+                    SimulationIterationFailure.ResourceSchedulingStall,
+                    SimulationIterationFailure.None,
+                ],
+                [0, 0, 1]);
+
+        [Fact]
+        public void WriteStatistics_Given_FailedIterationsWithTheirReasons_Then_HasARowForEachReason()
+        {
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(ResultWithFailures(), s_Names, 10, null, s_Settings);
+
+            string[] lines = Lines(Write(w => SimulationCsvWriter.WriteStatistics(w, summary)));
+
+            lines[1..7].ShouldBe(
+            [
+                "Iterations,4",
+                "ValidIterations,2",
+                "FailedIterations,2",
+                "ResourceSchedulingStallIterations,1",
+                "MaximumTimeValueExceededIterations,0",
+                "InvalidConstraintsIterations,1",
+            ]);
+        }
+
+        [Fact]
+        public void WriteActivities_Given_AMissedMaximum_Then_TheActivityHasARowWithItsMisses()
+        {
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(ResultWithFailures(), s_Names, 10, null, s_Settings);
+
+            string[] lines = Lines(Write(w => SimulationCsvWriter.WriteActivities(w, summary)));
+
+            lines.ShouldBe(
+            [
+                "ActivityId,Name,CriticalIterations,CriticalityIndex,MaximumLatestFinishTimeMisses",
+                "10,A,2,1,0",
+                "30,\"The \"\"big\"\" one\",0,0,1",
+            ]);
+        }
+
+        [Fact]
+        public void WriteIterations_Given_FailedIterationsWithTheirReasons_Then_EachSaysWhyItFailed()
+        {
+            string[] lines = Lines(Write(w => SimulationCsvWriter.WriteIterations(w, ResultWithFailures(), s_Names)));
+
+            lines.ShouldBe(
+            [
+                "Iteration,FinishTime,CriticalPaths,Failure",
+                "1,10,,",
+                "2,,,InvalidConstraints",
+                "3,,,ResourceSchedulingStall",
+                "4,11,,",
+            ]);
         }
     }
 }

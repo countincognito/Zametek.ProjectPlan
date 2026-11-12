@@ -45,6 +45,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_InfoContentType = @"application/json; charset=utf-8";
         private const string c_DescriptionCacheControl = @"public, max-age=3600";
         private const string c_DescriptionResourceName = @"openapi.yaml";
+        private const string c_ProjectSchemaResourceName = @"zpp.schema.json";
         private const string c_ResultFilename = @"result.json";
 
         // Where the parts of a request are, as a JSON pointer: the request, as OpenAPI models a multipart body, is an object
@@ -56,6 +57,9 @@ namespace Zametek.ProjectPlan.CommandLine
         internal const string DescriptionMediaType = @"application/openapi+yaml";
         internal const string YamlMediaType = @"application/yaml";
 
+        // The media types that the schema of the project file is offered as: that of a JSON Schema, and then JSON as such.
+        internal const string ProjectSchemaMediaType = @"application/schema+json";
+
         // The earliest and latest times a zip can stamp on its files.
         private static readonly DateTime s_EarliestZipTime = new(1980, 1, 1);
         private static readonly DateTime s_LatestZipTime = new(2107, 12, 31, 23, 59, 58);
@@ -63,7 +67,13 @@ namespace Zametek.ProjectPlan.CommandLine
         private static readonly string[] s_DescriptionMediaTypes = [DescriptionMediaType, YamlMediaType];
 
         // The description of the API as it was embedded when the server was built, and its strong ETag: read when first asked for.
-        private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_Description = new(ReadDescription);
+        private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_Description = new(() => ReadResource(c_DescriptionResourceName));
+
+        private static readonly string[] s_ProjectSchemaMediaTypes = [ProjectSchemaMediaType, c_JsonMediaType];
+
+        // The schema of the project file as it was embedded when the server was built, and its strong ETag: read when first asked
+        // for.
+        private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_ProjectSchema = new(() => ReadResource(c_ProjectSchemaResourceName));
 
         // The part of the path of a job that is its id.
         private const string c_RequestIdRoute = @"requestId";
@@ -110,6 +120,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The media types that the description of the API is offered as.
         public static IReadOnlyList<string> DescriptionMediaTypes => s_DescriptionMediaTypes;
+
+        // The media types that the schema of the project file is offered as.
+        public static IReadOnlyList<string> ProjectSchemaMediaTypes => s_ProjectSchemaMediaTypes;
 
         #endregion
 
@@ -198,6 +211,28 @@ namespace Zametek.ProjectPlan.CommandLine
             await WriteFixedAsync(context, body, tag, c_DescriptionCacheControl, mediaType);
         }
 
+        // The JSON Schema of the project file: docs/zpp.schema.json, as it was when the server was built. A program that writes a
+        // plan checks it against the schema before it sends it. Like the description, it holds nothing that is not in the
+        // repository, and so the API key is not asked for, and it cannot change while the server runs.
+        public async Task GetProjectSchemaAsync(HttpContext context)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+
+            // What it is answered with depends on what the request accepts.
+            context.Response.Headers.Vary = c_AcceptHeader;
+
+            if (AcceptHelper.Choose(context.Request, s_ProjectSchemaMediaTypes) is not string mediaType)
+            {
+                Answer refusal = NotAcceptable(context, s_ProjectSchemaMediaTypes);
+                Log(context, refusal, Stopwatch.StartNew());
+                await refusal.Result.ExecuteAsync(context);
+                return;
+            }
+
+            (byte[] body, EntityTagHeaderValue tag) = s_ProjectSchema.Value;
+            await WriteFixedAsync(context, body, tag, c_DescriptionCacheControl, mediaType);
+        }
+
         // What an endpoint takes, as OPTIONS says it: no content, the methods it answers, and - for a POST - the media type
         // of what it takes.
         public static Task GetOptionsAsync(
@@ -260,11 +295,11 @@ namespace Zametek.ProjectPlan.CommandLine
             await context.Response.Body.WriteAsync(body, context.RequestAborted);
         }
 
-        private static (byte[] Body, EntityTagHeaderValue Tag) ReadDescription()
+        private static (byte[] Body, EntityTagHeaderValue Tag) ReadResource(string name)
         {
             Type type = typeof(ProjectEndpoints);
-            using Stream stream = type.Assembly.GetManifestResourceStream(c_DescriptionResourceName)
-                ?? throw new InvalidOperationException($@"{c_DescriptionResourceName} is not embedded in {type.Assembly.GetName().Name}");
+            using Stream stream = type.Assembly.GetManifestResourceStream(name)
+                ?? throw new InvalidOperationException($@"{name} is not embedded in {type.Assembly.GetName().Name}");
             using var memory = new MemoryStream();
             stream.CopyTo(memory);
 
@@ -445,6 +480,8 @@ namespace Zametek.ProjectPlan.CommandLine
             var response = new CompileResponse(
                 MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
                 result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
+                TrackedScenarioResponse.From(result.TrackedScenarios),
+                ScenarioChartResponse.From(result.ScenarioChart),
                 outputs,
                 consoleResponse);
 
@@ -925,7 +962,9 @@ namespace Zametek.ProjectPlan.CommandLine
                     console,
                     MetricsResponse.From(result.Metrics ?? throw new InvalidOperationException()),
                     outputs,
-                    result.Simulation is null ? null : SimulationResponse.From(result.Simulation)),
+                    result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
+                    TrackedScenarioResponse.From(result.TrackedScenarios),
+                    ScenarioChartResponse.From(result.ScenarioChart)),
                 exitCode);
         }
 

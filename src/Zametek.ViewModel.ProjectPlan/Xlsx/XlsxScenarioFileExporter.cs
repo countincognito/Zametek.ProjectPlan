@@ -728,6 +728,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     titleColumnIndex++;
                 }
 
+                // The total of each day: the number of resources whose value is true, or the sum of the values.
+                AddToCell(Resource.ProjectPlan.Reporting.Reporting_Total, sheet, rowIndex, titleColumnIndex, XlsxCellStyle.Title);
+
                 rowIndex++;
             }
             {
@@ -743,15 +746,29 @@ namespace Zametek.ViewModel.ProjectPlan
                     columnIndex++;
 
                     // Values.
+                    double total = 0.0;
+
                     foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
                     {
+                        T value = resourceSeriesFunc(resourceSeries, timeIndex);
+                        total += value switch
+                        {
+                            bool x => x ? 1.0 : 0.0,
+                            double x => x,
+                            int x => x,
+                            _ => 0.0,
+                        };
+
                         AddToCell(
-                            resourceSeriesFunc(resourceSeries, timeIndex),
+                            value,
                             sheet,
                             rowIndex,
                             columnIndex);
                         columnIndex++;
                     }
+
+                    // Total.
+                    AddToCell(total, sheet, rowIndex, columnIndex);
 
                     rowIndex++;
                 }

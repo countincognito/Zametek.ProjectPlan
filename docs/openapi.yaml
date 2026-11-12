@@ -407,6 +407,81 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/OptionsGet'
+  /v1/schemas/project:
+    get:
+      operationId: getProjectSchema
+      tags: [Projects]
+      summary: Fetch the schema of a project file
+      description: |
+        This operation gives the JSON Schema of the project file (`.zpp`) of the latest version. A program that writes a plan can
+        check it against the schema before it sends the plan. The schema is strict about the names of the members, because the server
+        ignores a member that it does not know. The rules that a schema cannot say are in `docs/PROJECT-FILE.md`. The schema is the
+        file `docs/zpp.schema.json` of the repository, in the version from the time of the build of the server. It holds only what is
+        in the repository, and thus it needs no API key. It cannot change while the server operates. Thus, the response has a strong
+        `ETag`, and any cache can keep it for one hour.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/Traceparent'
+      responses:
+        '200':
+          description: The schema of the project file.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Cache-Control:
+              description: Any cache can keep the response for one hour.
+              required: true
+              schema:
+                type: string
+                const: public, max-age=3600
+            Vary:
+              description: The answer varies with what the request accepts.
+              required: true
+              schema:
+                type: string
+                const: Accept
+          content:
+            application/schema+json:
+              schema:
+                type: object
+            application/json:
+              schema:
+                type: object
+        '304':
+          description: The client has this schema, as the `ETag` shows.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+    head:
+      operationId: headProjectSchema
+      tags: [Projects]
+      summary: The headers of the schema of a project file
+      description: This operation answers with the headers of `GET`, with the `ETag`, and with no body. It needs no API key.
+      security: []
+      responses:
+        '200':
+          description: The headers of `GET`, and no body.
+          headers:
+            Request-Id:
+              $ref: '#/components/headers/RequestId'
+            ETag:
+              $ref: '#/components/headers/ETag'
+    options:
+      operationId: optionsProjectSchema
+      tags: [Projects]
+      summary: What the endpoint takes
+      description: This operation says that the endpoint takes `GET` and `HEAD`. It needs no API key, because they need none.
+      security: []
+      responses:
+        '204':
+          $ref: '#/components/responses/OptionsGet'
   /health/live:
     get:
       operationId: getLive
@@ -723,6 +798,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -762,6 +840,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -809,6 +890,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -834,6 +918,9 @@ components:
           iterations: 5000
           validIterations: 5000
           failedIterations: 0
+          resourceSchedulingStallIterations: 0
+          maximumTimeValueExceededIterations: 0
+          invalidConstraintsIterations: 0
           seed: '1'
           distribution: betaPert
           modifiedBetaShape: null
@@ -858,6 +945,7 @@ components:
           targetFinishDays: 30
           targetFinishDate: '2024-01-31'
           targetProbability: 0.86
+          missedMaximumLatestFinishTimes: []
         outputs:
           - kind: simulationStatistics
             fileName: two-scenarios-simulation-statistics.csv
@@ -878,7 +966,7 @@ components:
     Server:
       summary: A server with the limits that it has at its start
       value:
-        version: 0.11.0-alpha
+        version: 0.11.0-beta
         culture: en-GB
         timeZone: Europe/London
         limits:
@@ -1050,6 +1138,9 @@ components:
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
+          peakHeadcount: 1
+          averageHeadcount: 1
+          peakToAverageHeadcount: 1
           activityEffort: 5
           directEffort: 5
           indirectEffort: 0
@@ -1184,6 +1275,15 @@ components:
         scenario:
           type: [string, 'null']
           description: The scenario to load, by name or by id. The id is the whole id, or a unique prefix of it of a minimum of four hexadecimal characters. Only with a `project`.
+        compileTracked:
+          type: [boolean, 'null']
+          default: false
+          description: |
+            Compile each tracked scenario of the project, and not only the scenario that the job loads, as `zpp --compile-tracked`
+            does. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output
+            `project` holds the new metrics, and the answer has `trackedScenarios`. The answer also has `scenarioChart` when the scenario
+            chart of the project has axes. The output `scenarioChart` compiles the tracked scenarios also without this member, and thus
+            the chart has no stale points. An import has no tracked scenarios.
         baseTheme:
           type: [string, 'null']
           enum: [light, dark, null]
@@ -1227,6 +1327,14 @@ components:
         (`runSimulation`) or, without a run, from the result that the project holds, which has no iterations, and thus no file of them. A
         project that holds no result, with no run, is a problem with the type `simulation-not-possible`.
 
+        The output `scenarioChart` is one request for the chart of the tracked scenarios and two CSV files of its data: the points of
+        each axis of Y (`scenarioChartPoints`) and the fit of each axis of Y (`scenarioChartFits`). The answer lists each file as an
+        output of its own, and it has the member `scenarioChart`.
+
+        The output `data` is one request for the data of the compiled scenario as three CSV files: the table of the critical path method
+        (`schedule`), the series of the resources (`resourceSeries`) and the series of the earned value (`earnedValueSeries`). The answer
+        lists each file as an output of its own.
+
         The output `simulationWorkbook` is the same result as one Excel workbook: a sheet for the settings and for each of the CSV files
         above (`Simulation Settings`, `Simulation Statistics`, `Simulation Percentiles`, `Simulation Histogram`, `Simulation Paths`
         and `Simulation Criticalities`), and, for a run, the sheet `Simulation Iterations`. It is an output of its own, and a request can
@@ -1250,6 +1358,8 @@ components:
           $ref: '#/components/schemas/ChartOptions'
         scenarioChart:
           $ref: '#/components/schemas/ChartOptions'
+        data:
+          $ref: '#/components/schemas/OutputWithoutSettings'
         simulation:
           $ref: '#/components/schemas/ChartOptions'
         simulationWorkbook:
@@ -1291,12 +1401,155 @@ components:
           $ref: '#/components/schemas/Metrics'
         simulation:
           $ref: '#/components/schemas/Simulation'
+        trackedScenarios:
+          type: array
+          description: Each tracked scenario of the project, in the order of the project, with its metrics. The answer has this member when the request has `compileTracked`.
+          items:
+            $ref: '#/components/schemas/TrackedScenario'
+        scenarioChart:
+          $ref: '#/components/schemas/ScenarioChart'
         outputs:
           type: array
           items:
             $ref: '#/components/schemas/Output'
         console:
           $ref: '#/components/schemas/Console'
+    TrackedScenario:
+      type: object
+      required: [path, id, isCurrent, metrics]
+      properties:
+        path:
+          type: string
+          description: The name of the scenario, after the names of the folders that it is in, as `POST /v1/projects/scenarios` gives it.
+        id:
+          type: string
+          format: uuid
+        isCurrent:
+          type: boolean
+          description: Whether the job loaded this scenario. Then its metrics are the same as the `metrics` of the answer.
+        metrics:
+          oneOf:
+            - $ref: '#/components/schemas/Metrics'
+            - type: 'null'
+          description: The metrics of the scenario, or `null` when it did not compile or the project has no data for it.
+    ScenarioChart:
+      description: |
+        The data of the scenario chart, from the settings of the chart that the project keeps: the metrics of the axes, the fits and
+        the option for absolute values. Thus, the data and the chart always agree. The answer has this member when the job compiles
+        the tracked scenarios (`compileTracked` or the output `scenarioChart`), and the chart has a metric for the axis of X and for
+        one or two axes of Y. An axis of Y that has no metric is not in the data.
+      type: object
+      required: [xMetric]
+      properties:
+        xMetric:
+          $ref: '#/components/schemas/ScenarioChartMetric'
+        y1:
+          $ref: '#/components/schemas/ScenarioChartSeries'
+        y2:
+          $ref: '#/components/schemas/ScenarioChartSeries'
+    ScenarioChartMetric:
+      description: A metric that the scenario chart can plot. It has the name of the metric in `Metrics`.
+      type: string
+      enum:
+        - criticalityRisk
+        - fibonacciRisk
+        - activityRisk
+        - activityRiskWithStandardDeviationCorrection
+        - geometricCriticalityRisk
+        - geometricFibonacciRisk
+        - geometricActivityRisk
+        - directCost
+        - indirectCost
+        - otherCost
+        - totalCost
+        - directBilling
+        - indirectBilling
+        - otherBilling
+        - totalBilling
+        - directMargin
+        - indirectMargin
+        - otherMargin
+        - totalMargin
+        - directMarginAbsolute
+        - indirectMarginAbsolute
+        - otherMarginAbsolute
+        - totalMarginAbsolute
+        - directEffort
+        - indirectEffort
+        - otherEffort
+        - totalEffort
+        - activityEffort
+        - effortEfficiency
+        - networkCyclomaticComplexity
+        - networkDuration
+        - networkDurationManMonths
+        - peakHeadcount
+        - averageHeadcount
+        - peakToAverageHeadcount
+    ScenarioChartSeries:
+      description: An axis of Y of the scenario chart.
+      type: object
+      required: [metric, curveFitting, absolute, points]
+      properties:
+        metric:
+          $ref: '#/components/schemas/ScenarioChartMetric'
+        curveFitting:
+          type: string
+          enum: [none, linear, exponential, logarithmic, power, polynomialOrder2, polynomialOrder3, polynomialOrder4]
+          description: The fit that the chart asks for.
+        absolute:
+          type: boolean
+          description: Whether the chart shows the absolute value of the curve. The coefficients are those of the curve itself.
+        points:
+          type: array
+          description: A point for each tracked scenario, in the order of the chart (by `x`, and then by `y`).
+          items:
+            $ref: '#/components/schemas/ScenarioChartPoint'
+        fit:
+          $ref: '#/components/schemas/CurveFit'
+    ScenarioChartPoint:
+      description: A tracked scenario, and the values of the metrics of the axes. A metric that the scenario does not have is 0, as on the chart. A value that is not a number is `null`.
+      type: object
+      required: [id, path, x, y]
+      properties:
+        id:
+          type: string
+          format: uuid
+        path:
+          type: string
+          description: The name of the scenario, after the names of the folders that it is in.
+        x:
+          type: [number, 'null']
+        y:
+          type: [number, 'null']
+    CurveFit:
+      description: |
+        The fit of an axis of Y. The axis has no fit when `curveFitting` is `none`, when the points have too few different values of
+        `x` (a fit with n coefficients needs n), or when the fit is not a curve (for example, an exponential fit of a value of 0). The
+        coefficients go from the constant up, and the curves are:
+
+        - `linear`: y = c0 + c1·x, and y′ = d0.
+        - `exponential`: y = c0·e^(c1·x), and y′ = d0·e^(d1·x).
+        - `logarithmic`: y = c0 + c1·ln(x), and y′ = d0 / x.
+        - `power`: y = c0·x^c1, and y′ = d0·x^d1.
+        - `polynomialOrder2`, `polynomialOrder3` and `polynomialOrder4`: y = Σ ci·x^i, and y′ = Σ di·x^i.
+
+        The coefficients are numbers with all their digits. A client that finds the points of a curve (for example, the inflection point
+        of a cubic fit of the risk) must not round them first.
+      type: object
+      required: [rSquared, coefficients, derivativeCoefficients]
+      properties:
+        rSquared:
+          type: [number, 'null']
+          description: The square of the correlation of the curve with the points. It is `null` when the points have one value of `y`.
+        coefficients:
+          type: array
+          items:
+            type: number
+        derivativeCoefficients:
+          type: array
+          items:
+            type: number
     Metrics:
       description: |
         The metrics of a compiled project. The names are words in `lowerCamelCase`, and the values are numbers and not the text that
@@ -1317,6 +1570,9 @@ components:
         - projectFinishDays
         - projectFinishDate
         - effortEfficiency
+        - peakHeadcount
+        - averageHeadcount
+        - peakToAverageHeadcount
         - activityEffort
         - directEffort
         - indirectEffort
@@ -1359,6 +1615,15 @@ components:
           format: date
           description: The date on which the project finishes, in the working calendar of the project. `null` when the project has no duration.
         effortEfficiency: { type: [number, 'null'] }
+        peakHeadcount:
+          type: [integer, 'null']
+          description: The most resources that the schedule allocates on one day. `null` when the project did not compile or has no days.
+        averageHeadcount:
+          type: [number, 'null']
+          description: The mean of the number of resources that the schedule allocates on each day.
+        peakToAverageHeadcount:
+          type: [number, 'null']
+          description: The peak headcount divided by the average headcount. `null` when the average is 0.
         activityEffort: { type: [number, 'null'] }
         directEffort: { type: [number, 'null'] }
         indirectEffort: { type: [number, 'null'] }
@@ -1385,14 +1650,19 @@ components:
         What the simulation found. It is in the answer when the request runs the simulation, or the project holds a result. Like the
         metrics, the names are words in
         `lowerCamelCase`, and the values are numbers and not the text that `zpp` prints. Every time is in days from the start of the
-        project, with the date on which it falls in the working calendar of the project. An iteration that the scheduler cannot
-        place every activity in is a failed iteration, and it is in none of the statistics. A simulation in which every iteration
+        project, with the date on which it falls in the working calendar of the project. An iteration fails when the resource
+        scheduler cannot place every activity, when the schedule goes past the limit of time, or when an activity cannot finish
+        by its maximum latest finish time. A failed iteration is in none of the statistics. An iteration that misses a maximum
+        latest finish time is a late one. Thus, when such iterations fail, the statistics are too early. A simulation in which every iteration
         fails has no statistics, and thus `null` values for them.
       type: object
       required:
         - iterations
         - validIterations
         - failedIterations
+        - resourceSchedulingStallIterations
+        - maximumTimeValueExceededIterations
+        - invalidConstraintsIterations
         - seed
         - distribution
         - modifiedBetaShape
@@ -1408,6 +1678,7 @@ components:
         - targetFinishDays
         - targetFinishDate
         - targetProbability
+        - missedMaximumLatestFinishTimes
       properties:
         iterations:
           type: integer
@@ -1417,6 +1688,16 @@ components:
           description: The number of iterations that gave a finish. Each statistic uses these.
         failedIterations:
           type: integer
+          description: The number of iterations that failed. The three counts that follow say why.
+        resourceSchedulingStallIterations:
+          type: integer
+          description: The failed iterations in which the resource scheduler could not place every activity.
+        maximumTimeValueExceededIterations:
+          type: integer
+          description: The failed iterations in which the schedule went past the limit of time.
+        invalidConstraintsIterations:
+          type: integer
+          description: The failed iterations in which an activity could not finish by its maximum latest finish time.
         seed:
           type: string
           pattern: '^[0-9]{1,20}$'
@@ -1464,6 +1745,23 @@ components:
           minimum: 0
           maximum: 1
           description: The share of the valid iterations that finish by the target, from 0 to 1.
+        missedMaximumLatestFinishTimes:
+          type: array
+          description: Each activity that could not finish by its maximum latest finish time in an iteration, the most misses first. The array is empty when no activity missed its maximum.
+          items:
+            $ref: '#/components/schemas/SimulationMissedMaximum'
+    SimulationMissedMaximum:
+      type: object
+      required: [activityId, name, iterations]
+      properties:
+        activityId:
+          type: integer
+        name:
+          type: string
+        iterations:
+          type: integer
+          minimum: 1
+          description: The number of iterations in which the activity could not finish by its maximum latest finish time. Each of them failed.
     SimulationPercentile:
       type: object
       required: [percentile, finishDays, finishDate]
@@ -1493,6 +1791,11 @@ components:
             - resourceChart
             - earnedValueChart
             - scenarioChart
+            - scenarioChartPoints
+            - scenarioChartFits
+            - schedule
+            - resourceSeries
+            - earnedValueSeries
             - simulationChart
             - simulationStatistics
             - simulationHistogram
@@ -1570,8 +1873,8 @@ components:
           type: boolean
           description: |
             Shows if the scenario is tracked. The scenario chart shows the metrics of a tracked scenario as a point, against the metrics of
-            the axes of the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any
-            other output holds. It is not the progress tracking of activities.
+            the axes of the chart. Tracking does not change how the scenario compiles or what its metrics are. The output `scenarioChart`
+            and the option `compileTracked` compile the tracked scenarios. Tracking is not the progress tracking of activities.
         isCurrent:
           type: boolean
           description: |
@@ -1820,7 +2123,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, and the outputs that the job produced.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, the data of the scenario chart as the answer has it, and the outputs that the job produced.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -1833,6 +2136,12 @@ components:
               $ref: '#/components/schemas/Metrics'
             simulation:
               $ref: '#/components/schemas/Simulation'
+            trackedScenarios:
+              type: array
+              items:
+                $ref: '#/components/schemas/TrackedScenario'
+            scenarioChart:
+              $ref: '#/components/schemas/ScenarioChart'
             outputs:
               type: array
               items:

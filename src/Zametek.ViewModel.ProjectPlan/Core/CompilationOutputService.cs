@@ -94,6 +94,8 @@ namespace Zametek.ViewModel.ProjectPlan
             (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
                 ComputeFinancialMetrics(resourceSeriesSet, inputs.HasCompilationErrors);
 
+            HeadcountModel headcount = ComputeHeadcountMetrics(resourceSeriesSet, inputs.HasCompilationErrors);
+
             return new CascadeOutputs(
                 arrowGraph,
                 vertexGraph,
@@ -105,7 +107,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 billings,
                 margins,
                 efforts,
-                resourceMetrics);
+                resourceMetrics,
+                headcount);
         }
 
         // The seven outputs of the cascade, each built from the values that it reads and nothing else. The Build*
@@ -232,6 +235,15 @@ namespace Zametek.ViewModel.ProjectPlan
             CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(CoreViewModel.BuildFinancialMetrics)}");
 
             return m_MetricCalculationService.BuildFinancialMetrics(
+                resourceSeriesSet,
+                hasCompilationErrors);
+        }
+
+        public HeadcountModel ComputeHeadcountMetrics(
+            ResourceSeriesSetModel resourceSeriesSet,
+            bool hasCompilationErrors)
+        {
+            return m_MetricCalculationService.BuildHeadcountMetrics(
                 resourceSeriesSet,
                 hasCompilationErrors);
         }

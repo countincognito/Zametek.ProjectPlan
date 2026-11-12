@@ -81,10 +81,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             JsonElement simulation = document.RootElement.GetProperty(@"simulation");
             simulation.EnumerateObject().Select(x => x.Name).ShouldBe(
             [
-                @"iterations", @"validIterations", @"failedIterations", @"seed", @"distribution", @"modifiedBetaShape",
+                @"iterations", @"validIterations", @"failedIterations", @"resourceSchedulingStallIterations",
+                @"maximumTimeValueExceededIterations", @"invalidConstraintsIterations", @"seed", @"distribution", @"modifiedBetaShape",
                 @"plannedFinishDays", @"plannedFinishDate", @"meanDays", @"standardDeviationDays",
                 @"earliestFinishDays", @"earliestFinishDate", @"latestFinishDays", @"latestFinishDate",
-                @"percentiles", @"targetFinishDays", @"targetFinishDate", @"targetProbability",
+                @"percentiles", @"targetFinishDays", @"targetFinishDate", @"targetProbability", @"missedMaximumLatestFinishTimes",
             ]);
 
             // The seed is text, the distribution a name, and a shape value is null for a distribution that has none.
@@ -94,6 +95,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             simulation.GetProperty(@"modifiedBetaShape").ValueKind.ShouldBe(JsonValueKind.Null);
             simulation.GetProperty(@"iterations").GetInt32().ShouldBe(1000);
             simulation.GetProperty(@"validIterations").GetInt32().ShouldBe(1000);
+            simulation.GetProperty(@"failedIterations").GetInt32().ShouldBe(0);
+            simulation.GetProperty(@"invalidConstraintsIterations").GetInt32().ShouldBe(0);
+            simulation.GetProperty(@"missedMaximumLatestFinishTimes").GetArrayLength().ShouldBe(0);
             simulation.GetProperty(@"targetFinishDays").GetInt32().ShouldBe(30);
             simulation.GetProperty(@"targetFinishDate").ValueKind.ShouldBe(JsonValueKind.String);
             simulation.GetProperty(@"percentiles").GetArrayLength().ShouldBe(9);
@@ -101,6 +105,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // It is the plan as it stands that the project's own metrics say.
             document.RootElement.GetProperty(@"metrics").GetProperty(@"networkDuration").GetInt32()
                 .ShouldBe(simulation.GetProperty(@"plannedFinishDays").GetInt32());
+        }
+
+        [Fact]
+        public async Task Compile_Given_AMaximumThatSomeIterationsMiss_Then_TheAnswerSaysHowManyFailedAndWhy()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            byte[] late = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, @"Assets", @"missed-maximum-lft.zpp"));
+            byte[] plan = await SimulatedAsync(new SimulationSettingsModel { Iterations = 500, Seed = 11, UseRandomSeed = false }, plan: late);
+
+            using HttpResponseMessage response = await PostAsync(server, @"{""runSimulation"":true}", plan);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            SimulationResponse simulation = (await RunningServer.ReadAsync<CompileResponse>(response)).Simulation.ShouldNotBeNull();
+            simulation.FailedIterations.ShouldBeGreaterThan(0);
+            simulation.ValidIterations.ShouldBe(500 - simulation.FailedIterations);
+            simulation.InvalidConstraintsIterations.ShouldBe(simulation.FailedIterations);
+            (simulation.ResourceSchedulingStallIterations, simulation.MaximumTimeValueExceededIterations).ShouldBe((0, 0));
+            simulation.MissedMaximumLatestFinishTimes.ShouldBe([new SimulationMissedMaximumResponse(2, @"End", simulation.FailedIterations)]);
         }
 
         [Fact]

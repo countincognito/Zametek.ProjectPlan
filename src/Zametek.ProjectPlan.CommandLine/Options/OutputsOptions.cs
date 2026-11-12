@@ -28,6 +28,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // --scenario-chart-*
         public ChartOptions? ScenarioChart { get; init; }
 
+        // --data-directory: the data of the compiled scenario as three CSV files, which the answer lists as outputs of their own:
+        // schedule (the table of the critical path method), resourceSeries and earnedValueSeries.
+        public DataOptions? Data { get; init; }
+
         // --simulation-*: the chart of the result of the simulation, and, with it, its CSV files, which are the statistics of the
         // finish, its histogram split by critical path, the critical paths, and how often each activity was critical. The result
         // is the one that the job made when it ran the simulation (runSimulation), or else the one that the project held. A

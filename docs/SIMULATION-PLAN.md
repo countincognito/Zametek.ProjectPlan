@@ -297,7 +297,7 @@ Phase 2 finished on 2026-10-16. All the work is in the library repository, on th
 
 The tracked file `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The file is in `.gitignore`. It removes the package references to `Zametek.Maths.Graphs.Primitives` and `Zametek.Maths.Graphs.Compilers`, and adds project references to the library source in the folder next to this repository. After a change to the file, run `dotnet restore Zametek.ProjectPlan.slnf`. Delete the file, and restore again, to return to the packages. A build on CI has no such file, and so it uses the packages.
 
-The maintainer published the packages, and the two package references use version 4.0.1. Use the local file only for a change that needs a version of the library that nobody has published.
+The maintainer published the packages, and the two package references use version 4.1.0. Use the local file only for a change that needs a version of the library that nobody has published.
 
 ## Phase 3: the results
 
@@ -428,7 +428,7 @@ A result that a project held did not say which seed, distribution and shape valu
 - **Where.** `SimulationSummaryModel` has `Seed`, `Distribution` and `ModifiedBetaShape`. `SimulationAnalyzer.Analyze` takes the settings of the run and copies the three values. The project file (v0.6.2) holds them, in the same record as the statistics.
 - **The shape value is null when the distribution has none.** The settings always have a shape value, but only the modified beta-PERT distribution uses it. The result has the value only for that distribution.
 - **Excel.** The sheet "Simulation Statistics" has the columns `Seed` (as text, as in the sheet of the settings), `Distribution` and `ModifiedBetaShape` after `FailedIterationCount`. A workbook from before these columns has the settings of the scenario in their place. The import finds a column by its title, and so the other columns do not move.
-- **CSV.** The statistics file has the rows `Seed`, `Distribution` and, for the modified beta-PERT, `ModifiedBetaShape`, after `FailedIterations`. They are there also when every iteration failed.
+- **CSV.** The statistics file has the rows `Seed`, `Distribution` and, for the modified beta-PERT, `ModifiedBetaShape`, after the counts of the iterations. They are there also when every iteration failed.
 - **The statistics of the panel.** The panel shows the seed, the distribution and the shape value first, with the values of the result. `zpp` and the server print the same lines, because they print the statistics of the panel. The line for the shape value is new, and it shows only for the modified beta-PERT.
 - **The job.** `JobSimulationMetrics` takes the values from the result. Thus a job that loads a project, gives other settings and does not run reports the seed that made the result.
 - **The golden files.** The workbook `sample-simulation.xlsx` and its snapshot have the new columns. The other two workbooks did not change, and they are still the files that an older release wrote.
@@ -558,6 +558,21 @@ A test of `zpp serve` timed out two times in the commit hook. A request for the 
 - **The change.** `zpp serve` raises the minimum of the thread pool when it starts. The pool then starts threads at once, up to the minimum, and a request does not wait. The minimum is a thread for each processor, plus the most threads that the simulations of all the jobs can take (`SimulationProcessorShare.MostThreads`). With four processors and four jobs, this is 4 + (4 + 2 + 1 + 1) = 12. The minimum only goes up.
 - **Why not threads of its own.** A scheduler with threads of its own would keep the loop away from the pool, also in the desktop application. But `Parallel.For` does not use the scheduler of the task that calls it, and the library sets no scheduler. [TODO](TODO.md) has an entry for this.
 - **How it was checked.** The new test of the server failed on the code from before: the minimum was 4, and the test wanted 11 for three jobs. A test of the share begins and ends simulations 10,000 times in a random order. Their threads never added up to more than `MostThreads`. The runs above do not measure the speed of the simulation, because the client asked more often when the answers came at once.
+
+### The application uses version 4.1.0 of the library
+
+Version 4.1.0 of the library corrects two crashes of the compile and an error of the simulation. It only adds to the API. The application moved from version 4.0.1 to version 4.1.0 on 2026-11-11. The tests of the zpp skill found the three problems.
+
+- **The crashes.** A milestone in a phase after the last activity of the phase that takes time crashed the compile. A maximum LFT that a milestone cannot meet crashed it too, and `zpp` exited with code 1. The first plan now compiles, and the phase of the indirect resource runs to the milestone. The second plan gives `C0010`, and `zpp` exits with code 3.
+- **The simulation.** An iteration that cannot meet a maximum LFT gave the maximum as its finish time, and so the statistics were too early. In one plan, the 95th percentile was 12 days, and the real value was 15. A minimum EST and a maximum LFT can hold an activity to a window. A draw longer than the window stopped the whole simulation. Such an iteration now fails, and the statistics leave it out.
+- **The outputs.** The library tells why each iteration failed, and which activities missed their maximum LFT. Each output of a simulation now shows this:
+  - The table "Statistics" shows the failed iterations with their share of all the iterations. It has a row for each reason that an iteration had, and a row "Missed maximum LFT" for each activity that missed its maximum.
+  - The table "Criticalities" also has the activities that missed their maximum, and the column "Missed maximum LFT".
+  - The statistics file has the rows `ResourceSchedulingStallIterations`, `MaximumTimeValueExceededIterations` and `InvalidConstraintsIterations` after `FailedIterations`. The activities file has the column `MaximumLatestFinishTimeMisses`. The iterations file has the column `Failure`, with the reason of each failed iteration.
+  - The workbook, the project file, the JSON of `zpp` and the API have the same values. A result from an earlier version has zeros.
+  - The test plan `missed-maximum-lft.zpp` has an activity of 8 to 20 days before a milestone with a maximum LFT of 12 days. Some iterations of it fail.
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.1.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.1.0.
+- **How it was checked.** Two new tests of `zpp` run the plans of the two crashes, `milestone-after-phase.zpp` and `unmet-maximum-lft.zpp`. With version 4.0.1, `zpp` exited with code 1 on both. With version 4.1.0, it exits with code 0 and code 3.
 
 ## Performance work to explore later
 

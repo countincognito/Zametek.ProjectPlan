@@ -7,16 +7,25 @@ namespace Zametek.ProjectPlan.CommandLine
     // What a simulation found, as zpp serve's API gives it: the settings it ran with, and the statistics of the finish. Like
     // the metrics, they are values and not the text zpp prints, named in words, and nothing here is written in the
     // server's culture. Every time is in days from the start of the project, with the date it falls on in the working
-    // calendar of the project. A run in which every iteration failed has no statistics, and so no values for them.
+    // calendar of the project. A failed iteration is in none of the statistics, and the answer says why the iterations
+    // failed. A run in which every iteration failed has no statistics, and so no values for them.
     public record SimulationResponse
     {
-        // The iterations that were asked for. ValidIterations of them gave a finish; the others - FailedIterations - could not
-        // be scheduled, and are in none of the statistics.
+        // The iterations that were asked for. ValidIterations of them gave a finish; the others - FailedIterations - did not,
+        // and are in none of the statistics.
         public int Iterations { get; init; }
 
         public int ValidIterations { get; init; }
 
         public int FailedIterations { get; init; }
+
+        // Why the iterations failed: the resource scheduler could not place every activity, the schedule ran past the limit of
+        // time, or an activity could not finish by its maximum latest finish time.
+        public int ResourceSchedulingStallIterations { get; init; }
+
+        public int MaximumTimeValueExceededIterations { get; init; }
+
+        public int InvalidConstraintsIterations { get; init; }
 
         // Written as text (see SimulationOptions).
         [JsonNumberHandling(JsonNumberHandling.WriteAsString | JsonNumberHandling.AllowReadingFromString)]
@@ -55,6 +64,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public double? TargetProbability { get; init; }
 
+        // Each activity that could not finish by its maximum latest finish time in an iteration, the most misses first.
+        public IReadOnlyList<SimulationMissedMaximumResponse> MissedMaximumLatestFinishTimes { get; init; } = [];
+
         public static SimulationResponse From(JobSimulationMetrics simulation)
         {
             ArgumentNullException.ThrowIfNull(simulation);
@@ -64,6 +76,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 Iterations = simulation.Iterations,
                 ValidIterations = simulation.ValidIterations,
                 FailedIterations = simulation.FailedIterations,
+                ResourceSchedulingStallIterations = simulation.ResourceSchedulingStallIterations,
+                MaximumTimeValueExceededIterations = simulation.MaximumTimeValueExceededIterations,
+                InvalidConstraintsIterations = simulation.InvalidConstraintsIterations,
                 Seed = simulation.Seed,
                 Distribution = simulation.Distribution,
                 ModifiedBetaShape = simulation.ModifiedBetaShape,
@@ -79,17 +94,21 @@ namespace Zametek.ProjectPlan.CommandLine
                 TargetFinishDays = simulation.TargetFinishDays,
                 TargetFinishDate = simulation.TargetFinishDate,
                 TargetProbability = simulation.TargetProbability,
+                MissedMaximumLatestFinishTimes = [.. simulation.MissedMaximumLatestFinishTimes.Select(x => new SimulationMissedMaximumResponse(x.ActivityId, x.Name, x.Iterations))],
             };
         }
 
-        // Two answers are equal when they say the same thing: a record would compare the list of percentiles by reference,
-        // not by what is in it.
+        // Two answers are equal when they say the same thing: a record would compare the lists by reference, not by what is
+        // in them.
         public virtual bool Equals(SimulationResponse? other)
         {
             return other is not null
                 && Iterations == other.Iterations
                 && ValidIterations == other.ValidIterations
                 && FailedIterations == other.FailedIterations
+                && ResourceSchedulingStallIterations == other.ResourceSchedulingStallIterations
+                && MaximumTimeValueExceededIterations == other.MaximumTimeValueExceededIterations
+                && InvalidConstraintsIterations == other.InvalidConstraintsIterations
                 && Seed == other.Seed
                 && Distribution == other.Distribution
                 && ModifiedBetaShape == other.ModifiedBetaShape
@@ -104,13 +123,15 @@ namespace Zametek.ProjectPlan.CommandLine
                 && Percentiles.SequenceEqual(other.Percentiles)
                 && TargetFinishDays == other.TargetFinishDays
                 && TargetFinishDate == other.TargetFinishDate
-                && TargetProbability == other.TargetProbability;
+                && TargetProbability == other.TargetProbability
+                && MissedMaximumLatestFinishTimes.SequenceEqual(other.MissedMaximumLatestFinishTimes);
         }
 
         public override int GetHashCode()
         {
             var hash = new HashCode();
             hash.Add(Iterations);
+            hash.Add(FailedIterations);
             hash.Add(Seed);
             hash.Add(Distribution);
             hash.Add(PlannedFinishDays);
@@ -123,6 +144,11 @@ namespace Zametek.ProjectPlan.CommandLine
                 hash.Add(percentile);
             }
 
+            foreach (SimulationMissedMaximumResponse missed in MissedMaximumLatestFinishTimes)
+            {
+                hash.Add(missed);
+            }
+
             return hash.ToHashCode();
         }
     }
@@ -131,4 +157,10 @@ namespace Zametek.ProjectPlan.CommandLine
         int Percentile,
         int FinishDays,
         DateOnly FinishDate);
+
+    // An activity that could not finish by its maximum latest finish time, and the number of iterations in which it could not.
+    public record SimulationMissedMaximumResponse(
+        int ActivityId,
+        string Name,
+        int Iterations);
 }

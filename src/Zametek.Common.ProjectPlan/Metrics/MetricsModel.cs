@@ -14,5 +14,7 @@
         public EffortsModel Efforts { get; init; } = new();
 
         public NetworkModel Network { get; init; } = new();
+
+        public HeadcountModel Headcount { get; init; } = new();
     }
 }

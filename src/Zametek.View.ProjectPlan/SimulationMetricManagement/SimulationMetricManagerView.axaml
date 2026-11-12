@@ -116,6 +116,9 @@
 					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationCriticality}"
 										Width="135"
 										Binding="{Binding Path=CriticalityIndex, Mode=OneWay, StringFormat=\{0:P1\}}" />
+					<DataGridTextColumn Header="{x:Static resources:Labels.Label_SimulationMissedMaximumLatestFinishTime}"
+										Width="165"
+										Binding="{Binding Path=MaximumLatestFinishTimeMissCount, Mode=OneWay}" />
 				</DataGrid.Columns>
 			</DataGrid>
 		</TabItem>

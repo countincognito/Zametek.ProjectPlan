@@ -71,6 +71,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     ResourceChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
                     EarnedValueChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
                     ScenarioChart = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
+                    Data = new DataOptions(),
                     Simulation = new ChartOptions { Format = PlotExport.Png, Width = 800, Height = 600 },
                     SimulationWorkbook = new SimulationWorkbookOptions(),
                 },

@@ -266,6 +266,24 @@
 									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDurationManMonths}"
 									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountPeak}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountPeak}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountPeak}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountAverage}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountAverage}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountAverage}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountPeakToAverageRatio}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountPeakToAverageRatio}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountPeakToAverageRatio}"
+									  ToggleType="Radio" />
 						</MenuItem>
 
 						<Separator />
@@ -467,6 +485,24 @@
 									  IsChecked="{Binding Path=TrackedMetricY1Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkDurationManMonths}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeTrackedMetricY1AxisCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDurationManMonths}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountPeak}"
+									  IsChecked="{Binding Path=TrackedMetricY1Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountPeak}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricY1AxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountPeak}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountAverage}"
+									  IsChecked="{Binding Path=TrackedMetricY1Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountAverage}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricY1AxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountAverage}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountPeakToAverageRatio}"
+									  IsChecked="{Binding Path=TrackedMetricY1Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountPeakToAverageRatio}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricY1AxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountPeakToAverageRatio}"
 									  ToggleType="Radio" />
 						</MenuItem>
 
@@ -734,6 +770,24 @@
 									  Command="{Binding Path=ChangeTrackedMetricY2AxisCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDurationManMonths}"
 									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountPeak}"
+									  IsChecked="{Binding Path=TrackedMetricY2Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountPeak}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricY2AxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountPeak}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountAverage}"
+									  IsChecked="{Binding Path=TrackedMetricY2Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountAverage}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricY2AxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountAverage}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_HeadcountPeakToAverageRatio}"
+									  IsChecked="{Binding Path=TrackedMetricY2Axis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.HeadcountPeakToAverageRatio}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricY2AxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.HeadcountPeakToAverageRatio}"
+									  ToggleType="Radio" />
 						</MenuItem>
 
 						<MenuItem Header="{x:Static resources:Menus.Menu_CurveFittingTypeY2}">
@@ -812,6 +866,11 @@
 
             <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 								  Command="{Binding Path=SaveScenarioChartImageFileCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_ExportCsvFiles}"
+								  Command="{Binding Path=ExportCsvFilesCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

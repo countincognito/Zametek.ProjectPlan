@@ -61,6 +61,30 @@ namespace Zametek.ViewModel.ProjectPlan
             int[] finishTimes = [.. result.FinishTimes.Where(x => x != SimulationResult<int>.FailedFinishTime)];
             int validCount = finishTimes.Length;
 
+            // Why the failed iterations failed, when the run recorded it. The counts and the activities are there also when
+            // every iteration failed: they say why there are no statistics.
+            int stalls = 0;
+            int pastTheLimit = 0;
+            int invalidConstraints = 0;
+            if (result.HasFailureReasons)
+            {
+                for (int i = 0; i < result.IterationCount; i++)
+                {
+                    switch (result.FailureReason(i))
+                    {
+                        case SimulationIterationFailure.ResourceSchedulingStall:
+                            stalls++;
+                            break;
+                        case SimulationIterationFailure.MaximumTimeValueExceeded:
+                            pastTheLimit++;
+                            break;
+                        case SimulationIterationFailure.InvalidConstraints:
+                            invalidConstraints++;
+                            break;
+                    }
+                }
+            }
+
             var summary = new SimulationSummaryModel
             {
                 IterationCount = result.IterationCount,
@@ -69,8 +93,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 ModifiedBetaShape = settings.Distribution == DurationDistribution.ModifiedBetaPert ? settings.ModifiedBetaShape : null,
                 ValidIterationCount = validCount,
                 FailedIterationCount = result.FailedIterationCount,
+                ResourceSchedulingStallIterationCount = stalls,
+                MaximumTimeValueExceededIterationCount = pastTheLimit,
+                InvalidConstraintsIterationCount = invalidConstraints,
                 PlannedFinishTime = plannedFinishTime,
                 TargetFinishTime = targetFinishTime,
+                Activities = BuildActivities(result, activityNames, validCount),
             };
 
             if (validCount == 0)
@@ -210,40 +238,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
             }
 
-            // How often each activity was critical.
-            var activities = new List<SimulationActivityCriticalityModel>();
-            if (result.HasCriticalActivities)
-            {
-                for (int a = 0; a < result.ActivityIds.Count; a++)
-                {
-                    int count = 0;
-                    for (int i = 0; i < result.IterationCount; i++)
-                    {
-                        if (result.FinishTimes[i] != SimulationResult<int>.FailedFinishTime
-                            && result.IsCritical(i, a))
-                        {
-                            count++;
-                        }
-                    }
-
-                    if (count > 0)
-                    {
-                        int id = result.ActivityIds[a];
-                        activities.Add(new SimulationActivityCriticalityModel
-                        {
-                            ActivityId = id,
-                            Name = NameOf(activityNames, id),
-                            CriticalIterationCount = count,
-                            CriticalityIndex = (double)count / validCount,
-                        });
-                    }
-                }
-
-                activities = [.. activities
-                    .OrderByDescending(x => x.CriticalIterationCount)
-                    .ThenBy(x => x.ActivityId)];
-            }
-
             return summary with
             {
                 Mean = mean,
@@ -261,8 +255,54 @@ namespace Zametek.ViewModel.ProjectPlan
                 Paths = pathRows,
                 ChartPathCount = groupCount,
                 OtherPathsWeight = Math.Max(0.0, (validCount - listedWeight)),
-                Activities = activities,
             };
+        }
+
+        // How often each activity was critical in the valid iterations, and how often it could not finish by its maximum
+        // latest finish time. The critical activities come first, the most often first. The activities that only missed
+        // their maximum come after them, the most misses first.
+        private static List<SimulationActivityCriticalityModel> BuildActivities(
+            SimulationResult<int> result,
+            IReadOnlyDictionary<int, string> activityNames,
+            int validCount)
+        {
+            var activities = new List<SimulationActivityCriticalityModel>();
+
+            for (int a = 0; a < result.ActivityIds.Count; a++)
+            {
+                int count = 0;
+                if (result.HasCriticalActivities)
+                {
+                    for (int i = 0; i < result.IterationCount; i++)
+                    {
+                        if (result.FinishTimes[i] != SimulationResult<int>.FailedFinishTime
+                            && result.IsCritical(i, a))
+                        {
+                            count++;
+                        }
+                    }
+                }
+
+                int misses = result.HasFailureReasons ? result.MaximumLatestFinishTimeMissCount(a) : 0;
+
+                if (count > 0 || misses > 0)
+                {
+                    int id = result.ActivityIds[a];
+                    activities.Add(new SimulationActivityCriticalityModel
+                    {
+                        ActivityId = id,
+                        Name = NameOf(activityNames, id),
+                        CriticalIterationCount = count,
+                        CriticalityIndex = validCount == 0 ? 0.0 : (double)count / validCount,
+                        MaximumLatestFinishTimeMissCount = misses,
+                    });
+                }
+            }
+
+            return [.. activities
+                .OrderByDescending(x => x.CriticalIterationCount)
+                .ThenByDescending(x => x.MaximumLatestFinishTimeMissCount)
+                .ThenBy(x => x.ActivityId)];
         }
 
         /// <summary>

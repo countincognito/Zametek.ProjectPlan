@@ -21,5 +21,9 @@ namespace Zametek.Contract.ProjectPlan
             BuildFinancialMetrics(
             ResourceSeriesSetModel resourceSeriesSet,
             bool hasCompilationErrors);
+
+        HeadcountModel BuildHeadcountMetrics(
+            ResourceSeriesSetModel resourceSeriesSet,
+            bool hasCompilationErrors);
     }
 }

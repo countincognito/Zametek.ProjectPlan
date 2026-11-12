@@ -349,5 +349,86 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             second.Paths.Select(x => (x.Label, x.Weight)).ShouldBe(first.Paths.Select(x => (x.Label, x.Weight)));
             second.Bins.Select(x => x.PathGroupWeights.ToArray()).ShouldBe(first.Bins.Select(x => x.PathGroupWeights.ToArray()));
         }
+
+        // Six iterations of the plan of three activities: 8 (A and B critical), a miss of the maximum of C, a stall of the
+        // resource scheduler, a miss of the maxima of B and C, 9 (A critical), and a run past the time limit.
+        private static SimulationResult<int> SixIterationsWithFailures() =>
+            new(
+                [10, 20, 30],
+                [8, -1, -1, -1, 9, -1],
+                [0b011, 0, 0, 0, 0b001, 0],
+                [],
+                null,
+                null,
+                null,
+                [
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.InvalidConstraints,
+                    SimulationIterationFailure.ResourceSchedulingStall,
+                    SimulationIterationFailure.InvalidConstraints,
+                    SimulationIterationFailure.None,
+                    SimulationIterationFailure.MaximumTimeValueExceeded,
+                ],
+                [0, 1, 2]);
+
+        [Fact]
+        public void Analyze_Given_FailedIterationsWithTheirReasons_Then_TheSummaryCountsEachReason()
+        {
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(SixIterationsWithFailures(), s_Names, 8, null, s_Settings);
+
+            summary.ValidIterationCount.ShouldBe(2);
+            summary.FailedIterationCount.ShouldBe(4);
+            summary.InvalidConstraintsIterationCount.ShouldBe(2);
+            summary.ResourceSchedulingStallIterationCount.ShouldBe(1);
+            summary.MaximumTimeValueExceededIterationCount.ShouldBe(1);
+        }
+
+        // An activity that missed its maximum LFT is in the list of the activities, after the critical ones, even when it was
+        // never critical. The criticality index stays a share of the valid iterations.
+        [Fact]
+        public void Analyze_Given_MissedMaximumLatestFinishTimes_Then_TheActivitiesHaveTheirMisses()
+        {
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(SixIterationsWithFailures(), s_Names, 8, null, s_Settings);
+
+            summary.Activities.Select(x => (x.Name, x.CriticalIterationCount, x.MaximumLatestFinishTimeMissCount))
+                .ShouldBe([("A", 2, 0), ("B", 1, 1), ("C", 0, 2)]);
+            summary.Activities.Select(x => x.CriticalityIndex).ShouldBe([1.0, 0.5, 0.0], 1e-12);
+        }
+
+        // When every iteration misses a maximum, there are no statistics, but the summary still says why and which maximum.
+        [Fact]
+        public void Analyze_Given_EveryIterationMissesAMaximum_Then_TheSummaryStillHasTheReasonAndTheMisses()
+        {
+            var result = new SimulationResult<int>(
+                [10, 20],
+                [-1, -1],
+                new ulong[2],
+                [],
+                null,
+                null,
+                null,
+                [SimulationIterationFailure.InvalidConstraints, SimulationIterationFailure.InvalidConstraints],
+                [0, 2]);
+
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(result, s_Names, 5, null, s_Settings);
+
+            summary.HasResult.ShouldBeFalse();
+            summary.InvalidConstraintsIterationCount.ShouldBe(2);
+            summary.Activities.Select(x => (x.Name, x.CriticalIterationCount, x.CriticalityIndex, x.MaximumLatestFinishTimeMissCount))
+                .ShouldBe([("B", 0, 0.0, 2)]);
+        }
+
+        // A result that does not say why its iterations failed (made with the constructor of version 4.0.1) counts no reason.
+        [Fact]
+        public void Analyze_Given_AResultWithoutTheReasons_Then_CountsNoReasonAndNoMiss()
+        {
+            SimulationSummaryModel summary = SimulationAnalyzer.Analyze(TenIterations(), s_Names, 11, null, s_Settings);
+
+            summary.FailedIterationCount.ShouldBe(1);
+            summary.InvalidConstraintsIterationCount.ShouldBe(0);
+            summary.ResourceSchedulingStallIterationCount.ShouldBe(0);
+            summary.MaximumTimeValueExceededIterationCount.ShouldBe(0);
+            summary.Activities.ShouldAllBe(x => x.MaximumLatestFinishTimeMissCount == 0);
+        }
     }
 }

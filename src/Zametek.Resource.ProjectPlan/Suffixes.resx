@@ -162,4 +162,19 @@
   <data name="Suffix_SimulationWorkbook" xml:space="preserve">
     <value>-simulation</value>
   </data>
+  <data name="Suffix_EarnedValueSeries" xml:space="preserve">
+    <value>-earned-value</value>
+  </data>
+  <data name="Suffix_ResourceSeries" xml:space="preserve">
+    <value>-resources</value>
+  </data>
+  <data name="Suffix_Schedule" xml:space="preserve">
+    <value>-schedule</value>
+  </data>
+  <data name="Suffix_ScenarioChartPoints" xml:space="preserve">
+    <value>-points</value>
+  </data>
+  <data name="Suffix_ScenarioChartFits" xml:space="preserve">
+    <value>-fits</value>
+  </data>
 </root>

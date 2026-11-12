@@ -173,6 +173,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Theory]
+        [InlineData(@"/v1/schemas/project")]
+        [InlineData(@"/V1/Schemas/Project")]
+        public async Task InvokeAsync_Given_TheSchemaOfTheProjectFile_Then_PassesItOnWithoutAKey(string path)
+        {
+            bool passedOn = false;
+            var middleware = new ApiKeyMiddleware(_ => { passedOn = true; return Task.CompletedTask; }, c_ApiKey, NullLogger<ApiKeyMiddleware>.Instance);
+            var context = new DefaultHttpContext();
+            context.Request.Path = path;
+
+            await middleware.InvokeAsync(context);
+
+            passedOn.ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(@"/v1/schemas")]
+        [InlineData(@"/v1/schemas/project/")]
+        [InlineData(@"/v1/schemas/projects")]
         [InlineData(@"/v1/openapi/")]
         [InlineData(@"/v1/openapi.yaml")]
         [InlineData(@"/v1/openapix")]

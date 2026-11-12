@@ -50,6 +50,8 @@
     <!-- The description of the API, which zpp serve serves at /v1/openapi: the file of the repository itself, so that what a server
          says it takes is what it was built to take. -->
     <EmbeddedResource Include="..\..\docs\openapi.yaml" LogicalName="openapi.yaml" Link="Assets\openapi.yaml" />
+    <!-- The schema of the project file, which zpp serve serves at /v1/schemas/project. A test of the data holds it to the classes. -->
+    <EmbeddedResource Include="..\..\docs\zpp.schema.json" LogicalName="zpp.schema.json" Link="Assets\zpp.schema.json" />
   </ItemGroup>
 
   <ItemGroup>

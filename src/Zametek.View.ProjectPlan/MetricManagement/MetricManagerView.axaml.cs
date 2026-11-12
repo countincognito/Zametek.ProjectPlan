@@ -52,6 +52,10 @@ namespace Zametek.View.ProjectPlan
             AddRow(Resource.ProjectPlan.Labels.Label_ProjectFinish, vm.ProjectFinish);
             AddRow(Resource.ProjectPlan.Labels.Label_EffortEfficiency, vm.EffortEfficiency);
 
+            AddRow(Resource.ProjectPlan.Labels.Label_PeakHeadcount, vm.PeakHeadcount);
+            AddRow(Resource.ProjectPlan.Labels.Label_AverageHeadcount, vm.AverageHeadcount);
+            AddRow(Resource.ProjectPlan.Labels.Label_PeakToAverageHeadcount, vm.PeakToAverageHeadcount);
+
             AddRow(Resource.ProjectPlan.Labels.Label_DirectEffort, vm.DirectEffort);
             AddRow(Resource.ProjectPlan.Labels.Label_IndirectEffort, vm.IndirectEffort);
             AddRow(Resource.ProjectPlan.Labels.Label_OtherEffort, vm.OtherEffort);

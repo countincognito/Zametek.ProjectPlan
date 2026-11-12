@@ -23,6 +23,12 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
 
         public int FailedIterationCount { get; init; }
 
+        public int ResourceSchedulingStallIterationCount { get; init; }
+
+        public int MaximumTimeValueExceededIterationCount { get; init; }
+
+        public int InvalidConstraintsIterationCount { get; init; }
+
         public int PlannedFinishTime { get; init; }
 
         public int? TargetFinishTime { get; init; }
@@ -102,5 +108,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
         public int CriticalIterationCount { get; init; }
 
         public double CriticalityIndex { get; init; }
+
+        public int MaximumLatestFinishTimeMissCount { get; init; }
     }
 }

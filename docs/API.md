@@ -17,6 +17,7 @@ The API has five operations, all under `/v1`. The table that follows lists them:
 | [`GET /v1/jobs/{requestId}`](#ask-how-far-a-job-has-got) | This operation tells how far a job that runs now has got. The id of the job is the trace id of the request that began it. |
 | [`GET /v1/info`](#ask-what-the-server-is) | This operation gives information about the server: its version, culture, time zone and limits. |
 | [`GET /v1/openapi`](#fetch-the-description) | This operation gives the description of this API, `openapi.yaml`, for programs. It needs no API key. |
+| [`GET /v1/schemas/project`](#fetch-the-schema-of-a-project-file) | This operation gives the JSON Schema of the project file, `zpp.schema.json`, for programs that write a plan. It needs no API key. |
 
 The server keeps nothing between requests. Each request carries its project, and the server does not store it. The two operations use POST only because a project is a file, and a file cannot go in a URL. A request that you send again has the same result. You can send a request to any server of the same version. The one thing that the server knows about a job is how far it has got while it runs (refer to [Ask how far a job has got](#ask-how-far-a-job-has-got)), and it forgets this when the job ends.
 
@@ -93,7 +94,7 @@ The server refuses a request that names a member that it does not know, with sta
 
 Give the id to the person who operates the server, who can find the request in the log with it. A request that has a [`traceparent`](https://www.w3.org/TR/trace-context/) keeps the trace that it names, and the trace id is the id of the request. The server gives an id of its own to a request that has no `traceparent`.
 
-**Authentication.** A server that only this computer can reach needs no API key. A server that other computers can reach must have a key. Then each path under `/v1` needs the key, in the header `Authorization: Bearer <key>`. A request without the key, or with an incorrect key, gets status `401` with `WWW-Authenticate: Bearer`. The health endpoints and [the description of the API](#fetch-the-description) are the only paths that need no key.
+**Authentication.** A server that only this computer can reach needs no API key. A server that other computers can reach must have a key. Then each path under `/v1` needs the key, in the header `Authorization: Bearer <key>`. A request without the key, or with an incorrect key, gets status `401` with `WWW-Authenticate: Bearer`. The health endpoints, [the description of the API](#fetch-the-description) and [the schema of a project file](#fetch-the-schema-of-a-project-file) are the only paths that need no key.
 
 A key has a minimum of 32 characters. A random 256-bit key in base64 has 44 characters, and `openssl rand -base64 32` makes such a key. The server keeps only a hash of the key and compares it in constant time. It logs each request that it refuses, at warning level, with the method, the path and the trace id, but never the key.
 
@@ -145,6 +146,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | Option | Option of zpp | Description |
 | ------ | ------------- | ----------- |
 | `scenario` | `--scenario` | The scenario to load, by name or by id. The name is not case-sensitive. The id is the whole id, or a unique prefix of a minimum of four hexadecimal characters. A name that matches has priority over a prefix. Only with a `project`. |
+| `compileTracked` | `--compile-tracked` | `true` compiles each tracked scenario of the project, and not only the scenario that the job loads. The new metrics of each scenario replace the metrics that the project holds, which can be stale. The output `project` holds the new metrics, and the answer has `trackedScenarios`. The answer also has `scenarioChart` when the scenario chart of the project has axes. The output `scenarioChart` compiles the tracked scenarios also without this option. The default is `false`. |
 | `baseTheme` | `--base-theme` | `light` (the default) or `dark`: the theme of the charts and graphs. |
 | `metricsFormat` | `--metrics-format` | `markdown` (the default), `table` or `json`: how the [console](#console) shows the metrics. It has no other effect. |
 | `compileTimeout` | `--compile-timeout` | An ISO 8601 duration, from `PT0.001S` to the limit of the server (`maxCompileTimeout`). Without it, the value is `PT5S` as for `zpp`, or the limit if that is shorter. A request cannot disable the limit, but `zpp` can. |
@@ -152,7 +154,7 @@ The options are the options of `zpp`, with the defaults of `zpp`, but without th
 | `runSimulation` | `--run-simulation` | `true` runs the simulation of the schedule after the project compiles (refer to [The simulation](#the-simulation)). The default is `false`. |
 | `outputs` | | What the job produces (refer to the table that follows). |
 
-The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Three outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`).
+The members of `outputs` are the outputs that the job can produce, in the order in which it produces them. The job produces an output that the request gives. It does not produce an output that the request does not give. Four outputs have no settings of their own at this time. The request gives them as an empty object. Later, the object can carry settings, and this does not break a request. The output `simulation` is one request for the chart of the simulation and its CSV files. The answer lists each of them as an output of its own (`simulationChart`, `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). The output `data` is one request for three CSV files, and the answer lists them as `schedule`, `resourceSeries` and `earnedValueSeries`. The output `scenarioChart` is one request for the chart and two CSV files of its data. The answer lists them as `scenarioChart`, `scenarioChartPoints` and `scenarioChartFits`.
 
 | Member | Option of zpp | Produces | Settings |
 | ------ | ------------- | -------- | -------- |
@@ -163,7 +165,8 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `vertexGraph` | `--vertex-*` | The vertex graph (`<name>-vertex.<format>`) | A graph |
 | `resourceChart` | `--resource-*` | The resource chart (`<name>-resource.<format>`) | A chart |
 | `earnedValueChart` | `--ev-*` | The earned value chart (`<name>-ev.<format>`) | A chart |
-| `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`) | A chart |
+| `scenarioChart` | `--scenario-chart-*` | The scenario chart (`<name>-scenario.<format>`), and two CSV files of its data: the points (`<name>-scenario-points.csv`) and the fits (`<name>-scenario-fits.csv`). Refer to [The data of the scenario chart](COMMAND-LINE.md#the-data-of-the-scenario-chart). | A chart |
+| `data` | `--data-directory` | The data of the compiled scenario as three CSV files: the table of the critical path method (`<name>-schedule.csv`), the series of the resources (`<name>-resources.csv`) and the series of the earned value (`<name>-earned-value.csv`). Refer to [The data of the schedule](COMMAND-LINE.md#the-data-of-the-schedule). | `{}` |
 | `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
 | `simulationWorkbook` | `--simulation-workbook-directory` | The result of the simulation as one Excel workbook (`<name>-simulation.xlsx`), with a sheet for the settings and for each of the CSV files, and, for a run, a sheet for the iterations. It is independent of `simulation`. | `{}` |
 
@@ -199,6 +202,8 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 - `metrics` has the [metrics](#metrics) of the project.
 - `outputs` lists each output, in the order in which the job produced them. This is the order of the table above. The list is `[]` when the request asked for no output. `kind` shows which output it is. `fileName` is the name that `zpp` gives to its file. `contentType` is its media type. `content` is the file, in base64.
 - `simulation` has the [statistics](#simulation) of the simulation. It is in the answer when the request ran the simulation, or the project holds a result.
+- `trackedScenarios` lists each tracked scenario of the project, in the order of the project. It is in the answer when the request has `compileTracked`. An item has the `path` and the `id` of the scenario, `isCurrent`, and its `metrics`. `isCurrent` is `true` for the scenario that the job loaded, and its metrics are then the same as `metrics`. `metrics` is `null` for a scenario that does not compile.
+- `scenarioChart` has the [data of the scenario chart](#scenario-chart). It is in the answer when the job compiled the tracked scenarios, and the chart of the project has axes.
 - With `?include=console`, the answer also has `console` (refer to [console](#console)).
 
 With `Accept: application/zip`, the answer is a zip. `Content-Disposition` names it `<name>.zip`. The zip contains each output as a file, with the name that `zpp` gives it. It also contains `result.json`, which is the answer above without the contents of the files. The time of each entry is the time at which the job ran, or the time that `now` gave.
@@ -216,6 +221,9 @@ The answer has each metric of the project, as a number or `null`. The names are 
 | `projectFinishDays` | The number of days from the start of the project to its finish. This is the duration of the network. |
 | `projectFinishDate` | The date on which the project finishes, in the working calendar of the project, as a date (`2024-01-06`). The value is `null`, with `projectFinishDays`, when the project has no duration. |
 | `effortEfficiency` | The efficiency of the effort. |
+| `peakHeadcount` | The most resources that the schedule allocates on one day. |
+| `averageHeadcount` | The mean of the number of resources that the schedule allocates on each day. |
+| `peakToAverageHeadcount` | The peak headcount divided by the average headcount. A high value is a team that grows fast for a short time. |
 | `activityEffort`, `directEffort`, `indirectEffort`, `otherEffort`, `totalEffort` | The effort. |
 | `directCost`, `indirectCost`, `otherCost`, `totalCost` | The costs. |
 | `directBilling`, `indirectBilling`, `otherBilling`, `totalBilling` | The billings. |
@@ -233,6 +241,9 @@ The answer has `simulation` when the request ran the simulation, or the project 
   "iterations": 5000,
   "validIterations": 5000,
   "failedIterations": 0,
+  "resourceSchedulingStallIterations": 0,
+  "maximumTimeValueExceededIterations": 0,
+  "invalidConstraintsIterations": 0,
   "seed": "1",
   "distribution": "betaPert",
   "modifiedBetaShape": null,
@@ -250,11 +261,14 @@ The answer has `simulation` when the request ran the simulation, or the project 
   ],
   "targetFinishDays": 30,
   "targetFinishDate": "2024-01-31",
-  "targetProbability": 0.86
+  "targetProbability": 0.86,
+  "missedMaximumLatestFinishTimes": []
 }
 ```
 
-- `iterations` is the number that the simulation ran. An iteration fails when the scheduler cannot place each activity. `failedIterations` counts these, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
+- `iterations` is the number that the simulation ran. `failedIterations` counts the iterations that fail, and `validIterations` counts the others. Each statistic uses the valid iterations only. When every iteration fails, the statistics, the dates and the percentiles have no values (`null`, and `[]` for `percentiles`).
+- An iteration fails for one of three reasons, and each reason has a count. `resourceSchedulingStallIterations` counts the iterations in which the resource scheduler cannot place each activity. `maximumTimeValueExceededIterations` counts the iterations in which the schedule goes past the limit of time. `invalidConstraintsIterations` counts the iterations in which an activity cannot finish by its maximum latest finish time. An iteration that misses a maximum latest finish time is a late one. Thus, when such iterations fail, the statistics are too early.
+- `missedMaximumLatestFinishTimes` lists each activity that cannot finish by its maximum latest finish time in an iteration. An item has the `activityId` and the `name` of the activity, and `iterations`, the number of iterations in which it cannot finish in time. The activity with the most comes first. The list is `[]` when no activity misses its maximum.
 - `seed`, `distribution` and `modifiedBetaShape` are what the simulation used. `modifiedBetaShape` is `null` for each distribution but `modifiedBetaPert`. A project keeps these values with its result. They stay the same for a result that a project saved before a person changed its settings.
 - `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
 - `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.
@@ -262,6 +276,42 @@ The answer has `simulation` when the request ran the simulation, or the project 
 - `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the request gave a target. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
 
 The panel of the application, `zpp` and this API make these numbers in the same way. Refer to the [simulation plan](SIMULATION-PLAN.md) for how the simulation works.
+
+#### Scenario chart
+
+The answer has `scenarioChart` when two conditions are true. The job compiled the tracked scenarios (`compileTracked`, or the output `scenarioChart`). The chart of the project has a metric for the axis of X, and for one or two axes of Y. The axes, the fits and the option for absolute values are the settings of the chart that the project keeps. A person sets them in the dock "Scenario Chart" of the application. Thus, the data and the chart always agree:
+
+```json
+"scenarioChart": {
+  "xMetric": "networkDuration",
+  "y1": {
+    "metric": "totalCost",
+    "curveFitting": "polynomialOrder2",
+    "absolute": false,
+    "points": [
+      { "id": "8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5", "path": "Options/Compressed", "x": 90, "y": 21480 },
+      ...
+    ],
+    "fit": { "rSquared": 0.987, "coefficients": [52341.7, -812.5, 4.25], "derivativeCoefficients": [-812.5, 8.5] }
+  }
+}
+```
+
+- `xMetric` and `metric` have the names of the [metrics](#metrics). Thus, a client also finds the values of a scenario there. An axis of Y that has no metric is not in the data.
+- `points` has a point for each tracked scenario, in the order of the chart: by `x`, and then by `y`. A metric that a scenario does not have is 0, as on the chart. A scenario that does not compile has no metrics.
+- `curveFitting` is the fit that the chart asks for: `none`, `linear`, `exponential`, `logarithmic`, `power`, `polynomialOrder2`, `polynomialOrder3` or `polynomialOrder4`. The axis has no `fit` when the fit is `none`, or when the points have too few different values of `x`. A fit with n coefficients needs n different values. The axis also has no `fit` when the fit is not a curve, for example an exponential fit of a value of 0.
+- `coefficients` go from the constant up, and `derivativeCoefficients` are those of the derivative of the curve. The table that follows gives their forms. `rSquared` is the square of the correlation of the curve with the points. It is `null` when the points have one value of `y`.
+- `absolute` shows that the chart plots the absolute value of the curve. The coefficients are those of the curve itself.
+
+| `curveFitting` | Curve | Derivative |
+| -------------- | ----- | ---------- |
+| `linear` | y = c0 + c1·x | y′ = d0 |
+| `exponential` | y = c0·e^(c1·x) | y′ = d0·e^(d1·x) |
+| `logarithmic` | y = c0 + c1·ln(x) | y′ = d0 / x |
+| `power` | y = c0·x^c1 | y′ = d0·x^d1 |
+| `polynomialOrder2`, `polynomialOrder3`, `polynomialOrder4` | y = Σ ci·x^i | y′ = Σ di·x^i |
+
+The coefficients have all their digits. Do not round them before you calculate the points of a curve. An example of such a point is the inflection point of a cubic fit of the risk. The output `scenarioChart` writes the same data as two CSV files (refer to [The data of the scenario chart](COMMAND-LINE.md#the-data-of-the-scenario-chart)).
 
 #### Console
 
@@ -299,7 +349,7 @@ The request is a `multipart/form-data` body with a part named `project` and no o
 ```
 
 - `path` names the scenario by its location in the project. A child of another scenario has the path `Alpha/Beta`. `scenario` takes the `path`, and it also takes the `id`.
-- `isTracked` shows that the scenario is *tracked*. The scenario chart shows the metrics of the scenario as a point, against the metrics of the axes of the chart. Tracking does only this. It does not change how the scenario compiles, what its metrics are, or what any other output holds. It is not the progress tracking of activities.
+- `isTracked` shows that the scenario is *tracked*. The scenario chart shows the metrics of the scenario as a point, against the metrics of the axes of the chart. Tracking does not change how the scenario compiles or what its metrics are. The output `scenarioChart` and the option `compileTracked` compile the tracked scenarios. Tracking is not the progress tracking of activities.
 - `isCurrent` shows that the scenario is the *current* scenario of the project. This is the scenario that was open when a user saved the project. `zpp` loads it when the request does not name a scenario with `scenario`. A project has a maximum of one current scenario.
 
 The problems are the problems of a compile, where they apply.
@@ -336,7 +386,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 ```json
 {
-  "version": "0.11.0-alpha",
+  "version": "0.11.0-beta",
   "culture": "en-GB",
   "timeZone": "Europe/London",
   "limits": {
@@ -359,7 +409,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 - The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
-`OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, it is `GET, OPTIONS` for `/v1/jobs/{requestId}`, and it is `GET, HEAD, OPTIONS` for `/v1/info` and `/v1/openapi`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi`.
+`OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, it is `GET, OPTIONS` for `/v1/jobs/{requestId}`, and it is `GET, HEAD, OPTIONS` for `/v1/info`, `/v1/openapi` and `/v1/schemas/project`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi` and `/v1/schemas/project`.
 
 ## Fetch the description
 
@@ -384,9 +434,23 @@ X-Content-Type-Options: nosniff
 ```
 
 - The description is YAML. A request asks for it as `application/openapi+yaml`, the media type of a description of OpenAPI, or as `application/yaml`. A request that gives no `Accept` gets `application/openapi+yaml`. Any other `Accept` gets status `406`, and the problem names the types that the server can answer with. The server does not offer the description as JSON.
-- The description needs no API key, and `HEAD` and `OPTIONS` on it need none. It holds only what is in the repository, and a tool must read what a server takes before it receives the key. It is the only path under `/v1` that needs no key.
+- The description needs no API key, and `HEAD` and `OPTIONS` on it need none. It holds only what is in the repository, and a tool must read what a server takes before it receives the key. With the schema of a project file, it is one of the two paths under `/v1` that need no key.
 - The description cannot change while the server operates. Thus, the response has a strong `ETag`, and any cache can keep it for one hour (`Cache-Control: public, max-age=3600`). A request with `If-None-Match` and the `ETag` gets status `304`. The response varies with `Accept` and says so, and the server compresses it for a client that accepts compression. `HEAD` gets the headers only.
 - The first server that the description names is `/`. Thus, the server from which a client fetches the description is the server that the description describes. The file in the repository names no server, and a tool receives the address of a server.
+
+## Fetch the schema of a project file
+
+`GET /v1/schemas/project`
+
+This operation gives the JSON Schema of the project file (`.zpp`), [`zpp.schema.json`](zpp.schema.json), in the version from the time of the build of the server. It is the file of the repository, byte for byte. A program that writes a plan can check the plan against it before it sends the plan. [The project file](PROJECT-FILE.md) gives the rules that a schema cannot say.
+
+```
+curl -s -o zpp.schema.json http://localhost:9770/v1/schemas/project
+```
+
+- The schema describes the latest version of the format. It is strict about the names of the members, because the server ignores a member that it does not know. Thus, a misspelt member changes nothing, and the server does not tell you.
+- A request asks for the schema as `application/schema+json`, the media type of a JSON Schema, or as `application/json`. A request that gives no `Accept` gets `application/schema+json`. Any other `Accept` gets status `406`.
+- The schema needs no API key, as the description needs none. It holds only what is in the repository. It cannot change while the server operates. Thus, the response has a strong `ETag`, any cache can keep it for one hour, and `HEAD` gets the headers only.
 
 ## Probes
 
@@ -592,7 +656,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 #### output-failed
 
-`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
+`500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. `trackedScenarios` has the tracked scenarios, when the request has `compileTracked`. `scenarioChart` has the data of the scenario chart, as the answer has it. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
 
 ```json
 {
@@ -739,7 +803,7 @@ This table compares the OWASP API Security Top 10 (2023) with the API in its pre
 | API2 Broken authentication | The API has one shared key. It has a minimum of 32 characters, and the client sends it as a bearer token. The server keeps it as a hash and compares it in constant time. Beyond this computer, TLS protects it. The server logs refusals without the key. A Unix domain socket belongs to the user alone. |
 | API3 Broken object property level authorization | The server checks each member of a request. It refuses a member that it does not know, and thus a request cannot assign a property that it must not assign. The answer holds only what the operation produces. |
 | API4 Unrestricted resource consumption | The server limits the size of a request, the size and the depth of its `options`, and the size of a chart. It also limits the iterations of a simulation, the time of a job and of a compilation, and the number of jobs that run at one time and that wait. It turns away the other requests with `Retry-After`. |
-| API5 Broken function level authorization | The API has one role. Whoever has the key can use each operation. The health endpoints need no key, because they show only if the server is ready. The description of the API needs no key, because it is the description of the repository. |
+| API5 Broken function level authorization | The API has one role. Whoever has the key can use each operation. The health endpoints need no key, because they show only if the server is ready. The description of the API and the schema of a project file need no key, because they are files of the repository. |
 | API6 Unrestricted access to sensitive business flows | The operations calculate from what they receive, and they keep nothing. The limits restrict what one client can ask for. |
 | API7 Server side request forgery | The server never fetches a URL, because nothing in a request names a URL. |
 | API8 Security misconfiguration | The API accepts TLS 1.2 and TLS 1.3. It refuses plain HTTP beyond this computer, unless you say that a proxy ends TLS. It sends no `Server` header. Each response has `nosniff` and `no-store`. The server answers a failure that it did not expect in a generic way, with no information about its paths, types or source code. The API has no CORS, because no browser calls it. |
@@ -777,3 +841,9 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The output `simulationWorkbook`: the result of the simulation as one Excel workbook (`<name>-simulation.xlsx`). It is a new member of `outputs`, and a new kind of output in the answer.
 - The operation `GET /v1/jobs/{requestId}` tells how far a job that runs has got (the iterations of its simulation). The job is the request, and its id is the trace id that the request gave in its `traceparent`. The server keeps the status only while the job runs.
 - The simulation of the schedule. Its settings are the project's. A request has the option `runSimulation` and the output `simulation`. The answer has the member `simulation`, and it lists the output as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). There is a problem, `simulation-not-possible`, with the code `noResult`, and a limit, `maxSimulationIterations`.
+- The simulation tells why each iteration failed. `simulation` has the members `resourceSchedulingStallIterations`, `maximumTimeValueExceededIterations`, `invalidConstraintsIterations` and `missedMaximumLatestFinishTimes`.
+- The option `compileTracked` compiles each tracked scenario of the project. The answer and the problem `output-failed` then have the member `trackedScenarios`.
+- The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
+- The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
+- The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
+- The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.

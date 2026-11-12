@@ -44,6 +44,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 ModifiedBetaShape = 3.25,
                 ValidIterationCount = 1200,
                 FailedIterationCount = 34,
+                ResourceSchedulingStallIterationCount = 20,
+                MaximumTimeValueExceededIterationCount = 4,
+                InvalidConstraintsIterationCount = 10,
                 PlannedFinishTime = 60,
                 TargetFinishTime = 77,
                 TargetProbability = 0.875,
@@ -72,7 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Activities =
                 [
                     new SimulationActivityCriticalityModel { ActivityId = 1, Name = "Design", CriticalIterationCount = 1200, CriticalityIndex = 1.0 },
-                    new SimulationActivityCriticalityModel { ActivityId = 3, Name = "Build, with a comma", CriticalIterationCount = 700, CriticalityIndex = 0.5833 },
+                    new SimulationActivityCriticalityModel { ActivityId = 3, Name = "Build, with a comma", CriticalIterationCount = 700, CriticalityIndex = 0.5833, MaximumLatestFinishTimeMissCount = 10 },
                 ],
             };
 
@@ -148,8 +151,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics)!.Header().ShouldBe(
                 [
-                    "IterationCount", "ValidIterationCount", "FailedIterationCount", "Seed", "Distribution", "ModifiedBetaShape", "PlannedFinishTime",
-                    "TargetFinishTime", "TargetProbability", "Mean", "StandardDeviation", "Minimum", "Maximum", "BinWidth", "ChartPathCount", "OtherPathsWeight",
+                    "IterationCount", "ValidIterationCount", "FailedIterationCount", "ResourceSchedulingStallIterationCount",
+                    "MaximumTimeValueExceededIterationCount", "InvalidConstraintsIterationCount", "Seed", "Distribution", "ModifiedBetaShape",
+                    "PlannedFinishTime", "TargetFinishTime", "TargetProbability", "Mean", "StandardDeviation", "Minimum", "Maximum", "BinWidth",
+                    "ChartPathCount", "OtherPathsWeight",
                 ]);
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles)!.Header().ShouldBe(["Percentile", "FinishTime"]);
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationHistogram)!.Header().ShouldBe(
@@ -157,7 +162,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPaths)!.Header().ShouldBe(
                 ["Rank", "Label", "ShortLabel", "IdLabel", "HasResourceLinks", "Weight", "Share"]);
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities)!.Header().ShouldBe(
-                ["ActivityId", "Name", "CriticalIterationCount", "CriticalityIndex"]);
+                ["ActivityId", "Name", "CriticalIterationCount", "CriticalityIndex", "MaximumLatestFinishTimeMissCount"]);
 
             // One row for each item of a list, under the titles: the titles are row 1, and there are two items in each list.
             workbook.Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationPercentiles)!.LastRow.ShouldBe(3);
@@ -184,6 +189,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             summary.ShouldNotBeNull();
             (summary.IterationCount, summary.ValidIterationCount, summary.FailedIterationCount, summary.PlannedFinishTime, summary.TargetFinishTime, summary.TargetProbability)
                 .ShouldBe((1234, 1200, 34, 60, 77, 0.875));
+            (summary.ResourceSchedulingStallIterationCount, summary.MaximumTimeValueExceededIterationCount, summary.InvalidConstraintsIterationCount)
+                .ShouldBe((20, 4, 10));
             (summary.Mean, summary.StandardDeviation, summary.Minimum, summary.Maximum, summary.BinWidth, summary.ChartPathCount, summary.OtherPathsWeight)
                 .ShouldBe((66.25, 4.5, 50, 90, 2, 2, 199.5));
             summary.Percentiles.ShouldBe(expected.Percentiles);
@@ -210,10 +217,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             // The values of the run and not the values of the settings, which the person changed after the run. The seed is
             // text, as in the sheet of the settings.
-            sheet.Cell(@"D2")!.Kind.ShouldBe(XlsxCellKind.Text);
-            sheet.Cell(@"D2")!.Text.ShouldBe((ulong.MaxValue - 9).ToString(CultureInfo.InvariantCulture));
-            sheet.Cell(@"E2")!.Text.ShouldBe(nameof(DurationDistribution.ModifiedBetaPert));
-            sheet.Cell(@"F2")!.Number.ShouldBe(3.25);
+            sheet.Cell(@"G2")!.Kind.ShouldBe(XlsxCellKind.Text);
+            sheet.Cell(@"G2")!.Text.ShouldBe((ulong.MaxValue - 9).ToString(CultureInfo.InvariantCulture));
+            sheet.Cell(@"H2")!.Text.ShouldBe(nameof(DurationDistribution.ModifiedBetaPert));
+            sheet.Cell(@"I2")!.Number.ShouldBe(3.25);
         }
 
         [Fact]
@@ -252,9 +259,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             byte[] bytes = XlsxPackageEditor.Edit(
                 Export(Scenario(Settings(), Summary())),
                 workbook => workbook
-                    .SetText(sheet, @"D1", @"NotSeed")
-                    .SetText(sheet, @"E1", @"NotDistribution")
-                    .SetText(sheet, @"F1", @"NotShape"));
+                    .SetText(sheet, @"G1", @"NotSeed")
+                    .SetText(sheet, @"H1", @"NotDistribution")
+                    .SetText(sheet, @"I1", @"NotShape"));
 
             SimulationSummaryModel? summary = Import(bytes).SimulationSummary;
 
@@ -263,6 +270,30 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             summary.Distribution.ShouldBe(DurationDistribution.ModifiedBetaPert);
             summary.ModifiedBetaShape.ShouldBe(6.5);
             summary.Mean.ShouldBe(66.25);
+        }
+
+        [Fact]
+        public void Import_Given_AWorkbookThatWasMadeBeforeTheReasonsOfTheFailures_Then_TheCountsAndTheMissesAreZero()
+        {
+            // The statistics and the criticalities of an older workbook have no columns for the reasons and the misses.
+            string statistics = Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationStatistics;
+            string criticalities = Resource.ProjectPlan.Reporting.Reporting_WorksheetSimulationCriticalities;
+            byte[] bytes = XlsxPackageEditor.Edit(
+                Export(Scenario(Settings(), Summary())),
+                workbook => workbook
+                    .SetText(statistics, @"D1", @"NotStalls")
+                    .SetText(statistics, @"E1", @"NotPastTheLimit")
+                    .SetText(statistics, @"F1", @"NotInvalidConstraints")
+                    .SetText(criticalities, @"E1", @"NotMisses"));
+
+            SimulationSummaryModel? summary = Import(bytes).SimulationSummary;
+
+            summary.ShouldNotBeNull();
+            summary.FailedIterationCount.ShouldBe(34);
+            (summary.ResourceSchedulingStallIterationCount, summary.MaximumTimeValueExceededIterationCount, summary.InvalidConstraintsIterationCount)
+                .ShouldBe((0, 0, 0));
+            summary.Activities.Select(x => (x.ActivityId, x.CriticalIterationCount, x.MaximumLatestFinishTimeMissCount))
+                .ShouldBe([(1, 1200, 0), (3, 700, 0)]);
         }
 
         [Fact]
