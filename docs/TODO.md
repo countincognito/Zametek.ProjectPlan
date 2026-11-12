@@ -31,16 +31,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The priority list is in the library Zametek.Maths.Graphs (`PriorityListResourceScheduler`, and `scheduling/scheduler.rs` in Rust). Thus, the change starts in the library. Today, `TargetResources` can keep an activity on one resource, but the user must set it on each activity.
 
-- [ ] **Stop the message "Unsupported path effect in addPaint." when a scenario chart goes to SVG** *(2026-11-12, from the smoke test of v0.11.0-beta)*
-
-  When `zpp` saves a scenario chart as SVG, and the chart has a fitted curve, `zpp` writes `Unsupported path effect in addPaint.` to stderr. The exit code stays 0. Thus, a script that reads each line on stderr as an error can stop for no cause. The message comes one time in a run, also when the chart shows the derivative, which is also a dashed line. The desktop app probably writes the same message when it saves the chart as SVG, but its stderr is not visible.
-
-  The SVG is correct. A browser shows the dashed curve of the SVG as the PNG shows it. The SVG device of Skia writes the message when a paint that has a path effect draws a shape that is not a path.
-
-  The dashed line of the fitted curve (`LinePattern.Dashed` in `AddCurveFitLine`, since 2026-03-15) causes it: a chart with no fitted curve gives no message. The points and their names give no message. The dashed and dotted lines of the simulation chart give no message. The Gantt chart, the resource chart and the earned value chart of `docs/assets/sample.zpp` give no message as SVG. Thus, the cause is probably in how ScottPlot 5.1.59 draws a scatter line that has a pattern.
-
-  Find the shape that ScottPlot draws with the paint of the dash. Then, report it to ScottPlot, or draw the fitted curve in a way that does not keep the path effect on the paint. Do not hide the stderr of the native code, because other messages of Skia can be useful.
-
 - [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 
   The chart SVG files (Gantt, resource, earned value, scenario and simulation) do not contain the font Inter. Windows 11 does not install Inter. Until 2026-11-12, the SVG named only `Inter`, and thus Microsoft Edge showed the text in its default serif font. Now each text names fallback fonts after Inter (`ChartFonts.SvgFontFamilies`), and Edge shows the text in Segoe UI.

@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using SkiaSharp;
+using System.Diagnostics;
 using System.IO.Compression;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -566,6 +567,55 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             schedules[0].Select(x => (x[0], x[3], x[6], x[12], x[13])).ShouldBe(
                 [(@"1", @"0", @"40", @"", @""), (@"2", @"40", @"43", @"40", @""), (@"3", @"43", @"48", @"", @"50")]);
             schedules[1].ShouldBe(schedules[0]);
+        }
+
+        [Fact]
+        public async Task Main_Given_AScenarioChartWithFittedCurvesAsSvg_Then_SkiaWritesNoWarningToStandardError()
+        {
+            // ScottPlot draws every plottable with one paint, and a dashed fitted curve left its dash on that paint. The markers
+            // of the second axis come after the curve of the first one, and the fill of the first marker carried the dash.
+            // Skia's SVG canvas then wrote "Unsupported path effect in addPaint." to the standard error of the process, from
+            // native code. Console.Error cannot see that stream, so the test runs zpp in a process of its own.
+            string directory = Path.Combine(m_TempDirectory, @"scenario-chart");
+            Directory.CreateDirectory(directory);
+
+            var start = new ProcessStartInfo(Environment.GetEnvironmentVariable(@"DOTNET_HOST_PATH") ?? @"dotnet")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            foreach (string argument in new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, @"zpp.dll"),
+                @"-i", AssetPath(@"scenario-chart.zpp"),
+                @"--scenario-chart-directory", directory,
+                @"--scenario-chart-format", @"Svg",
+                @"--scenario-chart-size", @"1200:800",
+            })
+            {
+                start.ArgumentList.Add(argument);
+            }
+
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            using Process process = Process.Start(start).ShouldNotBeNull();
+            Task<string> output = process.StandardOutput.ReadToEndAsync(timeout.Token);
+            Task<string> error = process.StandardError.ReadToEndAsync(timeout.Token);
+            try
+            {
+                await process.WaitForExitAsync(timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill(entireProcessTree: true);
+                throw;
+            }
+
+            await output;
+            string errors = await error;
+            process.ExitCode.ShouldBe(0, errors);
+            Directory.GetFiles(directory, @"*.svg").ShouldNotBeEmpty();
+            errors.ShouldNotContain(@"Unsupported path effect");
         }
 
         [Fact]
