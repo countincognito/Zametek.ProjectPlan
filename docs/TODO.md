@@ -2,13 +2,11 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Correct the wiki about the cyclomatic complexity and the maximum LFT** *(2026-11-11, found during tests for the zpp skill)*
+- [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
 
-  The wiki page "Project compilation" says that the cyclomatic complexity does not include resource dependencies. A measurement shows that it does. One logical network gave 8 with phantom resources, 6 with three developers and 7 with two developers. Righting Software also counts resource dependencies. On 2026-11-11, the maintainer decided to keep the metric.
+  On Linux, `zpp` saves a placeholder date of year 1 as `0001-01-01T00:00:00-00:01`. On Windows, it saves the same date as `0001-01-01T00:00:00+00:00`. A plan that a program writes can have such dates in the `CreatedOn` and `ModifiedOn` of its nodes, as the test plans have. The smoke test of v0.11.0-alpha found the difference on 2026-11-06, and on 2026-11-12 Windows still wrote `+00:00`.
 
-  The wiki page "Activities" says that a maximum LFT can give negative values, as in Microsoft Project. This is not true. A maximum LFT pins an activity. When the plan cannot meet it, the compile reports `C0010`, and an iteration of a simulation fails.
-
-  Correct the two pages with the other updates of the wiki.
+  The cause is probably a change to the local time zone. For London in year 1, the time zone data of Linux gives the local mean time (−00:01:15). Windows has no rules before its first rule. Real dates are the same on the two systems. Thus, the difference is harmless, but two computers save two different files from one plan. Find where a date of year 1 becomes a local date, and keep the offset that the file has.
 
 - ~~**Suggestion: tell how far a plan misses its deadline**~~ DECLINED on 2026-11-12. *(2026-11-11, a suggestion from the design of the zpp skill)*
 
