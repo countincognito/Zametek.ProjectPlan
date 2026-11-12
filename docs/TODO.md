@@ -2,6 +2,16 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Stop the message "Unsupported path effect in addPaint." when a scenario chart goes to SVG** *(2026-11-12, from the smoke test of v0.11.0-beta)*
+
+  When `zpp` saves a scenario chart as SVG, and the chart has a fitted curve, `zpp` writes `Unsupported path effect in addPaint.` to stderr. The exit code stays 0. Thus, a script that reads each line on stderr as an error can stop for no cause. The message comes one time in a run, also when the chart shows the derivative, which is also a dashed line. The desktop app probably writes the same message when it saves the chart as SVG, but its stderr is not visible.
+
+  The SVG is correct. A browser shows the dashed curve of the SVG as the PNG shows it. The SVG device of Skia writes the message when a paint that has a path effect draws a shape that is not a path.
+
+  The dashed line of the fitted curve (`LinePattern.Dashed` in `AddCurveFitLine`, since 2026-03-15) causes it: a chart with no fitted curve gives no message. The points and their names give no message. The dashed and dotted lines of the simulation chart give no message. The Gantt chart, the resource chart and the earned value chart of `docs/assets/sample.zpp` give no message as SVG. Thus, the cause is probably in how ScottPlot 5.1.59 draws a scatter line that has a pattern.
+
+  Find the shape that ScottPlot draws with the paint of the dash. Then, report it to ScottPlot, or draw the fitted curve in a way that does not keep the path effect on the paint. Do not hide the stderr of the native code, because other messages of Skia can be useful.
+
 - [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
 
   On Linux, `zpp` saves a placeholder date of year 1 as `0001-01-01T00:00:00-00:01`. On Windows, it saves the same date as `0001-01-01T00:00:00+00:00`. A plan that a program writes can have such dates in the `CreatedOn` and `ModifiedOn` of its nodes, as the test plans have. The smoke test of v0.11.0-alpha found the difference on 2026-11-06, and on 2026-11-12 Windows still wrote `+00:00`.
