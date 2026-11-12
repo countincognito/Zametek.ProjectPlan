@@ -117,7 +117,7 @@ You can also build the installer from the command line, without the extension:
 dotnet build pkg/Zametek.ProjectPlan.MsiPackager/Zametek.ProjectPlan.MsiPackager.wixproj -c Release
 ```
 
-The build writes the installer (for example `projectplandotnet.0.11.0-beta.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
+The build writes the installer (for example `projectplandotnet.0.11.0-beta.1.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
 
 ## MSIX packages (Windows)
 

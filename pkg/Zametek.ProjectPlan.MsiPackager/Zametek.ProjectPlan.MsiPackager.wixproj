@@ -4,7 +4,7 @@
          CheckTheInstallerInputs stops a build for a different platform. The default comes before OutputName, which uses it. -->
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <Platforms>x64</Platforms>
-    <OutputName>projectplandotnet.0.11.0-beta.installer.$(Platform)</OutputName>
+    <OutputName>projectplandotnet.0.11.0-beta.1.installer.$(Platform)</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>false</SuppressValidation>
