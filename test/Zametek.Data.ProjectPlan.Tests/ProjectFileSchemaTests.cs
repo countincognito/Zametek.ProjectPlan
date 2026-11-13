@@ -150,6 +150,23 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
+        public void Validate_Given_EachPlanThatTheDocumentsGive_Then_EachIsOfTheLatestVersionAndFitsTheSchema()
+        {
+            // A client that checks a plan against the schema refused the samples of the documents, which had the version v0.6.1
+            // (C20 of the stress test of 0.11.0-beta.1).
+            string[] files = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, @"DocsAssets"), @"*.zpp");
+
+            files.Length.ShouldBeGreaterThanOrEqualTo(6);
+
+            foreach (string file in files)
+            {
+                string json = File.ReadAllText(file);
+                JObject.Parse(json)[@"Version"]?.Value<string>().ShouldBe(Versions.ProjectLatest, Path.GetFileName(file));
+                Problems(json).ShouldBeEmpty(Path.GetFileName(file));
+            }
+        }
+
+        [Fact]
         public void Validate_Given_AMinimalPlan_Then_ItFitsTheSchema()
         {
             Problems(c_Minimal).ShouldBeEmpty();

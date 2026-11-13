@@ -95,6 +95,10 @@
     <Content Include="..\Zametek.ProjectPlan.CommandLine.Tests\Assets\*.zpp" LinkBase="Assets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- The plans that the documents give to the users, which a client can check against the schema. -->
+    <Content Include="..\..\docs\assets\*.zpp" LinkBase="DocsAssets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

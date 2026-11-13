@@ -18,10 +18,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Give a warning for each one. The check before the load refuses three other plans of the finding. These are two activities with one `Id`, a `TargetResourceOperator` of 9, and a plan with no data to load.
 
-- [ ] **Let the schema accept the versions that zpp reads** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
-
-  `docs/assets/sample.zpp`, `two-scenarios.zpp` and `broken-dependency.zpp` have the version `v0.6.1`. The schema accepts `v0.6.2` only. Thus, a client that checks a file with the schema refuses the samples of `zpp`, but `zpp` reads them. Let the schema accept each version that `zpp` reads, or save the samples again as `v0.6.2`.
-
 - [ ] **Tell why a tracked scenario did not compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 
   With `compileTracked`, a tracked scenario that does not compile gets `"metrics": null` in `trackedScenarios`. In the test, the scenario had a dependency on an activity that does not exist. The answer has 200, stderr is empty, and `zpp --compile-tracked` gives the exit code 0. Thus, the client cannot tell why the metrics are null, and the scenario chart does not have the point. Give the problems of the scenario in its item of `trackedScenarios`, for example `P0010`. The answer of one compile does this too.
