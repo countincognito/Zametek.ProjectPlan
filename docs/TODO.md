@@ -2,10 +2,6 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Refuse a cut-off multipart body with 400** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
-
-  Such a body gives 500 `unexpected-error`, and the log of the server has an `IOException` from `MultipartReaderStream.ReadAsync`. Give 400 `malformed-request`. The four plans of the same finding (B8) give 422 `project-not-readable` since the check before the load.
-
 - [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
 
   The test compiles one network of 1500 activities with 10, 50, 100, 200 and 500 developers, on a server with no other jobs. The jobs take 5.4, 7.8, 13.1, 21.6 and 51.5 seconds. Each job adds 107, 107, 108, 161 and 740 MB to the memory of the server. The compile limit does not stop this work. With a `compileTimeout` of PT5S, the plan with 200 developers gets 200 after 25 seconds. With PT1S, it gets `compilation-timed-out` after 3.9 seconds.
@@ -21,10 +17,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   - A `TargetWorkStreams` or an `InterActivityPhases` with an id that no work stream has.
 
   Give a warning for each one. The check before the load refuses three other plans of the finding. These are two activities with one `Id`, a `TargetResourceOperator` of 9, and a plan with no data to load.
-
-- [ ] **Read the file name of a part as UTF-8, and refuse a second project part** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
-
-  A part with `filename="ünïcödé.zpp"` in UTF-8, as curl and the browsers send it, gives outputs with the names `�n�c�d�-schedule.csv`. Read the headers of the parts as UTF-8. Also, a request with two `project` parts gets 200: the server compiles the first part, and it ignores the second. A second part is probably a mistake of the client, so give 422.
 
 - [ ] **Let the schema accept the versions that zpp reads** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 

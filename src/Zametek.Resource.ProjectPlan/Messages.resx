@@ -696,6 +696,9 @@
   <data name="Message_ServeErrorPartNotKnown" xml:space="preserve">
     <value>'{0}' is not a part this endpoint takes</value>
   </data>
+  <data name="Message_ServeErrorPartSentMoreThanOnce" xml:space="preserve">
+    <value>must be sent once</value>
+  </data>
   <data name="Message_ServeErrorParameterNotKnown" xml:space="preserve">
     <value>is not a parameter this endpoint takes</value>
   </data>

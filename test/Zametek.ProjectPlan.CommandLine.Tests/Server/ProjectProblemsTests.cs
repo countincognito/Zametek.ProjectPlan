@@ -243,6 +243,39 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_AMultipartBodyWithNoClosingBoundary_Then_BadRequestAndTheServerGoesOn()
+        {
+            // The reader of the parts threw an IOException, and the answer was 500 (B8 of the stress test of 0.11.0-beta.1).
+            using ByteArrayContent content = RunningServer.RawMultipart(@"cut", closed: false, (@"project", @"plan.zpp", TwoScenarios()));
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.MalformedRequest));
+            Where(problem).ShouldBe([@"# invalidFormat"]);
+
+            // The server answers the next request.
+            using var next = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            using HttpResponseMessage answer = await Server.Client.PostAsync(@"/v1/projects/compile", next);
+            answer.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task Compile_Given_TwoProjectParts_Then_UnprocessableNamingThePart()
+        {
+            // The server compiled the first part and ignored the second (C14 of the stress test of 0.11.0-beta.1). A second
+            // part is probably a mistake of the client.
+            using var content = RunningServer.CompileContent(TwoScenarios(), @"one.zpp");
+            content.Add(new ByteArrayContent(TwoScenarios()), @"project", @"two.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            Where(problem).ShouldBe([@"#/project notAllowed"]);
+        }
+
+        [Fact]
         public async Task ListScenarios_Given_AFileThatIsNotAProject_Then_Unprocessable()
         {
             using var content = RunningServer.CompileContent(Encoding.UTF8.GetBytes(@"This is not a plan."), @"plan.zpp");

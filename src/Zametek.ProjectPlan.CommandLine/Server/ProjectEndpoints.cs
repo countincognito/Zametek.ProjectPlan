@@ -616,9 +616,10 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 return (null, Refuse(context, StatusCodes.Status413PayloadTooLarge, string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, m_Limits.MaxUploadMegabytes)));
             }
-            catch (Exception ex) when (ex is BadHttpRequestException or InvalidDataException)
+            catch (Exception ex) when (ex is BadHttpRequestException or InvalidDataException or IOException)
             {
-                // What the framework says of a body it cannot read is its own: the detail says it in ours.
+                // What the framework says of a body it cannot read is its own: the detail says it in ours. A body that ends
+                // before its closing boundary is an IOException of the reader of the parts.
                 return (null, Problem(
                     context,
                     ProblemHelper.Create(
@@ -629,13 +630,26 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The parts that are not ones the endpoint takes, and the parts that are files and were sent as fields.
+        // The parts that are not ones the endpoint takes, the parts that are files and were sent as fields, and the parts that
+        // were sent more than once. The endpoint reads only the first of a part, and so a second one is probably a mistake of
+        // the client.
         private static void ReadParts(
             IFormCollection form,
             IReadOnlyList<string> known,
             IReadOnlyList<string> files,
             ProblemCollector problems)
         {
+            IEnumerable<string> twice = form.Files
+                .GroupBy(x => x.Name, StringComparer.Ordinal)
+                .Where(x => x.Count() > 1)
+                .Select(x => x.Key)
+                .Concat(form.Where(x => x.Value.Count > 1).Select(x => x.Key));
+
+            foreach (string name in twice.Where(known.Contains).Distinct(StringComparer.Ordinal))
+            {
+                problems.AddInvalid(PartError(name, ProblemCodes.NotAllowed, Resource.ProjectPlan.Messages.Message_ServeErrorPartSentMoreThanOnce));
+            }
+
             foreach (string name in form.Keys.Concat(form.Files.Select(x => x.Name)).Distinct(StringComparer.Ordinal))
             {
                 if (!known.Contains(name))

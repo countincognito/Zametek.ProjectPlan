@@ -188,6 +188,24 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_AFileNameInUtf8_Then_TheOutputsHaveTheName()
+        {
+            // curl, the browsers and Python send the name of a file in UTF-8, in the header of its part (C13 of the stress test of
+            // 0.11.0-beta.1).
+            using ByteArrayContent content = RunningServer.RawMultipart(
+                @"utf8",
+                closed: true,
+                (@"project", @"ünïcödé.zpp", TwoScenarios()),
+                (@"options", null, Encoding.UTF8.GetBytes(@"{ ""outputs"": { ""data"": {} } }")));
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Outputs.Select(x => x.FileName).ShouldContain(@"ünïcödé-schedule.csv");
+        }
+
+        [Fact]
         public async Task Compile_Given_NoOptions_Then_AnswersWithTheMetricsAndNoOutputs()
         {
             using HttpResponseMessage response = await PostAsync();

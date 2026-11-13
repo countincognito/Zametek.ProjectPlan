@@ -133,7 +133,7 @@ The request is a `multipart/form-data` body with these parts. Its size is not mo
 | `import` | A file | An Excel workbook (`.xlsx`) to import into a new project, as `zpp --import` does. The server does not import MS Project files. Import them with `zpp` itself. |
 | `options` | JSON | Optional. A file or a field. The server does not insist on the content type of the part, and thus `curl -F 'options={...}'` operates. The maximum size is 64 KB, and the maximum nesting depth is 16. |
 
-The server refuses a part that the operation does not take. It also refuses a `project` or an `import` that you send as a field and not as a file. The query parameter `include` asks for more in the answer:
+The server refuses a part that the operation does not take. It also refuses a `project` or an `import` that you send as a field and not as a file. A part that you send two times gets the same answer. The query parameter `include` asks for more in the answer:
 
 | Parameter | Type | Notes |
 | --------- | ---- | ----- |
@@ -539,7 +539,7 @@ The name of each section is the last part of its `type`.
 
 `400`. The server cannot understand the request. These are the possible causes:
 
-- The server cannot read the parts as `multipart/form-data`.
+- The server cannot read the parts as `multipart/form-data`, for example a body that ends before its closing boundary.
 - The `options` are not JSON.
 - A query parameter is not a parameter that the operation takes.
 - A query parameter has a value that `include` does not have.

@@ -1249,6 +1249,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_ServeErrorPartNotKnown", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to must be sent once.
+        /// </summary>
+        public static string Message_ServeErrorPartSentMoreThanOnce {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorPartSentMoreThanOnce", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to must be from 1 to {0} pixels.
