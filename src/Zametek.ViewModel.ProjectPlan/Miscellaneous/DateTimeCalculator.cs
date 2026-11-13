@@ -704,9 +704,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // A time at an end of the range of .NET can have no moment at the offset of the zone. For example, a plan that
             // gives no Today has 0001-01-01, and a zone east of UTC in the year 1 (Paris, Tokyo, Sydney) puts it before the
-            // year 1: the load of the plan failed. Such a time stays at offset 0, as in UTC.
+            // year 1: the load of the plan failed. Such a time stays at offset 0, as in UTC. So does any time in the year 1,
+            // which is a placeholder: west of UTC, the offset of a zone in the year 1 is its local mean time on Linux (-07:53
+            // in Los Angeles), and a save wrote it, so two computers saved two texts for one plan.
             long utcTicks = clockTime.Ticks - offset.Ticks;
-            if (utcTicks < DateTime.MinValue.Ticks
+            if (clockTime.Year == 1
+                || utcTicks < DateTime.MinValue.Ticks
                 || utcTicks > DateTime.MaxValue.Ticks)
             {
                 offset = TimeSpan.Zero;

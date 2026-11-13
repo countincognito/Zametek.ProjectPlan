@@ -506,6 +506,34 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             (local.DateTime, local.Offset).ShouldBe((DateTime.MinValue, TimeSpan.Zero));
         }
 
+        // A time in the year 1 is a placeholder, such as the Today of a plan that gives none. West of UTC, the offset of a
+        // zone in the year 1 is its local mean time on Linux (-07:53 in Los Angeles, -00:01 in London), and a save wrote
+        // it: two computers saved two texts for one plan. Such a time stays at offset 0 too.
+        [Theory]
+        [InlineData(1, 1)]
+        [InlineData(6, 15)]
+        public void GetLocal_Given_ATimeOfTheYear1InAZoneWestOfUtc_Then_ItStaysAtOffsetNought(int month, int day)
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -07:53", new TimeSpan(-7, -53, 0), @"Test -07:53", @"Test -07:53");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(new DateTime(1, month, day));
+
+            (local.DateTime, local.Offset).ShouldBe((new DateTime(1, month, day), TimeSpan.Zero));
+        }
+
+        // From the year 2, a time has the offset of the zone, as any other time.
+        [Fact]
+        public void GetLocal_Given_ATimeOfTheYear2InAZoneWestOfUtc_Then_TheOffsetOfTheZone()
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -07:53", new TimeSpan(-7, -53, 0), @"Test -07:53", @"Test -07:53");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(new DateTime(2, 1, 1));
+
+            (local.DateTime, local.Offset).ShouldBe((new DateTime(2, 1, 1), new TimeSpan(-7, -53, 0)));
+        }
+
         // West of UTC, the last moment of .NET is after the range, as the first day is before it east of UTC.
         [Fact]
         public void GetLocal_Given_TheLastMomentOfDotNetInAZoneWestOfUtc_Then_ItStaysAtOffsetNought()
