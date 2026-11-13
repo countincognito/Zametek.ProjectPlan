@@ -16,18 +16,15 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time (refer to the entry about the five inputs that give 500).
 
-- [ ] **Let the MSI of the final 0.11.0 replace an installed 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
+- [ ] **Install the MSI of the final 0.11.0 over a 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
 
-  Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` does not allow an upgrade of the same version, because this is the default of WiX 5. The Upgrade table of the MSI of the beta shows it:
+  Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. Since 0.11.0-beta.1, `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` has `AllowSameVersionUpgrades="yes"`. Thus, the MSI removes an installed product of the same version. The Upgrade table of an MSI that was built from beta.1 shows it. Its row that removes the earlier versions has the attributes 513, which include the maximum of 0.11.0.0. The MSI of the beta had 1.
 
-  - One row removes the versions before 0.11.0.0. Its `VersionMax` is 0.11.0.0, and its attributes are 1, which does not include the maximum.
-  - One row only finds the versions after 0.11.0.0.
+  On 2026-11-12, the maintainer removed the MSI files of v0.11.0-alpha and v0.11.0-beta from their releases, and the next pre-releases have no MSI. But a user who installed one of these MSI files has 0.11.0.0. Before the final release, install its MSI over the beta, and make sure that the installed apps show one entry.
 
-  Thus, an MSI of 0.11.0.0 with a new product code does not remove an installed 0.11.0.0. It installs as a second product, with a second entry in the installed apps.
+- [ ] **Let the export to Excel take a resource tracker with two entries for one activity** *(2026-11-13, found during the fix of B10)*
 
-  On 2026-11-12, the maintainer removed the MSI files of v0.11.0-alpha and v0.11.0-beta from their releases, and the next pre-releases have no MSI. But a user who installed one of these MSI files has 0.11.0.0. The MSI of the final 0.11.0 would install next to it.
-
-  Before the final release, add `AllowSameVersionUpgrades="yes"` to `<MajorUpgrade>`. WiX then gives the warning ICE61, which is expected for this attribute. Read the Upgrade table of the new MSI: the first row must have the attributes 513, which include the maximum. Then install the final MSI over the beta, and make sure that the installed apps show one entry.
+  A resource tracker can have two entries for one activity on one day. Then `zpp -x` fails with exit code 1, and the message is "An item with the same key has already been added". The application does not write such a tracker, but a program can. The tracking series adds the two entries. Add them in the export too, or refuse such a tracker in the check before the load (`duplicateId`).
 
 - [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
 
