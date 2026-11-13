@@ -65,6 +65,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             ProjectFileSchema.Descriptions.Keys.Where(x => !used.Contains(x)).ShouldBeEmpty();
             ProjectFileSchema.Required.Keys.Where(x => !used.Contains(x)).ShouldBeEmpty();
+            ProjectFileSchema.Minimums.Keys.Where(x => !used.Contains(x)).ShouldBeEmpty();
         }
 
         // What is wrong with a file, as the schema says: nothing, when it fits the schema.
@@ -171,6 +172,15 @@ namespace Zametek.Data.ProjectPlan.Tests
             IReadOnlyList<string> problems = Problems(c_Minimal.Replace(@"""MostLikelyDuration""", @"""MostlikelyDuration""", StringComparison.Ordinal));
 
             problems.ShouldContain(x => x.Contains(@"/Files/0/Scenario/DependentActivities/0/Activity", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public void Validate_Given_ADurationBelowZero_Then_TheSchemaRefusesIt()
+        {
+            // zpp counts it as 0, and so the plan does not say what its writer meant.
+            IReadOnlyList<string> problems = Problems(c_Minimal.Replace(@"""MostLikelyDuration"": 5", @"""MostLikelyDuration"": -3", StringComparison.Ordinal));
+
+            problems.ShouldContain(x => x.Contains(@"/Files/0/Scenario/DependentActivities/0/Activity/MostLikelyDuration minimum", StringComparison.Ordinal));
         }
 
         [Fact]

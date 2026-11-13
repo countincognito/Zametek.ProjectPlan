@@ -77,6 +77,19 @@ namespace Zametek.Data.ProjectPlan.Tests
             [@"v0_6_2.ActivityModel.MaximumLatestFinishDateTime"] = @"The latest day by which the activity must finish, as a date. It takes the place of MaximumLatestFinishTime.",
         };
 
+        // The members that have a minimum, by the class that has them and their name. zpp counts a duration or a time of an
+        // activity below 0 as 0, and so a value below 0 is a mistake that the schema can show.
+        public static IReadOnlyDictionary<string, int> Minimums { get; } = new Dictionary<string, int>
+        {
+            [@"v0_6_2.ActivityModel.Duration"] = 0,
+            [@"v0_6_2.ActivityModel.MostLikelyDuration"] = 0,
+            [@"v0_6_2.ActivityModel.OptimisticDuration"] = 0,
+            [@"v0_6_2.ActivityModel.PessimisticDuration"] = 0,
+            [@"v0_6_2.ActivityModel.MinimumFreeSlack"] = 0,
+            [@"v0_6_2.ActivityModel.MinimumEarliestStartTime"] = 0,
+            [@"v0_6_2.ActivityModel.MaximumLatestFinishTime"] = 0,
+        };
+
         public static Type Root => typeof(v0_6_2.ProjectModel);
 
         // The schema, with each member and class that it found a description or a list of required members for.
@@ -176,6 +189,12 @@ namespace Zametek.Data.ProjectPlan.Tests
                 {
                     schema[@"type"] = @"string";
                     schema[@"const"] = Versions.ProjectLatest;
+                }
+
+                if (Minimums.TryGetValue(key, out int minimum))
+                {
+                    used.Add(key);
+                    schema[@"minimum"] = minimum;
                 }
 
                 if (Descriptions.TryGetValue(key, out string? description))

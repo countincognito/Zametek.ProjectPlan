@@ -16,12 +16,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Give 400 `malformed-request` for the first input, and 422 `project-not-readable` for the others. The server stays up after each one. The repros are in the folder of the stress test (`repros/b8-*.zpp`).
 
-- [ ] **Refuse a duration that overflows, and the values that make no sense** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
-
-  A `MostLikelyDuration` of 2147483647 compiles, and the activity takes 0 days: the arithmetic of the three estimates, (O + 4 × ML + P + 3) / 6, overflows. Thus, the activity goes out of the critical path, and the finish is wrong. A value of 300000000 gives `P0080`, because the value that overflows does not get to the check of the limits. Calculate the expected duration with a type that does not overflow, and give `P0080` above 100,000 days.
-
-  A `MostLikelyDuration` of -3 also gives 0 days. [The project file](PROJECT-FILE.md) says that a most likely duration below 0 is 0, but the stress test expected an error. A negative `MinimumEarliestStartTime` is also 0, a negative `UnitCost` is accepted, and a `UnitCost` of 1e308 gives costs that are null. Decide which of these values `zpp` refuses with a code, and give the schema a minimum for each.
-
 - [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
 
   The test compiles one network of 1500 activities with 10, 50, 100, 200 and 500 developers, on a server with no other jobs. The jobs take 5.4, 7.8, 13.1, 21.6 and 51.5 seconds. Each job adds 107, 107, 108, 161 and 740 MB to the memory of the server. The compile limit does not stop this work. With a `compileTimeout` of PT5S, the plan with 200 developers gets 200 after 25 seconds. With PT1S, it gets `compilation-timed-out` after 3.9 seconds.

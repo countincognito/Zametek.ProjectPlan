@@ -64,8 +64,13 @@ This plan has one scenario with three activities in a chain:
 An activity has three estimates of its duration, in working days: `OptimisticDuration` (O), `MostLikelyDuration` (ML) and `PessimisticDuration` (P). The compiler schedules the expected duration, (O + 4 × ML + P + 3) / 6, in whole days. `Duration` holds the expected duration.
 
 - An activity with no `MostLikelyDuration` has `Duration` as its most likely duration.
+
 - An activity with no `OptimisticDuration` or no `PessimisticDuration` has ML in its place. An activity with only ML has no uncertainty, and its duration is ML.
-- An optimistic duration above ML is ML, and a pessimistic duration below ML is ML. A most likely duration below 0 is 0.
+
+- An optimistic duration above ML is ML, and a pessimistic duration below ML is ML. A most likely duration below 0 is 0. The schema gives each duration and each time of an activity a minimum of 0, because a value below 0 is probably a mistake.
+
+- A duration above 100,000 days does not compile (`P0080`).
+
 - `zpp` calculates `Duration` again when it reads the file. Thus, set `MostLikelyDuration`. When an activity has `MostLikelyDuration`, a change to `Duration` alone changes nothing. A plan that has no estimates can set `Duration` and leave out the estimates.
 
 ## The values that zpp calculates
