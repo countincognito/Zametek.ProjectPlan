@@ -2,7 +2,9 @@
 
 ## Prerequisites
 
-Each project in `Zametek.ProjectPlan.slnx` uses the `net10.0` target framework. Thus, you must install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) or a newer version of the SDK to build the projects and to start the desktop application. Previous versions of the SDK, for example .NET 8, cannot build the projects.
+Each project in `Zametek.ProjectPlan.slnx` uses the `net10.0` target framework. Thus, you must install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) to build the projects and to start the desktop application. Previous versions of the SDK, for example .NET 8, cannot build the projects.
+
+The file `global.json` makes the build use the newest .NET 10 SDK of the computer. This is also true when the computer has a newer SDK, such as .NET 11. The MSBuild of the .NET 11 SDK cannot run the tasks of IKVM.Maven.Sdk, which builds the importer of MS Project files.
 
 To restore, build and start the desktop application, enter these commands:
 

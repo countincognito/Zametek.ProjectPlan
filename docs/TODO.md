@@ -28,6 +28,12 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The version of the file tells the migration that the earlier times have no meaning, so it keeps only their dates. Hours that a person works on a day do not need this change, because a tracker counts them for a day. A log of work as moments, with a start and a stop from a clock, needs a time zone of the plan. The zone puts each moment on a day and an hour of the plan.
 
+- [ ] **Build with the .NET 11 SDK** *(2026-11-13, found when CI failed)*
+
+  `global.json` keeps the build on .NET 10, with the newest .NET 10 SDK of the computer. On 2026-11-13, CI failed in the build of `Zametek.ViewModel.ProjectPlan`. The task `MavenReferenceItemResolve` of IKVM.Maven.Sdk 1.12.1 failed with `MSB4217` ("Task host node exited prematurely") and `MSB4027` (a disposed `MetadataLoadContext`). IKVM.Maven.Sdk runs its tasks in a task host (`TaskHostFactory`).
+
+  The image of the runner, version 20261111, added the .NET 11 SDK (11.0.100), and nothing pinned the SDK. Before the move to .NET 11, find a version of IKVM.Maven.Sdk that works with the MSBuild of .NET 11, or report the problem to ikvmnet. Then change `global.json`.
+
 - [ ] **Install the MSI of the final 0.11.0 over a 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
 
   Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. Since 0.11.0-beta.1, `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` has `AllowSameVersionUpgrades="yes"`. Thus, the MSI removes an installed product of the same version. The Upgrade table of an MSI that was built from beta.1 shows it. Its row that removes the earlier versions has the attributes 513, which include the maximum of 0.11.0.0. The MSI of the beta had 1.
