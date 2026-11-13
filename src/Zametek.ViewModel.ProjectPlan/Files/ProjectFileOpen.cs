@@ -25,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // The caller owns the stream, so the reader leaves it open.
             using var reader = new StreamReader(stream, leaveOpen: true);
             string content = await reader.ReadToEndAsync();
-            JObject json = JObject.Parse(content);
+            JObject json = ParseKeepingTexts(content);
             string version =
                 json?.GetValue(nameof(ProjectModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
                 ?? string.Empty;
@@ -157,6 +157,24 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             return await Task.Run(() => func(jsonString));
+        }
+
+        // As JObject.Parse, but each text stays the text that the file holds. A date of a plan is the day that it shows, in
+        // its own offset (PROJECT-FILE.md). JObject.Parse reads a text that looks like a date as a moment, in the time zone
+        // of the computer, and the text that the typed reader then gets can show another day and another offset. A name or
+        // a note that only looks like a date changed too.
+        private static JObject ParseKeepingTexts(string content)
+        {
+            using var textReader = new StringReader(content);
+            using var jsonReader = new JsonTextReader(textReader) { DateParseHandling = DateParseHandling.None };
+            JObject json = JObject.Load(jsonReader);
+
+            // As JObject.Parse does: the reader refuses anything but a comment after the object.
+            while (jsonReader.Read())
+            {
+            }
+
+            return json;
         }
     }
 }

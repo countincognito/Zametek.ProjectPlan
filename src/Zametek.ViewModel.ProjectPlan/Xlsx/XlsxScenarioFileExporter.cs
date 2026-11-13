@@ -193,7 +193,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (datesFromStart.ShowDates)
             {
-                sheet.Date(row, column, datesFromStart.DateTimeCalculator.AddDays(datesFromStart.ProjectStart, time).DateTime, dateStyle);
+                // A whole day: a date of a plan is a day, and a time of the day in its start does not reach the cell.
+                sheet.Date(row, column, datesFromStart.DateTimeCalculator.AddDays(datesFromStart.ProjectStart, time).Date, dateStyle);
             }
             else
             {
@@ -273,7 +274,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     sheet.Date(row, column, x, dateStyle);
                     break;
                 case DateTimeOffset x:
-                    sheet.Date(row, column, x.DateTime, dateStyle);
+                    // The day that the date shows, in its own offset, as a whole day.
+                    sheet.Date(row, column, x.Date, dateStyle);
                     break;
                 case IEnumerable x:
                     sheet.Text(row, column, string.Join(DependenciesStringValidationRule.Separator, x.Cast<object>().Select(y => y.ToString())), style);

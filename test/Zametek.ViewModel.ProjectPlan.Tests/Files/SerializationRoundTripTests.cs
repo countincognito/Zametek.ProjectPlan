@@ -252,6 +252,68 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             (projectStart.DateTime, projectStart.Offset).ShouldBe((new DateTime(2015, 1, 5, 8, 0, 0), TimeSpan.FromMinutes(330)));
         }
 
+        // A date of a plan is the day that it shows (PROJECT-FILE.md). The reader read each date as a moment, and moved it into
+        // the time zone of the computer. There, midnight at +14:00 is the evening before, and midnight at -11:00 is the same
+        // day at noon or later. Thus, on a computer west of the offset of the file, the plan started a day early. Now each
+        // date keeps its clock time and its offset. No computer has both +14:00 and -11:00, so the old reader fails this test
+        // in each time zone.
+        [Fact]
+        public async Task OpenProject_Given_DatesFarFromTheTimeZoneOfTheComputer_Then_EachDateKeepsItsClockTimeAndItsOffset()
+        {
+            static DateTimeOffset East(int month, int day) => new(2027, month, day, 0, 0, 0, TimeSpan.FromHours(14));
+            static DateTimeOffset West(int month, int day) => new(2027, month, day, 0, 0, 0, TimeSpan.FromHours(-11));
+            ProjectModel original = WithActivities(
+                BuildMinimalProjectModel(),
+                new ActivityModel { Id = 1, Duration = 5, MinimumEarliestStartDateTime = East(1, 11), MaximumLatestFinishDateTime = West(2, 1) });
+            original = original with
+            {
+                Files =
+                [
+                    original.Files[0] with
+                    {
+                        Scenario = original.Files[0].Scenario with
+                        {
+                            ProjectStart = East(1, 4),
+                            Today = West(1, 6),
+                            HolidaySettings = new HolidaySettingsModel
+                            {
+                                Holidays = [new HolidayModel { Id = 1, Name = @"Christmas", StartDateTime = East(12, 25), RecurrencePattern = @"FREQ=YEARLY" }],
+                            },
+                        },
+                    },
+                ],
+            };
+
+            ProjectModel loaded = await RoundTripAsync(original);
+
+            ProjectScenarioModel scenario = loaded.Files.ShouldHaveSingleItem().Scenario;
+            ActivityModel activity = scenario.DependentActivities.ShouldHaveSingleItem().Activity;
+            DateTimeOffset?[] dates =
+            [
+                scenario.ProjectStart,
+                scenario.Today,
+                activity.MinimumEarliestStartDateTime,
+                activity.MaximumLatestFinishDateTime,
+                scenario.HolidaySettings.Holidays.ShouldHaveSingleItem().StartDateTime,
+            ];
+            DateTimeOffset[] written = [East(1, 4), West(1, 6), East(1, 11), West(2, 1), East(12, 25)];
+            dates.Select(x => (x?.DateTime, x?.Offset)).ShouldBe(written.Select(x => ((DateTime?)x.DateTime, (TimeSpan?)x.Offset)));
+        }
+
+        // A text that looks like a date stays a text. The reader made it a date in the time zone of the computer, and wrote it
+        // again as that date.
+        [Fact]
+        public async Task OpenProject_Given_ANameAndANoteThatLookLikeADate_Then_TheyStayTheSameText()
+        {
+            const string text = @"2027-01-04T00:00:00+14:00";
+            ProjectModel original = WithActivities(BuildMinimalProjectModel(), new ActivityModel { Id = 1, Duration = 5, Name = text, Notes = text });
+
+            ProjectModel loaded = await RoundTripAsync(original);
+
+            ActivityModel activity = loaded.Files.ShouldHaveSingleItem().Scenario.DependentActivities.ShouldHaveSingleItem().Activity;
+            (activity.Name, activity.Notes).ShouldBe((text, text));
+        }
+
         [Fact]
         public async Task RoundTrip_Minimal_Preserves_Version()
         {

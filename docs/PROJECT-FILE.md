@@ -103,7 +103,9 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - An activity cannot have both `MinimumFreeSlack` and a maximum latest finish: the compile then gives `P0030`. The compile also gives `P0030` when the minimum earliest start and the duration go past the maximum latest finish. Refer to [the codes of the compiler](API.md#codes-of-the-compiler).
 
-- A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. An id of a node is a GUID. An id of an activity, a resource or a work stream is a whole number.
+- A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. A date of a plan is a day: `zpp` and the application use the day that the date shows, in its own offset. Thus, `2027-01-04T00:00:00+14:00` and `2027-01-04T23:30:00-05:00` are both 4 January. The time zone of the computer does not change the day, and the time of the day does not change it either. A save keeps the day of each date, but it can write the date with a different offset.
+
+- The times of the nodes (`CreatedOn` and `ModifiedOn`) are moments, and the schedule does not use them. An id of a node is a GUID. An id of an activity, a resource or a work stream is a whole number.
 
 ## What zpp checks before the load
 

@@ -445,6 +445,90 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private static readonly string s_VersionLine =
             $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
 
+        // A date of a plan is the day that it shows, whatever the time zone of the computer (PROJECT-FILE.md). The plan has a
+        // custom calendar: the weekends by a weekly rule, and Christmas and New Year. It starts on a Tuesday, and B has a
+        // minimum earliest start date. zpp read each date as a moment in the time zone of the computer. Thus, in UTC or in
+        // London, the plan at +14:00 started on the Monday, its holidays fell on Fridays, and it finished later. Now each
+        // offset gives the metrics and the days of the plan at +00:00. No computer has both +14:00 and -11:00.
+        [Theory]
+        [InlineData(@"+14:00")]
+        [InlineData(@"+05:45")]
+        [InlineData(@"-11:00")]
+        public async Task Main_Given_ThePlanWithItsDatesAtAnotherOffset_Then_TheSameMetricsAndTheSameDays(string offset)
+        {
+            (string Metrics, string[] Days) expected = await RunPlanAtOffsetAsync(@"+00:00");
+
+            (string Metrics, string[] Days) actual = await RunPlanAtOffsetAsync(offset);
+
+            expected.Days.ShouldBe([@"2027-12-21", @"2027-12-21", @"2027-12-28", @"2027-12-29", @"2027-12-04", @"2027-12-25", @"2028-01-01"]);
+            actual.Days.ShouldBe(expected.Days);
+            actual.Metrics.ShouldBe(expected.Metrics);
+        }
+
+        // Runs the plan of the test above with each of its dates at midnight in the offset, and saves it. Returns the metrics,
+        // and the day of each date in the saved plan: the requested start, the effective start, today, the minimum earliest
+        // start of B and the holidays.
+        private async Task<(string Metrics, string[] Days)> RunPlanAtOffsetAsync(string offset)
+        {
+            string name = offset.Replace(@":", string.Empty, StringComparison.Ordinal);
+            string input = Path.Combine(m_TempDirectory, $@"offset{name}.zpp");
+            string output = Path.Combine(m_TempDirectory, $@"offset{name}-saved.zpp");
+            await File.WriteAllTextAsync(input, c_PlanAtOffset.Replace(@"{offset}", offset, StringComparison.Ordinal));
+
+            (int exitCode, string metrics) = await RunCapturedAsync(@"-i", input, @"-o", output, @"--metrics-format", @"json", @"--now", @"2027-12-01T09:00:00+00:00");
+
+            exitCode.ShouldBe(0);
+
+            // The dates as the file writes them: a reader with dates would move them into the time zone of the computer.
+            using var reader = new JsonTextReader(new StringReader(await File.ReadAllTextAsync(output))) { DateParseHandling = DateParseHandling.None };
+            JToken scenario = JObject.Load(reader)[@"Files"]![0]![@"Scenario"]!;
+            string[] dates =
+            [
+                (string)scenario[@"ProjectStart"]!,
+                (string)scenario[@"EffectiveProjectStart"]!,
+                (string)scenario[@"Today"]!,
+                (string)scenario[@"DependentActivities"]![1]![@"Activity"]![@"MinimumEarliestStartDateTime"]!,
+                .. scenario[@"HolidaySettings"]![@"Holidays"]!.Select(x => (string)x[@"StartDateTime"]!),
+            ];
+            return (metrics, [.. dates.Select(x => x[..10])]);
+        }
+
+        // A plan with a custom calendar. Each of its dates is at midnight in the offset that replaces {offset}.
+        private const string c_PlanAtOffset = """
+            {
+              "Version": "v0.6.2",
+              "Id": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e60",
+              "Root": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e61",
+              "Current": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e62",
+              "Nodes": [
+                { "Id": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e62", "ParentId": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e61", "NodeType": 0, "Name": "Main" }
+              ],
+              "Files": [
+                {
+                  "NodeId": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e62",
+                  "Scenario": {
+                    "ProjectStart": "2027-12-21T00:00:00{offset}",
+                    "Today": "2027-12-28T00:00:00{offset}",
+                    "DependentActivities": [
+                      { "Activity": { "Id": 1, "Name": "A", "Duration": 5 }, "Dependencies": [], "PlanningDependencies": [] },
+                      { "Activity": { "Id": 2, "Name": "B", "Duration": 5, "MinimumEarliestStartDateTime": "2027-12-29T00:00:00{offset}" }, "Dependencies": [ 1 ], "PlanningDependencies": [] },
+                      { "Activity": { "Id": 3, "Name": "C", "Duration": 5 }, "Dependencies": [ 2 ], "PlanningDependencies": [] },
+                      { "Activity": { "Id": 4, "Name": "End", "Duration": 0 }, "Dependencies": [ 3 ], "PlanningDependencies": [] }
+                    ],
+                    "HolidaySettings": {
+                      "Holidays": [
+                        { "Id": 1, "Name": "Weekend", "StartDateTime": "2027-12-04T00:00:00{offset}", "RecurrencePattern": "FREQ=WEEKLY;BYDAY=SA,SU" },
+                        { "Id": 2, "Name": "Christmas", "StartDateTime": "2027-12-25T00:00:00{offset}", "RecurrencePattern": "FREQ=YEARLY" },
+                        { "Id": 3, "Name": "New Year", "StartDateTime": "2028-01-01T00:00:00{offset}", "RecurrencePattern": "FREQ=YEARLY" }
+                      ]
+                    },
+                    "DisplaySettings": { "ShowDates": true, "NonWorkingDayMode": 2 }
+                  }
+                }
+              ]
+            }
+            """;
+
         [Fact]
         public void Usage_Given_EachLine_Then_FitsATerminal80ColumnsWide()
         {

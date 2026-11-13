@@ -403,7 +403,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 }
 ```
 
-- `culture` is the culture in which the server writes numbers and dates. It is an empty string for the invariant culture, which a server on Linux has when nobody sets a culture. `timeZone` is the time zone in which the server writes times. It gives the IANA name, for example `Europe/London`, and not the name that the system uses.
+- `culture` is the culture in which the server writes numbers and dates. It is an empty string for the invariant culture, which a server on Linux has when nobody sets a culture. `timeZone` is the time zone in which the server writes times. It gives the IANA name, for example `Europe/London`, and not the name that the system uses. It does not change the dates of a project, which are days (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)).
 
 - `maxJobs` jobs can run at one time, and `maxQueue` more jobs can wait for a free place. The server turns away more requests (`503 busy`).
 
@@ -879,3 +879,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The member `errors` of each item of `trackedScenarios`: why the scenario did not compile.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.
+- The dates of a project do not depend on the time zone of the server. Each date is the day that it shows, in its own offset.

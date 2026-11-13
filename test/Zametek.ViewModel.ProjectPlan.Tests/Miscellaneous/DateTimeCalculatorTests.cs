@@ -324,6 +324,63 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
+        #region Dates with different offsets
+
+        // A date of a plan is the day that it shows, whatever its offset (PROJECT-FILE.md). Thus, a count compares days, and
+        // not moments. Midnight at -08:00 is eight hours after midnight at +00:00 on the same day, and the count of moments
+        // took it as one day more. Midnight at +14:00 on the next day is a moment before midnight at -11:00 on this day.
+        [Theory]
+        [InlineData(0, -8, 0)]
+        [InlineData(-11, 14, 1)]
+        [InlineData(14, -11, 1)]
+        [InlineData(-11, 14, 0)]
+        public void CountDays_Given_DatesWithDifferentOffsets_Then_TheDaysThatTheyShow(int startOffsetHours, int dateOffsetHours, int days)
+        {
+            var calc = CreateCalc();
+            var start = new DateTimeOffset(2027, 1, 4, 0, 0, 0, TimeSpan.FromHours(startOffsetHours));
+            var date = new DateTimeOffset(2027, 1, 4 + days, 0, 0, 0, TimeSpan.FromHours(dateOffsetHours));
+
+            calc.CountDays(start, date).ShouldBe(days);
+            calc.CountDays(date, start).ShouldBe(-days);
+        }
+
+        // The day of the date is after the start, but the moment is before it. The moment made it a date before the start,
+        // which became the start.
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_ADateWhoseDayIsAfterTheStartButWhoseMomentIsBefore_Then_ItsDay()
+        {
+            var calc = CreateCalc();
+            var start = new DateTimeOffset(2027, 1, 4, 0, 0, 0, TimeSpan.FromHours(-11));
+            var date = new DateTimeOffset(2027, 1, 5, 0, 0, 0, TimeSpan.FromHours(14));
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(start, date);
+
+            time.ShouldBe(1);
+            (dt?.DateTime, dt?.Offset).ShouldBe((new DateTime(2027, 1, 5), start.Offset));
+        }
+
+        // A holiday of a custom calendar is on the day that its date shows, whatever the offset of the start.
+        [Theory]
+        [InlineData(14, -11)]
+        [InlineData(-11, 14)]
+        public void AddDays_Given_AHolidayAtAnotherOffset_Then_ItIsOnTheDayThatItsDateShows(int startOffsetHours, int holidayOffsetHours)
+        {
+            var calc = CreateCalc();
+            var start = new DateTimeOffset(2027, 1, 4, 0, 0, 0, TimeSpan.FromHours(startOffsetHours));
+            calc.ProjectStart = start;
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+            calc.SetNonWorkingDayCalendarEvents(
+            [
+                new HolidayModel { Id = 1, StartDateTime = new DateTimeOffset(2027, 1, 6, 0, 0, 0, TimeSpan.FromHours(holidayOffsetHours)), RecurrencePattern = @"FREQ=YEARLY" },
+            ]);
+
+            // Monday 4 January is day 0. Then the 5th, the 7th, the 8th and the 9th: Wednesday 6 January is the holiday.
+            calc.AddDays(start, 4).DateTime.ShouldBe(new DateTime(2027, 1, 9));
+            calc.CountDays(start, new DateTimeOffset(2027, 1, 8, 0, 0, 0, TimeSpan.FromHours(holidayOffsetHours))).ShouldBe(3);
+        }
+
+        #endregion
+
         #region FirstWorkingDayOnOrAfter and TryAddDays
 
         // A calendar can have no working day at all, or a run of days off with no end. The searches stop after

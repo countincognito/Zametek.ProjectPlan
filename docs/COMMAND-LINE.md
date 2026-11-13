@@ -393,6 +393,8 @@ A Unix domain socket is a file. Programs on this computer connect to it, in the 
 
 Jobs write numbers and dates in the culture of the computer, and times in its time zone, as `zpp` does. The option `--culture` sets the culture for all jobs, for example `--culture en-GB`. On Linux and macOS, the variable `TZ` sets the time zone, for example `TZ=Europe/London zpp serve`. A job cannot select the culture or the time zone. `/v1/info` shows both. It gives the time zone by its IANA name, also when the system uses a different name.
 
+The time zone does not change the dates of a plan. Each date is the day that it shows, in its own offset (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)).
+
 The server writes its log to the standard error stream. The log has these items:
 
 - The start and the warm-up of the server

@@ -169,8 +169,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     current = current.AddDays(sign);
 
                     // If we have moved out of the range of already calculated non-working days,
-                    // then calculate more non-working days.
-                    if (current.IsAfterOrOn(NonWorkingDaysFinish))
+                    // then calculate more non-working days. The range is days, as each date of a plan is.
+                    if (current.Date >= NonWorkingDaysFinish.Date)
                     {
                         AppendNonWorkingDays(
                             current.Date,
@@ -207,22 +207,28 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (current.IsAfter(toCompareWith))
+                // A date of a plan is the day that it shows, in its own offset (PROJECT-FILE.md). Thus, the count compares
+                // days, and not moments: two dates with different offsets can be a day apart as days, and less or more
+                // than a day apart as moments.
+                DateTime day = current.Date;
+                DateTime lastDay = toCompareWith.Date;
+
+                if (day > lastDay)
                 {
                     return -CountNonWorkingDays(toCompareWith, current, nonWorkingDayCalendarEvents);
                 }
 
                 AppendNonWorkingDays(
-                    current.Date,
-                    toCompareWith.Date,
+                    day,
+                    lastDay,
                     nonWorkingDayCalendarEvents: nonWorkingDayCalendarEvents);
 
                 int count = 0;
-                while (current.IsBefore(toCompareWith))
+                while (day < lastDay)
                 {
-                    current = current.AddDays(1);
+                    day = day.AddDays(1);
 
-                    if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
+                    if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(day)))
                     {
                         count += 1;
                     }
@@ -500,9 +506,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 DateTimeOffset? result = input;
                 if (result.HasValue)
                 {
-                    if (result < projectStart)
+                    // A day before the start is the start. Days, and not moments, as each date of a plan is a day.
+                    if (result.GetValueOrDefault().Date < projectStart.Date)
                     {
-                        result = GetLocal(projectStart.DateTime);
+                        result = projectStart;
                     }
                     result = new DateTimeOffset(result.GetValueOrDefault().Date + projectStart.TimeOfDay, projectStart.Offset);
                 }

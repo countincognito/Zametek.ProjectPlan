@@ -255,6 +255,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             DateTime.FromOADate(general.Cell(@"B2")!.Number).ShouldBe(new DateTime(2026, 3, 12));
         }
 
+        // A date of the plan is a day: a time of the day in the date does not reach the cell.
+        [Fact]
+        public void Export_Given_DatesWithATimeOfTheDay_Then_TheCellsHoldWholeDays()
+        {
+            var scenario = new ProjectScenarioModel
+            {
+                ProjectStart = new DateTimeOffset(2026, 3, 9, 13, 30, 0, TimeSpan.FromHours(10)),
+                Today = new DateTimeOffset(2026, 3, 12, 23, 45, 0, TimeSpan.FromHours(-7)),
+            };
+
+            XlsxSheet general = Sheet(
+                XlsxPackageReader.Read(XlsxSampleExport.Export(scenario, new ResourceSeriesSetModel(), new TrackingSeriesSetModel(), showDates: false)),
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
+
+            general.Cell(@"A2")!.Number.ShouldBe(new DateTime(2026, 3, 9).ToOADate());
+            general.Cell(@"B2")!.Number.ShouldBe(new DateTime(2026, 3, 12).ToOADate());
+        }
+
         [Fact]
         public async Task Export_Given_TheSample_Then_ADecimalNumberIsANumberAndNotText()
         {
