@@ -695,11 +695,24 @@ namespace Zametek.ViewModel.ProjectPlan
             return new(today, m_TimeProvider.LocalTimeZone.GetUtcOffset(today));
         }
 
+        // The time on the clock, in the time zone of this calculator's clock. A time of the kind Local took the offset of the
+        // computer, and .NET refused any other: the time is the time on the clock, whatever its kind.
         public DateTimeOffset GetLocal(DateTime dateTime)
         {
-            var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
-            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(localDateTime);
-            return new(localDateTime, offset);
+            var clockTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(clockTime);
+
+            // A time at an end of the range of .NET can have no moment at the offset of the zone. For example, a plan that
+            // gives no Today has 0001-01-01, and a zone east of UTC in the year 1 (Paris, Tokyo, Sydney) puts it before the
+            // year 1: the load of the plan failed. Such a time stays at offset 0, as in UTC.
+            long utcTicks = clockTime.Ticks - offset.Ticks;
+            if (utcTicks < DateTime.MinValue.Ticks
+                || utcTicks > DateTime.MaxValue.Ticks)
+            {
+                offset = TimeSpan.Zero;
+            }
+
+            return new(clockTime, offset);
         }
 
         public (int?, DateTimeOffset?) CalculateTimeAndDateTime(

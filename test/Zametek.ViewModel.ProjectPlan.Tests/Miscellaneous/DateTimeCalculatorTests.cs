@@ -489,6 +489,48 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #region GetLocal
 
+        // A plan that gives no Today has 0001-01-01. In a zone whose offset in the year 1 is east of UTC, that day is before
+        // the year 1, and .NET has no such moment: the load of the plan failed. Most zones east of UTC have such an offset:
+        // on Windows, Paris has +01:00, Tokyo +09:00 and Sydney +11:00 on 0001-01-01. On Linux, Kiritimati and Pago Pago
+        // failed too. Such a time stays at offset 0, as in UTC.
+        [Theory]
+        [InlineData(14)]
+        [InlineData(1)]
+        public void GetLocal_Given_TheFirstDayOfDotNetInAZoneEastOfUtc_Then_ItStaysAtOffsetNought(int hours)
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone($@"Test +{hours}", TimeSpan.FromHours(hours), $@"Test +{hours}", $@"Test +{hours}");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(DateTime.MinValue);
+
+            (local.DateTime, local.Offset).ShouldBe((DateTime.MinValue, TimeSpan.Zero));
+        }
+
+        // West of UTC, the last moment of .NET is after the range, as the first day is before it east of UTC.
+        [Fact]
+        public void GetLocal_Given_TheLastMomentOfDotNetInAZoneWestOfUtc_Then_ItStaysAtOffsetNought()
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -11", TimeSpan.FromHours(-11), @"Test -11", @"Test -11");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(DateTime.MaxValue);
+
+            (local.DateTime, local.Offset).ShouldBe((DateTime.MaxValue, TimeSpan.Zero));
+        }
+
+        // The time on the clock of the calculator, at the offset of its zone, also when that zone is not the zone of the
+        // computer. A time of the kind Local took the offset of the computer, and .NET refused any other.
+        [Fact]
+        public void GetLocal_Given_AClockInAnotherZone_Then_TheTimeAtTheOffsetOfThatZone()
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test +05:30", TimeSpan.FromMinutes(330), @"Test +05:30", @"Test +05:30");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 9, 27, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(new DateTime(2027, 1, 4, 9, 30, 0, DateTimeKind.Local));
+
+            (local.DateTime, local.Offset).ShouldBe((new DateTime(2027, 1, 4, 9, 30, 0), TimeSpan.FromMinutes(330)));
+        }
+
         [Fact]
         public void CalculateTimeAndDateTime_DateTime_BeforeProjectStart_ClampsToStart()
         {
