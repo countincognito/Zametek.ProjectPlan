@@ -12,6 +12,8 @@ dotnet build
 dotnet run --project src/Zametek.ProjectPlan.Desktop
 ```
 
+On Windows, clone the repository into a short path, for example `C:\src\pp`. IKVM writes files below the `obj` folder of the command line tool, and in a deep folder their paths can be longer than 260 characters. By default, Windows does not accept such a path, and the build stops with `MSB3030`. If you cannot use a short path, give IKVM short folders, for example `-p:IkvmStageDir=C:\ikvm\stage -p:IkvmCacheDir=C:\ikvm\cache`.
+
 The application has one project that all hosts use, and one project for each host. Thus, all platforms use the same view models, UI components and composition. The table that follows gives a list of the projects:
 
 | Project | Description |

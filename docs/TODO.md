@@ -10,6 +10,10 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   At the limits of the compiler (2000 activities and 1000 resources), one job takes 214 seconds, and the server uses 2.9 GB at the peak. With the default job limit of 120 seconds, the job fails after it holds the memory for two minutes. Thus, four such jobs at one time can use 12 GB. Find the work that grows with the activities and the resources. The allocation streams of each resource are one possible cause: they have one value for each day. Then bound the work: make it smaller, put it under the compile limit, or give the server a limit of memory.
 
+  The Linux test of the same day measured the job at the limits after the change. It took 15 seconds on Windows, and 17.6 seconds on Linux (WSL, 2 processors). But the server used 4.5 GB at the peak on Windows (3.5 GB on Linux), and it kept 3.4 GB after the job.
+
+  In the stress test, a long run of 440 jobs gave its memory back. Thus, this is probably the garbage collector, which keeps its heap. By default, the server runs as many jobs at one time as the computer has processors. Thus, on a computer with 2 processors and 8 GB, two such jobs fill the memory. Measure the job with `DOTNET_GCConserveMemory` or with a limit of the heap, together with point 5 of the entry "Package `zpp serve`".
+
 - [ ] **Stop the cache of non-working days from taking a gap as known** *(2026-11-13, found during the fix of a constraint date on a non-working day)*
 
   `AppendNonWorkingDays` in `DateTimeCalculator` searches the non-working days of a range. Then it makes the known span reach the range. When the range does not touch the span, the days between them become known, but the method did not search them. Their non-working days then count as working days. The first fix of a constraint date on a non-working day checked the date before it counted from the project start. Then a minimum earliest start of 220 became 306.
@@ -422,6 +426,8 @@ This file lists the maintainer-internal engineering intents that must version wi
   4. **The probes.** `/health/live` is for liveness. `/health/ready` is for readiness, and it comes a few seconds after the start-up, when the warm-up is complete.
   5. **The garbage collector.** `zpp` runs the workstation GC. Measure the server GC (`DOTNET_gcServer=1` in the image or in the environment of the service) with a long test of 1,000 jobs before you choose.
   6. **The size of the image.** It carries MPXJ and the Java runtime image of IKVM, although the server refuses MS Project imports. `Zametek.ViewModel.ProjectPlan` references MPXJ.Net. If the importer moves to an assembly of its own, the image can leave them out.
+
+  The packaging must also give the single file a folder. At its first start, the single file unpacks approximately 250 MB into `~/.net/zpp/<hash>`. A service without a home folder cannot write there, for example a systemd unit with `ProtectHome` or `DynamicUser`. Then `zpp` stops with the exit code 159. Set `DOTNET_BUNDLE_EXTRACT_BASE_DIR` in the image and in each unit (refer to [The single file](COMMAND-LINE.md#the-single-file)).
 
   CI must build and test on Windows, Linux and macOS. It needs exact golden files for the data outputs and the graph SVGs on all platforms. It needs exact golden files for the other outputs on the platform of the image. On other platforms, it needs a perceptual tolerance.
 

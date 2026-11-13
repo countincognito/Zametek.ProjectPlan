@@ -180,6 +180,18 @@ zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --s
 - `zpp --server` sends the run to the server, and the server limits the iterations of a project that it runs (refer to [Limits](#limits)).
 - [Simulations on the server](CLIENT-SERVER-QUICK-START.md#simulations-on-the-server) is a tutorial with three sample plans of different sizes. It shows the progress of each simulation, and how simulations at the same time share the processors of a server.
 
+## The single file
+
+The archives of a release hold `zpp` as one file. At its first start, each build of this file unpacks approximately 250 MB into a folder of its own. On Linux and macOS, the folder is `~/.net/zpp/<hash>`. On Windows, it is `%TEMP%\.net\zpp\<hash>`. The later starts of the same build use the same folder.
+
+`zpp` does not delete the folders of earlier builds. To get the space back, delete the folder `zpp` in `~/.net` or in `%TEMP%\.net` when no `zpp` runs. The next start unpacks its build again.
+
+If `zpp` cannot write to this folder, it stops before it does its work. The message is "Failure processing application bundle", and on Linux the exit code is 159. This code is not one of the exit codes of `zpp`. It can occur for a service without a home folder, for example a systemd service with `ProtectHome` or `DynamicUser`. To use a different folder, set the variable `DOTNET_BUNDLE_EXTRACT_BASE_DIR`:
+
+```
+DOTNET_BUNDLE_EXTRACT_BASE_DIR=/var/cache/zpp zpp serve
+```
+
 ## Exit codes
 
 The exit codes are a contract for scripts and CI gates. The test suite `Zametek.ProjectPlan.CommandLine.Tests` makes sure that they stay the same:
