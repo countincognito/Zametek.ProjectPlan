@@ -28,6 +28,10 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public double? NetworkDurationManMonths { get; init; }
 
+        // The effective start: the first working day on the start of the project or after it, in the working calendar the
+        // project keeps. It is day 0, and the days of the finish count from it.
+        public DateOnly? ProjectStartDate { get; init; }
+
         // The finish as the days to it from the project's start - the network's duration - and as the date it falls on, in
         // the working calendar the project keeps. Neither has a value when the project has no duration.
         public int? ProjectFinishDays { get; init; }
@@ -103,6 +107,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 NetworkCyclomaticComplexity = metrics.NetworkCyclomaticComplexity,
                 NetworkDuration = metrics.NetworkDuration,
                 NetworkDurationManMonths = Finite(metrics.NetworkDurationManMonths),
+                ProjectStartDate = metrics.ProjectStartDate,
                 ProjectFinishDays = metrics.ProjectFinishDays,
                 ProjectFinishDate = metrics.ProjectFinishDate,
                 EffortEfficiency = Finite(metrics.EffortEfficiency),

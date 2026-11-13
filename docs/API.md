@@ -191,7 +191,7 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 
 ```json
 {
-  "metrics": { "networkDuration": 5, "projectFinishDays": 5, "projectFinishDate": "2024-01-06", ... },
+  "metrics": { "networkDuration": 5, "projectStartDate": "2024-01-01", "projectFinishDays": 5, "projectFinishDate": "2024-01-06", ... },
   "outputs": [
     { "kind": "project", "fileName": "plan.zpp", "contentType": "application/json", "content": "ewogICJWZXJz..." },
     { "kind": "ganttChart", "fileName": "plan-gantt.png", "contentType": "image/png", "content": "iVBORw0KGgo..." }
@@ -218,6 +218,7 @@ The answer has each metric of the project, as a number or `null`. The names are 
 | `networkCyclomaticComplexity` | The cyclomatic complexity of the network, a whole number. |
 | `networkDuration` | The duration of the network, in days, a whole number. |
 | `networkDurationManMonths` | The duration, in person-months. |
+| `projectStartDate` | The date on which the work of the project starts, as a date (`2024-01-01`). It is the first working day on `ProjectStart` or after it, and it is day 0 of the schedule (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)). |
 | `projectFinishDays` | The number of days from the start of the project to its finish. This is the duration of the network. |
 | `projectFinishDate` | The date on which the project finishes, in the working calendar of the project, as a date (`2024-01-06`). It is the date of the first day after the last day of work. With `UseClassicDates` in the display settings of the scenario, it is the date of the last day of work. The value is `null`, with `projectFinishDays`, when the project has no duration. |
 | `effortEfficiency` | The efficiency of the effort. |
@@ -692,7 +693,7 @@ A workbook to import can have problems in its cells. The server reads the whole 
   "errors": [
     { "pointer": "#/options/outputs/ganttChart", "code": "failed", "detail": "The gantt chart could not be produced." }
   ],
-  "metrics": { "networkDuration": 5, "projectFinishDays": 5, "projectFinishDate": "2024-01-06", ... },
+  "metrics": { "networkDuration": 5, "projectStartDate": "2024-01-01", "projectFinishDays": 5, "projectFinishDate": "2024-01-06", ... },
   "outputs": [
     { "kind": "project", "fileName": "plan.zpp", "contentType": "application/json", "content": "ewogICJWZXJz..." }
   ]
@@ -871,3 +872,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
 - The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
+- The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.

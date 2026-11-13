@@ -593,7 +593,7 @@ curl.exe -s -F project=@two-scenarios.zpp http://localhost:9770/v1/projects/comp
 ```
 
 ```text
-{"metrics":{"activityRisk":1,"activityRiskWithStandardDeviationCorrection":1,"criticalityRisk":1,...,"networkDuration":5,"networkDurationManMonths":0.1643835616438356,"projectFinishDays":5,"projectFinishDate":"2024-01-06",...},"outputs":[]}
+{"metrics":{"activityRisk":1,"activityRiskWithStandardDeviationCorrection":1,"criticalityRisk":1,...,"networkDuration":5,"networkDurationManMonths":0.1643835616438356,"projectStartDate":"2024-01-01","projectFinishDays":5,"projectFinishDate":"2024-01-06",...},"outputs":[]}
 ```
 
 A request names the outputs in its options. The options are JSON in a part named `options`. They are the options of `zpp`, with the same names and defaults, but without the paths. Put the options in a file. This prevents problems with the quotation marks of JSON in PowerShell:

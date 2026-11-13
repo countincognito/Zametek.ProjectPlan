@@ -242,6 +242,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                 (Resource.ProjectPlan.Labels.Label_ActivityEffort, Value(x => $@"{x.ActivityEffort:F0}")),
                 (Resource.ProjectPlan.Labels.Label_DurationManMonths, Value(x => $@"{x.NetworkDurationManMonths:F1}")),
+                (Resource.ProjectPlan.Labels.Label_ProjectStartDate, Value(x => x.ProjectStartDate?.ToString(DateTimeCalculator.DateFormat, CultureInfo.CurrentCulture) ?? string.Empty)),
                 (Resource.ProjectPlan.Labels.Label_ProjectFinish, Value(x => $@"{x.ProjectFinish}")),
                 (Resource.ProjectPlan.Labels.Label_EffortEfficiency, Value(x => $@"{x.EffortEfficiency:F3}")),
 
@@ -376,6 +377,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 metrics.NetworkCyclomaticComplexity,
                 metrics.NetworkDuration,
                 metrics.NetworkDurationManMonths,
+                ProjectStartDate = Date(metrics.ProjectStartDate),
                 metrics.ProjectFinish,
                 metrics.EffortEfficiency,
                 metrics.PeakHeadcount,

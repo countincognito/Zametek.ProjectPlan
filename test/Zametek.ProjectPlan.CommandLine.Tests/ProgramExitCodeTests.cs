@@ -478,6 +478,32 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_APlanThatStartsOnASaturdayWithWeekends_Then_ItsWorkStartsOnTheMondayAfter()
+        {
+            // The plan asks to start on Saturday 6 January 2024. With weekends, its work starts on Monday 8 January, which is
+            // day 0. zpp gives the start in the metrics, and the file keeps the start that the plan asks for beside it.
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            foreach (JToken scenario in plan.SelectTokens(@"$.Files[*].Scenario"))
+            {
+                scenario[@"ProjectStart"] = @"2024-01-06T00:00:00+00:00";
+                scenario[@"DisplaySettings"]![@"NonWorkingDayMode"] = 1;
+            }
+            string planFile = Path.Combine(m_TempDirectory, @"saturday.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+            string outputFile = Path.Combine(m_TempDirectory, @"saturday-saved.zpp");
+
+            (int exitCode, string output) = await RunCapturedAsync(@"-i", planFile, @"-o", outputFile, @"--metrics-format", @"json");
+
+            exitCode.ShouldBe(0);
+            output.ShouldContain(@"""ProjectStartDate"": ""2024-01-08""");
+            output.ShouldContain(@"""NetworkDuration"": 5");
+            using var reader = new JsonTextReader(new StringReader(File.ReadAllText(outputFile))) { DateParseHandling = DateParseHandling.None };
+            JToken saved = JObject.Load(reader).SelectToken(@"$.Files[0].Scenario")!;
+            saved[@"ProjectStart"]!.Value<string>().ShouldStartWith(@"2024-01-06T00:00:00");
+            saved[@"EffectiveProjectStart"]!.Value<string>().ShouldStartWith(@"2024-01-08T00:00:00");
+        }
+
+        [Fact]
         public async Task Main_Given_CompileTracked_Then_PrintsTheMetricsOfEachTrackedScenario()
         {
             (int exitCode, string output) = await RunCapturedAsync(

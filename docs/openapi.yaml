@@ -795,6 +795,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -837,6 +838,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -887,6 +889,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -1135,6 +1138,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -1567,6 +1571,7 @@ components:
         - networkCyclomaticComplexity
         - networkDuration
         - networkDurationManMonths
+        - projectStartDate
         - projectFinishDays
         - projectFinishDate
         - effortEfficiency
@@ -1607,6 +1612,10 @@ components:
           type: [integer, 'null']
           description: In days.
         networkDurationManMonths: { type: [number, 'null'] }
+        projectStartDate:
+          type: [string, 'null']
+          format: date
+          description: The date on which the work of the project starts, in the working calendar of the project. It is the first working day on `ProjectStart` or after it, and it is day 0 of the schedule.
         projectFinishDays:
           type: [integer, 'null']
           description: The number of days from the start of the project to its finish. `null` when the project has no duration.

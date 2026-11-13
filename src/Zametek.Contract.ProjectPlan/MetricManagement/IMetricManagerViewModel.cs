@@ -35,6 +35,9 @@
 
         double? NetworkDurationManMonths { get; }
 
+        // The effective start: the first working day on the start of the plan or after it, which is day 0 of the schedule.
+        DateOnly? ProjectStartDate { get; }
+
         string ProjectFinish { get; }
 
         int? ProjectFinishDays { get; }

@@ -180,6 +180,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
             JobMetrics metrics = result.Metrics.ShouldNotBeNull();
             metrics.ProjectFinish.ShouldBe(@"5");
+            metrics.ProjectStartDate.ShouldBe(new DateOnly(2024, 1, 1));
             metrics.ProjectFinishDays.ShouldBe(5);
             metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 6));
         }

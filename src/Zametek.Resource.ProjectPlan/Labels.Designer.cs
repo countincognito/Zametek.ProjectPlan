@@ -1545,6 +1545,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ProjectStart", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Project Start.
+        /// </summary>
+        public static string Label_ProjectStartDate {
+            get {
+                return ResourceManager.GetString("Label_ProjectStartDate", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Rename.

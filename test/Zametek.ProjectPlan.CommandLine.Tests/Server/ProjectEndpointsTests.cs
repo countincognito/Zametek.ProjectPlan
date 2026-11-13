@@ -27,7 +27,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [
             @"activityRisk", @"activityRiskWithStandardDeviationCorrection", @"criticalityRisk", @"fibonacciRisk",
             @"geometricActivityRisk", @"geometricCriticalityRisk", @"geometricFibonacciRisk", @"networkCyclomaticComplexity",
-            @"networkDuration", @"networkDurationManMonths", @"projectFinishDays", @"projectFinishDate", @"effortEfficiency",
+            @"networkDuration", @"networkDurationManMonths", @"projectStartDate", @"projectFinishDays", @"projectFinishDate", @"effortEfficiency",
             @"peakHeadcount", @"averageHeadcount", @"peakToAverageHeadcount",
             @"activityEffort", @"directEffort", @"indirectEffort", @"otherEffort", @"totalEffort", @"directCost",
             @"indirectCost", @"otherCost", @"totalCost", @"directBilling", @"indirectBilling", @"otherBilling",
@@ -201,8 +201,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             compiled.Metrics.NetworkDuration.ShouldBe(5);
 
             // The project finishes five days after its start, 1 January 2024, as the days and as the date.
+            compiled.Metrics.ProjectStartDate.ShouldBe(new DateOnly(2024, 1, 1));
             compiled.Metrics.ProjectFinishDays.ShouldBe(5);
             compiled.Metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 6));
+        }
+
+        [Fact]
+        public async Task Compile_Given_AStartOnASaturdayWithWeekends_Then_TheWorkStartsOnTheMondayAfter()
+        {
+            // The plan asks to start on Saturday 6 January 2024. With weekends, its work starts on Monday 8 January, which is
+            // day 0. The five days of work finish on Friday 12 January, and the finish is the first day after them.
+            byte[] plan = PlanThatStartsOnASaturdayWithWeekends();
+            using var content = RunningServer.CompileContent(plan, @"saturday.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Metrics.ProjectStartDate.ShouldBe(new DateOnly(2024, 1, 8));
+            compiled.Metrics.ProjectFinishDays.ShouldBe(5);
+            compiled.Metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 15));
         }
 
         [Fact]
@@ -605,6 +623,19 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         // The project of the two scenarios, in which every activity has no duration.
+        private static byte[] PlanThatStartsOnASaturdayWithWeekends()
+        {
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+
+            foreach (Newtonsoft.Json.Linq.JToken scenario in plan.SelectTokens(@"$.Files[*].Scenario"))
+            {
+                scenario[@"ProjectStart"] = @"2024-01-06T00:00:00+00:00";
+                scenario[@"DisplaySettings"]![@"NonWorkingDayMode"] = 1;
+            }
+
+            return Encoding.UTF8.GetBytes(plan.ToString());
+        }
+
         private static byte[] PlanOfNoDuration()
         {
             Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));

@@ -667,6 +667,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problemNames.ShouldBe(Names(problem, written), ignoreOrder: true);
 
             Schema(@"Metrics")[@"properties"]![@"projectFinishDate"]![@"format"]!.GetValue<string>().ShouldBe(@"date");
+            Schema(@"Metrics")[@"properties"]![@"projectStartDate"]![@"format"]!.GetValue<string>().ShouldBe(@"date");
         }
 
         [Fact]

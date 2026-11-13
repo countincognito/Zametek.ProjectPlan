@@ -84,7 +84,7 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - A time of an activity is a number of working days from the effective start. The effective start is the first working day on `ProjectStart` or after it. Day 0 is the effective start, and day n is the nth working day after it. The calendar of the scenario gives the working days (refer to [The calendar](#the-calendar)).
 
-- `ProjectStart` is the start that you give, and `zpp` does not change it. `zpp` writes the effective start as `EffectiveProjectStart`, and it calculates it again when it reads the file. Thus, with weekends, a plan that starts on a Saturday does its first day of work on the Monday after it.
+- `ProjectStart` is the start that you give, and `zpp` does not change it. `zpp` writes the effective start as `EffectiveProjectStart`, and it calculates it again when it reads the file. The metrics also give it: `projectStartDate` in the API, and `ProjectStartDate` in `zpp --metrics-format json`. Thus, with weekends, a plan that starts on a Saturday does its first day of work on the Monday after it.
 
 - A change to the calendar can move the effective start. For example, a holiday on `ProjectStart` moves it to the next working day. When the holiday goes, the effective start goes back to `ProjectStart`.
 

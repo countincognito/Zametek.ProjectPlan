@@ -546,6 +546,9 @@
   <data name="Label_ProjectFinish" xml:space="preserve">
     <value>Project Finish</value>
   </data>
+  <data name="Label_ProjectStartDate" xml:space="preserve">
+    <value>Project Start</value>
+  </data>
   <data name="Label_ProjectStart" xml:space="preserve">
     <value>Project Start:</value>
   </data>

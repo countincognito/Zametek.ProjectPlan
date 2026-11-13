@@ -66,12 +66,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time (refer to the entry about the five inputs that give 500).
 
-- [ ] **Decide what day 0 is when ProjectStart is not a working day** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
-
-  With weekends, a plan of 5 days that starts on Saturday 2027-01-02 finishes on 2027-01-08. The same plan finishes on 2027-01-11 when it starts on Monday 2027-01-04. Thus, `zpp` and the application count the Saturday as working day 0, and each date is one working day early.
-
-  One fix makes day 0 the first working day on `ProjectStart` or after it. This fix moves the dates of each plan that starts on a day that is not a working day. Other possible fixes: refuse such a plan, or make the application move `ProjectStart` to a working day when the user sets it. The documents tell the user to give a working day since 0.11.0-beta.1.
-
 - [ ] **Let the MSI of the final 0.11.0 replace an installed 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
 
   Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` does not allow an upgrade of the same version, because this is the default of WiX 5. The Upgrade table of the MSI of the beta shows it:
