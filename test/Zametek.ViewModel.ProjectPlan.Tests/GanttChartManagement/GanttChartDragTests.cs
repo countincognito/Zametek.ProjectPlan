@@ -23,7 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // where O is 0. Activity 2 takes 6 days from the same start, and so its bar ends where the shortest bar of activity
             // 1 ends, in days or in dates. Activity 3 has no estimates of its own, and a drag can make it 1 day, as before.
             using CoreViewModel core = CoreViewModelFixture.Create();
-            core.ProjectStart = new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero);
+            core.RequestedProjectStart = new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero);
             core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
             core.DisplaySettingsViewModel.ShowDates = showDates;
             core.AddManagedActivities(

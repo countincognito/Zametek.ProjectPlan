@@ -99,6 +99,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_HasStaleOutputs = false;
             DateTimeOffset today = m_DateTimeCalculator.GetLocalToday();
+            m_RequestedProjectStart = today;
             m_ProjectStart = today;
             m_Today = today;
             m_ResourceSettings = new ResourceSettingsModel();
@@ -239,6 +240,8 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </remarks>
         private void RefreshActivityDateTimes()
         {
+            // The calendar also decides the first working day, which is day 0: each activity counts from it.
+            UpdateProjectStart();
             m_PlanGraph.UpdateEarliestStartAndLatestFinishDateTimes();
         }
 
@@ -463,6 +466,64 @@ namespace Zametek.ViewModel.ProjectPlan
             CancellationToken cancellationToken) =>
             compiler.Compile(availableResources, workStreams, cancellationToken);
 
+        /// <summary>
+        /// Makes a compilation fail when the calendar cannot give the plan its dates: it has no working day in the
+        /// <see cref="DateTimeCalculator.MaximumNonWorkingRun"/> days from the requested start, or the schedule meets a run
+        /// of more days off than that before it finishes. The calculator stops its searches at that run, so that a calendar
+        /// with no working day, for example a holiday on each day, does not make it search without end. The error is P0080,
+        /// the code of a value out of the limits, and it has no schedule.
+        /// </summary>
+        private IGraphCompilation<int, int, int, IDependentActivity> WithCalendarCheck(
+            IGraphCompilation<int, int, int, IDependentActivity> compilation)
+        {
+            if (compilation.CompilationErrors.Any())
+            {
+                return compilation;
+            }
+
+            string? problem = null;
+            DateTimeOffset requestedStart;
+            DateTimeOffset start;
+
+            lock (m_ProjectStartLock)
+            {
+                requestedStart = m_RequestedProjectStart;
+                start = m_ProjectStart;
+            }
+
+            if (m_DateTimeCalculator.FirstWorkingDayOnOrAfter(requestedStart) is null)
+            {
+                problem = string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    Resource.ProjectPlan.Messages.Message_CalendarHasNoWorkingDay,
+                    DateTimeCalculator.MaximumNonWorkingRun,
+                    requestedStart.DateTime);
+            }
+            else
+            {
+                // A schedule of no days meets no run of days off, and it has no date of a finish to count to.
+                int finish = compilation.DependentActivities.Select(x => x.EarliestFinishTime.GetValueOrDefault()).DefaultIfEmpty().Max();
+                if (finish > 0 && !m_DateTimeCalculator.TryAddDays(start, finish, out _))
+                {
+                    problem = string.Format(
+                        System.Globalization.CultureInfo.CurrentCulture,
+                        Resource.ProjectPlan.Messages.Message_CalendarHasLongRunOfDaysOff,
+                        DateTimeCalculator.MaximumNonWorkingRun);
+                }
+            }
+
+            if (problem is null)
+            {
+                return compilation;
+            }
+
+            return new GraphCompilation<int, int, int, IDependentActivity>(
+                compilation.DependentActivities,
+                [],
+                compilation.WorkStreams,
+                [new GraphCompilationError(GraphCompilationErrorCode.P0080, problem)]);
+        }
+
         // Publishing the metrics. Call these with m_Lock held. The setters mark the scenario as updated when a
         // value is different, and Metrics is raised for the observers of the record as a whole.
 
@@ -603,10 +664,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private int m_CompilationOutputRevision;
         public int CompilationOutputRevision => Volatile.Read(ref m_CompilationOutputRevision);
 
-        private DateTimeOffset m_ProjectStart;
-        public DateTimeOffset ProjectStart
+        private DateTimeOffset m_RequestedProjectStart;
+        public DateTimeOffset RequestedProjectStart
         {
-            get => m_ProjectStart;
+            get => m_RequestedProjectStart;
             set
             {
                 lock (m_Lock)
@@ -614,24 +675,70 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectScenarioUpdated = true;
 
                     // Convert to local now using TimeProvider as we do not know
-                    // if the input is provided as just a datetime from XAML.
+                    // if the input is provided as just a datetime from XAML. The calculator keeps the requested start: the
+                    // rules of the holidays start from it, and so they do not depend on the effective start that they decide.
                     m_DateTimeCalculator.ProjectStart = value;
-                    this.RaiseAndSetIfChanged(ref m_ProjectStart, m_DateTimeCalculator.ProjectStart);
+                    DateTimeOffset requestedStart = m_DateTimeCalculator.ProjectStart;
 
-                    // Push the new start into every activity synchronously, so their
-                    // minimum earliest start times and maximum latest finish times are
-                    // measured from it before the compile armed below can read them.
-                    // This used to happen through a per-activity subscription observing
-                    // on the current thread's trampoline, which deferred the work
-                    // whenever the write itself was made from inside another scheduled
-                    // delivery. During a load this loop is empty: the start is always
-                    // assigned before the activities are added, and each activity is
-                    // built with the current start.
-                    m_PlanGraph.SetProjectStart(m_ProjectStart);
+                    bool isChanged;
+                    lock (m_ProjectStartLock)
+                    {
+                        isChanged = !m_RequestedProjectStart.Equals(requestedStart);
+                        if (isChanged)
+                        {
+                            m_RequestedProjectStart = requestedStart;
+                        }
+                    }
+
+                    if (isChanged)
+                    {
+                        this.RaisePropertyChanged();
+                    }
+
+                    UpdateProjectStart();
 
                     RequestCompilation();
                 }
             }
+        }
+
+        // Guards the writes of the two starts, and the reads that must see them together. A leaf lock: only the calculator
+        // is called under it, and the calculator calls nothing back.
+        private readonly Lock m_ProjectStartLock = new();
+
+        private DateTimeOffset m_ProjectStart;
+        public DateTimeOffset ProjectStart => m_ProjectStart;
+
+        /// <summary>
+        /// Makes day 0 the first working day on the requested start or after it, and pushes it into every activity. The
+        /// setter of the requested start calls it, and so does the recount after a change of the calendar, because the
+        /// calendar decides which day that is. The plan keeps the requested start. Thus, an edit of the calendar moves the
+        /// effective start only while the edit holds, and it does not change what the user gave. A calendar with no working
+        /// day keeps the requested start, and the compile fails (see <see cref="WithCalendarCheck"/>).
+        /// </summary>
+        /// <remarks>
+        /// It takes no lock of the core, for the reason that <see cref="RefreshActivityDateTimes"/> gives. Its own lock
+        /// keeps the calculation and the write together. The push into the activities is synchronous, so their minimum
+        /// earliest start times and maximum latest finish times are measured from the new start before a compile can read
+        /// them. During a load, the activities are added after the start and the calendar, and each is built with the start
+        /// of that time.
+        /// </remarks>
+        private void UpdateProjectStart()
+        {
+            DateTimeOffset start;
+
+            lock (m_ProjectStartLock)
+            {
+                start = m_DateTimeCalculator.FirstWorkingDayOnOrAfter(m_RequestedProjectStart) ?? m_RequestedProjectStart;
+                if (start.EqualsExact(m_ProjectStart))
+                {
+                    return;
+                }
+                m_ProjectStart = start;
+            }
+
+            this.RaisePropertyChanged(nameof(ProjectStart));
+            m_PlanGraph.SetProjectStart(start);
         }
 
         private DateTimeOffset m_Today;
@@ -1213,7 +1320,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     BeginBusy();
                     ProjectScenarioModel emptyPlan = CreateEmptyProjectScenario();
 
-                    ProjectStart = emptyPlan.ProjectStart;
+                    RequestedProjectStart = emptyPlan.ProjectStart;
                     Today = emptyPlan.Today;
 
                     GraphSettings = emptyPlan.GraphSettings;
@@ -1359,7 +1466,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectScenarioImportModel.ProjectStart;
+                    RequestedProjectStart = projectScenarioImportModel.ProjectStart;
 
                     // Project Start Date.
                     Today = projectScenarioImportModel.Today;
@@ -1474,7 +1581,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectScenarioModel.ProjectStart;
+                    RequestedProjectStart = projectScenarioModel.ProjectStart;
 
                     // Project Start Date.
                     Today = projectScenarioModel.Today;
@@ -1626,7 +1733,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var plan = new ProjectScenarioModel
                     {
-                        ProjectStart = ProjectStart,
+                        ProjectStart = RequestedProjectStart,
+                        EffectiveProjectStart = ProjectStart,
                         Today = Today,
                         DependentActivities = dependentActivities,
                         GraphSettings = GraphSettings.CloneObject(),
@@ -2030,7 +2138,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         snapshot = TakeSnapshot();
                     }
 
-                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = m_Scheduler.Compile(snapshot, timeoutMilliseconds, CompilePlan);
+                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = WithCalendarCheck(
+                        m_Scheduler.Compile(snapshot, timeoutMilliseconds, CompilePlan));
 
                     lock (m_Lock)
                     {

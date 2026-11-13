@@ -7,6 +7,9 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
     {
         public DateTimeOffset ProjectStart { get; init; }
 
+        // Calculated: the first working day on ProjectStart or after it, which is day 0 of the schedule.
+        public DateTimeOffset? EffectiveProjectStart { get; init; }
+
         public DateTimeOffset Today { get; init; }
 
         public List<DependentActivityModel> DependentActivities { get; init; } = [];

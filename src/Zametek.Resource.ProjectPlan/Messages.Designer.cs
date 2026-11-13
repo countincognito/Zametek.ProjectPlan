@@ -97,6 +97,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The calendar has more than {0} days in a row that are not working days, before the schedule finishes..
+        /// </summary>
+        public static string Message_CalendarHasLongRunOfDaysOff {
+            get {
+                return ResourceManager.GetString("Message_CalendarHasLongRunOfDaysOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The calendar has no working day in the {0} days from {1:d}..
+        /// </summary>
+        public static string Message_CalendarHasNoWorkingDay {
+            get {
+                return ResourceManager.GetString("Message_CalendarHasNoWorkingDay", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} and {1} cannot both be set.
         /// </summary>
         public static string Message_CannotBothBeSet {

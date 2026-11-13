@@ -907,7 +907,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static CoreViewModel CreateCore(IReadOnlyList<DependentActivityModel> activities)
         {
             CoreViewModel core = CoreViewModelFixture.Create();
-            core.ProjectStart = new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero);
+            core.RequestedProjectStart = new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero);
             core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
             core.AddManagedActivities(activities);
             return core;

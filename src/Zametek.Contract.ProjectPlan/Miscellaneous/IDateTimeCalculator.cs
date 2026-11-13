@@ -36,9 +36,17 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset AddDays(DateTimeOffset startDateTime, int days);
 
+        // As AddDays, but false when the count meets a run of more days off than DateTimeCalculator.MaximumNonWorkingRun.
+        // The count then takes the next day as a working day, so that it ends, and the result is not a date of the calendar.
+        bool TryAddDays(DateTimeOffset startDateTime, int days, out DateTimeOffset result);
+
         int CountDays(DateTimeOffset current, DateTimeOffset toCompareWith);
 
         bool IsNonWorkingDay(DateTimeOffset date);
+
+        // The first working day on the date or after it. Null when the calendar has no working day in the
+        // DateTimeCalculator.MaximumNonWorkingRun days from the date.
+        DateTimeOffset? FirstWorkingDayOnOrAfter(DateTimeOffset date);
 
         DateTimeOffset DisplayEarliestStartDate(DateTimeOffset projectStart, DateTimeOffset earliestStart, int duration);
 

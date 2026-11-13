@@ -723,6 +723,9 @@
   <data name="Label_DisplayStyle" xml:space="preserve">
     <value>Display style</value>
   </data>
+  <data name="Label_WorkStartsOn" xml:space="preserve">
+    <value>Work starts on {0:ddd} {0:d}</value>
+  </data>
   <data name="Label_Today" xml:space="preserve">
     <value>Today:</value>
   </data>

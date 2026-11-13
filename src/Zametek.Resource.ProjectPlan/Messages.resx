@@ -366,6 +366,12 @@
   <data name="Message_MustBeGreaterThanZero" xml:space="preserve">
     <value>{0} must be greater than zero ({1})</value>
   </data>
+  <data name="Message_CalendarHasNoWorkingDay" xml:space="preserve">
+    <value>The calendar has no working day in the {0} days from {1:d}.</value>
+  </data>
+  <data name="Message_CalendarHasLongRunOfDaysOff" xml:space="preserve">
+    <value>The calendar has more than {0} days in a row that are not working days, before the schedule finishes.</value>
+  </data>
   <data name="Message_CannotBothBeSet" xml:space="preserve">
     <value>{0} and {1} cannot both be set</value>
   </data>

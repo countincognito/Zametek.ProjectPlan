@@ -215,9 +215,11 @@ These rules are important. Several of them came from deadlocks and double-build 
 
     Three tests found this on all three triggers. The tests make the change from inside `Scheduler.CurrentThread.Schedule`, and they read the activity before that action returns.
 
-    These values now go in synchronously, as the settings do. `ProjectStart` calls `SetProjectStart`. `HolidaySettings` calls `UpdateEarliestStartAndLatestFinishDateTimes`. `ProjectScenarioDisplaySettingsViewModel.NonWorkingDayMode` calls `UpdateEarliestStartAndLatestFinishDateTimes` through a core callback that takes no lock.
+    These values now go in synchronously, as the settings do. `RequestedProjectStart` calls `SetProjectStart` with the effective start. `HolidaySettings` calls `UpdateEarliestStartAndLatestFinishDateTimes`. `ProjectScenarioDisplaySettingsViewModel.NonWorkingDayMode` calls `UpdateEarliestStartAndLatestFinishDateTimes` through a core callback that takes no lock.
 
     The reason is that this setter can still be inside the display settings lock. If it takes `m_Lock` there, it creates again the lock-order edge of rule 6. The application can still defer one item. This item changes nothing: the *display* mode of the calculator, which only raises the properties that show a date again. Rule 11 closes the remaining cases.
+
+    The calendar also decides day 0. Day 0 is the effective start: the first working day on the requested start or after it. Thus, the recount after a change of the calendar first finds the effective start again (`UpdateProjectStart`). It pushes a new start into every activity, as the setter does. It takes only `m_ProjectStartLock`, a leaf lock that guards the two starts, for the reason of rule 6.
 
     A load and an import must also set the calendar of the plan before they make the activities. Each activity counts its constraints along the calendar in force when the load makes it. An activity that has only the number of a constraint makes the date from the number. A date that is not a working day moves to a working day. The reset at the start of a load puts the default calendar of the settings in force.
 

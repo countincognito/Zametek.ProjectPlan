@@ -741,6 +741,7 @@ namespace Zametek.Data.ProjectPlan
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.ResourceMetrics))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSettings))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSummary))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.EffectiveProjectStart))]
         public partial ProjectScenarioModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -853,12 +854,13 @@ namespace Zametek.Data.ProjectPlan
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_1.ProjectScenarioModel FromCurrentToV0_6_1(ProjectScenarioModel src);
-        // The settings of the simulation and its last result are new in v0.6.2, so a v0.6.1 scenario
-        // carries neither: those targets are intentionally left at their defaults (the default settings,
-        // and no result).
+        // The settings of the simulation, its last result and the effective start are new in v0.6.2, so a
+        // v0.6.1 scenario carries none of them: those targets are intentionally left at their defaults (the
+        // default settings, no result, and no effective start, which a load calculates again).
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSettings))]
         [MapperIgnoreTarget(nameof(ProjectScenarioModel.SimulationSummary))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.EffectiveProjectStart))]
         public partial ProjectScenarioModel FromV0_6_1ToCurrent(v0_6_1.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]

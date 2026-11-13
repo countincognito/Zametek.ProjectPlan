@@ -74,7 +74,7 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - In an activity: `Duration`, `EarliestStartTime`, `LatestFinishTime`, `FreeSlack` and `AllocatedToResources`.
 - In a dependent activity: `ResourceDependencies` and `Successors`.
-- In a scenario: `Metrics` and `ResourceMetrics`.
+- In a scenario: `EffectiveProjectStart`, `Metrics` and `ResourceMetrics`.
 
 `SimulationSummary` is the result of the last run of the simulation. A scenario without it has no result. Refer to [Simulate the schedule](COMMAND-LINE.md#simulate-the-schedule).
 
@@ -82,9 +82,11 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 ## Times and constraints
 
-- A time of an activity is a number of working days from `ProjectStart`. Day 0 is `ProjectStart`, and day n is the nth working day after it. The calendar of the scenario gives the working days (refer to [The calendar](#the-calendar)).
+- A time of an activity is a number of working days from the effective start. The effective start is the first working day on `ProjectStart` or after it. Day 0 is the effective start, and day n is the nth working day after it. The calendar of the scenario gives the working days (refer to [The calendar](#the-calendar)).
 
-- `ProjectStart` is day 0 also when it is not a working day. Thus, with weekends, a plan that starts on a Saturday does its first day of work on that Saturday. Then each date is one working day early. Give a working day as `ProjectStart`.
+- `ProjectStart` is the start that you give, and `zpp` does not change it. `zpp` writes the effective start as `EffectiveProjectStart`, and it calculates it again when it reads the file. Thus, with weekends, a plan that starts on a Saturday does its first day of work on the Monday after it.
+
+- A change to the calendar can move the effective start. For example, a holiday on `ProjectStart` moves it to the next working day. When the holiday goes, the effective start goes back to `ProjectStart`.
 
 - An activity that starts at time n and has a duration of d days does its work on days n to n + d − 1. Its finish time is n + d, which is the start of the day after its last day of work.
 
@@ -109,3 +111,9 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 - `2` (`CustomCalendar`): only the holidays in the `HolidaySettings` of the scenario are not working days. Thus, the weekends are working days, unless a holiday makes them days off. The default holidays of the application have a holiday for the weekends (`FREQ=WEEKLY;BYDAY=SA,SU`), Christmas Day and New Year's Day.
 
 A holiday has a `RecurrencePattern`, which is a recurrence rule of iCalendar (RFC 5545). Its rule starts on its `StartDateTime`, or on `ProjectStart` when it has no `StartDateTime`. A holiday of one day has its date as `StartDateTime` and the rule `FREQ=DAILY;COUNT=1`.
+
+The compile gives `P0080` when the calendar cannot give the dates of the plan:
+
+- The calendar has no working day in the 366 days from `ProjectStart`. For example, a holiday with the rule `FREQ=DAILY` and no `COUNT` or `UNTIL` makes each day a day off.
+
+- Before the schedule finishes, the calendar has more than 366 days in a row that are not working days.

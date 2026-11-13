@@ -5,6 +5,10 @@
     {
         public DateTimeOffset ProjectStart { get; init; }
 
+        // Calculated: the first working day on ProjectStart or after it, which is day 0 of the schedule. A load calculates
+        // it again, so a value that a file gives changes nothing.
+        public DateTimeOffset? EffectiveProjectStart { get; init; }
+
         public DateTimeOffset Today { get; init; }
 
         public List<DependentActivityModel> DependentActivities { get; init; } = [];

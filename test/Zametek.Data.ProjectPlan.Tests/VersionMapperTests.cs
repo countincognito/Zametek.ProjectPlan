@@ -74,6 +74,12 @@ namespace Zametek.Data.ProjectPlan.Tests
             @"$.Metrics.Headcount.PeakToAverageRatio",
         ];
 
+        // The effective start of the project arrived in v0.6.2, so no earlier version holds it. A load calculates it again.
+        private static readonly string[] s_EffectiveStart =
+        [
+            @"$.EffectiveProjectStart",
+        ];
+
         // A resource's activity trackers record which activity was worked on by id; the
         // name shown beside it is looked up when the plan is loaded rather than stored.
         private const string c_TrackedActivityName =
@@ -192,7 +198,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             // Everything else came across: the only differences are the estimates, which
             // the scenario was never holding in v0.6.1, and the values no version stores.
             ModelReflection
-                .Differences(original, upgraded, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount]))
+                .Differences(original, upgraded, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart]))
                 .ShouldBeEmpty();
         }
 
@@ -280,7 +286,7 @@ namespace Zametek.Data.ProjectPlan.Tests
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
             ModelReflection
-                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount]))])
+                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart]))])
                 .ShouldBeEmpty();
 
             roundTripped.Version.ShouldBe(@"v0.6.1");
@@ -295,7 +301,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectScenarioModel roundTripped =
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
-            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount])).ShouldBeEmpty();
+            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart])).ShouldBeEmpty();
 
             // The graph layouts and the per-resource metrics are what v0.6.1 added, so
             // this is the pair that has to carry them.
@@ -439,6 +445,8 @@ namespace Zametek.Data.ProjectPlan.Tests
                     .. s_Simulation,
                     // The headcount of the metrics arrived in v0.6.2.
                     .. s_Headcount,
+                    // The effective start arrived in v0.6.2.
+                    .. s_EffectiveStart,
                     // The three estimates of a duration arrived in v0.6.2.
                     @"$.DependentActivities[].Activity.MostLikelyDuration",
                     @"$.DependentActivities[].Activity.OptimisticDuration",

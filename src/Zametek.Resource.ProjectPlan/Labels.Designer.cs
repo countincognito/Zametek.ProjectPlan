@@ -2456,6 +2456,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Work starts on {0:ddd} {0:d}.
+        /// </summary>
+        public static string Label_WorkStartsOn {
+            get {
+                return ResourceManager.GetString("Label_WorkStartsOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Work Stream Name.
         /// </summary>
         public static string Label_WorkStreamName {

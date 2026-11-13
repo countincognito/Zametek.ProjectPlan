@@ -338,6 +338,12 @@
 								YearVisible="True"
 								VerticalAlignment="Center"/>
 
+					<TextBlock DockPanel.Dock="Left"
+							   Text="{Binding Path=WorkStart}"
+							   IsVisible="{Binding Path=WorkStart, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+							   VerticalAlignment="Center"
+							   Margin="0,0,11,0"/>
+
 					<Label DockPanel.Dock="Left"
 						   IsTabStop="False"
 						   Content="{x:Static resources:Labels.Label_Today}"

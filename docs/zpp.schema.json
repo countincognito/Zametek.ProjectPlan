@@ -88,7 +88,15 @@
               "ProjectStart": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The start of the project. A time of an activity is a number of working days from it."
+                "description": "The start that the plan asks for. Day 0 of the schedule is the first working day on this date or after it (EffectiveProjectStart)."
+              },
+              "EffectiveProjectStart": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Calculated: the first working day on ProjectStart or after it, which is day 0 of the schedule. A time of an activity is a number of working days from it. zpp calculates it again when it reads the file."
               },
               "Today": {
                 "type": "string",

@@ -84,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             core.NetworkMetrics.DurationManMonths.ShouldBe(startedOnTheMonday, "the duration followed Today and not the start of the project");
 
             // The check above means something only if the start does move the duration.
-            core.ProjectStart = thursday;
+            core.RequestedProjectStart = thursday;
             core.BuildNetworkMetrics();
 
             core.NetworkMetrics.DurationManMonths.ShouldNotBe(startedOnTheMonday, "the start of the project does not move the duration");

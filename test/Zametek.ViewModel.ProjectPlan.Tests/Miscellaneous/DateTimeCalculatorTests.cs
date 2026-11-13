@@ -1,6 +1,7 @@
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -319,6 +320,112 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             time.ShouldBe(0);
             dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 14));
+        }
+
+        #endregion
+
+        #region FirstWorkingDayOnOrAfter and TryAddDays
+
+        // A calendar can have no working day at all, or a run of days off with no end. The searches stop after
+        // DateTimeCalculator.MaximumNonWorkingRun days, so each of these tests must end; a search without end fails it
+        // after a minute instead of hanging the run.
+        private static T WithinAMinute<T>(Func<T> search)
+        {
+            Task<T> task = Task.Run(search);
+            task.Wait(TimeSpan.FromMinutes(1)).ShouldBeTrue(@"the search for a working day must end");
+            return task.Result;
+        }
+
+        private static DateTimeCalculator CreateCustomCalc(params HolidayModel[] holidays)
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.SetNonWorkingDayCalendarEvents([.. holidays]);
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+            return calc;
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_ASaturdayWithWeekends_Then_TheMondayAfter()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.FirstWorkingDayOnOrAfter(s_Monday.AddDays(5)).ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 16));
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_AWorkingDay_Then_ThatDay()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.FirstWorkingDayOnOrAfter(s_Monday).ShouldBe(s_Monday);
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_ASaturdayWithNoNonWorkingDays_Then_ThatSaturday()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.None;
+
+            calc.FirstWorkingDayOnOrAfter(s_Monday.AddDays(5)).ShouldBe(s_Monday.AddDays(5));
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_TheFirstDateThatThereIs_Then_ThatDate()
+        {
+            // The start of a plan that gives none. It has no day before it, and so the search does not count from it.
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.FirstWorkingDayOnOrAfter(DateTimeOffset.MinValue).ShouldBe(DateTimeOffset.MinValue);
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_ACalendarWithNoWorkingDay_Then_Null()
+        {
+            var calc = CreateCustomCalc(new HolidayModel { Id = 1, StartDateTime = s_Monday, RecurrencePattern = @"FREQ=DAILY" });
+
+            WithinAMinute(() => calc.FirstWorkingDayOnOrAfter(s_Monday)).ShouldBeNull();
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_TwoRulesThatCoverEachDay_Then_Null()
+        {
+            // Neither rule covers each day by itself, which is what the holiday editor checks.
+            var calc = CreateCustomCalc(
+                new HolidayModel { Id = 1, StartDateTime = s_Monday, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR" },
+                new HolidayModel { Id = 2, StartDateTime = s_Monday, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=SA,SU" });
+
+            WithinAMinute(() => calc.FirstWorkingDayOnOrAfter(s_Monday)).ShouldBeNull();
+        }
+
+        [Fact]
+        public void TryAddDays_Given_AnOrdinaryCalendar_Then_TrueAndTheSameDayAsAddDays()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.TryAddDays(s_Monday, 5, out DateTimeOffset result).ShouldBeTrue();
+            result.ShouldBe(calc.AddDays(s_Monday, 5));
+        }
+
+        [Fact]
+        public void TryAddDays_Given_DaysOffWithNoEnd_Then_FalseAndAnEnd()
+        {
+            // From the Thursday on, each day is a day off: the count of 10 working days cannot end in the calendar.
+            var calc = CreateCustomCalc(new HolidayModel { Id = 1, StartDateTime = s_Monday.AddDays(3), RecurrencePattern = @"FREQ=DAILY" });
+
+            (bool Done, DateTimeOffset Result) attempt = WithinAMinute(() => (calc.TryAddDays(s_Monday, 10, out DateTimeOffset result), result));
+
+            attempt.Done.ShouldBeFalse();
+            WithinAMinute(() => calc.AddDays(s_Monday, 10)).ShouldBe(attempt.Result);
         }
 
         #endregion
