@@ -2,6 +2,76 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Give 4xx and not 500 for five inputs** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
+
+  These inputs give 500 `unexpected-error`. The log of the server has the exception:
+
+  | Input | Exception | Where |
+  |---|---|---|
+  | A multipart body with no closing boundary | `IOException` | `MultipartReaderStream.ReadAsync` |
+  | `MaximumLatestFinishDateTime` 9999-12-31 | `ArgumentOutOfRangeException` | `DateTimeCalculator.AppendNonWorkingDays` |
+  | A scenario with no `ProjectStart` | `ArgumentOutOfRangeException` | `DateTimeCalculator.AppendNonWorkingDays` |
+  | Two resources with the same `Id` | `ArgumentException` | `ResourceSelectorViewModel.SetTargetResources` |
+  | `NonWorkingDayMode` 7 | `ArgumentOutOfRangeException` | `DateTimeCalculator.set_NonWorkingDayMode` |
+
+  Give 400 `malformed-request` for the first input, and 422 `project-not-readable` for the others. The server stays up after each one. The repros are in the folder of the stress test (`repros/b8-*.zpp`).
+
+- [ ] **Refuse a duration that overflows, and the values that make no sense** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
+
+  A `MostLikelyDuration` of 2147483647 compiles, and the activity takes 0 days: the arithmetic of the three estimates, (O + 4 × ML + P + 3) / 6, overflows. Thus, the activity goes out of the critical path, and the finish is wrong. A value of 300000000 gives `P0080`, because the value that overflows does not get to the check of the limits. Calculate the expected duration with a type that does not overflow, and give `P0080` above 100,000 days.
+
+  A `MostLikelyDuration` of -3 also gives 0 days. [The project file](PROJECT-FILE.md) says that a most likely duration below 0 is 0, but the stress test expected an error. A negative `MinimumEarliestStartTime` is also 0, a negative `UnitCost` is accepted, and a `UnitCost` of 1e308 gives costs that are null. Decide which of these values `zpp` refuses with a code, and give the schema a minimum for each.
+
+- [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
+
+  The test compiles one network of 1500 activities with 10, 50, 100, 200 and 500 developers, on a server with no other jobs. The jobs take 5.4, 7.8, 13.1, 21.6 and 51.5 seconds. Each job adds 107, 107, 108, 161 and 740 MB to the memory of the server. The compile limit does not stop this work. With a `compileTimeout` of PT5S, the plan with 200 developers gets 200 after 25 seconds. With PT1S, it gets `compilation-timed-out` after 3.9 seconds.
+
+  At the limits of the compiler (2000 activities and 1000 resources), one job takes 214 seconds, and the server uses 2.9 GB at the peak. With the default job limit of 120 seconds, the job fails after it holds the memory for two minutes. Thus, four such jobs at one time can use 12 GB. Find the work that grows with the activities and the resources. The allocation streams of each resource are one possible cause: they have one value for each day. Then bound the work: make it smaller, put it under the compile limit, or give the server a limit of memory.
+
+- [ ] **Check the limits of a plan before the load** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  A plan with 2001 activities gives `P0080`, but only after the load of the plan. The refusal takes 0.5 seconds for 2001 activities, 3 seconds for 5000 and 10 seconds for 10000, also when the compile timeout is 5 seconds. Count the activities, the resources and the work streams before the load, and refuse a plan that is out of the limits at once. The documents give the limits since 0.11.0-beta.1.
+
+- [ ] **Report the ids that match nothing** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  These plans compile with 200, and nothing tells the user about the problem:
+
+  - Two activities with the same `Id`.
+
+  - A `TargetResources` with an id that no resource has. The activity can then go to any resource. The application removes such an id on purpose, when it makes the activity, so that a plan stays usable after a resource is deleted. Thus, a warning fits better than an error.
+
+  - A `TargetWorkStreams` or an `InterActivityPhases` with an id that no work stream has.
+
+  - A `TargetResourceOperator` of 9.
+
+  - A plan with no `Files`, or a node of a scenario with no file. The answer has 200, and each metric is null.
+
+  Give a problem with a code for each one, as `P0010` does for a dependency that does not exist.
+
+- [ ] **Read the file name of a part as UTF-8, and refuse a second project part** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  A part with `filename="ünïcödé.zpp"` in UTF-8, as curl and the browsers send it, gives outputs with the names `�n�c�d�-schedule.csv`. Read the headers of the parts as UTF-8. Also, a request with two `project` parts gets 200: the server compiles the first part, and it ignores the second. A second part is probably a mistake of the client, so give 422.
+
+- [ ] **Let the schema accept the versions that zpp reads** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  `docs/assets/sample.zpp`, `two-scenarios.zpp` and `broken-dependency.zpp` have the version `v0.6.1`. The schema accepts `v0.6.2` only. Thus, a client that checks a file with the schema refuses the samples of `zpp`, but `zpp` reads them. Let the schema accept each version that `zpp` reads, or save the samples again as `v0.6.2`.
+
+- [ ] **Tell why a tracked scenario did not compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  With `compileTracked`, a tracked scenario that does not compile gets `"metrics": null` in `trackedScenarios`. In the test, the scenario had a dependency on an activity that does not exist. The answer has 200, stderr is empty, and `zpp --compile-tracked` gives the exit code 0. Thus, the client cannot tell why the metrics are null, and the scenario chart does not have the point. Give the problems of the scenario in its item of `trackedScenarios`, for example `P0010`. The answer of one compile does this too.
+
+- [ ] **Stop the cache of non-working days from taking a gap as known** *(2026-11-13, found during the fix of a constraint date on a non-working day)*
+
+  `AppendNonWorkingDays` in `DateTimeCalculator` searches the non-working days of a range. Then it makes the known span reach the range. When the range does not touch the span, the days between them become known, but the method did not search them. Their non-working days then count as working days. The first fix of a constraint date on a non-working day checked the date before it counted from the project start. Then a minimum earliest start of 220 became 306.
+
+  The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time (refer to the entry about the five inputs that give 500).
+
+- [ ] **Decide what day 0 is when ProjectStart is not a working day** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  With weekends, a plan of 5 days that starts on Saturday 2027-01-02 finishes on 2027-01-08. The same plan finishes on 2027-01-11 when it starts on Monday 2027-01-04. Thus, `zpp` and the application count the Saturday as working day 0, and each date is one working day early.
+
+  One fix makes day 0 the first working day on `ProjectStart` or after it. This fix moves the dates of each plan that starts on a day that is not a working day. Other possible fixes: refuse such a plan, or make the application move `ProjectStart` to a working day when the user sets it. The documents tell the user to give a working day since 0.11.0-beta.1.
+
 - [ ] **Let the MSI of the final 0.11.0 replace an installed 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
 
   Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` does not allow an upgrade of the same version, because this is the default of WiX 5. The Upgrade table of the MSI of the beta shows it:
