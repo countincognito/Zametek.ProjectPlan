@@ -121,6 +121,8 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 The check looks at the scenario that the plan loads, and at the nodes and the display settings of the project. A tracked scenario that the check refuses does not compile, and it has no metrics.
 
+The check also finds the ids that match nothing. These are a target resource that no resource has, and a target work stream or a phase that no work stream has. The load ignores such an id. Thus, an activity with a target resource that does not exist can go to any resource. The plan loads, and `zpp` writes a warning for each id on its standard error stream. `zpp serve` gives them in `warnings`, with the code `notFound`.
+
 The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it.
 
 ## The calendar

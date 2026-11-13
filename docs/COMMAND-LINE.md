@@ -194,6 +194,8 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 | 5 | `zpp` sent the run to a server, and the server did not run it (refer to [Send runs to a server](#send-runs-to-a-server)) |
 | 130 | A person stopped the run with Ctrl+C, or a program stopped it with `SIGTERM` (refer to [Stop a run](#stop-a-run)). This is the code that a shell gives to a program that Ctrl+C stopped (128 + 2). |
 
+A tracked scenario that does not compile does not change the exit code. `zpp --compile-tracked` writes its errors on the standard error stream, and its metrics are empty.
+
 A plan that is out of the limits of the compiler also gives exit code 3 (`P0080`). The limits are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. A calendar with no working day in 366 days in a row also gives `P0080` (refer to [The calendar](PROJECT-FILE.md#the-calendar)).
 
 A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.

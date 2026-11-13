@@ -175,6 +175,39 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindScenarioWarnings_Given_AnOrdinaryPlan_Then_None()
+        {
+            PlanCheck.FindScenarioWarnings(Project(Scenario()), 0).ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_IdsThatMatchNothing_Then_AWarningAtEach()
+        {
+            // The load drops a target resource that no resource has, and the activity can then go to any resource (A6 of the
+            // stress test of 0.11.0-beta.1).
+            ProjectScenarioModel scenario = Scenario();
+            scenario = scenario with
+            {
+                DependentActivities =
+                [
+                    scenario.DependentActivities[0] with
+                    {
+                        Activity = scenario.DependentActivities[0].Activity with { TargetResources = [1, 99], TargetWorkStreams = [7] },
+                    },
+                    scenario.DependentActivities[1],
+                ],
+                ResourceSettings = scenario.ResourceSettings with { Resources = [new ResourceModel { Id = 1, InterActivityPhases = [1, 8] }] },
+            };
+
+            PlanCheck.FindScenarioWarnings(Project(scenario), 0).Select(x => (x.Pointer, x.Code)).ShouldBe(
+            [
+                ($@"{c_Scenario}/DependentActivities/0/Activity/TargetResources/1", PlanCheck.NotFound),
+                ($@"{c_Scenario}/DependentActivities/0/Activity/TargetWorkStreams/0", PlanCheck.NotFound),
+                ($@"{c_Scenario}/ResourceSettings/Resources/0/InterActivityPhases/1", PlanCheck.NotFound),
+            ]);
+        }
+
+        [Fact]
         public void FindProjectProblems_Given_ANodeWithNoDataAndNoOtherScenario_Then_TheFilesHaveNoData()
         {
             ProjectModel project = Project(Scenario()) with { Files = [] };

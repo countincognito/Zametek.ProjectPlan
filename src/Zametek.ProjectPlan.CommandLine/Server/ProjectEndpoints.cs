@@ -483,6 +483,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 TrackedScenarioResponse.From(result.TrackedScenarios),
                 ScenarioChartResponse.From(result.ScenarioChart),
                 outputs,
+                result.Warnings.Count == 0
+                    ? null
+                    : [.. result.Warnings.Select(x => new ProblemError
+                    {
+                        Pointer = $@"{CompileOptionsHelper.GetPointer(c_RequestPointer, c_ProjectPart)}{x.Pointer}",
+                        Code = x.Code,
+                        Detail = x.Detail,
+                    })],
                 consoleResponse);
 
             return new Answer(

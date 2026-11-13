@@ -249,6 +249,18 @@
   <data name="Message_PlanWorkStreams" xml:space="preserve">
     <value>work streams</value>
   </data>
+  <data name="Message_PlanNotAResource" xml:space="preserve">
+    <value>is not the Id of a resource of the scenario</value>
+  </data>
+  <data name="Message_PlanNotAWorkStream" xml:space="preserve">
+    <value>is not the Id of a work stream of the scenario</value>
+  </data>
+  <data name="Message_PlanWarning" xml:space="preserve">
+    <value>Warning: {0}: {1}</value>
+  </data>
+  <data name="Message_TrackedScenarioDidNotCompile" xml:space="preserve">
+    <value>The tracked scenario '{0}' did not compile:</value>
+  </data>
   <data name="Message_ProjectUnsavedChanges" xml:space="preserve">
     <value>The project has unsaved changes that will be lost. Do you wish to continue without saving?</value>
   </data>

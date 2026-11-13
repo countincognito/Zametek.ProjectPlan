@@ -8,20 +8,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   At the limits of the compiler (2000 activities and 1000 resources), one job takes 214 seconds, and the server uses 2.9 GB at the peak. With the default job limit of 120 seconds, the job fails after it holds the memory for two minutes. Thus, four such jobs at one time can use 12 GB. Find the work that grows with the activities and the resources. The allocation streams of each resource are one possible cause: they have one value for each day. Then bound the work: make it smaller, put it under the compile limit, or give the server a limit of memory.
 
-- [ ] **Report the ids that match nothing** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
-
-  These plans compile with 200, and nothing tells the user about the problem:
-
-  - A `TargetResources` with an id that no resource has. The activity can then go to any resource. The application removes such an id on purpose, when it makes the activity, so that a plan stays usable after a resource is deleted. Thus, a warning fits better than an error.
-
-  - A `TargetWorkStreams` or an `InterActivityPhases` with an id that no work stream has.
-
-  Give a warning for each one. The check before the load refuses three other plans of the finding. These are two activities with one `Id`, a `TargetResourceOperator` of 9, and a plan with no data to load.
-
-- [ ] **Tell why a tracked scenario did not compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
-
-  With `compileTracked`, a tracked scenario that does not compile gets `"metrics": null` in `trackedScenarios`. In the test, the scenario had a dependency on an activity that does not exist. The answer has 200, stderr is empty, and `zpp --compile-tracked` gives the exit code 0. Thus, the client cannot tell why the metrics are null, and the scenario chart does not have the point. Give the problems of the scenario in its item of `trackedScenarios`, for example `P0010`. The answer of one compile does this too.
-
 - [ ] **Stop the cache of non-working days from taking a gap as known** *(2026-11-13, found during the fix of a constraint date on a non-working day)*
 
   `AppendNonWorkingDays` in `DateTimeCalculator` searches the non-working days of a range. Then it makes the known span reach the range. When the range does not touch the span, the days between them become known, but the method did not search them. Their non-working days then count as working days. The first fix of a constraint date on a non-working day checked the date before it counted from the project start. Then a minimum earliest start of 220 became 306.

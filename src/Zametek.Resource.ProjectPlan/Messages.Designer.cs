@@ -930,6 +930,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to is not the Id of a resource of the scenario.
+        /// </summary>
+        public static string Message_PlanNotAResource {
+            get {
+                return ResourceManager.GetString("Message_PlanNotAResource", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to is not the Id of a work stream of the scenario.
+        /// </summary>
+        public static string Message_PlanNotAWorkStream {
+            get {
+                return ResourceManager.GetString("Message_PlanNotAWorkStream", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: {0}: {1}.
+        /// </summary>
+        public static string Message_PlanWarning {
+            get {
+                return ResourceManager.GetString("Message_PlanWarning", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The tracked scenario '{0}' did not compile:.
+        /// </summary>
+        public static string Message_TrackedScenarioDidNotCompile {
+            get {
+                return ResourceManager.GetString("Message_TrackedScenarioDidNotCompile", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The project has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ProjectUnsavedChanges {

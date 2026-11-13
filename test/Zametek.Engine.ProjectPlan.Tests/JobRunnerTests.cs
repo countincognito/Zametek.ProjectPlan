@@ -236,8 +236,41 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
             result.Status.ShouldBe(JobStatus.Succeeded);
             IReadOnlyList<JobTrackedScenario> tracked = result.TrackedScenarios.ShouldNotBeNull();
-            tracked.Single(x => x.Id == s_BetaId).Metrics.ShouldBeNull();
+            JobTrackedScenario beta = tracked.Single(x => x.Id == s_BetaId);
+            beta.Metrics.ShouldBeNull();
+            beta.Errors.ShouldBe([new JobCompilationError(@"notAllowed", @"/Files/1/Scenario/DisplaySettings/NonWorkingDayMode: must be one of: 0 (None), 1 (Weekends), 2 (CustomCalendar)")]);
             tracked.Single(x => x.Id == s_AlphaId).Metrics.ShouldNotBeNull();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ATrackedScenarioThatDoesNotCompile_Then_ItsErrorsSayWhy()
+        {
+            // Its metrics were null, and nothing said why (C23 of the stress test of 0.11.0-beta.1).
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));
+            plan[@"Files"]!.Single(x => (string?)x[@"NodeId"] == s_BetaId.ToString())[@"Scenario"]![@"DependentActivities"]![0]![@"Dependencies"] = new JArray(42);
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input, CompileTracked = true }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            IReadOnlyList<JobTrackedScenario> tracked = result.TrackedScenarios.ShouldNotBeNull();
+            tracked.Single(x => x.Id == s_BetaId).Errors.Select(x => x.Code).ShouldBe([@"P0010"]);
+            tracked.Single(x => x.Id == s_AlphaId).Errors.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ATargetResourceThatNoResourceHas_Then_AWarningAtItsPlace()
+        {
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"TargetResources"] = new JArray(99);
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            result.Warnings.Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Files/0/Scenario/DependentActivities/0/Activity/TargetResources/0", @"notFound")]);
         }
 
         [Fact]

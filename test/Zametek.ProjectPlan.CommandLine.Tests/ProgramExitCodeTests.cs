@@ -519,6 +519,35 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_ATargetResourceThatNoResourceHas_Then_AWarningOnStandardErrorAndExitCode0()
+        {
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"TargetResources"] = new JArray(99);
+            string planFile = Path.Combine(m_TempDirectory, @"target-99.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile);
+
+            exitCode.ShouldBe(0);
+            error.ShouldContain(@"Warning: /Files/0/Scenario/DependentActivities/0/Activity/TargetResources/0: is not the Id of a resource of the scenario");
+        }
+
+        [Fact]
+        public async Task Main_Given_CompileTrackedAndATrackedScenarioThatDoesNotCompile_Then_ItsErrorsOnStandardErrorAndExitCode0()
+        {
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));
+            plan[@"Files"]![1]![@"Scenario"]![@"DependentActivities"]![0]![@"Dependencies"] = new JArray(42);
+            string planFile = Path.Combine(m_TempDirectory, @"broken-beta.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile, @"--compile-tracked");
+
+            exitCode.ShouldBe(0);
+            error.ShouldContain(@"The tracked scenario 'Beta' did not compile:");
+            error.ShouldContain(@"P0010: ");
+        }
+
+        [Fact]
         public async Task Main_Given_CompileTracked_Then_PrintsTheMetricsOfEachTrackedScenario()
         {
             (int exitCode, string output) = await RunCapturedAsync(

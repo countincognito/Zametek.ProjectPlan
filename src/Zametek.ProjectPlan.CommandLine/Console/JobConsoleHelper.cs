@@ -24,6 +24,12 @@ namespace Zametek.ProjectPlan.CommandLine
             ArgumentNullException.ThrowIfNull(console);
             ArgumentNullException.ThrowIfNull(result);
 
+            // The ids of the plan that match nothing: on stderr, so that stdout keeps the result of the run.
+            foreach (PlanProblem warning in result.Warnings)
+            {
+                await console.WriteErrorLineAsync(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_PlanWarning, warning.Pointer, warning.Detail));
+            }
+
             if (result.Status == JobStatus.CompilationErrors)
             {
                 await console.DisplayAsync(result.CompilationOutput, hasErrors: true);
@@ -48,6 +54,17 @@ namespace Zametek.ProjectPlan.CommandLine
                     default:
                         await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, result.ScenarioChart, x => x.ToMarkDownString()), hasErrors: false);
                         break;
+                }
+            }
+
+            // Why a tracked scenario did not compile, on stderr: its metrics are empty in the output.
+            foreach (JobTrackedScenario tracked in result.TrackedScenarios?.Where(x => x.Errors.Count > 0) ?? [])
+            {
+                await console.WriteErrorLineAsync(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_TrackedScenarioDidNotCompile, tracked.Path));
+
+                foreach (JobCompilationError error in tracked.Errors)
+                {
+                    await console.WriteErrorLineAsync($@"{error.Code}: {error.Message.TrimEnd()}");
                 }
             }
 
@@ -352,6 +369,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     [@"Id"] = x.Id.ToString(),
                     [@"IsCurrent"] = x.IsCurrent,
                     [@"Metrics"] = x.Metrics is null ? JValue.CreateNull() : JObject.FromObject(BuildMetricsObject(x.Metrics)),
+                    [@"Errors"] = new JArray(x.Errors.Select(error => new JObject { [@"Code"] = error.Code, [@"Message"] = error.Message })),
                 }));
             }
 

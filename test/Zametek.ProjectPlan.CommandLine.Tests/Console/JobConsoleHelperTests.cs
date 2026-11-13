@@ -226,7 +226,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             all.Properties().Select(x => x.Name).TakeLast(2).ShouldBe([@"Simulation", @"TrackedScenarios"]);
             var tracked = (JArray)all[@"TrackedScenarios"]!;
             tracked.Count.ShouldBe(2);
-            ((JObject)tracked[0]).Properties().Select(x => x.Name).ShouldBe([@"Path", @"Id", @"IsCurrent", @"Metrics"]);
+            ((JObject)tracked[0]).Properties().Select(x => x.Name).ShouldBe([@"Path", @"Id", @"IsCurrent", @"Metrics", @"Errors"]);
             tracked[0][@"Path"]!.Value<string>().ShouldBe(@"Alpha");
             tracked[0][@"Id"]!.Value<string>().ShouldBe(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5");
             tracked[0][@"IsCurrent"]!.Value<bool>().ShouldBeTrue();

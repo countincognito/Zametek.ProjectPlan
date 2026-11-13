@@ -512,7 +512,7 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
 
-The check of a project before the load also uses `required`, `outOfRange`, `notAllowed`, `duplicateId` and `hasNoData`. Each error is then at the place of its problem in the project (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)).
+The check of a project before the load also uses `required`, `outOfRange`, `notAllowed`, `duplicateId` and `hasNoData`, and `notFound` for a warning. Each error is then at the place of its problem in the project (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)).
 
 ### Codes of the compiler
 
@@ -875,5 +875,7 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
 - The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
+- The member `warnings` of the answer: the ids of the project that match nothing.
+- The member `errors` of each item of `trackedScenarios`: why the scenario did not compile.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.

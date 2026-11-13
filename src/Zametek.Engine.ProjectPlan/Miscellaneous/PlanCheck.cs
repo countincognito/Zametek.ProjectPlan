@@ -24,6 +24,7 @@ namespace Zametek.Engine.ProjectPlan
         public const string NotAllowed = @"notAllowed";
         public const string DuplicateId = @"duplicateId";
         public const string HasNoData = @"hasNoData";
+        public const string NotFound = @"notFound";
 
         // The dates on which a project can start. The calendar counts the days of a schedule from its start, up to the limit
         // of a time, and these dates leave room for them inside the dates of .NET.
@@ -174,6 +175,50 @@ namespace Zametek.Engine.ProjectPlan
         }
 
         /// <summary>
+        /// The ids of a scenario that match nothing, as warnings with the code notFound: a target resource that no resource has
+        /// (the load drops it, and the activity can then go to any resource), and a target work stream or a phase of a resource
+        /// that no work stream has. A plan with such an id loads.
+        /// </summary>
+        public static List<PlanProblem> FindScenarioWarnings(ProjectModel project, int fileIndex)
+        {
+            ArgumentNullException.ThrowIfNull(project);
+            string root = $@"/{nameof(ProjectModel.Files)}/{fileIndex}/{nameof(ProjectScenarioFileModel.Scenario)}";
+            var warnings = new List<PlanProblem>();
+            ProjectScenarioModel? scenario = project.Files[fileIndex]?.Scenario;
+
+            if (scenario is null)
+            {
+                return warnings;
+            }
+
+            List<ResourceModel> resources = scenario.ResourceSettings?.Resources ?? [];
+            HashSet<int> resourceIds = [.. resources.Where(x => x is not null).Select(x => x.Id)];
+            HashSet<int> workStreamIds = [.. (scenario.WorkStreamSettings?.WorkStreams ?? []).Where(x => x is not null).Select(x => x.Id)];
+            List<DependentActivityModel> activities = scenario.DependentActivities ?? [];
+
+            for (int index = 0; index < activities.Count; index++)
+            {
+                if (activities[index]?.Activity is ActivityModel activity)
+                {
+                    string place = $@"{root}/{nameof(ProjectScenarioModel.DependentActivities)}/{index}/{nameof(DependentActivityModel.Activity)}";
+                    AddUnknown(activity.TargetResources, resourceIds, $@"{place}/{nameof(ActivityModel.TargetResources)}", Resource.ProjectPlan.Messages.Message_PlanNotAResource, warnings);
+                    AddUnknown(activity.TargetWorkStreams, workStreamIds, $@"{place}/{nameof(ActivityModel.TargetWorkStreams)}", Resource.ProjectPlan.Messages.Message_PlanNotAWorkStream, warnings);
+                }
+            }
+
+            for (int index = 0; index < resources.Count; index++)
+            {
+                if (resources[index] is ResourceModel resource)
+                {
+                    string place = $@"{root}/{nameof(ProjectScenarioModel.ResourceSettings)}/{nameof(ResourceSettingsModel.Resources)}/{index}/{nameof(ResourceModel.InterActivityPhases)}";
+                    AddUnknown(resource.InterActivityPhases, workStreamIds, place, Resource.ProjectPlan.Messages.Message_PlanNotAWorkStream, warnings);
+                }
+            }
+
+            return warnings;
+        }
+
+        /// <summary>
         /// The counts of a scenario that are above the limits of the compiler, in the words of the compiler (P0080). The
         /// compiler counts the active resources only, and none when the resources are disabled.
         /// </summary>
@@ -265,6 +310,27 @@ namespace Zametek.Engine.ProjectPlan
                 if (items[index] is T item)
                 {
                     AddIfDuplicate(ids, idOf(item), index, $@"{place}/{index}/{c_Id}", problems);
+                }
+            }
+        }
+
+        private static void AddUnknown(
+            List<int>? ids,
+            HashSet<int> known,
+            string place,
+            string detail,
+            List<PlanProblem> warnings)
+        {
+            if (ids is null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < ids.Count; index++)
+            {
+                if (!known.Contains(ids[index]))
+                {
+                    warnings.Add(new PlanProblem($@"{place}/{index}", NotFound, detail));
                 }
             }
         }
