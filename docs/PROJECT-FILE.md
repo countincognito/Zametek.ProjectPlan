@@ -82,7 +82,30 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 ## Times and constraints
 
-- A time of an activity is a number of working days from `ProjectStart`. The calendar of the scenario gives the working days.
-- `MinimumEarliestStartTime` is the earliest day on which an activity can start. `MinimumEarliestStartDateTime` gives the same constraint as a date. When an activity has both, the date takes the place of the number.
-- `MaximumLatestFinishTime` and `MaximumLatestFinishDateTime` are the latest day by which an activity must finish, with the same rule.
+- A time of an activity is a number of working days from `ProjectStart`. Day 0 is `ProjectStart`, and day n is the nth working day after it. The calendar of the scenario gives the working days (refer to [The calendar](#the-calendar)).
+
+- `ProjectStart` is day 0 also when it is not a working day. Thus, with weekends, a plan that starts on a Saturday does its first day of work on that Saturday. Then each date is one working day early. Give a working day as `ProjectStart`.
+
+- An activity that starts at time n and has a duration of d days does its work on days n to n + d − 1. Its finish time is n + d, which is the start of the day after its last day of work.
+
+- `MinimumEarliestStartTime` is the earliest day on which an activity can start. `MinimumEarliestStartDateTime` gives the same constraint as the date of that day. When an activity has both, the date takes the place of the number.
+
+- `MaximumLatestFinishTime` is the latest finish time of an activity. `MaximumLatestFinishDateTime` gives it as a date: the date of the first day after the last day of work. For example, with weekends, to let an activity finish its work on Friday 2027-01-15, give Monday 2027-01-18. `UseClassicDates` does not change this, because it changes only how the application and `zpp` show the date of a finish. When an activity has both, the date takes the place of the number.
+
+- A constraint date that is not a working day counts as the next working day.
+
+- An activity cannot have both `MinimumFreeSlack` and a maximum latest finish: the compile then gives `P0030`. The compile also gives `P0030` when the minimum earliest start and the duration go past the maximum latest finish. Refer to [the codes of the compiler](API.md#codes-of-the-compiler).
+
 - A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. An id of a node is a GUID. An id of an activity, a resource or a work stream is a whole number.
+
+## The calendar
+
+`NonWorkingDayMode` in the `DisplaySettings` of a scenario selects the days that are not working days:
+
+- `0` (`None`): each day is a working day. A scenario that does not give the mode has this mode.
+
+- `1` (`Weekends`): Saturday and Sunday are not working days. The holidays of the scenario have no effect.
+
+- `2` (`CustomCalendar`): only the holidays in the `HolidaySettings` of the scenario are not working days. Thus, the weekends are working days, unless a holiday makes them days off. The default holidays of the application have a holiday for the weekends (`FREQ=WEEKLY;BYDAY=SA,SU`), Christmas Day and New Year's Day.
+
+A holiday has a `RecurrencePattern`, which is a recurrence rule of iCalendar (RFC 5545). Its rule starts on its `StartDateTime`, or on `ProjectStart` when it has no `StartDateTime`. A holiday of one day has its date as `StartDateTime` and the rule `FREQ=DAILY;COUNT=1`.

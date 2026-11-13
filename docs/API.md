@@ -219,7 +219,7 @@ The answer has each metric of the project, as a number or `null`. The names are 
 | `networkDuration` | The duration of the network, in days, a whole number. |
 | `networkDurationManMonths` | The duration, in person-months. |
 | `projectFinishDays` | The number of days from the start of the project to its finish. This is the duration of the network. |
-| `projectFinishDate` | The date on which the project finishes, in the working calendar of the project, as a date (`2024-01-06`). The value is `null`, with `projectFinishDays`, when the project has no duration. |
+| `projectFinishDate` | The date on which the project finishes, in the working calendar of the project, as a date (`2024-01-06`). It is the date of the first day after the last day of work. With `UseClassicDates` in the display settings of the scenario, it is the date of the last day of work. The value is `null`, with `projectFinishDays`, when the project has no duration. |
 | `effortEfficiency` | The efficiency of the effort. |
 | `peakHeadcount` | The most resources that the schedule allocates on one day. |
 | `averageHeadcount` | The mean of the number of resources that the schedule allocates on each day. |
@@ -403,10 +403,17 @@ The server answers a request to compile a project when the job ends. A simulatio
 ```
 
 - `culture` is the culture in which the server writes numbers and dates. It is an empty string for the invariant culture, which a server on Linux has when nobody sets a culture. `timeZone` is the time zone in which the server writes times. It gives the IANA name, for example `Europe/London`, and not the name that the system uses.
+
 - `maxJobs` jobs can run at one time, and `maxQueue` more jobs can wait for a free place. The server turns away more requests (`503 busy`).
-- A request with its files has a maximum of `maxUploadMegabytes` megabytes. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
+
+- A request with its files has a maximum of `maxUploadMegabytes` megabytes. A client that sends a larger request gets status `413` at once only when it sends the header `Expect: 100-continue`, as curl does. Without this header, the server closes the connection while the client sends the request, and the client gets no answer. Thus, compare the size of a request with `maxUploadMegabytes` before you send it. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
+
+- A project has limits of its own, which `/v1/info` does not give. These are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. A project that is out of these limits does not compile (`P0080`, refer to [Codes of the compiler](#codes-of-the-compiler)).
+
 - A project can have a maximum of `maxSimulationIterations` iterations for the server to run its simulation. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
+
 - The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
+
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
 `OPTIONS` on each of the paths gets status `204` with the header `Allow`. The value is `POST, OPTIONS`, it is `GET, OPTIONS` for `/v1/jobs/{requestId}`, and it is `GET, HEAD, OPTIONS` for `/v1/info`, `/v1/openapi` and `/v1/schemas/project`. The two operations with POST also get `Accept-Post: multipart/form-data`. `OPTIONS` needs the API key, as the other requests under `/v1` do, but not on `/v1/openapi` and `/v1/schemas/project`.
@@ -503,6 +510,23 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. |
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
+
+### Codes of the compiler
+
+A project that does not compile gets the code of the compiler (`compilation-failed`). The `detail` of the error names the activities. These are the codes:
+
+| Code | Means | What to do |
+| ---- | ----- | ---------- |
+| `P0010` | An activity depends on an id that no activity has. | Add the activity, or remove the id from the dependencies. |
+| `P0020` | The dependencies make a cycle. | Remove one dependency of the cycle. |
+| `P0030` | The constraints of an activity contradict each other. The activity has both `MinimumFreeSlack` and a maximum latest finish, or its minimum earliest start and its duration go past its maximum latest finish. | Remove a constraint, or change it. |
+| `P0040` | Each resource is an explicit target, but an activity has no target resource. | Give the activity a target, or add a resource that is not an explicit target. |
+| `P0050` | The compiler cannot remove the dependencies that are not necessary. | This is an error of the compiler. Report it. |
+| `P0060` | An activity can use only its explicit target resources, and some of them are not available, for example because they are not active. | Make the resources active, or change the targets. |
+| `P0070` | The data of an activity or a resource does not agree with itself. | This is an error of the application. Report it. |
+| `P0080` | A value or a count is out of the limits: a duration or a time above 100,000 days, more than 2,000 activities, more than 1,000 resources, or more than 100 work streams. `zpp` changes a value below 0 to 0 before the compile. | Correct the value, or make the plan smaller. |
+| `C0010` | The calculated times break a constraint, for example a maximum latest finish that an activity cannot meet. The detail names the activities whose times are not valid. These can be the activities before the activity that has the constraint, and not that activity. | Move the constraint, or make the activities before it shorter. |
+| `C0020` | The scheduler cannot put each activity on the resources, or the schedule goes past 100,000 days. | Check the targets of the activities, and the resources. |
 
 ### The kinds of problem
 
