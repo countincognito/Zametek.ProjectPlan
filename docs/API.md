@@ -512,6 +512,8 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
 
+The check of a project before the load also uses `required`, `outOfRange`, `notAllowed`, `duplicateId` and `hasNoData`. Each error is then at the place of its problem in the project (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)).
+
 ### Codes of the compiler
 
 A project that does not compile gets the code of the compiler (`compilation-failed`). The `detail` of the error names the activities. These are the codes:
@@ -610,6 +612,8 @@ A client cannot correct this by a change to what it says. It must correct how it
   }
 }
 ```
+
+The server also checks a project before it loads it. It refuses a project that the load cannot get past, or that would not give what it says. `errors` then has one error for each problem, at its place in the project, for example `#/project/Files/0/Scenario/ProjectStart`. [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load) gives the codes.
 
 A workbook to import can have problems in its cells. The server reads the whole workbook, imports nothing, and answers with this same kind of problem. `errors` has one error for each problem, at `#/import`, up to 100. The `code` of an error is one of the codes for the cells of a workbook (see the table of the [codes](#codes)). The `detail` of an error gives the place of the problem (the sheet and the cell, then the title of the column and the name of the row in brackets) and says what is wrong. The `detail` of the problem gives the number of problems. If the workbook has more than 100, the `detail` of the problem also says that only the first 100 are listed, and the console ends with the number of the others. A file that is not a workbook at all is not a problem of this type: its answer is the one above, with the code `unreadable`. This is the answer to a workbook with two cells of text in a column of numbers:
 

@@ -105,6 +105,24 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. An id of a node is a GUID. An id of an activity, a resource or a work stream is a whole number.
 
+## What zpp checks before the load
+
+`zpp` and `zpp serve` check a plan before they load it. They refuse a plan that has one of these problems. `zpp` then gives exit code 1, with one line for each problem on its standard error stream. `zpp serve` gives `422` `project-not-readable`, with each problem at its place in the project.
+
+- `required`: the scenario that the plan loads has no `ProjectStart`.
+
+- `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`.
+
+- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7.
+
+- `duplicateId`: two activities, two resources or two work streams of the scenario have the same `Id`.
+
+- `hasNoData`: the plan has nodes, but `Files` has no item for the scenario that the plan loads (refer to [The tree of scenarios](#the-tree-of-scenarios)).
+
+The check looks at the scenario that the plan loads, and at the nodes and the display settings of the project. A tracked scenario that the check refuses does not compile, and it has no metrics.
+
+The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it.
+
 ## The calendar
 
 `NonWorkingDayMode` in the `DisplaySettings` of a scenario selects the days that are not working days:

@@ -146,6 +146,39 @@ namespace Zametek.Engine.ProjectPlan
             }
         }
 
+        // The item of Files that the load loads, when the check before the load finds no problem in the project and in that
+        // scenario; else ProjectNotReadableException, with each problem.
+        private static int? CheckProject(ProjectModel projectModel)
+        {
+            List<PlanProblem> problems = PlanCheck.FindProjectProblems(projectModel);
+            int? scenarioToLoad = PlanCheck.IndexOfScenarioToLoad(projectModel);
+
+            if (scenarioToLoad is int index)
+            {
+                problems.AddRange(PlanCheck.FindScenarioProblems(projectModel, index));
+            }
+
+            if (problems.Count > 0)
+            {
+                throw new ProjectNotReadableException(PlanProblemText.BuildHeader(problems.Count), problems);
+            }
+
+            return scenarioToLoad;
+        }
+
+        // What a compile gives for a plan out of the limits of the compiler (P0080), without the load and the compile.
+        private static JobResult LimitsResult(IReadOnlyList<string> violations)
+        {
+            var error = new GraphCompilationError(GraphCompilationErrorCode.P0080, PlanCheck.BuildLimitsMessage(violations));
+
+            return new JobResult
+            {
+                Status = JobStatus.CompilationErrors,
+                CompilationOutput = OutputManagerViewModel.BuildCompilationErrorsText([error]),
+                CompilationErrors = [new JobCompilationError(error.ErrorCode.ToString(), error.ErrorMessage)],
+            };
+        }
+
         // Whether an exception from a reader says that the file cannot be read. A job that was cancelled, or that ran out
         // of memory, has not met a file it cannot read.
         private static bool IsUnreadable(Exception ex)
@@ -210,6 +243,14 @@ namespace Zametek.Engine.ProjectPlan
                     // processing: ProcessProject loads whichever scenario Current
                     // names, so this is the entire mechanism of scenario selection.
                     projectModel = projectModel with { Current = ScenarioSelector.ResolveScenarioId(projectModel, request.Scenario) };
+                }
+
+                // The check before the load. A plan that the load cannot get past, or that would give what the plan does not
+                // say, is refused with each problem. A plan out of the limits of the compiler gets P0080 without the load.
+                if (CheckProject(projectModel) is int scenarioToLoad
+                    && PlanCheck.FindLimitViolations(projectModel.Files[scenarioToLoad].Scenario) is { Count: > 0 } violations)
+                {
+                    return LimitsResult(violations);
                 }
 
                 project.ProcessProject(projectModel);
@@ -615,6 +656,17 @@ namespace Zametek.Engine.ProjectPlan
             foreach (Guid scenarioId in withData)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // A tracked scenario that the check before the load refuses, or that is out of the limits of the compiler, does
+                // not compile, and the job does not load it: the load cannot get past some of them.
+                int index = projectModel.Files.FindLastIndex(x => x?.NodeId == scenarioId);
+
+                if (PlanCheck.FindScenarioProblems(projectModel, index).Count > 0
+                    || PlanCheck.FindLimitViolations(projectModel.Files[index].Scenario).Count > 0)
+                {
+                    compiled[scenarioId] = null;
+                    continue;
+                }
 
                 project.ProcessProject(projectModel with { Current = scenarioId });
 

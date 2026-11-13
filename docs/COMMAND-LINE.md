@@ -187,7 +187,7 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 | Code | Meaning |
 | ---- | ------- |
 | 0 | Success |
-| 1 | Runtime failure: an incorrect path, a file that `zpp` cannot read, an output that `zpp` cannot write, or an unexpected error |
+| 1 | Runtime failure: an incorrect path, a file that `zpp` cannot read, a plan that the check before the load refuses (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)), an output that `zpp` cannot write, or an unexpected error |
 | 2 | Incorrect use: invalid options or combinations of options |
 | 3 | The plan compiled with errors. [The API](API.md#codes-of-the-compiler) gives the codes of the errors. |
 | 4 | A compilation used more time than `--compile-timeout` gives, and `zpp` cancelled it |

@@ -813,6 +813,20 @@ namespace Zametek.ProjectPlan.CommandLine
                     // Each problem is an error with the code of its kind and the place in the sheets in its words.
                     errors.AddRange(import.Issues.Take(c_MaximumImportProblems).Select(x => PartError(part, x.Code, ImportIssueText.Describe(x))));
                     break;
+                // A project that the check before the load refuses: each problem is an error, at its place in the project.
+                case ProjectNotReadableException { PlanProblems: { Count: > 0 } planProblems }:
+                    exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception, c_MaximumImportProblems);
+                    kind = ProblemKind.ProjectNotReadable;
+                    detail = planProblems.Count > c_MaximumImportProblems
+                        ? $@"{exception.Message} {ImportIssueText.BuildListed(c_MaximumImportProblems)}"
+                        : exception.Message;
+                    errors.AddRange(planProblems.Take(c_MaximumImportProblems).Select(x => new ProblemError
+                    {
+                        Pointer = $@"{CompileOptionsHelper.GetPointer(c_RequestPointer, part)}{x.Pointer}",
+                        Code = x.Code,
+                        Detail = x.Detail,
+                    }));
+                    break;
                 case ProjectNotReadableException:
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
                     kind = ProblemKind.ProjectNotReadable;

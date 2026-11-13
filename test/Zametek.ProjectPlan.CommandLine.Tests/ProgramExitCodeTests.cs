@@ -504,6 +504,21 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_APlanThatTheCheckBeforeTheLoadRefuses_Then_ExitCode1WithEachProblemOnStandardError()
+        {
+            // The load of this plan failed with an exception (B8 of the stress test of 0.11.0-beta.1).
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DisplaySettings"]![@"NonWorkingDayMode"] = 7;
+            string planFile = Path.Combine(m_TempDirectory, @"mode-7.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile);
+
+            exitCode.ShouldBe(1);
+            error.ShouldContain(@"/Files/0/Scenario/DisplaySettings/NonWorkingDayMode: must be one of: 0 (None), 1 (Weekends), 2 (CustomCalendar)");
+        }
+
+        [Fact]
         public async Task Main_Given_CompileTracked_Then_PrintsTheMetricsOfEachTrackedScenario()
         {
             (int exitCode, string output) = await RunCapturedAsync(

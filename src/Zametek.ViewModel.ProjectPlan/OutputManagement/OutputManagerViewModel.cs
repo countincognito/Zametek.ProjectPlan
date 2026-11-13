@@ -133,6 +133,26 @@ namespace Zametek.ViewModel.ProjectPlan
             return output.ToString();
         }
 
+        /// <summary>
+        /// The text of the errors of a compilation, as the output of the compilation gives it. A job that refuses a plan before
+        /// its compile (P0080 for counts above the limits) gives its errors in the same words.
+        /// </summary>
+        public static string BuildCompilationErrorsText(IEnumerable<IGraphCompilationError> errors)
+        {
+            ArgumentNullException.ThrowIfNull(errors);
+            var output = new StringBuilder();
+            output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_CompilationErrors}");
+            output.AppendLine();
+
+            foreach (IGraphCompilationError error in errors)
+            {
+                output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_Error}: {error.ErrorCode}");
+                output.AppendLine($@">{error.ErrorMessage}");
+            }
+
+            return output.ToString();
+        }
+
         private static string BuildCompilationOutputInternal(
             IDateTimeCalculator dateTimeCalculator,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
@@ -152,14 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (hasCompilationErrors)
             {
-                output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_CompilationErrors}");
-                output.AppendLine();
-
-                foreach (IGraphCompilationError error in errors)
-                {
-                    output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_Error}: {error.ErrorCode}");
-                    output.AppendLine($@">{error.ErrorMessage}");
-                }
+                output.Append(BuildCompilationErrorsText(errors));
             }
             else if (resourceSeries.Any())
             {

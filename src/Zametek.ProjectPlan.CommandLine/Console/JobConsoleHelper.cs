@@ -83,6 +83,16 @@ namespace Zametek.ProjectPlan.CommandLine
                     }
 
                     return ExitCode.Failure;
+                case ProjectNotReadableException { PlanProblems: { Count: > 0 } planProblems }:
+                    // The check before the load: the header, and each problem at its place in the file.
+                    await console.WriteErrorLineAsync(exception.Message);
+
+                    foreach (string line in PlanProblemText.ListLines(planProblems, maximumImportProblems))
+                    {
+                        await console.WriteErrorLineAsync(line);
+                    }
+
+                    return ExitCode.Failure;
                 case ScenarioSelectionException ex:
                     await console.WriteErrorLineAsync(BuildScenarioSelectionMessage(ex));
                     return ExitCode.Failure;

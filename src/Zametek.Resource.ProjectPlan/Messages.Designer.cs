@@ -849,6 +849,87 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to activities.
+        /// </summary>
+        public static string Message_PlanActivities {
+            get {
+                return ResourceManager.GetString("Message_PlanActivities", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The number of {0} is {1}, which exceeds the maximum supported count of {2}.
+        /// </summary>
+        public static string Message_PlanCountExceedsMaximum {
+            get {
+                return ResourceManager.GetString("Message_PlanCountExceedsMaximum", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to must be within {0:N0} days of ProjectStart.
+        /// </summary>
+        public static string Message_PlanDateTooFarFromStart {
+            get {
+                return ResourceManager.GetString("Message_PlanDateTooFarFromStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to is also the Id of item {0} of this list.
+        /// </summary>
+        public static string Message_PlanDuplicateId {
+            get {
+                return ResourceManager.GetString("Message_PlanDuplicateId", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to has no data for the scenario '{0}', which the plan loads.
+        /// </summary>
+        public static string Message_PlanHasNoData {
+            get {
+                return ResourceManager.GetString("Message_PlanHasNoData", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Values or counts outside the supported limits:.
+        /// </summary>
+        public static string Message_PlanLimitsExceeded {
+            get {
+                return ResourceManager.GetString("Message_PlanLimitsExceeded", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The plan was not loaded. Problems found in the file: {0}..
+        /// </summary>
+        public static string Message_PlanProblemsFound {
+            get {
+                return ResourceManager.GetString("Message_PlanProblemsFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to resources.
+        /// </summary>
+        public static string Message_PlanResources {
+            get {
+                return ResourceManager.GetString("Message_PlanResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to work streams.
+        /// </summary>
+        public static string Message_PlanWorkStreams {
+            get {
+                return ResourceManager.GetString("Message_PlanWorkStreams", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The project has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ProjectUnsavedChanges {

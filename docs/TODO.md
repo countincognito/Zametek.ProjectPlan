@@ -2,19 +2,9 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Give 4xx and not 500 for five inputs** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
+- [ ] **Refuse a cut-off multipart body with 400** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
 
-  These inputs give 500 `unexpected-error`. The log of the server has the exception:
-
-  | Input | Exception | Where |
-  |---|---|---|
-  | A multipart body with no closing boundary | `IOException` | `MultipartReaderStream.ReadAsync` |
-  | `MaximumLatestFinishDateTime` 9999-12-31 | `ArgumentOutOfRangeException` | `DateTimeCalculator.AppendNonWorkingDays` |
-  | A scenario with no `ProjectStart` | `ArgumentOutOfRangeException` | `DateTimeCalculator.AppendNonWorkingDays` |
-  | Two resources with the same `Id` | `ArgumentException` | `ResourceSelectorViewModel.SetTargetResources` |
-  | `NonWorkingDayMode` 7 | `ArgumentOutOfRangeException` | `DateTimeCalculator.set_NonWorkingDayMode` |
-
-  Give 400 `malformed-request` for the first input, and 422 `project-not-readable` for the others. The server stays up after each one. The repros are in the folder of the stress test (`repros/b8-*.zpp`).
+  Such a body gives 500 `unexpected-error`, and the log of the server has an `IOException` from `MultipartReaderStream.ReadAsync`. Give 400 `malformed-request`. The four plans of the same finding (B8) give 422 `project-not-readable` since the check before the load.
 
 - [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
 
@@ -22,25 +12,15 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   At the limits of the compiler (2000 activities and 1000 resources), one job takes 214 seconds, and the server uses 2.9 GB at the peak. With the default job limit of 120 seconds, the job fails after it holds the memory for two minutes. Thus, four such jobs at one time can use 12 GB. Find the work that grows with the activities and the resources. The allocation streams of each resource are one possible cause: they have one value for each day. Then bound the work: make it smaller, put it under the compile limit, or give the server a limit of memory.
 
-- [ ] **Check the limits of a plan before the load** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
-
-  A plan with 2001 activities gives `P0080`, but only after the load of the plan. The refusal takes 0.5 seconds for 2001 activities, 3 seconds for 5000 and 10 seconds for 10000, also when the compile timeout is 5 seconds. Count the activities, the resources and the work streams before the load, and refuse a plan that is out of the limits at once. The documents give the limits since 0.11.0-beta.1.
-
 - [ ] **Report the ids that match nothing** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 
   These plans compile with 200, and nothing tells the user about the problem:
-
-  - Two activities with the same `Id`.
 
   - A `TargetResources` with an id that no resource has. The activity can then go to any resource. The application removes such an id on purpose, when it makes the activity, so that a plan stays usable after a resource is deleted. Thus, a warning fits better than an error.
 
   - A `TargetWorkStreams` or an `InterActivityPhases` with an id that no work stream has.
 
-  - A `TargetResourceOperator` of 9.
-
-  - A plan with no `Files`, or a node of a scenario with no file. The answer has 200, and each metric is null.
-
-  Give a problem with a code for each one, as `P0010` does for a dependency that does not exist.
+  Give a warning for each one. The check before the load refuses three other plans of the finding. These are two activities with one `Id`, a `TargetResourceOperator` of 9, and a plan with no data to load.
 
 - [ ] **Read the file name of a part as UTF-8, and refuse a second project part** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 

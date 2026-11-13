@@ -12,6 +12,10 @@ namespace Zametek.Engine.ProjectPlan
     /// A workbook that has problems in its cells is read in full, and the reader's exception is a
     /// <see cref="ScenarioImportException"/> with the list of them (see <see cref="ImportProblems"/>).
     /// </para>
+    /// <para>
+    /// A project that the check before the load refuses has the problems that the check found (see <see cref="PlanProblems"/>),
+    /// and the message says how many there are.
+    /// </para>
     /// </summary>
     public class ProjectNotReadableException
         : Exception
@@ -30,9 +34,22 @@ namespace Zametek.Engine.ProjectPlan
         {
         }
 
+        public ProjectNotReadableException(string message, IReadOnlyList<PlanProblem> planProblems)
+            : base(message)
+        {
+            ArgumentNullException.ThrowIfNull(planProblems);
+            PlanProblems = planProblems;
+        }
+
         /// <summary>
         /// The problems that were found in the cells of a workbook, or null when the file cannot be read for another reason.
         /// </summary>
         public ScenarioImportException? ImportProblems => InnerException as ScenarioImportException;
+
+        /// <summary>
+        /// The problems that the check of a project found before its load, or null when the file cannot be read for another
+        /// reason.
+        /// </summary>
+        public IReadOnlyList<PlanProblem>? PlanProblems { get; }
     }
 }
