@@ -20,6 +20,14 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time (refer to the entry about the five inputs that give 500).
 
+- [ ] **When the schedule counts hours, store the times of a plan without an offset** *(2026-11-13, a decision of the maintainer)*
+
+  Since 0.11.0-beta.1, a date of a plan is the day that it shows, in its own offset (a70c2e1c). The schedule counts whole days, so the time of the day and the offset have no effect. The file keeps a `DateTimeOffset` for each date, and the code must not read such a value as a moment. A plain date (`DateOnly`) was another option, but it removes the time of the day, which hours need.
+
+  If the schedule counts hours one day, keep the dates and the times, and remove the offset. Store each time of the plan as the time on the clock of the plan, for example `2027-01-04T09:00:00`. Do this in one change of the version of the file, as for the entry about `Duration`. A working day of 09:00 to 17:30 then stays 09:00 to 17:30 in each time zone. A change of the clock does not move it either.
+
+  The version of the file tells the migration that the earlier times have no meaning, so it keeps only their dates. Hours that a person works on a day do not need this change, because a tracker counts them for a day. A log of work as moments, with a start and a stop from a clock, needs a time zone of the plan. The zone puts each moment on a day and an hour of the plan.
+
 - [ ] **Install the MSI of the final 0.11.0 over a 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
 
   Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. Since 0.11.0-beta.1, `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` has `AllowSameVersionUpgrades="yes"`. Thus, the MSI removes an installed product of the same version. The Upgrade table of an MSI that was built from beta.1 shows it. Its row that removes the earlier versions has the attributes 513, which include the maximum of 0.11.0.0. The MSI of the beta had 1.
@@ -53,12 +61,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   But the SVG gives the position of each letter from the measurements of Inter, for example `x="0, 8.897727"`. Thus, with a fallback font, the spaces between the letters are not regular. For example, Edge shows "Requirements & Architecture" as "Requirements &Architecture".
 
   To show the text exactly as the PNG does, put Inter into the SVG with `@font-face`. Each file then becomes larger by the size of the font, unless the export keeps only the letters that the chart uses. Skia can change text to paths in an SVG, but SkiaSharp does not give access to this option (checked in 3.119.4 and 4.148.0).
-
-- [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
-
-  On Linux, `zpp` saves a placeholder date of year 1 as `0001-01-01T00:00:00-00:01`. On Windows, it saves the same date as `0001-01-01T00:00:00+00:00`. A plan that a program writes can have such dates in the `CreatedOn` and `ModifiedOn` of its nodes, as the test plans have. The smoke test of v0.11.0-alpha found the difference on 2026-11-06, and on 2026-11-12 Windows still wrote `+00:00`.
-
-  The cause is probably a change to the local time zone. For London in year 1, the time zone data of Linux gives the local mean time (−00:01:15). Windows has no rules before its first rule. Real dates are the same on the two systems. Thus, the difference is harmless, but two computers save two different files from one plan. Find where a date of year 1 becomes a local date, and keep the offset that the file has.
 
 - ~~**Suggestion: tell how far a plan misses its deadline**~~ DECLINED on 2026-11-12. *(2026-11-11, a suggestion from the design of the zpp skill)*
 
