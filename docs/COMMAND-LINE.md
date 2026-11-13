@@ -72,6 +72,8 @@ Import a plan from Microsoft Project or Excel, and convert it to a plan file:
 zpp -m plan.mpp -o plan.zpp
 ```
 
+An import from Microsoft Project gives each task its duration in working days. Microsoft Project can give a duration in minutes, hours, days, weeks or months. `zpp` converts it with the hours of a day, the hours of a week and the days of a month that the plan gives. A part of a day is a whole day: a task of 4 hours takes 1 day.
+
 The import of an Excel workbook is all or nothing. `zpp` reads the whole workbook and collects each problem in its cells. If it finds one or more, it imports nothing and exits with code 1. It writes the problems to the standard error stream, one in each line. Each line gives the place of the problem (the sheet and the cell), the title of the column and the name of the row, and then it says what is wrong:
 
 ```
