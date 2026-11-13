@@ -66,8 +66,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     with.CaseInsensitiveEnumValues = true;
                     with.HelpWriter = null;
 
-                    // This needs to be included to prevent the --version option.
-                    with.AutoVersion = false;
+                    // --version prints the name and the version of zpp (see OnParseErrors).
+                    with.AutoVersion = true;
                 });
 
                 ParserResult<Options> parserResult = parser.ParseArguments<Options>(arguments);
@@ -555,6 +555,14 @@ namespace Zametek.ProjectPlan.CommandLine
             IEnumerable<Error> errs,
             IReadOnlyList<string> usage)
         {
+            // --version asks for the heading of the help alone, which names the version. The line ends as each line that zpp
+            // writes itself does: only the help is the library's.
+            if (errs.Any(x => x.Tag is ErrorType.VersionRequestedError))
+            {
+                Console.Out.Write(VersionLine + NewLineHelper.NewLine);
+                return ExitCode.Success;
+            }
+
             DisplayHelp(result, usage);
 
             // Help explicitly requested is a successful outcome; anything else
@@ -563,6 +571,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 ? ExitCode.Success
                 : ExitCode.UsageError;
         }
+
+        // The name and the version of zpp: the heading of the help, and what --version prints.
+        private static string VersionLine =>
+            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
 
         private static void DisplayHelp<T>(
             ParserResult<T> result,
@@ -576,13 +588,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 h.AdditionalNewLineAfterOption = false;
 
                 // Change header.
-                h.Heading = $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                h.Heading = VersionLine;
 
                 // Change copyright.
                 h.Copyright = $@"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}";
 
-                // This needs to be included to prevent the --version option.
-                h.AutoVersion = false;
+                // List --version.
+                h.AutoVersion = true;
 
                 // What was wrong with the options, if anything was, and then how the command is used, above its
                 // options - set off by a blank line, as the library sets off its errors: a line that starts with a

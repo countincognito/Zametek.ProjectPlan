@@ -404,6 +404,47 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             output.IndexOf(Options.Usage[0], StringComparison.Ordinal).ShouldBeLessThan(output.IndexOf(@"--input", StringComparison.Ordinal));
         }
 
+        // A package manager or a script runs zpp --version to make sure that zpp runs, and takes any exit code but 0 as a
+        // failure.
+        [Fact]
+        public async Task Main_Given_Version_Then_ExitSuccess()
+        {
+            (int exitCode, _) = await RunCapturedAsync(@"--version");
+
+            exitCode.ShouldBe(0);
+        }
+
+        // The heading of the help, which names the version, on a line of its own, and not the help itself. The line ends
+        // as each line that zpp writes itself does.
+        [Fact]
+        public async Task Main_Given_Version_Then_PrintsTheNameAndTheVersionOnly()
+        {
+            (_, string output) = await RunCapturedAsync(@"--version");
+
+            output.ShouldBe(s_VersionLine + NewLineHelper.NewLine);
+        }
+
+        [Fact]
+        public async Task Main_Given_Help_Then_ListsVersion()
+        {
+            (_, string output) = await RunCapturedAsync(@"--help");
+
+            output.ShouldContain(@"--version");
+        }
+
+        [Fact]
+        public async Task Main_Given_ServeVersion_Then_PrintsTheNameAndTheVersionOnly()
+        {
+            (int exitCode, string output) = await RunCapturedAsync(@"serve", @"--version");
+
+            exitCode.ShouldBe(0);
+            output.ShouldBe(s_VersionLine + NewLineHelper.NewLine);
+        }
+
+        // The name and the version of zpp, as the heading of the help gives them.
+        private static readonly string s_VersionLine =
+            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+
         [Fact]
         public void Usage_Given_EachLine_Then_FitsATerminal80ColumnsWide()
         {
