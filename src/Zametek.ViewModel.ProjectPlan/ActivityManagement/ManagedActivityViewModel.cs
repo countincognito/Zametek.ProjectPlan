@@ -209,7 +209,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetMinimumEarliestStartTimes(DateTimeOffset? input, bool skipValidation = false)
         {
-            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
+            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateConstraintTimeAndDateTime(ProjectStart, input);
 
             if (!skipValidation)
             {
@@ -246,7 +246,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetMaximumLatestFinishTimes(DateTimeOffset? input, bool skipValidation = false)
         {
-            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
+            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateConstraintTimeAndDateTime(ProjectStart, input);
 
             if (!skipValidation)
             {

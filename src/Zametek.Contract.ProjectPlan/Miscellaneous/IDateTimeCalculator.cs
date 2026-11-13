@@ -30,6 +30,10 @@ namespace Zametek.Contract.ProjectPlan
 
         (int?, DateTimeOffset?) CalculateTimeAndDateTime(DateTimeOffset projectStart, DateTimeOffset? input);
 
+        // As the overload for a date, for the date of a constraint (a minimum earliest start or a maximum latest finish): a
+        // date after the project start that is not a working day counts as the next working day.
+        (int?, DateTimeOffset?) CalculateConstraintTimeAndDateTime(DateTimeOffset projectStart, DateTimeOffset? input);
+
         DateTimeOffset AddDays(DateTimeOffset startDateTime, int days);
 
         int CountDays(DateTimeOffset current, DateTimeOffset toCompareWith);

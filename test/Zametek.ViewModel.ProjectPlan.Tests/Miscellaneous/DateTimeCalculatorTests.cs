@@ -243,6 +243,86 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
+        #region CalculateConstraintTimeAndDateTime
+
+        // s_Monday is Monday 2025-06-09. With weekends, day 4 is Friday 2025-06-13 and day 5 is Monday 2025-06-16. The count of
+        // the days takes each working day after the start up to and including the date, so a Saturday counted as the Friday
+        // before it: an activity could start a day before its minimum earliest start date.
+
+        [Theory]
+        [InlineData(14)]
+        [InlineData(15)]
+        public void CalculateConstraintTimeAndDateTime_Given_AWeekendDayWithWeekends_Then_TheMondayAfter(int day)
+        {
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, day, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(5);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 16));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_AWorkingDayWithWeekends_Then_ThatDay()
+        {
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, 13, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(4);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 13));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_ASaturdayWithNoNonWorkingDays_Then_ThatSaturday()
+        {
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.None;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, 14, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(5);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 14));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_AHolidayOfACustomCalendar_Then_TheNextWorkingDay()
+        {
+            // Wednesday 2025-06-11 is a holiday, and the weekends are working days in this calendar: Thursday is day 2.
+            var holiday = new HolidayModel
+            {
+                Id = 1,
+                StartDateTime = new DateTimeOffset(2025, 6, 11, 0, 0, 0, TimeSpan.Zero),
+                RecurrencePattern = @"FREQ=DAILY;COUNT=1",
+            };
+            var calc = CreateCalc();
+            calc.SetNonWorkingDayCalendarEvents([holiday]);
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, 11, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(2);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 12));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_TheProjectStartOnASaturday_Then_DayNought()
+        {
+            // The start of the project stays day 0, whatever the calendar says of it.
+            var saturday = new DateTimeOffset(2025, 6, 14, 0, 0, 0, TimeSpan.Zero);
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(saturday, saturday);
+
+            time.ShouldBe(0);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 14));
+        }
+
+        #endregion
+
         #region GetLocal
 
         [Fact]

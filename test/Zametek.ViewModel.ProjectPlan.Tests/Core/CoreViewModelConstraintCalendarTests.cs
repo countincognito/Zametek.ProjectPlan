@@ -101,6 +101,53 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             constraints.EarliestStartTime.ShouldBe(220);
         }
 
+        [Theory]
+        [InlineData(NonWorkingDayMode.None)]
+        [InlineData(NonWorkingDayMode.Weekends)]
+        public void ProcessProjectScenario_Given_AWeekendPlanWithAMinimumEarliestStartDateOnASaturday_Then_TheActivityStartsOnTheMondayAfter(NonWorkingDayMode defaultMode)
+        {
+            // Saturday 2023-05-13 counted as Friday 2023-05-12, day 9, so the activity could start a day before its date.
+            Constraints constraints = Load(
+                defaultMode,
+                Plan(NonWorkingDayMode.Weekends, minimumEarliestStartDateTime: Local(2023, 5, 13)));
+
+            constraints.MinimumEarliestStartTime.ShouldBe(10);
+            constraints.MinimumEarliestStartDateTime.ShouldBe(new DateTime(2023, 5, 15));
+            constraints.EarliestStartTime.ShouldBe(10);
+        }
+
+        [Theory]
+        [InlineData(NonWorkingDayMode.None)]
+        [InlineData(NonWorkingDayMode.Weekends)]
+        public void ProcessProjectScenario_Given_AWeekendPlanWithAMaximumLatestFinishDateOnASaturday_Then_TheActivityCanFinishOnTheFriday(NonWorkingDayMode defaultMode)
+        {
+            // The date of a maximum latest finish is the day after the last day of work. Saturday 2023-05-13 counted as
+            // Friday 2023-05-12, day 9, so the activity had to finish on the Thursday.
+            Constraints constraints = Load(
+                defaultMode,
+                Plan(NonWorkingDayMode.Weekends, maximumLatestFinishDateTime: Local(2023, 5, 13)));
+
+            constraints.MaximumLatestFinishTime.ShouldBe(10);
+            constraints.HasCompilationErrors.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void MinimumEarliestStartDateTime_Given_ASaturdayInAWeekendPlan_Then_TheMondayAfter()
+        {
+            // As the date picker of the activities sets it.
+            (CoreViewModel core, ISettingService _) = CoreViewModelFixture.CreateWithSettingService();
+            using (core)
+            {
+                core.ProcessProjectScenario(Plan(NonWorkingDayMode.Weekends), Guid.NewGuid(), @"Plan");
+                IManagedActivityViewModel activity = core.RawActivities.Single(x => x.Id == c_ActivityId);
+
+                activity.MinimumEarliestStartDateTime = new DateTime(2023, 5, 13);
+
+                activity.MinimumEarliestStartTime.ShouldBe(10);
+                activity.MinimumEarliestStartDateTime.ShouldBe(new DateTime(2023, 5, 15));
+            }
+        }
+
         [Fact]
         public void ProcessProjectScenario_Given_APlanWhoseCalendarIsNotTheDefault_Then_TheScenarioIsNotMarkedAsUpdated()
         {
@@ -221,7 +268,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             NonWorkingDayMode mode,
             int? minimumEarliestStartTime = null,
             DateTimeOffset? minimumEarliestStartDateTime = null,
-            int? maximumLatestFinishTime = null)
+            int? maximumLatestFinishTime = null,
+            DateTimeOffset? maximumLatestFinishDateTime = null)
         {
             ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(3);
             List<DependentActivityModel> activities =
@@ -235,6 +283,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                             MinimumEarliestStartTime = minimumEarliestStartTime,
                             MinimumEarliestStartDateTime = minimumEarliestStartDateTime,
                             MaximumLatestFinishTime = maximumLatestFinishTime,
+                            MaximumLatestFinishDateTime = maximumLatestFinishDateTime,
                         }
                         : x.Activity with { TargetResources = [] },
                 }),

@@ -698,6 +698,36 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public (int?, DateTimeOffset?) CalculateConstraintTimeAndDateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                // A constraint holds from the start of a working day. The count of the days takes each working day after the
+                // start up to and including the date, so a date that is not a working day counted as the working day before
+                // it: an activity could start a day before its minimum earliest start date, or had to finish a day before its
+                // maximum latest finish date. Thus, such a date counts as the next working day, which is one day more. The
+                // start of the project itself stays day 0, whatever the calendar says of it.
+                //
+                // The count runs first, from the start of the project, as the other counts do: the calendar then knows each
+                // day up to the date. A check of the date alone, before the count, made the calendar take the days between as
+                // known when it had not found their non-working days, and they counted as working days.
+                (int? time, DateTimeOffset? dateTime) = CalculateTimeAndDateTime(projectStart, input);
+                DateTimeOffset? date = CalculateDateTime(projectStart, input);
+
+                if (time.HasValue
+                    && date.HasValue
+                    && date.GetValueOrDefault().Date > projectStart.Date
+                    && IsNonWorkingDay(date.GetValueOrDefault()))
+                {
+                    return CalculateTimeAndDateTime(projectStart, time.GetValueOrDefault() + 1);
+                }
+
+                return (time, dateTime);
+            }
+        }
+
         private Func<DateTimeOffset, int, DateTimeOffset> m_AddDaysFunc;
 
         public DateTimeOffset AddDays(DateTimeOffset startDateTime, int days)
