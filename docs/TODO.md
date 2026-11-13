@@ -2,7 +2,9 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1, do before the final 0.11.0)*
+- [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
+
+  Since 0.11.0-beta.1, the effort series no longer reads each activity for each resource on each day. The series of 1500 activities and 500 resources took 34 seconds and 38 GB of allocations, and it now takes 1.3 seconds and 278 MB. A job of that plan now takes 9 seconds, and not 60. The rest of this entry is from before the change. Measure it again, and then decide what to bound. A job still builds each output of the cascade two times (refer to the entry about the two compiles of a job).
 
   The test compiles one network of 1500 activities with 10, 50, 100, 200 and 500 developers, on a server with no other jobs. The jobs take 5.4, 7.8, 13.1, 21.6 and 51.5 seconds. Each job adds 107, 107, 108, 161 and 740 MB to the memory of the server. The compile limit does not stop this work. With a `compileTimeout` of PT5S, the plan with 200 developers gets 200 after 25 seconds. With PT1S, it gets `compilation-timed-out` after 3.9 seconds.
 

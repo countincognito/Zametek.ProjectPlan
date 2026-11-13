@@ -660,40 +660,47 @@ namespace Zametek.ViewModel.ProjectPlan
                     // This is for tracking the working effort for each activity.
                     Dictionary<int, int> runningWorkingEfforts = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
 
+                    // The place of each activity in the order of the series. A tracker adds its efforts in this order, as the
+                    // series always did, so that the sum of each resource adds its parts in the same order.
+                    Dictionary<int, int> activityOrder = [];
+
+                    for (int index = 0; index < orderedActivities.Count; index++)
+                    {
+                        activityOrder[orderedActivities[index].Id] = index;
+                    }
+
                     // Cycle through each time index.
                     for (int timeIndex = 0; timeIndex <= endTime; timeIndex++)
                     {
-                        // Here we need to update the running percentage effort for each resource.
+                        // Here we need to update the running percentage effort for each resource. Only a resource with a tracker
+                        // for this time index adds any. The loop over each activity for each resource on each day made the
+                        // series take 34 seconds for 1500 activities and 500 resources (B10 of the stress test of 0.11.0-beta.1).
                         foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)
                         {
+                            if (!resourceTrackerLookup.TryGetValue(timeIndex, out ResourceTrackerModel? tracker))
+                            {
+                                continue;
+                            }
+
                             ResourceTrackingAccumulator? accumulator = resourceTrackingLookup.GetValueOrDefault(resource.Id);
 
-                            foreach (ActivityModel activity in orderedActivities)
+                            // An activity that the series does not have gets no effort, as before. OrderBy keeps the order of the
+                            // list for two trackers of one activity.
+                            IEnumerable<ResourceActivityTrackerModel> activityTrackers = tracker.ActivityTrackers
+                                .Where(x => activityOrder.ContainsKey(x.ActivityId))
+                                .OrderBy(x => activityOrder[x.ActivityId]);
+
+                            foreach (ResourceActivityTrackerModel activityTracker in activityTrackers)
                             {
-                                int runningWorkingEffort = 0;
-                                int activityId = activity.Id;
+                                int activityId = activityTracker.ActivityId;
+                                runningWorkingEfforts[activityId] += activityTracker.PercentageWorked;
 
-                                if (runningWorkingEfforts.TryGetValue(activityId, out int workingEffort))
+                                // Attribute the same increment to the resource that owns the tracker.
+                                if (accumulator is not null)
                                 {
-                                    runningWorkingEffort = workingEffort;
+                                    int resourceWorkingEffort = accumulator.RunningWorkingEfforts.GetValueOrDefault(activityId);
+                                    accumulator.RunningWorkingEfforts[activityId] = resourceWorkingEffort + activityTracker.PercentageWorked;
                                 }
-
-                                if (resourceTrackerLookup.TryGetValue(timeIndex, out ResourceTrackerModel? tracker))
-                                {
-                                    foreach (ResourceActivityTrackerModel activityTracker in tracker.ActivityTrackers.Where(x => x.ActivityId == activityId))
-                                    {
-                                        runningWorkingEffort += activityTracker.PercentageWorked;
-
-                                        // Attribute the same increment to the resource that owns the tracker.
-                                        if (accumulator is not null)
-                                        {
-                                            int resourceWorkingEffort = accumulator.RunningWorkingEfforts.GetValueOrDefault(activityId);
-                                            accumulator.RunningWorkingEfforts[activityId] = resourceWorkingEffort + activityTracker.PercentageWorked;
-                                        }
-                                    }
-                                }
-
-                                runningWorkingEfforts[activity.Id] = runningWorkingEffort;
                             }
                         }
 
