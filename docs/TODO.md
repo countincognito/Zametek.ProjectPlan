@@ -193,11 +193,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Make a compiler warning stop the build** *(2026-11-14, from the review of `src`)*
 
-  The hook and CI do `dotnet format style` and `dotnet format analyzers` with `--verify-no-changes`, and then a plain `dotnet build`. No project sets `TreatWarningsAsErrors`, `AnalysisLevel` or `EnforceCodeStyleInBuild`, and the repository has no `Directory.Build.props`. Thus, a warning of the compiler, for example a nullable warning, does not stop a commit. On 2026-11-03, f52cd6cb added a CS8600 to a test, and 2d37e6fa removed it.
+  The hook and CI do `dotnet format style` and `dotnet format analyzers` with `--verify-no-changes`, and then a plain `dotnet build`. No project sets `TreatWarningsAsErrors`, `AnalysisLevel` or `EnforceCodeStyleInBuild`, and `Directory.Build.props` does not set them either. Thus, a warning of the compiler, for example a nullable warning, does not stop a commit. On 2026-11-03, f52cd6cb added a CS8600 to a test, and 2d37e6fa removed it.
 
   The comment in `ci.yml` says that `/WarnAsError` is off because of NU1903 for `System.Security.Cryptography.Xml` 8.0.2. On 2026-11-14, `dotnet list package --vulnerable --include-transitive` found no vulnerable package in a project, and the restore now takes version 10.0.11 of that package. Thus, the reason is probably gone.
 
-  Add a `Directory.Build.props` with `TreatWarningsAsErrors`, or pass `-warnaserror` in the hook and in CI. List the warnings that must stay warnings. They are the IKVM warnings of the projects that reference MPXJ, and the one SDK warning of the Browser head (`NativeFileReference`). Build Debug and Release first, and read what each build gives.
+  Add `TreatWarningsAsErrors` to `Directory.Build.props`, or pass `-warnaserror` in the hook and in CI. List the warnings that must stay warnings. They are the IKVM warnings of the projects that reference MPXJ, and the one SDK warning of the Browser head (`NativeFileReference`). Build Debug and Release first, and read what each build gives.
 
 - [ ] **Keep the versions of the packages in one file, and let Dependabot watch NuGet** *(2026-11-14, from the review of `src`)*
 
@@ -219,6 +219,18 @@ This file lists the maintainer-internal engineering intents that must version wi
   `ci.yml` has one job, on `ubuntu-24.04`. The desktop ships for Windows, and the hook on the computer of the maintainer is the only gate on Windows. Thus, CI does not test the things that differ there. Examples are the MS Project import through IKVM, the sharing of open files, the fonts and the paths with a backslash. The test projects reference `coverlet.collector`, but no step collects coverage. Thus, nobody knows which lines the tests do not reach.
 
   Add a job on Windows. The entry "Package `zpp serve`" already asks for Windows, Linux and macOS, for its golden files. Collect the coverage in one job, and publish the report as an artifact. Do not make a threshold a gate at first.
+
+- [ ] **Map the paths of the XAML files in the symbols of a release** *(2026-11-14, found after the change to `ContinuousIntegrationBuild`)*
+
+  A `Release` build starts each path of a C# file in the symbols with `/_/` (2e3f20cb). The XAML compiler of Avalonia writes the paths of the `.axaml` files into the symbols itself. It makes each path from the folder of the project, and it does not use `PathMap`. Thus, the symbols of a release keep the full path of each `.axaml` file on the build machine. On 2026-11-14, these were 34 files in four DLLs of the desktop application, and one file in `zpp`. Such a path shows only in a frame of compiled XAML in a stack trace.
+
+  Avalonia 12.1.3 has no setting for this. The target `CompileAvaloniaXaml` gives `$(MSBuildProjectDirectory)` to the task as `ProjectDirectory`, and the task has no parameter for `PathMap` or `SourceRoot`. Ask Avalonia to map these paths, or look for a newer version that does. Do not change `ProjectDirectory` in a copy of the target before you know what else the task does with it. Each new version of Avalonia can also break such a copy.
+
+  To do a check of the paths, read the documents of the embedded PDB of `Zametek.View.ProjectPlan.dll` with `System.Reflection.Metadata`. After the change, each document must start with `/_/`.
+
+- [ ] **Use Zametek.Utility 3.0.1 when it is on NuGet** *(2026-11-14, found after the change to `ContinuousIntegrationBuild`)*
+
+  The DLL of Zametek.Utility 3.0.0 names the path of its `.pdb` file on the computer of the maintainer. It is the only plain local path in the single files of `zpp` and of the desktop application. Version 3.0.1 (Zametek.Utility ae487c5 and ee0454d, not on NuGet yet) has the same code, and its paths start with `/_/`. When 3.0.1 is on NuGet, change the version in `Zametek.Graphs.Avalonia.csproj`. Then publish a release build, and make sure that no DLL names a local folder.
 
 - [ ] **Suggestion: make `Zametek.ViewModel.ProjectPlan` smaller** *(2026-11-14, from the review of `src`)*
 
