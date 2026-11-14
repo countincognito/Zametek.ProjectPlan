@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    A Release build puts the symbols of each assembly of this repository into the assembly (an embedded portable PDB).
+    Thus, a stack trace from a release gives file names and line numbers, and the publish has no .pdb file of ours.
+    A Debug build keeps the separate .pdb files. Directory.Build.targets removes the .pdb files of the packages from a
+    Release publish.
+
+    DebugType is set in this file, and not in Directory.Build.targets. MSBuild uses it to decide if a build copies a
+    separate .pdb file, and it does this before it imports Directory.Build.targets.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+</Project>

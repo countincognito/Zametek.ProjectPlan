@@ -203,3 +203,5 @@ make publish-cli OS=linux ARCH=arm64
 ```
 
 The published output goes to `src/<project>/bin/<configuration>/net10.0/<os>-<arch>/publish/`. For example, the default `make publish-cli` writes a self-contained `zpp.exe` to `src/Zametek.ProjectPlan.CommandLine/bin/Release/net10.0/win-x64/publish/`.
+
+A `Release` publish has no `.pdb` file. Each assembly of this repository holds its symbols (an embedded portable PDB). Thus, a stack trace from a release gives file names and line numbers. `Directory.Build.props` sets this, and `Directory.Build.targets` removes the `.pdb` files of the packages from the publish.
