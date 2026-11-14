@@ -375,6 +375,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (output + error).ShouldContain(@"C0010");
         }
 
+        // The only activity must finish by day 0: as a number, or as a date before the start of the project, which the load
+        // makes day 0. The schedule then finishes on day 0. Up to version 4.1.0, the library threw when it marked the
+        // allocations of the resources, and zpp exited with 1. The compile now reports the broken constraints.
+        [Theory]
+        [InlineData(@"maximum-finish-day-0.zpp")]
+        [InlineData(@"maximum-finish-date-before-start.zpp")]
+        public async Task Main_Given_AMaximumFinishOfDayZero_Then_ExitCompilationErrors(string asset)
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(asset));
+
+            exitCode.ShouldBe(3);
+            (output + error).ShouldContain(@"C0010");
+        }
+
         [Fact]
         public async Task Main_Given_ValidFile_Then_ChartsUseTheBundledFont()
         {

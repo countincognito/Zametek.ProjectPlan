@@ -2,17 +2,9 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Give `C0010`, not a crash, for a maximum finish of day 0** *(2026-11-14, from phase 3 of the zpp skill)*
-
-  A plan with one activity of 5 days and a `MaximumLatestFinishTime` of 0 stops the compile. `zpp -i` exits with 1, and the server answers 500. The log shows an `ArgumentOutOfRangeException` in `ResourceScheduleBuilder.AllocationForNoneType` of Zametek.Maths.Graphs 4.1.0. A maximum finish of day 3 gives `C0010` correctly. When the activity has a predecessor, zpp also gives `C0010`.
-
-  The maximum pulls the activity back to the days from -5 to 0. When no activity finishes after day 0, the allocation streams of the resources have no days. Then the library writes to day 0 of an empty list. The fix of 4.1.0 (`a8d2783`) does not cover this case. The fix goes into the library, in C# and in Rust, and then this repository needs the new package. This is a suggestion for the final 0.11.0.
-
-  The desktop uses the same compile. There, the exception probably stops the automatic compiles for the rest of the session. Refer to the entry "Keep the compile subscriptions alive after an exception". Nobody tried this in the desktop.
-
 - [ ] **Warn about a constraint date before the start of the project** *(2026-11-14, from phase 3 of the zpp skill)*
 
-  `DateTimeCalculator` gives day 0 for a date before the start of the project, and no message tells the user. Thus, a `MaximumLatestFinishDateTime` before the start becomes a `MaximumLatestFinishTime` of 0. For an activity with a duration, the compile then crashes (refer to the entry above) or gives `C0010`. For a milestone, zpp uses day 0 and gives no warning. A `MinimumEarliestStartDateTime` before the start also becomes day 0, and it then has no effect. A date before the start is usually a mistake, for example the wrong year.
+  `DateTimeCalculator` gives day 0 for a date before the start of the project, and no message tells the user. Thus, a `MaximumLatestFinishDateTime` before the start becomes a `MaximumLatestFinishTime` of 0. For an activity with a duration, the compile then gives `C0010`, but the error does not name the date. For a milestone, zpp uses day 0 and gives no warning. A `MinimumEarliestStartDateTime` before the start also becomes day 0, and it then has no effect. A date before the start is usually a mistake, for example the wrong year.
 
   Refuse such a date, or give a warning that names the activity and the date. Before `zpp` and the server load a plan, `PlanCheck` checks it. `PlanCheck` already reports a date that is too far from the start (`AddIfFar`), and it can report a date before the start too. The desktop does not use `PlanCheck`, and a load does not validate the dates of the activities. Thus, the desktop needs a check of its own, for example when it opens a plan and when the user types a date. This is a suggestion for the final 0.11.0.
 

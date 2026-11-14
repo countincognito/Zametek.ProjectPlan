@@ -574,6 +574,16 @@ Version 4.1.0 of the library corrects two crashes of the compile and an error of
 - **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.1.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.1.0.
 - **How it was checked.** Two new tests of `zpp` run the plans of the two crashes, `milestone-after-phase.zpp` and `unmet-maximum-lft.zpp`. With version 4.0.1, `zpp` exited with code 1 on both. With version 4.1.0, it exits with code 0 and code 3.
 
+### The application uses version 4.1.1 of the library
+
+Version 4.1.1 of the library corrects a crash of the compile. The API does not change. The application moved from version 4.1.0 to version 4.1.1 on 2026-11-14. Phase 3 of the tests of the zpp skill found the crash.
+
+- **The crash.** An activity that must finish by day 0 crashed the compile when no activity finished after day 0. A maximum finish date before the start of the project also gives day 0. `zpp` exited with code 1. The compile now gives `C0010`, and `zpp` exits with code 3.
+
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.1.1, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.1.1.
+
+- **How it was checked.** A new test of `zpp` runs two plans, `maximum-finish-day-0.zpp` and `maximum-finish-date-before-start.zpp`. With version 4.1.0, `zpp` exited with code 1 on both. With version 4.1.1, it exits with code 3 and reports `C0010`.
+
 ## Performance work to explore later
 
 The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.
