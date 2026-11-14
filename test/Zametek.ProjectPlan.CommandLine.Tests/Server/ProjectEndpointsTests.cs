@@ -205,6 +205,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_AConstraintDateBeforeTheStart_Then_TheAnswerWarnsAtItsPlace()
+        {
+            // The calendar gives such a date day 0, and so a minimum EST has no effect (phase 3 of the zpp skill).
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+            using var content = RunningServer.CompileContent(Encoding.UTF8.GetBytes(plan.ToString()), @"plan.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime outOfRange"]);
+        }
+
+        [Fact]
         public async Task Compile_Given_ATrackedScenarioThatDoesNotCompile_Then_ItsItemSaysWhy()
         {
             // Its metrics were null, and nothing said why (C23 of the stress test of 0.11.0-beta.1).

@@ -504,6 +504,9 @@
   <data name="Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualToDuration" xml:space="preserve">
     <value>Minimum EST to Maximum LFT must be &gt;= Duration</value>
   </data>
+  <data name="Label_ConstraintDateBeforeProjectStart" xml:space="preserve">
+    <value>The date is before the start of the project ({0}), and so the schedule uses the start in its place.</value>
+  </data>
   <data name="Label_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum FS</value>
   </data>

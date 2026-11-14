@@ -101,6 +101,8 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - A constraint date that is not a working day counts as the next working day.
 
+- A constraint date before `ProjectStart` counts as day 0. `zpp` and the application give a warning for such a date (refer to [What zpp checks before the load](#what-zpp-checks-before-the-load)).
+
 - An activity cannot have both `MinimumFreeSlack` and a maximum latest finish: the compile then gives `P0030`. The compile also gives `P0030` when the minimum earliest start and the duration go past the maximum latest finish. Refer to [the codes of the compiler](API.md#codes-of-the-compiler).
 
 - A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. A date of a plan is a day: `zpp` and the application use the day that the date shows, in its own offset. Thus, `2027-01-04T00:00:00+14:00` and `2027-01-04T23:30:00-05:00` are both 4 January. The time zone of the computer does not change the day, and the time of the day does not change it either. A save keeps the day of each date, but it can write the date with a different offset.
@@ -124,6 +126,10 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 The check looks at the scenario that the plan loads, and at the nodes and the display settings of the project. A tracked scenario that the check refuses does not compile, and it has no metrics.
 
 The check also finds the ids that match nothing. These are a target resource that no resource has, and a target work stream or a phase that no work stream has. The load ignores such an id. Thus, an activity with a target resource that does not exist can go to any resource. The plan loads, and `zpp` writes a warning for each id on its standard error stream. `zpp serve` gives them in `warnings`, with the code `notFound`.
+
+The check also finds each constraint date before `ProjectStart`. The calendar counts such a date as day 0. Thus, a `MinimumEarliestStartDateTime` before the start has no effect, and an activity that takes time cannot meet a `MaximumLatestFinishDateTime` before the start (`C0010`). A date before the start is usually a mistake, for example the wrong year.
+
+The plan loads, and `zpp` writes a warning that names the date and the activity. `zpp serve` gives the warning in `warnings`, with the code `outOfRange`. The problem `compilation-failed` has no `warnings`.
 
 The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it.
 

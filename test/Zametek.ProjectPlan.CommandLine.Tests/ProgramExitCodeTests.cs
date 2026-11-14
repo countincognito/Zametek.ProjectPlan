@@ -672,6 +672,33 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_AConstraintDateBeforeTheStart_Then_AWarningOnStandardErrorAndExitCode0()
+        {
+            // The calendar gives such a date day 0, and so a minimum EST has no effect. Nothing said so (phase 3 of the zpp
+            // skill).
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+            string planFile = Path.Combine(m_TempDirectory, @"date-before-start.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile);
+
+            exitCode.ShouldBe(0);
+            error.ShouldContain(@"Warning: /Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime: is 2023-12-01, before ProjectStart (2024-01-01), and so the schedule uses day 0 for activity 1");
+        }
+
+        [Fact]
+        public async Task Main_Given_AMaximumFinishDateBeforeTheStart_Then_C0010AndAWarningThatNamesTheDate()
+        {
+            // C0010 names the activity, but not the date that the compile could not meet.
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"maximum-finish-date-before-start.zpp"));
+
+            exitCode.ShouldBe(3);
+            (output + error).ShouldContain(@"C0010");
+            error.ShouldContain(@"Warning: /Files/0/Scenario/DependentActivities/0/Activity/MaximumLatestFinishDateTime: is 2026-12-01, before ProjectStart (2027-01-04), and so the schedule uses day 0 for activity 1");
+        }
+
+        [Fact]
         public async Task Main_Given_CompileTrackedAndATrackedScenarioThatDoesNotCompile_Then_ItsErrorsOnStandardErrorAndExitCode0()
         {
             JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));

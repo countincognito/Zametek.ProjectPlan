@@ -24,7 +24,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ArgumentNullException.ThrowIfNull(console);
             ArgumentNullException.ThrowIfNull(result);
 
-            // The ids of the plan that match nothing: on stderr, so that stdout keeps the result of the run.
+            // The warnings of the check before the load: on stderr, so that stdout keeps the result of the run.
             foreach (PlanProblem warning in result.Warnings)
             {
                 await console.WriteErrorLineAsync(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_PlanWarning, warning.Pointer, warning.Detail));

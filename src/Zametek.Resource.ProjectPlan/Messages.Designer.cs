@@ -867,6 +867,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to is {0}, before ProjectStart ({1}), and so the schedule uses day 0 for activity {2}.
+        /// </summary>
+        public static string Message_PlanDateBeforeStart {
+            get {
+                return ResourceManager.GetString("Message_PlanDateBeforeStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to must be within {0:N0} days of ProjectStart.
         /// </summary>
         public static string Message_PlanDateTooFarFromStart {

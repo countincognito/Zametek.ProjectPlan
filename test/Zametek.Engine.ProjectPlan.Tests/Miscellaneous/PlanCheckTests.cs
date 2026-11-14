@@ -208,6 +208,62 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindScenarioWarnings_Given_ConstraintDatesBeforeTheStart_Then_AWarningAtEach()
+        {
+            // The calendar gives such a date day 0, and nothing said so. A minimum EST then has no effect, and an activity that
+            // takes time cannot meet the maximum LFT (C0010). A date before the start is usually a mistake, for example the
+            // wrong year (phase 3 of the zpp skill).
+            ProjectScenarioModel scenario = Scenario();
+            scenario = scenario with
+            {
+                DependentActivities =
+                [
+                    scenario.DependentActivities[0] with
+                    {
+                        Activity = scenario.DependentActivities[0].Activity with { MinimumEarliestStartDateTime = s_Monday.AddDays(-1) },
+                    },
+                    scenario.DependentActivities[1] with
+                    {
+                        Activity = scenario.DependentActivities[1].Activity with { MaximumLatestFinishDateTime = new DateTimeOffset(2026, 12, 1, 0, 0, 0, TimeSpan.Zero) },
+                    },
+                ],
+            };
+
+            List<PlanProblem> warnings = PlanCheck.FindScenarioWarnings(Project(scenario), 0);
+
+            warnings.Select(x => (x.Pointer, x.Code)).ShouldBe(
+            [
+                ($@"{c_Scenario}/DependentActivities/0/Activity/MinimumEarliestStartDateTime", PlanCheck.OutOfRange),
+                ($@"{c_Scenario}/DependentActivities/1/Activity/MaximumLatestFinishDateTime", PlanCheck.OutOfRange),
+            ]);
+            warnings[1].Detail.ShouldBe(@"is 2026-12-01, before ProjectStart (2027-01-04), and so the schedule uses day 0 for activity 2");
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_ConstraintDatesOnTheDayOfTheStart_Then_None()
+        {
+            // Each date of a plan is a day, and so the time of the day does not count. The start itself is day 0.
+            ProjectScenarioModel scenario = Scenario();
+            scenario = scenario with
+            {
+                ProjectStart = s_Monday.AddHours(9),
+                DependentActivities =
+                [
+                    scenario.DependentActivities[0] with
+                    {
+                        Activity = scenario.DependentActivities[0].Activity with { MinimumEarliestStartDateTime = s_Monday },
+                    },
+                    scenario.DependentActivities[1] with
+                    {
+                        Activity = scenario.DependentActivities[1].Activity with { MaximumLatestFinishDateTime = s_Monday.AddDays(10) },
+                    },
+                ],
+            };
+
+            PlanCheck.FindScenarioWarnings(Project(scenario), 0).ShouldBeEmpty();
+        }
+
+        [Fact]
         public void FindProjectProblems_Given_ANodeWithNoDataAndNoOtherScenario_Then_TheFilesHaveNoData()
         {
             ProjectModel project = Project(Scenario()) with { Files = [] };

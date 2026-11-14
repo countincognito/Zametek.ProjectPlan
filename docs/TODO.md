@@ -2,12 +2,6 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Warn about a constraint date before the start of the project** *(2026-11-14, from phase 3 of the zpp skill)*
-
-  `DateTimeCalculator` gives day 0 for a date before the start of the project, and no message tells the user. Thus, a `MaximumLatestFinishDateTime` before the start becomes a `MaximumLatestFinishTime` of 0. For an activity with a duration, the compile then gives `C0010`, but the error does not name the date. For a milestone, zpp uses day 0 and gives no warning. A `MinimumEarliestStartDateTime` before the start also becomes day 0, and it then has no effect. A date before the start is usually a mistake, for example the wrong year.
-
-  Refuse such a date, or give a warning that names the activity and the date. Before `zpp` and the server load a plan, `PlanCheck` checks it. `PlanCheck` already reports a date that is too far from the start (`AddIfFar`), and it can report a date before the start too. The desktop does not use `PlanCheck`, and a load does not validate the dates of the activities. Thus, the desktop needs a check of its own, for example when it opens a plan and when the user types a date. This is a suggestion for the final 0.11.0.
-
 - [ ] **Write a file to a temporary file, and then put it in the place of the old file** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
 
   `FileStreamHelper.Save` and `SaveAsync` build the whole file in memory first. Thus, a failure of the build keeps the old file. But then `CreateFile` opens the target with `FileMode.Create`, which empties it, and the copy follows. A full disk, a lost network share or a stop of the process during the copy leaves an incomplete file. The comment above the two methods says that the old file stays as it was. This is true only for a failure before the copy.

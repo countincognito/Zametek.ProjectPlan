@@ -1418,7 +1418,7 @@ components:
             $ref: '#/components/schemas/Output'
         warnings:
           type: array
-          description: The ids of the project that match nothing, for example a target resource that no resource has. The job ignores them, and it goes on. Each has its place in the project and the code `notFound`. The answer has this member only when the project has such an id.
+          description: The warnings of the check of the project. The job goes on. An id that matches nothing has the code `notFound`, for example a target resource that no resource has, and the job ignores it. A constraint date before the start of the project has the code `outOfRange`, and the job gives it day 0. Each warning has its place in the project. The answer has this member only when the project has a warning.
           items:
             $ref: '#/components/schemas/ProblemError'
         console:

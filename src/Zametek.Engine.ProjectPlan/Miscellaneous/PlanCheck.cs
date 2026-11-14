@@ -175,9 +175,10 @@ namespace Zametek.Engine.ProjectPlan
         }
 
         /// <summary>
-        /// The ids of a scenario that match nothing, as warnings with the code notFound: a target resource that no resource has
-        /// (the load drops it, and the activity can then go to any resource), and a target work stream or a phase of a resource
-        /// that no work stream has. A plan with such an id loads.
+        /// The warnings of a scenario. A plan with a warning loads. The ids that match nothing have the code notFound: a target
+        /// resource that no resource has (the load drops it, and the activity can then go to any resource), and a target work
+        /// stream or a phase of a resource that no work stream has. A constraint date before the start of the project has the
+        /// code outOfRange: the calendar gives it day 0.
         /// </summary>
         public static List<PlanProblem> FindScenarioWarnings(ProjectModel project, int fileIndex)
         {
@@ -203,6 +204,8 @@ namespace Zametek.Engine.ProjectPlan
                     string place = $@"{root}/{nameof(ProjectScenarioModel.DependentActivities)}/{index}/{nameof(DependentActivityModel.Activity)}";
                     AddUnknown(activity.TargetResources, resourceIds, $@"{place}/{nameof(ActivityModel.TargetResources)}", Resource.ProjectPlan.Messages.Message_PlanNotAResource, warnings);
                     AddUnknown(activity.TargetWorkStreams, workStreamIds, $@"{place}/{nameof(ActivityModel.TargetWorkStreams)}", Resource.ProjectPlan.Messages.Message_PlanNotAWorkStream, warnings);
+                    AddIfBeforeStart(scenario.ProjectStart, activity.MinimumEarliestStartDateTime, activity.Id, $@"{place}/{nameof(ActivityModel.MinimumEarliestStartDateTime)}", warnings);
+                    AddIfBeforeStart(scenario.ProjectStart, activity.MaximumLatestFinishDateTime, activity.Id, $@"{place}/{nameof(ActivityModel.MaximumLatestFinishDateTime)}", warnings);
                 }
             }
 
@@ -350,6 +353,27 @@ namespace Zametek.Engine.ProjectPlan
                     place,
                     OutOfRange,
                     Say(Resource.ProjectPlan.Messages.Message_PlanDateTooFarFromStart, GraphLimits.MaximumTimeValue)));
+            }
+        }
+
+        private static void AddIfBeforeStart(
+            DateTimeOffset start,
+            DateTimeOffset? date,
+            int activityId,
+            string place,
+            List<PlanProblem> warnings)
+        {
+            // The calendar gives a date before the start day 0, and the load writes the start in place of the date. A minimum
+            // EST then has no effect, and an activity that takes time cannot meet a maximum LFT (C0010). Each date of a plan is
+            // a day, and so the time of the day does not count.
+            if (start != default
+                && date is DateTimeOffset value
+                && value.Date < start.Date)
+            {
+                warnings.Add(new PlanProblem(
+                    place,
+                    OutOfRange,
+                    Say(Resource.ProjectPlan.Messages.Message_PlanDateBeforeStart, Date(value.Date), Date(start.Date), activityId)));
             }
         }
 

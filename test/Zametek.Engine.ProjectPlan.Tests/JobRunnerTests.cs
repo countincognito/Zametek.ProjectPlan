@@ -274,6 +274,21 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_AConstraintDateBeforeTheStart_Then_AWarningAtItsPlace()
+        {
+            // The calendar gives such a date day 0, and so a minimum EST has no effect (phase 3 of the zpp skill).
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            result.Warnings.Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime", @"outOfRange")]);
+        }
+
+        [Fact]
         public async Task RunAsync_Given_EveryOutput_Then_ProducesEachOnceInOrder()
         {
             await using ServiceProvider services = BuildServices();

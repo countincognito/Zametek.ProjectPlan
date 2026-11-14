@@ -340,6 +340,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The date is before the start of the project ({0}), and so the schedule uses the start in its place..
+        /// </summary>
+        public static string Label_ConstraintDateBeforeProjectStart {
+            get {
+                return ResourceManager.GetString("Label_ConstraintDateBeforeProjectStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Copy.
         /// </summary>
         public static string Label_CopyNode {

@@ -228,6 +228,9 @@
   <data name="Message_PlanCountExceedsMaximum" xml:space="preserve">
     <value>The number of {0} is {1}, which exceeds the maximum supported count of {2}</value>
   </data>
+  <data name="Message_PlanDateBeforeStart" xml:space="preserve">
+    <value>is {0}, before ProjectStart ({1}), and so the schedule uses day 0 for activity {2}</value>
+  </data>
   <data name="Message_PlanDateTooFarFromStart" xml:space="preserve">
     <value>must be within {0:N0} days of ProjectStart</value>
   </data>

@@ -29,8 +29,9 @@ namespace Zametek.Engine.ProjectPlan
         // both axes of Y.
         public ScenarioChartDataModel? ScenarioChart { get; init; }
 
-        // The ids of the plan that match nothing, each at its place in the file (see PlanCheck.FindScenarioWarnings). The job
-        // goes on: the load drops a target resource that no resource has, for example.
+        // The warnings of the check before the load, each at its place in the file (see PlanCheck.FindScenarioWarnings): the ids
+        // of the plan that match nothing, and the constraint dates before the start. The job goes on: the load drops a target
+        // resource that no resource has, and the calendar gives a date before the start day 0.
         public IReadOnlyList<PlanProblem> Warnings { get; init; } = [];
 
         // Two results are equal when they say the same thing: a record would compare the list of errors by reference,
