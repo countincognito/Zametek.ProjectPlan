@@ -311,6 +311,22 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The priority list is in the library Zametek.Maths.Graphs (`PriorityListResourceScheduler`, and `scheduling/scheduler.rs` in Rust). Thus, the change starts in the library. Today, `TargetResources` can keep an activity on one resource, but the user must set it on each activity.
 
+- [ ] **Suggestion: give the days on critical activities for each resource** *(2026-11-12, a suggestion from phase 2 of the zpp skill)*
+
+  Righting Software compresses a project with better resources on the critical path only. To select the person to replace with a senior, it counts the critical activities and the critical days of each person. The schedule CSV of `outputs.data` gives `AllocatedToResources` and `TotalSlack` for each activity. Thus, a client must add the durations to get the critical days of a resource. The zpp skill does not add numbers that `zpp` can calculate, so it only lists the critical activities of each resource.
+
+  Add the number of critical activities and the sum of their durations for each resource. For example, add a file `-resources-summary.csv` with the columns `ResourceId`, `Resource`, `CriticalActivities` and `CriticalDays`. Say in the documentation which activities are critical: a total slack of zero, or the critical band of `ActivitySeverities`.
+
+  On 2026-11-14, the maintainer moved this suggestion to a release after 0.11.0.
+
+- [ ] **Suggestion: let a fit of the scenario chart ignore some tracked scenarios** *(2026-11-12, a suggestion from phase 2 of the zpp skill)*
+
+  The scenario chart fits a curve to all the tracked scenarios. The time–cost–risk curve of Righting Software uses one family of plans: the normal plan, its compressed plans and its decompressed plans. Some options are not on that curve, for example a compressed plan with float. In the worked example of the zpp skill, one such option changes the r² of the cubic risk fit from 0.91 to 0.71. Thus, the zpp skill tracks only one family, and the other options are not on the chart.
+
+  Let a person or a client keep a tracked scenario on the chart as a point, but not in the fits. For example, add a flag to the node of the scenario, or fit only the scenarios of one folder.
+
+  On 2026-11-14, the maintainer moved this suggestion to a release after 0.11.0.
+
 - [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 
   The chart SVG files (Gantt, resource, earned value, scenario and simulation) do not contain the font Inter. Windows 11 does not install Inter. Until 2026-11-12, the SVG named only `Inter`, and thus Microsoft Edge showed the text in its default serif font. Now each text names fallback fonts after Inter (`ChartFonts.SvgFontFamilies`), and Edge shows the text in Segoe UI.

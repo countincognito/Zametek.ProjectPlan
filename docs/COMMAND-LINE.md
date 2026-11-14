@@ -194,6 +194,8 @@ If `zpp` cannot write to this folder, it stops before it does its work. The mess
 DOTNET_BUNDLE_EXTRACT_BASE_DIR=/var/cache/zpp zpp serve
 ```
 
+On Windows, write the folder with backslashes, for example `C:\zpp-cache`. With forward slashes, `zpp.exe` unpacks its files, and then it stops with the message "Failed to load System.Private.CoreLib.dll".
+
 ## Exit codes
 
 The exit codes are a contract for scripts and CI gates. The test suite `Zametek.ProjectPlan.CommandLine.Tests` makes sure that they stay the same:
