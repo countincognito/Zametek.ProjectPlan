@@ -2,6 +2,20 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Give `C0010`, not a crash, for a maximum finish of day 0** *(2026-11-14, from phase 3 of the zpp skill)*
+
+  A plan with one activity of 5 days and a `MaximumLatestFinishTime` of 0 stops the compile. `zpp -i` exits with 1, and the server answers 500. The log shows an `ArgumentOutOfRangeException` in `ResourceScheduleBuilder.AllocationForNoneType` of Zametek.Maths.Graphs 4.1.0. A maximum finish of day 3 gives `C0010` correctly. When the activity has a predecessor, zpp also gives `C0010`.
+
+  The maximum pulls the activity back to the days from -5 to 0. When no activity finishes after day 0, the allocation streams of the resources have no days. Then the library writes to day 0 of an empty list. The fix of 4.1.0 (`a8d2783`) does not cover this case. The fix goes into the library, in C# and in Rust, and then this repository needs the new package. This is a suggestion for the final 0.11.0.
+
+  The desktop uses the same compile. There, the exception probably stops the automatic compiles for the rest of the session. Refer to the entry "Keep the compile subscriptions alive after an exception". Nobody tried this in the desktop.
+
+- [ ] **Warn about a constraint date before the start of the project** *(2026-11-14, from phase 3 of the zpp skill)*
+
+  `DateTimeCalculator` gives day 0 for a date before the start of the project, and no message tells the user. Thus, a `MaximumLatestFinishDateTime` before the start becomes a `MaximumLatestFinishTime` of 0. For an activity with a duration, the compile then crashes (refer to the entry above) or gives `C0010`. For a milestone, zpp uses day 0 and gives no warning. A `MinimumEarliestStartDateTime` before the start also becomes day 0, and it then has no effect. A date before the start is usually a mistake, for example the wrong year.
+
+  Refuse such a date, or give a warning that names the activity and the date. Before `zpp` and the server load a plan, `PlanCheck` checks it. `PlanCheck` already reports a date that is too far from the start (`AddIfFar`), and it can report a date before the start too. The desktop does not use `PlanCheck`, and a load does not validate the dates of the activities. Thus, the desktop needs a check of its own, for example when it opens a plan and when the user types a date. This is a suggestion for the final 0.11.0.
+
 - [ ] **Write a file to a temporary file, and then put it in the place of the old file** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
 
   `FileStreamHelper.Save` and `SaveAsync` build the whole file in memory first. Thus, a failure of the build keeps the old file. But then `CreateFile` opens the target with `FileMode.Create`, which empties it, and the copy follows. A full disk, a lost network share or a stop of the process during the copy leaves an incomplete file. The comment above the two methods says that the old file stays as it was. This is true only for a failure before the copy.
@@ -338,6 +352,32 @@ This file lists the maintainer-internal engineering intents that must version wi
   Let a person or a client keep a tracked scenario on the chart as a point, but not in the fits. For example, add a flag to the node of the scenario, or fit only the scenarios of one folder.
 
   On 2026-11-14, the maintainer moved this suggestion to a release after 0.11.0.
+
+- [ ] **Suggestion: keep the late iterations in the statistics of a simulation** *(2026-11-14, a suggestion from phase 3 of the zpp skill)*
+
+  A simulation leaves its failed iterations out of the mean, the percentiles and the chance of the target. The maintainer chose this rule for Zametek.Maths.Graphs 4.1.0 on 2026-11-11, because a compile with the durations of such an iteration gives an error. But an iteration that misses a maximum finish is a late one. Thus, without these iterations, the percentiles are too early, and the chance of the target is too high. The answer gives the number of failed iterations, but it does not say this next to the statistics.
+
+  The zpp skill measured the effect on its claims example, with 5,000 iterations and the seed 1. PaymentsAccess must finish by day 80, and 552 iterations miss this day. Then the chance of a finish by day 172 is 96.6%, and P80 is 165. Without the maximum finish, the chance is 95.1%, and P80 is 166.
+
+  When End must finish by day 166, 977 iterations fail. Each iteration that is left finishes by day 166, and thus the chance of a finish by day 168 is 100%. Without that maximum finish, the chance is 86.9%.
+
+  Four changes are possible:
+
+  - A warning next to the statistics, in the answer and on the chart. It gives the number of iterations that missed a maximum finish, and it says that the statistics are too early.
+
+  - The chance of the target over all the iterations. A failed iteration then counts as a miss of the target. In the example with End, the chance is then 80.5% (4,023 of 5,000).
+
+  - A second run of the plan without its maximum finishes, with the same seed. The durations of an iteration come only from the seed, the order of the activities and their estimates. Thus, each iteration has the same durations in the two runs. The second run gives the statistics, and the first run gives the misses. This doubles the time of a simulation.
+
+  - An option of the simulation in Zametek.Maths.Graphs (4.2.0, in C# and in Rust). It schedules an iteration that misses a maximum finish again, without that maximum. Its late finish goes into the statistics, and it still counts as a miss.
+
+  The last two changes make a maximum finish a deadline in a simulation. In a compile, a maximum finish pins the activity, and a plan that cannot meet it has an error. For a deadline of the whole project, the target of the simulation already gives the chance without this problem. Decide which change to make.
+
+- [ ] **Suggestion: let the simulation take its target as a date** *(2026-11-14, a suggestion from phase 3 of the zpp skill)*
+
+  `SimulationSettings` gives the target as `TargetFinishTime`, a working day. People give a deadline as a date. The answer of a compile gives `targetFinishDate`, and thus zpp changes the day of the target into a date. But a client cannot give the date and get the day. The zpp skill compiles a second plan to get the day: one milestone with a `MaximumLatestFinishDateTime`.
+
+  Add `TargetFinishDateTime` to `SimulationSettings`, as activities have `MaximumLatestFinishDateTime`. Then zpp uses its own calendar for the target, and a client needs no second compile. Decide which day the date gives, and give the rule in PROJECT-FILE.md with an example. People usually mean the end of the date: "done by June 30" is "done by the end of June 30". With the rule of `MaximumLatestFinishDateTime`, the same deadline is July 1. The file format, the desktop and the API need the new field.
 
 - [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 
