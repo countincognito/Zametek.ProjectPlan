@@ -301,6 +301,49 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void BuildTrackingSeriesSet_GivenTrackersWithoutTheNamesOfTheActivities_Then_TheEffortPointsTakeTheNamesOfTheActivities()
+        {
+            // A .zpp file keeps no activity name for an entry of a resource tracker. Only the import of a workbook fills it. The
+            // plan and the progress points take the name of the activity, and the effort points must do the same (finding 21 of
+            // the test of the released 0.11.0-beta.1). The entry of Act One has an old name. Act Three has no effort, but its
+            // point gets its name. The plan has no activity 99, and thus its point keeps the name of its entry.
+            List<ActivityModel> activities = [.. CreateActivities().Select(x => x.Id == 3 ? x with { HasNoEffort = true } : x)];
+            var settings = new ResourceSettingsModel
+            {
+                Resources =
+                [
+                    new ResourceModel
+                    {
+                        Id = 1,
+                        Name = @"Res One",
+                        Trackers =
+                        [
+                            new ResourceTrackerModel
+                            {
+                                Time = 1,
+                                ResourceId = 1,
+                                ActivityTrackers =
+                                [
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 2, PercentageWorked = 30 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 1, ActivityName = @"An old name", PercentageWorked = 20 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 3, PercentageWorked = 40 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 99, ActivityName = @"Not in the plan", PercentageWorked = 50 },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            TrackingSeriesSetModel set = CreateService().BuildTrackingSeriesSet(activities, settings, hasResources: true, new PresetColorSequence());
+
+            // The first point of each series is the start, which has no activity.
+            (int, string)[] expected = [(2, @"Act Two"), (1, @"Act One"), (3, @"Act Three"), (99, @"Not in the plan")];
+            set.Effort.Skip(1).Select(x => (x.ActivityId, x.ActivityName)).ShouldBe(expected);
+            set.ByResource[0].Effort.Skip(1).Select(x => (x.ActivityId, x.ActivityName)).ShouldBe(expected);
+        }
+
+        [Fact]
         public void BuildTrackingSeriesSet_GivenAllocatedResources_ThenPerResourcePercentagesAreWholeProjectShares()
         {
             TrackingSeriesSetModel set = BuildTrackingSeriesSet();
