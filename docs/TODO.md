@@ -2,6 +2,257 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Write a file to a temporary file, and then put it in the place of the old file** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  `FileStreamHelper.Save` and `SaveAsync` build the whole file in memory first. Thus, a failure of the build keeps the old file. But then `CreateFile` opens the target with `FileMode.Create`, which empties it, and the copy follows. A full disk, a lost network share or a stop of the process during the copy leaves an incomplete file. The comment above the two methods says that the old file stays as it was. This is true only for a failure before the copy.
+
+  Write to a temporary file in the folder of the target, flush it, and then replace the target (`File.Replace`, or `File.Move` with `overwrite`). `Zametek.Graphs.Avalonia` has its own copy of the helper (`Internal/FileStreamHelper.cs`), which needs the same change. The `SettingService` of the desktop writes `UserSettings.json`, the dock layout and the layout of the grids in place with `File.CreateText`. Change these three writes too.
+
+  The review read the source code. Nobody made a write fail to see the result.
+
+- [ ] **Clear the marks of a save only when no edit came during the write** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  `MainViewModel.SaveProjectFileInternalAsync` builds the project, writes the file, and then clears the marks of a change. The calls are `ResetManagedNodes()`, `IsProjectScenarioUpdated = false` and `IsProjectUpdated = false`. The save sets no busy state during the write, and thus the user can edit the plan. An edit that comes after `BuildProjectAsync` is not in the file, but the save clears its mark. Then the title shows no change, and the close does not ask.
+
+  Read a revision of the edits before the build. After the write, clear the marks only if the revision is the same. If it changed, keep the marks, so that the next save writes the edit. The write of a small plan is short, and thus the window is small. A slow disk or a network share makes it longer. Nobody reproduced this.
+
+- [ ] **Give the file commands one condition that says when they can run** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  `MainViewModel` makes Open, Save, Save As, Import, Export and Close with `ReactiveCommand.CreateFromTask`, and none has a `canExecute`. A command stops only a second run of itself. Thus, Ctrl+O can start an open while a save writes the file, and Ctrl+S can start a save while an import loads. The properties `IsOpening`, `IsSaving`, `IsSavingAs`, `IsImporting`, `IsExporting` and `IsClosing` exist already. Make one observable that is true when all of them are false. Give it to the six commands and to `OpenRecentProjectFileCommand`.
+
+- [ ] **Start with the default settings when the application cannot read `UserSettings.json`** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  The constructor of `SettingServiceBase` reads the file with `JObject.Parse`, and it has no `catch`. An incomplete file, or a file that is not JSON, throws there. The start then writes "Fatal startup error" to the log and stops the desktop (`Shutdown(1)`). The user sees the splash screen go away, and no message. The read of the layout of the grids and the read of the dock layout each have a `catch` that resets the layout.
+
+  Catch the exception and write it to the log. Move the bad file to a name such as `UserSettings.json.bad`, and continue with the defaults. Tell the user one time. The entry above about the temporary file removes the most probable cause, which is a write that did not finish.
+
+- [ ] **Tell the user about an exception that nothing handles, and keep a copy of the plan** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  `RegisterGlobalExceptionHandlers` in `App.axaml.cs` writes two kinds of exception to the log: `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException`. Its comment says that the handlers only observe, and that the process still ends. Nothing handles `Dispatcher.UIThread.UnhandledException`, and nothing sets a default exception handler of ReactiveUI. Thus, an exception that leaves a command or a subscription can end the application. The edits since the last save are then lost.
+
+  Add a handler for the UI thread. It shows the error, and it lets the session continue when the exception is not fatal. Before the process ends, write the open project to a recovery file, and offer that file at the next start. A copy at an interval (an autosave) is a larger feature. Decide if it is necessary.
+
+- [ ] **Keep the compile subscriptions alive after an exception** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  Three subscriptions of `CoreViewModel` do the automatic work on the task pool. They are `m_CompileOnSettingsUpdateSub` (`DrainAutoCompiles`), `m_BuildCascadeSub` (`RunBuildCascade`) and `m_BuildRiskMetricsSub` (`BuildRiskMetrics`). The first two catch only `GraphCompilationTimeoutException`, and the third catches nothing. A comment there says that an exception that escapes ends the subscription for the rest of the session. Thus, another exception, for example from a metric or from the tracking series, stops each later automatic compile, or it ends the process. The builders of the charts catch each exception and show a dialog.
+
+  Catch each exception in the three handlers, write it to the log, and set `HasStaleOutputs`. The core has no dialog service (refer to the note on `AbandonCompilation`). Thus, find how the user learns about the failure, for example from a state that `MainViewModel` shows.
+
+- [ ] **Make the question at the close hold against a second request to close** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+
+  `App.axaml.cs` puts two handlers on `Closing`. `CancelClose` cancels the event, and `CheckClose` (an `async void` method) asks about the changes that are not saved. `CheckClose` removes `CancelClose` before it waits for the answer. A second `Closing` event during the question then has no handler that cancels it, and the window closes without the answer. The end of the Windows session is one possible source of such an event. Nobody reproduced this.
+
+  `CheckClose` has no `try`, so an exception from the dialog ends the process. It also does not read `IsSaving`. If the user closes during a write and answers yes, the process ends in the middle of the write. Use one handler that cancels each event until a flag says that the answer was yes. Let it ask only when no question is open, and let it wait for a save that is in progress.
+
+- [ ] **Run Reset Layout and Save Layout on the UI thread** *(2026-11-14, from the review of `src`)*
+
+  `ResetLayoutAsync` and `SaveLayoutAsync` of `MainViewModel` call `ResetLayout` and `SaveLayout` through `Task.Run`. On the pool thread, `ResetLayout` holds `m_Lock` of `MainViewModel`. Under the lock, it closes the dock layout, sets `Layout`, starts the new layout and calls `DataGridLayoutManager.ResetDataGridModels()`. Each reset action is `DataGridPersistLayoutBehavior.ResetDataGridModel`, which calls `Dispatcher.UIThread.Invoke` and waits. The setters of `ShowDates` and `UseClassicDates`, and `CloseLayout`, take the same lock on the UI thread. If the UI thread waits for the lock at that moment, the two threads wait for each other, and the application stops.
+
+  The two methods also use Dock objects off the UI thread. `ResetActions` is a plain list, and the UI thread changes it when a grid attaches or detaches. Call the two methods on the UI thread, without `Task.Run`. Then the lock is not necessary around the Dock calls. The Debug assertion of the entry "Add a Debug assertion for the locks that the application holds when it announces a change" finds this site. Nobody reproduced the deadlock.
+
+- [ ] **Do not read `OrderableActivities` on the thread of a compile** *(2026-11-14, from the review of `src`)*
+
+  `PlanGraph.SetDisplayOrders()` reads `OrderableActivities` by index, and it sets the `DisplayOrder` of each activity. Its caller holds the lock of the core. The thread is the one that takes the snapshot for a compile, or the one that builds a save.
+
+  But DynamicData binds `OrderableActivities` on the UI thread (`ObserveOn(RxSchedulers.MainThreadScheduler)`, then `Bind`). The lock of the core does not guard this bind. An add, a remove or a drag of a row during the loop can give an `ArgumentOutOfRangeException` or a wrong order. Nobody reproduced this.
+
+  Let the UI thread publish the order as an array of ids each time the bound collection changes. Let `SetDisplayOrders` read the array. `ActivitiesManagerViewModel` also reads the collection by index under its own lock. Find on which thread it does this.
+
+- [ ] **Build the scenario for a save without a change to the display mode of the calculator** *(2026-11-14, from the review of `src`)*
+
+  `CoreViewModel.BuildProjectScenario` sets `m_DateTimeCalculator.DisplayMode` to `Default`. Then it maps the activities, and it sets the old mode again. No `try` and `finally` are around the two writes. Thus, an exception from the mapper leaves the mode at `Default` for the rest of the session. The activities, the grid and the charts share this one calculator. A read on another thread between the two writes gets the dates of the `Default` mode.
+
+  The setter of `DisplayMode` also empties the cache of non-working days each time. Thus, each save empties the cache two times. In the Classic mode, each save also raises `DisplayMode` two times, and the activities then raise their date properties again.
+
+  Give the mapper the mode as an argument, or let the save call the `Default` functions of the calculator directly. Then a save does not write to the calculator. Nobody reproduced a wrong date.
+
+- [ ] **Do not change the compiled activities in the build of the Gantt chart** *(2026-11-14, from the review of `src`)*
+
+  `GanttChartManagerViewModel` groups the activities by work stream when `GroupByMode` is `WorkStream`. There, `HashSet<int> targetWorkStreams = activity.TargetWorkStreams` is the set of the published compiled activity, and not a copy. When the set is empty, the build adds `default` to it. Other threads clone the activities of the same `GraphCompilation` (`CompilationOutputService`, `MetricCalculationService`). A clone of a `HashSet` during an `Add` can tear, and ARCHITECTURE §7 rule 10 tells what a torn set did. Each later reader also sees a work stream 0 that the plan does not have.
+
+  The value does not go to the file, because the save reads the live activities. Use a local set when the set of the activity is empty. Nobody reproduced a failure.
+
+- [ ] **Make the two commands that call an async method with `CreateFromTask`** *(2026-11-14, from the review of `src`)*
+
+  `TransitiveReductionCommand` and `OpenAboutCommand` of `MainViewModel` use `ReactiveCommand.Create` with `RunTransitiveReductionAsync` and `OpenAboutAsync`. `Create` takes the method as a function that returns a value, and the value is the task. Thus, the command ends at once, and `IsExecuting` does not cover the work. A second run can start during the first, and nothing observes an exception of the task. The other async commands use `CreateFromTask`.
+
+- [ ] **Raise the properties of `DateTimeCalculator` after the release of its lock** *(2026-11-14, from the review of `src`)*
+
+  The setters of `NonWorkingDayMode`, `DisplayMode`, `ProjectStart`, `NonWorkingDaysStart` and `NonWorkingDaysFinish` call `RaiseAndSetIfChanged` inside `lock (m_Lock)`. ARCHITECTURE §7 rule 6 forbids this shape, and the list of the entry about the surgery for rule 6 does not have these sites. The compile, the chart builds and the UI thread take the same lock in `AddDays` and `CountDays`. An observer of one of these properties that waits for a lock of another of those threads makes a cycle.
+
+  The review found no such cycle. Set the field under the lock, and raise after the release. The Debug assertion finds these sites too.
+
+- [ ] **Do not hold the lock of the core during an import or an export** *(2026-11-14, from the review of `src`)*
+
+  `CoreViewModel.ImportProjectScenarioFile` and `ExportProjectScenarioFile` hold `m_Lock` while the importer reads the file or the exporter writes it. Neither method uses the state of the core inside the lock. The import returns a model, and the export gets its models as arguments. A large workbook or an MS Project file can take seconds. During that time, each thread that wants `m_Lock` waits, and a setter on the UI thread is one of them.
+
+  Keep `BeginBusy` and `EndBusy`, and remove the lock. `JobRunner` already calls the importer and the exporter without the core.
+
+- [ ] **Write the result of a simulation only into its own scenario** *(2026-11-14, from the review of `src`)*
+
+  `SimulationChartManagerViewModel` reads `ProjectScenarioRevision` before a run, and it compares the value after the run. Then it keeps the result, and it sets `SimulationSummary` of the core. The comparison and the write are not one step. During a load, `ResetProjectScenario` runs on a pool thread. It can clear `SimulationSummary` and increase the revision between the two. Then the summary of the old scenario goes into the new scenario, and the next save writes it to the file.
+
+  The window is some statements long, and nobody reproduced this. Give the core a method that takes the summary and the revision of the run. Let it compare and write under `m_Lock`.
+
+- [ ] **Arm the tracked metrics without a check of `IsBusy`** *(2026-11-14, from the review of `src`)*
+
+  Two subscriptions of `ProjectScenarioManagerViewModel` deliver on the task pool: `m_AreScenariosDisplayedSub` and `m_MetricsSub`. Each one sets `IsReadyToReviseTrackedMetrics` only when `IsBusy` is false. `IsBusy` is a counted scope for the UI, and nothing arms the revision again when the scope ends. If a delivery comes while the manager is busy, the application drops it. The scenario chart can then show the metrics from before the change, until another site arms the revision. Nobody reproduced this.
+
+  The cascades of the core use `IsBulkUpdating` and `MuteWhile` for this purpose. Find what the check protects. Then replace it with these two, or arm again at the end of the busy scope.
+
+- [ ] **Bound the rows and the columns that the import of a workbook reads** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
+
+  `XlsxWorkbookReader.Rows` goes from row 2 to the last row with contents. In each row, it reads one cell for each title of row 1. The workbook sets both numbers. A small file can have some hundreds of titles and one value in row 1,048,576. Then the reader goes to hundreds of millions of cells.
+
+  The loop has no cancellation token. Thus, the time limit of a job of `zpp serve` cannot stop it. `new XLWorkbook(stream)` also loads the whole workbook, and the limit of the upload bounds only its compressed size. The import of the desktop uses the same reader.
+
+  Refuse a sheet with more rows or more titles than a plan within the limits can have, with an `ImportIssue`, before the loop. Read only the rows that have cells, and not each row number. Pass a `CancellationToken` to the reader, and do a check of it for each row. The review made no such workbook. Make one, and measure it first.
+
+- [ ] **Do the check of the limits for an import, as for a project file** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
+
+  In `JobRunner.RunAsync`, a project file gets `CheckProject`, `PlanCheck.FindScenarioWarnings` and `PlanCheck.FindLimitViolations` before the load. A plan out of the limits of the compiler gets P0080 without the load. The branch for an import calls `core.ProcessProjectScenarioImport` directly. Thus, a workbook with more activities or resources than the limits gets the whole load. Find what the load and the compile do with such a plan, and how long they take. The entry "Bound the work after the compile" gives the cost of a plan at the limits.
+
+  `FindLimitViolations` takes a `ProjectScenarioModel`. Let it also count a `ProjectScenarioImportModel`, and return the same result (`LimitsResult`) for an import.
+
+- [ ] **Do not let a slow upload hold a place of a job** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
+
+  The two POST paths of `zpp serve` have the concurrency limiter (`RequireRateLimiting`). The endpoint reads the multipart body (`ReadFormAsync`) after the request has its permit. The time limit of the job starts only at `m_JobRunner.RunAsync`. `ConfigureKestrel` sets `MaxRequestBodySize`, and no time and no rate. Thus, a client that sends its body slowly holds a place for the whole upload. Only the default minimum rate of Kestrel bounds this time.
+
+  `MaxJobs` such clients stop the jobs of all the other clients. With a key, only a client that has the key can do this. Nobody tested a slow upload.
+
+  Choices: start one time limit at the start of the request, which covers the upload and the job. Or set `MinRequestBodyDataRate` to a rate that fits the largest upload. Or read the body before the permit, but then bound the number of uploads that the server reads at one time.
+
+- [ ] **Refuse a request from a web page when the server has no key** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
+
+  Without a key, `zpp serve` listens only on loopback, and it adds no `ApiKeyMiddleware`. Nothing in the server reads the `Host` header or the `Origin` header. Thus, a web page that the user opens in a browser can POST a `multipart/form-data` plan to the server. The browser sends such a request without a preflight. The page cannot read the answer, but the job runs, and a loop of requests keeps the server busy. With DNS rebinding, a page can also read the answers.
+
+  When the server has no key, refuse a request whose `Host` is not a loopback name or address. Also refuse a request with an `Origin` header. `zpp --server` and a script send no `Origin`. A reverse proxy in front of such a server sends its own `Host`. Thus, the check needs an option for the names that the server accepts.
+
+  Add a kind of problem for the refusal to `docs/API.md` and to `docs/openapi.yaml`. Nobody tested this from a browser.
+
+- [ ] **Escape the names in the Dot export** *(2026-11-14, from the review of `src`)*
+
+  `GraphVizBuilder.ToGraphViz` writes the text, the tooltip and the label of each node and each edge between double quotes, with no escape. A double quote or a backslash in the name of an activity gives a Dot file that Graphviz cannot read. A name can also add attributes of its own to the file. Escape `\`, `"` and a line end in each string. `zpp` and `zpp serve` write Dot too. Add a test with such a name.
+
+- [ ] **Decide if the CSV outputs must make a formula prefix safe** *(2026-11-14, from the review of `src`)*
+
+  `CsvText.Quote` follows RFC 4180. It puts a field with a comma, a quote or a line end in quotes. A field that starts with `=`, `+`, `-` or `@` goes out as it is. Excel reads such a field as a formula when a person opens the file.
+
+  The names of the activities and the resources come from the plan, and a server gets the plan from a client. The usual defense puts an apostrophe or a tab before such a field. But that changes the data for a program that reads the file.
+
+  Choices: keep the files as data, and tell the risk in `docs/API.md`. Or add an option of the job. Do a check of the report of the import problems too (`ImportIssueText.WriteReport`), because a person opens it, and it holds values from the workbook.
+
+- [ ] **Make the client of `zpp --server` safe by default** *(2026-11-14, from the review of `src`)*
+
+  `ClientSettingsHelper.ParseServer` accepts each `http` or `https` address. With a key, `JobClient` then sends the `Authorization` header over plain HTTP to a host that is not loopback. Each computer on the path can read the key and the plan. `JobClient.CreateClient` keeps the default of `SocketsHttpHandler` for redirects, which follows them, and the plan then goes to the new address. It also sets `Timeout.InfiniteTimeSpan`. Thus, a server that accepts the connection and does not answer holds the client until the user stops it.
+
+  Refuse a key over `http` when the host is not loopback, unless an option allows it. Set `AllowAutoRedirect` to false, and report a redirect as an error. Add an option for a time limit of the request.
+
+- [ ] **Do four smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
+
+  1. **The dock layout.** `MainViewModel.RestoreLayout` gives `DockLayout.json` to the `DockSerializer` of `Dock.Serializer.Newtonsoft`. The review reported that this serializer reads type names from the file, with no binder. Nobody confirmed this in the source code of the package. The file is in the settings folder of the user, and thus the risk is low. If the report is correct, do a check of the type names against the types of Dock before the read.
+  2. **The MS Project reader.** `MicrosoftProjectFileImporter` uses `UniversalProjectReader`, which finds the format from the contents of the file. It reads many formats that the import dialog does not offer. Use a reader for the one format, if MPXJ.Net has one. If it has none, do a check of the first bytes of the file before the read.
+  3. **The names of the outputs.** `ProjectEndpoints` takes `Path.GetFileName` of the name of the upload. On Linux, a backslash is not a separator. Thus, `..\..\x.zpp` keeps its dots, and the names of the outputs in the answer and in the zip start with `..\`. The server writes no file with these names. But a client on Windows that unpacks the zip without a check can write outside its folder. Refuse or replace `\`, `/` and `:` in the title.
+  4. **The names of the limits.** `ServeSettingsHelper.ResolveLimits` calls `configuration.Bind(limits)`, which ignores a name that it does not know. Thus, a limit with a wrong letter in `zpp-serve.json` has no effect, and the server starts with the default. Bind with `ErrorOnUnknownConfiguration`, or compare the keys of the file with the properties of `ServeLimits`.
+
+- [ ] **Change a day number to a date for a chart without a count from the project start** *(2026-11-14, from the review of `src`)*
+
+  `DateTimeCalculator.AddNonWorkingDays` goes one day at a time from its start date, and it counts the working days under the lock of the calculator. `ChartHelper.CalculateChartStartTimeXValue` calls `AddDays` from the project start for each point, when the chart shows dates. `ResourceChartManagerViewModel` calls it for each resource on each day, and two times in the Block style. Thus, the steps for each resource grow with the square of the days. For example, 500 resources and 300 days give about 45 million steps for one build of the chart.
+
+  Without dates, the chart does no count. This is a candidate for the work that the entry "Bound the work after the compile" asks for. Nobody measured it.
+
+  Make the dates of day 0 to the last day one time for each build, with one count, and read them by index. The calculator can also keep such a table, and clear it with the cache of non-working days.
+
+- [ ] **Raise each compiled property of an activity one time for each publish** *(2026-11-14, from the review of `src`)*
+
+  `ManagedActivityViewModel.SetCompiledValues` sets `EarliestStartTime`, `LatestFinishTime` and `FreeSlack`. Each setter raises without a comparison, with 11, 11 and 6 calls of `RaisePropertyChanged`. That is 28 calls for each activity at each publish of a compilation, also when no value changed. Each of the four dependency strings gets three calls. For 985 activities, one publish makes about 27,600 calls, and the grid reads each bound cell again.
+
+  Compare the values first, collect the names, and raise each name one time after the three writes. Measure the publish on `docs/assets/erp-migration.zpp` before and after the change.
+
+- [ ] **Do not make a model of each activity for each booked day at each revision of the trackers** *(2026-11-14, from the review of `src`)*
+
+  `ResourceTrackerSetViewModel` makes one `ResourceActivitySelectorViewModel` for each day that a resource has a tracker. Each selector has its own subscription to `TrackersRevision` of the core. At each revision, `ReviseTrackers()` of each selector makes a `ResourceActivityTrackerModel` for each activity of the plan. Then it compares them with its list. `PublishLists` keeps the arrays of a list that did not change, but the selector makes the models first. For example, 985 activities and 2,000 such days give about two million objects for each revision.
+
+  Let one owner make the list of the ids and the names one time for each revision, and let each selector read it. Then one subscription is enough. Nobody measured this.
+
+- [ ] **Decide if a chart or a graph that is not on the screen must build after each compilation** *(2026-11-14, from the review of `src`)*
+
+  Each chart manager builds its plot when `CompilationOutputRevision` changes (for example `m_BuildGanttChartPlotModelSub`). Each graph manager asks for a new layout when `ArrowGraph` or `VertexGraph` changes (`m_RebuildSub`). No subscription asks if its tab shows. Thus, the MSAGL layout of the two graphs and the plots of the charts run after each edit. They also run when the user sees only a grid.
+
+  A build on demand needs a mark that says that the output is stale. It also needs a build when the tab becomes active, and before each export. `zpp` and the server build all that a job asks for, so they do not change. Measure the builds on `docs/assets/erp-migration.zpp` first. Nobody measured them.
+
+- [ ] **Measure the smaller costs that the review reported** *(2026-11-14, from the review of `src`)*
+
+  The review reported these costs from the source code. Nobody read these sites a second time, and nobody measured them. Measure before a change.
+
+  1. `PlanGraph.RawActivities` returns `m_Activities.Items`, and DynamicData 9.4.33 makes a new array for each read. A loop that reads the property many times copies the list each time.
+  2. The graph outputs clone the activities two times and compile again (`CompilationOutputService`, `GraphCompilationService`). Refer to the entry about the two compiles of a job.
+  3. With rectilinear routing, a drag of a node resolves each edge two times for each move of the pointer (`InteractiveGraphViewModel`, `GraphClashResolver`).
+  4. The save of a workbook holds some copies of it in memory (`XlsxWorkbookWriter`). The server holds each output of a job in memory until the answer (`OutputResponse`).
+  5. The SVG export of a chart takes one lock for the whole process, on each operating system (`ScottPlotImageExporter`). Thus, the jobs of `zpp serve` that export SVG charts wait for each other.
+
+- [ ] **Make a compiler warning stop the build** *(2026-11-14, from the review of `src`)*
+
+  The hook and CI do `dotnet format style` and `dotnet format analyzers` with `--verify-no-changes`, and then a plain `dotnet build`. No project sets `TreatWarningsAsErrors`, `AnalysisLevel` or `EnforceCodeStyleInBuild`, and the repository has no `Directory.Build.props`. Thus, a warning of the compiler, for example a nullable warning, does not stop a commit. On 2026-11-03, f52cd6cb added a CS8600 to a test, and 2d37e6fa removed it.
+
+  The comment in `ci.yml` says that `/WarnAsError` is off because of NU1903 for `System.Security.Cryptography.Xml` 8.0.2. On 2026-11-14, `dotnet list package --vulnerable --include-transitive` found no vulnerable package in a project, and the restore now takes version 10.0.11 of that package. Thus, the reason is probably gone.
+
+  Add a `Directory.Build.props` with `TreatWarningsAsErrors`, or pass `-warnaserror` in the hook and in CI. List the warnings that must stay warnings. They are the IKVM warnings of the projects that reference MPXJ, and the one SDK warning of the Browser head (`NativeFileReference`). Build Debug and Release first, and read what each build gives.
+
+- [ ] **Keep the versions of the packages in one file, and let Dependabot watch NuGet** *(2026-11-14, from the review of `src`)*
+
+  Each project file gives the versions of its packages. Avalonia and ReactiveUI.Avalonia are in six project files each. A bump must change each file, and nothing stops two projects with two versions. No lock file exists, and thus a restore can take another transitive version on another day. `dependabot.yml` watches only `github-actions`.
+
+  Add `Directory.Packages.props` (central package management). Then decide about lock files (`RestorePackagesWithLockFile`) for the programs. Add the `nuget` ecosystem to Dependabot, with `ignore` rules for the packages that the repository holds on purpose. These are Dock (after 12.1.0.6, it needs ReactiveUI 26), SkiaSharp 4 and Svg.Skia from 5.2 (they break Linux), `Microsoft.Extensions.*` 11 and xunit v3.
+
+  On 2026-11-14, the packages that follow were behind, and the review knows no reason to hold them. Each line gives the version in use, and then the newest version. Do a check of each one before a bump.
+
+  - Avalonia 12.1.3 (12.1.6) and ReactiveUI.Avalonia 12.1.2 (12.1.6).
+  - Irihi.Ursa 2.2.0 (2.3.1) and Xaml.Behaviors.Avalonia 12.0.7 (12.1.5).
+  - DynamicData 9.4.33 (9.5.0) and Splat.Autofac 20.2.0 (21.0.0).
+  - MPXJ.Net 16.9.0 (16.11.0) and Ical.Net 5.2.3 (5.2.4).
+  - JsonSchema.Net 9.4.0 (9.7.0) and MessageBox.Avalonia 12.0.0 (12.1.0).
+  - Svg.Controls.Skia.Avalonia 12.0.0.13 (12.0.0.17) and Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2).
+
+- [ ] **Build and test on Windows in CI, and collect the coverage** *(2026-11-14, from the review of `src`)*
+
+  `ci.yml` has one job, on `ubuntu-24.04`. The desktop ships for Windows, and the hook on the computer of the maintainer is the only gate on Windows. Thus, CI does not test the things that differ there. Examples are the MS Project import through IKVM, the sharing of open files, the fonts and the paths with a backslash. The test projects reference `coverlet.collector`, but no step collects coverage. Thus, nobody knows which lines the tests do not reach.
+
+  Add a job on Windows. The entry "Package `zpp serve`" already asks for Windows, Linux and macOS, for its golden files. Collect the coverage in one job, and publish the report as an artifact. Do not make a threshold a gate at first.
+
+- [ ] **Suggestion: make `Zametek.ViewModel.ProjectPlan` smaller** *(2026-11-14, from the review of `src`)*
+
+  The project has about 45,700 lines. That is about 70 % of the source code under `src`, without the resources and the Browser head. It holds the view models. It also holds the file formats, the Excel and MS Project imports, the services for the schedule and the metrics, and the chart exports. Four files have more than 1,600 lines: `ProjectScenarioManagerViewModel.cs` (2,716), `CoreViewModel.cs` (2,557), `GanttChartManagerViewModel.cs` (1,813) and `MainViewModel.cs` (1,699).
+
+  Three steps are possible, and each is independent:
+
+  1. Move the MS Project importer to an assembly of its own. Point 6 of the entry "Package `zpp serve`" asks for this too.
+  2. Move the source code that needs no view model (probably `Xlsx`, `Files` and `Services`) to a library of its own. Its tests then need no view model.
+  3. Continue the decomposition of the core with `ProjectScenarioManagerViewModel`.
+
+  ARCHITECTURE §13 says where a file goes. Change it together with a move.
+
+- [ ] **Suggestion: make the collections of the models read-only** *(2026-11-14, from the review of `src`)*
+
+  `Zametek.Common.ProjectPlan` has 79 records. They have 74 public members that are a `List<T>` or another collection that a holder can change. The application gives these records to other threads as snapshots, but nothing stops a change. The equality of such a record compares its lists by reference, and the entry about rule 7 found a guard that this made dead. The Gantt build changed a set of a published activity (refer to the entry above), and ARCHITECTURE §7 rule 10 tells of a torn `HashSet`.
+
+  Types such as `IReadOnlyList<T>` or `ImmutableArray<T>` make the snapshot rule a rule of the compiler. Mapperly and Newtonsoft.Json must still read and write the models. Thus, try one model first, when it changes for another reason.
+
+- [ ] **Write to the log the four failures that only `Debug.WriteLine` reports** *(2026-11-14, from the review of `src`)*
+
+  Four sites report a failure with `Debug.WriteLine`, which a Release build removes:
+
+  - `SettingService`, when it cannot read the layout of the grids.
+  - `MainViewModel.RestoreLayout`, when it cannot read the dock layout.
+  - `MainViewModel.RestoreLayout`, when the dock layout has a tool missing.
+  - `DataGridPersistLayoutBehavior`, when it cannot restore the layout of one grid.
+
+  Thus, a user whose layout resets at each start has nothing in the log file. Use the logger, and give it the exception.
+
+- [ ] **Give the controls names for a screen reader** *(2026-11-14, from the review of `src`)*
+
+  No `.axaml` file under `src` sets `AutomationProperties`. Thus, a button that has only an icon has no name for a screen reader, and the charts and the graphs have none. Start with the buttons that have only an icon, and take `AutomationProperties.Name` from the resources. The review reported one such button in `MainView.axaml`. The names also give a UI test a stable way to find a control.
+
 - [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 
   Since 0.11.0-beta.1, the effort series no longer reads each activity for each resource on each day. The series of 1500 activities and 500 resources took 34 seconds and 38 GB of allocations, and it now takes 1.3 seconds and 278 MB. A job of that plan now takes 9 seconds, and not 60. The rest of this entry is from before the change. Measure it again, and then decide what to bound. A job still builds each output of the cascade two times (refer to the entry about the two compiles of a job).
@@ -229,6 +480,10 @@ This file lists the maintainer-internal engineering intents that must version wi
   The cascade of a large plan takes about 650 ms on the sample plan with 985 activities (`docs/assets/erp-migration.zpp`). The compile takes 100 to 170 ms. `CalculateTrackingSeriesSet` in `ResourceSchedulingService` takes 310 to 370 ms, and thus it is about half of the cascade. The arrow graph takes 50 to 90 ms, the vertex graph takes 160 to 190 ms, and all the metrics together take 30 to 70 ms.
 
   The cascade no longer holds `m_Lock` (ARCHITECTURE §7 rule 14), and thus the time does not block the UI. But it delays the charts after each edit, and a bulk update waits for it. Profile the calculation and look for work that repeats for each activity. A faster tracking series shortens the wait for every chart.
+
+  **A possible cause** *(2026-11-14, from the review of `src`, read in the source code and not measured)*. For the plan series, the method makes the list `progressTimeline`, with one dictionary for each day to the end of the plan. For each activity, it then adds a `TrackingPointModel` to the dictionary of each day. This includes the days before the activity starts and the days after it finishes. A second loop reads each entry of each day two times. For example, 985 activities and 450 days give about 443,000 objects and dictionary entries, also for a plan with no trackers.
+
+  The loops for the progress and the effort read each day again. One pass in the order of the days is enough for the plan series. It adds the activities that start on a day to a running sum, and it removes those that finish. Profile first, because nobody measured which loop takes the time.
 
 - [ ] **Bring the browser head up to the desktop application** *(2026-08-21)*
 
