@@ -27,7 +27,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [
             @"activityRisk", @"activityRiskWithStandardDeviationCorrection", @"criticalityRisk", @"fibonacciRisk",
             @"geometricActivityRisk", @"geometricCriticalityRisk", @"geometricFibonacciRisk", @"networkCyclomaticComplexity",
-            @"networkDuration", @"networkDurationManMonths", @"projectFinishDays", @"projectFinishDate", @"effortEfficiency",
+            @"networkDuration", @"networkDurationManMonths", @"projectStartDate", @"projectFinishDays", @"projectFinishDate", @"effortEfficiency",
             @"peakHeadcount", @"averageHeadcount", @"peakToAverageHeadcount",
             @"activityEffort", @"directEffort", @"indirectEffort", @"otherEffort", @"totalEffort", @"directCost",
             @"indirectCost", @"otherCost", @"totalCost", @"directBilling", @"indirectBilling", @"otherBilling",
@@ -97,7 +97,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             JsonElement[] tracked = [.. document.RootElement.GetProperty(@"trackedScenarios").EnumerateArray()];
             tracked.Length.ShouldBe(2);
-            tracked[0].EnumerateObject().Select(x => x.Name).ShouldBe([@"path", @"id", @"isCurrent", @"metrics"]);
+            tracked[0].EnumerateObject().Select(x => x.Name).ShouldBe([@"path", @"id", @"isCurrent", @"metrics", @"errors"]);
+            tracked[0].GetProperty(@"errors").GetArrayLength().ShouldBe(0);
             tracked[0].GetProperty(@"metrics").EnumerateObject().Select(x => x.Name).ShouldBe(s_MetricNames);
 
             // Alpha is the scenario that the job loaded, and Beta, whose stored metrics are stale, has the metrics of its compile.
@@ -188,6 +189,57 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_ATargetResourceThatNoResourceHas_Then_TheAnswerWarnsAtItsPlace()
+        {
+            // The load drops such an id, and the activity can then go to any resource (A6 of the stress test of 0.11.0-beta.1).
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"TargetResources"] = new Newtonsoft.Json.Linq.JArray(99);
+            using var content = RunningServer.CompileContent(Encoding.UTF8.GetBytes(plan.ToString()), @"plan.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/TargetResources/0 notFound"]);
+        }
+
+        [Fact]
+        public async Task Compile_Given_ATrackedScenarioThatDoesNotCompile_Then_ItsItemSaysWhy()
+        {
+            // Its metrics were null, and nothing said why (C23 of the stress test of 0.11.0-beta.1).
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Assets", @"stale-tracked.zpp")));
+            plan[@"Files"]![1]![@"Scenario"]![@"DependentActivities"]![0]![@"Dependencies"] = new Newtonsoft.Json.Linq.JArray(42);
+            using var content = RunningServer.CompileContent(Encoding.UTF8.GetBytes(plan.ToString()), @"stale-tracked.zpp", new CompileOptions { CompileTracked = true });
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            IReadOnlyList<TrackedScenarioResponse> tracked = compiled.TrackedScenarios.ShouldNotBeNull();
+            tracked.Single(x => x.Path == @"Beta").Errors.Select(x => x.Code).ShouldBe([@"P0010"]);
+            tracked.Single(x => x.Path == @"Alpha").Errors.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task Compile_Given_AFileNameInUtf8_Then_TheOutputsHaveTheName()
+        {
+            // curl, the browsers and Python send the name of a file in UTF-8, in the header of its part (C13 of the stress test of
+            // 0.11.0-beta.1).
+            using ByteArrayContent content = RunningServer.RawMultipart(
+                @"utf8",
+                closed: true,
+                (@"project", @"ünïcödé.zpp", TwoScenarios()),
+                (@"options", null, Encoding.UTF8.GetBytes(@"{ ""outputs"": { ""data"": {} } }")));
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Outputs.Select(x => x.FileName).ShouldContain(@"ünïcödé-schedule.csv");
+        }
+
+        [Fact]
         public async Task Compile_Given_NoOptions_Then_AnswersWithTheMetricsAndNoOutputs()
         {
             using HttpResponseMessage response = await PostAsync();
@@ -201,8 +253,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             compiled.Metrics.NetworkDuration.ShouldBe(5);
 
             // The project finishes five days after its start, 1 January 2024, as the days and as the date.
+            compiled.Metrics.ProjectStartDate.ShouldBe(new DateOnly(2024, 1, 1));
             compiled.Metrics.ProjectFinishDays.ShouldBe(5);
             compiled.Metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 6));
+        }
+
+        [Fact]
+        public async Task Compile_Given_AStartOnASaturdayWithWeekends_Then_TheWorkStartsOnTheMondayAfter()
+        {
+            // The plan asks to start on Saturday 6 January 2024. With weekends, its work starts on Monday 8 January, which is
+            // day 0. The five days of work finish on Friday 12 January, and the finish is the first day after them.
+            byte[] plan = PlanThatStartsOnASaturdayWithWeekends();
+            using var content = RunningServer.CompileContent(plan, @"saturday.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Metrics.ProjectStartDate.ShouldBe(new DateOnly(2024, 1, 8));
+            compiled.Metrics.ProjectFinishDays.ShouldBe(5);
+            compiled.Metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 15));
         }
 
         [Fact]
@@ -605,6 +675,19 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         // The project of the two scenarios, in which every activity has no duration.
+        private static byte[] PlanThatStartsOnASaturdayWithWeekends()
+        {
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+
+            foreach (Newtonsoft.Json.Linq.JToken scenario in plan.SelectTokens(@"$.Files[*].Scenario"))
+            {
+                scenario[@"ProjectStart"] = @"2024-01-06T00:00:00+00:00";
+                scenario[@"DisplaySettings"]![@"NonWorkingDayMode"] = 1;
+            }
+
+            return Encoding.UTF8.GetBytes(plan.ToString());
+        }
+
         private static byte[] PlanOfNoDuration()
         {
             Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));

@@ -795,6 +795,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -837,6 +838,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -887,6 +889,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -966,7 +969,7 @@ components:
     Server:
       summary: A server with the limits that it has at its start
       value:
-        version: 0.11.0-beta
+        version: 0.11.0-beta.1
         culture: en-GB
         timeZone: Europe/London
         limits:
@@ -1135,6 +1138,7 @@ components:
           networkCyclomaticComplexity: 1
           networkDuration: 5
           networkDurationManMonths: 0.1643835616438356
+          projectStartDate: '2024-01-01'
           projectFinishDays: 5
           projectFinishDate: '2024-01-06'
           effortEfficiency: 1
@@ -1412,11 +1416,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Output'
+        warnings:
+          type: array
+          description: The ids of the project that match nothing, for example a target resource that no resource has. The job ignores them, and it goes on. Each has its place in the project and the code `notFound`. The answer has this member only when the project has such an id.
+          items:
+            $ref: '#/components/schemas/ProblemError'
         console:
           $ref: '#/components/schemas/Console'
     TrackedScenario:
       type: object
-      required: [path, id, isCurrent, metrics]
+      required: [path, id, isCurrent, metrics, errors]
       properties:
         path:
           type: string
@@ -1432,6 +1441,20 @@ components:
             - $ref: '#/components/schemas/Metrics'
             - type: 'null'
           description: The metrics of the scenario, or `null` when it did not compile or the project has no data for it.
+        errors:
+          type: array
+          description: Why the scenario did not compile, when it did not. Else empty.
+          items:
+            $ref: '#/components/schemas/TrackedScenarioError'
+    TrackedScenarioError:
+      type: object
+      required: [code, detail]
+      properties:
+        code:
+          type: string
+          description: The code of the compiler, for example `P0010`, or a code of the check of the project before the load, for example `notAllowed`.
+        detail:
+          type: string
     ScenarioChart:
       description: |
         The data of the scenario chart, from the settings of the chart that the project keeps: the metrics of the axes, the fits and
@@ -1567,6 +1590,7 @@ components:
         - networkCyclomaticComplexity
         - networkDuration
         - networkDurationManMonths
+        - projectStartDate
         - projectFinishDays
         - projectFinishDate
         - effortEfficiency
@@ -1607,6 +1631,10 @@ components:
           type: [integer, 'null']
           description: In days.
         networkDurationManMonths: { type: [number, 'null'] }
+        projectStartDate:
+          type: [string, 'null']
+          format: date
+          description: The date on which the work of the project starts, in the working calendar of the project. It is the first working day on `ProjectStart` or after it, and it is day 0 of the schedule.
         projectFinishDays:
           type: [integer, 'null']
           description: The number of days from the start of the project to its finish. `null` when the project has no duration.

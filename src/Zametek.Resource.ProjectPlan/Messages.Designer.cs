@@ -97,6 +97,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The calendar has more than {0} days in a row that are not working days, before the schedule finishes..
+        /// </summary>
+        public static string Message_CalendarHasLongRunOfDaysOff {
+            get {
+                return ResourceManager.GetString("Message_CalendarHasLongRunOfDaysOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The calendar has no working day in the {0} days from {1:d}..
+        /// </summary>
+        public static string Message_CalendarHasNoWorkingDay {
+            get {
+                return ResourceManager.GetString("Message_CalendarHasNoWorkingDay", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} and {1} cannot both be set.
         /// </summary>
         public static string Message_CannotBothBeSet {
@@ -831,6 +849,123 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to activities.
+        /// </summary>
+        public static string Message_PlanActivities {
+            get {
+                return ResourceManager.GetString("Message_PlanActivities", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The number of {0} is {1}, which exceeds the maximum supported count of {2}.
+        /// </summary>
+        public static string Message_PlanCountExceedsMaximum {
+            get {
+                return ResourceManager.GetString("Message_PlanCountExceedsMaximum", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to must be within {0:N0} days of ProjectStart.
+        /// </summary>
+        public static string Message_PlanDateTooFarFromStart {
+            get {
+                return ResourceManager.GetString("Message_PlanDateTooFarFromStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to is also the Id of item {0} of this list.
+        /// </summary>
+        public static string Message_PlanDuplicateId {
+            get {
+                return ResourceManager.GetString("Message_PlanDuplicateId", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to has no data for the scenario '{0}', which the plan loads.
+        /// </summary>
+        public static string Message_PlanHasNoData {
+            get {
+                return ResourceManager.GetString("Message_PlanHasNoData", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Values or counts outside the supported limits:.
+        /// </summary>
+        public static string Message_PlanLimitsExceeded {
+            get {
+                return ResourceManager.GetString("Message_PlanLimitsExceeded", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The plan was not loaded. Problems found in the file: {0}..
+        /// </summary>
+        public static string Message_PlanProblemsFound {
+            get {
+                return ResourceManager.GetString("Message_PlanProblemsFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to resources.
+        /// </summary>
+        public static string Message_PlanResources {
+            get {
+                return ResourceManager.GetString("Message_PlanResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to work streams.
+        /// </summary>
+        public static string Message_PlanWorkStreams {
+            get {
+                return ResourceManager.GetString("Message_PlanWorkStreams", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to is not the Id of a resource of the scenario.
+        /// </summary>
+        public static string Message_PlanNotAResource {
+            get {
+                return ResourceManager.GetString("Message_PlanNotAResource", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to is not the Id of a work stream of the scenario.
+        /// </summary>
+        public static string Message_PlanNotAWorkStream {
+            get {
+                return ResourceManager.GetString("Message_PlanNotAWorkStream", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: {0}: {1}.
+        /// </summary>
+        public static string Message_PlanWarning {
+            get {
+                return ResourceManager.GetString("Message_PlanWarning", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The tracked scenario '{0}' did not compile:.
+        /// </summary>
+        public static string Message_TrackedScenarioDidNotCompile {
+            get {
+                return ResourceManager.GetString("Message_TrackedScenarioDidNotCompile", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The project has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ProjectUnsavedChanges {
@@ -1148,6 +1283,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServeErrorPartNotKnown {
             get {
                 return ResourceManager.GetString("Message_ServeErrorPartNotKnown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to must be sent once.
+        /// </summary>
+        public static string Message_ServeErrorPartSentMoreThanOnce {
+            get {
+                return ResourceManager.GetString("Message_ServeErrorPartSentMoreThanOnce", resourceCulture);
             }
         }
         

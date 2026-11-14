@@ -483,6 +483,14 @@ namespace Zametek.ProjectPlan.CommandLine
                 TrackedScenarioResponse.From(result.TrackedScenarios),
                 ScenarioChartResponse.From(result.ScenarioChart),
                 outputs,
+                result.Warnings.Count == 0
+                    ? null
+                    : [.. result.Warnings.Select(x => new ProblemError
+                    {
+                        Pointer = $@"{CompileOptionsHelper.GetPointer(c_RequestPointer, c_ProjectPart)}{x.Pointer}",
+                        Code = x.Code,
+                        Detail = x.Detail,
+                    })],
                 consoleResponse);
 
             return new Answer(
@@ -616,9 +624,10 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 return (null, Refuse(context, StatusCodes.Status413PayloadTooLarge, string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, m_Limits.MaxUploadMegabytes)));
             }
-            catch (Exception ex) when (ex is BadHttpRequestException or InvalidDataException)
+            catch (Exception ex) when (ex is BadHttpRequestException or InvalidDataException or IOException)
             {
-                // What the framework says of a body it cannot read is its own: the detail says it in ours.
+                // What the framework says of a body it cannot read is its own: the detail says it in ours. A body that ends
+                // before its closing boundary is an IOException of the reader of the parts.
                 return (null, Problem(
                     context,
                     ProblemHelper.Create(
@@ -629,13 +638,26 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        // The parts that are not ones the endpoint takes, and the parts that are files and were sent as fields.
+        // The parts that are not ones the endpoint takes, the parts that are files and were sent as fields, and the parts that
+        // were sent more than once. The endpoint reads only the first of a part, and so a second one is probably a mistake of
+        // the client.
         private static void ReadParts(
             IFormCollection form,
             IReadOnlyList<string> known,
             IReadOnlyList<string> files,
             ProblemCollector problems)
         {
+            IEnumerable<string> twice = form.Files
+                .GroupBy(x => x.Name, StringComparer.Ordinal)
+                .Where(x => x.Count() > 1)
+                .Select(x => x.Key)
+                .Concat(form.Where(x => x.Value.Count > 1).Select(x => x.Key));
+
+            foreach (string name in twice.Where(known.Contains).Distinct(StringComparer.Ordinal))
+            {
+                problems.AddInvalid(PartError(name, ProblemCodes.NotAllowed, Resource.ProjectPlan.Messages.Message_ServeErrorPartSentMoreThanOnce));
+            }
+
             foreach (string name in form.Keys.Concat(form.Files.Select(x => x.Name)).Distinct(StringComparer.Ordinal))
             {
                 if (!known.Contains(name))
@@ -812,6 +834,20 @@ namespace Zametek.ProjectPlan.CommandLine
 
                     // Each problem is an error with the code of its kind and the place in the sheets in its words.
                     errors.AddRange(import.Issues.Take(c_MaximumImportProblems).Select(x => PartError(part, x.Code, ImportIssueText.Describe(x))));
+                    break;
+                // A project that the check before the load refuses: each problem is an error, at its place in the project.
+                case ProjectNotReadableException { PlanProblems: { Count: > 0 } planProblems }:
+                    exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception, c_MaximumImportProblems);
+                    kind = ProblemKind.ProjectNotReadable;
+                    detail = planProblems.Count > c_MaximumImportProblems
+                        ? $@"{exception.Message} {ImportIssueText.BuildListed(c_MaximumImportProblems)}"
+                        : exception.Message;
+                    errors.AddRange(planProblems.Take(c_MaximumImportProblems).Select(x => new ProblemError
+                    {
+                        Pointer = $@"{CompileOptionsHelper.GetPointer(c_RequestPointer, part)}{x.Pointer}",
+                        Code = x.Code,
+                        Detail = x.Detail,
+                    }));
                     break;
                 case ProjectNotReadableException:
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);

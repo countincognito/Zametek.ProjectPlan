@@ -140,7 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 {
                     Resources = [.. c.ResourceSettings.Resources.Select(x => x.Id == 4 ? x with { IsExplicitTarget = true } : x)],
                 }),
-                (@"the project start is moved", c => c.ProjectStart = c.ProjectStart.AddDays(14)),
+                (@"the project start is moved", c => c.RequestedProjectStart = c.RequestedProjectStart.AddDays(14)),
             ];
 
             foreach ((string description, Action<CoreViewModel> apply) in steps)

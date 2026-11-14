@@ -243,8 +243,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, pm => pm.ProjectHasChanges);
 
             m_ProjectStart = this
-                .WhenAnyValue(main => main.m_CoreViewModel.ProjectStart)
+                .WhenAnyValue(main => main.m_CoreViewModel.RequestedProjectStart)
                 .ToProperty(this, main => main.ProjectStart);
+
+            m_WorkStart = this
+                .WhenAnyValue(
+                    main => main.m_CoreViewModel.RequestedProjectStart,
+                    main => main.m_CoreViewModel.ProjectStart,
+                    (DateTimeOffset requestedStart, DateTimeOffset start) => requestedStart.Date == start.Date
+                        ? string.Empty
+                        : string.Format(System.Globalization.CultureInfo.CurrentCulture, Resource.ProjectPlan.Labels.Label_WorkStartsOn, start.DateTime))
+                .ToProperty(this, main => main.WorkStart);
 
             m_Today = this
                 .WhenAnyValue(main => main.m_CoreViewModel.Today)
@@ -800,9 +809,14 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ProjectStart.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ProjectStart = value;
+                lock (m_Lock) m_CoreViewModel.RequestedProjectStart = value;
             }
         }
+
+        // The day on which the work starts, as the note after the picker of the start shows it: the first working day on the
+        // start or after it. Empty when it is the start itself.
+        private readonly ObservableAsPropertyHelper<string> m_WorkStart;
+        public string WorkStart => m_WorkStart.Value;
 
         private readonly ObservableAsPropertyHelper<DateTimeOffset> m_Today;
         public DateTimeOffset Today
@@ -1649,6 +1663,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsProjectScenarioUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();
                 m_ProjectStart?.Dispose();
+                m_WorkStart?.Dispose();
                 m_Today?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

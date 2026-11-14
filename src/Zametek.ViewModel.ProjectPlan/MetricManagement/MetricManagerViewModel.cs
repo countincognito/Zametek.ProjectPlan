@@ -1,4 +1,5 @@
 ﻿using ReactiveUI;
+using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -255,6 +256,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Headcount.PeakToAverageRatio)
                 .ToProperty(this, mm => mm.PeakToAverageHeadcount);
 
+            m_ProjectStartDate = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectStart)
+                .Select(start => (DateOnly?)DateOnly.FromDateTime(start.DateTime))
+                .ToProperty(this, mm => mm.ProjectStartDate);
+
             m_ProjectFinish = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinish)
                 .ToProperty(this, mm => mm.ProjectFinish);
@@ -356,6 +362,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<double?> m_PeakToAverageHeadcount;
         public double? PeakToAverageHeadcount => m_PeakToAverageHeadcount.Value;
+
+        private readonly ObservableAsPropertyHelper<DateOnly?> m_ProjectStartDate;
+        public DateOnly? ProjectStartDate => m_ProjectStartDate.Value;
 
         private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
         public string ProjectFinish => m_ProjectFinish.Value;
@@ -494,6 +503,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_PeakHeadcount?.Dispose();
                 m_AverageHeadcount?.Dispose();
                 m_PeakToAverageHeadcount?.Dispose();
+                m_ProjectStartDate?.Dispose();
                 m_ProjectFinish?.Dispose();
                 m_ProjectFinishDays?.Dispose();
                 m_ProjectFinishDate?.Dispose();

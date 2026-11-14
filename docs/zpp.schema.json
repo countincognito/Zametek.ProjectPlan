@@ -88,7 +88,15 @@
               "ProjectStart": {
                 "type": "string",
                 "format": "date-time",
-                "description": "The start of the project. A time of an activity is a number of working days from it."
+                "description": "The start that the plan asks for. Day 0 of the schedule is the first working day on this date or after it (EffectiveProjectStart)."
+              },
+              "EffectiveProjectStart": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Calculated: the first working day on ProjectStart or after it, which is day 0 of the schedule. A time of an activity is a number of working days from it. zpp calculates it again when it reads the file."
               },
               "Today": {
                 "type": "string",
@@ -167,6 +175,7 @@
                         },
                         "Duration": {
                           "type": "integer",
+                          "minimum": 0,
                           "description": "Calculated: the duration that the compiler schedules, in working days. It is (O \u002B 4 \u00D7 ML \u002B P \u002B 3) / 6 in whole days, from the estimates. zpp calculates it again when it reads the file. Thus, set MostLikelyDuration, or leave it out and set Duration, which is then the most likely duration."
                         },
                         "MostLikelyDuration": {
@@ -174,6 +183,7 @@
                             "integer",
                             "null"
                           ],
+                          "minimum": 0,
                           "description": "The most likely duration (ML), in working days. Without it, the most likely duration is Duration. A value below 0 is 0."
                         },
                         "OptimisticDuration": {
@@ -181,6 +191,7 @@
                             "integer",
                             "null"
                           ],
+                          "minimum": 0,
                           "description": "The optimistic duration (O), in working days. Without it, O is ML. A value above ML is ML."
                         },
                         "PessimisticDuration": {
@@ -188,6 +199,7 @@
                             "integer",
                             "null"
                           ],
+                          "minimum": 0,
                           "description": "The pessimistic duration (P), in working days. Without it, P is ML. A value below ML is ML."
                         },
                         "FreeSlack": {
@@ -216,6 +228,7 @@
                             "integer",
                             "null"
                           ],
+                          "minimum": 0,
                           "description": "The free slack that the activity must keep, in working days."
                         },
                         "MinimumEarliestStartTime": {
@@ -223,6 +236,7 @@
                             "integer",
                             "null"
                           ],
+                          "minimum": 0,
                           "description": "The earliest day on which the activity can start, in working days from ProjectStart. MinimumEarliestStartDateTime takes its place when the file has both."
                         },
                         "MinimumEarliestStartDateTime": {
@@ -238,6 +252,7 @@
                             "integer",
                             "null"
                           ],
+                          "minimum": 0,
                           "description": "The latest day by which the activity must finish, in working days from ProjectStart. MaximumLatestFinishDateTime takes its place when the file has both."
                         },
                         "MaximumLatestFinishDateTime": {

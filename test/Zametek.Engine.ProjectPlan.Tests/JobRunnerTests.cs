@@ -180,8 +180,97 @@ namespace Zametek.Engine.ProjectPlan.Tests
 
             JobMetrics metrics = result.Metrics.ShouldNotBeNull();
             metrics.ProjectFinish.ShouldBe(@"5");
+            metrics.ProjectStartDate.ShouldBe(new DateOnly(2024, 1, 1));
             metrics.ProjectFinishDays.ShouldBe(5);
             metrics.ProjectFinishDate.ShouldBe(new DateOnly(2024, 1, 6));
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_APlanOverTheLimitsOfTheCompiler_Then_P0080WithoutTheLoad()
+        {
+            // 2001 activities, which the compiler refuses (P0080). The load of such a plan took seconds before the compile
+            // refused it: the check counts them first, and the job gives what the compile gives.
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"] = new JArray(
+                Enumerable.Range(1, GraphLimits.MaximumActivityCount + 1).Select(x => new JObject { [@"Activity"] = new JObject { [@"Id"] = x, [@"Duration"] = 1 } }));
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.CompilationErrors);
+            JobCompilationError error = result.CompilationErrors.ShouldHaveSingleItem();
+            error.Code.ShouldBe(@"P0080");
+            error.Message.ShouldContain(@"The number of activities is 2001, which exceeds the maximum supported count of 2000");
+            result.CompilationOutput.ShouldContain($@">{Resource.ProjectPlan.Messages.Message_Error}: P0080");
+            result.Metrics.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_APlanThatTheCheckBeforeTheLoadRefuses_Then_ProjectNotReadableWithEachProblem()
+        {
+            // The load of this plan failed with an exception (B8 of the stress test of 0.11.0-beta.1).
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DisplaySettings"]![@"NonWorkingDayMode"] = 7;
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink()));
+
+            ex.PlanProblems.ShouldNotBeNull().Select(x => (x.Pointer, x.Code))
+                .ShouldBe([(@"/Files/0/Scenario/DisplaySettings/NonWorkingDayMode", @"notAllowed")]);
+            ex.ImportProblems.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ATrackedScenarioThatTheCheckRefuses_Then_ItHasNoMetricsAndTheJobGoesOn()
+        {
+            // The job loaded each tracked scenario, and a tracked scenario that the load could not get past stopped the job.
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));
+            plan[@"Files"]!.Single(x => (string?)x[@"NodeId"] == s_BetaId.ToString())[@"Scenario"]![@"DisplaySettings"]![@"NonWorkingDayMode"] = 7;
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input, CompileTracked = true }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            IReadOnlyList<JobTrackedScenario> tracked = result.TrackedScenarios.ShouldNotBeNull();
+            JobTrackedScenario beta = tracked.Single(x => x.Id == s_BetaId);
+            beta.Metrics.ShouldBeNull();
+            beta.Errors.ShouldBe([new JobCompilationError(@"notAllowed", @"/Files/1/Scenario/DisplaySettings/NonWorkingDayMode: must be one of: 0 (None), 1 (Weekends), 2 (CustomCalendar)")]);
+            tracked.Single(x => x.Id == s_AlphaId).Metrics.ShouldNotBeNull();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ATrackedScenarioThatDoesNotCompile_Then_ItsErrorsSayWhy()
+        {
+            // Its metrics were null, and nothing said why (C23 of the stress test of 0.11.0-beta.1).
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));
+            plan[@"Files"]!.Single(x => (string?)x[@"NodeId"] == s_BetaId.ToString())[@"Scenario"]![@"DependentActivities"]![0]![@"Dependencies"] = new JArray(42);
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input, CompileTracked = true }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            IReadOnlyList<JobTrackedScenario> tracked = result.TrackedScenarios.ShouldNotBeNull();
+            tracked.Single(x => x.Id == s_BetaId).Errors.Select(x => x.Code).ShouldBe([@"P0010"]);
+            tracked.Single(x => x.Id == s_AlphaId).Errors.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ATargetResourceThatNoResourceHas_Then_AWarningAtItsPlace()
+        {
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"TargetResources"] = new JArray(99);
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink());
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            result.Warnings.Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Files/0/Scenario/DependentActivities/0/Activity/TargetResources/0", @"notFound")]);
         }
 
         [Fact]

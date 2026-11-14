@@ -106,6 +106,35 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return content;
         }
 
+        // A body of multipart/form-data as a client writes it, byte by byte, as curl, the browsers and Python do: the headers
+        // of each part in UTF-8, and the closing boundary only when closed is true.
+        public static ByteArrayContent RawMultipart(
+            string boundary,
+            bool closed,
+            params (string Name, string? FileName, byte[] Content)[] parts)
+        {
+            using var body = new MemoryStream();
+
+            foreach ((string name, string? fileName, byte[] bytes) in parts)
+            {
+                string disposition = fileName is null
+                    ? $@"form-data; name=""{name}"""
+                    : $@"form-data; name=""{name}""; filename=""{fileName}""";
+                body.Write(Encoding.UTF8.GetBytes($"--{boundary}\r\nContent-Disposition: {disposition}\r\n\r\n"));
+                body.Write(bytes);
+                body.Write(Encoding.UTF8.GetBytes("\r\n"));
+            }
+
+            if (closed)
+            {
+                body.Write(Encoding.UTF8.GetBytes($"--{boundary}--\r\n"));
+            }
+
+            var content = new ByteArrayContent(body.ToArray());
+            content.Headers.TryAddWithoutValidation(@"Content-Type", $@"multipart/form-data; boundary={boundary}");
+            return content;
+        }
+
         // The answer, read as the contract has it - strictly, so that a member it does not name is found.
         public static async Task<T> ReadAsync<T>(HttpResponseMessage response)
         {

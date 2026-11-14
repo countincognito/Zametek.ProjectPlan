@@ -42,6 +42,20 @@
     <Content Include="..\Zametek.ViewModel.ProjectPlan.Tests\TestFiles\sample_v0_6_1.zpp" LinkBase="Assets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- Each plan that the repository ships or that its tests read, of each version: the check before the load must refuse
+         none of them. -->
+    <Content Include="..\..\docs\assets\*.zpp" LinkBase="RepositoryPlans\docs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Zametek.Data.ProjectPlan.Tests\TestFiles\*.zpp" LinkBase="RepositoryPlans\data">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Zametek.ViewModel.ProjectPlan.Tests\TestFiles\*.zpp" LinkBase="RepositoryPlans\viewmodel">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Zametek.ProjectPlan.CommandLine.Tests\Assets\*.zpp" LinkBase="RepositoryPlans\commandline">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -257,6 +257,50 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void BuildTrackingSeriesSet_GivenATrackerOutOfOrderWithADuplicateAndActivitiesThatTheSeriesDoesNotHave_Then_TheEffortOfEachActivityOnce()
+        {
+            // The effort of a tracker goes to the activities of the series only: Act Three has no effort, and 99 does not exist.
+            // Act Two has two parts in the tracker, which add up. The series now reads only the trackers of a day, and not each
+            // activity for each resource on each day (B10 of the stress test of 0.11.0-beta.1).
+            List<ActivityModel> activities = [.. CreateActivities().Select(x => x.Id == 3 ? x with { HasNoEffort = true } : x)];
+            var settings = new ResourceSettingsModel
+            {
+                Resources =
+                [
+                    new ResourceModel
+                    {
+                        Id = 1,
+                        Name = @"Res One",
+                        Trackers =
+                        [
+                            new ResourceTrackerModel
+                            {
+                                Time = 1,
+                                ResourceId = 1,
+                                ActivityTrackers =
+                                [
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 2, PercentageWorked = 30 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 1, PercentageWorked = 20 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 2, PercentageWorked = 10 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 99, PercentageWorked = 50 },
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 3, PercentageWorked = 40 },
+                                ],
+                            },
+                        ],
+                    },
+                    new ResourceModel { Id = 2, Name = @"Res Two", DisplayOrder = 1 },
+                ],
+            };
+
+            TrackingSeriesSetModel set = CreateService().BuildTrackingSeriesSet(activities, settings, hasResources: true, new PresetColorSequence());
+
+            // 20 % of Act One and 40 % of Act Two: 0.6 of a day.
+            set.Effort.Last().Value.ShouldBe(0.6, c_Tolerance);
+            set.ByResource[0].Effort.Last().Value.ShouldBe(0.6, c_Tolerance);
+            set.ByResource[1].Effort.Count.ShouldBe(1);
+        }
+
+        [Fact]
         public void BuildTrackingSeriesSet_GivenAllocatedResources_ThenPerResourcePercentagesAreWholeProjectShares()
         {
             TrackingSeriesSetModel set = BuildTrackingSeriesSet();

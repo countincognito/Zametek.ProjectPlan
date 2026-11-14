@@ -30,6 +30,10 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset ProjectStart { get; set; }
 
+        // The note after the picker of the start: the first working day on ProjectStart or after it, when it is not
+        // ProjectStart itself. Else empty.
+        string WorkStart { get; }
+
         DateTimeOffset Today { get; set; }
 
         bool HasStaleOutputs { get; }

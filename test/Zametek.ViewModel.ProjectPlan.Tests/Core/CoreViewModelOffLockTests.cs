@@ -85,7 +85,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
             else
             {
-                core.ProjectStart = core.ProjectStart.AddDays(1);
+                core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1);
             }
 
             Drain(main, pool);
@@ -108,7 +108,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
                 // The compilation has taken its copy and let go of the lock. A setter takes that lock, and it used to
                 // wait for as long as the compilation ran.
-                await RunAway(() => core.ProjectStart = core.ProjectStart.AddDays(1));
+                await RunAway(() => core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1));
             }
             finally
             {
@@ -431,7 +431,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             try
             {
                 core.WaitUntilHeld();
-                setting = Task.Run(() => core.ProjectStart = core.ProjectStart.AddDays(1));
+                setting = Task.Run(() => core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1));
 
                 await Task.Delay(300);
 
@@ -536,7 +536,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using GatedCoreViewModel core = CreateStartedWithAutoCompile(main, pool);
 
             // An edit asks for a compilation, and another scenario opens before the request is delivered.
-            core.ProjectStart = core.ProjectStart.AddDays(1);
+            core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1);
             core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(5, durationOffset: 40), Guid.NewGuid(), @"Other");
             Drain(main, pool);
 
@@ -551,7 +551,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using var pool = new TaskpoolSequencerScope();
             using GatedCoreViewModel core = CreateStartedWithAutoCompile(main, pool);
 
-            core.ProjectStart = core.ProjectStart.AddDays(1);
+            core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1);
             core.ResetProjectScenario();
             Drain(main, pool);
 
@@ -571,7 +571,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // The compilation that an edit asks for is under way when another scenario opens. The load does not wait for it,
             // and it publishes nothing.
             core.HoldNextCompilation();
-            core.ProjectStart = core.ProjectStart.AddDays(1);
+            core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1);
             Task delivery = Task.Run(pool.Pump.Drain);
             core.WaitUntilHeld();
 
@@ -652,7 +652,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
                 // The cascade has copied what it reads and let go of the lock. It is the longer of the two steps, and
                 // the setter used to wait for all of it.
-                await RunAway(() => core.ProjectStart = core.ProjectStart.AddDays(1));
+                await RunAway(() => core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1));
             }
             finally
             {

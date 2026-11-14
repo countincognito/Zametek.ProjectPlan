@@ -250,7 +250,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.11.0-beta.
+        ///   Looks up a localized string similar to 0.11.0-beta.1.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -1545,6 +1545,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ProjectStart", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Project Start.
+        /// </summary>
+        public static string Label_ProjectStartDate {
+            get {
+                return ResourceManager.GetString("Label_ProjectStartDate", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Rename.
@@ -2455,6 +2464,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Work starts on {0:ddd} {0:d}.
+        /// </summary>
+        public static string Label_WorkStartsOn {
+            get {
+                return ResourceManager.GetString("Label_WorkStartsOn", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Work Stream Name.
         /// </summary>

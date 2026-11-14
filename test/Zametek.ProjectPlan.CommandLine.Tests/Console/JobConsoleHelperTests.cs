@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using Shouldly;
+using System.Globalization;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
@@ -54,6 +55,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             ActivityRisk = 0.25,
             NetworkCyclomaticComplexity = 3,
+            ProjectStartDate = new DateOnly(2024, 1, 8),
             ProjectFinish = @"Friday",
             TotalCost = 1234.5,
             TotalMarginAbsolute = 100,
@@ -97,6 +99,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             JObject metrics = JObject.Parse(call.Text);
             metrics[@"TotalCost"]!.Value<double>().ShouldBe(1234.5);
             metrics[@"ProjectFinish"]!.Value<string>().ShouldBe(@"Friday");
+            call.Text.ShouldContain(@"""ProjectStartDate"": ""2024-01-08""");
         }
 
         [Fact]
@@ -223,7 +226,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             all.Properties().Select(x => x.Name).TakeLast(2).ShouldBe([@"Simulation", @"TrackedScenarios"]);
             var tracked = (JArray)all[@"TrackedScenarios"]!;
             tracked.Count.ShouldBe(2);
-            ((JObject)tracked[0]).Properties().Select(x => x.Name).ShouldBe([@"Path", @"Id", @"IsCurrent", @"Metrics"]);
+            ((JObject)tracked[0]).Properties().Select(x => x.Name).ShouldBe([@"Path", @"Id", @"IsCurrent", @"Metrics", @"Errors"]);
             tracked[0][@"Path"]!.Value<string>().ShouldBe(@"Alpha");
             tracked[0][@"Id"]!.Value<string>().ShouldBe(@"8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5");
             tracked[0][@"IsCurrent"]!.Value<bool>().ShouldBeTrue();
@@ -368,6 +371,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = metrics }, format);
 
             Rows(text).ShouldContain($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} | {finish}");
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        public async Task WriteResultAsync_Given_AStart_Then_ARowGivesItsDateBeforeTheFinish(MetricsExport format)
+        {
+            string text = await DisplayedAsync(new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics }, format);
+
+            string start = new DateOnly(2024, 1, 8).ToString(DateTimeCalculator.DateFormat, CultureInfo.CurrentCulture);
+            List<string> rows = [.. Rows(text)];
+            int startRow = rows.IndexOf($@"{Resource.ProjectPlan.Labels.Label_ProjectStartDate} | {start}");
+            startRow.ShouldBeGreaterThanOrEqualTo(0);
+            rows[startRow + 1].ShouldBe($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} | Friday");
         }
 
         [Fact]

@@ -567,7 +567,7 @@ curl.exe -s http://localhost:9770/v1/info
 ```
 
 ```text
-{"version":"0.11.0-beta","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"maxSimulationIterations":100000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
+{"version":"0.11.0-beta.1","culture":"en-GB","timeZone":"Europe/London","limits":{"maxJobs":4,"maxQueue":8,"maxUploadMegabytes":50,"maxChartWidth":5000,"maxChartHeight":5000,"maxSimulationIterations":100000,"jobTimeout":"PT2M","maxCompileTimeout":"PT1M"}}
 ```
 
 The server also supplies its own description, for each tool that reads OpenAPI. This description is the file `openapi.yaml` of the [API reference](API.md), in the version from the time when you built the server. A request for it needs no key:
@@ -593,7 +593,7 @@ curl.exe -s -F project=@two-scenarios.zpp http://localhost:9770/v1/projects/comp
 ```
 
 ```text
-{"metrics":{"activityRisk":1,"activityRiskWithStandardDeviationCorrection":1,"criticalityRisk":1,...,"networkDuration":5,"networkDurationManMonths":0.1643835616438356,"projectFinishDays":5,"projectFinishDate":"2024-01-06",...},"outputs":[]}
+{"metrics":{"activityRisk":1,"activityRiskWithStandardDeviationCorrection":1,"criticalityRisk":1,...,"networkDuration":5,"networkDurationManMonths":0.1643835616438356,"projectStartDate":"2024-01-01","projectFinishDays":5,"projectFinishDate":"2024-01-06",...},"outputs":[]}
 ```
 
 A request names the outputs in its options. The options are JSON in a part named `options`. They are the options of `zpp`, with the same names and defaults, but without the paths. Put the options in a file. This prevents problems with the quotation marks of JSON in PowerShell:

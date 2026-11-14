@@ -29,6 +29,10 @@ namespace Zametek.Engine.ProjectPlan
         // both axes of Y.
         public ScenarioChartDataModel? ScenarioChart { get; init; }
 
+        // The ids of the plan that match nothing, each at its place in the file (see PlanCheck.FindScenarioWarnings). The job
+        // goes on: the load drops a target resource that no resource has, for example.
+        public IReadOnlyList<PlanProblem> Warnings { get; init; } = [];
+
         // Two results are equal when they say the same thing: a record would compare the list of errors by reference,
         // not by what is in it.
         public virtual bool Equals(JobResult? other)
@@ -37,6 +41,7 @@ namespace Zametek.Engine.ProjectPlan
                 && Status == other.Status
                 && CompilationOutput == other.CompilationOutput
                 && CompilationErrors.SequenceEqual(other.CompilationErrors)
+                && Warnings.SequenceEqual(other.Warnings)
                 && Equals(Metrics, other.Metrics)
                 && Equals(Simulation, other.Simulation)
                 && Equals(ScenarioChart, other.ScenarioChart)
@@ -62,6 +67,11 @@ namespace Zametek.Engine.ProjectPlan
             foreach (JobCompilationError error in CompilationErrors)
             {
                 hash.Add(error);
+            }
+
+            foreach (PlanProblem warning in Warnings)
+            {
+                hash.Add(warning);
             }
 
             return hash.ToHashCode();

@@ -175,7 +175,7 @@
     <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.11.0-beta</value>
+    <value>0.11.0-beta.1</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
@@ -546,6 +546,9 @@
   <data name="Label_ProjectFinish" xml:space="preserve">
     <value>Project Finish</value>
   </data>
+  <data name="Label_ProjectStartDate" xml:space="preserve">
+    <value>Project Start</value>
+  </data>
   <data name="Label_ProjectStart" xml:space="preserve">
     <value>Project Start:</value>
   </data>
@@ -722,6 +725,9 @@
   </data>
   <data name="Label_DisplayStyle" xml:space="preserve">
     <value>Display style</value>
+  </data>
+  <data name="Label_WorkStartsOn" xml:space="preserve">
+    <value>Work starts on {0:ddd} {0:d}</value>
   </data>
   <data name="Label_Today" xml:space="preserve">
     <value>Today:</value>

@@ -17,7 +17,10 @@
              Version="$(var.Version)"
              UpgradeCode="$(var.UpgradeCode)"
              Compressed="yes">
-		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+		<!-- Each MSI of 0.11.0 has the version 0.11.0.0, the pre-releases too, so the upgrade must also replace an installed
+		     product of the same version. Without it, the MSI of the final release installs next to a pre-release. WiX then
+		     gives the warning ICE61, which is expected for this attribute. -->
+		<MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeError)" />
 
 		<MediaTemplate EmbedCab="yes" />
 

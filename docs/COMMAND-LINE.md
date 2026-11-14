@@ -72,6 +72,8 @@ Import a plan from Microsoft Project or Excel, and convert it to a plan file:
 zpp -m plan.mpp -o plan.zpp
 ```
 
+An import from Microsoft Project gives each task its duration in working days. Microsoft Project can give a duration in minutes, hours, days, weeks or months. `zpp` converts it with the hours of a day, the hours of a week and the days of a month that the plan gives. A part of a day is a whole day: a task of 4 hours takes 1 day.
+
 The import of an Excel workbook is all or nothing. `zpp` reads the whole workbook and collects each problem in its cells. If it finds one or more, it imports nothing and exits with code 1. It writes the problems to the standard error stream, one in each line. Each line gives the place of the problem (the sheet and the cell), the title of the column and the name of the row, and then it says what is wrong:
 
 ```
@@ -84,7 +86,7 @@ A blank cell is not a problem. It gives the default of its column. A cell is a p
 
 A formula is its result, and a date cell is its date. A number that you type as text is read as the culture of the computer writes numbers, and without a thousands separator: in a culture where a comma is the decimal mark, `1,5` is 1.5 and `1.5` is a problem.
 
-For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
+For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. To show the version of `zpp`, enter `zpp --version`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
 
 `zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle. A control character in a value, for example a line end in the title of a scenario, is written as an escape such as `\n`.
 
@@ -180,6 +182,18 @@ zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --s
 - `zpp --server` sends the run to the server, and the server limits the iterations of a project that it runs (refer to [Limits](#limits)).
 - [Simulations on the server](CLIENT-SERVER-QUICK-START.md#simulations-on-the-server) is a tutorial with three sample plans of different sizes. It shows the progress of each simulation, and how simulations at the same time share the processors of a server.
 
+## The single file
+
+The archives of a release hold `zpp` as one file. At its first start, each build of this file unpacks approximately 250 MB into a folder of its own. On Linux and macOS, the folder is `~/.net/zpp/<hash>`. On Windows, it is `%TEMP%\.net\zpp\<hash>`. The later starts of the same build use the same folder.
+
+`zpp` does not delete the folders of earlier builds. To get the space back, delete the folder `zpp` in `~/.net` or in `%TEMP%\.net` when no `zpp` runs. The next start unpacks its build again.
+
+If `zpp` cannot write to this folder, it stops before it does its work. The message is "Failure processing application bundle", and on Linux the exit code is 159. This code is not one of the exit codes of `zpp`. It can occur for a service without a home folder, for example a systemd service with `ProtectHome` or `DynamicUser`. To use a different folder, set the variable `DOTNET_BUNDLE_EXTRACT_BASE_DIR`:
+
+```
+DOTNET_BUNDLE_EXTRACT_BASE_DIR=/var/cache/zpp zpp serve
+```
+
 ## Exit codes
 
 The exit codes are a contract for scripts and CI gates. The test suite `Zametek.ProjectPlan.CommandLine.Tests` makes sure that they stay the same:
@@ -187,12 +201,16 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 | Code | Meaning |
 | ---- | ------- |
 | 0 | Success |
-| 1 | Runtime failure: an incorrect path, a file that `zpp` cannot read, an output that `zpp` cannot write, or an unexpected error |
+| 1 | Runtime failure: an incorrect path, a file that `zpp` cannot read, a plan that the check before the load refuses (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)), an output that `zpp` cannot write, or an unexpected error |
 | 2 | Incorrect use: invalid options or combinations of options |
-| 3 | The plan compiled with errors |
+| 3 | The plan compiled with errors. [The API](API.md#codes-of-the-compiler) gives the codes of the errors. |
 | 4 | A compilation used more time than `--compile-timeout` gives, and `zpp` cancelled it |
 | 5 | `zpp` sent the run to a server, and the server did not run it (refer to [Send runs to a server](#send-runs-to-a-server)) |
 | 130 | A person stopped the run with Ctrl+C, or a program stopped it with `SIGTERM` (refer to [Stop a run](#stop-a-run)). This is the code that a shell gives to a program that Ctrl+C stopped (128 + 2). |
+
+A tracked scenario that does not compile does not change the exit code. `zpp --compile-tracked` writes its errors on the standard error stream, and its metrics are empty.
+
+A plan that is out of the limits of the compiler also gives exit code 3 (`P0080`). The limits are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. A calendar with no working day in 366 days in a row also gives `P0080` (refer to [The calendar](PROJECT-FILE.md#the-calendar)).
 
 A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
 
@@ -376,6 +394,8 @@ A Unix domain socket is a file. Programs on this computer connect to it, in the 
 ### Culture, time zone and logs
 
 Jobs write numbers and dates in the culture of the computer, and times in its time zone, as `zpp` does. The option `--culture` sets the culture for all jobs, for example `--culture en-GB`. On Linux and macOS, the variable `TZ` sets the time zone, for example `TZ=Europe/London zpp serve`. A job cannot select the culture or the time zone. `/v1/info` shows both. It gives the time zone by its IANA name, also when the system uses a different name.
+
+The time zone does not change the dates of a plan. Each date is the day that it shows, in its own offset (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)).
 
 The server writes its log to the standard error stream. The log has these items:
 

@@ -146,6 +146,39 @@ namespace Zametek.Engine.ProjectPlan
             }
         }
 
+        // The item of Files that the load loads, when the check before the load finds no problem in the project and in that
+        // scenario; else ProjectNotReadableException, with each problem.
+        private static int? CheckProject(ProjectModel projectModel)
+        {
+            List<PlanProblem> problems = PlanCheck.FindProjectProblems(projectModel);
+            int? scenarioToLoad = PlanCheck.IndexOfScenarioToLoad(projectModel);
+
+            if (scenarioToLoad is int index)
+            {
+                problems.AddRange(PlanCheck.FindScenarioProblems(projectModel, index));
+            }
+
+            if (problems.Count > 0)
+            {
+                throw new ProjectNotReadableException(PlanProblemText.BuildHeader(problems.Count), problems);
+            }
+
+            return scenarioToLoad;
+        }
+
+        // What a compile gives for a plan out of the limits of the compiler (P0080), without the load and the compile.
+        private static JobResult LimitsResult(IReadOnlyList<string> violations)
+        {
+            var error = new GraphCompilationError(GraphCompilationErrorCode.P0080, PlanCheck.BuildLimitsMessage(violations));
+
+            return new JobResult
+            {
+                Status = JobStatus.CompilationErrors,
+                CompilationOutput = OutputManagerViewModel.BuildCompilationErrorsText([error]),
+                CompilationErrors = [new JobCompilationError(error.ErrorCode.ToString(), error.ErrorMessage)],
+            };
+        }
+
         // Whether an exception from a reader says that the file cannot be read. A job that was cancelled, or that ran out
         // of memory, has not met a file it cannot read.
         private static bool IsUnreadable(Exception ex)
@@ -179,7 +212,10 @@ namespace Zametek.Engine.ProjectPlan
             // The tracked scenarios of a project file, and the metrics of each that the job compiled before its own.
             IReadOnlyList<ScenarioSummary> trackedScenarios = [];
             Guid loadedScenarioId = Guid.Empty;
-            Dictionary<Guid, JobMetrics?> trackedMetrics = [];
+            Dictionary<Guid, (JobMetrics? Metrics, IReadOnlyList<JobCompilationError> Errors)> trackedMetrics = [];
+
+            // The ids of the plan that match nothing: the job goes on, and its result gives them.
+            IReadOnlyList<PlanProblem> warnings = [];
 
             // Plan in.
             if (request.ImportFormat is ProjectScenarioImportFormat importFormat)
@@ -210,6 +246,18 @@ namespace Zametek.Engine.ProjectPlan
                     // processing: ProcessProject loads whichever scenario Current
                     // names, so this is the entire mechanism of scenario selection.
                     projectModel = projectModel with { Current = ScenarioSelector.ResolveScenarioId(projectModel, request.Scenario) };
+                }
+
+                // The check before the load. A plan that the load cannot get past, or that would give what the plan does not
+                // say, is refused with each problem. A plan out of the limits of the compiler gets P0080 without the load.
+                if (CheckProject(projectModel) is int scenarioToLoad)
+                {
+                    warnings = PlanCheck.FindScenarioWarnings(projectModel, scenarioToLoad);
+
+                    if (PlanCheck.FindLimitViolations(projectModel.Files[scenarioToLoad].Scenario) is { Count: > 0 } violations)
+                    {
+                        return LimitsResult(violations) with { Warnings = warnings };
+                    }
                 }
 
                 project.ProcessProject(projectModel);
@@ -266,6 +314,7 @@ namespace Zametek.Engine.ProjectPlan
                         Status = JobStatus.CompilationErrors,
                         CompilationOutput = outputs.CompilationOutput,
                         CompilationErrors = [.. core.GraphCompilation.CompilationErrors.Select(x => new JobCompilationError(x.ErrorCode.ToString(), x.ErrorMessage))],
+                        Warnings = warnings,
                     };
                 }
 
@@ -577,14 +626,15 @@ namespace Zametek.Engine.ProjectPlan
                 Simulation = simulationMetrics,
                 TrackedScenarios = request.CompileTracked
                     ? [
-                        .. trackedScenarios.Select(x => new JobTrackedScenario(
-                            x.Path,
-                            x.Id,
-                            x.Id == loadedScenarioId,
-                            x.Id == loadedScenarioId ? jobMetrics : trackedMetrics.GetValueOrDefault(x.Id))),
+                        .. trackedScenarios.Select(x => x.Id == loadedScenarioId
+                            ? new JobTrackedScenario(x.Path, x.Id, true, jobMetrics)
+                            : trackedMetrics.TryGetValue(x.Id, out (JobMetrics? Metrics, IReadOnlyList<JobCompilationError> Errors) tracked)
+                                ? new JobTrackedScenario(x.Path, x.Id, false, tracked.Metrics) { Errors = tracked.Errors }
+                                : new JobTrackedScenario(x.Path, x.Id, false, null)),
                     ]
                     : null,
                 ScenarioChart = scenarioChartData,
+                Warnings = warnings,
             };
         }
 
@@ -595,7 +645,7 @@ namespace Zametek.Engine.ProjectPlan
         // file has no data for is not loaded: a project
         // loads another scenario in its place. The job then loads its own scenario again, from the project that holds the new
         // metrics. Returns the metrics of each scenario that it compiled, or null for one that did not compile.
-        private static Dictionary<Guid, JobMetrics?> CompileTrackedScenarios(
+        private static Dictionary<Guid, (JobMetrics? Metrics, IReadOnlyList<JobCompilationError> Errors)> CompileTrackedScenarios(
             IProjectScenarioManagerViewModel project,
             ICoreViewModel core,
             IMetricManagerViewModel metrics,
@@ -604,7 +654,7 @@ namespace Zametek.Engine.ProjectPlan
             Guid loadedScenarioId,
             CancellationToken cancellationToken)
         {
-            var compiled = new Dictionary<Guid, JobMetrics?>();
+            var compiled = new Dictionary<Guid, (JobMetrics? Metrics, IReadOnlyList<JobCompilationError> Errors)>();
             List<Guid> withData = [.. scenarioIds.Where(x => projectModel.Files.Any(file => file.NodeId == x))];
 
             if (withData.Count == 0)
@@ -616,6 +666,25 @@ namespace Zametek.Engine.ProjectPlan
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                // A tracked scenario that the check before the load refuses, or that is out of the limits of the compiler, does
+                // not compile, and the job does not load it: the load cannot get past some of them.
+                int index = projectModel.Files.FindLastIndex(x => x?.NodeId == scenarioId);
+                List<PlanProblem> problems = PlanCheck.FindScenarioProblems(projectModel, index);
+
+                if (problems.Count > 0)
+                {
+                    compiled[scenarioId] = (null, [.. problems.Select(x => new JobCompilationError(x.Code, $@"{x.Pointer}: {x.Detail}"))]);
+                    continue;
+                }
+
+                List<string> violations = PlanCheck.FindLimitViolations(projectModel.Files[index].Scenario);
+
+                if (violations.Count > 0)
+                {
+                    compiled[scenarioId] = (null, [new JobCompilationError(GraphCompilationErrorCode.P0080.ToString(), PlanCheck.BuildLimitsMessage(violations))]);
+                    continue;
+                }
+
                 project.ProcessProject(projectModel with { Current = scenarioId });
 
                 // A load keeps the metrics that the file holds (see CoreViewModel.ProcessProjectScenario), and so the job
@@ -626,7 +695,9 @@ namespace Zametek.Engine.ProjectPlan
                 core.BuildRiskMetrics();
                 core.BuildFinancialMetrics();
 
-                compiled[scenarioId] = core.HasCompilationErrors ? null : JobMetrics.From(metrics);
+                compiled[scenarioId] = core.HasCompilationErrors
+                    ? (null, [.. core.GraphCompilation.CompilationErrors.Select(x => new JobCompilationError(x.ErrorCode.ToString(), x.ErrorMessage))])
+                    : (JobMetrics.From(metrics), []);
                 projectModel = project.BuildProject();
             }
 

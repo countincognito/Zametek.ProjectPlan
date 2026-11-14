@@ -2,7 +2,9 @@
 
 ## Prerequisites
 
-Each project in `Zametek.ProjectPlan.slnx` uses the `net10.0` target framework. Thus, you must install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) or a newer version of the SDK to build the projects and to start the desktop application. Previous versions of the SDK, for example .NET 8, cannot build the projects.
+Each project in `Zametek.ProjectPlan.slnx` uses the `net10.0` target framework. Thus, you must install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) to build the projects and to start the desktop application. Previous versions of the SDK, for example .NET 8, cannot build the projects.
+
+The file `global.json` makes the build use the newest .NET 10 SDK of the computer. This is also true when the computer has a newer SDK, such as .NET 11. The MSBuild of the .NET 11 SDK cannot run the tasks of IKVM.Maven.Sdk, which builds the importer of MS Project files.
 
 To restore, build and start the desktop application, enter these commands:
 
@@ -11,6 +13,8 @@ dotnet restore
 dotnet build
 dotnet run --project src/Zametek.ProjectPlan.Desktop
 ```
+
+On Windows, clone the repository into a short path, for example `C:\src\pp`. IKVM writes files below the `obj` folder of the command line tool, and in a deep folder their paths can be longer than 260 characters. By default, Windows does not accept such a path, and the build stops with `MSB3030`. If you cannot use a short path, give IKVM short folders, for example `-p:IkvmStageDir=C:\ikvm\stage -p:IkvmCacheDir=C:\ikvm\cache`.
 
 The application has one project that all hosts use, and one project for each host. Thus, all platforms use the same view models, UI components and composition. The table that follows gives a list of the projects:
 
@@ -117,7 +121,7 @@ You can also build the installer from the command line, without the extension:
 dotnet build pkg/Zametek.ProjectPlan.MsiPackager/Zametek.ProjectPlan.MsiPackager.wixproj -c Release
 ```
 
-The build writes the installer (for example `projectplandotnet.0.11.0-beta.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
+The build writes the installer (for example `projectplandotnet.0.11.0-beta.1.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
 
 ## MSIX packages (Windows)
 

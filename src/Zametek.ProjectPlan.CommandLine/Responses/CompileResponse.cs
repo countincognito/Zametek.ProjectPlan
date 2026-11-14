@@ -14,5 +14,6 @@ namespace Zametek.ProjectPlan.CommandLine
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<TrackedScenarioResponse>? TrackedScenarios,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ScenarioChartResponse? ScenarioChart,
         IReadOnlyList<OutputResponse> Outputs,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<ProblemError>? Warnings,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ConsoleResponse? Console);
 }

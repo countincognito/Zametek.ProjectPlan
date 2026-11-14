@@ -52,7 +52,8 @@ namespace Zametek.Data.ProjectPlan.Tests
             [@"v0_6_0.ProjectScenarioNodeModel.NodeType"] = @"A scenario has an item in Files, and a folder has none.",
             [@"v0_6_0.ProjectScenarioNodeModel.IsTracked"] = @"The scenario chart shows the scenario as a point.",
             [@"v0_6_2.ProjectScenarioFileModel.NodeId"] = @"The id of the node of the scenario.",
-            [@"v0_6_2.ProjectScenarioModel.ProjectStart"] = @"The start of the project. A time of an activity is a number of working days from it.",
+            [@"v0_6_2.ProjectScenarioModel.ProjectStart"] = @"The start that the plan asks for. Day 0 of the schedule is the first working day on this date or after it (EffectiveProjectStart).",
+            [@"v0_6_2.ProjectScenarioModel.EffectiveProjectStart"] = @"Calculated: the first working day on ProjectStart or after it, which is day 0 of the schedule. A time of an activity is a number of working days from it. zpp calculates it again when it reads the file.",
             [@"v0_6_2.ProjectScenarioModel.Metrics"] = @"The metrics of the last compile. zpp calculates them again when it compiles the scenario. The scenario chart shows them for a tracked scenario that zpp does not compile.",
             [@"v0_6_2.ProjectScenarioModel.ResourceMetrics"] = @"The metrics of each resource from the last compile. zpp calculates them again when it compiles the scenario.",
             [@"v0_6_2.ProjectScenarioModel.SimulationSummary"] = @"The result of the last run of the simulation, if the scenario has one.",
@@ -74,6 +75,19 @@ namespace Zametek.Data.ProjectPlan.Tests
             [@"v0_6_2.ActivityModel.MinimumEarliestStartDateTime"] = @"The earliest day on which the activity can start, as a date. It takes the place of MinimumEarliestStartTime.",
             [@"v0_6_2.ActivityModel.MaximumLatestFinishTime"] = @"The latest day by which the activity must finish, in working days from ProjectStart. MaximumLatestFinishDateTime takes its place when the file has both.",
             [@"v0_6_2.ActivityModel.MaximumLatestFinishDateTime"] = @"The latest day by which the activity must finish, as a date. It takes the place of MaximumLatestFinishTime.",
+        };
+
+        // The members that have a minimum, by the class that has them and their name. zpp counts a duration or a time of an
+        // activity below 0 as 0, and so a value below 0 is a mistake that the schema can show.
+        public static IReadOnlyDictionary<string, int> Minimums { get; } = new Dictionary<string, int>
+        {
+            [@"v0_6_2.ActivityModel.Duration"] = 0,
+            [@"v0_6_2.ActivityModel.MostLikelyDuration"] = 0,
+            [@"v0_6_2.ActivityModel.OptimisticDuration"] = 0,
+            [@"v0_6_2.ActivityModel.PessimisticDuration"] = 0,
+            [@"v0_6_2.ActivityModel.MinimumFreeSlack"] = 0,
+            [@"v0_6_2.ActivityModel.MinimumEarliestStartTime"] = 0,
+            [@"v0_6_2.ActivityModel.MaximumLatestFinishTime"] = 0,
         };
 
         public static Type Root => typeof(v0_6_2.ProjectModel);
@@ -175,6 +189,12 @@ namespace Zametek.Data.ProjectPlan.Tests
                 {
                     schema[@"type"] = @"string";
                     schema[@"const"] = Versions.ProjectLatest;
+                }
+
+                if (Minimums.TryGetValue(key, out int minimum))
+                {
+                    used.Add(key);
+                    schema[@"minimum"] = minimum;
                 }
 
                 if (Descriptions.TryGetValue(key, out string? description))

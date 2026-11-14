@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
@@ -55,6 +56,26 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 EstimateHelper.ExpectedDuration(duration, duration, duration).ShouldBe(duration);
             }
+        }
+
+        [Fact]
+        public void ExpectedDuration_Given_TheLargestEstimates_Then_DoesNotOverflow()
+        {
+            // In 32 bits, 4 × ML overflowed, and an ML of 2147483647 gave 0 days.
+            EstimateHelper.ExpectedDuration(int.MaxValue, int.MaxValue, int.MaxValue).ShouldBe(int.MaxValue);
+            EstimateHelper.ExpectedDuration(0, int.MaxValue, int.MaxValue).ShouldBe(1789569706);
+        }
+
+        [Fact]
+        public void RunCompile_Given_AMostLikelyDurationOfTheLargestWholeNumber_Then_TheCompileGivesP0080()
+        {
+            // The plan compiled, and the activity took 0 days: it left the critical path, and the finish was wrong.
+            using CoreViewModel core = CreateCore(new ActivityModel { Id = 1, MostLikelyDuration = int.MaxValue });
+
+            core.RunCompile();
+
+            core.RawActivities.Single().Duration.ShouldBe(int.MaxValue);
+            core.GraphCompilation.CompilationErrors.Select(x => x.ErrorCode).ShouldContain(GraphCompilationErrorCode.P0080);
         }
 
         [Fact]
@@ -907,7 +928,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static CoreViewModel CreateCore(IReadOnlyList<DependentActivityModel> activities)
         {
             CoreViewModel core = CoreViewModelFixture.Create();
-            core.ProjectStart = new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero);
+            core.RequestedProjectStart = new DateTimeOffset(2026, 1, 5, 0, 0, 0, TimeSpan.Zero);
             core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
             core.AddManagedActivities(activities);
             return core;

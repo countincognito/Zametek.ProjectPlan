@@ -65,6 +65,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             ProjectFileSchema.Descriptions.Keys.Where(x => !used.Contains(x)).ShouldBeEmpty();
             ProjectFileSchema.Required.Keys.Where(x => !used.Contains(x)).ShouldBeEmpty();
+            ProjectFileSchema.Minimums.Keys.Where(x => !used.Contains(x)).ShouldBeEmpty();
         }
 
         // What is wrong with a file, as the schema says: nothing, when it fits the schema.
@@ -149,6 +150,23 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
+        public void Validate_Given_EachPlanThatTheDocumentsGive_Then_EachIsOfTheLatestVersionAndFitsTheSchema()
+        {
+            // A client that checks a plan against the schema refused the samples of the documents, which had the version v0.6.1
+            // (C20 of the stress test of 0.11.0-beta.1).
+            string[] files = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, @"DocsAssets"), @"*.zpp");
+
+            files.Length.ShouldBeGreaterThanOrEqualTo(6);
+
+            foreach (string file in files)
+            {
+                string json = File.ReadAllText(file);
+                JObject.Parse(json)[@"Version"]?.Value<string>().ShouldBe(Versions.ProjectLatest, Path.GetFileName(file));
+                Problems(json).ShouldBeEmpty(Path.GetFileName(file));
+            }
+        }
+
+        [Fact]
         public void Validate_Given_AMinimalPlan_Then_ItFitsTheSchema()
         {
             Problems(c_Minimal).ShouldBeEmpty();
@@ -171,6 +189,15 @@ namespace Zametek.Data.ProjectPlan.Tests
             IReadOnlyList<string> problems = Problems(c_Minimal.Replace(@"""MostLikelyDuration""", @"""MostlikelyDuration""", StringComparison.Ordinal));
 
             problems.ShouldContain(x => x.Contains(@"/Files/0/Scenario/DependentActivities/0/Activity", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public void Validate_Given_ADurationBelowZero_Then_TheSchemaRefusesIt()
+        {
+            // zpp counts it as 0, and so the plan does not say what its writer meant.
+            IReadOnlyList<string> problems = Problems(c_Minimal.Replace(@"""MostLikelyDuration"": 5", @"""MostLikelyDuration"": -3", StringComparison.Ordinal));
+
+            problems.ShouldContain(x => x.Contains(@"/Files/0/Scenario/DependentActivities/0/Activity/MostLikelyDuration minimum", StringComparison.Ordinal));
         }
 
         [Fact]

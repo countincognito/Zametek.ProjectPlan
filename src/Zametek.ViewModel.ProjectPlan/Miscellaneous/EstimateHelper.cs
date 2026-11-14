@@ -23,11 +23,13 @@ namespace Zametek.ViewModel.ProjectPlan
         /// <remarks>
         /// Whole numbers only: (O + 4 ML + P + 3) / 6 rounds a non-negative sum to the nearest sixth,
         /// with halves up, and a floating-point sum could land either side of a half. The estimates
-        /// must follow the rule above, and they are the output of <see cref="Effective"/>.
+        /// must follow the rule above, and they are the output of <see cref="Effective"/>. The sum is in 64 bits: in 32 bits,
+        /// 4 ML overflows for an ML above 536,870,911 days, and the activity then took 0 days. The result is not more than the
+        /// largest estimate, and so it fits in 32 bits. A duration above the limit of the compiler then gives P0080.
         /// </remarks>
         public static int ExpectedDuration(int optimistic, int mostLikely, int pessimistic)
         {
-            return (optimistic + (4 * mostLikely) + pessimistic + 3) / 6;
+            return (int)((optimistic + (4L * mostLikely) + pessimistic + 3) / 6);
         }
 
         /// <summary>

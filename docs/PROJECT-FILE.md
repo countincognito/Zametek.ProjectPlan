@@ -64,8 +64,13 @@ This plan has one scenario with three activities in a chain:
 An activity has three estimates of its duration, in working days: `OptimisticDuration` (O), `MostLikelyDuration` (ML) and `PessimisticDuration` (P). The compiler schedules the expected duration, (O + 4 × ML + P + 3) / 6, in whole days. `Duration` holds the expected duration.
 
 - An activity with no `MostLikelyDuration` has `Duration` as its most likely duration.
+
 - An activity with no `OptimisticDuration` or no `PessimisticDuration` has ML in its place. An activity with only ML has no uncertainty, and its duration is ML.
-- An optimistic duration above ML is ML, and a pessimistic duration below ML is ML. A most likely duration below 0 is 0.
+
+- An optimistic duration above ML is ML, and a pessimistic duration below ML is ML. A most likely duration below 0 is 0. The schema gives each duration and each time of an activity a minimum of 0, because a value below 0 is probably a mistake.
+
+- A duration above 100,000 days does not compile (`P0080`).
+
 - `zpp` calculates `Duration` again when it reads the file. Thus, set `MostLikelyDuration`. When an activity has `MostLikelyDuration`, a change to `Duration` alone changes nothing. A plan that has no estimates can set `Duration` and leave out the estimates.
 
 ## The values that zpp calculates
@@ -74,7 +79,7 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - In an activity: `Duration`, `EarliestStartTime`, `LatestFinishTime`, `FreeSlack` and `AllocatedToResources`.
 - In a dependent activity: `ResourceDependencies` and `Successors`.
-- In a scenario: `Metrics` and `ResourceMetrics`.
+- In a scenario: `EffectiveProjectStart`, `Metrics` and `ResourceMetrics`.
 
 `SimulationSummary` is the result of the last run of the simulation. A scenario without it has no result. Refer to [Simulate the schedule](COMMAND-LINE.md#simulate-the-schedule).
 
@@ -82,7 +87,60 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 ## Times and constraints
 
-- A time of an activity is a number of working days from `ProjectStart`. The calendar of the scenario gives the working days.
-- `MinimumEarliestStartTime` is the earliest day on which an activity can start. `MinimumEarliestStartDateTime` gives the same constraint as a date. When an activity has both, the date takes the place of the number.
-- `MaximumLatestFinishTime` and `MaximumLatestFinishDateTime` are the latest day by which an activity must finish, with the same rule.
-- A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. An id of a node is a GUID. An id of an activity, a resource or a work stream is a whole number.
+- A time of an activity is a number of working days from the effective start. The effective start is the first working day on `ProjectStart` or after it. Day 0 is the effective start, and day n is the nth working day after it. The calendar of the scenario gives the working days (refer to [The calendar](#the-calendar)).
+
+- `ProjectStart` is the start that you give, and `zpp` does not change it. `zpp` writes the effective start as `EffectiveProjectStart`, and it calculates it again when it reads the file. The metrics also give it: `projectStartDate` in the API, and `ProjectStartDate` in `zpp --metrics-format json`. Thus, with weekends, a plan that starts on a Saturday does its first day of work on the Monday after it.
+
+- A change to the calendar can move the effective start. For example, a holiday on `ProjectStart` moves it to the next working day. When the holiday goes, the effective start goes back to `ProjectStart`.
+
+- An activity that starts at time n and has a duration of d days does its work on days n to n + d − 1. Its finish time is n + d, which is the start of the day after its last day of work.
+
+- `MinimumEarliestStartTime` is the earliest day on which an activity can start. `MinimumEarliestStartDateTime` gives the same constraint as the date of that day. When an activity has both, the date takes the place of the number.
+
+- `MaximumLatestFinishTime` is the latest finish time of an activity. `MaximumLatestFinishDateTime` gives it as a date: the date of the first day after the last day of work. For example, with weekends, to let an activity finish its work on Friday 2027-01-15, give Monday 2027-01-18. `UseClassicDates` does not change this, because it changes only how the application and `zpp` show the date of a finish. When an activity has both, the date takes the place of the number.
+
+- A constraint date that is not a working day counts as the next working day.
+
+- An activity cannot have both `MinimumFreeSlack` and a maximum latest finish: the compile then gives `P0030`. The compile also gives `P0030` when the minimum earliest start and the duration go past the maximum latest finish. Refer to [the codes of the compiler](API.md#codes-of-the-compiler).
+
+- A date is an ISO 8601 date and time with its offset from UTC, for example `2026-11-02T00:00:00+00:00`. A date of a plan is a day: `zpp` and the application use the day that the date shows, in its own offset. Thus, `2027-01-04T00:00:00+14:00` and `2027-01-04T23:30:00-05:00` are both 4 January. The time zone of the computer does not change the day, and the time of the day does not change it either. A save keeps the day of each date, but it can write the date with a different offset.
+
+- The times of the nodes (`CreatedOn` and `ModifiedOn`) are moments, and the schedule does not use them. An id of a node is a GUID. An id of an activity, a resource or a work stream is a whole number.
+
+## What zpp checks before the load
+
+`zpp` and `zpp serve` check a plan before they load it. They refuse a plan that has one of these problems. `zpp` then gives exit code 1, with one line for each problem on its standard error stream. `zpp serve` gives `422` `project-not-readable`, with each problem at its place in the project.
+
+- `required`: the scenario that the plan loads has no `ProjectStart`.
+
+- `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`.
+
+- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7.
+
+- `duplicateId`: two activities, two resources or two work streams of the scenario have the same `Id`.
+
+- `hasNoData`: the plan has nodes, but `Files` has no item for the scenario that the plan loads (refer to [The tree of scenarios](#the-tree-of-scenarios)).
+
+The check looks at the scenario that the plan loads, and at the nodes and the display settings of the project. A tracked scenario that the check refuses does not compile, and it has no metrics.
+
+The check also finds the ids that match nothing. These are a target resource that no resource has, and a target work stream or a phase that no work stream has. The load ignores such an id. Thus, an activity with a target resource that does not exist can go to any resource. The plan loads, and `zpp` writes a warning for each id on its standard error stream. `zpp serve` gives them in `warnings`, with the code `notFound`.
+
+The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it.
+
+## The calendar
+
+`NonWorkingDayMode` in the `DisplaySettings` of a scenario selects the days that are not working days:
+
+- `0` (`None`): each day is a working day. A scenario that does not give the mode has this mode.
+
+- `1` (`Weekends`): Saturday and Sunday are not working days. The holidays of the scenario have no effect.
+
+- `2` (`CustomCalendar`): only the holidays in the `HolidaySettings` of the scenario are not working days. Thus, the weekends are working days, unless a holiday makes them days off. The default holidays of the application have a holiday for the weekends (`FREQ=WEEKLY;BYDAY=SA,SU`), Christmas Day and New Year's Day.
+
+A holiday has a `RecurrencePattern`, which is a recurrence rule of iCalendar (RFC 5545). Its rule starts on its `StartDateTime`, or on `ProjectStart` when it has no `StartDateTime`. A holiday of one day has its date as `StartDateTime` and the rule `FREQ=DAILY;COUNT=1`.
+
+The compile gives `P0080` when the calendar cannot give the dates of the plan:
+
+- The calendar has no working day in the 366 days from `ProjectStart`. For example, a holiday with the rule `FREQ=DAILY` and no `COUNT` or `UNTIL` makes each day a day off.
+
+- Before the schedule finishes, the calendar has more than 366 days in a row that are not working days.

@@ -195,6 +195,86 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Where(problem).ShouldBe([@"#/import unreadable"]);
         }
 
+        // The load of the first four plans failed with an exception, and the answer was 500 (B8 of the stress test of
+        // 0.11.0-beta.1). The last two loaded, and gave a result that the plan does not say (A5 and A7). The check before the
+        // load gives each problem, with its place in the project.
+        [Theory]
+        [InlineData(@"no start", @"#/project/Files/0/Scenario/ProjectStart required")]
+        [InlineData(@"a date in 9999", @"#/project/Files/0/Scenario/DependentActivities/0/Activity/MaximumLatestFinishDateTime outOfRange")]
+        [InlineData(@"two resources with one id", @"#/project/Files/0/Scenario/ResourceSettings/Resources/2/Id duplicateId")]
+        [InlineData(@"a mode that does not exist", @"#/project/Files/0/Scenario/DisplaySettings/NonWorkingDayMode notAllowed")]
+        [InlineData(@"two activities with one id", @"#/project/Files/0/Scenario/DependentActivities/1/Activity/Id duplicateId")]
+        [InlineData(@"no data", @"#/project/Files hasNoData")]
+        public async Task Compile_Given_APlanThatTheCheckBeforeTheLoadRefuses_Then_UnprocessableWithThePlaceOfEachProblem(string change, string expected)
+        {
+            byte[] plan = TwoScenarios(project =>
+            {
+                var alpha = (JObject)project[@"Files"]![0]![@"Scenario"]!;
+                switch (change)
+                {
+                    case @"no start":
+                        alpha.Remove(@"ProjectStart");
+                        break;
+                    case @"a date in 9999":
+                        alpha[@"DependentActivities"]![0]![@"Activity"]![@"MaximumLatestFinishDateTime"] = @"9999-12-31T00:00:00+00:00";
+                        break;
+                    case @"two resources with one id":
+                        alpha[@"ResourceSettings"] = JObject.Parse(@"{ ""Resources"": [ { ""Id"": 1 }, { ""Id"": 2 }, { ""Id"": 1 } ] }");
+                        break;
+                    case @"a mode that does not exist":
+                        alpha[@"DisplaySettings"]![@"NonWorkingDayMode"] = 7;
+                        break;
+                    case @"two activities with one id":
+                        ((JArray)alpha[@"DependentActivities"]!).Add(JObject.Parse(@"{ ""Activity"": { ""Id"": 1, ""Duration"": 2 } }"));
+                        break;
+                    case @"no data":
+                        project[@"Files"] = new JArray();
+                        break;
+                }
+            });
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(plan, query: @"?include=console");
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.ProjectNotReadable));
+            Where(problem).ShouldBe([expected]);
+            problem.Console.ShouldNotBeNull().ExitCode.ShouldBe((int)ExitCode.Failure);
+        }
+
+        [Fact]
+        public async Task Compile_Given_AMultipartBodyWithNoClosingBoundary_Then_BadRequestAndTheServerGoesOn()
+        {
+            // The reader of the parts threw an IOException, and the answer was 500 (B8 of the stress test of 0.11.0-beta.1).
+            using ByteArrayContent content = RunningServer.RawMultipart(@"cut", closed: false, (@"project", @"plan.zpp", TwoScenarios()));
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.MalformedRequest));
+            Where(problem).ShouldBe([@"# invalidFormat"]);
+
+            // The server answers the next request.
+            using var next = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            using HttpResponseMessage answer = await Server.Client.PostAsync(@"/v1/projects/compile", next);
+            answer.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task Compile_Given_TwoProjectParts_Then_UnprocessableNamingThePart()
+        {
+            // The server compiled the first part and ignored the second (C14 of the stress test of 0.11.0-beta.1). A second
+            // part is probably a mistake of the client.
+            using var content = RunningServer.CompileContent(TwoScenarios(), @"one.zpp");
+            content.Add(new ByteArrayContent(TwoScenarios()), @"project", @"two.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            Where(problem).ShouldBe([@"#/project notAllowed"]);
+        }
+
         [Fact]
         public async Task ListScenarios_Given_AFileThatIsNotAProject_Then_Unprocessable()
         {

@@ -95,8 +95,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 with.CaseInsensitiveEnumValues = true;
                 with.HelpWriter = null;
 
-                // This needs to be included to prevent the --version option.
-                with.AutoVersion = false;
+                // As for zpp, --version prints the name and the version of zpp (see Program.OnParseErrors).
+                with.AutoVersion = true;
 
                 // So that --listen can be given more than once.
                 with.AllowMultiInstance = true;

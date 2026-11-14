@@ -2,11 +2,71 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Save a date of year 1 with one offset on each system** *(2026-11-12, from the smoke test of v0.11.0-alpha)*
+- [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 
-  On Linux, `zpp` saves a placeholder date of year 1 as `0001-01-01T00:00:00-00:01`. On Windows, it saves the same date as `0001-01-01T00:00:00+00:00`. A plan that a program writes can have such dates in the `CreatedOn` and `ModifiedOn` of its nodes, as the test plans have. The smoke test of v0.11.0-alpha found the difference on 2026-11-06, and on 2026-11-12 Windows still wrote `+00:00`.
+  Since 0.11.0-beta.1, the effort series no longer reads each activity for each resource on each day. The series of 1500 activities and 500 resources took 34 seconds and 38 GB of allocations, and it now takes 1.3 seconds and 278 MB. A job of that plan now takes 9 seconds, and not 60. The rest of this entry is from before the change. Measure it again, and then decide what to bound. A job still builds each output of the cascade two times (refer to the entry about the two compiles of a job).
 
-  The cause is probably a change to the local time zone. For London in year 1, the time zone data of Linux gives the local mean time (−00:01:15). Windows has no rules before its first rule. Real dates are the same on the two systems. Thus, the difference is harmless, but two computers save two different files from one plan. Find where a date of year 1 becomes a local date, and keep the offset that the file has.
+  The test compiles one network of 1500 activities with 10, 50, 100, 200 and 500 developers, on a server with no other jobs. The jobs take 5.4, 7.8, 13.1, 21.6 and 51.5 seconds. Each job adds 107, 107, 108, 161 and 740 MB to the memory of the server. The compile limit does not stop this work. With a `compileTimeout` of PT5S, the plan with 200 developers gets 200 after 25 seconds. With PT1S, it gets `compilation-timed-out` after 3.9 seconds.
+
+  At the limits of the compiler (2000 activities and 1000 resources), one job takes 214 seconds, and the server uses 2.9 GB at the peak. With the default job limit of 120 seconds, the job fails after it holds the memory for two minutes. Thus, four such jobs at one time can use 12 GB. Find the work that grows with the activities and the resources. The allocation streams of each resource are one possible cause: they have one value for each day. Then bound the work: make it smaller, put it under the compile limit, or give the server a limit of memory.
+
+  The Linux test of the same day measured the job at the limits after the change. It took 15 seconds on Windows, and 17.6 seconds on Linux (WSL, 2 processors). But the server used 4.5 GB at the peak on Windows (3.5 GB on Linux), and it kept 3.4 GB after the job.
+
+  In the stress test, a long run of 440 jobs gave its memory back. Thus, this is probably the garbage collector, which keeps its heap. By default, the server runs as many jobs at one time as the computer has processors. Thus, on a computer with 2 processors and 8 GB, two such jobs fill the memory. Measure the job with `DOTNET_GCConserveMemory` or with a limit of the heap, together with point 5 of the entry "Package `zpp serve`".
+
+- [ ] **Stop the cache of non-working days from taking a gap as known** *(2026-11-13, found during the fix of a constraint date on a non-working day)*
+
+  `AppendNonWorkingDays` in `DateTimeCalculator` searches the non-working days of a range. Then it makes the known span reach the range. When the range does not touch the span, the days between them become known, but the method did not search them. Their non-working days then count as working days. The first fix of a constraint date on a non-working day checked the date before it counted from the project start. Then a minimum earliest start of 220 became 306.
+
+  The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time (refer to the entry about the five inputs that give 500).
+
+- [ ] **When the schedule counts hours, store the times of a plan without an offset** *(2026-11-13, a decision of the maintainer)*
+
+  Since 0.11.0-beta.1, a date of a plan is the day that it shows, in its own offset (a70c2e1c). The schedule counts whole days, so the time of the day and the offset have no effect. The file keeps a `DateTimeOffset` for each date, and the code must not read such a value as a moment. A plain date (`DateOnly`) was another option, but it removes the time of the day, which hours need.
+
+  If the schedule counts hours one day, keep the dates and the times, and remove the offset. Store each time of the plan as the time on the clock of the plan, for example `2027-01-04T09:00:00`. Do this in one change of the version of the file, as for the entry about `Duration`. A working day of 09:00 to 17:30 then stays 09:00 to 17:30 in each time zone. A change of the clock does not move it either.
+
+  The version of the file tells the migration that the earlier times have no meaning, so it keeps only their dates. Hours that a person works on a day do not need this change, because a tracker counts them for a day. A log of work as moments, with a start and a stop from a clock, needs a time zone of the plan. The zone puts each moment on a day and an hour of the plan.
+
+- [ ] **Build with the .NET 11 SDK** *(2026-11-13, found when CI failed)*
+
+  `global.json` keeps the build on .NET 10, with the newest .NET 10 SDK of the computer. On 2026-11-13, CI failed in the build of `Zametek.ViewModel.ProjectPlan`. The task `MavenReferenceItemResolve` of IKVM.Maven.Sdk 1.12.1 failed with `MSB4217` ("Task host node exited prematurely") and `MSB4027` (a disposed `MetadataLoadContext`). IKVM.Maven.Sdk runs its tasks in a task host (`TaskHostFactory`).
+
+  The image of the runner, version 20261111, added the .NET 11 SDK (11.0.100), and nothing pinned the SDK. Before the move to .NET 11, find a version of IKVM.Maven.Sdk that works with the MSBuild of .NET 11, or report the problem to ikvmnet. Then change `global.json`.
+
+- [ ] **Install the MSI of the final 0.11.0 over a 0.11.0 pre-release** *(2026-11-12, do before the final 0.11.0)*
+
+  Each MSI of 0.11.0 has the version 0.11.0.0: the alpha, the beta and the final release. Since 0.11.0-beta.1, `<MajorUpgrade>` in `pkg/Zametek.ProjectPlan.MsiPackager/Package.wxs` has `AllowSameVersionUpgrades="yes"`. Thus, the MSI removes an installed product of the same version. The Upgrade table of an MSI that was built from beta.1 shows it. Its row that removes the earlier versions has the attributes 513, which include the maximum of 0.11.0.0. The MSI of the beta had 1.
+
+  On 2026-11-12, the maintainer removed the MSI files of v0.11.0-alpha and v0.11.0-beta from their releases, and the next pre-releases have no MSI. But a user who installed one of these MSI files has 0.11.0.0. Before the final release, install its MSI over the beta, and make sure that the installed apps show one entry.
+
+- [ ] **Let the export to Excel take a resource tracker with two entries for one activity** *(2026-11-13, found during the fix of B10)*
+
+  A resource tracker can have two entries for one activity on one day. Then `zpp -x` fails with exit code 1, and the message is "An item with the same key has already been added". The application does not write such a tracker, but a program can. The tracking series adds the two entries. Add them in the export too, or refuse such a tracker in the check before the load (`duplicateId`).
+
+- [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
+
+  `outputs.data` writes `-resources.csv`, with one row for each resource on each day. It has no total for each day. The Excel export has this total, in the column `Total` of the sheet "Resource Chart (Activity)". Add the headcount for each day to the data output. For example, add a file `-headcount.csv` with the columns `Time` and `Headcount`.
+
+  The CSV has the data now: on each day, count the rows where `Allocated` is `true`. On `docs/assets/sample.zpp`, this count is the same as the column `Total` on each of the 210 days, and its maximum is the `PeakHeadcount` of 10. But the sheet "Resource Chart (Activity)" counts the column `Allocated`, not the column `Activity`. A count of `Activity` gives a different curve, with a maximum of 6. Thus, the file is a convenience, and it also prevents a count of the wrong column.
+
+- [ ] **Suggestion: let the scheduler prefer task continuity** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
+
+  The priority list gives an activity to the first free resource in the allocation order. Righting Software also asks for task continuity. When activity A depends on activity B, the developer of B also does A. That developer knows the context, and has a stake in B.
+
+  In the worked example of the zpp skill, the developer of Claims Store stops on day 50. Then `zpp` gives ClaimsAccess, which depends on Claims Store, to the developer of Security on day 55. The book keeps the developer of Claims Store, who then waits for 5 days. Thus, the schedule of `zpp` costs 5 person-days less, and the schedule of the book keeps the continuity.
+
+  An option of the scenario can make the scheduler prefer a free resource that did a predecessor of the activity. It must be an option, because it can add idle days.
+
+  The priority list is in the library Zametek.Maths.Graphs (`PriorityListResourceScheduler`, and `scheduling/scheduler.rs` in Rust). Thus, the change starts in the library. Today, `TargetResources` can keep an activity on one resource, but the user must set it on each activity.
+
+- [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
+
+  The chart SVG files (Gantt, resource, earned value, scenario and simulation) do not contain the font Inter. Windows 11 does not install Inter. Until 2026-11-12, the SVG named only `Inter`, and thus Microsoft Edge showed the text in its default serif font. Now each text names fallback fonts after Inter (`ChartFonts.SvgFontFamilies`), and Edge shows the text in Segoe UI.
+
+  But the SVG gives the position of each letter from the measurements of Inter, for example `x="0, 8.897727"`. Thus, with a fallback font, the spaces between the letters are not regular. For example, Edge shows "Requirements & Architecture" as "Requirements &Architecture".
+
+  To show the text exactly as the PNG does, put Inter into the SVG with `@font-face`. Each file then becomes larger by the size of the font, unless the export keeps only the letters that the chart uses. Skia can change text to paths in an SVG, but SkiaSharp does not give access to this option (checked in 3.119.4 and 4.148.0).
 
 - ~~**Suggestion: tell how far a plan misses its deadline**~~ DECLINED on 2026-11-12. *(2026-11-11, a suggestion from the design of the zpp skill)*
 
@@ -374,6 +434,8 @@ This file lists the maintainer-internal engineering intents that must version wi
   4. **The probes.** `/health/live` is for liveness. `/health/ready` is for readiness, and it comes a few seconds after the start-up, when the warm-up is complete.
   5. **The garbage collector.** `zpp` runs the workstation GC. Measure the server GC (`DOTNET_gcServer=1` in the image or in the environment of the service) with a long test of 1,000 jobs before you choose.
   6. **The size of the image.** It carries MPXJ and the Java runtime image of IKVM, although the server refuses MS Project imports. `Zametek.ViewModel.ProjectPlan` references MPXJ.Net. If the importer moves to an assembly of its own, the image can leave them out.
+
+  The packaging must also give the single file a folder. At its first start, the single file unpacks approximately 250 MB into `~/.net/zpp/<hash>`. A service without a home folder cannot write there, for example a systemd unit with `ProtectHome` or `DynamicUser`. Then `zpp` stops with the exit code 159. Set `DOTNET_BUNDLE_EXTRACT_BASE_DIR` in the image and in each unit (refer to [The single file](COMMAND-LINE.md#the-single-file)).
 
   CI must build and test on Windows, Linux and macOS. It needs exact golden files for the data outputs and the graph SVGs on all platforms. It needs exact golden files for the other outputs on the platform of the image. On other platforms, it needs a perceptual tolerance.
 

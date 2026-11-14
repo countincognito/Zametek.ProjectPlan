@@ -2,6 +2,7 @@ using Dock.Model.Core;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using Xunit;
@@ -174,6 +175,35 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Project.TitleRevision.ShouldBe(int.MinValue);
             harness.Main.ProjectTitle.ShouldStartWith(@"plan - ");
         }
+
+        [Fact]
+        public void WorkStart_Given_AStartThatIsNotAWorkingDay_Then_TheNoteGivesTheFirstWorkingDay()
+        {
+            // 2023-04-29 is a Saturday, and 2023-05-01 is the Monday after it.
+            DateTimeOffset saturday = Local(new DateTime(2023, 4, 29));
+            DateTimeOffset monday = Local(new DateTime(2023, 5, 1));
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = Harness.Make();
+            harness.Main.StartSubscriptions();
+            Drain(main, pool);
+            harness.Core.DisplaySettingsViewModel.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            harness.Main.ProjectStart = saturday;
+            Drain(main, pool);
+
+            // The picker keeps the start that the user gave, and the note gives the day on which the work starts.
+            harness.Main.ProjectStart.ShouldBe(saturday);
+            harness.Main.WorkStart.ShouldBe(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Labels.Label_WorkStartsOn, monday.DateTime));
+
+            harness.Main.ProjectStart = monday;
+            Drain(main, pool);
+
+            harness.Main.WorkStart.ShouldBeEmpty();
+        }
+
+        private static DateTimeOffset Local(DateTime date) => new(date, TimeZoneInfo.Local.GetUtcOffset(date));
 
         // The path of a project file in a folder, made with the separator of the platform that runs the test. The title is the
         // name of the file without its folder, and on Linux a backslash does not end a folder: a path written as C:\plans\plan.zpp

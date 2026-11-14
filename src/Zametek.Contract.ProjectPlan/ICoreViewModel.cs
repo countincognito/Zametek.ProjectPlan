@@ -15,7 +15,12 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasStaleOutputs { get; set; }
 
-        DateTimeOffset ProjectStart { get; set; }
+        // The start that the user, the file or an import gives. The file keeps it as ProjectStart.
+        DateTimeOffset RequestedProjectStart { get; set; }
+
+        // Day 0 of the schedule: the first working day on RequestedProjectStart or after it. Each count of days and each
+        // date of the plan starts from it.
+        DateTimeOffset ProjectStart { get; }
 
         DateTimeOffset Today { get; set; }
 

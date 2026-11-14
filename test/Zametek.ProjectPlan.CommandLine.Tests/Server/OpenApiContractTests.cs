@@ -611,7 +611,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 Percentiles = [new SimulationPercentileResponse(5, 1, new DateOnly(2024, 1, 1))],
                 MissedMaximumLatestFinishTimes = [new SimulationMissedMaximumResponse(2, @"End", 1)],
             };
-            var tracked = new TrackedScenarioResponse(@"Plans > Beta", Guid.Empty, false, metrics);
+            var tracked = new TrackedScenarioResponse(@"Plans > Beta", Guid.Empty, false, metrics, [new TrackedScenarioErrorResponse(@"P0010", @"d")]);
             var curveFit = new CurveFitResponse(1.0, [0.0, 1.0], [1.0]);
             var point = new ScenarioChartPointResponse(Guid.Empty, @"Alpha", 5.0, 5.0);
             var series = new ScenarioChartSeriesResponse(@"networkDuration", CurveFittingType.Linear, false, [point], curveFit);
@@ -643,7 +643,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Names(Schema(@"ScenariosResponse")).ShouldBe(Names(new ScenariosResponse([], console), written), ignoreOrder: true);
             Names(Schema(@"TrackedScenario")).ShouldBe(Names(tracked, written), ignoreOrder: true);
             Schema(@"TrackedScenario")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(tracked, written), ignoreOrder: true);
-            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [tracked], scenarioChart, [output], console), written), ignoreOrder: true);
+            Names(Schema(@"CompileResponse")).ShouldBe(Names(new CompileResponse(metrics, simulation, [tracked], scenarioChart, [output], [error], console), written), ignoreOrder: true);
+            Names(Schema(@"TrackedScenarioError")).ShouldBe(Names(tracked.Errors[0], written), ignoreOrder: true);
+            Schema(@"TrackedScenarioError")[@"required"]!.AsArray().Select(x => x!.GetValue<string>()).ShouldBe(Names(tracked.Errors[0], written), ignoreOrder: true);
 
             // The data of the scenario chart. An axis of Y and the fit of an axis can be missing.
             Names(Schema(@"ScenarioChart")).ShouldBe(Names(scenarioChart, written), ignoreOrder: true);
@@ -667,6 +669,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problemNames.ShouldBe(Names(problem, written), ignoreOrder: true);
 
             Schema(@"Metrics")[@"properties"]![@"projectFinishDate"]![@"format"]!.GetValue<string>().ShouldBe(@"date");
+            Schema(@"Metrics")[@"properties"]![@"projectStartDate"]![@"format"]!.GetValue<string>().ShouldBe(@"date");
         }
 
         [Fact]

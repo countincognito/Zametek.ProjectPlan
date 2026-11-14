@@ -193,7 +193,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (datesFromStart.ShowDates)
             {
-                sheet.Date(row, column, datesFromStart.DateTimeCalculator.AddDays(datesFromStart.ProjectStart, time).DateTime, dateStyle);
+                // A whole day: a date of a plan is a day, and a time of the day in its start does not reach the cell.
+                sheet.Date(row, column, datesFromStart.DateTimeCalculator.AddDays(datesFromStart.ProjectStart, time).Date, dateStyle);
             }
             else
             {
@@ -273,7 +274,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     sheet.Date(row, column, x, dateStyle);
                     break;
                 case DateTimeOffset x:
-                    sheet.Date(row, column, x.DateTime, dateStyle);
+                    // The day that the date shows, in its own offset, as a whole day.
+                    sheet.Date(row, column, x.Date, dateStyle);
                     break;
                 case IEnumerable x:
                     sheet.Text(row, column, string.Join(DependenciesStringValidationRule.Separator, x.Cast<object>().Select(y => y.ToString())), style);
@@ -840,6 +842,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             using var workbook = new XlsxWorkbookWriter();
 
+            // The schedule counts its days from the effective start: the first working day on the start that the plan asks
+            // for, or after it. The sheet of the general settings keeps the start that the plan asks for.
+            DateTimeOffset scheduleStart = projectScenario.EffectiveProjectStart ?? projectScenario.ProjectStart;
+
             WriteGeneralToWorkbook(
                 projectScenario,
                 workbook);
@@ -856,7 +862,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.DependentActivities,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteItemsToWorkbook(
@@ -889,7 +895,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteResourceTrackersToWorkbook(
@@ -897,7 +903,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.ResourceSettings.Resources,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
@@ -907,7 +913,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartActivity,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
@@ -917,7 +923,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCost,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
@@ -927,7 +933,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartEffort,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteEarnedValueChartToWorkbook(
@@ -935,7 +941,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetEarnedValueChartPlan,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteEarnedValueChartToWorkbook(
@@ -943,7 +949,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetEarnedValueChartEffort,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             WriteEarnedValueChartToWorkbook(
@@ -951,7 +957,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetEarnedValueChartProgress,
                 workbook,
                 showDates,
-                projectScenario.ProjectStart,
+                scheduleStart,
                 m_DateTimeCalculator);
 
             // The simulation: only a scenario that has settings of its own, or a result, has the sheets.

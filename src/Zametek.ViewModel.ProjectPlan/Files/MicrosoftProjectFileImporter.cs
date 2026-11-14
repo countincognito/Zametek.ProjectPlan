@@ -51,8 +51,31 @@ namespace Zametek.ViewModel.ProjectPlan
             yield return parentTask;
         }
 
+        // A duration of zpp is a whole number of working days. MS Project gives each duration in a unit of its own, and MPXJ
+        // converts it to days with the plan's own hours to a day, hours to a week and days to a month. The importer took the
+        // number in its unit as days: 40 hours became 40 days, and 1 week 1 day. A part of a day takes the whole day, so that
+        // a task with work never becomes a milestone. The conversion can leave a trace of rounding, which goes first: 40 hours
+        // are 5 days, and not a little more.
+        private static int ToWorkingDays(
+            Duration? duration,
+            ProjectProperties? properties)
+        {
+            if (duration is null)
+            {
+                return 0;
+            }
+
+            // A percent is not a time, and a plan without properties has no units to convert with.
+            double days = duration.Units is TimeUnit.Days or TimeUnit.Percent or TimeUnit.ElapsedPercent || properties is null
+                ? duration.DurationValue
+                : duration.ConvertUnits(TimeUnit.Days, properties).DurationValue;
+
+            return Convert.ToInt32(Math.Ceiling(Math.Round(days, 6)));
+        }
+
         private static DependentActivityModel? ConvertTask(
             MPXJ.Net.Task mpxjTask,
+            ProjectProperties? properties,
             TimeSpan projectStartOffset)
         {
             int id = mpxjTask.ID ?? default;
@@ -61,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return null;
             }
 
-            int duration = Convert.ToInt32(mpxjTask.Duration.DurationValue);
+            int duration = ToWorkingDays(mpxjTask.Duration, properties);
 
             DateTimeOffset? minimumEarliestStartDateTime = null;
             if (mpxjTask.ConstraintType == ConstraintType.StartNoEarlierThan)
@@ -222,7 +245,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     mpxjTask.Duration = Duration.GetInstance(0.0, TimeUnit.Days);
                 }
 
-                DependentActivityModel? dependentActivity = ConvertTask(mpxjTask, projectStartOffset);
+                DependentActivityModel? dependentActivity = ConvertTask(mpxjTask, props, projectStartOffset);
 
                 if (dependentActivity is not null)
                 {

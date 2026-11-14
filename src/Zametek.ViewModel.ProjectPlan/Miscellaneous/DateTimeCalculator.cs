@@ -33,6 +33,22 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly HashSet<DateOnly> m_NonWorkingDays;
         private const int c_NonWorkingDaysSearchBuffer = 30;
 
+        // Whether the last count of AddNonWorkingDays met a run of more days off than MaximumNonWorkingRun.
+        private bool m_LastCountMetLongRun;
+
+        /// <summary>
+        /// The longest run of days that are not working days that the calendar can have. A count that meets a longer run
+        /// takes the next day as a working day, so that it ends: a calendar with no working day, for example a custom
+        /// calendar with a holiday on each day, would otherwise make it search without end. The compile of a plan fails
+        /// (P0080) when its calendar has such a run.
+        /// </summary>
+        public const int MaximumNonWorkingRun = 366;
+
+        // The search for a working day stays between these dates. A date at an end of the range of the dates of .NET has
+        // no day before it to compare with, or no run of days after it to search.
+        private static readonly DateTime s_FirstSearchableDate = DateTime.MinValue.AddDays(2);
+        private static readonly DateTime s_LastSearchableDate = DateTime.MaxValue.AddDays(-(MaximumNonWorkingRun + 2));
+
         #endregion
 
         #region Ctors
@@ -146,13 +162,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 int unsignedDays = Math.Abs(days);
 
                 int count = 0;
+                int run = 0;
+                m_LastCountMetLongRun = false;
                 while (count < unsignedDays)
                 {
                     current = current.AddDays(sign);
 
                     // If we have moved out of the range of already calculated non-working days,
-                    // then calculate more non-working days.
-                    if (current.IsAfterOrOn(NonWorkingDaysFinish))
+                    // then calculate more non-working days. The range is days, as each date of a plan is.
+                    if (current.Date >= NonWorkingDaysFinish.Date)
                     {
                         AppendNonWorkingDays(
                             current.Date,
@@ -163,6 +181,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
                     {
                         count += 1;
+                        run = 0;
+                    }
+                    else if (run >= MaximumNonWorkingRun)
+                    {
+                        // A run of days off this long has no end in a plan: take the day as a working day, so that
+                        // the count ends, and say so (see TryAddDays).
+                        m_LastCountMetLongRun = true;
+                        count += 1;
+                        run = 0;
+                    }
+                    else
+                    {
+                        run += 1;
                     }
                 }
                 return current;
@@ -176,22 +207,28 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (current.IsAfter(toCompareWith))
+                // A date of a plan is the day that it shows, in its own offset (PROJECT-FILE.md). Thus, the count compares
+                // days, and not moments: two dates with different offsets can be a day apart as days, and less or more
+                // than a day apart as moments.
+                DateTime day = current.Date;
+                DateTime lastDay = toCompareWith.Date;
+
+                if (day > lastDay)
                 {
                     return -CountNonWorkingDays(toCompareWith, current, nonWorkingDayCalendarEvents);
                 }
 
                 AppendNonWorkingDays(
-                    current.Date,
-                    toCompareWith.Date,
+                    day,
+                    lastDay,
                     nonWorkingDayCalendarEvents: nonWorkingDayCalendarEvents);
 
                 int count = 0;
-                while (current.IsBefore(toCompareWith))
+                while (day < lastDay)
                 {
-                    current = current.AddDays(1);
+                    day = day.AddDays(1);
 
-                    if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
+                    if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(day)))
                     {
                         count += 1;
                     }
@@ -469,9 +506,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 DateTimeOffset? result = input;
                 if (result.HasValue)
                 {
-                    if (result < projectStart)
+                    // A day before the start is the start. Days, and not moments, as each date of a plan is a day.
+                    if (result.GetValueOrDefault().Date < projectStart.Date)
                     {
-                        result = GetLocal(projectStart.DateTime);
+                        result = projectStart;
                     }
                     result = new DateTimeOffset(result.GetValueOrDefault().Date + projectStart.TimeOfDay, projectStart.Offset);
                 }
@@ -657,11 +695,27 @@ namespace Zametek.ViewModel.ProjectPlan
             return new(today, m_TimeProvider.LocalTimeZone.GetUtcOffset(today));
         }
 
+        // The time on the clock, in the time zone of this calculator's clock. A time of the kind Local took the offset of the
+        // computer, and .NET refused any other: the time is the time on the clock, whatever its kind.
         public DateTimeOffset GetLocal(DateTime dateTime)
         {
-            var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
-            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(localDateTime);
-            return new(localDateTime, offset);
+            var clockTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(clockTime);
+
+            // A time at an end of the range of .NET can have no moment at the offset of the zone. For example, a plan that
+            // gives no Today has 0001-01-01, and a zone east of UTC in the year 1 (Paris, Tokyo, Sydney) puts it before the
+            // year 1: the load of the plan failed. Such a time stays at offset 0, as in UTC. So does any time in the year 1,
+            // which is a placeholder: west of UTC, the offset of a zone in the year 1 is its local mean time on Linux (-07:53
+            // in Los Angeles), and a save wrote it, so two computers saved two texts for one plan.
+            long utcTicks = clockTime.Ticks - offset.Ticks;
+            if (clockTime.Year == 1
+                || utcTicks < DateTime.MinValue.Ticks
+                || utcTicks > DateTime.MaxValue.Ticks)
+            {
+                offset = TimeSpan.Zero;
+            }
+
+            return new(clockTime, offset);
         }
 
         public (int?, DateTimeOffset?) CalculateTimeAndDateTime(
@@ -698,6 +752,36 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public (int?, DateTimeOffset?) CalculateConstraintTimeAndDateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                // A constraint holds from the start of a working day. The count of the days takes each working day after the
+                // start up to and including the date, so a date that is not a working day counted as the working day before
+                // it: an activity could start a day before its minimum earliest start date, or had to finish a day before its
+                // maximum latest finish date. Thus, such a date counts as the next working day, which is one day more. The
+                // start of the project itself stays day 0, whatever the calendar says of it.
+                //
+                // The count runs first, from the start of the project, as the other counts do: the calendar then knows each
+                // day up to the date. A check of the date alone, before the count, made the calendar take the days between as
+                // known when it had not found their non-working days, and they counted as working days.
+                (int? time, DateTimeOffset? dateTime) = CalculateTimeAndDateTime(projectStart, input);
+                DateTimeOffset? date = CalculateDateTime(projectStart, input);
+
+                if (time.HasValue
+                    && date.HasValue
+                    && date.GetValueOrDefault().Date > projectStart.Date
+                    && IsNonWorkingDay(date.GetValueOrDefault()))
+                {
+                    return CalculateTimeAndDateTime(projectStart, time.GetValueOrDefault() + 1);
+                }
+
+                return (time, dateTime);
+            }
+        }
+
         private Func<DateTimeOffset, int, DateTimeOffset> m_AddDaysFunc;
 
         public DateTimeOffset AddDays(DateTimeOffset startDateTime, int days)
@@ -705,6 +789,17 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 return m_AddDaysFunc(startDateTime, days);
+            }
+        }
+
+        public bool TryAddDays(DateTimeOffset startDateTime, int days, out DateTimeOffset result)
+        {
+            lock (m_Lock)
+            {
+                // None counts each day and so never sets the flag: clear it here for that mode.
+                m_LastCountMetLongRun = false;
+                result = m_AddDaysFunc(startDateTime, days);
+                return !m_LastCountMetLongRun;
             }
         }
 
@@ -722,6 +817,34 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             // CountDays from (date - 1 calendar day) to date returns 0 when date is non-working.
             return CountDays(date.AddDays(-1), date) == 0;
+        }
+
+        public DateTimeOffset? FirstWorkingDayOnOrAfter(DateTimeOffset date)
+        {
+            lock (m_Lock)
+            {
+                // With no non-working days, each day is a working day, and there is nothing to count. A date at an end of the
+                // range, such as the start of a plan that gives none (0001-01-01), stays as it is: it was day 0 before
+                // there was an effective start.
+                if (NonWorkingDayMode == NonWorkingDayMode.None
+                    || date.UtcDateTime < s_FirstSearchableDate
+                    || date.UtcDateTime > s_LastSearchableDate)
+                {
+                    return date;
+                }
+
+                // One day after the other, so that the known span of non-working days grows next to itself.
+                DateTimeOffset day = date;
+                for (int index = 0; index <= MaximumNonWorkingRun; index++)
+                {
+                    if (!IsNonWorkingDay(day))
+                    {
+                        return day;
+                    }
+                    day = day.AddDays(1);
+                }
+                return null;
+            }
         }
 
         private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_DisplayEarliestStartDateFunc;

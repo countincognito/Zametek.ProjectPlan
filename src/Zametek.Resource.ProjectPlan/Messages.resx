@@ -222,6 +222,45 @@
   <data name="Message_UnknownNonWorkingDayMode" xml:space="preserve">
     <value>Unknown NonWorkingDayMode value:</value>
   </data>
+  <data name="Message_PlanActivities" xml:space="preserve">
+    <value>activities</value>
+  </data>
+  <data name="Message_PlanCountExceedsMaximum" xml:space="preserve">
+    <value>The number of {0} is {1}, which exceeds the maximum supported count of {2}</value>
+  </data>
+  <data name="Message_PlanDateTooFarFromStart" xml:space="preserve">
+    <value>must be within {0:N0} days of ProjectStart</value>
+  </data>
+  <data name="Message_PlanDuplicateId" xml:space="preserve">
+    <value>is also the Id of item {0} of this list</value>
+  </data>
+  <data name="Message_PlanHasNoData" xml:space="preserve">
+    <value>has no data for the scenario '{0}', which the plan loads</value>
+  </data>
+  <data name="Message_PlanLimitsExceeded" xml:space="preserve">
+    <value>Values or counts outside the supported limits:</value>
+  </data>
+  <data name="Message_PlanProblemsFound" xml:space="preserve">
+    <value>The plan was not loaded. Problems found in the file: {0}.</value>
+  </data>
+  <data name="Message_PlanResources" xml:space="preserve">
+    <value>resources</value>
+  </data>
+  <data name="Message_PlanWorkStreams" xml:space="preserve">
+    <value>work streams</value>
+  </data>
+  <data name="Message_PlanNotAResource" xml:space="preserve">
+    <value>is not the Id of a resource of the scenario</value>
+  </data>
+  <data name="Message_PlanNotAWorkStream" xml:space="preserve">
+    <value>is not the Id of a work stream of the scenario</value>
+  </data>
+  <data name="Message_PlanWarning" xml:space="preserve">
+    <value>Warning: {0}: {1}</value>
+  </data>
+  <data name="Message_TrackedScenarioDidNotCompile" xml:space="preserve">
+    <value>The tracked scenario '{0}' did not compile:</value>
+  </data>
   <data name="Message_ProjectUnsavedChanges" xml:space="preserve">
     <value>The project has unsaved changes that will be lost. Do you wish to continue without saving?</value>
   </data>
@@ -365,6 +404,12 @@
   </data>
   <data name="Message_MustBeGreaterThanZero" xml:space="preserve">
     <value>{0} must be greater than zero ({1})</value>
+  </data>
+  <data name="Message_CalendarHasNoWorkingDay" xml:space="preserve">
+    <value>The calendar has no working day in the {0} days from {1:d}.</value>
+  </data>
+  <data name="Message_CalendarHasLongRunOfDaysOff" xml:space="preserve">
+    <value>The calendar has more than {0} days in a row that are not working days, before the schedule finishes.</value>
   </data>
   <data name="Message_CannotBothBeSet" xml:space="preserve">
     <value>{0} and {1} cannot both be set</value>
@@ -662,6 +707,9 @@
   </data>
   <data name="Message_ServeErrorPartNotKnown" xml:space="preserve">
     <value>'{0}' is not a part this endpoint takes</value>
+  </data>
+  <data name="Message_ServeErrorPartSentMoreThanOnce" xml:space="preserve">
+    <value>must be sent once</value>
   </data>
   <data name="Message_ServeErrorParameterNotKnown" xml:space="preserve">
     <value>is not a parameter this endpoint takes</value>

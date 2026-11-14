@@ -154,7 +154,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             RevisionCounters.SetCompilationRequestRevision(core, before);
             List<int> raises = RecordRaises(core, nameof(CoreViewModel.CompilationRequestRevision), () => core.CompilationRequestRevision);
 
-            core.ProjectStart = core.ProjectStart.AddDays(1);
+            core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1);
 
             raises.ShouldHaveSingleItem().ShouldBe(after);
             core.CompilationRequestRevision.ShouldBe(after);
@@ -190,7 +190,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             switch (setting)
             {
                 case nameof(ICoreViewModel.ProjectStart):
-                    core.ProjectStart = core.ProjectStart.AddDays(1);
+                    core.RequestedProjectStart = core.RequestedProjectStart.AddDays(1);
                     break;
                 case nameof(ICoreViewModel.GraphSettings):
                     core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;

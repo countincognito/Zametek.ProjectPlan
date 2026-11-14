@@ -25,6 +25,12 @@ namespace Zametek.ViewModel.ProjectPlan
             @"(?<= id=""|clip-path=""url\(#)cl_[0-9a-f]+(?=[""\)])",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+        // The font of a text where Skia's SVG canvas names it (font-family="Inter"). It is an attribute, so no text in a
+        // chart can look like it: its quotes are escaped.
+        private static readonly Regex s_InterFontFamily = new(
+            @"(?<= font-family="")" + Regex.Escape(ChartFonts.FamilyName) + @"(?="")",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
         // Every chart draws in the same two bundled typefaces, and on Windows a typeface cannot be shared
         // while an SVG is written: Skia turns each run of glyphs back into characters for the SVG's text, and
         // under DirectWrite that races with any other thread drawing in the same typeface, leaving the run
@@ -51,7 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void WriteSvg(Plot plot, Stream stream, int width, int height)
         {
-            stream.Write(s_SvgEncoding.GetBytes(WithClipPathsNumberedInOrder(plot.GetSvgXml(width, height))));
+            stream.Write(s_SvgEncoding.GetBytes(WithFallbackFonts(WithClipPathsNumberedInOrder(plot.GetSvgXml(width, height)))));
         }
 
         // Skia numbers the clip paths of every SVG it writes from one counter that lasts as long as the process, so
@@ -69,6 +75,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 return string.Create(CultureInfo.InvariantCulture, $@"cl_{number:x}");
             });
+        }
+
+        // Other programs open the SVG too, and they cannot see the bundled Inter. Named alone, it left a viewer without it to
+        // its default font, which in a browser is a serif font. So each text names the fallbacks after Inter (see
+        // ChartFonts.SvgFontFamilies).
+        internal static string WithFallbackFonts(string svg)
+        {
+            return s_InterFontFamily.Replace(svg, _ => ChartFonts.SvgFontFamilies);
         }
 
         private static void WriteRaster(Plot plot, Stream stream, ImageFormat imageFormat, int width, int height)

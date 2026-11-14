@@ -107,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             using CoreViewModel core = CreateCompiledCore();
             DateOnly before = core.ProjectFinishDate.ShouldNotBeNull();
 
-            core.ProjectStart = core.ProjectStart.AddDays(14);
+            core.RequestedProjectStart = core.RequestedProjectStart.AddDays(14);
 
             core.ProjectFinishDate.ShouldBe(before.AddDays(14));
             core.ProjectFinishDays.ShouldBe(core.NetworkMetrics.Duration);

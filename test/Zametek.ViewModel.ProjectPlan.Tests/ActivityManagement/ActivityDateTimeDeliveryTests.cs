@@ -55,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             Scheduler.CurrentThread.Schedule(() =>
             {
-                core.ProjectStart = s_Tuesday;
+                core.RequestedProjectStart = s_Tuesday;
                 observed = activity.MinimumEarliestStartTime;
             });
 
@@ -119,7 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             CoreViewModel core = CoreViewModelFixture.Create();
 
-            core.ProjectStart = s_Monday;
+            core.RequestedProjectStart = s_Monday;
             core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
             core.AddManagedActivities(
                 [

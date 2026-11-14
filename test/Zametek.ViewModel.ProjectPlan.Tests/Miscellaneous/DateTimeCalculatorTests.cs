@@ -1,6 +1,7 @@
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -243,7 +244,320 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
+        #region CalculateConstraintTimeAndDateTime
+
+        // s_Monday is Monday 2025-06-09. With weekends, day 4 is Friday 2025-06-13 and day 5 is Monday 2025-06-16. The count of
+        // the days takes each working day after the start up to and including the date, so a Saturday counted as the Friday
+        // before it: an activity could start a day before its minimum earliest start date.
+
+        [Theory]
+        [InlineData(14)]
+        [InlineData(15)]
+        public void CalculateConstraintTimeAndDateTime_Given_AWeekendDayWithWeekends_Then_TheMondayAfter(int day)
+        {
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, day, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(5);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 16));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_AWorkingDayWithWeekends_Then_ThatDay()
+        {
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, 13, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(4);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 13));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_ASaturdayWithNoNonWorkingDays_Then_ThatSaturday()
+        {
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.None;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, 14, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(5);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 14));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_AHolidayOfACustomCalendar_Then_TheNextWorkingDay()
+        {
+            // Wednesday 2025-06-11 is a holiday, and the weekends are working days in this calendar: Thursday is day 2.
+            var holiday = new HolidayModel
+            {
+                Id = 1,
+                StartDateTime = new DateTimeOffset(2025, 6, 11, 0, 0, 0, TimeSpan.Zero),
+                RecurrencePattern = @"FREQ=DAILY;COUNT=1",
+            };
+            var calc = CreateCalc();
+            calc.SetNonWorkingDayCalendarEvents([holiday]);
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(s_Monday, new DateTimeOffset(2025, 6, 11, 0, 0, 0, TimeSpan.Zero));
+
+            time.ShouldBe(2);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 12));
+        }
+
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_TheProjectStartOnASaturday_Then_DayNought()
+        {
+            // The start of the project stays day 0, whatever the calendar says of it.
+            var saturday = new DateTimeOffset(2025, 6, 14, 0, 0, 0, TimeSpan.Zero);
+            var calc = CreateCalc();
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(saturday, saturday);
+
+            time.ShouldBe(0);
+            dt.ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 14));
+        }
+
+        #endregion
+
+        #region Dates with different offsets
+
+        // A date of a plan is the day that it shows, whatever its offset (PROJECT-FILE.md). Thus, a count compares days, and
+        // not moments. Midnight at -08:00 is eight hours after midnight at +00:00 on the same day, and the count of moments
+        // took it as one day more. Midnight at +14:00 on the next day is a moment before midnight at -11:00 on this day.
+        [Theory]
+        [InlineData(0, -8, 0)]
+        [InlineData(-11, 14, 1)]
+        [InlineData(14, -11, 1)]
+        [InlineData(-11, 14, 0)]
+        public void CountDays_Given_DatesWithDifferentOffsets_Then_TheDaysThatTheyShow(int startOffsetHours, int dateOffsetHours, int days)
+        {
+            var calc = CreateCalc();
+            var start = new DateTimeOffset(2027, 1, 4, 0, 0, 0, TimeSpan.FromHours(startOffsetHours));
+            var date = new DateTimeOffset(2027, 1, 4 + days, 0, 0, 0, TimeSpan.FromHours(dateOffsetHours));
+
+            calc.CountDays(start, date).ShouldBe(days);
+            calc.CountDays(date, start).ShouldBe(-days);
+        }
+
+        // The day of the date is after the start, but the moment is before it. The moment made it a date before the start,
+        // which became the start.
+        [Fact]
+        public void CalculateConstraintTimeAndDateTime_Given_ADateWhoseDayIsAfterTheStartButWhoseMomentIsBefore_Then_ItsDay()
+        {
+            var calc = CreateCalc();
+            var start = new DateTimeOffset(2027, 1, 4, 0, 0, 0, TimeSpan.FromHours(-11));
+            var date = new DateTimeOffset(2027, 1, 5, 0, 0, 0, TimeSpan.FromHours(14));
+
+            var (time, dt) = calc.CalculateConstraintTimeAndDateTime(start, date);
+
+            time.ShouldBe(1);
+            (dt?.DateTime, dt?.Offset).ShouldBe((new DateTime(2027, 1, 5), start.Offset));
+        }
+
+        // A holiday of a custom calendar is on the day that its date shows, whatever the offset of the start.
+        [Theory]
+        [InlineData(14, -11)]
+        [InlineData(-11, 14)]
+        public void AddDays_Given_AHolidayAtAnotherOffset_Then_ItIsOnTheDayThatItsDateShows(int startOffsetHours, int holidayOffsetHours)
+        {
+            var calc = CreateCalc();
+            var start = new DateTimeOffset(2027, 1, 4, 0, 0, 0, TimeSpan.FromHours(startOffsetHours));
+            calc.ProjectStart = start;
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+            calc.SetNonWorkingDayCalendarEvents(
+            [
+                new HolidayModel { Id = 1, StartDateTime = new DateTimeOffset(2027, 1, 6, 0, 0, 0, TimeSpan.FromHours(holidayOffsetHours)), RecurrencePattern = @"FREQ=YEARLY" },
+            ]);
+
+            // Monday 4 January is day 0. Then the 5th, the 7th, the 8th and the 9th: Wednesday 6 January is the holiday.
+            calc.AddDays(start, 4).DateTime.ShouldBe(new DateTime(2027, 1, 9));
+            calc.CountDays(start, new DateTimeOffset(2027, 1, 8, 0, 0, 0, TimeSpan.FromHours(holidayOffsetHours))).ShouldBe(3);
+        }
+
+        #endregion
+
+        #region FirstWorkingDayOnOrAfter and TryAddDays
+
+        // A calendar can have no working day at all, or a run of days off with no end. The searches stop after
+        // DateTimeCalculator.MaximumNonWorkingRun days, so each of these tests must end; a search without end fails it
+        // after a minute instead of hanging the run.
+        private static T WithinAMinute<T>(Func<T> search)
+        {
+            Task<T> task = Task.Run(search);
+            task.Wait(TimeSpan.FromMinutes(1)).ShouldBeTrue(@"the search for a working day must end");
+            return task.Result;
+        }
+
+        private static DateTimeCalculator CreateCustomCalc(params HolidayModel[] holidays)
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.SetNonWorkingDayCalendarEvents([.. holidays]);
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+            return calc;
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_ASaturdayWithWeekends_Then_TheMondayAfter()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.FirstWorkingDayOnOrAfter(s_Monday.AddDays(5)).ShouldNotBeNull().Date.ShouldBe(new DateTime(2025, 6, 16));
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_AWorkingDay_Then_ThatDay()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.FirstWorkingDayOnOrAfter(s_Monday).ShouldBe(s_Monday);
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_ASaturdayWithNoNonWorkingDays_Then_ThatSaturday()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.None;
+
+            calc.FirstWorkingDayOnOrAfter(s_Monday.AddDays(5)).ShouldBe(s_Monday.AddDays(5));
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_TheFirstDateThatThereIs_Then_ThatDate()
+        {
+            // The start of a plan that gives none. It has no day before it, and so the search does not count from it.
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.FirstWorkingDayOnOrAfter(DateTimeOffset.MinValue).ShouldBe(DateTimeOffset.MinValue);
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_ACalendarWithNoWorkingDay_Then_Null()
+        {
+            var calc = CreateCustomCalc(new HolidayModel { Id = 1, StartDateTime = s_Monday, RecurrencePattern = @"FREQ=DAILY" });
+
+            WithinAMinute(() => calc.FirstWorkingDayOnOrAfter(s_Monday)).ShouldBeNull();
+        }
+
+        [Fact]
+        public void FirstWorkingDayOnOrAfter_Given_TwoRulesThatCoverEachDay_Then_Null()
+        {
+            // Neither rule covers each day by itself, which is what the holiday editor checks.
+            var calc = CreateCustomCalc(
+                new HolidayModel { Id = 1, StartDateTime = s_Monday, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR" },
+                new HolidayModel { Id = 2, StartDateTime = s_Monday, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=SA,SU" });
+
+            WithinAMinute(() => calc.FirstWorkingDayOnOrAfter(s_Monday)).ShouldBeNull();
+        }
+
+        [Fact]
+        public void TryAddDays_Given_AnOrdinaryCalendar_Then_TrueAndTheSameDayAsAddDays()
+        {
+            var calc = CreateCalc();
+            calc.ProjectStart = s_Monday;
+            calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
+
+            calc.TryAddDays(s_Monday, 5, out DateTimeOffset result).ShouldBeTrue();
+            result.ShouldBe(calc.AddDays(s_Monday, 5));
+        }
+
+        [Fact]
+        public void TryAddDays_Given_DaysOffWithNoEnd_Then_FalseAndAnEnd()
+        {
+            // From the Thursday on, each day is a day off: the count of 10 working days cannot end in the calendar.
+            var calc = CreateCustomCalc(new HolidayModel { Id = 1, StartDateTime = s_Monday.AddDays(3), RecurrencePattern = @"FREQ=DAILY" });
+
+            (bool Done, DateTimeOffset Result) attempt = WithinAMinute(() => (calc.TryAddDays(s_Monday, 10, out DateTimeOffset result), result));
+
+            attempt.Done.ShouldBeFalse();
+            WithinAMinute(() => calc.AddDays(s_Monday, 10)).ShouldBe(attempt.Result);
+        }
+
+        #endregion
+
         #region GetLocal
+
+        // A plan that gives no Today has 0001-01-01. In a zone whose offset in the year 1 is east of UTC, that day is before
+        // the year 1, and .NET has no such moment: the load of the plan failed. Most zones east of UTC have such an offset:
+        // on Windows, Paris has +01:00, Tokyo +09:00 and Sydney +11:00 on 0001-01-01. On Linux, Kiritimati and Pago Pago
+        // failed too. Such a time stays at offset 0, as in UTC.
+        [Theory]
+        [InlineData(14)]
+        [InlineData(1)]
+        public void GetLocal_Given_TheFirstDayOfDotNetInAZoneEastOfUtc_Then_ItStaysAtOffsetNought(int hours)
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone($@"Test +{hours}", TimeSpan.FromHours(hours), $@"Test +{hours}", $@"Test +{hours}");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(DateTime.MinValue);
+
+            (local.DateTime, local.Offset).ShouldBe((DateTime.MinValue, TimeSpan.Zero));
+        }
+
+        // A time in the year 1 is a placeholder, such as the Today of a plan that gives none. West of UTC, the offset of a
+        // zone in the year 1 is its local mean time on Linux (-07:53 in Los Angeles, -00:01 in London), and a save wrote
+        // it: two computers saved two texts for one plan. Such a time stays at offset 0 too.
+        [Theory]
+        [InlineData(1, 1)]
+        [InlineData(6, 15)]
+        public void GetLocal_Given_ATimeOfTheYear1InAZoneWestOfUtc_Then_ItStaysAtOffsetNought(int month, int day)
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -07:53", new TimeSpan(-7, -53, 0), @"Test -07:53", @"Test -07:53");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(new DateTime(1, month, day));
+
+            (local.DateTime, local.Offset).ShouldBe((new DateTime(1, month, day), TimeSpan.Zero));
+        }
+
+        // From the year 2, a time has the offset of the zone, as any other time.
+        [Fact]
+        public void GetLocal_Given_ATimeOfTheYear2InAZoneWestOfUtc_Then_TheOffsetOfTheZone()
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -07:53", new TimeSpan(-7, -53, 0), @"Test -07:53", @"Test -07:53");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(new DateTime(2, 1, 1));
+
+            (local.DateTime, local.Offset).ShouldBe((new DateTime(2, 1, 1), new TimeSpan(-7, -53, 0)));
+        }
+
+        // West of UTC, the last moment of .NET is after the range, as the first day is before it east of UTC.
+        [Fact]
+        public void GetLocal_Given_TheLastMomentOfDotNetInAZoneWestOfUtc_Then_ItStaysAtOffsetNought()
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test -11", TimeSpan.FromHours(-11), @"Test -11", @"Test -11");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(DateTime.MaxValue);
+
+            (local.DateTime, local.Offset).ShouldBe((DateTime.MaxValue, TimeSpan.Zero));
+        }
+
+        // The time on the clock of the calculator, at the offset of its zone, also when that zone is not the zone of the
+        // computer. A time of the kind Local took the offset of the computer, and .NET refused any other.
+        [Fact]
+        public void GetLocal_Given_AClockInAnotherZone_Then_TheTimeAtTheOffsetOfThatZone()
+        {
+            TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone(@"Test +05:30", TimeSpan.FromMinutes(330), @"Test +05:30", @"Test +05:30");
+            var calc = new DateTimeCalculator(new FixedTimeProvider(new DateTimeOffset(2026, 9, 27, 12, 0, 0, TimeSpan.Zero), zone));
+
+            DateTimeOffset local = calc.GetLocal(new DateTime(2027, 1, 4, 9, 30, 0, DateTimeKind.Local));
+
+            (local.DateTime, local.Offset).ShouldBe((new DateTime(2027, 1, 4, 9, 30, 0), TimeSpan.FromMinutes(330)));
+        }
 
         [Fact]
         public void CalculateTimeAndDateTime_DateTime_BeforeProjectStart_ClampsToStart()

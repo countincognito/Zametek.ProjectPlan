@@ -2,8 +2,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using SkiaSharp;
+using System.Diagnostics;
 using System.IO.Compression;
 using Xunit;
+using Zametek.Common.ProjectPlan;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -46,6 +48,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         private static string AssetPath(string filename)
         {
             return Path.Combine(AppContext.BaseDirectory, @"Assets", filename);
+        }
+
+        // The example plan of docs/PROJECT-FILE.md: the first JSON block of the page.
+        private static string ProjectFileExamplePlan()
+        {
+            string page = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Docs", @"PROJECT-FILE.md"));
+            int start = page.IndexOf("```json\n", StringComparison.Ordinal) + "```json\n".Length;
+            return page[start..page.IndexOf("```", start, StringComparison.Ordinal)];
         }
 
         private static async Task<(int ExitCode, string Output)> RunCapturedAsync(params string[] args)
@@ -394,6 +404,131 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             output.IndexOf(Options.Usage[0], StringComparison.Ordinal).ShouldBeLessThan(output.IndexOf(@"--input", StringComparison.Ordinal));
         }
 
+        // A package manager or a script runs zpp --version to make sure that zpp runs, and takes any exit code but 0 as a
+        // failure.
+        [Fact]
+        public async Task Main_Given_Version_Then_ExitSuccess()
+        {
+            (int exitCode, _) = await RunCapturedAsync(@"--version");
+
+            exitCode.ShouldBe(0);
+        }
+
+        // The heading of the help, which names the version, on a line of its own, and not the help itself. The line ends
+        // as each line that zpp writes itself does.
+        [Fact]
+        public async Task Main_Given_Version_Then_PrintsTheNameAndTheVersionOnly()
+        {
+            (_, string output) = await RunCapturedAsync(@"--version");
+
+            output.ShouldBe(s_VersionLine + NewLineHelper.NewLine);
+        }
+
+        [Fact]
+        public async Task Main_Given_Help_Then_ListsVersion()
+        {
+            (_, string output) = await RunCapturedAsync(@"--help");
+
+            output.ShouldContain(@"--version");
+        }
+
+        [Fact]
+        public async Task Main_Given_ServeVersion_Then_PrintsTheNameAndTheVersionOnly()
+        {
+            (int exitCode, string output) = await RunCapturedAsync(@"serve", @"--version");
+
+            exitCode.ShouldBe(0);
+            output.ShouldBe(s_VersionLine + NewLineHelper.NewLine);
+        }
+
+        // The name and the version of zpp, as the heading of the help gives them.
+        private static readonly string s_VersionLine =
+            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+
+        // A date of a plan is the day that it shows, whatever the time zone of the computer (PROJECT-FILE.md). The plan has a
+        // custom calendar: the weekends by a weekly rule, and Christmas and New Year. It starts on a Tuesday, and B has a
+        // minimum earliest start date. zpp read each date as a moment in the time zone of the computer. Thus, in UTC or in
+        // London, the plan at +14:00 started on the Monday, its holidays fell on Fridays, and it finished later. Now each
+        // offset gives the metrics and the days of the plan at +00:00. No computer has both +14:00 and -11:00.
+        [Theory]
+        [InlineData(@"+14:00")]
+        [InlineData(@"+05:45")]
+        [InlineData(@"-11:00")]
+        public async Task Main_Given_ThePlanWithItsDatesAtAnotherOffset_Then_TheSameMetricsAndTheSameDays(string offset)
+        {
+            (string Metrics, string[] Days) expected = await RunPlanAtOffsetAsync(@"+00:00");
+
+            (string Metrics, string[] Days) actual = await RunPlanAtOffsetAsync(offset);
+
+            expected.Days.ShouldBe([@"2027-12-21", @"2027-12-21", @"2027-12-28", @"2027-12-29", @"2027-12-04", @"2027-12-25", @"2028-01-01"]);
+            actual.Days.ShouldBe(expected.Days);
+            actual.Metrics.ShouldBe(expected.Metrics);
+        }
+
+        // Runs the plan of the test above with each of its dates at midnight in the offset, and saves it. Returns the metrics,
+        // and the day of each date in the saved plan: the requested start, the effective start, today, the minimum earliest
+        // start of B and the holidays.
+        private async Task<(string Metrics, string[] Days)> RunPlanAtOffsetAsync(string offset)
+        {
+            string name = offset.Replace(@":", string.Empty, StringComparison.Ordinal);
+            string input = Path.Combine(m_TempDirectory, $@"offset{name}.zpp");
+            string output = Path.Combine(m_TempDirectory, $@"offset{name}-saved.zpp");
+            await File.WriteAllTextAsync(input, c_PlanAtOffset.Replace(@"{offset}", offset, StringComparison.Ordinal));
+
+            (int exitCode, string metrics) = await RunCapturedAsync(@"-i", input, @"-o", output, @"--metrics-format", @"json", @"--now", @"2027-12-01T09:00:00+00:00");
+
+            exitCode.ShouldBe(0);
+
+            // The dates as the file writes them: a reader with dates would move them into the time zone of the computer.
+            using var reader = new JsonTextReader(new StringReader(await File.ReadAllTextAsync(output))) { DateParseHandling = DateParseHandling.None };
+            JToken scenario = JObject.Load(reader)[@"Files"]![0]![@"Scenario"]!;
+            string[] dates =
+            [
+                (string)scenario[@"ProjectStart"]!,
+                (string)scenario[@"EffectiveProjectStart"]!,
+                (string)scenario[@"Today"]!,
+                (string)scenario[@"DependentActivities"]![1]![@"Activity"]![@"MinimumEarliestStartDateTime"]!,
+                .. scenario[@"HolidaySettings"]![@"Holidays"]!.Select(x => (string)x[@"StartDateTime"]!),
+            ];
+            return (metrics, [.. dates.Select(x => x[..10])]);
+        }
+
+        // A plan with a custom calendar. Each of its dates is at midnight in the offset that replaces {offset}.
+        private const string c_PlanAtOffset = """
+            {
+              "Version": "v0.6.2",
+              "Id": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e60",
+              "Root": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e61",
+              "Current": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e62",
+              "Nodes": [
+                { "Id": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e62", "ParentId": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e61", "NodeType": 0, "Name": "Main" }
+              ],
+              "Files": [
+                {
+                  "NodeId": "6f5f1c0e-2d43-4f0e-9a51-3c1d2b4a5e62",
+                  "Scenario": {
+                    "ProjectStart": "2027-12-21T00:00:00{offset}",
+                    "Today": "2027-12-28T00:00:00{offset}",
+                    "DependentActivities": [
+                      { "Activity": { "Id": 1, "Name": "A", "Duration": 5 }, "Dependencies": [], "PlanningDependencies": [] },
+                      { "Activity": { "Id": 2, "Name": "B", "Duration": 5, "MinimumEarliestStartDateTime": "2027-12-29T00:00:00{offset}" }, "Dependencies": [ 1 ], "PlanningDependencies": [] },
+                      { "Activity": { "Id": 3, "Name": "C", "Duration": 5 }, "Dependencies": [ 2 ], "PlanningDependencies": [] },
+                      { "Activity": { "Id": 4, "Name": "End", "Duration": 0 }, "Dependencies": [ 3 ], "PlanningDependencies": [] }
+                    ],
+                    "HolidaySettings": {
+                      "Holidays": [
+                        { "Id": 1, "Name": "Weekend", "StartDateTime": "2027-12-04T00:00:00{offset}", "RecurrencePattern": "FREQ=WEEKLY;BYDAY=SA,SU" },
+                        { "Id": 2, "Name": "Christmas", "StartDateTime": "2027-12-25T00:00:00{offset}", "RecurrencePattern": "FREQ=YEARLY" },
+                        { "Id": 3, "Name": "New Year", "StartDateTime": "2028-01-01T00:00:00{offset}", "RecurrencePattern": "FREQ=YEARLY" }
+                      ]
+                    },
+                    "DisplaySettings": { "ShowDates": true, "NonWorkingDayMode": 2 }
+                  }
+                }
+              ]
+            }
+            """;
+
         [Fact]
         public void Usage_Given_EachLine_Then_FitsATerminal80ColumnsWide()
         {
@@ -468,6 +603,76 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_APlanThatStartsOnASaturdayWithWeekends_Then_ItsWorkStartsOnTheMondayAfter()
+        {
+            // The plan asks to start on Saturday 6 January 2024. With weekends, its work starts on Monday 8 January, which is
+            // day 0. zpp gives the start in the metrics, and the file keeps the start that the plan asks for beside it.
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            foreach (JToken scenario in plan.SelectTokens(@"$.Files[*].Scenario"))
+            {
+                scenario[@"ProjectStart"] = @"2024-01-06T00:00:00+00:00";
+                scenario[@"DisplaySettings"]![@"NonWorkingDayMode"] = 1;
+            }
+            string planFile = Path.Combine(m_TempDirectory, @"saturday.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+            string outputFile = Path.Combine(m_TempDirectory, @"saturday-saved.zpp");
+
+            (int exitCode, string output) = await RunCapturedAsync(@"-i", planFile, @"-o", outputFile, @"--metrics-format", @"json");
+
+            exitCode.ShouldBe(0);
+            output.ShouldContain(@"""ProjectStartDate"": ""2024-01-08""");
+            output.ShouldContain(@"""NetworkDuration"": 5");
+            using var reader = new JsonTextReader(new StringReader(File.ReadAllText(outputFile))) { DateParseHandling = DateParseHandling.None };
+            JToken saved = JObject.Load(reader).SelectToken(@"$.Files[0].Scenario")!;
+            saved[@"ProjectStart"]!.Value<string>().ShouldStartWith(@"2024-01-06T00:00:00");
+            saved[@"EffectiveProjectStart"]!.Value<string>().ShouldStartWith(@"2024-01-08T00:00:00");
+        }
+
+        [Fact]
+        public async Task Main_Given_APlanThatTheCheckBeforeTheLoadRefuses_Then_ExitCode1WithEachProblemOnStandardError()
+        {
+            // The load of this plan failed with an exception (B8 of the stress test of 0.11.0-beta.1).
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DisplaySettings"]![@"NonWorkingDayMode"] = 7;
+            string planFile = Path.Combine(m_TempDirectory, @"mode-7.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile);
+
+            exitCode.ShouldBe(1);
+            error.ShouldContain(@"/Files/0/Scenario/DisplaySettings/NonWorkingDayMode: must be one of: 0 (None), 1 (Weekends), 2 (CustomCalendar)");
+        }
+
+        [Fact]
+        public async Task Main_Given_ATargetResourceThatNoResourceHas_Then_AWarningOnStandardErrorAndExitCode0()
+        {
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"TargetResources"] = new JArray(99);
+            string planFile = Path.Combine(m_TempDirectory, @"target-99.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile);
+
+            exitCode.ShouldBe(0);
+            error.ShouldContain(@"Warning: /Files/0/Scenario/DependentActivities/0/Activity/TargetResources/0: is not the Id of a resource of the scenario");
+        }
+
+        [Fact]
+        public async Task Main_Given_CompileTrackedAndATrackedScenarioThatDoesNotCompile_Then_ItsErrorsOnStandardErrorAndExitCode0()
+        {
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));
+            plan[@"Files"]![1]![@"Scenario"]![@"DependentActivities"]![0]![@"Dependencies"] = new JArray(42);
+            string planFile = Path.Combine(m_TempDirectory, @"broken-beta.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile, @"--compile-tracked");
+
+            exitCode.ShouldBe(0);
+            error.ShouldContain(@"The tracked scenario 'Beta' did not compile:");
+            error.ShouldContain(@"P0010: ");
+        }
+
+        [Fact]
         public async Task Main_Given_CompileTracked_Then_PrintsTheMetricsOfEachTrackedScenario()
         {
             (int exitCode, string output) = await RunCapturedAsync(
@@ -488,9 +693,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // its most likely duration of 5 days, the second has only a Duration, which is its most likely duration of 3 days,
             // and the third has the three estimates 2, 4 and 12, which give (2 + 4 × 4 + 12 + 3) / 6 = 5 days in whole days. In a
             // chain, they finish on day 13.
-            string page = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Docs", @"PROJECT-FILE.md"));
-            int start = page.IndexOf("```json\n", StringComparison.Ordinal) + "```json\n".Length;
-            string plan = page[start..page.IndexOf("```", start, StringComparison.Ordinal)];
+            string plan = ProjectFileExamplePlan();
 
             // The page also says that zpp calculates the duration and the times again: a stale Duration beside a most likely
             // duration, and a stale earliest start, change nothing.
@@ -521,6 +724,93 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     Directory.Delete(directory, recursive: true);
                 }
             }
+        }
+
+        [Fact]
+        public async Task Main_Given_ConstraintsWithOnlyTheirNumbers_Then_AWeekendCalendarGivesTheSameScheduleInDays()
+        {
+            // A time of an activity is a number of working days from ProjectStart (docs/PROJECT-FILE.md). So, when a plan gives
+            // its constraints only as numbers, its schedule in days is the same with weekends as with no non-working days. zpp
+            // starts each load from the default calendar None. When the calendar of the plan came after the activities, each
+            // number went to a date along every day, and came back along the working days. With weekends, the minimum earliest
+            // start time of 40 became 30, and the maximum latest finish time of 50 became 36, before Test finished on day 38:
+            // the compilation failed with C0010.
+            JObject template = JObject.Parse(ProjectFileExamplePlan());
+            JToken activities = template[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]!;
+            activities[1]![@"Activity"]![@"MinimumEarliestStartTime"] = 40;
+            activities[2]![@"Activity"]![@"MaximumLatestFinishTime"] = 50;
+
+            var schedules = new List<string[][]>();
+            foreach (NonWorkingDayMode mode in new[] { NonWorkingDayMode.None, NonWorkingDayMode.Weekends })
+            {
+                JObject plan = (JObject)template.DeepClone();
+                plan[@"Files"]![0]![@"Scenario"]![@"DisplaySettings"] = new JObject { [@"NonWorkingDayMode"] = (int)mode };
+
+                string directory = Path.Combine(m_TempDirectory, mode.ToString());
+                Directory.CreateDirectory(directory);
+                string input = Path.Combine(directory, @"plan.zpp");
+                File.WriteAllText(input, plan.ToString());
+
+                (int exitCode, _) = await RunCapturedAsync(@"-i", input, @"--data-directory", directory);
+
+                exitCode.ShouldBe(0);
+                schedules.Add([.. File.ReadAllLines(Path.Combine(directory, @"plan-schedule.csv")).Skip(1).Select(x => x.Split(','))]);
+            }
+
+            // Id, EarliestStartTime, LatestFinishTime, MinimumEarliestStartTime and MaximumLatestFinishTime. Build waits for
+            // day 40, and Test follows it, to finish on day 48, before its maximum latest finish time of day 50.
+            schedules[0].Select(x => (x[0], x[3], x[6], x[12], x[13])).ShouldBe(
+                [(@"1", @"0", @"40", @"", @""), (@"2", @"40", @"43", @"40", @""), (@"3", @"43", @"48", @"", @"50")]);
+            schedules[1].ShouldBe(schedules[0]);
+        }
+
+        [Fact]
+        public async Task Main_Given_AScenarioChartWithFittedCurvesAsSvg_Then_SkiaWritesNoWarningToStandardError()
+        {
+            // ScottPlot draws every plottable with one paint, and a dashed fitted curve left its dash on that paint. The markers
+            // of the second axis come after the curve of the first one, and the fill of the first marker carried the dash.
+            // Skia's SVG canvas then wrote "Unsupported path effect in addPaint." to the standard error of the process, from
+            // native code. Console.Error cannot see that stream, so the test runs zpp in a process of its own.
+            string directory = Path.Combine(m_TempDirectory, @"scenario-chart");
+            Directory.CreateDirectory(directory);
+
+            var start = new ProcessStartInfo(Environment.GetEnvironmentVariable(@"DOTNET_HOST_PATH") ?? @"dotnet")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            foreach (string argument in new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, @"zpp.dll"),
+                @"-i", AssetPath(@"scenario-chart.zpp"),
+                @"--scenario-chart-directory", directory,
+                @"--scenario-chart-format", @"Svg",
+                @"--scenario-chart-size", @"1200:800",
+            })
+            {
+                start.ArgumentList.Add(argument);
+            }
+
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            using Process process = Process.Start(start).ShouldNotBeNull();
+            Task<string> output = process.StandardOutput.ReadToEndAsync(timeout.Token);
+            Task<string> error = process.StandardError.ReadToEndAsync(timeout.Token);
+            try
+            {
+                await process.WaitForExitAsync(timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill(entireProcessTree: true);
+                throw;
+            }
+
+            await output;
+            string errors = await error;
+            process.ExitCode.ShouldBe(0, errors);
+            Directory.GetFiles(directory, @"*.svg").ShouldNotBeEmpty();
+            errors.ShouldNotContain(@"Unsupported path effect");
         }
 
         [Fact]

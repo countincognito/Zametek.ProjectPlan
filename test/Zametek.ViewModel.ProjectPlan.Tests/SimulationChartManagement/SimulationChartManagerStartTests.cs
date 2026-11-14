@@ -47,7 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public void ChangeWhatThePanelObserves()
             {
-                m_Core.ProjectStart = m_Core.ProjectStart.AddDays(1);
+                m_Core.RequestedProjectStart = m_Core.RequestedProjectStart.AddDays(1);
             }
 
             public void Dispose()
