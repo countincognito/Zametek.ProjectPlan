@@ -234,10 +234,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   To do a check of the paths, read the documents of the embedded PDB of `Zametek.View.ProjectPlan.dll` with `System.Reflection.Metadata`. After the change, each document must start with `/_/`.
 
-- [ ] **Use Zametek.Utility 3.0.1 when it is on NuGet** *(2026-11-14, found after the change to `ContinuousIntegrationBuild`)*
-
-  The DLL of Zametek.Utility 3.0.0 names the path of its `.pdb` file on the computer of the maintainer. It is the only plain local path in the single files of `zpp` and of the desktop application. Version 3.0.1 (Zametek.Utility ae487c5 and ee0454d, not on NuGet yet) has the same code, and its paths start with `/_/`. When 3.0.1 is on NuGet, change the version in `Zametek.Graphs.Avalonia.csproj`. Then publish a release build, and make sure that no DLL names a local folder.
-
 - [ ] **Suggestion: make `Zametek.ViewModel.ProjectPlan` smaller** *(2026-11-14, from the review of `src`)*
 
   The project has about 45,700 lines. That is about 70 % of the source code under `src`, without the resources and the Browser head. It holds the view models. It also holds the file formats, the Excel and MS Project imports, the services for the schedule and the metrics, and the chart exports. Four files have more than 1,600 lines: `ProjectScenarioManagerViewModel.cs` (2,716), `CoreViewModel.cs` (2,557), `GanttChartManagerViewModel.cs` (1,813) and `MainViewModel.cs` (1,699).
