@@ -8,6 +8,8 @@ namespace Zametek.ProjectPlan.CommandLine
     // problem a request's content has. The members after it are extensions, which only some types have: the console, which
     // a request asked for, and for a project that compiled but could not produce an output, the metrics, the simulation
     // if there was one, the tracked scenarios if the request asked to compile them, and the outputs that were produced.
+    // The warnings of the check before the load are in a problem of a project that did not compile, and in a problem of an
+    // output, when the project has warnings.
     public record ProblemResponse
     {
         public required string Type { get; init; }
@@ -38,6 +40,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyList<OutputResponse>? Outputs { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public IReadOnlyList<ProblemError>? Warnings { get; init; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ConsoleResponse? Console { get; init; }

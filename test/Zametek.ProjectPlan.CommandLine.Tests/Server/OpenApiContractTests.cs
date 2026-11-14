@@ -616,7 +616,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             var point = new ScenarioChartPointResponse(Guid.Empty, @"Alpha", 5.0, 5.0);
             var series = new ScenarioChartSeriesResponse(@"networkDuration", CurveFittingType.Linear, false, [point], curveFit);
             var scenarioChart = new ScenarioChartResponse(@"networkDuration", series, series);
-            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, TrackedScenarios = [tracked], ScenarioChart = scenarioChart, Console = console };
+            var problem = new ProblemResponse { Type = @"t", Title = @"t", Status = 400, Detail = @"d", TraceId = @"i", Errors = [error], Metrics = metrics, Outputs = [output], Simulation = simulation, TrackedScenarios = [tracked], ScenarioChart = scenarioChart, Warnings = [error], Console = console };
             var limits = LimitsResponse.From(new ServeLimits());
             var jobProgress = new JobProgressResponse(1, 2);
             var jobStatus = new JobStatusResponse(@"i", JobState.Running, DateTimeOffset.UnixEpoch, TimeSpan.Zero, jobProgress);
@@ -664,8 +664,15 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             Enumerated(Schema(@"ScenarioChartMetric")).ShouldBe(chartMetrics, ignoreOrder: true);
             chartMetrics.ShouldBeSubsetOf(metricNames);
 
-            // A problem is the members every one has, and those of the kind that has more.
-            string[] problemNames = [.. Names(Schema(@"Problem")), .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject()).Where(x => x is not (@"type" or @"status"))];
+            // A problem is the members every one has, and those of the kinds that have more.
+            string[] problemNames =
+            [
+                .. Names(Schema(@"Problem")),
+                .. Names(Schema(@"OutputFailedProblem")[@"allOf"]![1]!.AsObject())
+                    .Concat(Names(Schema(@"CompilationFailedProblem")[@"allOf"]![1]!.AsObject()))
+                    .Where(x => x is not (@"type" or @"status"))
+                    .Distinct(),
+            ];
             problemNames.ShouldBe(Names(problem, written), ignoreOrder: true);
 
             Schema(@"Metrics")[@"properties"]![@"projectFinishDate"]![@"format"]!.GetValue<string>().ShouldBe(@"date");

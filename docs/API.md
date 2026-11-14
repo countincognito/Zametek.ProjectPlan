@@ -635,6 +635,8 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 `422`. The project compiled with errors. `errors` has each error of the compiler, with its code, at `#/project` (or `#/import`). The example [above](#problems) is such a problem. With `include=console`, the console has the report of the compiler as `zpp` prints it, and the exit code is 3.
 
+`warnings` has the warnings of the check of the project, as in the answer of a compile, when the project has some. For example, a maximum finish date before the start of the project explains a `C0010` of its activity.
+
 #### compilation-timed-out
 
 `422`. The compilation did not end within its `compileTimeout`. This does not show if the project is valid. Increase `compileTimeout`, up to the limit of the server. The exit code is 4.
@@ -686,6 +688,8 @@ A workbook to import can have problems in its cells. The server reads the whole 
 #### output-failed
 
 `500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. `trackedScenarios` has the tracked scenarios, when the request has `compileTracked`. `scenarioChart` has the data of the scenario chart, as the answer has it. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
+
+`warnings` has the warnings of the check of the project, as in the answer of a compile, when the project has some.
 
 ```json
 {
@@ -875,7 +879,7 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
 - The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
-- The member `warnings` of the answer: the ids of the project that match nothing, and the constraint dates before the start of the project.
+- The member `warnings` of the answer and of the problems `compilation-failed` and `output-failed`: the warnings of the check of the project.
 - The member `errors` of each item of `trackedScenarios`: why the scenario did not compile.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.

@@ -135,6 +135,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problem.Console.ShouldBeNull();
             problem.Metrics.ShouldBeNull();
             problem.Outputs.ShouldBeNull();
+            problem.Warnings.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task Compile_Given_AMaximumFinishDateBeforeTheStart_Then_TheProblemHasTheErrorAndTheWarning()
+        {
+            // The calendar gives the date day 0, and the activity, which takes time, cannot finish by it. C0010 names the
+            // activity, and only the warning names the date (phase 3 of the zpp skill).
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(Asset(@"maximum-finish-date-before-start.zpp"), @"maximum-finish-date-before-start.zpp");
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.CompilationFailed));
+            Where(problem).ShouldBe([@"#/project C0010"]);
+            problem.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/MaximumLatestFinishDateTime outOfRange"]);
         }
 
         [Fact]
@@ -369,6 +385,28 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problem.Outputs.ShouldNotBeNull().Select(x => x.Kind).ShouldBe([JobOutput.Project, JobOutput.ArrowGraph]);
             problem.Outputs.ShouldAllBe(x => x.Content != null && x.Content.Length > 0);
             problem.Console.ShouldBeNull();
+            problem.Warnings.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task Compile_Given_AnOutputThatCannotBeProducedAndAConstraintDateBeforeTheStart_Then_TheProblemHasTheWarning()
+        {
+            // The project compiled, and so the problem has what the answer of a compile has: also its warnings.
+            await using FailingEngine engine = FailingEngine.WithAGanttChartThatCannotBeDrawn();
+            await using RunningServer server = await RunningServer.StartAsync(engine.JobRunner);
+            JObject plan = JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(
+                Encoding.UTF8.GetBytes(plan.ToString()),
+                options: new CompileOptions { Outputs = new OutputsOptions { GanttChart = new ChartOptions { Format = PlotExport.Png, Width = 100, Height = 100 } } },
+                server: server);
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.OutputFailed));
+            problem.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime outOfRange"]);
         }
 
         [Fact]

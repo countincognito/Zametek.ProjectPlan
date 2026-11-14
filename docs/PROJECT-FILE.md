@@ -129,7 +129,7 @@ The check also finds the ids that match nothing. These are a target resource tha
 
 The check also finds each constraint date before `ProjectStart`. The calendar counts such a date as day 0. Thus, a `MinimumEarliestStartDateTime` before the start has no effect, and an activity that takes time cannot meet a `MaximumLatestFinishDateTime` before the start (`C0010`). A date before the start is usually a mistake, for example the wrong year.
 
-The plan loads, and `zpp` writes a warning that names the date and the activity. `zpp serve` gives the warning in `warnings`, with the code `outOfRange`. The problem `compilation-failed` has no `warnings`.
+The plan loads, and `zpp` writes a warning that names the date and the activity. `zpp serve` gives the warning in `warnings`, with the code `outOfRange`. The problem `compilation-failed` has `warnings` too.
 
 The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it.
 

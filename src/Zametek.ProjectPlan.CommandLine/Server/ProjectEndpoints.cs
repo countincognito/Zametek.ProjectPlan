@@ -483,14 +483,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 TrackedScenarioResponse.From(result.TrackedScenarios),
                 ScenarioChartResponse.From(result.ScenarioChart),
                 outputs,
-                result.Warnings.Count == 0
-                    ? null
-                    : [.. result.Warnings.Select(x => new ProblemError
-                    {
-                        Pointer = $@"{CompileOptionsHelper.GetPointer(c_RequestPointer, c_ProjectPart)}{x.Pointer}",
-                        Code = x.Code,
-                        Detail = x.Detail,
-                    })],
+                Warnings(result),
                 consoleResponse);
 
             return new Answer(
@@ -951,9 +944,21 @@ namespace Zametek.ProjectPlan.CommandLine
 
             return Problem(
                 context,
-                ProblemHelper.Create(context, ProblemKind.CompilationFailed, detail, errors, console),
+                ProblemHelper.Create(context, ProblemKind.CompilationFailed, detail, errors, console, warnings: Warnings(result)),
                 exitCode);
         }
+
+        // The warnings of the check before the load, each at its place in the project, for the answer and for the problems of a
+        // job that loaded the project. Null when the project has none, and so the member is not there.
+        private static List<ProblemError>? Warnings(JobResult result) =>
+            result.Warnings.Count == 0
+                ? null
+                : [.. result.Warnings.Select(x => new ProblemError
+                {
+                    Pointer = $@"{CompileOptionsHelper.GetPointer(c_RequestPointer, c_ProjectPart)}{x.Pointer}",
+                    Code = x.Code,
+                    Detail = x.Detail,
+                })];
 
         // A project that compiled, whose outputs the job went on to produce - those it could - one or more of which could
         // not be: the problem has the metrics and the outputs that were produced, which a caller may still want.
@@ -1000,7 +1005,8 @@ namespace Zametek.ProjectPlan.CommandLine
                     outputs,
                     result.Simulation is null ? null : SimulationResponse.From(result.Simulation),
                     TrackedScenarioResponse.From(result.TrackedScenarios),
-                    ScenarioChartResponse.From(result.ScenarioChart)),
+                    ScenarioChartResponse.From(result.ScenarioChart),
+                    Warnings(result)),
                 exitCode);
         }
 

@@ -2108,7 +2108,7 @@ components:
             status:
               const: 422
     CompilationFailedProblem:
-      description: The project has compilation errors. `errors` has each error with the code of the compiler.
+      description: The project has compilation errors. `errors` has each error with the code of the compiler. `warnings` has the warnings of the check of the project, when it has some.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -2118,6 +2118,11 @@ components:
               const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed
             status:
               const: 422
+            warnings:
+              type: array
+              description: The warnings of the check of the project, as in the answer of a compile. For example, a maximum finish date before the start of the project explains a `C0010` of its activity. The problem has this member only when the project has a warning.
+              items:
+                $ref: '#/components/schemas/ProblemError'
     CompilationTimedOutProblem:
       description: The compilation did not end within its time limit. This does not show if the project is valid.
       allOf:
@@ -2151,7 +2156,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, the data of the scenario chart as the answer has it, and the outputs that the job produced.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, the data of the scenario chart as the answer has it, the outputs that the job produced, and the warnings of the check of the project if it has some.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -2174,6 +2179,11 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Output'
+            warnings:
+              type: array
+              description: The warnings of the check of the project, as in the answer of a compile. The problem has this member only when the project has a warning.
+              items:
+                $ref: '#/components/schemas/ProblemError'
     UnexpectedErrorProblem:
       description: A failure that the server did not expect. The cause is in the log of the server, under the trace id of the request. It is not in the answer.
       allOf:
