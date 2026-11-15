@@ -375,6 +375,28 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (output + error).ShouldContain(@"C0010");
         }
 
+        // In some iterations, End cannot finish by its maximum of day 12. Such an iteration is a late one, and the statistics
+        // leave it out. The table has the counts, and a line on the standard error stream says that the statistics are then
+        // too early.
+        [Fact]
+        public async Task Main_Given_ASimulationWithIterationsThatMissAMaximum_Then_AWarningSaysThatTheStatisticsAreTooEarly()
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"missed-maximum-lft.zpp"), @"--run-simulation");
+
+            exitCode.ShouldBe(0);
+            error.ShouldMatch(@"Warning: the statistics of the simulation are too early\. They leave out [\d,.]+ of 5[,.]000 iterations");
+            output.ShouldContain(Resource.ProjectPlan.Labels.Label_SimulationWarning);
+        }
+
+        [Fact]
+        public async Task Main_Given_ASimulationWithNoIterationThatMissesAMaximum_Then_NoWarning()
+        {
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"estimated.zpp"), @"--run-simulation");
+
+            exitCode.ShouldBe(0);
+            error.ShouldNotContain(@"too early");
+        }
+
         // The only activity must finish by day 0: as a number, or as a date before the start of the project, which the load
         // makes day 0. The schedule then finishes on day 0. Up to version 4.1.0, the library threw when it marked the
         // allocations of the resources, and zpp exited with 1. The compile now reports the broken constraints.

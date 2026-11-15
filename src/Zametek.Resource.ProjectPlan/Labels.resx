@@ -930,4 +930,10 @@
   <data name="Label_CurveFittingDerivativeY2" xml:space="preserve">
     <value>Y2 Derivative</value>
   </data>
+  <data name="Label_SimulationWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="Label_SimulationStatisticsTooEarly" xml:space="preserve">
+    <value>The statistics are too early: they leave out the iterations that missed a maximum LFT</value>
+  </data>
 </root>

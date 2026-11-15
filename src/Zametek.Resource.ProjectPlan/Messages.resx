@@ -882,4 +882,7 @@
   <data name="Message_ServeAllowHostNeedsNoApiKey" xml:space="preserve">
     <value>{0} is only for a server with no API key: a server with a key does not look at the Host of a request.</value>
   </data>
+  <data name="Message_SimulationStatisticsTooEarly" xml:space="preserve">
+    <value>Warning: the statistics of the simulation are too early. They leave out {0:N0} of {1:N0} iterations, in which an activity cannot finish by its maximum latest finish time.</value>
+  </data>
 </root>

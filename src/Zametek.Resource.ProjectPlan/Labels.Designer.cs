@@ -2222,6 +2222,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The statistics are too early: they leave out the iterations that missed a maximum LFT.
+        /// </summary>
+        public static string Label_SimulationStatisticsTooEarly {
+            get {
+                return ResourceManager.GetString("Label_SimulationStatisticsTooEarly", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Target finish.
         /// </summary>
         public static string Label_SimulationTarget {
@@ -2257,6 +2266,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string Label_SimulationWarning {
+            get {
+                return ResourceManager.GetString("Label_SimulationWarning", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Slack Limit.
         /// </summary>

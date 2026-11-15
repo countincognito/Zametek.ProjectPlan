@@ -1029,6 +1029,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Warning: the statistics of the simulation are too early. They leave out {0:N0} of {1:N0} iterations, in which an activity cannot finish by its maximum latest finish time..
+        /// </summary>
+        public static string Message_SimulationStatisticsTooEarly {
+            get {
+                return ResourceManager.GetString("Message_SimulationStatisticsTooEarly", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The tracked scenario '{0}' did not compile:.
         /// </summary>
         public static string Message_TrackedScenarioDidNotCompile {

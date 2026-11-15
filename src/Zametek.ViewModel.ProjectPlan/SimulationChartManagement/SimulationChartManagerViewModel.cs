@@ -545,6 +545,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     CountAndShare(activity.MaximumLatestFinishTimeMissCount, summary.IterationCount));
             }
 
+            // The rows above give the counts. This row says what they mean for the statistics that follow: an iteration that
+            // missed a maximum latest finish time is a late one, and it is in none of them.
+            if (summary.InvalidConstraintsIterationCount > 0)
+            {
+                Add(
+                    Resource.ProjectPlan.Labels.Label_SimulationWarning,
+                    Resource.ProjectPlan.Labels.Label_SimulationStatisticsTooEarly);
+            }
+
             if (!summary.HasResult)
             {
                 return statistics;

@@ -568,6 +568,7 @@ Version 4.1.0 of the library corrects two crashes of the compile and an error of
 - **The outputs.** The library tells why each iteration failed, and which activities missed their maximum LFT. Each output of a simulation now shows this:
   - The table "Statistics" shows the failed iterations with their share of all the iterations. It has a row for each reason that an iteration had, and a row "Missed maximum LFT" for each activity that missed its maximum.
   - The table "Criticalities" also has the activities that missed their maximum, and the column "Missed maximum LFT".
+  - Since 0.11.0-beta.2, the table "Statistics" also has the row "Warning" when an iteration missed a maximum. The row says that the statistics are too early, because they leave out the late iterations. `zpp` writes the same warning to its standard error stream, with the number of these iterations.
   - The statistics file has the rows `ResourceSchedulingStallIterations`, `MaximumTimeValueExceededIterations` and `InvalidConstraintsIterations` after `FailedIterations`. The activities file has the column `MaximumLatestFinishTimeMisses`. The iterations file has the column `Failure`, with the reason of each failed iteration.
   - The workbook, the project file, the JSON of `zpp` and the API have the same values. A result from an earlier version has zeros.
   - The test plan `missed-maximum-lft.zpp` has an activity of 8 to 20 days before a milestone with a maximum LFT of 12 days. Some iterations of it fail.

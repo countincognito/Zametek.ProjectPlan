@@ -713,12 +713,35 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Value = countAndShare,
             });
 
+            // The row after them says what the counts mean for the statistics that follow.
+            panel.Statistics.ShouldContain(new SimulationStatisticModel
+            {
+                Name = Resource.ProjectPlan.Labels.Label_SimulationWarning,
+                Value = Resource.ProjectPlan.Labels.Label_SimulationStatisticsTooEarly,
+            });
+
             // A reason that no iteration had has no row.
             panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationFailedResourceScheduling);
             panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationFailedTimeLimit);
 
             // The activity is in the table of the activities with its misses.
             panel.Activities.Single(x => x.ActivityId == 3).MaximumLatestFinishTimeMissCount.ShouldBe(failed);
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_NoIterationThatMissesAMaximum_Then_TheStatisticsHaveNoWarning()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+
+            await panel.RunSimulationAsync();
+
+            panel.Summary.ShouldNotBeNull().InvalidConstraintsIterationCount.ShouldBe(0);
+            panel.Statistics.ShouldNotBeEmpty();
+            panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationWarning);
         }
 
         [Fact]

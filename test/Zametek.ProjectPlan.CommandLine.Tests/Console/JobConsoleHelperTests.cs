@@ -19,6 +19,13 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// </summary>
     public class JobConsoleHelperTests
     {
+        // What zpp writes to the standard error stream for the simulation below.
+        private static readonly string s_StatisticsTooEarly = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.ProjectPlan.Messages.Message_SimulationStatisticsTooEarly,
+            6,
+            5000);
+
         private static readonly JobSimulationMetrics s_Simulation = new()
         {
             Iterations = 5000,
@@ -141,7 +148,48 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 MetricsExport.Json);
 
             exitCode.ShouldBe(ExitCode.Success);
-            console.Calls.ShouldHaveSingleItem().ShouldBe(RecordingJobConsole.Line(JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation)));
+            console.Calls.ShouldBe(
+            [
+                RecordingJobConsole.Line(JobConsoleHelper.BuildMetricsJson(s_Metrics, s_Simulation)),
+                RecordingJobConsole.ErrorLine(s_StatisticsTooEarly),
+            ]);
+        }
+
+        // In 6 of the 5000 iterations, an activity cannot finish by its maximum latest finish time. Such an iteration is a
+        // late one, and the statistics leave it out. The table has the counts, and the warning says what they mean.
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        [InlineData(MetricsExport.Json)]
+        public async Task WriteResultAsync_Given_ASimulationWithIterationsThatMissedAMaximum_Then_AWarningFollowsTheMetricsOnTheErrorStream(MetricsExport format)
+        {
+            var console = new RecordingJobConsole();
+
+            ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(
+                console,
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation },
+                format);
+
+            exitCode.ShouldBe(ExitCode.Success);
+            console.Calls.Count.ShouldBe(2);
+            console.Calls[1].ShouldBe(RecordingJobConsole.ErrorLine(s_StatisticsTooEarly));
+        }
+
+        [Theory]
+        [InlineData(MetricsExport.Markdown)]
+        [InlineData(MetricsExport.Table)]
+        [InlineData(MetricsExport.Json)]
+        public async Task WriteResultAsync_Given_ASimulationWithNoIterationThatMissedAMaximum_Then_NoWarning(MetricsExport format)
+        {
+            var console = new RecordingJobConsole();
+
+            ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(
+                console,
+                new JobResult { Status = JobStatus.Succeeded, Metrics = s_Metrics, Simulation = s_Simulation with { InvalidConstraintsIterations = 0 } },
+                format);
+
+            exitCode.ShouldBe(ExitCode.Success);
+            console.Calls.ShouldHaveSingleItem().Method.ShouldNotBe(nameof(RecordingJobConsole.WriteErrorLineAsync));
         }
 
         [Theory]
@@ -613,7 +661,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ExitCode exitCode = await JobConsoleHelper.WriteResultAsync(console, result, format);
 
             exitCode.ShouldBe(ExitCode.Success);
-            RecordingJobConsole.Call call = console.Calls.ShouldHaveSingleItem();
+
+            // One call displays the text. A simulation that left late iterations out of its statistics also writes a warning
+            // to the standard error stream, which is not a part of the text.
+            RecordingJobConsole.Call call = console.Calls.Where(x => x.Method == nameof(RecordingJobConsole.DisplayAsync)).ShouldHaveSingleItem();
             call.ShouldBe(RecordingJobConsole.Display(call.Text, hasErrors: false));
             return NewLineHelper.NormalizeNewLines(call.Text);
         }

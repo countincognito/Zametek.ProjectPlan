@@ -282,15 +282,15 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Suggestion: keep the late iterations in the statistics of a simulation** *(2026-11-14, a suggestion from phase 3 of the zpp skill)*
 
-  A simulation leaves its failed iterations out of the mean, the percentiles and the chance of the target. The maintainer chose this rule for Zametek.Maths.Graphs 4.1.0 on 2026-11-11, because a compile with the durations of such an iteration gives an error. But an iteration that misses a maximum finish is a late one. Thus, without these iterations, the percentiles are too early, and the chance of the target is too high. The answer gives the number of failed iterations, but it does not say this next to the statistics.
+  A simulation leaves its failed iterations out of the mean, the percentiles and the chance of the target. The maintainer chose this rule for Zametek.Maths.Graphs 4.1.0 on 2026-11-11, because a compile with the durations of such an iteration gives an error. But an iteration that misses a maximum finish is a late one. Thus, without these iterations, the percentiles are too early, and the chance of the target is too high.
 
   The zpp skill measured the effect on its claims example, with 5,000 iterations and the seed 1. PaymentsAccess must finish by day 80, and 552 iterations miss this day. Then the chance of a finish by day 172 is 96.6%, and P80 is 165. Without the maximum finish, the chance is 95.1%, and P80 is 166.
 
   When End must finish by day 166, 977 iterations fail. Each iteration that is left finishes by day 166, and thus the chance of a finish by day 168 is 100%. Without that maximum finish, the chance is 86.9%.
 
-  Four changes are possible:
+  Since 0.11.0-beta.2, a warning says this next to the statistics. The table "Statistics" of the application and of `zpp` has the row "Warning". `zpp` also writes a line to its standard error stream, with the number of these iterations. The answer of the API has the counts as before (`invalidConstraintsIterations`), and API.md tells what they mean.
 
-  - A warning next to the statistics, in the answer and on the chart. It gives the number of iterations that missed a maximum finish, and it says that the statistics are too early.
+  Three more changes are possible:
 
   - The chance of the target over all the iterations. A failed iteration then counts as a miss of the target. In the example with End, the chance is then 80.5% (4,023 of 5,000).
 

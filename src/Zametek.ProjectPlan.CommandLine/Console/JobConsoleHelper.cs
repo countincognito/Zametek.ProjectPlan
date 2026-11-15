@@ -57,6 +57,17 @@ namespace Zametek.ProjectPlan.CommandLine
                 }
             }
 
+            // The statistics of a simulation leave out the iterations that missed a maximum latest finish time, and those
+            // are the late ones. The table has the counts, and this line says what they mean, on stderr.
+            if (result.Simulation is { InvalidConstraintsIterations: > 0 } simulation)
+            {
+                await console.WriteErrorLineAsync(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.ProjectPlan.Messages.Message_SimulationStatisticsTooEarly,
+                    simulation.InvalidConstraintsIterations,
+                    simulation.Iterations));
+            }
+
             // Why a tracked scenario did not compile, on stderr: its metrics are empty in the output.
             foreach (JobTrackedScenario tracked in result.TrackedScenarios?.Where(x => x.Errors.Count > 0) ?? [])
             {
