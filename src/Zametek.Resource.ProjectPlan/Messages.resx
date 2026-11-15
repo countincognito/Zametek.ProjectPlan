@@ -858,4 +858,7 @@
   <data name="Message_ScenarioChartFilesSaved" xml:space="preserve">
     <value>{0} files were saved in {1}.</value>
   </data>
+  <data name="Message_UserSettingsNotReadable" xml:space="preserve">
+    <value>The application could not read its settings, and so it started with the default settings. The file that it could not read is now {0}.</value>
+  </data>
 </root>

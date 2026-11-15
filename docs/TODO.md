@@ -6,15 +6,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   `FileStreamHelper.Save` and `SaveAsync` build the whole file in memory first. Thus, a failure of the build keeps the old file. But then `CreateFile` opens the target with `FileMode.Create`, which empties it, and the copy follows. A full disk, a lost network share or a stop of the process during the copy leaves an incomplete file. The comment above the two methods says that the old file stays as it was. This is true only for a failure before the copy.
 
-  Write to a temporary file in the folder of the target, flush it, and then replace the target (`File.Replace`, or `File.Move` with `overwrite`). `Zametek.Graphs.Avalonia` has its own copy of the helper (`Internal/FileStreamHelper.cs`), which needs the same change. The `SettingService` of the desktop writes `UserSettings.json`, the dock layout and the layout of the grids in place with `File.CreateText`. Change these three writes too.
+  Write to a temporary file in the folder of the target, and flush it. Then replace the target (`File.Replace`, or `File.Move` with `overwrite`). `Zametek.Graphs.Avalonia` has its own copy of the helper (`Internal/FileStreamHelper.cs`), which needs the same change.
+
+  Since 0.11.0-beta.2, the desktop writes its three settings files in this way (`FileStreamHelper.Replace`). The project files and the exports do not. First decide what a save does in three cases. The target is read-only or hidden. A sync client or a virus scanner holds the file open. The target is a link.
 
   The review read the source code. Nobody made a write fail to see the result.
-
-- [ ] **Start with the default settings when the application cannot read `UserSettings.json`** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
-
-  The constructor of `SettingServiceBase` reads the file with `JObject.Parse`, and it has no `catch`. An incomplete file, or a file that is not JSON, throws there. The start then writes "Fatal startup error" to the log and stops the desktop (`Shutdown(1)`). The user sees the splash screen go away, and no message. The read of the layout of the grids and the read of the dock layout each have a `catch` that resets the layout.
-
-  Catch the exception and write it to the log. Move the bad file to a name such as `UserSettings.json.bad`, and continue with the defaults. Tell the user one time. The entry above about the temporary file removes the most probable cause, which is a write that did not finish.
 
 - [ ] **Tell the user about an exception that nothing handles, and keep a copy of the plan** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
 

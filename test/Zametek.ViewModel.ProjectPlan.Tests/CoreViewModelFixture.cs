@@ -374,6 +374,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
             }
 
+            // For the tests of what the base does with a settings file.
+            public TestSettingService(string settingsFilename)
+                : base(settingsFilename)
+            {
+            }
+
             public override string ProjectDirectory
             {
                 get => m_ProjectDirectory;

@@ -27,6 +27,61 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private string FilePath(string name) => Path.Combine(m_TempDirectory, name);
 
         [Fact]
+        public void Replace_Given_NoFileThere_Then_WritesTheFileAndLeavesNoTemporaryFile()
+        {
+            string path = FilePath(@"settings.json");
+
+            FileStreamHelper.Replace(path, stream => stream.Write(new byte[] { 1, 2, 3 }));
+
+            File.ReadAllBytes(path).ShouldBe(new byte[] { 1, 2, 3 });
+            Directory.GetFiles(m_TempDirectory).ShouldBe([path]);
+        }
+
+        [Fact]
+        public void Replace_Given_ALongerFileAlreadyThere_Then_ReplacesItWhole()
+        {
+            string path = FilePath(@"settings.json");
+            File.WriteAllBytes(path, new byte[1000]);
+
+            FileStreamHelper.Replace(path, stream => stream.Write(new byte[] { 1, 2, 3 }));
+
+            File.ReadAllBytes(path).ShouldBe(new byte[] { 1, 2, 3 });
+            Directory.GetFiles(m_TempDirectory).ShouldBe([path]);
+        }
+
+        [Fact]
+        public void Replace_Given_AWriterThatFailsPartWay_Then_TheFileAlreadyThereIsLeftAsItWas()
+        {
+            // The writer has the stream of the file in its hands, and it stops after a part of the contents - as a full
+            // disk or a lost share stops a write. The file that was there must be whole, and nothing else must be left.
+            string path = FilePath(@"settings.json");
+            File.WriteAllBytes(path, new byte[] { 9, 9, 9 });
+
+            Should.Throw<IOException>(() => FileStreamHelper.Replace(path, stream =>
+            {
+                stream.Write(new byte[] { 1, 2 });
+                stream.Flush();
+                throw new IOException(@"The disk is full.");
+            }));
+
+            File.ReadAllBytes(path).ShouldBe(new byte[] { 9, 9, 9 });
+            Directory.GetFiles(m_TempDirectory).ShouldBe([path]);
+        }
+
+        [Fact]
+        public void Replace_Given_ATemporaryFileLeftByAnEarlierWrite_Then_WritesTheFile()
+        {
+            // A process that stopped in the middle of a write leaves its temporary file. The next write takes its place.
+            string path = FilePath(@"settings.json");
+            File.WriteAllBytes($@"{path}.tmp", new byte[] { 7 });
+
+            FileStreamHelper.Replace(path, stream => stream.Write(new byte[] { 1, 2, 3 }));
+
+            File.ReadAllBytes(path).ShouldBe(new byte[] { 1, 2, 3 });
+            Directory.GetFiles(m_TempDirectory).ShouldBe([path]);
+        }
+
+        [Fact]
         public async Task SaveAsync_Given_ALongerFileAlreadyThere_Then_ReplacesItWhole()
         {
             string path = FilePath(@"output.bin");

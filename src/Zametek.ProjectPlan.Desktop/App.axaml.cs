@@ -5,6 +5,7 @@ using Serilog;
 using Splat;
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,6 +13,7 @@ using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Shell.ProjectPlan;
 using Zametek.View.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.Desktop
 {
@@ -180,6 +182,19 @@ namespace Zametek.ProjectPlan.Desktop
                         }
 
                         splashView.Close();
+
+                        // A settings file that could not be read: the application runs with the default settings, and it
+                        // says so. The service moved the file out of the way, and so the next start does not say it again.
+                        if (settingService is SettingServiceBase { SettingsReadFailure: not null } settings)
+                        {
+                            await dialogService.ShowWarningAsync(
+                                Resource.ProjectPlan.Titles.Title_ProjectPlan,
+                                string.Empty,
+                                string.Format(
+                                    CultureInfo.CurrentCulture,
+                                    Resource.ProjectPlan.Messages.Message_UserSettingsNotReadable,
+                                    settings.UnreadableSettingsFilename ?? settings.SettingsFilename));
+                        }
                     }
                     catch (TaskCanceledException)
                     {

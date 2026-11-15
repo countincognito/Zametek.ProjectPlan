@@ -2261,6 +2261,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The application could not read its settings, and so it started with the default settings. The file that it could not read is now {0}..
+        /// </summary>
+        public static string Message_UserSettingsNotReadable {
+            get {
+                return ResourceManager.GetString("Message_UserSettingsNotReadable", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Vertex graph cannot contain Normal nodes without any End nodes.
         /// </summary>
         public static string Message_VertexGraphCannotContainNormalNodesWithoutAnyEndNodes {
