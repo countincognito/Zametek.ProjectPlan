@@ -180,6 +180,8 @@ A **chart** is `{ "format": "png", "width": 1600, "height": 900 }`. The `format`
 
 A **graph** is `{ "format": "svg" }`. The `format` is `jpeg` (the default), `png`, `pdf`, `svg`, `graphml` or `dot`. Each option, and each setting of an output, can be `null`. This is the same as if the request does not give it.
 
+A **CSV file** holds the names of the project as data, as RFC 4180 writes them. A name that starts with `=`, `+`, `-` or `@` goes into the file as it is. A spreadsheet program can read such a field as a formula. Thus, do not open a CSV file of a project that you do not trust in a spreadsheet program. A program that reads the file gets each name without a change.
+
 #### The simulation
 
 The simulation draws the duration of each activity from its three-point estimate, in each iteration. An activity that has no estimate keeps its duration. The simulation schedules the resources again in each iteration, and it finds the finish and the critical path. A request does not give the settings of the simulation. They are in the project. A person sets them in the dock "Simulation" of the application, and `zpp -o` saves them. They are the iterations, the distribution, the shape value of the modified beta-PERT distribution, the seed, whether to draw a new seed each time, and the target finish.

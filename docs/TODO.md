@@ -92,14 +92,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: start one time limit at the start of the request, which covers the upload and the job. Or set `MinRequestBodyDataRate` to a rate that fits the largest upload. Or read the body before the permit, but then bound the number of uploads that the server reads at one time.
 
-- [ ] **Decide if the CSV outputs must make a formula prefix safe** *(2026-11-14, from the review of `src`)*
-
-  `CsvText.Quote` follows RFC 4180. It puts a field with a comma, a quote or a line end in quotes. A field that starts with `=`, `+`, `-` or `@` goes out as it is. Excel reads such a field as a formula when a person opens the file.
-
-  The names of the activities and the resources come from the plan, and a server gets the plan from a client. The usual defense puts an apostrophe or a tab before such a field. But that changes the data for a program that reads the file.
-
-  Choices: keep the files as data, and tell the risk in `docs/API.md`. Or add an option of the job. Do a check of the report of the import problems too (`ImportIssueText.WriteReport`), because a person opens it, and it holds values from the workbook.
-
 - [ ] **Give the client of `zpp --server` a time limit** *(2026-11-14, from the review of `src`)*
 
   `JobClient.CreateClient` sets `Timeout.InfiniteTimeSpan`, because the limits of the server bound the time of a job. Thus, a server that accepts the connection and does not answer holds the client until the user stops it. Add an option for a time limit of the request.
