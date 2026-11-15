@@ -45,7 +45,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         // The options of zpp's that a request does not carry: the plan is its own part, a listing is its own endpoint, the
         // log is the server's, and where to run is the client's.
-        private static readonly string[] s_NotSent = [@"input", @"import", @"list-scenarios", @"verbose", @"server", @"local", @"api-key-file", @"allow-key-over-http"];
+        private static readonly string[] s_NotSent = [@"input", @"import", @"list-scenarios", @"verbose", @"server", @"local", @"api-key-file", @"allow-key-over-http", @"server-timeout"];
 
         private static string Serialize(CompileOptions options)
         {

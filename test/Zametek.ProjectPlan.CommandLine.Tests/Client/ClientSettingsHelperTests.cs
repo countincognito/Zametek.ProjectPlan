@@ -193,6 +193,34 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Resolve_Given_NoServerTimeout_Then_ARequestHasNoTimeLimit()
+        {
+            Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server })
+                .ShouldNotBeNull().RequestTimeout.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Resolve_Given_AServerTimeout_Then_ARequestHasThatTimeLimit()
+        {
+            Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = 1500 })
+                .ShouldNotBeNull().RequestTimeout.ShouldBe(TimeSpan.FromMilliseconds(1500));
+        }
+
+        [Fact]
+        public void Resolve_Given_ANegativeServerTimeout_Then_UsageException()
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = -1 }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionCannotBeNegative, @"--server-timeout"));
+        }
+
+        [Fact]
+        public void Resolve_Given_AServerTimeoutAndNoServer_Then_UsageException()
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", ServerTimeoutMilliseconds = 1500 }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithServer, @"--server-timeout", @"--server", ClientSettingsHelper.ServerVariable));
+        }
+
+        [Fact]
         public void Resolve_Given_AnEmptyKeyFile_Then_UsageException()
         {
             string keyFile = Path.GetTempFileName();

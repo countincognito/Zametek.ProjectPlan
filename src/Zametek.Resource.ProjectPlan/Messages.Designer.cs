@@ -1020,6 +1020,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request ({2})..
+        /// </summary>
+        public static string Message_ServerTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServerTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} has the setting '{1}', which is not a limit of zpp serve. The limits are {2}..
         /// </summary>
         public static string Message_ServeSettingNotKnown {

@@ -486,6 +486,59 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             elsewhere.Requests.ShouldBeEmpty();
         }
 
+        // A server that takes the connection and the request, and never answers. Without a time limit, zpp waits until a
+        // person stops it.
+        [Fact]
+        public async Task Run_Given_AServerThatDoesNotAnswerAndAServerTimeout_Then_ServerFailureAfterThatTime()
+        {
+            using var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            string address = $@"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}";
+            using var stopped = new CancellationTokenSource();
+            Task silent = Task.Run(async () =>
+            {
+                try
+                {
+                    // After this time, the connection closes, so that a zpp with no time limit of its own also ends.
+                    using TcpClient connection = await listener.AcceptTcpClientAsync(stopped.Token);
+                    await Task.Delay(s_Hang, stopped.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // The test is over.
+                }
+            });
+            var waited = Stopwatch.StartNew();
+
+            try
+            {
+                (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", address, @"--server-timeout", @"500"]);
+
+                exitCode.ShouldBe((int)ExitCode.ServerFailure);
+                output.ShouldBeEmpty();
+                error.ShouldBe(ErrorLine(string.Format(Resource.ProjectPlan.Messages.Message_ServerTimedOut, address, 500, @"--server-timeout")));
+                waited.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.FromMilliseconds(400));
+                waited.Elapsed.ShouldBeLessThan(s_Hang);
+            }
+            finally
+            {
+                await stopped.CancelAsync();
+                await silent;
+            }
+        }
+
+        [Fact]
+        public async Task Run_Given_AServerThatAnswersWithinTheServerTimeout_Then_TheJobRuns()
+        {
+            await using RunningServer server = await StartAsync();
+
+            (int exitCode, string output, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address, @"--server-timeout", @"120000"]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            output.ShouldNotBeEmpty();
+            error.ShouldBeEmpty();
+        }
+
         [Fact]
         public async Task Run_Given_AnAnswerThatIsNotJson_Then_ServerFailureSayingSo()
         {

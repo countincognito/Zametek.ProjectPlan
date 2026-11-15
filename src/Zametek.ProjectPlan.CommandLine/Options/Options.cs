@@ -51,6 +51,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_LocalLongName = "local";
         private const string c_ApiKeyFileLongName = "api-key-file";
         private const string c_AllowKeyOverHttpLongName = "allow-key-over-http";
+        private const string c_ServerTimeoutLongName = "server-timeout";
 
         // How zpp is used, shown above its options in its help: each form of the command, and what it does. Each line
         // fits a terminal 80 columns wide.
@@ -208,5 +209,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_AllowKeyOverHttpLongName, HelpText = "Send the API key over plain http to a server that is not on this computer - without it zpp refuses to, because anything on the way to the server can read the key (only valid when the run is on a server)")]
         public bool AllowKeyOverHttp { get; set; } = default;
+
+        [Option(c_ServerTimeoutLongName, Default = 0, HelpText = "Milliseconds zpp waits for the answer of the server to one request before it stops - 0 for no limit, because the limits of the server bound the time of a job (a run stopped this way exits with code 5; only valid when the run is on a server)")]
+        public int ServerTimeoutMilliseconds { get; set; } = default;
     }
 }

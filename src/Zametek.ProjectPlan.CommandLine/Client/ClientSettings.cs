@@ -15,5 +15,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The key requests carry, when the server needs one.
         public string? ApiKey { get; init; }
+
+        // How long zpp waits for the answer to one request, or null for no limit.
+        public TimeSpan? RequestTimeout { get; init; }
     }
 }

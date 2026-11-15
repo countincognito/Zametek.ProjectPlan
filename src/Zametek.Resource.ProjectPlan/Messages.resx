@@ -885,4 +885,7 @@
   <data name="Message_SimulationStatisticsTooEarly" xml:space="preserve">
     <value>Warning: the statistics of the simulation are too early. They leave out {0:N0} of {1:N0} iterations, in which an activity cannot finish by its maximum latest finish time.</value>
   </data>
+  <data name="Message_ServerTimedOut" xml:space="preserve">
+    <value>The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request ({2}).</value>
+  </data>
 </root>

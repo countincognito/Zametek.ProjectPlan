@@ -34,6 +34,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_SpecifyEitherOptionNotBoth, serverOption, localOption));
             }
 
+            if (options.ServerTimeoutMilliseconds < 0)
+            {
+                throw new UsageException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_OptionCannotBeNegative,
+                    Program.OptionLongName(nameof(Options.ServerTimeoutMilliseconds))));
+            }
+
             string? server = null;
             string source = serverOption;
 
@@ -54,7 +61,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 // An option that says how to talk to a server, with no server to talk to.
                 string? serverOnly = options.ApiKeyFile is not null
                     ? nameof(Options.ApiKeyFile)
-                    : options.AllowKeyOverHttp ? nameof(Options.AllowKeyOverHttp) : null;
+                    : options.AllowKeyOverHttp ? nameof(Options.AllowKeyOverHttp)
+                    : options.ServerTimeoutMilliseconds != 0 ? nameof(Options.ServerTimeoutMilliseconds) : null;
 
                 return serverOnly is null
                     ? null
@@ -99,6 +107,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 BaseAddress = baseAddress,
                 UnixSocket = socket,
                 ApiKey = apiKey,
+                RequestTimeout = options.ServerTimeoutMilliseconds > 0
+                    ? TimeSpan.FromMilliseconds(options.ServerTimeoutMilliseconds)
+                    : null,
             };
         }
 

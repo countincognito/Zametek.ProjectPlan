@@ -72,12 +72,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: start one time limit at the start of the request, which covers the upload and the job. Or set `MinRequestBodyDataRate` to a rate that fits the largest upload. Or read the body before the permit, but then bound the number of uploads that the server reads at one time.
 
-- [ ] **Give the client of `zpp --server` a time limit** *(2026-11-14, from the review of `src`)*
-
-  `JobClient.CreateClient` sets `Timeout.InfiniteTimeSpan`, because the limits of the server bound the time of a job. Thus, a server that accepts the connection and does not answer holds the client until the user stops it. Add an option for a time limit of the request.
-
-  Since 0.11.0-beta.2, `zpp` refuses to send the API key over plain `http` to a host that is not loopback, unless `--allow-key-over-http` allows it. It also follows no redirect. These were the other two parts of this entry.
-
 - [ ] **Do two smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
 
   1. **The dock layout.** `MainViewModel.RestoreLayout` gives `DockLayout.json` to the `DockSerializer` of `Dock.Serializer.Newtonsoft`. The review reported that this serializer reads type names from the file, with no binder. Nobody confirmed this in the source code of the package. The file is in the settings folder of the user, and thus the risk is low. If the report is correct, do a check of the type names against the types of Dock before the read.

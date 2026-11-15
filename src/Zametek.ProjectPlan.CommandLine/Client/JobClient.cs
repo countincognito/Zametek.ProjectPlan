@@ -211,7 +211,8 @@ namespace Zametek.ProjectPlan.CommandLine
                 };
             }
 
-            // The server's own limits bound how long a job may take.
+            // The server's own limits bound how long a job may take. A request has a time limit of its own only when the
+            // settings give one (RequestTimeout), which PostAsync applies.
             return new HttpClient(handler)
             {
                 BaseAddress = settings.BaseAddress,
@@ -372,94 +373,116 @@ namespace Zametek.ProjectPlan.CommandLine
 
             while (true)
             {
-                using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = createContent() };
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(c_JsonMediaType));
-                request.Headers.Add(c_TraceParentHeader, $@"00-{traceId}-{ActivitySpanId.CreateRandom().ToHexString()}-00");
+                // The time limit is for one request: the upload, the wait for the answer, and the read of the answer. A
+                // server that takes the connection and then says nothing does not hold zpp for longer.
+                using var requestLimit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                if (request.Content.Headers.ContentLength > c_ExpectContinueBytes)
+                if (settings.RequestTimeout is TimeSpan requestTimeout)
                 {
-                    request.Headers.ExpectContinue = true;
+                    requestLimit.CancelAfter(requestTimeout);
                 }
 
-                if (settings.ApiKey is string apiKey)
-                {
-                    request.Headers.Authorization = new AuthenticationHeaderValue(c_Scheme, apiKey);
-                }
+                CancellationToken requestToken = requestLimit.Token;
 
-                using HttpResponseMessage response = await SendAsync(client, request, settings, cancellationToken);
-                string requestId = response.Headers.TryGetValues(ResponseHeadersMiddleware.RequestIdHeader, out IEnumerable<string>? ids)
-                    ? ids.FirstOrDefault() ?? traceId
-                    : traceId;
-
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    try
+                    using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = createContent() };
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(c_JsonMediaType));
+                    request.Headers.Add(c_TraceParentHeader, $@"00-{traceId}-{ActivitySpanId.CreateRandom().ToHexString()}-00");
+
+                    if (request.Content.Headers.ContentLength > c_ExpectContinueBytes)
                     {
-                        T value = await response.Content.ReadFromJsonAsync<T>(JobJsonHelper.ClientOptions, cancellationToken)
-                            ?? throw NotReadable(settings);
-                        return new ServerAnswer<T>(value, null, requestId);
+                        request.Headers.ExpectContinue = true;
                     }
-                    catch (JsonException ex)
-                    {
-                        throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, settings.Server, ex.Message));
-                    }
-                }
 
-                // The server, or a proxy in front of it, sends the request to another address. zpp does not go there: the
-                // plan and the key are for the server that zpp was given.
-                if ((int)response.StatusCode is >= 300 and < 400)
+                    if (settings.ApiKey is string apiKey)
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue(c_Scheme, apiKey);
+                    }
+
+                    using HttpResponseMessage response = await SendAsync(client, request, settings, requestToken);
+                    string requestId = response.Headers.TryGetValues(ResponseHeadersMiddleware.RequestIdHeader, out IEnumerable<string>? ids)
+                        ? ids.FirstOrDefault() ?? traceId
+                        : traceId;
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        try
+                        {
+                            T value = await response.Content.ReadFromJsonAsync<T>(JobJsonHelper.ClientOptions, requestToken)
+                                ?? throw NotReadable(settings);
+                            return new ServerAnswer<T>(value, null, requestId);
+                        }
+                        catch (JsonException ex)
+                        {
+                            throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, settings.Server, ex.Message));
+                        }
+                    }
+
+                    // The server, or a proxy in front of it, sends the request to another address. zpp does not go there: the
+                    // plan and the key are for the server that zpp was given.
+                    if ((int)response.StatusCode is >= 300 and < 400)
+                    {
+                        throw new ServerException(string.Format(
+                            Resource.ProjectPlan.Messages.Message_ServerRedirected,
+                            settings.Server,
+                            response.Headers.Location?.ToString() ?? string.Empty,
+                            Program.OptionLongName(nameof(Options.Server))));
+                    }
+
+                    ProblemResponse? problem = await ReadProblemAsync(response, requestToken);
+
+                    // Busy: the job did not run, and is the same job tried again. A job that ran out of time is a 503 as well,
+                    // which trying again would only run out of time again.
+                    if (response.StatusCode == HttpStatusCode.ServiceUnavailable
+                        && !IsKind(problem, ProblemKind.JobTimeout))
+                    {
+                        TimeSpan retryAfter = GetRetryAfter(response, tries);
+
+                        if (waiting.Elapsed + retryAfter > busyLimit)
+                        {
+                            throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, settings.Server, (int)busyLimit.TotalSeconds));
+                        }
+
+                        Log.Warning("The server at {Server} is busy: trying again in {Seconds} s", settings.Server, retryAfter.TotalSeconds);
+                        await Task.Delay(retryAfter, cancellationToken);
+                        tries++;
+                        continue;
+                    }
+
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        throw new ServerException(settings.ApiKey is null
+                            ? string.Format(
+                                Resource.ProjectPlan.Messages.Message_ServerNeedsApiKey,
+                                settings.Server,
+                                ClientSettingsHelper.ApiKeyVariable,
+                                Program.OptionLongName(nameof(Options.ApiKeyFile)))
+                            : string.Format(Resource.ProjectPlan.Messages.Message_ServerRefusedApiKey, settings.Server));
+                    }
+
+                    // A job that ran and failed, and says so with the console: a project that does not compile, a file that cannot
+                    // be read, a scenario that cannot be selected, an output that could not be produced.
+                    if (problem?.Console is not null
+                        && ProblemHelper.TryGetKind(problem.Type, out ProblemKind kind)
+                        && GetExitCode(kind) is not null)
+                    {
+                        return new ServerAnswer<T>(default, problem, requestId);
+                    }
+
+                    throw new ServerException(string.Format(
+                        Resource.ProjectPlan.Messages.Message_ServerRefused,
+                        settings.Server,
+                        Describe(problem, response, requestId)));
+                }
+                catch (OperationCanceledException) when (requestLimit.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                 {
                     throw new ServerException(string.Format(
-                        Resource.ProjectPlan.Messages.Message_ServerRedirected,
+                        Resource.ProjectPlan.Messages.Message_ServerTimedOut,
                         settings.Server,
-                        response.Headers.Location?.ToString() ?? string.Empty,
-                        Program.OptionLongName(nameof(Options.Server))));
+                        (long)(settings.RequestTimeout?.TotalMilliseconds ?? 0),
+                        Program.OptionLongName(nameof(Options.ServerTimeoutMilliseconds))));
                 }
-
-                ProblemResponse? problem = await ReadProblemAsync(response, cancellationToken);
-
-                // Busy: the job did not run, and is the same job tried again. A job that ran out of time is a 503 as well,
-                // which trying again would only run out of time again.
-                if (response.StatusCode == HttpStatusCode.ServiceUnavailable
-                    && !IsKind(problem, ProblemKind.JobTimeout))
-                {
-                    TimeSpan retryAfter = GetRetryAfter(response, tries);
-
-                    if (waiting.Elapsed + retryAfter > busyLimit)
-                    {
-                        throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, settings.Server, (int)busyLimit.TotalSeconds));
-                    }
-
-                    Log.Warning("The server at {Server} is busy: trying again in {Seconds} s", settings.Server, retryAfter.TotalSeconds);
-                    await Task.Delay(retryAfter, cancellationToken);
-                    tries++;
-                    continue;
-                }
-
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    throw new ServerException(settings.ApiKey is null
-                        ? string.Format(
-                            Resource.ProjectPlan.Messages.Message_ServerNeedsApiKey,
-                            settings.Server,
-                            ClientSettingsHelper.ApiKeyVariable,
-                            Program.OptionLongName(nameof(Options.ApiKeyFile)))
-                        : string.Format(Resource.ProjectPlan.Messages.Message_ServerRefusedApiKey, settings.Server));
-                }
-
-                // A job that ran and failed, and says so with the console: a project that does not compile, a file that cannot
-                // be read, a scenario that cannot be selected, an output that could not be produced.
-                if (problem?.Console is not null
-                    && ProblemHelper.TryGetKind(problem.Type, out ProblemKind kind)
-                    && GetExitCode(kind) is not null)
-                {
-                    return new ServerAnswer<T>(default, problem, requestId);
-                }
-
-                throw new ServerException(string.Format(
-                    Resource.ProjectPlan.Messages.Message_ServerRefused,
-                    settings.Server,
-                    Describe(problem, response, requestId)));
             }
         }
 
