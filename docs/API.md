@@ -96,6 +96,10 @@ Give the id to the person who operates the server, who can find the request in t
 
 **Authentication.** A server that only this computer can reach needs no API key. A server that other computers can reach must have a key. Then each path under `/v1` needs the key, in the header `Authorization: Bearer <key>`. A request without the key, or with an incorrect key, gets status `401` with `WWW-Authenticate: Bearer`. The health endpoints, [the description of the API](#fetch-the-description) and [the schema of a project file](#fetch-the-schema-of-a-project-file) are the only paths that need no key.
 
+**A server with no key.** A web page in a browser on the same computer can also reach such a server. Thus, a server with no key refuses a request with an `Origin` header, which a browser adds for a page. It also refuses a request whose `Host` is not `localhost`, a name that ends with `.localhost`, or a loopback address. Each refusal has status `403`, and `detail` says why.
+
+The option `--allow-host` of `zpp serve` adds a name, for example the name that a proxy sends (refer to [A server with no API key](COMMAND-LINE.md#a-server-with-no-api-key)). A request on a Unix domain socket has no such check.
+
 A key has a minimum of 32 characters. A random 256-bit key in base64 has 44 characters, and `openssl rand -base64 32` makes such a key. The server keeps only a hash of the key and compares it in constant time. It logs each request that it refuses, at warning level, with the method, the path and the trace id, but never the key.
 
 Other users of the computer can read a key on a command line. Thus, give `curl` the header from a file with `-H @key-header.txt`. The file has the one line `Authorization: Bearer <key>`.
@@ -757,6 +761,7 @@ These problems have only their status, with the `type` that RFC 9110 gives to it
 | Status | When |
 | ------ | ---- |
 | `401` | The request needs the API key and does not have it, or it has an incorrect key. The response has `WWW-Authenticate: Bearer`. |
+| `403` | The server has no API key, and the request has an `Origin` header, or its `Host` is not this computer. |
 | `404` | There is nothing at the path. |
 | `405` | The path does not take the method. `Allow` shows the methods that it takes. |
 | `406` | `Accept` offers nothing that the operation can answer with. `detail` says what it can answer with. |
@@ -778,7 +783,7 @@ The web server itself refuses a request that it cannot read at all. Examples: a 
 | `500` `output-failed` | Writes the outputs that came, and plays back the console. | 1 |
 | A redirect (a status from `300` to `399`) | Does not follow it, and sends nothing to the new address. Shows the address from `Location`. | 5 |
 | `503` `busy` | Waits for the time in `Retry-After`, and longer each time. The wait doubles, up to half a minute, with a small random addition. Then it tries again, for up to two minutes. | Then 5 |
-| `503` `job-timeout`, the statuses `400`, `401`, `406`, `413` and `415`, `422` `validation-failed`, no answer, and an answer that `zpp` cannot read | Shows the reason from `detail` and `errors`, with the id of the request. | 5 |
+| `503` `job-timeout`, the statuses `400`, `401`, `403`, `406`, `413` and `415`, `422` `validation-failed`, no answer, and an answer that `zpp` cannot read | Shows the reason from `detail` and `errors`, with the id of the request. | 5 |
 
 An answer whose console has an exit code that does not match its kind is an answer that `zpp` cannot read. An example is a `compilation-failed` with exit code 0. Then `zpp` exits with code 5, and it prints and writes nothing.
 
@@ -881,6 +886,7 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
 - The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
 - The member `warnings` of the answer and of the problems `compilation-failed` and `output-failed`: the warnings of the check of the project.
+- The status `403` of a server with no API key: the request has an `Origin` header, or its `Host` is not this computer.
 - The member `errors` of each item of `trackedScenarios`: why the scenario did not compile.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.

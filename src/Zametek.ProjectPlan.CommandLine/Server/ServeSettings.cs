@@ -29,6 +29,10 @@ namespace Zametek.ProjectPlan.CommandLine
         // Whether a proxy in front of it ends TLS, which lets it listen over plain http beyond this machine.
         public bool BehindTlsProxy { get; init; }
 
+        // The names, besides those of this computer, that a request may give as its Host when the server has no key (see
+        // LocalRequestMiddleware).
+        public IReadOnlyList<string> AllowedHosts { get; init; } = [];
+
         public ServeLimits Limits { get; init; } = new();
     }
 }

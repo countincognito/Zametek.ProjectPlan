@@ -966,6 +966,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} is only for a server with no API key: a server with a key does not look at the Host of a request..
+        /// </summary>
+        public static string Message_ServeAllowHostNeedsNoApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServeAllowHostNeedsNoApiKey", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to '{0}', from {1}, is not the name of a host: give a name such as plan.example.com, with no port..
+        /// </summary>
+        public static string Message_ServeAllowHostNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeAllowHostNotValid", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server has no API key, and so it takes only a request for localhost or a loopback address, or for a name that {0} gives: the Host of the request is a different name..
+        /// </summary>
+        public static string Message_ServeHostNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_ServeHostNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server has no API key, and so it takes no request from a web page: the request has an Origin header..
+        /// </summary>
+        public static string Message_ServeOriginNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_ServeOriginNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to zpp does not send the API key to {0} over plain http, because each computer on the way can read the key: use an https address, or {1} if the network between the two computers is private..
         /// </summary>
         public static string Message_ServerKeyOverPlainHttp {

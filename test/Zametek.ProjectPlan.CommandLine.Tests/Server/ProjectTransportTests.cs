@@ -79,6 +79,96 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return bytes.ToArray();
         }
 
+        // A server with no key takes no request that a web page can send: one with an Origin header, or one for a name
+        // that is not this computer.
+        [Theory]
+        [InlineData(@"/v1/info")]
+        [InlineData(@"/v1/openapi")]
+        [InlineData(@"/health/live")]
+        public async Task Request_Given_NoKeyAndAnOriginHeader_Then_ForbiddenAsAProblem(string path)
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, path, headers => headers.Add(@"Origin", @"http://evil.example.com"));
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            response.Content.Headers.ContentType?.MediaType.ShouldBe(@"application/problem+json");
+            ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
+            problem.Status.ShouldBe(403);
+            problem.Title.ShouldBe(@"Forbidden");
+            problem.Detail.ShouldBe(Resource.ProjectPlan.Messages.Message_ServeOriginNotAllowed);
+            response.Headers.Contains(ResponseHeadersMiddleware.RequestIdHeader).ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task Compile_Given_NoKeyAndAnOriginHeader_Then_ForbiddenAndNoJobRuns()
+        {
+            using MultipartFormDataContent content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            int before = Server.ApiRequests;
+
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Post, @"/v1/projects/compile", headers => headers.Add(@"Origin", @"null"), content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            Server.ApiRequests.ShouldBe(before);
+        }
+
+        [Fact]
+        public async Task Request_Given_NoKeyAndAHostThatIsNotThisComputer_Then_ForbiddenAsAProblem()
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/info", headers => headers.Host = @"rebound.example.com");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
+            problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeHostNotAllowed, @"--allow-host"));
+        }
+
+        [Theory]
+        [InlineData(@"localhost")]
+        [InlineData(@"zpp.localhost:9770")]
+        [InlineData(@"127.0.0.1")]
+        public async Task Request_Given_NoKeyAndAHostOfThisComputer_Then_TheAnswer(string host)
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/info", headers => headers.Host = host);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task Request_Given_NoKeyAndAHostThatTheServerWasToldToTake_Then_TheAnswer()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = s_Limits, AllowedHosts = [@"plan.example.com"] });
+            using var allowed = new HttpRequestMessage(HttpMethod.Get, @"/v1/info");
+            allowed.Headers.Host = @"plan.example.com";
+            using var other = new HttpRequestMessage(HttpMethod.Get, @"/v1/info");
+            other.Headers.Host = @"other.example.com";
+
+            using HttpResponseMessage allowedResponse = await server.Client.SendAsync(allowed);
+            using HttpResponseMessage otherResponse = await server.Client.SendAsync(other);
+
+            allowedResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+            otherResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Request_Given_AKeyAndAnOriginHeader_Then_TheKeyDecides()
+        {
+            // A server with a key does not look at the Origin or at the Host: a page does not have the key.
+            const string key = @"0123456789abcdef0123456789abcdef";
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner, new ServeSettings { Limits = s_Limits, ApiKey = key });
+            using var withKey = new HttpRequestMessage(HttpMethod.Get, @"/v1/info");
+            withKey.Headers.Add(@"Origin", @"http://app.example.com");
+            withKey.Headers.Host = @"plan.example.com";
+            withKey.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", key);
+            using var withoutKey = new HttpRequestMessage(HttpMethod.Get, @"/v1/info");
+            withoutKey.Headers.Add(@"Origin", @"http://app.example.com");
+
+            using HttpResponseMessage withKeyResponse = await server.Client.SendAsync(withKey);
+            using HttpResponseMessage withoutKeyResponse = await server.Client.SendAsync(withoutKey);
+
+            withKeyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+            withoutKeyResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+
         [Theory]
         [InlineData(@"/v1/projects/compile", @"POST, OPTIONS", @"multipart/form-data")]
         [InlineData(@"/v1/projects/scenarios", @"POST, OPTIONS", @"multipart/form-data")]

@@ -364,6 +364,15 @@ The file holds limits only. If it has a name that is not the setting of a limit,
 
 The simulations of the jobs of a server share the processors. A simulation that begins takes the processors divided by the number of simulations that run at that time, itself among them. The first takes all the processors, the second half of them, the third a third, and so on, and each takes at least one. A simulation keeps its share to its end. This does not change the result of a simulation, which is the same for any number of threads. It limits the threads that the jobs ask for. A run of `zpp` is one job, and it has all the processors. There is no setting for this.
 
+### A server with no API key
+
+A server that only this computer can reach needs no API key. But a web page that the user opens in a browser is also on this computer. The browser can send a request to `http://localhost:9770` for the page. Thus, a server with no key refuses two kinds of request, with status `403`:
+
+- A request with an `Origin` header. A browser adds this header to each POST that a page sends, and the page cannot remove it. `zpp` and scripts do not send it.
+- A request whose `Host` is not `localhost`, a name that ends with `.localhost`, or a loopback address. A page can reach the server through a name of its own that points at this computer.
+
+A proxy on this computer in front of the server sends its own name as the `Host`. Give this name to the server: `zpp serve --allow-host plan.example.com`. For more than one name, give the option more than once. The server refuses `--allow-host` together with an API key, because a server with a key does not do these checks. A request on a Unix domain socket also has no such check, because a browser cannot connect to a socket.
+
 ### Other computers
 
 ```

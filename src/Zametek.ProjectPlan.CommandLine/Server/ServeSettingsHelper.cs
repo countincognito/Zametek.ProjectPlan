@@ -82,8 +82,43 @@ namespace Zametek.ProjectPlan.CommandLine
                 Verbose = options.Verbose,
                 LogFormat = options.LogFormat,
                 BehindTlsProxy = options.BehindTlsProxy,
+                AllowedHosts = ResolveAllowedHosts(options, apiKey),
                 Limits = ResolveLimits(options, settingsDirectory, environment),
             };
+        }
+
+        // The names that --allow-host gives, each one time. A name is the name of a host and nothing else: the server
+        // compares it with the Host of a request without its port. With a key, the server does not look at the Host, and so
+        // the option is refused and does not do nothing in silence.
+        private static List<string> ResolveAllowedHosts(
+            ServeOptions options,
+            string? apiKey)
+        {
+            string allowHost = OptionLongName(nameof(ServeOptions.AllowHost));
+            List<string> names = [];
+
+            foreach (string given in options.AllowHost)
+            {
+                string name = given.Trim();
+
+                if (Uri.CheckHostName(name) == UriHostNameType.Unknown)
+                {
+                    throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNotValid, given, allowHost));
+                }
+
+                if (!names.Contains(name, StringComparer.OrdinalIgnoreCase))
+                {
+                    names.Add(name);
+                }
+            }
+
+            if (names.Count > 0
+                && apiKey is not null)
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNeedsNoApiKey, allowHost));
+            }
+
+            return names;
         }
 
         // The directory zpp is in, where it looks for zpp-serve.json: the executable's, unless zpp was started through

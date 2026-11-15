@@ -297,6 +297,11 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 app.UseMiddleware<ApiKeyMiddleware>(apiKey);
             }
+            else
+            {
+                // A server with no key takes no request from a web page, which has no key to give either.
+                app.UseMiddleware<LocalRequestMiddleware>(settings.AllowedHosts);
+            }
 
             app.UseRateLimiter();
 

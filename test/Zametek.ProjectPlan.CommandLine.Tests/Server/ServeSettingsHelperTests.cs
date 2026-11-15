@@ -269,6 +269,35 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void Resolve_Given_NamesThatAProxySends_Then_TheServerTakesThem()
+        {
+            Resolve(new ServeOptions { AllowHost = [@" plan.example.com ", @"PLAN.example.com", @"zpp.internal"] })
+                .AllowedHosts.ShouldBe([@"plan.example.com", @"zpp.internal"]);
+            Resolve().AllowedHosts.ShouldBeEmpty();
+        }
+
+        [Theory]
+        [InlineData(@"plan.example.com:443")]
+        [InlineData(@"https://plan.example.com")]
+        [InlineData(@"plan example")]
+        [InlineData(@"")]
+        public void Resolve_Given_ANameThatIsNotTheNameOfAHost_Then_UsageException(string name)
+        {
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { AllowHost = [name] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNotValid, name, Option(nameof(ServeOptions.AllowHost))));
+        }
+
+        [Fact]
+        public void Resolve_Given_NamesThatAProxySendsAndAKey_Then_UsageException()
+        {
+            // A server with a key does not look at the name that a request gives, and so the option would do nothing.
+            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [ServeSettingsHelper.ApiKeyVariable] = c_Key };
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { AllowHost = [@"plan.example.com"] }, environment: environment))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNeedsNoApiKey, Option(nameof(ServeOptions.AllowHost))));
+        }
+
+        [Fact]
         public void Resolve_Given_ASettingsFileThatIsNotJson_Then_UsageException()
         {
             Should.Throw<UsageException>(() => Resolve(settingsJson: @"{ MaxJobs: "))

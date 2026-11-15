@@ -870,4 +870,16 @@
   <data name="Message_ServeSettingNotKnown" xml:space="preserve">
     <value>{0} has the setting '{1}', which is not a limit of zpp serve. The limits are {2}.</value>
   </data>
+  <data name="Message_ServeOriginNotAllowed" xml:space="preserve">
+    <value>The server has no API key, and so it takes no request from a web page: the request has an Origin header.</value>
+  </data>
+  <data name="Message_ServeHostNotAllowed" xml:space="preserve">
+    <value>The server has no API key, and so it takes only a request for localhost or a loopback address, or for a name that {0} gives: the Host of the request is a different name.</value>
+  </data>
+  <data name="Message_ServeAllowHostNotValid" xml:space="preserve">
+    <value>'{0}', from {1}, is not the name of a host: give a name such as plan.example.com, with no port.</value>
+  </data>
+  <data name="Message_ServeAllowHostNeedsNoApiKey" xml:space="preserve">
+    <value>{0} is only for a server with no API key: a server with a key does not look at the Host of a request.</value>
+  </data>
 </root>

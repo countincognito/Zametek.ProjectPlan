@@ -21,6 +21,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_JobTimeoutLongName = "job-timeout";
         private const string c_MaxCompileTimeoutLongName = "max-compile-timeout";
         private const string c_BehindTlsProxyLongName = "behind-tls-proxy";
+        private const string c_AllowHostLongName = "allow-host";
         private const string c_LogFormatLongName = "log-format";
 
         // How zpp serve is used, shown above its options in its help: what it does, how to reach and stop it, where else
@@ -65,6 +66,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_BehindTlsProxyLongName, HelpText = "Say that a proxy in front of zpp serve ends TLS, which lets it listen on an http address that other machines can reach - it refuses to otherwise, as plain http would send the API key in the clear. Only the proxy may be able to reach that address")]
         public bool BehindTlsProxy { get; set; } = default;
+
+        [Option(c_AllowHostLongName, HelpText = "Name that a request may give as its Host when the server has no API key, such as the name that a proxy in front of the server sends. A server with no key takes only requests for localhost or a loopback address, and none with an Origin header, so that a web page in a browser cannot send it a job. Repeat it for more than one name")]
+        public IEnumerable<string> AllowHost { get; set; } = [];
 
 
 

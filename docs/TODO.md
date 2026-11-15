@@ -92,14 +92,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: start one time limit at the start of the request, which covers the upload and the job. Or set `MinRequestBodyDataRate` to a rate that fits the largest upload. Or read the body before the permit, but then bound the number of uploads that the server reads at one time.
 
-- [ ] **Refuse a request from a web page when the server has no key** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
-
-  Without a key, `zpp serve` listens only on loopback, and it adds no `ApiKeyMiddleware`. Nothing in the server reads the `Host` header or the `Origin` header. Thus, a web page that the user opens in a browser can POST a `multipart/form-data` plan to the server. The browser sends such a request without a preflight. The page cannot read the answer, but the job runs, and a loop of requests keeps the server busy. With DNS rebinding, a page can also read the answers.
-
-  When the server has no key, refuse a request whose `Host` is not a loopback name or address. Also refuse a request with an `Origin` header. `zpp --server` and a script send no `Origin`. A reverse proxy in front of such a server sends its own `Host`. Thus, the check needs an option for the names that the server accepts.
-
-  Add a kind of problem for the refusal to `docs/API.md` and to `docs/openapi.yaml`. Nobody tested this from a browser.
-
 - [ ] **Decide if the CSV outputs must make a formula prefix safe** *(2026-11-14, from the review of `src`)*
 
   `CsvText.Quote` follows RFC 4180. It puts a field with a comma, a quote or a line end in quotes. A field that starts with `=`, `+`, `-` or `@` goes out as it is. Excel reads such a field as a formula when a person opens the file.

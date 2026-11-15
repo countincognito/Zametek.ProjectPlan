@@ -132,6 +132,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             await ObserveWhatAServerAnswersAsync(observations);
             await ObserveWhatAServerAnswersAboutAJobThatRunsAsync(observations);
             await ObserveWhatAServerThatNeedsAKeyAnswersAsync(observations);
+            await ObserveWhatAServerWithNoKeyAnswersAWebPageAsync(observations);
             await ObserveWhatAServerThatIsFullAnswersAsync(observations);
             await ObserveWhatAServerThatFailsAnswersAsync(observations);
             await ObserveWhatAServerThatWarmsUpAnswersAsync(observations);
@@ -300,6 +301,37 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             HttpRequestMessage withTheKey = Get(@"/v1/info");
             withTheKey.Headers.TryAddWithoutValidation(@"Authorization", $@"Bearer {c_ApiKey}");
             await observations.SendAsync(@"info, with the key", client, withTheKey, HttpStatusCode.OK);
+        }
+
+        // A server with no key takes no request that a web page can send. A browser gives the origin of the page in the
+        // Origin header, and each operation answers such a request with 403.
+        private async Task ObserveWhatAServerWithNoKeyAnswersAWebPageAsync(Observations observations)
+        {
+            await using RunningServer server = await RunningServer.StartAsync(m_Engine.JobRunner);
+            HttpClient client = server.Client;
+
+            static HttpRequestMessage FromAPage(HttpRequestMessage request)
+            {
+                request.Headers.TryAddWithoutValidation(@"Origin", @"http://page.example.com");
+                return request;
+            }
+
+            await observations.SendAsync(@"info, from a web page", client, FromAPage(Get(@"/v1/info")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"info, the headers, from a web page", client, FromAPage(new HttpRequestMessage(HttpMethod.Head, @"/v1/info")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"compile, from a web page", client, FromAPage(Post(@"/v1/projects/compile", Plan())), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"scenarios, from a web page", client, FromAPage(Post(@"/v1/projects/scenarios", Plan())), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"job, from a web page", client, FromAPage(Get($@"/v1/jobs/{c_JobId}")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"description, from a web page", client, FromAPage(Get(@"/v1/openapi")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"description, the headers, from a web page", client, FromAPage(new HttpRequestMessage(HttpMethod.Head, @"/v1/openapi")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"schema of a project, from a web page", client, FromAPage(Get(@"/v1/schemas/project")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"schema of a project, the headers, from a web page", client, FromAPage(new HttpRequestMessage(HttpMethod.Head, @"/v1/schemas/project")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"live, from a web page", client, FromAPage(Get(@"/health/live")), HttpStatusCode.Forbidden);
+            await observations.SendAsync(@"ready, from a web page", client, FromAPage(Get(@"/health/ready")), HttpStatusCode.Forbidden);
+
+            foreach (string path in new[] { @"/v1/info", @"/v1/openapi", @"/v1/schemas/project", @"/v1/projects/compile", @"/v1/projects/scenarios", $@"/v1/jobs/{c_JobId}" })
+            {
+                await observations.SendAsync($@"what {path} takes, from a web page", client, FromAPage(new HttpRequestMessage(HttpMethod.Options, path)), HttpStatusCode.Forbidden);
+            }
         }
 
         private async Task ObserveWhatAServerThatIsFullAnswersAsync(Observations observations)
