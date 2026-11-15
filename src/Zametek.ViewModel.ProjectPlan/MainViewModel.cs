@@ -1115,7 +1115,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     catch (Exception ex)
                     {
                         // The persisted dock layout is corrupt or incompatible - reset to default.
-                        Debug.WriteLine($"[MainViewModel] Failed to deserialize dock layout, resetting: {ex.Message}");
+                        m_Logger.LogWarning(ex, "Could not read the saved dock layout, and so the default layout is in use");
                         m_Layout = null;
                     }
                 }
@@ -1130,7 +1130,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (defaultLayout is not null
                         && !DockLayoutHelper.CollectToolIds(defaultLayout).IsSubsetOf(DockLayoutHelper.CollectToolIds(m_Layout)))
                     {
-                        Debug.WriteLine(@"[MainViewModel] Persisted dock layout is missing tools, resetting");
+                        m_Logger.LogWarning("The saved dock layout does not have each tool of this version, and so the default layout is in use");
                         m_Layout = defaultLayout;
                     }
                 }

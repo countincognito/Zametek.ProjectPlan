@@ -216,17 +216,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Types such as `IReadOnlyList<T>` or `ImmutableArray<T>` make the snapshot rule a rule of the compiler. Mapperly and Newtonsoft.Json must still read and write the models. Thus, try one model first, when it changes for another reason.
 
-- [ ] **Write to the log the four failures that only `Debug.WriteLine` reports** *(2026-11-14, from the review of `src`)*
-
-  Four sites report a failure with `Debug.WriteLine`, which a Release build removes:
-
-  - `SettingService`, when it cannot read the layout of the grids.
-  - `MainViewModel.RestoreLayout`, when it cannot read the dock layout.
-  - `MainViewModel.RestoreLayout`, when the dock layout has a tool missing.
-  - `DataGridPersistLayoutBehavior`, when it cannot restore the layout of one grid.
-
-  Thus, a user whose layout resets at each start has nothing in the log file. Use the logger, and give it the exception.
-
 - [ ] **Give the controls names for a screen reader** *(2026-11-14, from the review of `src`)*
 
   No `.axaml` file under `src` sets `AutomationProperties`. Thus, a button that has only an icon has no name for a screen reader, and the charts and the graphs have none. Start with the buttons that have only an icon, and take `AutomationProperties.Name` from the resources. The review reported one such button in `MainView.axaml`. The names also give a UI test a stable way to find a control.

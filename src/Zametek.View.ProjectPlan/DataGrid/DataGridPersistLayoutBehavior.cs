@@ -4,9 +4,10 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
+using Microsoft.Extensions.Logging;
+using Splat;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
@@ -289,7 +290,12 @@ namespace Zametek.View.ProjectPlan
                     // A bad persisted layout must never take down view materialisation:
                     // fall back to the markup defaults. The next layout save overwrites
                     // the offending entry with the live layout, so this self-heals.
-                    Debug.WriteLine($"[{nameof(DataGridPersistLayoutBehavior)}] Failed to restore layout for '{m_GridName}', using defaults: {ex.Message}");
+                    // The behavior is made by a view, with no logger of its own, and so it asks for one here. A host
+                    // with no logger, such as a test, gives none.
+                    Locator.Current.GetService<ILogger<DataGridPersistLayoutBehavior>>()?.LogWarning(
+                        ex,
+                        "Could not restore the saved layout of the grid {GridName}, and so its default layout is in use",
+                        m_GridName);
                 }
             }
         }
