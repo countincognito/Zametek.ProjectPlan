@@ -514,33 +514,23 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The direction "delete locks rather than order them" in the entry for rule 6 above becomes more attractive if the browser stays single-threaded. A layer of view models with affinity to the UI thread has nothing to contend over.
 
-- [ ] **Stop the MSIX build from depending on whether NuGet restores** *(2026-08-21)*
+- [ ] **Build the packages as a step of each release** *(2026-11-15, from the audit of the packaging path)*
 
-  The packaging build needs the `project.assets.json` file of every project to carry a target for each RID in the bundle. `build-msix.ps1` arranges this. It sets `RuntimeIdentifiers` in the environment, and thus the restore fills all three targets in one pass. This works only if the restore runs.
+  The packaging projects are outside the filter `Zametek.ProjectPlan.slnf`, and thus no gate builds them. A fault in that path can stay there in silence. For example, `-Clean` in `build-msix.ps1` deleted nothing from the day that someone wrote it, and it printed "Cleaned obj/bin". The WiX components once took their files from a folder that the publish no longer wrote to.
 
-  Sometimes the restore does not run. NuGet then reports "All projects are up-to-date for restore" and keeps the assets file that is already there. An ordinary `dotnet build` can leave such a file, and this file has no RIDs at all. Then the inner publish for each RID fails with `NETSDK1047`, and the message names a project that looks innocent.
+  On 2026-11-15, an audit read `build-msix.ps1`, the two `.wapproj` files and the WiX project for more faults of this kind. It found two in the script, and both now stop the script. The first was a build that wrote no bundle, or only the bundle of an earlier run. The second was a `bin` folder that `-Clean` could not delete. The script also forces the NuGet restore now (`RestoreForce`). Before, a restore that NuGet did not do made the build fail with `NETSDK1047`.
 
-  This occurred once, during the `PlatformTarget` investigation, on `Zametek.Shell.ProjectPlan`. It was immediately after a plain build of `Zametek.ProjectPlan.slnx`. The run before and the run after both succeeded. Thus, the fault looks like flakiness and not like a missing input.
+  After these changes, a run of the script built the two bundles in 7 minutes, directly after an ordinary build of the solution. No package in the bundles had a `.pdb` file.
 
-  Three attempts failed. The comments of the script record all three, and thus the next person does not repeat them:
+  A gate in the hook or in CI is not practical. The build needs the MSBuild of Visual Studio with the Windows App Packaging SDK, and it takes minutes. Thus, build the two bundles and the MSI before the tag of each release that has them. The WiX project stops a build for a wrong platform, or with a publish that is older than the code (the target `CheckTheInstallerInputs`). A bundle has no signature unless the script gets `-Sign`.
 
-  1. Deleting `obj` in `-Clean` forces a restore and closes the fault in theory. The attempt on 2026-08-21 failed. MSBuild evaluates every project before it runs any target, and that evaluation imports `obj\<project>.nuget.g.props`. With an empty `obj`, the DesktopBridge targets fail with `MSB4024`. They look for a file that the same command is about to write.
-  2. A separate invocation for the restore fixes that problem. But then the targets for each RID are not filled. The `RuntimeIdentifiers` environment variable does not reach a standalone `/t:Restore` in the way it reaches the `/restore` switch.
-  3. Passing `RuntimeIdentifiers` as a global property is worse. The inner publishes for each RID cannot then override it. The SDK rejects the whole list as a single identifier (`NETSDK1083`).
+- [ ] **Find why a publish of the Browser head waits in the workload restore** *(2026-11-15, from the audit of the packaging path)*
 
-  Two options remain. The first is `-p:RestoreForce=true` on the existing single invocation. It costs a few seconds of re-evaluation on a build that takes minutes, and it makes the RID targets unconditional. The second option is cheaper and less certain. It reads the assets file of each referenced project at the start. It fails early with a message that names the real problem, and `NETSDK1047` does not misdirect.
+  On 2026-11-15, `dotnet publish -c Release` of `Zametek.ProjectPlan.Browser` wrote "Determining projects to restore...", and then nothing for 11 minutes. Its child process was `dotnet workload restore`, which the target `WasmWorkloadRestore` in `Directory.Build.targets` starts before each restore of the Browser head. The workload was on the computer already. With `WASM_WORKLOAD=0`, which skips the target, the same publish took 4 minutes.
 
-- [ ] **Audit the packaging path for more commands and paths that fail in silence** *(2026-08-21)*
+  The hook does not meet this, because it builds with `--no-restore`. The comment of the target says that the installation of a workload needs administrator rights. Thus, the restore possibly waits for a question that a shell with no window cannot show. Find what it waits for. Then give the target a time limit, or let it start the restore only when the workload is not there.
 
-  `-Clean` in `build-msix.ps1` never deleted anything, from the day that someone wrote it. It used `Get-ChildItem -Path $dir -Include bin,obj -Directory`. `-Include` filters the leaf of `-Path` and not the children, unless the path itself ends in a wildcard. Thus, the pipeline matched nothing, and the script still printed "Cleaned obj/bin".
-
-  Nothing failed, and this is the reason why nobody noticed it for a year. It also silently invalidated every "clean build" that anyone believed they ran. One example is the first comparison in the `PlatformTarget` investigation. Stale IKVM native staging made 64 files look as if a change to a managed compiler switch rearranged the JDK.
-
-  A second case appeared almost immediately, in 349baed0. The WiX components took their files from `$(var.<project>.TargetDir)publish\`. The publish no longer wrote to this directory, and nothing reported a missing input.
-
-  The packaging projects are outside the filter `Zametek.ProjectPlan.slnf`. Thus, no gate builds or exercises them. The same class of fault can be in the rest of that path. Its sign is a command or a path that seems correct, because its failure mode is silence.
-
-  Read `build-msix.ps1`, the two `.wapproj` files and the WiX project with this specific suspicion. Then ask if a gate can cover any of them. Since 2026-11-06, the WiX project stops a build for a platform that is not x64. It also stops when a file of its publish is not there or is older than a file under `src` (the target `CheckTheInstallerInputs`).
+  `make publish-browser` has the same wait. The release workflow does not publish the Browser head.
 
 - [ ] **Add a Debug assertion for the locks that the application holds when it announces a change** *(2026-08-21, extracted from the rule-6 entry as the piece that is worth doing on its own)*
 

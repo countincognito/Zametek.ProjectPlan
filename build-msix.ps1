@@ -65,7 +65,12 @@ function Remove-BuildOutput {
         if (-not (Test-Path $dir)) { continue }
         Get-ChildItem -Path $dir -Directory -Force |
             Where-Object { $_.Name -eq 'bin' } |
-            ForEach-Object { Remove-Item -Recurse -Force $_.FullName -ErrorAction SilentlyContinue }
+            ForEach-Object {
+                # A bin that cannot be removed stops the script, for example when a program that runs from it holds a
+                # file. With '-ErrorAction SilentlyContinue', the script said "Cleaned" and left the folder there: the
+                # same silence that the comment above tells of.
+                Remove-Item -Recurse -Force $_.FullName
+            }
     }
 }
 
@@ -114,9 +119,15 @@ try {
         # '/restore' rather than a separate '/t:Restore' invocation: the switch runs restore in its own
         # pass and re-evaluates before building, which is what gets the RuntimeIdentifiers environment
         # variable into the assets files. A standalone restore target does not.
+        #
+        # 'RestoreForce' makes that restore run each time. Without it, NuGet sometimes said "All projects
+        # are up-to-date for restore" and kept an assets file that an ordinary 'dotnet build' wrote, which
+        # has no target for any RID. The inner publish of each RID then failed with NETSDK1047, and its
+        # message named a project that looked innocent. The forced restore costs some seconds.
         $msbuildArgs = @(
             $proj,
             '/restore',
+            '/p:RestoreForce=true',
             '/t:Build',
             "/p:Configuration=$Configuration",
             "/p:Platform=$Platform",
@@ -127,17 +138,21 @@ try {
             '/v:minimal',
             '/nologo'
         )
+        $started = Get-Date
         & $msbuild @msbuildArgs
         if ($LASTEXITCODE -ne 0) { throw "Build failed for $name (exit $LASTEXITCODE)" }
 
+        # The bundle must be one that this build wrote. Before, the newest bundle in the folder counted,
+        # whenever it was made, and no bundle at all was only a warning: a build that wrote nothing looked
+        # like a build that worked.
         $appPkgs = Join-Path (Split-Path $proj -Parent) 'AppPackages'
         $bundle = Get-ChildItem -Path $appPkgs -Recurse -Filter '*.msixbundle' -ErrorAction SilentlyContinue |
+            Where-Object { $_.LastWriteTime -ge $started } |
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
-        if ($bundle) {
-            Write-Host "Bundle: $($bundle.FullName)" -ForegroundColor Green
-        } else {
-            Write-Warning "No .msixbundle found under $appPkgs"
+        if (-not $bundle) {
+            throw "The build of $name wrote no .msixbundle under $appPkgs"
         }
+        Write-Host "Bundle: $($bundle.FullName)" -ForegroundColor Green
     }
 }
 finally {
