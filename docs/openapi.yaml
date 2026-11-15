@@ -1015,7 +1015,7 @@ components:
     Server:
       summary: A server with the limits that it has at its start
       value:
-        version: 0.11.0-beta.1
+        version: 0.11.0-beta.2
         culture: en-GB
         timeZone: Europe/London
         limits:
