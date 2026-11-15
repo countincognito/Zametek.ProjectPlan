@@ -33,6 +33,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public static void SetTrackersRevision(CoreViewModel core, int value) =>
             Field<CoreViewModel>(@"m_TrackersRevision").SetValue(core, value);
 
+        public static void SetProjectScenarioUpdateRevision(CoreViewModel core, int value) =>
+            Field<CoreViewModel>(@"m_ProjectScenarioUpdateRevision").SetValue(core, value);
+
+        public static void SetProjectUpdateRevision(ProjectScenarioManagerViewModel project, int value) =>
+            Field<ProjectScenarioManagerViewModel>(@"m_ProjectUpdateRevision").SetValue(project, value);
+
         public static void SetTitleRevision(ProjectScenarioManagerViewModel project, int value) =>
             Field<ProjectScenarioManagerViewModel>(@"m_TitleRevision").SetValue(project, value);
 
@@ -226,6 +232,77 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             raises.ShouldBeEmpty();
         }
 
+        // The scenario has the mark already, and so the flag does not change: only the counter says that a change came.
+        [Theory]
+        [InlineData(int.MaxValue, int.MinValue)]
+        [InlineData(int.MinValue, int.MinValue + 1)]
+        public void ProjectScenarioUpdateRevision_Given_AMarkOfAChange_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            core.IsProjectScenarioUpdated = true;
+            RevisionCounters.SetProjectScenarioUpdateRevision(core, before);
+            List<int> raises = RecordRaises(core, nameof(ICoreViewModel.ProjectScenarioUpdateRevision), () => core.ProjectScenarioUpdateRevision);
+
+            core.IsProjectScenarioUpdated = true;
+
+            raises.ShouldHaveSingleItem().ShouldBe(after);
+            core.ProjectScenarioUpdateRevision.ShouldBe(after);
+        }
+
+        [Fact]
+        public void ProjectScenarioUpdateRevision_Given_AClearOfTheMark_Then_ItDoesNotMove()
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            core.IsProjectScenarioUpdated = true;
+            int before = core.ProjectScenarioUpdateRevision;
+
+            core.IsProjectScenarioUpdated = false;
+
+            core.ProjectScenarioUpdateRevision.ShouldBe(before);
+        }
+
+        [Theory]
+        [InlineData(int.MaxValue, int.MinValue)]
+        [InlineData(int.MinValue, int.MinValue + 1)]
+        public void ProjectUpdateRevision_Given_AMarkOfAChange_Then_ItMovesOnByOneAndRaisesOnce(int before, int after)
+        {
+            (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
+            using CoreViewModel coreOwner = core;
+            using var project = new ProjectScenarioManagerViewModel(
+                core,
+                settings,
+                CoreViewModelFixture.CreateDialogService(),
+                new DateTimeCalculator(TimeProvider.System),
+                CoreViewModelFixture.CreateUIDispatcher());
+            project.IsProjectUpdated = true;
+            RevisionCounters.SetProjectUpdateRevision(project, before);
+            List<int> raises = RecordRaises(project, nameof(IProjectScenarioManagerViewModel.ProjectUpdateRevision), () => project.ProjectUpdateRevision);
+
+            project.IsProjectUpdated = true;
+
+            raises.ShouldHaveSingleItem().ShouldBe(after);
+            project.ProjectUpdateRevision.ShouldBe(after);
+        }
+
+        [Fact]
+        public void ProjectUpdateRevision_Given_AClearOfTheMark_Then_ItDoesNotMove()
+        {
+            (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
+            using CoreViewModel coreOwner = core;
+            using var project = new ProjectScenarioManagerViewModel(
+                core,
+                settings,
+                CoreViewModelFixture.CreateDialogService(),
+                new DateTimeCalculator(TimeProvider.System),
+                CoreViewModelFixture.CreateUIDispatcher());
+            project.IsProjectUpdated = true;
+            int before = project.ProjectUpdateRevision;
+
+            project.IsProjectUpdated = false;
+
+            project.ProjectUpdateRevision.ShouldBe(before);
+        }
+
         [Theory]
         [InlineData(int.MaxValue, int.MinValue)]
         [InlineData(int.MinValue, int.MinValue + 1)]
@@ -344,6 +421,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ShouldNotWaitForTheLock(coreLock, () => core.CompilationOutputRevision);
             ShouldNotWaitForTheLock(coreLock, () => core.CompilationRequestRevision);
             ShouldNotWaitForTheLock(coreLock, () => core.ProjectScenarioRevision);
+            ShouldNotWaitForTheLock(coreLock, () => core.ProjectScenarioUpdateRevision);
             ShouldNotWaitForTheLock(coreLock, () => core.TrackersRevision);
 
             // The sets of trackers and the timesheet follow it in a chain, in the same way.
@@ -363,6 +441,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 CoreViewModelFixture.CreateUIDispatcher());
 
             ShouldNotWaitForTheLock(RevisionCounters.LockOf(project), () => project.TitleRevision);
+            ShouldNotWaitForTheLock(RevisionCounters.LockOf(project), () => project.ProjectUpdateRevision);
         }
 
         [Theory]

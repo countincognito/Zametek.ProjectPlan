@@ -1979,8 +1979,20 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 //lock (m_Lock) 
                 this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
+
+                if (value)
+                {
+                    // Each mark counts, also when the project has the mark already: the flag cannot say that it was set
+                    // again.
+                    Interlocked.Increment(ref m_ProjectUpdateRevision);
+                    this.RaisePropertyChanged(nameof(ProjectUpdateRevision));
+                }
             }
         }
+
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_ProjectUpdateRevision;
+        public int ProjectUpdateRevision => Volatile.Read(ref m_ProjectUpdateRevision);
 
         private readonly ObservableAsPropertyHelper<bool> m_IsProjectScenarioUpdated;
         public bool IsProjectScenarioUpdated => m_IsProjectScenarioUpdated.Value;

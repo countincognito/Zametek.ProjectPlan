@@ -13,6 +13,13 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsProjectScenarioUpdated { get; set; }
 
+        /// <summary>
+        /// How many times a change marked the scenario as updated, also when the scenario had the mark already. A save
+        /// reads it before it takes its copy of the project, to know if a change came while it wrote the file. Observe
+        /// changes only.
+        /// </summary>
+        int ProjectScenarioUpdateRevision { get; }
+
         bool HasStaleOutputs { get; set; }
 
         // The start that the user, the file or an import gives. The file keeps it as ProjectStart.

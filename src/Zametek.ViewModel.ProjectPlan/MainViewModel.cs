@@ -714,19 +714,37 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Logger.LogInformation("Saving project {ProjectFile}", filename);
                 long startTimestamp = Stopwatch.GetTimestamp();
 
+                // The save sets no busy state, and so the user can change the plan while it writes the file. A change
+                // that comes after the save took its copy of the project is not in the file. The two counters are read
+                // before the copy (ARCHITECTURE section 9): if one of them moved, the marks of a change stay, so that
+                // the title shows the change and the next save writes it.
+                int scenarioUpdateRevision = m_CoreViewModel.ProjectScenarioUpdateRevision;
+                int projectUpdateRevision = m_ProjectScenarioManagerViewModel.ProjectUpdateRevision;
+
                 ProjectModel projectModel = await BuildProjectAsync();
                 await FileStreamHelper.SaveAsync(filename, stream => m_ProjectFileSave.SaveProjectFileAsync(projectModel, stream));
-                // Clear the node markers BEFORE the scenario flag: the nodes'
-                // IsUpdated latch subscriptions observe the flag, so clearing
-                // the flag first would interleave their (async) delivery with
-                // the reset - the ordering half of the stale-asterisk race the
-                // latch-only stream in ManagedNodeViewModel closes.
-                CascadeDiagnostics.RecordMarker(@"Save: file written; ResetManagedNodes begin");
-                m_ProjectScenarioManagerViewModel.ResetManagedNodes();
-                CascadeDiagnostics.RecordMarker(@"Save: ResetManagedNodes end; clearing IsProjectScenarioUpdated");
-                m_CoreViewModel.IsProjectScenarioUpdated = false;
-                CascadeDiagnostics.RecordMarker(@"Save: clearing IsProjectUpdated");
-                m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
+
+                if (scenarioUpdateRevision == m_CoreViewModel.ProjectScenarioUpdateRevision
+                    && projectUpdateRevision == m_ProjectScenarioManagerViewModel.ProjectUpdateRevision)
+                {
+                    // Clear the node markers BEFORE the scenario flag: the nodes'
+                    // IsUpdated latch subscriptions observe the flag, so clearing
+                    // the flag first would interleave their (async) delivery with
+                    // the reset - the ordering half of the stale-asterisk race the
+                    // latch-only stream in ManagedNodeViewModel closes.
+                    CascadeDiagnostics.RecordMarker(@"Save: file written; ResetManagedNodes begin");
+                    m_ProjectScenarioManagerViewModel.ResetManagedNodes();
+                    CascadeDiagnostics.RecordMarker(@"Save: ResetManagedNodes end; clearing IsProjectScenarioUpdated");
+                    m_CoreViewModel.IsProjectScenarioUpdated = false;
+                    CascadeDiagnostics.RecordMarker(@"Save: clearing IsProjectUpdated");
+                    m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
+                }
+                else
+                {
+                    CascadeDiagnostics.RecordMarker(@"Save: file written; the plan changed during the save, and the marks stay");
+                    m_Logger.LogInformation("The project changed while {ProjectFile} was saved, and so it keeps its marks of a change", filename);
+                }
+
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 m_SettingService.RecordRecentProjectFilePath(filename);
                 RefreshRecentProjectFileMenuItems();

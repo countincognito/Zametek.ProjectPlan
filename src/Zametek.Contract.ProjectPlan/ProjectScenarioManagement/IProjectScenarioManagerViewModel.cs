@@ -28,6 +28,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsProjectUpdated { get; set; }
 
+        // How many times a change marked the project as updated, also when the project had the mark already. A save reads
+        // it before it takes its copy of the project, to know if a change came while it wrote the file. Observe changes only.
+        int ProjectUpdateRevision { get; }
+
         bool IsProjectScenarioUpdated { get; }
 
         bool ProjectHasChanges { get; }

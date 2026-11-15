@@ -10,12 +10,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The review read the source code. Nobody made a write fail to see the result.
 
-- [ ] **Clear the marks of a save only when no edit came during the write** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
-
-  `MainViewModel.SaveProjectFileInternalAsync` builds the project, writes the file, and then clears the marks of a change. The calls are `ResetManagedNodes()`, `IsProjectScenarioUpdated = false` and `IsProjectUpdated = false`. The save sets no busy state during the write, and thus the user can edit the plan. An edit that comes after `BuildProjectAsync` is not in the file, but the save clears its mark. Then the title shows no change, and the close does not ask.
-
-  Read a revision of the edits before the build. After the write, clear the marks only if the revision is the same. If it changed, keep the marks, so that the next save writes the edit. The write of a small plan is short, and thus the window is small. A slow disk or a network share makes it longer. Nobody reproduced this.
-
 - [ ] **Start with the default settings when the application cannot read `UserSettings.json`** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
 
   The constructor of `SettingServiceBase` reads the file with `JObject.Parse`, and it has no `catch`. An incomplete file, or a file that is not JSON, throws there. The start then writes "Fatal startup error" to the log and stops the desktop (`Shutdown(1)`). The user sees the splash screen go away, and no message. The read of the layout of the grids and the read of the dock layout each have a `catch` that resets the layout.

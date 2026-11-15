@@ -656,10 +656,22 @@ namespace Zametek.ViewModel.ProjectPlan
                             CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to false");
                         }
                         this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value);
+
+                        if (value)
+                        {
+                            // Each mark counts, also when the scenario has the mark already: the flag cannot say that it
+                            // was set again.
+                            Interlocked.Increment(ref m_ProjectScenarioUpdateRevision);
+                            this.RaisePropertyChanged(nameof(ProjectScenarioUpdateRevision));
+                        }
                     }
                 }
             }
         }
+
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_ProjectScenarioUpdateRevision;
+        public int ProjectScenarioUpdateRevision => Volatile.Read(ref m_ProjectScenarioUpdateRevision);
 
         private bool m_HasStaleOutputs;
         public bool HasStaleOutputs
