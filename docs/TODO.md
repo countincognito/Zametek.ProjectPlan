@@ -244,10 +244,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   On 2026-11-12, the maintainer removed the MSI files of v0.11.0-alpha and v0.11.0-beta from their releases, and the next pre-releases have no MSI. But a user who installed one of these MSI files has 0.11.0.0. Before the final release, install its MSI over the beta, and make sure that the installed apps show one entry.
 
-- [ ] **Let the export to Excel take a resource tracker with two entries for one activity** *(2026-11-13, found during the fix of B10)*
-
-  A resource tracker can have two entries for one activity on one day. Then `zpp -x` fails with exit code 1, and the message is "An item with the same key has already been added". The application does not write such a tracker, but a program can. The tracking series adds the two entries. Add them in the export too, or refuse such a tracker in the check before the load (`duplicateId`).
-
 - [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
 
   `outputs.data` writes `-resources.csv`, with one row for each resource on each day. It has no total for each day. The Excel export has this total, in the column `Total` of the sheet "Resource Chart (Activity)". Add the headcount for each day to the data output. For example, add a file `-headcount.csv` with the columns `Time` and `Headcount`.

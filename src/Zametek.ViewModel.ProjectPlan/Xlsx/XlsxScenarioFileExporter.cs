@@ -652,14 +652,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int resourceId = resource.Id;
 
-                    // Create a lookup dictionary for each time entry.
-                    Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
+                    // Create a lookup dictionary for each time entry: the percentage worked on each activity. A tracker can
+                    // have two entries for one activity. The application does not write such a tracker, but a program
+                    // can. The tracking series adds the entries, and so the sheet has their sum.
+                    Dictionary<int, Dictionary<int, int>> resourceTrackerLookup = [];
 
                     foreach (ResourceTrackerModel tracker in resource.Trackers)
                     {
                         if (tracker.ResourceId == resourceId)
                         {
-                            resourceTrackerLookup[tracker.Time] = tracker.ActivityTrackers.ToDictionary(x => x.ActivityId);
+                            resourceTrackerLookup[tracker.Time] = tracker.ActivityTrackers
+                                .GroupBy(x => x.ActivityId)
+                                .ToDictionary(x => x.Key, x => x.Sum(y => y.PercentageWorked));
                         }
                     }
 
@@ -675,11 +679,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Tracker values.
                         for (int i = 0; i <= endTime; i++)
                         {
-                            if (resourceTrackerLookup.TryGetValue(i, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
+                            if (resourceTrackerLookup.TryGetValue(i, out Dictionary<int, int>? trackerLookup))
                             {
-                                if (trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? activityTracker))
+                                if (trackerLookup.TryGetValue(activityId, out int percentageWorked))
                                 {
-                                    AddToCell(activityTracker.PercentageWorked, sheet, rowIndex, columnIndex);
+                                    AddToCell(percentageWorked, sheet, rowIndex, columnIndex);
                                 }
                             }
 
