@@ -220,6 +220,56 @@ namespace Zametek.Engine.ProjectPlan.Tests
             sink.Outputs.Select(x => x.Output).ShouldBe([JobOutput.Project]);
         }
 
+        // estimated.zpp starts on Monday 2024-01-01, and each day is a working day. A project that is done by the end of
+        // 2024-01-30 finishes by day 30.
+        [Fact]
+        public async Task RunAsync_Given_ATargetAsADate_Then_TheTargetIsTheEndOfThatDate()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+            var date = new DateTimeOffset(2024, 1, 30, 0, 0, 0, TimeSpan.Zero);
+
+            (JobResult byDays, _) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, new SimulationSettingsModel { Iterations = 500, Seed = 11, TargetFinishTime = 30 }));
+            (JobResult byDate, _) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, new SimulationSettingsModel { Iterations = 500, Seed = 11, TargetFinishDateTime = date }));
+
+            // The date takes the place of a number that the settings also have.
+            (JobResult byBoth, _) = await RunAsync(
+                runner,
+                @"estimated.zpp",
+                input => Simulate(input, new SimulationSettingsModel { Iterations = 500, Seed = 11, TargetFinishTime = 5, TargetFinishDateTime = date }));
+
+            JobSimulationMetrics expected = byDays.Simulation.ShouldNotBeNull();
+            expected.TargetFinishDays.ShouldBe(30);
+            expected.TargetProbability.ShouldNotBeNull();
+            byDate.Simulation.ShouldBe(expected);
+            byBoth.Simulation.ShouldBe(expected);
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_ATargetAsADateAndASave_Then_TheProjectKeepsTheDateAndHasItsNumber()
+        {
+            await using ServiceProvider services = BuildServices();
+            JobRunner runner = services.GetRequiredService<JobRunner>();
+
+            byte[] saved = await SaveSimulatedProjectAsync(
+                runner,
+                new SimulationSettingsModel { Iterations = 200, Seed = 3, UseRandomSeed = false, TargetFinishDateTime = new DateTimeOffset(2024, 1, 30, 0, 0, 0, TimeSpan.Zero) });
+
+            JToken savedSettings = JObject.Parse(Encoding.UTF8.GetString(saved))[@"Files"]![0]![@"Scenario"]![@"SimulationSettings"]!;
+            savedSettings[@"TargetFinishDateTime"]!.Value<DateTime>().ShouldBe(new DateTime(2024, 1, 30));
+            savedSettings[@"TargetFinishTime"]!.Value<int>().ShouldBe(30);
+
+            // The project that the job saved gives the same target when a job runs it again.
+            (JobResult again, _) = await RunBytesAsync(runner, saved, input => new JobRequest { Input = input, RunSimulation = true });
+            again.Simulation.ShouldNotBeNull().TargetFinishDays.ShouldBe(30);
+        }
+
         [Fact]
         public async Task RunAsync_Given_TheSameSimulationTwice_Then_TheSameStatisticsAndTheSameFiles()
         {

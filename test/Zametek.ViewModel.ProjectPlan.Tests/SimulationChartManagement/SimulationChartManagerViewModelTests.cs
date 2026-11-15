@@ -1141,6 +1141,56 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task TargetFinishTime_Given_SettingsWithATargetDate_Then_IsTheDaysUpToTheEndOfThatDate()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            DateTimeOffset date = harness.Core.ProjectStart.AddDays(41);
+
+            // Each day is a working day here: by the end of the 42nd day of the plan, 42 days of work are possible.
+            harness.Core.SimulationSettings = harness.Core.SimulationSettings with { TargetFinishTime = 7, TargetFinishDateTime = date };
+
+            panel.TargetFinishTime.ShouldBe(42);
+
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+            await panel.RunSimulationAsync();
+
+            panel.Summary.ShouldNotBeNull().TargetFinishTime.ShouldBe(42);
+            panel.Summary.TargetProbability.ShouldNotBeNull();
+            harness.Core.SimulationSettings.TargetFinishDateTime.ShouldBe(date);
+        }
+
+        [Fact]
+        public async Task TargetFinishTime_Given_ANumberFromTheUserAfterATargetDate_Then_TheNumberIsTheTargetAndTheDateIsGone()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            harness.Core.SimulationSettings = harness.Core.SimulationSettings with { TargetFinishDateTime = harness.Core.ProjectStart.AddDays(41) };
+
+            panel.TargetFinishTime = 50;
+
+            panel.TargetFinishTime.ShouldBe(50);
+            harness.Core.SimulationSettings.TargetFinishDateTime.ShouldBeNull();
+            harness.Core.SimulationSettings.TargetFinishTime.ShouldBe(50);
+        }
+
+        [Fact]
+        public async Task TargetFinishTime_Given_TheSameNumberFromTheUserAsTheTargetDateGives_Then_TheDateStays()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            DateTimeOffset date = harness.Core.ProjectStart.AddDays(41);
+            harness.Core.SimulationSettings = harness.Core.SimulationSettings with { TargetFinishDateTime = date };
+
+            // A binding that writes back the value that it read is not a change of the target.
+            panel.TargetFinishTime = 42;
+
+            harness.Core.SimulationSettings.TargetFinishDateTime.ShouldBe(date);
+        }
+
+        [Fact]
         public async Task ShowDates_Given_TheDisplaySetting_Then_FollowsIt()
         {
             using Harness harness = await Harness.MakeAsync();

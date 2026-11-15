@@ -46,5 +46,12 @@ namespace Zametek.Common.ProjectPlan
         /// give, or null.
         /// </summary>
         public int? TargetFinishTime { get; init; }
+
+        /// <summary>
+        /// The target as a date, or null: the project is done by the end of this date. When the settings have both, the
+        /// date takes the place of <see cref="TargetFinishTime"/>. The calendar of the scenario gives its finish time: the
+        /// number of working days from the start of the project up to and including the date.
+        /// </summary>
+        public DateTimeOffset? TargetFinishDateTime { get; init; }
     }
 }

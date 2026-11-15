@@ -3005,7 +3005,8 @@
     "ModifiedBetaShape": 6.5,
     "Seed": 18446744073709551612,
     "UseRandomSeed": false,
-    "TargetFinishTime": 77
+    "TargetFinishTime": 77,
+    "TargetFinishDateTime": null
   },
   "SimulationSummary": {
     "IterationCount": 1234,

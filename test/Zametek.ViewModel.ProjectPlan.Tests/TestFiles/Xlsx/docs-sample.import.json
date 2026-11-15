@@ -3005,7 +3005,8 @@
     "ModifiedBetaShape": 4.0,
     "Seed": 1,
     "UseRandomSeed": true,
-    "TargetFinishTime": null
+    "TargetFinishTime": null,
+    "TargetFinishDateTime": null
   },
   "SimulationSummary": null
 }

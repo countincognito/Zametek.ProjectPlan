@@ -256,11 +256,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The last two changes make a maximum finish a deadline in a simulation. In a compile, a maximum finish pins the activity, and a plan that cannot meet it has an error. For a deadline of the whole project, the target of the simulation already gives the chance without this problem. Decide which change to make.
 
-- [ ] **Suggestion: let the simulation take its target as a date** *(2026-11-14, a suggestion from phase 3 of the zpp skill)*
+- [ ] **Let the date of the target in the dock "Simulation" write the target date** *(2026-11-15, left from the target date of the simulation)*
 
-  `SimulationSettings` gives the target as `TargetFinishTime`, a working day. People give a deadline as a date. The answer of a compile gives `targetFinishDate`, and thus zpp changes the day of the target into a date. But a client cannot give the date and get the day. The zpp skill compiles a second plan to get the day: one milestone with a `MaximumLatestFinishDateTime`.
+  Since 0.11.0-beta.2, `SimulationSettings` can give the target as a date (`TargetFinishDateTime`). The project is done by the end of that date: "done by June 30" is "done by the end of June 30". `zpp`, the server and the application use the date, and a save keeps it. [The project file](PROJECT-FILE.md#times-and-constraints) gives the rule.
 
-  Add `TargetFinishDateTime` to `SimulationSettings`, as activities have `MaximumLatestFinishDateTime`. Then zpp uses its own calendar for the target, and a client needs no second compile. Decide which day the date gives, and give the rule in PROJECT-FILE.md with an example. People usually mean the end of the date: "done by June 30" is "done by the end of June 30". With the rule of `MaximumLatestFinishDateTime`, the same deadline is July 1. The file format, the desktop and the API need the new field.
+  The dock "Simulation" does not write the date. Its date gives a number of days, as before, and a number from the user removes the target date of a file. Thus, a target that a user gives as a date in the dock does not follow a change of the calendar.
+
+  Let the date of the dock write `TargetFinishDateTime`. The date of the dock is the date that the application shows for a finish. Without classic dates, that is the first working day after the target date. The Excel export and import have only the number of days. Decide if they need the date.
 
 - [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 

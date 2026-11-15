@@ -280,7 +280,7 @@ The answer has `simulation` when the request ran the simulation, or the project 
 - `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
 - `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.
 - `percentiles` lists the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. A percentile is the smallest finish that at least that share of the valid iterations reach.
-- `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the request gave a target. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
+- `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the project gives a target. The project gives it as a number of working days or as a date (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)). `targetFinishDate` is the date of the finish time `targetFinishDays`, as `zpp` shows a finish. Thus, without classic dates, it is the first working day after a target date. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
 
 The panel of the application, `zpp` and this API make these numbers in the same way. Refer to the [simulation plan](SIMULATION-PLAN.md) for how the simulation works.
 
@@ -893,3 +893,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.
 - The dates of a project do not depend on the time zone of the server. Each date is the day that it shows, in its own offset.
+- A project can give the target of its simulation as a date: `TargetFinishDateTime` in its `SimulationSettings`. The project is done by the end of that date. The answer does not change.

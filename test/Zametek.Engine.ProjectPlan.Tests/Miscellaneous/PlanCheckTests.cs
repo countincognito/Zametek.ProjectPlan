@@ -93,6 +93,43 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindScenarioProblems_Given_ATargetDateOfTheSimulationThatTheCalendarCannotCountTo_Then_OutOfRange()
+        {
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = s_Monday.AddDays(GraphLimits.MaximumTimeValue + 1) };
+
+            Problems(Scenario() with { SimulationSettings = settings })
+                .ShouldBe([($@"{c_Scenario}/SimulationSettings/TargetFinishDateTime", PlanCheck.OutOfRange)]);
+        }
+
+        [Fact]
+        public void FindScenarioProblems_Given_ATargetDateOfTheSimulationThatTheLimitsAllow_Then_None()
+        {
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = s_Monday.AddDays(GraphLimits.MaximumTimeValue) };
+
+            Problems(Scenario() with { SimulationSettings = settings }).ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_ATargetDateOfTheSimulationBeforeTheStart_Then_AWarning()
+        {
+            // No day of work is before the end of such a date, and so the target is day 0. It is usually a mistake.
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = new DateTimeOffset(2026, 12, 1, 0, 0, 0, TimeSpan.Zero) };
+
+            List<PlanProblem> warnings = PlanCheck.FindScenarioWarnings(Project(Scenario() with { SimulationSettings = settings }), 0);
+
+            warnings.Select(x => (x.Pointer, x.Code)).ShouldBe([($@"{c_Scenario}/SimulationSettings/TargetFinishDateTime", PlanCheck.OutOfRange)]);
+            warnings[0].Detail.ShouldBe(@"is 2026-12-01, before ProjectStart (2027-01-04), and so the target of the simulation is day 0");
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_ATargetDateOfTheSimulationOnTheDayOfTheStart_Then_None()
+        {
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = s_Monday.AddHours(9) };
+
+            PlanCheck.FindScenarioWarnings(Project(Scenario() with { SimulationSettings = settings }), 0).ShouldBeEmpty();
+        }
+
+        [Fact]
         public void FindScenarioProblems_Given_ANonWorkingDayModeThatDoesNotExist_Then_NotAllowed()
         {
             ProjectScenarioModel scenario = Scenario();

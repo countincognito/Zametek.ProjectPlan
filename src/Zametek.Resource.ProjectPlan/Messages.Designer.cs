@@ -930,6 +930,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to is {0}, before ProjectStart ({1}), and so the target of the simulation is day 0.
+        /// </summary>
+        public static string Message_PlanTargetDateBeforeStart {
+            get {
+                return ResourceManager.GetString("Message_PlanTargetDateBeforeStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to work streams.
         /// </summary>
         public static string Message_PlanWorkStreams {

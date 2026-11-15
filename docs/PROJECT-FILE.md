@@ -97,11 +97,17 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - `MinimumEarliestStartTime` is the earliest day on which an activity can start. `MinimumEarliestStartDateTime` gives the same constraint as the date of that day. When an activity has both, the date takes the place of the number.
 
-- `MaximumLatestFinishTime` is the latest finish time of an activity. `MaximumLatestFinishDateTime` gives it as a date: the date of the first day after the last day of work. For example, with weekends, to let an activity finish its work on Friday 2027-01-15, give Monday 2027-01-18. `UseClassicDates` does not change this, because it changes only how the application and `zpp` show the date of a finish. When an activity has both, the date takes the place of the number.
+- `MaximumLatestFinishTime` is the latest finish time of an activity. `MaximumLatestFinishDateTime` gives it as a date: the date of the first day after the last day of work. For example, with weekends, to let an activity finish its work by the end of Friday 2027-01-15, give Monday 2027-01-18. `UseClassicDates` does not change this, because it changes only how the application and `zpp` show the date of a finish. When an activity has both, the date takes the place of the number.
 
 - A constraint date that is not a working day counts as the next working day.
 
 - A constraint date before `ProjectStart` counts as day 0. `zpp` and the application give a warning for such a date (refer to [What zpp checks before the load](#what-zpp-checks-before-the-load)).
+
+- `SimulationSettings.TargetFinishTime` is the target of the simulation: a finish time, as a number of working days. `TargetFinishDateTime` gives the target as a date. The project is done by the end of that date. For example, the deadline "done by June 30" means "done by the end of June 30", and the date is `2027-06-30`. When the settings have both, the date takes the place of the number.
+
+- The finish time of a target date is the number of working days from the effective start up to and including the date. With weekends and a start on Monday 2027-01-04, the target date Friday 2027-01-15 is the finish time 10. A target date that is not a working day gives the time of the working day before it. A target date before `ProjectStart` gives day 0, and `zpp` gives a warning for it.
+
+- The rule of a target date is not the rule of `MaximumLatestFinishDateTime`. The same deadline, "done by the end of Friday 2027-01-15", is the target date `2027-01-15` and the maximum latest finish date Monday `2027-01-18`. `UseClassicDates` does not change a target date. A file that `zpp` or the application saves has the date and the number that the date gives.
 
 - An activity cannot have both `MinimumFreeSlack` and a maximum latest finish: the compile then gives `P0030`. The compile also gives `P0030` when the minimum earliest start and the duration go past the maximum latest finish. Refer to [the codes of the compiler](API.md#codes-of-the-compiler).
 
@@ -115,7 +121,7 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - `required`: the scenario that the plan loads has no `ProjectStart`.
 
-- `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`.
+- `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`. The same limit is for the target date of the simulation.
 
 - `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7.
 
@@ -127,7 +133,7 @@ The check looks at the scenario that the plan loads, and at the nodes and the di
 
 The check also finds the ids that match nothing. These are a target resource that no resource has, and a target work stream or a phase that no work stream has. The load ignores such an id. Thus, an activity with a target resource that does not exist can go to any resource. The plan loads, and `zpp` writes a warning for each id on its standard error stream. `zpp serve` gives them in `warnings`, with the code `notFound`.
 
-The check also finds each constraint date before `ProjectStart`. The calendar counts such a date as day 0. Thus, a `MinimumEarliestStartDateTime` before the start has no effect, and an activity that takes time cannot meet a `MaximumLatestFinishDateTime` before the start (`C0010`). A date before the start is usually a mistake, for example the wrong year.
+The check also finds each constraint date before `ProjectStart`. The calendar counts such a date as day 0. Thus, a `MinimumEarliestStartDateTime` before the start has no effect, and an activity that takes time cannot meet a `MaximumLatestFinishDateTime` before the start (`C0010`). A date before the start is usually a mistake, for example the wrong year. The check finds a `TargetFinishDateTime` before `ProjectStart` in the same way.
 
 The plan loads, and `zpp` writes a warning that names the date and the activity. `zpp serve` gives the warning in `warnings`, with the code `outOfRange`. The problem `compilation-failed` has `warnings` too.
 

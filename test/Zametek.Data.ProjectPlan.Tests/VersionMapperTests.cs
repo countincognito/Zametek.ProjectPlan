@@ -62,6 +62,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             @"$.SimulationSettings.Seed",
             @"$.SimulationSettings.UseRandomSeed",
             @"$.SimulationSettings.TargetFinishTime",
+            @"$.SimulationSettings.TargetFinishDateTime",
             @"$.SimulationSummary",
         ];
 

@@ -1792,7 +1792,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         ResourceMetrics = [.. ResourceMetrics],
-                        SimulationSettings = SimulationSettings,
+                        // With the number that a target date gives in the calendar of now.
+                        SimulationSettings = SimulationTargetHelper.Normalize(SimulationSettings, m_DateTimeCalculator, ProjectStart),
                         SimulationSummary = SimulationSummary,
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                         ArrowGraphLayout = ArrowGraphLayout.CloneObject(),

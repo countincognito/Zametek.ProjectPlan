@@ -156,6 +156,16 @@ namespace Zametek.Engine.ProjectPlan
                 }
             }
 
+            // The target date of the simulation: a date that the calendar can count to.
+            if (hasStart)
+            {
+                AddIfFar(
+                    scenario.ProjectStart,
+                    scenario.SimulationSettings?.TargetFinishDateTime,
+                    $@"{root}/{nameof(ProjectScenarioModel.SimulationSettings)}/{nameof(SimulationSettingsModel.TargetFinishDateTime)}",
+                    problems);
+            }
+
             // The resources and the work streams: an id of their own.
             AddDuplicates(
                 scenario.ResourceSettings?.Resources,
@@ -207,6 +217,17 @@ namespace Zametek.Engine.ProjectPlan
                     AddIfBeforeStart(scenario.ProjectStart, activity.MinimumEarliestStartDateTime, activity.Id, $@"{place}/{nameof(ActivityModel.MinimumEarliestStartDateTime)}", warnings);
                     AddIfBeforeStart(scenario.ProjectStart, activity.MaximumLatestFinishDateTime, activity.Id, $@"{place}/{nameof(ActivityModel.MaximumLatestFinishDateTime)}", warnings);
                 }
+            }
+
+            // No day of work is before the end of a target date that is before the start: the target is then day 0.
+            if (scenario.ProjectStart != default
+                && scenario.SimulationSettings?.TargetFinishDateTime is DateTimeOffset target
+                && target.Date < scenario.ProjectStart.Date)
+            {
+                warnings.Add(new PlanProblem(
+                    $@"{root}/{nameof(ProjectScenarioModel.SimulationSettings)}/{nameof(SimulationSettingsModel.TargetFinishDateTime)}",
+                    OutOfRange,
+                    Say(Resource.ProjectPlan.Messages.Message_PlanTargetDateBeforeStart, Date(target.Date), Date(scenario.ProjectStart.Date))));
             }
 
             for (int index = 0; index < resources.Count; index++)

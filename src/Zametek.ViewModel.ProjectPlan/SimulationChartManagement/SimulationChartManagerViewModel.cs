@@ -863,12 +863,19 @@ namespace Zametek.ViewModel.ProjectPlan
             set => ChangeSettings(x => x with { ModifiedBetaShape = value }, nameof(ModifiedBetaShape));
         }
 
+        // The target that a run uses. When the settings give the target as a date (a file can), it is the finish time of the
+        // end of that date in the calendar of now, and the date stays in the settings. A number from the user is a new
+        // target: it takes the place of the date. A number that is the one that the date gives changes nothing.
         public int? TargetFinishTime
         {
-            get => m_CoreViewModel.SimulationSettings.TargetFinishTime;
+            get => SimulationTargetHelper.Resolve(m_CoreViewModel.SimulationSettings, m_DateTimeCalculator, m_CoreViewModel.ProjectStart);
             set
             {
-                ChangeSettings(x => x with { TargetFinishTime = value }, nameof(TargetFinishTime));
+                if (value != TargetFinishTime)
+                {
+                    ChangeSettings(x => x with { TargetFinishTime = value, TargetFinishDateTime = null }, nameof(TargetFinishTime));
+                }
+
                 this.RaisePropertyChanged(nameof(TargetFinishDate));
             }
         }

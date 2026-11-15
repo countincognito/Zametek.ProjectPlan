@@ -888,4 +888,7 @@
   <data name="Message_ServerTimedOut" xml:space="preserve">
     <value>The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request ({2}).</value>
   </data>
+  <data name="Message_PlanTargetDateBeforeStart" xml:space="preserve">
+    <value>is {0}, before ProjectStart ({1}), and so the target of the simulation is day 0</value>
+  </data>
 </root>

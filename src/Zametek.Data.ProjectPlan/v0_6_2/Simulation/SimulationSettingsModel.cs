@@ -19,5 +19,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
         public bool UseRandomSeed { get; init; } = true;
 
         public int? TargetFinishTime { get; init; }
+
+        // Added before the first release of v0.6.2. A file without it has no target date.
+        public DateTimeOffset? TargetFinishDateTime { get; init; }
     }
 }
