@@ -867,4 +867,7 @@
   <data name="Message_ServerRedirected" xml:space="preserve">
     <value>The server at {0} answered with a redirect to {1}, and zpp does not follow a redirect: give that address to {2}.</value>
   </data>
+  <data name="Message_ServeSettingNotKnown" xml:space="preserve">
+    <value>{0} has the setting '{1}', which is not a limit of zpp serve. The limits are {2}.</value>
+  </data>
 </root>

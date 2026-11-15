@@ -984,6 +984,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} has the setting '{1}', which is not a limit of zpp serve. The limits are {2}..
+        /// </summary>
+        public static string Message_ServeSettingNotKnown {
+            get {
+                return ResourceManager.GetString("Message_ServeSettingNotKnown", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The tracked scenario '{0}' did not compile:.
         /// </summary>
         public static string Message_TrackedScenarioDidNotCompile {

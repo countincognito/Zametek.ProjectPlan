@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using System.Globalization;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -32,6 +33,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // Hosts that stand for every address the machine has, as Kestrel reads them.
         private static readonly string[] s_AnyHosts = [@"*", @"+"];
+
+        // The names of the limits, as zpp-serve.json and the environment give them.
+        private static readonly string[] s_LimitNames = [.. typeof(ServeLimits).GetProperties().Select(x => x.Name)];
 
         // The extensions of certificates read as PEM rather than as PKCS #12.
         private static readonly string[] s_PemExtensions = [@".pem", @".crt"];
@@ -336,6 +340,23 @@ namespace Zametek.ProjectPlan.CommandLine
                     .Build();
 
                 configuration.Bind(limits);
+
+                // Bind takes no notice of a name that it does not know. Thus, a limit with a wrong letter in the file had
+                // no effect, and the server started with the default. Only the file is held to the names of the limits:
+                // the environment has other variables that start with ZPP_.
+                string? unknown = configuration.Providers
+                    .OfType<JsonConfigurationProvider>()
+                    .SelectMany(x => x.GetChildKeys([], null))
+                    .FirstOrDefault(x => !s_LimitNames.Contains(x, StringComparer.OrdinalIgnoreCase));
+
+                if (unknown is not null)
+                {
+                    throw new UsageException(string.Format(
+                        Resource.ProjectPlan.Messages.Message_ServeSettingNotKnown,
+                        settingsFile,
+                        unknown,
+                        string.Join(@", ", s_LimitNames)));
+                }
             }
             catch (Exception ex) when (ex is InvalidDataException or FormatException or InvalidOperationException)
             {

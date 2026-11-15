@@ -114,12 +114,10 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Since 0.11.0-beta.2, `zpp` refuses to send the API key over plain `http` to a host that is not loopback, unless `--allow-key-over-http` allows it. It also follows no redirect. These were the other two parts of this entry.
 
-- [ ] **Do four smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
+- [ ] **Do two smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
 
   1. **The dock layout.** `MainViewModel.RestoreLayout` gives `DockLayout.json` to the `DockSerializer` of `Dock.Serializer.Newtonsoft`. The review reported that this serializer reads type names from the file, with no binder. Nobody confirmed this in the source code of the package. The file is in the settings folder of the user, and thus the risk is low. If the report is correct, do a check of the type names against the types of Dock before the read.
   2. **The MS Project reader.** `MicrosoftProjectFileImporter` uses `UniversalProjectReader`, which finds the format from the contents of the file. It reads many formats that the import dialog does not offer. Use a reader for the one format, if MPXJ.Net has one. If it has none, do a check of the first bytes of the file before the read.
-  3. **The names of the outputs.** `ProjectEndpoints` takes `Path.GetFileName` of the name of the upload. On Linux, a backslash is not a separator. Thus, `..\..\x.zpp` keeps its dots, and the names of the outputs in the answer and in the zip start with `..\`. The server writes no file with these names. But a client on Windows that unpacks the zip without a check can write outside its folder. Refuse or replace `\`, `/` and `:` in the title.
-  4. **The names of the limits.** `ServeSettingsHelper.ResolveLimits` calls `configuration.Bind(limits)`, which ignores a name that it does not know. Thus, a limit with a wrong letter in `zpp-serve.json` has no effect, and the server starts with the default. Bind with `ErrorOnUnknownConfiguration`, or compare the keys of the file with the properties of `ServeLimits`.
 
 - [ ] **Change a day number to a date for a chart without a count from the project start** *(2026-11-14, from the review of `src`)*
 

@@ -236,6 +236,38 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     1_000_000));
         }
 
+        // A name with a wrong letter had no effect, and the server started with the default of the limit.
+        [Theory]
+        [InlineData(@"{ ""MaxJob"": 2 }", @"MaxJob")]
+        [InlineData(@"{ ""MaxJobs"": 2, ""JobTimeout"": 30 }", @"JobTimeout")]
+        [InlineData(@"{ ""Limits"": { ""MaxJobs"": 2 } }", @"Limits")]
+        public void Resolve_Given_ASettingsFileWithANameThatIsNotALimit_Then_UsageExceptionNamingIt(string settingsJson, string name)
+        {
+            string message = Should.Throw<UsageException>(() => Resolve(settingsJson: settingsJson)).Message;
+
+            message.ShouldContain(ServeSettingsHelper.SettingsFilename);
+            message.ShouldContain($@"'{name}'");
+            message.ShouldContain(nameof(ServeLimits.MaxJobs));
+            message.ShouldContain(nameof(ServeLimits.JobTimeoutSeconds));
+        }
+
+        [Fact]
+        public void Resolve_Given_ASettingsFileWithALimitInOtherLetterCase_Then_ThatLimit()
+        {
+            Resolve(settingsJson: @"{ ""maxjobs"": 3 }").Limits.MaxJobs.ShouldBe(3);
+        }
+
+        [Fact]
+        public void Resolve_Given_OtherVariablesOfZppInTheEnvironment_Then_TheyAreNoLimits()
+        {
+            // The environment has variables that start with ZPP_ and are not limits. Only the file is held to the names.
+            Resolve(environment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [@"ZPP_SERVER"] = @"http://localhost:9770",
+                [@"ZPP_MaxJobs"] = @"3",
+            }).Limits.MaxJobs.ShouldBe(3);
+        }
+
         [Fact]
         public void Resolve_Given_ASettingsFileThatIsNotJson_Then_UsageException()
         {

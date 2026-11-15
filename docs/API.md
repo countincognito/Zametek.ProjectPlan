@@ -170,7 +170,7 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
 | `simulationWorkbook` | `--simulation-workbook-directory` | The result of the simulation as one Excel workbook (`<name>-simulation.xlsx`), with a sheet for the settings and for each of the CSV files, and, for a run, a sheet for the iterations. It is independent of `simulation`. | `{}` |
 
-`<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`.
+`<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`. If the request gives a path as the name of the file, `<name>` comes from the part after the last `/`, `\` or `:`. Thus, the name of an output never has a part of a path.
 
 A **chart** is `{ "format": "png", "width": 1600, "height": 900 }`. The `format` is `jpeg` (the default), `png`, `bmp`, `webp` or `svg`. The size is in pixels, from 1 to the chart limit of the server, and the request must give it.
 

@@ -237,6 +237,43 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             tracked.Single(x => x.Path == @"Alpha").Errors.ShouldBeEmpty();
         }
 
+        // A client can send a path as the name of its file, and a path of Windows has separators that Linux does not take
+        // as separators. The name is what follows the last of them, on each system.
+        [Theory]
+        [InlineData(@"plan.zpp", @"plan.zpp")]
+        [InlineData(@"..\..\plan.zpp", @"plan.zpp")]
+        [InlineData(@"../../plan.zpp", @"plan.zpp")]
+        [InlineData(@"C:\plans\plan.zpp", @"plan.zpp")]
+        [InlineData(@"C:plan.zpp", @"plan.zpp")]
+        [InlineData(@"/plans\mixed/plan.zpp", @"plan.zpp")]
+        [InlineData(@"plans\", @"")]
+        [InlineData(@"", @"")]
+        public void UploadFileName_Given_ANameWithAPath_Then_OnlyTheName(string sent, string expected)
+        {
+            ProjectEndpoints.UploadFileName(sent).ShouldBe(expected);
+        }
+
+        [Theory]
+        [InlineData(@"..\\..\\escape.zpp")]
+        [InlineData(@"../../escape.zpp")]
+        [InlineData(@"C:escape.zpp")]
+        public async Task Compile_Given_AFileNameWithAPath_Then_TheOutputsHaveOnlyTheName(string sent)
+        {
+            // In the header of a part, a backslash comes with a backslash before it.
+            using ByteArrayContent content = RunningServer.RawMultipart(
+                @"path",
+                closed: true,
+                (@"project", sent, TwoScenarios()),
+                (@"options", null, Encoding.UTF8.GetBytes(@"{ ""outputs"": { ""data"": {} } }")));
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Outputs.ShouldNotBeEmpty();
+            compiled.Outputs.ShouldAllBe(x => x.FileName.StartsWith(@"escape-", StringComparison.Ordinal));
+        }
+
         [Fact]
         public async Task Compile_Given_AFileNameInUtf8_Then_TheOutputsHaveTheName()
         {

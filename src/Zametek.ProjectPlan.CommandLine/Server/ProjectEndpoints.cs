@@ -64,6 +64,9 @@ namespace Zametek.ProjectPlan.CommandLine
         private static readonly DateTime s_EarliestZipTime = new(1980, 1, 1);
         private static readonly DateTime s_LatestZipTime = new(2107, 12, 31, 23, 59, 58);
 
+        // What ends a path in the name of a file that a client sent, on any system.
+        private static readonly char[] s_UploadNameSeparators = ['/', '\\', ':'];
+
         private static readonly string[] s_DescriptionMediaTypes = [DescriptionMediaType, YamlMediaType];
 
         // The description of the API as it was embedded when the server was built, and its strong ETag: read when first asked for.
@@ -392,7 +395,7 @@ namespace Zametek.ProjectPlan.CommandLine
             if (plan is not null)
             {
                 // Only the name: a path that came with it says nothing about where the server is.
-                string filename = Path.GetFileName(plan.FileName);
+                string filename = UploadFileName(plan.FileName);
                 projectTitle = FileFormatHelper.GetProjectTitle(filename);
 
                 if (projectTitle.Length == 0)
@@ -1033,6 +1036,17 @@ namespace Zametek.ProjectPlan.CommandLine
             ExitCode exitCode)
         {
             return new ConsoleResponse((int)exitCode, console.Output, console.Error, console.Transcript);
+        }
+
+        // The name of a file that a client sent, without the path that came with it. Path.GetFileName takes only the
+        // separators of the system that the server runs on. Thus, on Linux it kept ..\..\plan.zpp whole, and the outputs
+        // had names that start with ..\ in the answer and in the zip. The name is what follows the last / , \ or : on
+        // each system, as Path.GetFileName gives it on Windows.
+        internal static string UploadFileName(string fileName)
+        {
+            ArgumentNullException.ThrowIfNull(fileName);
+            int separator = fileName.LastIndexOfAny(s_UploadNameSeparators);
+            return separator < 0 ? fileName : fileName[(separator + 1)..];
         }
 
         private static OutputResponse ToOutputResponse(
