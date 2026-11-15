@@ -62,7 +62,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 string? serverOnly = options.ApiKeyFile is not null
                     ? nameof(Options.ApiKeyFile)
                     : options.AllowKeyOverHttp ? nameof(Options.AllowKeyOverHttp)
-                    : options.ServerTimeoutMilliseconds != 0 ? nameof(Options.ServerTimeoutMilliseconds) : null;
+                    : options.ServerTimeoutMilliseconds is not null ? nameof(Options.ServerTimeoutMilliseconds) : null;
 
                 return serverOnly is null
                     ? null
@@ -107,9 +107,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 BaseAddress = baseAddress,
                 UnixSocket = socket,
                 ApiKey = apiKey,
-                RequestTimeout = options.ServerTimeoutMilliseconds > 0
-                    ? TimeSpan.FromMilliseconds(options.ServerTimeoutMilliseconds)
+
+                // The option gives the time limit, and 0 says that there is none. Without the option, zpp works the time
+                // limit out from the limits of the server, which it asks for (see JobClient).
+                RequestTimeout = options.ServerTimeoutMilliseconds is int timeout && timeout > 0
+                    ? TimeSpan.FromMilliseconds(timeout)
                     : null,
+                RequestTimeoutFromServer = options.ServerTimeoutMilliseconds is null,
             };
         }
 

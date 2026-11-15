@@ -478,7 +478,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 ? await ZppMain.RunCapturedAsync(commandLine(there), new Dictionary<string, string> { [ClientSettingsHelper.ServerVariable] = address })
                 : await ZppMain.RunCapturedAsync([.. commandLine(there), @"--server", address]);
 
-            server.ApiRequests.ShouldBe(requests + 1);
+            // The request for the limits of the server, and the job.
+            server.ApiRequests.ShouldBe(requests + 2);
 
             if (expectedExitCode is ExitCode expected)
             {

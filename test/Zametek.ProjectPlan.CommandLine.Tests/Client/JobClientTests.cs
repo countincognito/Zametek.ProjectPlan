@@ -348,8 +348,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
             ShouldBeRefused(error, server.Address, string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 0));
 
-            // It is a 503, as a busy server is, and not tried again: it would only run out of time again.
-            server.ApiRequests.ShouldBe(1);
+            // It is a 503, as a busy server is, and not tried again: it would only run out of time again. The other request
+            // is the one for the limits of the server.
+            server.ApiRequests.ShouldBe(2);
         }
 
         [Fact]
@@ -372,7 +373,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             try
             {
-                (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), stopped.Token)))
+                (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), cancellationToken: stopped.Token)))
                     .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, server.Address, 1));
                 waited.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(4));
             }
@@ -433,7 +434,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // The 5 seconds zpp waits for a server that does not say are more than the second it may wait.
             using var stopped = new CancellationTokenSource(s_Hang);
-            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), stopped.Token)))
+            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), cancellationToken: stopped.Token)))
                 .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerStayedBusy, server.Address, 1));
             server.Requests.Count.ShouldBe(1);
         }
@@ -480,7 +481,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull();
 
             using var stopped = new CancellationTokenSource(s_Hang);
-            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), stopped.Token)))
+            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), cancellationToken: stopped.Token)))
                 .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerRedirected, server.Address, location, @"--server"));
             server.Requests.Count.ShouldBe(1);
             elsewhere.Requests.ShouldBeEmpty();
@@ -537,6 +538,127 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             exitCode.ShouldBe((int)ExitCode.Success);
             output.ShouldNotBeEmpty();
             error.ShouldBeEmpty();
+        }
+
+        // With no --server-timeout, zpp asks the server for its limits one time, before the job, and as it asks for the
+        // job: with the key, and in the same trace.
+        [Fact]
+        public async Task Run_Given_NoServerTimeout_Then_AsksForTheLimitsOneTimeBeforeTheJob()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync(
+                [@"-i", Plan, @"--server", server.Address],
+                Variables((ClientSettingsHelper.ApiKeyVariable, c_ApiKey)));
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            error.ShouldBeEmpty();
+            server.Paths.ShouldBe([@"/v1/info", @"/v1/projects/compile"]);
+
+            FakeServer.Request info = server.InfoRequests.ShouldHaveSingleItem();
+            info.Headers[@"Authorization"].ShouldBe($@"Bearer {c_ApiKey}");
+            info.Headers[@"Accept"].ShouldBe(@"application/json");
+
+            // 00, the id of the trace, and then the id of the request, which is its own.
+            string job = server.Requests.ShouldHaveSingleItem().Headers[@"traceparent"];
+            info.Headers[@"traceparent"][..36].ShouldBe(job[..36]);
+            info.Headers[@"traceparent"].ShouldNotBe(job);
+        }
+
+        [Fact]
+        public async Task Run_Given_NoServerTimeoutAndAListOfTheScenarios_Then_AsksForTheLimitsOneTimeBeforeTheList()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            await ZppMain.RunCapturedAsync([@"-i", Plan, @"--server", server.Address, @"--list-scenarios"]);
+
+            server.Paths.ShouldBe([@"/v1/info", @"/v1/projects/scenarios"]);
+        }
+
+        // The option gives the time limit - or, with 0, says that there is none - and zpp has nothing to ask.
+        [Theory]
+        [InlineData(@"0")]
+        [InlineData(@"120000")]
+        public async Task Run_Given_AServerTimeout_Then_DoesNotAskForTheLimits(string timeout)
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync([@"-i", Plan, @"--server", server.Address, @"--server-timeout", timeout]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            error.ShouldBeEmpty();
+            server.Paths.ShouldBe([@"/v1/projects/compile"]);
+        }
+
+        // A check of zpp's own fails the run before anything is sent, the request for the limits too.
+        [Fact]
+        public async Task Run_Given_AnExportThatZppDoesNotWrite_Then_DoesNotAskForTheLimits()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            (int exitCode, _, _) = await ZppMain.RunCapturedAsync([@"-i", Plan, @"--server", server.Address, @"-x", Path.Combine(m_TempDirectory, @"plan.txt")]);
+
+            exitCode.ShouldNotBe((int)ExitCode.Success);
+            server.Paths.ShouldBeEmpty();
+        }
+
+        // A proxy that passes only the paths of the jobs, a server in trouble, or something that is not a zpp serve of
+        // this version: the job runs with no time limit, as it did before zpp asked, and the log says so.
+        [Theory]
+        [InlineData(StatusCodes.Status404NotFound, @"")]
+        [InlineData(StatusCodes.Status500InternalServerError, @"")]
+        [InlineData(StatusCodes.Status200OK, @"")]
+        [InlineData(StatusCodes.Status200OK, @"{}")]
+        [InlineData(StatusCodes.Status200OK, @"not an answer")]
+        [InlineData(StatusCodes.Status200OK, @"{""limits"":{""maxJobs"":0,""maxQueue"":8,""jobTimeout"":""PT2M""}}")]
+        [InlineData(StatusCodes.Status200OK, @"{""limits"":{""maxJobs"":4,""maxQueue"":8,""jobTimeout"":""two minutes""}}")]
+        public async Task Run_Given_AServerThatDoesNotGiveItsLimits_Then_TheJobRunsAndTheLogWarns(int status, string body)
+        {
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok(), () => new FakeServer.Answer(status, body));
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            server.Paths.ShouldBe([@"/v1/info", @"/v1/projects/compile"]);
+
+            // One line of the log, and nothing else: a warning, which names the server and the option that gives a time limit.
+            s_LogLine.Matches(error).Count.ShouldBe(1);
+            s_LogLine.Replace(error, string.Empty).ShouldBeEmpty();
+            error.ShouldContain(@" WRN] ");
+            error.ShouldContain(server.Address);
+            error.ShouldContain(@"--server-timeout");
+        }
+
+        // A server that wants its key refuses the request for its limits as it refuses the job. The refusal of the job
+        // says what to do, and a warning about the limits before it would say nothing more.
+        [Fact]
+        public async Task Run_Given_AServerThatWantsItsKeyForItsLimits_Then_OnlyTheRefusalOfTheJobIsSaid()
+        {
+            await using FakeServer server = await FakeServer.StartAsync(
+                _ => new FakeServer.Answer(StatusCodes.Status401Unauthorized),
+                () => new FakeServer.Answer(StatusCodes.Status401Unauthorized));
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync([@"-i", Plan, @"--server", server.Address]);
+
+            exitCode.ShouldBe((int)ExitCode.ServerFailure);
+            error.ShouldBe(ErrorLine(string.Format(
+                Resource.ProjectPlan.Messages.Message_ServerNeedsApiKey,
+                server.Address,
+                ClientSettingsHelper.ApiKeyVariable,
+                @"--api-key-file")));
+        }
+
+        [Fact]
+        public async Task Run_Given_VerboseAndNoServerTimeout_Then_SaysTheTimeLimitThatTheLimitsGive()
+        {
+            // 4 jobs, 8 in the queue, and 2 minutes for a job with 1 minute for a compilation: 540 seconds, and a tenth.
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+
+            (int exitCode, _, string error) = await ZppMain.RunCapturedAsync([@"-i", Plan, @"--server", server.Address, @"-v"]);
+
+            exitCode.ShouldBe((int)ExitCode.Success);
+            error.ShouldContain(@"594000 ms");
+            error.ShouldNotContain(@" WRN] ");
         }
 
         [Fact]

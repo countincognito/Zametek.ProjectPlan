@@ -1020,6 +1020,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave no answer about its limits in {1} milliseconds, so zpp stopped. zpp does not ask for the limits when {2} gives the time limit..
+        /// </summary>
+        public static string Message_ServerLimitsTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServerLimitsTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The server at {0} answered with a redirect to {1}, and zpp does not follow a redirect: give that address to {2}..
         /// </summary>
         public static string Message_ServerRedirected {
@@ -1034,6 +1043,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ServerTimedOut {
             get {
                 return ResourceManager.GetString("Message_ServerTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request. zpp calculated this time limit from the limits of the server. To change it, use {2}..
+        /// </summary>
+        public static string Message_ServerTimedOutFromLimits {
+            get {
+                return ResourceManager.GetString("Message_ServerTimedOutFromLimits", resourceCulture);
             }
         }
 

@@ -18,5 +18,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // How long zpp waits for the answer to one request, or null for no limit.
         public TimeSpan? RequestTimeout { get; init; }
+
+        // No option gave the time limit of a request, and so it comes from the limits of the server. RequestTimeout is
+        // null until zpp has them.
+        public bool RequestTimeoutFromServer { get; init; }
     }
 }

@@ -891,4 +891,10 @@
   <data name="Message_PlanTargetDateBeforeStart" xml:space="preserve">
     <value>is {0}, before ProjectStart ({1}), and so the target of the simulation is day 0</value>
   </data>
+  <data name="Message_ServerLimitsTimedOut" xml:space="preserve">
+    <value>The server at {0} gave no answer about its limits in {1} milliseconds, so zpp stopped. zpp does not ask for the limits when {2} gives the time limit.</value>
+  </data>
+  <data name="Message_ServerTimedOutFromLimits" xml:space="preserve">
+    <value>The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request. zpp calculated this time limit from the limits of the server. To change it, use {2}.</value>
+  </data>
 </root>

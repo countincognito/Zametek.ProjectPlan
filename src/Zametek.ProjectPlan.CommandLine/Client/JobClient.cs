@@ -22,7 +22,8 @@ namespace Zametek.ProjectPlan.CommandLine
     // that does not run the job - it cannot be reached, refuses the request, stays busy, or stops the job at its time limit
     // - fails the run with a ServerException. It never builds the engine. Like any client of the API it sends a
     // traceparent, tells a problem by its type, and tries a busy server again as it says to, with a little more patience
-    // each time.
+    // each time. A request has a time limit, so that a server that takes the connection and then says nothing does not hold
+    // zpp: the one --server-timeout gives or, without it, the one the limits of the server give, which zpp asks for first.
     internal static class JobClient
     {
         #region Fields
@@ -30,9 +31,13 @@ namespace Zametek.ProjectPlan.CommandLine
         // How long zpp keeps trying a server that is busy.
         public static readonly TimeSpan BusyLimit = TimeSpan.FromMinutes(2);
 
+        // How long zpp waits for the server to say what its limits are.
+        public static readonly TimeSpan LimitsTimeout = TimeSpan.FromSeconds(30);
+
         private const string c_CompilePath = @"v1/projects/compile?include=console";
         private const string c_ScenariosPath = @"v1/projects/scenarios?include=console";
         private const string c_JobsPath = @"v1/jobs";
+        private const string c_InfoPath = @"v1/info";
         private const string c_ProjectPart = @"project";
         private const string c_ImportPart = @"import";
         private const string c_OptionsPart = @"options";
@@ -67,17 +72,26 @@ namespace Zametek.ProjectPlan.CommandLine
         // The shortest zpp waits between two questions about the progress, whatever the server says.
         private static readonly TimeSpan s_ShortestProgressWait = TimeSpan.FromSeconds(1);
 
+        // What the time limit of a request has over the time that the server lets a job wait and run, for the upload of
+        // the plan and the download of the answer: this part of that time, and never less than the shortest.
+        private const double c_RequestMargin = 0.1;
+        private static readonly TimeSpan s_ShortestRequestMargin = TimeSpan.FromSeconds(30);
+
+        // The longest time that a timer takes (CancellationTokenSource.CancelAfter): about 49 days.
+        private static readonly TimeSpan s_LongestRequestTimeout = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
+
         #endregion
 
         #region Public Members
 
         // Runs the job on the server the settings name, and returns the exit code zpp ends the run with. busyLimit is how
-        // long a busy server is waited for.
+        // long a busy server is waited for, and limitsTimeout how long the server has to say what its limits are.
         public static async Task<ExitCode> RunAsync(
             Options options,
             ClientSettings settings,
             IJobConsole console,
             TimeSpan? busyLimit = null,
+            TimeSpan? limitsTimeout = null,
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(options);
@@ -118,6 +132,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (options.ListScenarios)
             {
+                settings = await WithRequestTimeoutAsync(client, settings, traceId, limitsTimeout ?? LimitsTimeout, cancellationToken);
+
                 ServerAnswer<ScenariosResponse> answer = await PostAsync<ScenariosResponse>(
                     client,
                     settings,
@@ -144,6 +160,9 @@ namespace Zametek.ProjectPlan.CommandLine
             // Where zpp writes each output: named here, as zpp names it, whatever the server calls it.
             IReadOnlyDictionary<JobOutput, string> filenames = Program.BuildOutputFilenames(options, FileFormatHelper.GetProjectTitle(inputFilename));
             CompileOptions compileOptions = CompileOptionsHelper.FromOptions(options);
+
+            // After the checks of zpp's own, which send nothing when one of them fails.
+            settings = await WithRequestTimeoutAsync(client, settings, traceId, limitsTimeout ?? LimitsTimeout, cancellationToken);
 
             // While the job runs, the log says how far it has got, as the log of a run here does (with --verbose): the server says
             // it to whoever asks for it by the id of the request, and zpp asks.
@@ -211,7 +230,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 };
             }
 
-            // The server's own limits bound how long a job may take. A request has a time limit of its own only when the
+            // The server's own limits bound how long a job may take. A request has a time limit of its own when the
             // settings give one (RequestTimeout), which PostAsync applies.
             return new HttpClient(handler)
             {
@@ -478,7 +497,9 @@ namespace Zametek.ProjectPlan.CommandLine
                 catch (OperationCanceledException) when (requestLimit.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                 {
                     throw new ServerException(string.Format(
-                        Resource.ProjectPlan.Messages.Message_ServerTimedOut,
+                        settings.RequestTimeoutFromServer
+                            ? Resource.ProjectPlan.Messages.Message_ServerTimedOutFromLimits
+                            : Resource.ProjectPlan.Messages.Message_ServerTimedOut,
                         settings.Server,
                         (long)(settings.RequestTimeout?.TotalMilliseconds ?? 0),
                         Program.OptionLongName(nameof(Options.ServerTimeoutMilliseconds))));
@@ -538,6 +559,119 @@ namespace Zametek.ProjectPlan.CommandLine
             TimeSpan backedOff = given.Ticks > ceiling.Ticks / factor ? ceiling : TimeSpan.FromTicks(given.Ticks * factor);
 
             return backedOff + TimeSpan.FromTicks((long)(backedOff.Ticks * 0.25 * jitter));
+        }
+
+        // The settings with the time limit of a request that the limits of the server give, when no option gave one: zpp
+        // asks the server for them, one time. A server that does not answer in limitsTimeout would not answer the job either,
+        // and the run ends. A server that answers with something else - a proxy that passes only the paths of the jobs,
+        // say, or a server of another version - gets the job with no time limit, as before zpp asked, and the log says so.
+        private static async Task<ClientSettings> WithRequestTimeoutAsync(
+            HttpClient client,
+            ClientSettings settings,
+            string traceId,
+            TimeSpan limitsTimeout,
+            CancellationToken cancellationToken)
+        {
+            if (!settings.RequestTimeoutFromServer)
+            {
+                return settings;
+            }
+
+            string option = Program.OptionLongName(nameof(Options.ServerTimeoutMilliseconds));
+            using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            limit.CancelAfter(limitsTimeout);
+            string reason;
+
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, c_InfoPath);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(c_JsonMediaType));
+                request.Headers.Add(c_TraceParentHeader, $@"00-{traceId}-{ActivitySpanId.CreateRandom().ToHexString()}-00");
+
+                if (settings.ApiKey is string apiKey)
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue(c_Scheme, apiKey);
+                }
+
+                using HttpResponseMessage response = await SendAsync(client, request, settings, limit.Token);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    // The server refuses the job in the same way, and that refusal says what to do.
+                    Log.Debug("The server at {Server} wants its key for its limits", settings.Server);
+                    return settings;
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    InfoResponse? info = await response.Content.ReadFromJsonAsync<InfoResponse>(JobJsonHelper.ClientOptions, limit.Token);
+
+                    if (info?.Limits is LimitsResponse limits
+                        && GetRequestTimeout(limits) is TimeSpan requestTimeout)
+                    {
+                        Log.Information(
+                            "The time limit of a request, from the limits of {Server}: {Milliseconds} ms",
+                            settings.Server,
+                            (long)requestTimeout.TotalMilliseconds);
+
+                        return settings with { RequestTimeout = requestTimeout };
+                    }
+
+                    reason = @"the answer does not give them";
+                }
+                else
+                {
+                    reason = $@"{(int)response.StatusCode} {response.ReasonPhrase}";
+                }
+            }
+            catch (OperationCanceledException) when (limit.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            {
+                throw new ServerException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServerLimitsTimedOut,
+                    settings.Server,
+                    (long)limitsTimeout.TotalMilliseconds,
+                    option));
+            }
+            catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException or HttpRequestException or IOException)
+            {
+                reason = ex.Message;
+            }
+
+            Log.Warning(
+                "The server at {Server} did not give its limits ({Reason}): a request has no time limit, unless {Option} gives one",
+                settings.Server,
+                reason,
+                option);
+
+            return settings;
+        }
+
+        // The time limit of a request on a server with these limits, or null when they are not the limits of a server. The
+        // server holds a job in its queue while it runs the jobs in front, as many at a time as it runs, and each of
+        // those for no longer than a job may run; then it runs the job, for no longer than that. A job may run for its
+        // time limit and for one compilation more, because the server stops a job between two steps, and a compilation
+        // that is in progress ends first. The time limit is all of that and a margin for the upload of the plan and the
+        // download of the answer.
+        internal static TimeSpan? GetRequestTimeout(LimitsResponse limits)
+        {
+            ArgumentNullException.ThrowIfNull(limits);
+
+            if (limits.MaxJobs < 1
+                || limits.MaxQueue < 0
+                || limits.JobTimeout < TimeSpan.Zero
+                || limits.MaxCompileTimeout < TimeSpan.Zero)
+            {
+                return null;
+            }
+
+            // The rounds of the queue in front of the job, rounded up, and the round of the job itself.
+            long rounds = ((limits.MaxQueue + (long)limits.MaxJobs - 1) / limits.MaxJobs) + 1;
+            double jobs = (limits.JobTimeout.TotalMilliseconds + limits.MaxCompileTimeout.TotalMilliseconds) * rounds;
+            double total = jobs + Math.Max(jobs * c_RequestMargin, s_ShortestRequestMargin.TotalMilliseconds);
+
+            return total < s_LongestRequestTimeout.TotalMilliseconds
+                ? TimeSpan.FromMilliseconds(Math.Round(total))
+                : s_LongestRequestTimeout;
         }
 
         // The problem a response is, if it is one: problem details, which a proxy in front of the server, say, does not send.

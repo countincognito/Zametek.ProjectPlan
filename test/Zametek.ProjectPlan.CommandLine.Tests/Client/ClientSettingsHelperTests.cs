@@ -33,7 +33,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server }).ShouldNotBeNull();
 
-            settings.ShouldBe(new ClientSettings { Server = c_Server, BaseAddress = new Uri(c_Server + @"/") });
+            // No key, and no time limit of a request yet: no option gave one, and so it comes from the limits of the server.
+            settings.ShouldBe(new ClientSettings { Server = c_Server, BaseAddress = new Uri(c_Server + @"/"), RequestTimeoutFromServer = true });
         }
 
         [Fact]
@@ -193,17 +194,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
-        public void Resolve_Given_NoServerTimeout_Then_ARequestHasNoTimeLimit()
+        public void Resolve_Given_NoServerTimeout_Then_TheTimeLimitOfARequestComesFromTheServer()
         {
-            Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server })
-                .ShouldNotBeNull().RequestTimeout.ShouldBeNull();
+            ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server }).ShouldNotBeNull();
+
+            settings.RequestTimeoutFromServer.ShouldBeTrue();
+            settings.RequestTimeout.ShouldBeNull();
         }
 
         [Fact]
         public void Resolve_Given_AServerTimeout_Then_ARequestHasThatTimeLimit()
         {
-            Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = 1500 })
-                .ShouldNotBeNull().RequestTimeout.ShouldBe(TimeSpan.FromMilliseconds(1500));
+            ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = 1500 }).ShouldNotBeNull();
+
+            settings.RequestTimeoutFromServer.ShouldBeFalse();
+            settings.RequestTimeout.ShouldBe(TimeSpan.FromMilliseconds(1500));
+        }
+
+        [Fact]
+        public void Resolve_Given_AServerTimeoutOfZero_Then_ARequestHasNoTimeLimit()
+        {
+            ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = 0 }).ShouldNotBeNull();
+
+            settings.RequestTimeoutFromServer.ShouldBeFalse();
+            settings.RequestTimeout.ShouldBeNull();
         }
 
         [Fact]
@@ -213,10 +227,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionCannotBeNegative, @"--server-timeout"));
         }
 
-        [Fact]
-        public void Resolve_Given_AServerTimeoutAndNoServer_Then_UsageException()
+        [Theory]
+        [InlineData(1500)]
+        [InlineData(0)]
+        public void Resolve_Given_AServerTimeoutAndNoServer_Then_UsageException(int timeout)
         {
-            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", ServerTimeoutMilliseconds = 1500 }))
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", ServerTimeoutMilliseconds = timeout }))
                 .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithServer, @"--server-timeout", @"--server", ClientSettingsHelper.ServerVariable));
         }
 

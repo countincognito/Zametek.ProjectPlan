@@ -210,7 +210,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option(c_AllowKeyOverHttpLongName, HelpText = "Send the API key over plain http to a server that is not on this computer - without it zpp refuses to, because anything on the way to the server can read the key (only valid when the run is on a server)")]
         public bool AllowKeyOverHttp { get; set; } = default;
 
-        [Option(c_ServerTimeoutLongName, Default = 0, HelpText = "Milliseconds zpp waits for the answer of the server to one request before it stops - 0 for no limit, because the limits of the server bound the time of a job (a run stopped this way exits with code 5; only valid when the run is on a server)")]
-        public int ServerTimeoutMilliseconds { get; set; } = default;
+        [Option(c_ServerTimeoutLongName, HelpText = "Milliseconds zpp waits for the answer of the server to one request before it stops - 0 for no limit. Without it, zpp asks the server for its limits and calculates the time that a job can wait and run on that server (a run stopped this way exits with code 5; only valid when the run is on a server)")]
+        public int? ServerTimeoutMilliseconds { get; set; } = default;
     }
 }
