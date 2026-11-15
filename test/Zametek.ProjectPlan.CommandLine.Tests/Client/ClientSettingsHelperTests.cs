@@ -145,6 +145,53 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
         }
 
+        // The key goes in a header of each request. Over plain http, each computer on the way to a server that is not this
+        // computer can read it, and so zpp refuses before it sends anything.
+        [Theory]
+        [InlineData(@"http://zpp.example.com:9770")]
+        [InlineData(@"http://10.0.0.5:9770")]
+        [InlineData(@"http://[2001:db8::1]:9770")]
+        public void Resolve_Given_AKeyAndPlainHttpToAnotherComputer_Then_UsageException(string server)
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", Server = server }, (ClientSettingsHelper.ApiKeyVariable, @"the-key")))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerKeyOverPlainHttp, server, @"--allow-key-over-http"));
+        }
+
+        [Theory]
+        [InlineData(@"http://localhost:9770")]
+        [InlineData(@"http://127.0.0.1:9770")]
+        [InlineData(@"http://[::1]:9770")]
+        [InlineData(@"https://zpp.example.com")]
+        [InlineData(@"unix:/tmp/zpp.sock")]
+        public void Resolve_Given_AKeyAndThisComputerOrHttpsOrASocket_Then_TheKey(string server)
+        {
+            Resolve(new Options { InputFilename = @"plan.zpp", Server = server }, (ClientSettingsHelper.ApiKeyVariable, @"the-key"))
+                .ShouldNotBeNull().ApiKey.ShouldBe(@"the-key");
+        }
+
+        [Fact]
+        public void Resolve_Given_AKeyAndPlainHttpToAnotherComputerAndTheOptionThatAllowsIt_Then_TheKey()
+        {
+            Resolve(
+                new Options { InputFilename = @"plan.zpp", Server = @"http://zpp.example.com:9770", AllowKeyOverHttp = true },
+                (ClientSettingsHelper.ApiKeyVariable, @"the-key"))
+                .ShouldNotBeNull().ApiKey.ShouldBe(@"the-key");
+        }
+
+        [Fact]
+        public void Resolve_Given_NoKeyAndPlainHttpToAnotherComputer_Then_RunsThere()
+        {
+            Resolve(new Options { InputFilename = @"plan.zpp", Server = @"http://zpp.example.com:9770" })
+                .ShouldNotBeNull().ApiKey.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Resolve_Given_TheOptionThatAllowsAKeyOverHttpAndNoServer_Then_UsageException()
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", AllowKeyOverHttp = true }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithServer, @"--allow-key-over-http", @"--server", ClientSettingsHelper.ServerVariable));
+        }
+
         [Fact]
         public void Resolve_Given_AnEmptyKeyFile_Then_UsageException()
         {

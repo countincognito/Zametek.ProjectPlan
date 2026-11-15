@@ -966,6 +966,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to zpp does not send the API key to {0} over plain http, because each computer on the way can read the key: use an https address, or {1} if the network between the two computers is private..
+        /// </summary>
+        public static string Message_ServerKeyOverPlainHttp {
+            get {
+                return ResourceManager.GetString("Message_ServerKeyOverPlainHttp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} answered with a redirect to {1}, and zpp does not follow a redirect: give that address to {2}..
+        /// </summary>
+        public static string Message_ServerRedirected {
+            get {
+                return ResourceManager.GetString("Message_ServerRedirected", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The tracked scenario '{0}' did not compile:.
         /// </summary>
         public static string Message_TrackedScenarioDidNotCompile {

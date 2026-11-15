@@ -178,7 +178,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private static HttpClient CreateClient(ClientSettings settings)
         {
-            var handler = new SocketsHttpHandler { ConnectTimeout = s_ConnectTimeout };
+            // zpp sends the plan and the key to the server that it was given, and to no other: it follows no redirect.
+            var handler = new SocketsHttpHandler { ConnectTimeout = s_ConnectTimeout, AllowAutoRedirect = false };
 
             if (settings.UnixSocket is string socket)
             {
@@ -402,6 +403,17 @@ namespace Zametek.ProjectPlan.CommandLine
                     {
                         throw new ServerException(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerNotValid, settings.Server, ex.Message));
                     }
+                }
+
+                // The server, or a proxy in front of it, sends the request to another address. zpp does not go there: the
+                // plan and the key are for the server that zpp was given.
+                if ((int)response.StatusCode is >= 300 and < 400)
+                {
+                    throw new ServerException(string.Format(
+                        Resource.ProjectPlan.Messages.Message_ServerRedirected,
+                        settings.Server,
+                        response.Headers.Location?.ToString() ?? string.Empty,
+                        Program.OptionLongName(nameof(Options.Server))));
                 }
 
                 ProblemResponse? problem = await ReadProblemAsync(response, cancellationToken);

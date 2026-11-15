@@ -776,6 +776,7 @@ The web server itself refuses a request that it cannot read at all. Examples: a 
 | `422` `compilation-failed` | Plays back the console: the report of the compiler. | 3 |
 | `422` `compilation-timed-out` | Plays back the console. | 4 |
 | `500` `output-failed` | Writes the outputs that came, and plays back the console. | 1 |
+| A redirect (a status from `300` to `399`) | Does not follow it, and sends nothing to the new address. Shows the address from `Location`. | 5 |
 | `503` `busy` | Waits for the time in `Retry-After`, and longer each time. The wait doubles, up to half a minute, with a small random addition. Then it tries again, for up to two minutes. | Then 5 |
 | `503` `job-timeout`, the statuses `400`, `401`, `406`, `413` and `415`, `422` `validation-failed`, no answer, and an answer that `zpp` cannot read | Shows the reason from `detail` and `errors`, with the id of the request. | 5 |
 

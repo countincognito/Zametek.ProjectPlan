@@ -50,6 +50,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ServerLongName = "server";
         private const string c_LocalLongName = "local";
         private const string c_ApiKeyFileLongName = "api-key-file";
+        private const string c_AllowKeyOverHttpLongName = "allow-key-over-http";
 
         // How zpp is used, shown above its options in its help: each form of the command, and what it does. Each line
         // fits a terminal 80 columns wide.
@@ -204,5 +205,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_ApiKeyFileLongName, HelpText = "File holding the server's API key - or set ZPP_API_KEY (only valid when the run is on a server)")]
         public string? ApiKeyFile { get; set; } = default;
+
+        [Option(c_AllowKeyOverHttpLongName, HelpText = "Send the API key over plain http to a server that is not on this computer - without it zpp refuses to, because anything on the way to the server can read the key (only valid when the run is on a server)")]
+        public bool AllowKeyOverHttp { get; set; } = default;
     }
 }

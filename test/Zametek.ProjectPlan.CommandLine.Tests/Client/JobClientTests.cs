@@ -462,6 +462,30 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             metrics.HasErrors.ShouldBeFalse();
         }
 
+        // zpp sends the plan, and the key when it has one, to the server that it was given, and to no other: an answer that
+        // sends it to another address is a failure that says where, and zpp sends nothing there.
+        [Theory]
+        [InlineData(StatusCodes.Status301MovedPermanently)]
+        [InlineData(StatusCodes.Status302Found)]
+        [InlineData(StatusCodes.Status307TemporaryRedirect)]
+        [InlineData(StatusCodes.Status308PermanentRedirect)]
+        public async Task Run_Given_AnAnswerThatSendsItElsewhere_Then_ServerFailureAndNothingIsSentThere(int status)
+        {
+            await using FakeServer elsewhere = await FakeServer.StartAsync(_ => Ok());
+            string location = $@"{elsewhere.Address}/v1/projects/compile";
+            await using FakeServer server = await FakeServer.StartAsync(_ => new FakeServer.Answer(
+                status,
+                Headers: new Dictionary<string, string> { [@"Location"] = location }));
+            var options = new Options { InputFilename = Plan, Server = server.Address };
+            ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull();
+
+            using var stopped = new CancellationTokenSource(s_Hang);
+            (await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(1), stopped.Token)))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerRedirected, server.Address, location, @"--server"));
+            server.Requests.Count.ShouldBe(1);
+            elsewhere.Requests.ShouldBeEmpty();
+        }
+
         [Fact]
         public async Task Run_Given_AnAnswerThatIsNotJson_Then_ServerFailureSayingSo()
         {

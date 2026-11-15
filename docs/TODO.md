@@ -108,11 +108,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Choices: keep the files as data, and tell the risk in `docs/API.md`. Or add an option of the job. Do a check of the report of the import problems too (`ImportIssueText.WriteReport`), because a person opens it, and it holds values from the workbook.
 
-- [ ] **Make the client of `zpp --server` safe by default** *(2026-11-14, from the review of `src`)*
+- [ ] **Give the client of `zpp --server` a time limit** *(2026-11-14, from the review of `src`)*
 
-  `ClientSettingsHelper.ParseServer` accepts each `http` or `https` address. With a key, `JobClient` then sends the `Authorization` header over plain HTTP to a host that is not loopback. Each computer on the path can read the key and the plan. `JobClient.CreateClient` keeps the default of `SocketsHttpHandler` for redirects, which follows them, and the plan then goes to the new address. It also sets `Timeout.InfiniteTimeSpan`. Thus, a server that accepts the connection and does not answer holds the client until the user stops it.
+  `JobClient.CreateClient` sets `Timeout.InfiniteTimeSpan`, because the limits of the server bound the time of a job. Thus, a server that accepts the connection and does not answer holds the client until the user stops it. Add an option for a time limit of the request.
 
-  Refuse a key over `http` when the host is not loopback, unless an option allows it. Set `AllowAutoRedirect` to false, and report a redirect as an error. Add an option for a time limit of the request.
+  Since 0.11.0-beta.2, `zpp` refuses to send the API key over plain `http` to a host that is not loopback, unless `--allow-key-over-http` allows it. It also follows no redirect. These were the other two parts of this entry.
 
 - [ ] **Do four smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
 

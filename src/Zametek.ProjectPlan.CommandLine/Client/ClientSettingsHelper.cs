@@ -51,11 +51,16 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (server is null)
             {
-                return options.ApiKeyFile is null
+                // An option that says how to talk to a server, with no server to talk to.
+                string? serverOnly = options.ApiKeyFile is not null
+                    ? nameof(Options.ApiKeyFile)
+                    : options.AllowKeyOverHttp ? nameof(Options.AllowKeyOverHttp) : null;
+
+                return serverOnly is null
                     ? null
                     : throw new UsageException(string.Format(
                         Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithServer,
-                        Program.OptionLongName(nameof(Options.ApiKeyFile)),
+                        Program.OptionLongName(serverOnly),
                         serverOption,
                         ServerVariable));
             }
@@ -72,12 +77,28 @@ namespace Zametek.ProjectPlan.CommandLine
                     : string.Format(Resource.ProjectPlan.Messages.Message_ServerCannotImport, import, serverOption));
             }
 
+            string? apiKey = ResolveApiKey(options, environment);
+
+            // The key goes in a header of each request. Over plain http, each computer on the way to the server can read
+            // it. A server on this computer, or on a socket, has no way to it but this computer.
+            if (apiKey is not null
+                && socket is null
+                && baseAddress.Scheme == Uri.UriSchemeHttp
+                && !baseAddress.IsLoopback
+                && !options.AllowKeyOverHttp)
+            {
+                throw new UsageException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServerKeyOverPlainHttp,
+                    server,
+                    Program.OptionLongName(nameof(Options.AllowKeyOverHttp))));
+            }
+
             return new ClientSettings
             {
                 Server = server,
                 BaseAddress = baseAddress,
                 UnixSocket = socket,
-                ApiKey = ResolveApiKey(options, environment),
+                ApiKey = apiKey,
             };
         }
 
