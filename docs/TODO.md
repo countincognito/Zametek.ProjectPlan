@@ -18,12 +18,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add a handler for the UI thread. It shows the error, and it lets the session continue when the exception is not fatal. Before the process ends, write the open project to a recovery file, and offer that file at the next start. A copy at an interval (an autosave) is a larger feature. Decide if it is necessary.
 
-- [ ] **Make the question at the close hold against a second request to close** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
-
-  `App.axaml.cs` puts two handlers on `Closing`. `CancelClose` cancels the event, and `CheckClose` (an `async void` method) asks about the changes that are not saved. `CheckClose` removes `CancelClose` before it waits for the answer. A second `Closing` event during the question then has no handler that cancels it, and the window closes without the answer. The end of the Windows session is one possible source of such an event. Nobody reproduced this.
-
-  `CheckClose` has no `try`, so an exception from the dialog ends the process. It also does not read `IsSaving`. If the user closes during a write and answers yes, the process ends in the middle of the write. Use one handler that cancels each event until a flag says that the answer was yes. Let it ask only when no question is open, and let it wait for a save that is in progress.
-
 - [ ] **Run Reset Layout and Save Layout on the UI thread** *(2026-11-14, from the review of `src`)*
 
   `ResetLayoutAsync` and `SaveLayoutAsync` of `MainViewModel` call `ResetLayout` and `SaveLayout` through `Task.Run`. On the pool thread, `ResetLayout` holds `m_Lock` of `MainViewModel`. Under the lock, it closes the dock layout, sets `Layout`, starts the new layout and calls `DataGridLayoutManager.ResetDataGridModels()`. Each reset action is `DataGridPersistLayoutBehavior.ResetDataGridModel`, which calls `Dispatcher.UIThread.Invoke` and waits. The setters of `ShowDates` and `UseClassicDates`, and `CloseLayout`, take the same lock on the UI thread. If the UI thread waits for the lock at that moment, the two threads wait for each other, and the application stops.

@@ -127,50 +127,32 @@ namespace Zametek.ProjectPlan.Desktop
                         IDialogService dialogService = GetRequiredService<IDialogService>();
                         dialogService.Parent = mainWindow;
 
-                        // Cancelling the window closing does not work when using an async handler,
-                        // and trying to force Wait on the return dialog freezes the UI thread.
-                        // This solution is the hack below, where CancelClose automatically cancels
-                        // the closing event first, then CheckClose checks to see if the project
-                        // has updates.
-                        // If there are no updates, CheckClose removes all handlers and forces a new close.
-                        // If there are updates, then the dialog requests permission to proceed.
-                        // If yes, then it continues as before. If no, then CheckClose removes itself
-                        // and then adds back all the handlers in the correct order (i.e. the same
-                        // initial state) and then immediately returns.
-                        void CancelClose(object? sender, CancelEventArgs args)
-                        {
-                            args.Cancel = true;
-                        }
-
-                        async void CheckClose(object? sender, CancelEventArgs args)
-                        {
-                            mainWindow.Closing -= CancelClose;
-
-                            if (mainViewModel.ProjectHasChanges)
+                        // A handler of Closing cannot wait for the answer to a question. So the guard cancels each request
+                        // to close until it knows that the window can close, and then it closes the window itself. It
+                        // waits for a save or an export in progress, and it asks only when the project has changes. A
+                        // second request while the question is open is cancelled too.
+                        var closeGuard = new WindowCloseGuard(
+                            isWriting: () => mainViewModel.IsSaving || mainViewModel.IsSavingAs || mainViewModel.IsExporting,
+                            writingSource: (INotifyPropertyChanged)mainViewModel,
+                            hasChanges: () => mainViewModel.ProjectHasChanges,
+                            confirmCloseAsync: () => dialogService.ShowConfirmationAsync(
+                                Resource.ProjectPlan.Titles.Title_ProjectUnsavedChanges,
+                                string.Empty,
+                                Resource.ProjectPlan.Messages.Message_ProjectUnsavedChanges),
+                            close: () =>
                             {
-                                bool wishToClose = await dialogService.ShowConfirmationAsync(
-                                    Resource.ProjectPlan.Titles.Title_ProjectUnsavedChanges,
-                                    string.Empty,
-                                    Resource.ProjectPlan.Messages.Message_ProjectUnsavedChanges);
+                                mainViewModel.CloseLayout();
+                                mainWindow.Close();
+                            },
+                            reportFailure: ex => Log.Error(ex, "The check before the close of the main window failed"));
 
-                                if (!wishToClose)
-                                {
-                                    // Clearing the rest of the handlers and then adding
-                                    // them back in the correct order.
-                                    mainWindow.Closing -= CheckClose;
-                                    mainWindow.Closing += CancelClose;
-                                    mainWindow.Closing += CheckClose;
-                                    return;
-                                }
+                        mainWindow.Closing += (_, args) =>
+                        {
+                            if (closeGuard.ShouldCancel())
+                            {
+                                args.Cancel = true;
                             }
-
-                            mainWindow.Closing -= CheckClose;
-                            mainViewModel.CloseLayout();
-                            mainWindow.Close();
-                        }
-
-                        mainWindow.Closing += CancelClose;
-                        mainWindow.Closing += CheckClose;
+                        };
 
                         desktopLifetime.MainWindow = mainWindow;
 
