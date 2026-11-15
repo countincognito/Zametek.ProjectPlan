@@ -6,6 +6,7 @@ using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -20,6 +21,10 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+
+        // True when no file command runs. The file commands can start only then.
+        private readonly BehaviorSubject<bool> m_CanRunFileCommand;
+        private readonly IDisposable m_FileCommandsSub;
 
         private static readonly IList<IFileFilter> s_ProjectFileFilters =
             [
@@ -135,38 +140,51 @@ namespace Zametek.ViewModel.ProjectPlan
             m_RecentProjectFileMenuItems = [];
             m_HasRecentProjectFilePaths = false;
 
-            {
-                ReactiveCommand<RxVoid, RxVoid> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
-                openProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
-                OpenProjectFileCommand = openProjectFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync);
-                saveProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
-                SaveProjectFileCommand = saveProjectFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync);
-                saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
-                SaveAsProjectFileCommand = saveAsProjectFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync);
-                importProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
-                ImportProjectScenarioFileCommand = importProjectScenarioFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync);
-                exportProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
-                ExportProjectScenarioFileCommand = exportProjectScenarioFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
-                closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
-                CloseProjectCommand = closeProjectCommand;
-            }
+            // One file command runs at a time. While one of them runs - also while its dialog is open - none of them can
+            // start: an open must not start while a save writes the file, and a save must not start while an import loads.
+            // A command stops only a second run of itself, and so the commands share this one condition.
+            m_CanRunFileCommand = new BehaviorSubject<bool>(true);
 
-            OpenRecentProjectFileCommand = ReactiveCommand.CreateFromTask<string>(OpenRecentProjectFileAsync);
+            ReactiveCommand<RxVoid, RxVoid> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync, m_CanRunFileCommand);
+            openProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
+            OpenProjectFileCommand = openProjectFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync, m_CanRunFileCommand);
+            saveProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
+            SaveProjectFileCommand = saveProjectFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync, m_CanRunFileCommand);
+            saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
+            SaveAsProjectFileCommand = saveAsProjectFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync, m_CanRunFileCommand);
+            importProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
+            ImportProjectScenarioFileCommand = importProjectScenarioFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync, m_CanRunFileCommand);
+            exportProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
+            ExportProjectScenarioFileCommand = exportProjectScenarioFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync, m_CanRunFileCommand);
+            closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
+            CloseProjectCommand = closeProjectCommand;
+
+            ReactiveCommand<string, RxVoid> openRecentProjectFileCommand = ReactiveCommand.CreateFromTask<string>(OpenRecentProjectFileAsync, m_CanRunFileCommand);
+            OpenRecentProjectFileCommand = openRecentProjectFileCommand;
+
+            m_FileCommandsSub = Observable
+                .CombineLatest(
+                    openProjectFileCommand.IsExecuting,
+                    openRecentProjectFileCommand.IsExecuting,
+                    saveProjectFileCommand.IsExecuting,
+                    saveAsProjectFileCommand.IsExecuting,
+                    importProjectScenarioFileCommand.IsExecuting,
+                    exportProjectScenarioFileCommand.IsExecuting,
+                    closeProjectCommand.IsExecuting)
+                .Select(running => !running.Any(isRunning => isRunning))
+                .DistinctUntilChanged()
+                .Subscribe(m_CanRunFileCommand.OnNext);
+
             ClearRecentProjectFilePathsCommand = ReactiveCommand.CreateFromTask(ClearRecentProjectFilePathsAsync);
             RefreshRecentProjectFileMenuItems();
 
@@ -192,7 +210,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
-            TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
+            TransitiveReductionCommand = ReactiveCommand.CreateFromTask(RunTransitiveReductionAsync);
             SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
             OpenDocumentationCommand = ReactiveCommand.CreateFromTask(OpenDocumentationAsync);
@@ -200,7 +218,7 @@ namespace Zametek.ViewModel.ProjectPlan
             OpenMainPageCommand = ReactiveCommand.CreateFromTask(OpenMainPageAsync);
             OpenReportIssueCommand = ReactiveCommand.CreateFromTask(OpenReportIssueAsync);
             OpenViewLicenseCommand = ReactiveCommand.CreateFromTask(OpenViewLicenseAsync);
-            OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
+            OpenAboutCommand = ReactiveCommand.CreateFromTask(OpenAboutAsync);
 
             // The busy chrome (the loading overlay) is immediate for long-form
             // operations (project loads, scenario processing, layout work) but
@@ -1659,6 +1677,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsImporting?.Dispose();
                 m_IsExporting?.Dispose();
                 m_IsClosing?.Dispose();
+                m_FileCommandsSub?.Dispose();
+                m_CanRunFileCommand?.Dispose();
                 m_IsProjectUpdated?.Dispose();
                 m_IsProjectScenarioUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();

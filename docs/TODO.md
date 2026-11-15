@@ -16,10 +16,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read a revision of the edits before the build. After the write, clear the marks only if the revision is the same. If it changed, keep the marks, so that the next save writes the edit. The write of a small plan is short, and thus the window is small. A slow disk or a network share makes it longer. Nobody reproduced this.
 
-- [ ] **Give the file commands one condition that says when they can run** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
-
-  `MainViewModel` makes Open, Save, Save As, Import, Export and Close with `ReactiveCommand.CreateFromTask`, and none has a `canExecute`. A command stops only a second run of itself. Thus, Ctrl+O can start an open while a save writes the file, and Ctrl+S can start a save while an import loads. The properties `IsOpening`, `IsSaving`, `IsSavingAs`, `IsImporting`, `IsExporting` and `IsClosing` exist already. Make one observable that is true when all of them are false. Give it to the six commands and to `OpenRecentProjectFileCommand`.
-
 - [ ] **Start with the default settings when the application cannot read `UserSettings.json`** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
 
   The constructor of `SettingServiceBase` reads the file with `JObject.Parse`, and it has no `catch`. An incomplete file, or a file that is not JSON, throws there. The start then writes "Fatal startup error" to the log and stops the desktop (`Shutdown(1)`). The user sees the splash screen go away, and no message. The read of the layout of the grids and the read of the dock layout each have a `catch` that resets the layout.
@@ -65,10 +61,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   The setter of `DisplayMode` also empties the cache of non-working days each time. Thus, each save empties the cache two times. In the Classic mode, each save also raises `DisplayMode` two times, and the activities then raise their date properties again.
 
   Give the mapper the mode as an argument, or let the save call the `Default` functions of the calculator directly. Then a save does not write to the calculator. Nobody reproduced a wrong date.
-
-- [ ] **Make the two commands that call an async method with `CreateFromTask`** *(2026-11-14, from the review of `src`)*
-
-  `TransitiveReductionCommand` and `OpenAboutCommand` of `MainViewModel` use `ReactiveCommand.Create` with `RunTransitiveReductionAsync` and `OpenAboutAsync`. `Create` takes the method as a function that returns a value, and the value is the task. Thus, the command ends at once, and `IsExecuting` does not cover the work. A second run can start during the first, and nothing observes an exception of the task. The other async commands use `CreateFromTask`.
 
 - [ ] **Raise the properties of `DateTimeCalculator` after the release of its lock** *(2026-11-14, from the review of `src`)*
 
