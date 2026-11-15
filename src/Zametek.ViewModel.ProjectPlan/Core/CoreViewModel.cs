@@ -640,30 +640,37 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool IsProjectScenarioUpdated
         {
             get => m_IsProjectScenarioUpdated;
-            set
-            {
-                lock (m_Lock)
-                {
-                    HasStaleOutputs = value;
-                    if (m_TrackIsProjectScenarioUpdated)
-                    {
-                        if (value && !m_IsProjectScenarioUpdated)
-                        {
-                            CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to true");
-                        }
-                        else if (!value && m_IsProjectScenarioUpdated)
-                        {
-                            CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to false");
-                        }
-                        this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value);
+            set => MarkProjectScenario(value, isChange: true);
+        }
 
-                        if (value)
-                        {
-                            // Each mark counts, also when the scenario has the mark already: the flag cannot say that it
-                            // was set again.
-                            Interlocked.Increment(ref m_ProjectScenarioUpdateRevision);
-                            this.RaisePropertyChanged(nameof(ProjectScenarioUpdateRevision));
-                        }
+        // Marks the scenario as updated, or clears the mark. A change to the plan or to its settings also moves
+        // ProjectScenarioUpdateRevision, which tells a save that a change came while it wrote the file. The publication of a
+        // compilation marks the scenario too, because the file holds the compiled values, but it is not such a change: the
+        // file has the plan that was compiled, and a load compiles it again. If the publication moved the counter, a save
+        // that overlaps the automatic compilation of an edit left the title with the mark of a change.
+        private void MarkProjectScenario(bool value, bool isChange)
+        {
+            lock (m_Lock)
+            {
+                HasStaleOutputs = value;
+                if (m_TrackIsProjectScenarioUpdated)
+                {
+                    if (value && !m_IsProjectScenarioUpdated)
+                    {
+                        CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to true");
+                    }
+                    else if (!value && m_IsProjectScenarioUpdated)
+                    {
+                        CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to false");
+                    }
+                    this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value, nameof(IsProjectScenarioUpdated));
+
+                    if (value && isChange)
+                    {
+                        // Each mark counts, also when the scenario has the mark already: the flag cannot say that it
+                        // was set again.
+                        Interlocked.Increment(ref m_ProjectScenarioUpdateRevision);
+                        this.RaisePropertyChanged(nameof(ProjectScenarioUpdateRevision));
                     }
                 }
             }
@@ -2186,7 +2193,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             compilationErrorCount = graphCompilation.CompilationErrors.Count();
                             GraphCompilation = graphCompilation;
 
-                            IsProjectScenarioUpdated = true;
+                            MarkProjectScenario(true, isChange: false);
 
                             // The outputs match the plan only if nothing that a compilation reads has changed since the
                             // snapshot. If something has, these results are the newest there are and they stay on

@@ -250,6 +250,22 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void ProjectScenarioUpdateRevision_Given_ACompilationThatPublishes_Then_ItDoesNotMove()
+        {
+            // The publication marks the scenario as updated, but it is not a change to the plan.
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
+            core.AddManagedActivity(1);
+            core.IsProjectScenarioUpdated = false;
+            int before = core.ProjectScenarioUpdateRevision;
+
+            core.RunCompile();
+
+            core.IsProjectScenarioUpdated.ShouldBeTrue();
+            core.ProjectScenarioUpdateRevision.ShouldBe(before);
+        }
+
+        [Fact]
         public void ProjectScenarioUpdateRevision_Given_AClearOfTheMark_Then_ItDoesNotMove()
         {
             using CoreViewModel core = CoreViewModelFixture.Create();

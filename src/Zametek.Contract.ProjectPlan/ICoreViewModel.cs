@@ -14,9 +14,9 @@ namespace Zametek.Contract.ProjectPlan
         bool IsProjectScenarioUpdated { get; set; }
 
         /// <summary>
-        /// How many times a change marked the scenario as updated, also when the scenario had the mark already. A save
-        /// reads it before it takes its copy of the project, to know if a change came while it wrote the file. Observe
-        /// changes only.
+        /// How many times a change marked the scenario as updated, also when the scenario had the mark already. The
+        /// publication of a compilation marks the scenario too, but it does not count. A save reads the counter before it
+        /// takes its copy of the project, to know if a change came while it wrote the file. Observe changes only.
         /// </summary>
         int ProjectScenarioUpdateRevision { get; }
 

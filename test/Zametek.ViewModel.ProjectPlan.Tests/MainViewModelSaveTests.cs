@@ -63,6 +63,27 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task SaveProjectFileAsync_Given_ACompilationThatPublishesDuringTheWrite_Then_TheMarksOfAChangeGo()
+        {
+            // A person edits the plan and saves at once, while the automatic compilation of the edit still runs. The edit is
+            // in the file. The compilation marks the scenario when it publishes, because the file holds the compiled
+            // values, but it is no change that the save can lose: a load compiles the plan again. If its mark stayed, the
+            // title showed a change after each such save.
+            using Harness harness = Harness.Make();
+            harness.Core.GraphSettings = CoreViewModelFixture.DefaultGraphSettings;
+            harness.Core.AddManagedActivity(1);
+            harness.Core.IsProjectScenarioUpdated = true;
+            harness.Saver.DuringTheWrite = harness.Core.RunCompile;
+
+            await harness.Main.SaveProjectFileAsync();
+
+            harness.Dialogs.Errors.ShouldBeEmpty();
+            harness.Core.GraphCompilation.DependentActivities.ShouldNotBeEmpty(@"the compilation did not publish");
+            harness.Core.IsProjectScenarioUpdated.ShouldBeFalse(@"the publication of a compilation kept the marks of a change");
+            harness.Project.IsProjectUpdated.ShouldBeFalse();
+        }
+
+        [Fact]
         public async Task SaveProjectFileAsync_Given_AChangeDuringTheWrite_Then_TheNextSaveClearsTheMarks()
         {
             using Harness harness = Harness.Make();
