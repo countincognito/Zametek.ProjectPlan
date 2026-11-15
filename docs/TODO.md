@@ -28,12 +28,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add a handler for the UI thread. It shows the error, and it lets the session continue when the exception is not fatal. Before the process ends, write the open project to a recovery file, and offer that file at the next start. A copy at an interval (an autosave) is a larger feature. Decide if it is necessary.
 
-- [ ] **Keep the compile subscriptions alive after an exception** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
-
-  Three subscriptions of `CoreViewModel` do the automatic work on the task pool. They are `m_CompileOnSettingsUpdateSub` (`DrainAutoCompiles`), `m_BuildCascadeSub` (`RunBuildCascade`) and `m_BuildRiskMetricsSub` (`BuildRiskMetrics`). The first two catch only `GraphCompilationTimeoutException`, and the third catches nothing. A comment there says that an exception that escapes ends the subscription for the rest of the session. Thus, another exception, for example from a metric or from the tracking series, stops each later automatic compile, or it ends the process. The builders of the charts catch each exception and show a dialog.
-
-  Catch each exception in the three handlers, write it to the log, and set `HasStaleOutputs`. The core has no dialog service (refer to the note on `AbandonCompilation`). Thus, find how the user learns about the failure, for example from a state that `MainViewModel` shows.
-
 - [ ] **Make the question at the close hold against a second request to close** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
 
   `App.axaml.cs` puts two handlers on `Closing`. `CancelClose` cancels the event, and `CheckClose` (an `async void` method) asks about the changes that are not saved. `CheckClose` removes `CancelClose` before it waits for the answer. A second `Closing` event during the question then has no handler that cancels it, and the window closes without the answer. The end of the Windows session is one possible source of such an event. Nobody reproduced this.

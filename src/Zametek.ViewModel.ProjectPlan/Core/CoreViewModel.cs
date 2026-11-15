@@ -605,6 +605,23 @@ namespace Zametek.ViewModel.ProjectPlan
             AutoCompile = false;
         }
 
+        /// <summary>
+        /// Applies the state that follows an exception in the automatic work of a subscription: an automatic compilation,
+        /// the build of the outputs after a compilation, or the build of the risk metrics. The exception stays in the
+        /// handler, because an exception that leaves it ends the subscription for the rest of the session, and then no
+        /// later edit compiles. The outputs on display do not match the plan, so they are flagged stale, which the window
+        /// shows. The log has the exception.
+        /// </summary>
+        /// <remarks>
+        /// Automatic compilation stays on: the next edit can take the cause away, and it then compiles again. A
+        /// compilation that runs out of time is a different case (see <see cref="AbandonCompilation"/>).
+        /// </remarks>
+        private void AbandonAutomaticWork(Exception ex, string work)
+        {
+            m_Logger.LogError(ex, "The {AutomaticWork} failed", work);
+            HasStaleOutputs = true;
+        }
+
         #endregion
 
         #region ICoreViewModel Members
@@ -2455,6 +2472,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         // service here to report it either - see the note on
                         // AbandonCompilation.
                     }
+                    catch (Exception ex)
+                    {
+                        // Any other exception stays here too, for the same reason.
+                        AbandonAutomaticWork(ex, @"automatic compilation");
+                    }
                 });
 
             // One compile, one cascade: a GraphCompilation change runs the whole
@@ -2483,6 +2505,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         // state, and an escaping exception would end the cascade
                         // subscription for the rest of the session.
                     }
+                    catch (Exception ex)
+                    {
+                        // Any other exception stays here too, for the same reason.
+                        AbandonAutomaticWork(ex, @"build of the outputs of a compilation");
+                    }
                 });
 
             // Risk metrics are the one output with a non-compile trigger: the
@@ -2492,7 +2519,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(core => core.GraphSettings)
                 .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildRiskMetrics());
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        BuildRiskMetrics();
+                    }
+                    catch (Exception ex)
+                    {
+                        // An exception that escapes would end this subscription for the rest of the session.
+                        AbandonAutomaticWork(ex, @"build of the risk metrics");
+                    }
+                });
 
             // The activities made before the start start with it; those made after it start as they are made.
             m_PlanGraph.StartActivities();

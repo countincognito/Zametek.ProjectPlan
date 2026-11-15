@@ -98,10 +98,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             return (core, settingService);
         }
 
+        /// <summary>
+        /// Builds a core as <see cref="CreateGated"/> does, over a metric service that a test can make fail: for the tests
+        /// of what the automatic work of the core does about an exception.
+        /// </summary>
+        public static (GatedCoreViewModel Core, FaultyMetricCalculationService Metrics) CreateGatedWithFaultyMetrics()
+        {
+            FaultyMetricCalculationService? metrics = null;
+            (GatedCoreViewModel core, _, _) = BuildGated(
+                AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+                wrapMetrics: inner => metrics = new FaultyMetricCalculationService(inner));
+            return (core, metrics!);
+        }
+
         private static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs, ISettingService SettingService) BuildGated(
             int compilationTimeoutMilliseconds,
             ILogger<CoreViewModel>? logger = null,
-            IProjectScenarioFileImport? projectScenarioFileImport = null)
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            Func<IMetricCalculationService, IMetricCalculationService>? wrapMetrics = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -112,6 +126,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             };
             var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
             var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));
+            IMetricCalculationService metrics = new MetricCalculationService(mapper, dateTimeCalculator);
 
             var coreViewModel = new GatedCoreViewModel(
                 projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
@@ -121,7 +136,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 mapper,
                 graphs,
                 new ResourceSchedulingService(mapper),
-                new MetricCalculationService(mapper, dateTimeCalculator),
+                wrapMetrics?.Invoke(metrics) ?? metrics,
                 new TestDataGridScrollManager(),
                 logger ?? NullLogger<CoreViewModel>.Instance);
 

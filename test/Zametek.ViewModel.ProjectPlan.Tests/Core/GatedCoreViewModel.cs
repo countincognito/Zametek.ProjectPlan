@@ -29,6 +29,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private readonly SemaphoreSlim m_Held = new(0);
         private int m_HoldNext;
         private int m_StallNext;
+        private Exception? m_FailNext;
         private int m_Started;
 
         public GatedCoreViewModel(
@@ -96,6 +97,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public void StallNextCompilation() => Volatile.Write(ref m_StallNext, 1);
 
+        /// <summary>
+        /// Makes the next compilation throw this, in place of its results.
+        /// </summary>
+        public void FailNextCompilation(Exception failure) => Volatile.Write(ref m_FailNext, failure);
+
         protected override IGraphCompilation<int, int, int, IDependentActivity> CompilePlan(
             VertexGraphCompiler compiler,
             List<IResource<int, int>> availableResources,
@@ -120,6 +126,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
                 cancellationToken.WaitHandle.WaitOne(s_Patience);
                 cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            if (Interlocked.Exchange(ref m_FailNext, null) is Exception failure)
+            {
+                throw failure;
             }
 
             return base.CompilePlan(compiler, availableResources, workStreams, cancellationToken);
