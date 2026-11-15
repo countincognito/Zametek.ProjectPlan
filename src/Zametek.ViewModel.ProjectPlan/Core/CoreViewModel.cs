@@ -1758,10 +1758,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     BeginBusy();
 
-                    // Default display mode is required for all file opening and closing.
-                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
-                    m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
-
+                    // A file holds the dates of the default display mode. The mapper reads each date from its activity
+                    // as the plan keeps it (StoredMaximumLatestFinishDateTime). So the build writes nothing to the date
+                    // calculator, which the activities, the grid and the charts share.
                     UpdateActivityDisplayOrders();
 
                     List<DependentActivityModel> dependentActivities =
@@ -1788,9 +1787,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Reorder activity dependencies so they are more readable.
                     ProjectScenarioHelper.SortDependencies(plan.DependentActivities);
-
-                    // Put display mode back to the way it was.
-                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
 
                     return plan;
                 }

@@ -1145,6 +1145,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The maximum latest finish date as the plan keeps it: the first day after the last day of work, which is the
+        // value of MaximumLatestFinishDateTime in the default display mode. The build of a scenario for a save reads this,
+        // so that it does not have to change the display mode of the date calculator.
+        public DateTime? StoredMaximumLatestFinishDateTime => m_MaximumLatestFinishDateTime?.DateTime;
+
         public IResourceSelectorViewModel ResourceSelector { get; }
 
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }

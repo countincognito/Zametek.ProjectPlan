@@ -38,14 +38,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Let the UI thread publish the order as an array of ids each time the bound collection changes. Let `SetDisplayOrders` read the array. `ActivitiesManagerViewModel` also reads the collection by index under its own lock. Find on which thread it does this.
 
-- [ ] **Build the scenario for a save without a change to the display mode of the calculator** *(2026-11-14, from the review of `src`)*
-
-  `CoreViewModel.BuildProjectScenario` sets `m_DateTimeCalculator.DisplayMode` to `Default`. Then it maps the activities, and it sets the old mode again. No `try` and `finally` are around the two writes. Thus, an exception from the mapper leaves the mode at `Default` for the rest of the session. The activities, the grid and the charts share this one calculator. A read on another thread between the two writes gets the dates of the `Default` mode.
-
-  The setter of `DisplayMode` also empties the cache of non-working days each time. Thus, each save empties the cache two times. In the Classic mode, each save also raises `DisplayMode` two times, and the activities then raise their date properties again.
-
-  Give the mapper the mode as an argument, or let the save call the `Default` functions of the calculator directly. Then a save does not write to the calculator. Nobody reproduced a wrong date.
-
 - [ ] **Raise the properties of `DateTimeCalculator` after the release of its lock** *(2026-11-14, from the review of `src`)*
 
   The setters of `NonWorkingDayMode`, `DisplayMode`, `ProjectStart`, `NonWorkingDaysStart` and `NonWorkingDaysFinish` call `RaiseAndSetIfChanged` inside `lock (m_Lock)`. ARCHITECTURE §7 rule 6 forbids this shape, and the list of the entry about the surgery for rule 6 does not have these sites. The compile, the chart builds and the UI thread take the same lock in `AddDays` and `CountDays`. An observer of one of these properties that waits for a lock of another of those threads makes a cycle.
