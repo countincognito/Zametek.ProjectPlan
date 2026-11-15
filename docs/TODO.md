@@ -100,10 +100,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add a kind of problem for the refusal to `docs/API.md` and to `docs/openapi.yaml`. Nobody tested this from a browser.
 
-- [ ] **Escape the names in the Dot export** *(2026-11-14, from the review of `src`)*
-
-  `GraphVizBuilder.ToGraphViz` writes the text, the tooltip and the label of each node and each edge between double quotes, with no escape. A double quote or a backslash in the name of an activity gives a Dot file that Graphviz cannot read. A name can also add attributes of its own to the file. Escape `\`, `"` and a line end in each string. `zpp` and `zpp serve` write Dot too. Add a test with such a name.
-
 - [ ] **Decide if the CSV outputs must make a formula prefix safe** *(2026-11-14, from the review of `src`)*
 
   `CsvText.Quote` follows RFC 4180. It puts a field with a comma, a quote or a line end in quotes. A field that starts with `=`, `+`, `-` or `@` goes out as it is. Excel reads such a field as a formula when a person opens the file.
