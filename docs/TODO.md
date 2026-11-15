@@ -66,12 +66,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Give the mapper the mode as an argument, or let the save call the `Default` functions of the calculator directly. Then a save does not write to the calculator. Nobody reproduced a wrong date.
 
-- [ ] **Do not change the compiled activities in the build of the Gantt chart** *(2026-11-14, from the review of `src`)*
-
-  `GanttChartManagerViewModel` groups the activities by work stream when `GroupByMode` is `WorkStream`. There, `HashSet<int> targetWorkStreams = activity.TargetWorkStreams` is the set of the published compiled activity, and not a copy. When the set is empty, the build adds `default` to it. Other threads clone the activities of the same `GraphCompilation` (`CompilationOutputService`, `MetricCalculationService`). A clone of a `HashSet` during an `Add` can tear, and ARCHITECTURE §7 rule 10 tells what a torn set did. Each later reader also sees a work stream 0 that the plan does not have.
-
-  The value does not go to the file, because the save reads the live activities. Use a local set when the set of the activity is empty. Nobody reproduced a failure.
-
 - [ ] **Make the two commands that call an async method with `CreateFromTask`** *(2026-11-14, from the review of `src`)*
 
   `TransitiveReductionCommand` and `OpenAboutCommand` of `MainViewModel` use `ReactiveCommand.Create` with `RunTransitiveReductionAsync` and `OpenAboutAsync`. `Create` takes the method as a function that returns a value, and the value is the task. Thus, the command ends at once, and `IsExecuting` does not cover the work. A second run can start during the first, and nothing observes an exception of the task. The other async commands use `CreateFromTask`.
@@ -242,7 +236,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Suggestion: make the collections of the models read-only** *(2026-11-14, from the review of `src`)*
 
-  `Zametek.Common.ProjectPlan` has 79 records. They have 74 public members that are a `List<T>` or another collection that a holder can change. The application gives these records to other threads as snapshots, but nothing stops a change. The equality of such a record compares its lists by reference, and the entry about rule 7 found a guard that this made dead. The Gantt build changed a set of a published activity (refer to the entry above), and ARCHITECTURE §7 rule 10 tells of a torn `HashSet`.
+  `Zametek.Common.ProjectPlan` has 79 records. They have 74 public members that are a `List<T>` or another collection that a holder can change. The application gives these records to other threads as snapshots, but nothing stops a change. The equality of such a record compares its lists by reference, and the entry about rule 7 found a guard that this made dead. Until 0.11.0-beta.2, the build of the Gantt chart changed a set of a published activity, and ARCHITECTURE §7 rule 10 tells of a torn `HashSet`.
 
   Types such as `IReadOnlyList<T>` or `ImmutableArray<T>` make the snapshot rule a rule of the compiler. Mapperly and Newtonsoft.Json must still read and write the models. Thus, try one model first, when it changes for another reason.
 

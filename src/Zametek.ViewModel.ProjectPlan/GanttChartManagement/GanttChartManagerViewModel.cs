@@ -87,6 +87,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SubscriptionLifetime m_SubscriptionLifetime = new();
         private IDisposable? m_BuildGanttChartPlotModelSub;
 
+        // The work stream of an activity that targets none, for the chart that groups by work stream.
+        private static readonly IReadOnlyCollection<int> s_DefaultWorkStream = [default];
+
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
         private const double c_BarSize = 0.5;
@@ -666,14 +669,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             ScheduledActivityModel scheduledActivity = scheduledActivityLookup[activity.Id];
 
-                            HashSet<int> targetWorkStreams = activity.TargetWorkStreams;
+                            // If no work streams are targetted, then use the default. The set of the activity belongs
+                            // to the compilation, which other threads read and clone: the default goes into a set of
+                            // this build, and never into the set of the activity.
 
-                            // If no work streams are targetted, then use the default.
-
-                            if (targetWorkStreams.Count == 0)
-                            {
-                                targetWorkStreams.Add(default);
-                            }
+                            IReadOnlyCollection<int> targetWorkStreams = activity.TargetWorkStreams.Count == 0
+                                ? s_DefaultWorkStream
+                                : activity.TargetWorkStreams;
 
                             // Cycle through each work stream and add the scheduled activity where required.
 
