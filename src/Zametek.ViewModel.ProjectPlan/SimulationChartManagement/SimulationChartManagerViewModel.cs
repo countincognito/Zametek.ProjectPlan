@@ -1077,8 +1077,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     throw new OperationCanceledException(token);
                 }
 
+                SimulationResult<int>? resultBefore;
+                SimulationSummaryModel? resultSummaryBefore;
+                IReadOnlyDictionary<int, string> activityNamesBefore;
+                SimulationSummaryModel? presentedSummaryBefore;
+                int resultRevisionBefore = ResultRevision;
+
                 lock (m_Lock)
                 {
+                    resultBefore = m_Result;
+                    resultSummaryBefore = m_ResultSummary;
+                    activityNamesBefore = m_ActivityNames;
+                    presentedSummaryBefore = m_PresentedSummary;
                     m_Result = outcome.Result;
                     m_ResultSummary = outcome.Summary;
                     m_ActivityNames = outcome.ActivityNames;
@@ -1086,7 +1096,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 ResultRevision = outcome.CompilationOutputRevision;
-                m_CoreViewModel.SimulationSummary = outcome.Summary;
+
+                // The comparison above and a write here would be two steps, and a scenario can load or reset between them.
+                // It would then get the result of the scenario before it, and the next save would write that result to
+                // the file. So the core compares the revision and writes in one step.
+                if (!m_CoreViewModel.TrySetSimulationSummary(outcome.Summary, scenarioRevision))
+                {
+                    lock (m_Lock)
+                    {
+                        // Only when nothing else changed them since: the panel holds what it held before the run.
+                        if (ReferenceEquals(m_ResultSummary, outcome.Summary))
+                        {
+                            m_Result = resultBefore;
+                            m_ResultSummary = resultSummaryBefore;
+                            m_ActivityNames = activityNamesBefore;
+                            m_PresentedSummary = presentedSummaryBefore;
+                        }
+                    }
+
+                    ResultRevision = resultRevisionBefore;
+                    throw new OperationCanceledException(token);
+                }
+
                 BuildPresentation();
 
                 SetStatus(

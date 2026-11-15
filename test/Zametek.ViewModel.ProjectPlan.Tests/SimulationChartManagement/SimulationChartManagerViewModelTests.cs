@@ -898,6 +898,36 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunSimulationAsync_Given_AScenarioThatResetsWhileTheRunGivesItsResult_Then_TheNewScenarioDoesNotGetTheResult()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+            bool wasReset = false;
+
+            // The panel sets the revision of its result after it compared the revision of the scenario with the one of the
+            // run, and before it gives the result to the core. A scenario that resets at that moment is a new scenario.
+            panel.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == @"ResultRevision" && !wasReset)
+                {
+                    wasReset = true;
+                    harness.Core.ResetProjectScenario();
+                }
+            };
+
+            await panel.RunSimulationAsync();
+
+            wasReset.ShouldBeTrue();
+            harness.Core.SimulationSummary.ShouldBeNull();
+            panel.Summary.ShouldBeNull();
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
+            harness.Dialogs.Errors.ShouldBeEmpty();
+        }
+
+        [Fact]
         public async Task RunSimulationAsync_Given_AnEditAndACompile_Then_TheNextRunUsesTheEditedPlan()
         {
             using Harness harness = await Harness.MakeAsync();

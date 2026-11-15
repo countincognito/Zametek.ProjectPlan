@@ -50,12 +50,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Keep `BeginBusy` and `EndBusy`, and remove the lock. `JobRunner` already calls the importer and the exporter without the core.
 
-- [ ] **Write the result of a simulation only into its own scenario** *(2026-11-14, from the review of `src`)*
-
-  `SimulationChartManagerViewModel` reads `ProjectScenarioRevision` before a run, and it compares the value after the run. Then it keeps the result, and it sets `SimulationSummary` of the core. The comparison and the write are not one step. During a load, `ResetProjectScenario` runs on a pool thread. It can clear `SimulationSummary` and increase the revision between the two. Then the summary of the old scenario goes into the new scenario, and the next save writes it to the file.
-
-  The window is some statements long, and nobody reproduced this. Give the core a method that takes the summary and the revision of the run. Let it compare and write under `m_Lock`.
-
 - [ ] **Arm the tracked metrics without a check of `IsBusy`** *(2026-11-14, from the review of `src`)*
 
   Two subscriptions of `ProjectScenarioManagerViewModel` deliver on the task pool: `m_AreScenariosDisplayedSub` and `m_MetricsSub`. Each one sets `IsReadyToReviseTrackedMetrics` only when `IsBusy` is false. `IsBusy` is a counted scope for the UI, and nothing arms the revision again when the scope ends. If a delivery comes while the manager is busy, the application drops it. The scenario chart can then show the metrics from before the change, until another site arms the revision. Nobody reproduced this.

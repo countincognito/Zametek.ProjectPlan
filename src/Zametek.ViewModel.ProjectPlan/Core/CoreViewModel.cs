@@ -1172,6 +1172,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The reset of a scenario clears the summary and counts the revision under the same lock. So the comparison and the
+        // write here are one step for it.
+        public bool TrySetSimulationSummary(SimulationSummaryModel? simulationSummary, int projectScenarioRevision)
+        {
+            lock (m_Lock)
+            {
+                if (Volatile.Read(ref m_ProjectScenarioRevision) != projectScenarioRevision)
+                {
+                    return false;
+                }
+                SimulationSummary = simulationSummary;
+                return true;
+            }
+        }
+
         // A revision counter (ARCHITECTURE section 9).
         private int m_ProjectScenarioRevision;
         public int ProjectScenarioRevision => Volatile.Read(ref m_ProjectScenarioRevision);

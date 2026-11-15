@@ -102,6 +102,14 @@ namespace Zametek.Contract.ProjectPlan
         SimulationSummaryModel? SimulationSummary { get; set; }
 
         /// <summary>
+        /// Sets <see cref="SimulationSummary"/>, but only when <see cref="ProjectScenarioRevision"/> still has the given
+        /// value. The core compares and writes in one step. A run of the simulation gives its result in this way, with
+        /// the revision that it read before it started. Then a scenario that loaded or reset since does not get the
+        /// result of the scenario before it. False when nothing was written.
+        /// </summary>
+        bool TrySetSimulationSummary(SimulationSummaryModel? simulationSummary, int projectScenarioRevision);
+
+        /// <summary>
         /// How many times a scenario has been loaded or reset (a project that closes or begins is a reset too). A run
         /// of the simulation belongs to one scenario, and it stops when this changes. Observe changes only.
         /// </summary>
