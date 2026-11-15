@@ -44,12 +44,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The review found no such cycle. Set the field under the lock, and raise after the release. The Debug assertion finds these sites too.
 
-- [ ] **Do not hold the lock of the core during an import or an export** *(2026-11-14, from the review of `src`)*
-
-  `CoreViewModel.ImportProjectScenarioFile` and `ExportProjectScenarioFile` hold `m_Lock` while the importer reads the file or the exporter writes it. Neither method uses the state of the core inside the lock. The import returns a model, and the export gets its models as arguments. A large workbook or an MS Project file can take seconds. During that time, each thread that wants `m_Lock` waits, and a setter on the UI thread is one of them.
-
-  Keep `BeginBusy` and `EndBusy`, and remove the lock. `JobRunner` already calls the importer and the exporter without the core.
-
 - [ ] **Arm the tracked metrics without a check of `IsBusy`** *(2026-11-14, from the review of `src`)*
 
   Two subscriptions of `ProjectScenarioManagerViewModel` deliver on the task pool: `m_AreScenariosDisplayedSub` and `m_MetricsSub`. Each one sets `IsReadyToReviseTrackedMetrics` only when `IsBusy` is false. `IsBusy` is a counted scope for the UI, and nothing arms the revision again when the scope ends. If a delivery comes while the manager is busy, the application drops it. The scenario chart can then show the metrics from before the change, until another site arms the revision. Nobody reproduced this.

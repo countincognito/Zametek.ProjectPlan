@@ -61,12 +61,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService(
             IProjectScenarioFileImport? projectScenarioFileImport = null,
-            ILogger<CoreViewModel>? logger = null)
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileExport? projectScenarioFileExport = null)
         {
             (CoreViewModel coreViewModel, ISettingService settingService) = Build(
                 AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
                 projectScenarioFileImport: projectScenarioFileImport,
-                logger: logger);
+                logger: logger,
+                projectScenarioFileExport: projectScenarioFileExport);
 
             coreViewModel.AutoCompile = false;
             return (coreViewModel, settingService);
@@ -198,7 +200,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             int compilationTimeoutMilliseconds,
             TimeProvider? clock = null,
             IProjectScenarioFileImport? projectScenarioFileImport = null,
-            ILogger<CoreViewModel>? logger = null)
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileExport? projectScenarioFileExport = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -211,7 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             var coreViewModel = new CoreViewModel(
                 projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
-                new TestProjectScenarioFileExport(),
+                projectScenarioFileExport ?? new TestProjectScenarioFileExport(),
                 settingService,
                 dateTimeCalculator,
                 mapper,

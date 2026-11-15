@@ -1453,15 +1453,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The importer reads the file and returns a model, and it uses nothing of the core. A large file can take seconds.
+        // So this shows that the core is busy, and it does not hold the lock of the core: a setter on the UI thread, which
+        // takes that lock, does not wait for the file.
         public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format)
         {
+            BeginBusy();
             try
             {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-                    return m_ProjectScenarioFileImport.ImportProjectScenarioFile(stream, format);
-                }
+                return m_ProjectScenarioFileImport.ImportProjectScenarioFile(stream, format);
             }
             finally
             {
@@ -1477,19 +1477,18 @@ namespace Zametek.ViewModel.ProjectPlan
             Stream stream,
             ProjectScenarioExportFormat format)
         {
+            // The exporter writes the models that it gets, and it uses nothing of the core. So, as for an import, this
+            // does not hold the lock of the core.
+            BeginBusy();
             try
             {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-                    m_ProjectScenarioFileExport.ExportProjectScenarioFile(
-                        projectScenarioModel,
-                        resourceSeriesSetModel,
-                        trackingSeriesSetModel,
-                        showDates,
-                        stream,
-                        format);
-                }
+                m_ProjectScenarioFileExport.ExportProjectScenarioFile(
+                    projectScenarioModel,
+                    resourceSeriesSetModel,
+                    trackingSeriesSetModel,
+                    showDates,
+                    stream,
+                    format);
             }
             finally
             {
