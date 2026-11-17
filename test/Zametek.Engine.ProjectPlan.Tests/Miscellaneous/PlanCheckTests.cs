@@ -375,6 +375,30 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 .ShouldBeEmpty();
         }
 
+        // An import has the same counts as a scenario, and the check gives the same words for them.
+        [Fact]
+        public void FindLimitViolations_Given_AnImportWithMoreThanTheCompilerTakes_Then_TheCountsInTheWordsOfTheCompiler()
+        {
+            List<ResourceModel> resources = [.. Enumerable.Range(1, GraphLimits.MaximumResourceCount + 2).Select(x => new ResourceModel { Id = x, IsInactive = x == 1 })];
+            var import = new ProjectScenarioImportModel
+            {
+                DependentActivities = [.. Enumerable.Range(1, GraphLimits.MaximumActivityCount + 1).Select(x => new DependentActivityModel { Activity = new ActivityModel { Id = x, Duration = 1 } })],
+                ResourceSettings = new ResourceSettingsModel { Resources = resources },
+                WorkStreams = [.. Enumerable.Range(1, GraphLimits.MaximumWorkStreamCount + 1).Select(x => new WorkStreamModel { Id = x })],
+            };
+
+            PlanCheck.FindLimitViolations(import).ShouldBe(
+            [
+                @"The number of activities is 2001, which exceeds the maximum supported count of 2000",
+                @"The number of resources is 1001, which exceeds the maximum supported count of 1000",
+                @"The number of work streams is 101, which exceeds the maximum supported count of 100",
+            ]);
+
+            // The compiler counts the active resources only, and none when the resources are disabled.
+            PlanCheck.FindLimitViolations(new ProjectScenarioImportModel { ResourceSettings = new ResourceSettingsModel { Resources = resources, AreDisabled = true } }).ShouldBeEmpty();
+            PlanCheck.FindLimitViolations(new ProjectScenarioImportModel()).ShouldBeEmpty();
+        }
+
         [Fact]
         public async Task FindProblems_Given_EachPlanOfTheRepository_Then_None()
         {

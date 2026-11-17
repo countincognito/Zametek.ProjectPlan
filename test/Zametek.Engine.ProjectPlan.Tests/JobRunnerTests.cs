@@ -206,6 +206,56 @@ namespace Zametek.Engine.ProjectPlan.Tests
             result.Metrics.ShouldBeNull();
         }
 
+        // The import of 10,000 activities took 9.6 s and 14.8 GB of allocations before the compile refused it. The check
+        // counts first. The item that is not there shows that the job does not load the import: the load fails on it.
+        [Fact]
+        public async Task RunAsync_Given_AnImportOverTheLimitsOfTheCompiler_Then_P0080WithoutTheLoad()
+        {
+            var import = new ProjectScenarioImportModel
+            {
+                DependentActivities =
+                [
+                    .. Enumerable.Range(1, GraphLimits.MaximumActivityCount).Select(x => new DependentActivityModel { Activity = new ActivityModel { Id = x, Duration = 1 } }),
+                    null!,
+                ],
+            };
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FixedProjectScenarioFileImport(import)));
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"two-scenarios.zpp",
+                input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx });
+
+            result.Status.ShouldBe(JobStatus.CompilationErrors);
+            JobCompilationError error = result.CompilationErrors.ShouldHaveSingleItem();
+            error.Code.ShouldBe(@"P0080");
+            error.Message.ShouldContain(@"The number of activities is 2001, which exceeds the maximum supported count of 2000");
+            result.CompilationOutput.ShouldContain($@">{Resource.ProjectPlan.Messages.Message_Error}: P0080");
+            result.Metrics.ShouldBeNull();
+        }
+
+        // An import within the limits is loaded and compiled, as before.
+        [Fact]
+        public async Task RunAsync_Given_AnImportAtTheLimitsOfTheCompiler_Then_ItCompiles()
+        {
+            var import = new ProjectScenarioImportModel
+            {
+                ProjectStart = s_Now,
+                Today = s_Now,
+                DependentActivities = [.. Enumerable.Range(1, 50).Select(x => new DependentActivityModel { Activity = new ActivityModel { Id = x, Duration = 1 } })],
+                WorkStreams = [.. Enumerable.Range(1, GraphLimits.MaximumWorkStreamCount).Select(x => new WorkStreamModel { Id = x, Name = $@"Stream {x}" })],
+            };
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => new FixedProjectScenarioFileImport(import)));
+
+            (JobResult result, _) = await RunAsync(
+                services.GetRequiredService<JobRunner>(),
+                @"two-scenarios.zpp",
+                input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx });
+
+            result.Status.ShouldBe(JobStatus.Succeeded);
+            result.Metrics.ShouldNotBeNull();
+        }
+
         [Fact]
         public async Task RunAsync_Given_APlanThatTheCheckBeforeTheLoadRefuses_Then_ProjectNotReadableWithEachProblem()
         {
@@ -1125,6 +1175,13 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 cancellationToken.ThrowIfCancellationRequested();
                 return new ProjectScenarioImportModel();
             }
+        }
+
+        // The reader of workbooks, which gives the import that it is told to give.
+        private sealed class FixedProjectScenarioFileImport(ProjectScenarioImportModel import)
+            : IProjectScenarioFileImport
+        {
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default) => import;
         }
 
         private sealed class ScrollManagerProbe

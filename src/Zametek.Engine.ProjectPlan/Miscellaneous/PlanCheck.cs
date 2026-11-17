@@ -249,17 +249,25 @@ namespace Zametek.Engine.ProjectPlan
         public static List<string> FindLimitViolations(ProjectScenarioModel scenario)
         {
             ArgumentNullException.ThrowIfNull(scenario);
-            var violations = new List<string>();
-            ResourceSettingsModel? resources = scenario.ResourceSettings;
-            int resourceCount = resources is null || resources.AreDisabled
-                ? 0
-                : resources.Resources?.Count(x => x is not null && !x.IsInactive) ?? 0;
 
-            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanActivities, scenario.DependentActivities?.Count ?? 0, GraphLimits.MaximumActivityCount);
-            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanResources, resourceCount, GraphLimits.MaximumResourceCount);
-            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanWorkStreams, scenario.WorkStreamSettings?.WorkStreams?.Count ?? 0, GraphLimits.MaximumWorkStreamCount);
+            return FindLimitViolations(
+                scenario.DependentActivities?.Count ?? 0,
+                scenario.ResourceSettings,
+                scenario.WorkStreamSettings?.WorkStreams?.Count ?? 0);
+        }
 
-            return violations;
+        /// <summary>
+        /// The counts of an import that are above the limits of the compiler, as
+        /// <see cref="FindLimitViolations(ProjectScenarioModel)"/> gives them for a scenario of a project file.
+        /// </summary>
+        public static List<string> FindLimitViolations(ProjectScenarioImportModel import)
+        {
+            ArgumentNullException.ThrowIfNull(import);
+
+            return FindLimitViolations(
+                import.DependentActivities?.Count ?? 0,
+                import.ResourceSettings,
+                import.WorkStreams?.Count ?? 0);
         }
 
         /// <summary>
@@ -396,6 +404,23 @@ namespace Zametek.Engine.ProjectPlan
                     OutOfRange,
                     Say(Resource.ProjectPlan.Messages.Message_PlanDateBeforeStart, Date(value.Date), Date(start.Date), activityId)));
             }
+        }
+
+        private static List<string> FindLimitViolations(
+            int activityCount,
+            ResourceSettingsModel? resources,
+            int workStreamCount)
+        {
+            var violations = new List<string>();
+            int resourceCount = resources is null || resources.AreDisabled
+                ? 0
+                : resources.Resources?.Count(x => x is not null && !x.IsInactive) ?? 0;
+
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanActivities, activityCount, GraphLimits.MaximumActivityCount);
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanResources, resourceCount, GraphLimits.MaximumResourceCount);
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanWorkStreams, workStreamCount, GraphLimits.MaximumWorkStreamCount);
+
+            return violations;
         }
 
         private static void AddCount(

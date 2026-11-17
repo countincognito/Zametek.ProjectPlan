@@ -44,12 +44,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The cascades of the core use `IsBulkUpdating` and `MuteWhile` for this purpose. Find what the check protects. Then replace it with these two, or arm again at the end of the busy scope.
 
-- [ ] **Do the check of the limits for an import, as for a project file** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
-
-  In `JobRunner.RunAsync`, a project file gets `CheckProject`, `PlanCheck.FindScenarioWarnings` and `PlanCheck.FindLimitViolations` before the load. A plan out of the limits of the compiler gets P0080 without the load. The branch for an import calls `core.ProcessProjectScenarioImport` directly. Thus, a workbook with more activities or resources than the limits gets the whole load. Find what the load and the compile do with such a plan, and how long they take. The entry "Bound the work after the compile" gives the cost of a plan at the limits.
-
-  `FindLimitViolations` takes a `ProjectScenarioModel`. Let it also count a `ProjectScenarioImportModel`, and return the same result (`LimitsResult`) for an import.
-
 - [ ] **Do not let a slow upload hold a place of a job** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
 
   The two POST paths of `zpp serve` have the concurrency limiter (`RequireRateLimiting`). The endpoint reads the multipart body (`ReadFormAsync`) after the request has its permit. The time limit of the job starts only at `m_JobRunner.RunAsync`. `ConfigureKestrel` sets `MaxRequestBodySize`, and no time and no rate. Thus, a client that sends its body slowly holds a place for the whole upload. Only the default minimum rate of Kestrel bounds this time.

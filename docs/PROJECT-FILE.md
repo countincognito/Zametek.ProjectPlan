@@ -137,7 +137,7 @@ The check also finds each constraint date before `ProjectStart`. The calendar co
 
 The plan loads, and `zpp` writes a warning that names the date and the activity. `zpp serve` gives the warning in `warnings`, with the code `outOfRange`. The problem `compilation-failed` has `warnings` too.
 
-The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it.
+The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it. An import gets the same count, after `zpp` reads the workbook or the file of Microsoft Project.
 
 ## The calendar
 

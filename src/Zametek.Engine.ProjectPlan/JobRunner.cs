@@ -234,6 +234,13 @@ namespace Zametek.Engine.ProjectPlan
                 string projectScenarioTitle = settingService.ScenarioTitle;
                 ProjectScenarioImportModel projectImport = ImportProjectScenario(projectFileImport, request.Input, importFormat, cancellationToken);
 
+                // The check before the load, as for a project file: an import out of the limits of the compiler gets P0080
+                // without the load, which takes seconds and gigabytes for a plan of that size.
+                if (PlanCheck.FindLimitViolations(projectImport) is { Count: > 0 } importViolations)
+                {
+                    return LimitsResult(importViolations);
+                }
+
                 core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
             }
             else
