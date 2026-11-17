@@ -52,6 +52,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         internal static string NoKnownSheet() => Resource.ProjectPlan.Messages.Message_ImportNoKnownSheet;
 
+        internal static string WorkbookTooLarge(long megabytes, long maximumMegabytes) => Say(Resource.ProjectPlan.Messages.Message_ImportWorkbookTooLarge, megabytes, maximumMegabytes);
+
+        internal static string TooManyRows(int maximumRows) => Say(Resource.ProjectPlan.Messages.Message_ImportTooManyRows, maximumRows);
+
+        internal static string TooManyCells(long maximumCells) => Say(Resource.ProjectPlan.Messages.Message_ImportTooManyCells, maximumCells);
+
         internal static string UnreadableWorkbook(string reason) => Say(Resource.ProjectPlan.Messages.Message_ImportUnreadableWorkbook, reason).TrimEnd();
 
         private static string Say(string template, params object[] arguments) =>

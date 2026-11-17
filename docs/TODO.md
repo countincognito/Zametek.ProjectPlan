@@ -44,14 +44,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The cascades of the core use `IsBulkUpdating` and `MuteWhile` for this purpose. Find what the check protects. Then replace it with these two, or arm again at the end of the busy scope.
 
-- [ ] **Bound the rows and the columns that the import of a workbook reads** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
-
-  `XlsxWorkbookReader.Rows` goes from row 2 to the last row with contents. In each row, it reads one cell for each title of row 1. The workbook sets both numbers. A small file can have some hundreds of titles and one value in row 1,048,576. Then the reader goes to hundreds of millions of cells.
-
-  The loop has no cancellation token. Thus, the time limit of a job of `zpp serve` cannot stop it. `new XLWorkbook(stream)` also loads the whole workbook, and the limit of the upload bounds only its compressed size. The import of the desktop uses the same reader.
-
-  Refuse a sheet with more rows or more titles than a plan within the limits can have, with an `ImportIssue`, before the loop. Read only the rows that have cells, and not each row number. Pass a `CancellationToken` to the reader, and do a check of it for each row. The review made no such workbook. Make one, and measure it first.
-
 - [ ] **Do the check of the limits for an import, as for a project file** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
 
   In `JobRunner.RunAsync`, a project file gets `CheckProject`, `PlanCheck.FindScenarioWarnings` and `PlanCheck.FindLimitViolations` before the load. A plan out of the limits of the compiler gets P0080 without the load. The branch for an import calls `core.ProcessProjectScenarioImport` directly. Thus, a workbook with more activities or resources than the limits gets the whole load. Find what the load and the compile do with such a plan, and how long they take. The entry "Bound the work after the compile" gives the cost of a plan at the limits.

@@ -50,9 +50,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Cells
 
+        // A row holds its cells up to the last one that has a value. A cell after that one is a blank cell.
         public ImportCell Cell(string title) =>
             m_Table.IndexOf(title) is int index
-                ? m_Cells[index]
+                ? CellAt(index)
                 : ImportCell.Blank;
 
         public ImportCell CellAt(int index) =>

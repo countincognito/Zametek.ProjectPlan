@@ -84,6 +84,12 @@ Activities!C3 (Duration, Build the wall): "later" is not a whole number.
 
 A blank cell is not a problem. It gives the default of its column. A cell is a problem when it holds a value that is not of the kind of its column. Examples are text in a column of numbers, a number in a column of true and false values, and an error of Excel such as `#N/A`. A row is also a problem when its `Id` is blank or is the `Id` of an earlier row, and when a row of a tracker sheet is for an activity that the workbook does not have. A column or a sheet that `zpp` does not know is not a problem: `zpp` does not read it. Thus, you can add columns and sheets to a workbook that `zpp` exported, and import it again. `zpp` keeps the first 10000 problems and counts the others. The last line says how many there are.
 
+The import reads a workbook up to three limits. They stop a small file that says that it holds a very large sheet. A workbook above a limit is one problem, and the import stops at once:
+
+- The parts of the file hold more than 100 MB when they are unpacked. The import does not unpack such a file.
+- A sheet has more than 10000 rows that hold a value.
+- The workbook has more than 10 million cells to read. The import reads the titles, and each row up to its last value.
+
 A formula is its result, and a date cell is its date. A number that you type as text is read as the culture of the computer writes numbers, and without a thousands separator: in a culture where a comma is the decimal mark, `1,5` is 1.5 and `1.5` is a problem.
 
 For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. To show the version of `zpp`, enter `zpp --version`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.

@@ -535,12 +535,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IXlsxFileImporter Members
 
-        public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(Stream stream)
+        public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(Stream stream, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(stream);
 
             var issues = new ImportIssueCollector();
-            using XlsxWorkbookReader reader = XlsxWorkbookReader.Open(stream, issues);
+            using XlsxWorkbookReader reader = XlsxWorkbookReader.Open(stream, issues, cancellationToken);
             DateTimeOffset projectStart = m_DateTimeCalculator.GetLocalToday();
             DateTimeOffset today = projectStart;
 

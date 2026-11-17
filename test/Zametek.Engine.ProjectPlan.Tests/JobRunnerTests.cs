@@ -429,6 +429,24 @@ namespace Zametek.Engine.ProjectPlan.Tests
             problems.TotalCount.ShouldBe(5);
         }
 
+        // The reader of a workbook stops between two rows when the job is cancelled: the job gives it its cancellation.
+        [Fact]
+        public async Task RunAsync_Given_AnImport_Then_TheReaderGetsTheCancellationOfTheJob()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var import = new CancellingProjectScenarioFileImport(cancellation);
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IProjectScenarioFileImport>(_ => import));
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(
+                    services.GetRequiredService<JobRunner>(),
+                    @"two-scenarios.zpp",
+                    input => new JobRequest { Input = input, ImportFormat = ProjectScenarioImportFormat.Xlsx },
+                    cancellationToken: cancellation.Token));
+
+            import.Token.ShouldBe(cancellation.Token);
+        }
+
         [Fact]
         public async Task RunAsync_Given_AReaderThatFailsForAnotherReason_Then_ThereAreNoProblemsOfCellsInTheException()
         {
@@ -1090,7 +1108,23 @@ namespace Zametek.Engine.ProjectPlan.Tests
         private sealed class FailingProjectScenarioFileImport(Exception exception)
             : IProjectScenarioFileImport
         {
-            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) => throw exception;
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default) => throw exception;
+        }
+
+        // The reader of workbooks, which keeps the cancellation that it gets, and stops as a reader does that is cancelled
+        // between two rows.
+        private sealed class CancellingProjectScenarioFileImport(CancellationTokenSource cancellation)
+            : IProjectScenarioFileImport
+        {
+            public CancellationToken Token { get; private set; }
+
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default)
+            {
+                Token = cancellationToken;
+                cancellation.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new ProjectScenarioImportModel();
+            }
         }
 
         private sealed class ScrollManagerProbe

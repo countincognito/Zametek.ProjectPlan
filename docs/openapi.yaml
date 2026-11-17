@@ -2073,6 +2073,9 @@ components:
                 - tooLarge
                 - unsupportedFormat
                 - unreadable
+                - workbookTooLarge
+                - tooManyRows
+                - tooManyCells
                 - noKnownSheet
                 - missingHeader
                 - missingColumn

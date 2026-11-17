@@ -115,7 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public ProjectScenarioImportModel Imported { get; } = new();
 
-            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format)
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default)
             {
                 Entered.Set();
                 Release.Wait(s_Limit).ShouldBeTrue();

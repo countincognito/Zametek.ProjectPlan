@@ -541,6 +541,14 @@ Jobs run side by side, and each job produces exactly the same result as when it 
 - `zpp` writes one line for each problem to the standard error stream and exits with code 1.
 - The server answers with the problem `project-not-readable` and an error for each of the first 100 problems.
 
+**The reader bounds what it reads of a workbook.** A workbook is a file that anyone can make. A file of some kilobytes can say that a sheet has a million rows and thousands of titles. Its parts can also unpack to many times its size. Thus, `XlsxWorkbookReader` goes only to the rows and the cells that the file holds, and it reads a row up to its last value. It also has three bounds, and a workbook above a bound is one `ImportIssue`: the import stops at once.
+
+- The parts of the file hold 100 MB at most when the library unpacks them.
+- A sheet has 10,000 rows that hold a value at most.
+- The reader reads 10 million cells of a workbook at most.
+
+The library loads the whole workbook, and nothing can stop that load. The bound on the parts is thus the bound on its time and its memory. The reader does the check of that bound before the load, from the sizes that the package gives for its parts. After the load, the `CancellationToken` of the job stops the reader between two rows. The desktop gives no token. The import of a file of Microsoft Project has no bound and no stop.
+
 **ClosedXML reads and writes the workbooks.** Only `XlsxWorkbookReader` and `XlsxWorkbookWriter` use it. Some rules follow from how the library works:
 
 - **A number has 15 digits.** The library writes a number to 15 digits, as Excel does. Thus `0.1 + 0.2` is `0.3` after an export and an import. A seed has up to 20 digits, and thus it is text.

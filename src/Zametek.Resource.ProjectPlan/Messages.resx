@@ -897,4 +897,13 @@
   <data name="Message_ServerTimedOutFromLimits" xml:space="preserve">
     <value>The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request. zpp calculated this time limit from the limits of the server. To change it, use {2}.</value>
   </data>
+  <data name="Message_ImportTooManyRows" xml:space="preserve">
+    <value>The sheet has more than {0:N0} rows that hold a value. The import reads no sheet that has more.</value>
+  </data>
+  <data name="Message_ImportTooManyCells" xml:space="preserve">
+    <value>The workbook has more cells than the import reads ({0:N0}).</value>
+  </data>
+  <data name="Message_ImportWorkbookTooLarge" xml:space="preserve">
+    <value>The workbook holds {0:N0} MB when it is unpacked. The import reads no workbook that holds more than {1:N0} MB.</value>
+  </data>
 </root>

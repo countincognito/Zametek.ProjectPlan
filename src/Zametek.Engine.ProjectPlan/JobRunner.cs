@@ -134,11 +134,12 @@ namespace Zametek.Engine.ProjectPlan
         private static ProjectScenarioImportModel ImportProjectScenario(
             IProjectScenarioFileImport projectFileImport,
             Stream input,
-            ProjectScenarioImportFormat importFormat)
+            ProjectScenarioImportFormat importFormat,
+            CancellationToken cancellationToken)
         {
             try
             {
-                return projectFileImport.ImportProjectScenarioFile(input, importFormat);
+                return projectFileImport.ImportProjectScenarioFile(input, importFormat, cancellationToken);
             }
             catch (Exception ex) when (IsUnreadable(ex))
             {
@@ -231,7 +232,7 @@ namespace Zametek.Engine.ProjectPlan
                 IProjectScenarioFileImport projectFileImport = services.GetRequiredService<IProjectScenarioFileImport>();
                 Guid projectScenarioId = settingService.ScenarioId;
                 string projectScenarioTitle = settingService.ScenarioTitle;
-                ProjectScenarioImportModel projectImport = ImportProjectScenario(projectFileImport, request.Input, importFormat);
+                ProjectScenarioImportModel projectImport = ImportProjectScenario(projectFileImport, request.Input, importFormat, cancellationToken);
 
                 core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
             }

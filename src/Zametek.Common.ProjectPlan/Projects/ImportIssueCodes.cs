@@ -9,6 +9,15 @@ namespace Zametek.Common.ProjectPlan
         /// <summary>The file cannot be read as a workbook.</summary>
         public const string UnreadableWorkbook = @"unreadableWorkbook";
 
+        /// <summary>The parts of the workbook are larger, when they are unpacked, than the import reads.</summary>
+        public const string WorkbookTooLarge = @"workbookTooLarge";
+
+        /// <summary>A sheet has more rows that hold a value than the import reads.</summary>
+        public const string TooManyRows = @"tooManyRows";
+
+        /// <summary>The workbook has more cells than the import reads.</summary>
+        public const string TooManyCells = @"tooManyCells";
+
         /// <summary>The workbook has no sheet that the import knows.</summary>
         public const string NoKnownSheet = @"noKnownSheet";
 

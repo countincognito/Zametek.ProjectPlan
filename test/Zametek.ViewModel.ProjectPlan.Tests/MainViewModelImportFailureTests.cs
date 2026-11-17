@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -259,7 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             public Exception? Failure { get; set; }
 
-            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) =>
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default) =>
                 Failure is null ? Import() : throw Failure;
         }
 

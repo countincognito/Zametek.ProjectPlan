@@ -583,6 +583,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The workbook has more cells than the import reads ({0:N0})..
+        /// </summary>
+        public static string Message_ImportTooManyCells {
+            get {
+                return ResourceManager.GetString("Message_ImportTooManyCells", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The sheet has more than {0:N0} rows that hold a value. The import reads no sheet that has more..
+        /// </summary>
+        public static string Message_ImportTooManyRows {
+            get {
+                return ResourceManager.GetString("Message_ImportTooManyRows", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The workbook has no activity with the Id {0}..
         /// </summary>
         public static string Message_ImportUnknownActivity {
@@ -600,6 +618,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook holds {0:N0} MB when it is unpacked. The import reads no workbook that holds more than {1:N0} MB..
+        /// </summary>
+        public static string Message_ImportWorkbookTooLarge {
+            get {
+                return ResourceManager.GetString("Message_ImportWorkbookTooLarge", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid Frequency value: &apos;{0}&apos;.
         /// </summary>

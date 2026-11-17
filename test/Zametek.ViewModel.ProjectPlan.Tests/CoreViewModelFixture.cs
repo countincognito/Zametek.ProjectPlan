@@ -431,7 +431,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private sealed class TestProjectScenarioFileImport
             : IProjectScenarioFileImport
         {
-            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) =>
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default) =>
                 throw new NotSupportedException();
         }
 

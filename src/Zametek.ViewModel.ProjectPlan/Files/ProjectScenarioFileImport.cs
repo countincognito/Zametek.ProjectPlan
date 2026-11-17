@@ -29,14 +29,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IProjectScenarioFileImport Members
 
-        public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format)
+        public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(stream);
 
             return format switch
             {
                 ProjectScenarioImportFormat.MicrosoftProject => m_MicrosoftProjectFileImporter.ImportMicrosoftProjectFile(stream),
-                ProjectScenarioImportFormat.Xlsx => m_XlsxFileImporter.ImportProjectScenarioXlsxFile(stream),
+                ProjectScenarioImportFormat.Xlsx => m_XlsxFileImporter.ImportProjectScenarioXlsxFile(stream, cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
             };
         }
