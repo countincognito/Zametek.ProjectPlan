@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -469,7 +470,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Compile_Given_AJobThatRunsOutOfTime_Then_ServiceUnavailableAndToldToWait()
         {
-            // A limit of no time at all is one no job can keep to.
+            // A limit of no time at all is one no job can keep to. The time of a job starts before the server reads the body
+            // of the request, and so the server stops the request there.
             await using RunningServer server = await RunningServer.StartAsync(
                 m_Engine.JobRunner,
                 new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = 0 } });
@@ -485,8 +487,66 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
                 response.Headers.RetryAfter.ShouldNotBeNull().Delta.ShouldBe(TimeSpan.FromSeconds(JobServer.RetryAfterSeconds));
                 problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.JobTimeout));
-                problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 0));
+                problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 0));
             }
+        }
+
+        // A client that sends its body slowly holds a place of a job. The time limit of a job starts before the server
+        // reads the body. Thus, the server stops the request after that time, and the place is free again.
+        [Theory]
+        [InlineData(@"/v1/projects/compile")]
+        [InlineData(@"/v1/projects/scenarios")]
+        public async Task Post_Given_ABodyThatDoesNotArrive_Then_TheTimeLimitOfAJobStopsTheRequestAndItsPlaceIsFree(string path)
+        {
+            await using RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = 3, MaxJobs = 1, MaxQueue = 0 } });
+            var address = new Uri(server.Address);
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(address.Host, address.Port);
+            NetworkStream stream = tcp.GetStream();
+
+            // The start of a request of 100,000 bytes: its head, and the first bytes of its one part. No more bytes come.
+            string start =
+                $"POST {path} HTTP/1.1\r\nHost: {address.Authority}\r\nAccept: application/json\r\n"
+                + "Content-Type: multipart/form-data; boundary=x\r\nContent-Length: 100000\r\n\r\n"
+                + "--x\r\nContent-Disposition: form-data; name=\"project\"; filename=\"plan.zpp\"\r\n\r\n{";
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(start));
+
+            // The answer comes while the body is not complete. Without the time limit, the server waits for the body.
+            using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var answer = new StringBuilder();
+            var buffer = new byte[8192];
+
+            // The server closes the connection after its answer, because the rest of the body did not come.
+            try
+            {
+                while (true)
+                {
+                    int read = await stream.ReadAsync(buffer, limit.Token);
+
+                    if (read == 0)
+                    {
+                        break;
+                    }
+
+                    answer.Append(Encoding.UTF8.GetString(buffer, 0, read));
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            answer.ToString().ShouldStartWith(@"HTTP/1.1 503");
+            answer.ToString().ShouldContain(@"Retry-After: 5");
+            answer.ToString().ShouldContain(ProblemHelper.GetType(ProblemKind.JobTimeout));
+            answer.ToString().ShouldContain(string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 3));
+
+            // The server has one place for a job and no queue: the next request gets that place.
+            using var content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            using HttpResponseMessage next = await server.Client.PostAsync(@"/v1/projects/scenarios", content);
+
+            next.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         [Fact]

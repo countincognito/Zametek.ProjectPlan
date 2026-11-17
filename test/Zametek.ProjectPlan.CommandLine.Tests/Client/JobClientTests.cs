@@ -340,13 +340,14 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Run_Given_AJobThatRunsOutOfTimeOnTheServer_Then_ServerFailureWithTheServersReasonAndNoSecondTry()
         {
-            // A limit of no time at all is one no job can keep to.
+            // A limit of no time at all is one no job can keep to. The time of a job starts before the server reads the body
+            // of the request, and so the server stops the request there.
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { JobTimeoutSeconds = 0 } });
 
             (int exitCode, _, string error) = await RunAsync([@"-i", Plan, @"--server", server.Address]);
 
             exitCode.ShouldBe((int)ExitCode.ServerFailure);
-            ShouldBeRefused(error, server.Address, string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 0));
+            ShouldBeRefused(error, server.Address, string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 0));
 
             // It is a 503, as a busy server is, and not tried again: it would only run out of time again. The other request
             // is the one for the limits of the server.

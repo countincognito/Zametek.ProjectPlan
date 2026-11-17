@@ -906,4 +906,7 @@
   <data name="Message_ImportWorkbookTooLarge" xml:space="preserve">
     <value>The workbook holds {0:N0} MB when it is unpacked. The import reads no workbook that holds more than {1:N0} MB.</value>
   </data>
+  <data name="Message_ServeUploadTimedOut" xml:space="preserve">
+    <value>The request did not arrive within the limit of {0} seconds that the server gives a job, and the server stopped it.</value>
+  </data>
 </root>

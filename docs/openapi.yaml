@@ -2041,7 +2041,7 @@ components:
           description: The most iterations that a simulation of a project can have for the server to run it. The `jobTimeout` also stops a simulation that is too slow.
         jobTimeout:
           $ref: '#/components/schemas/Duration'
-          description: The time that a job can use before the server stops it.
+          description: The time that a job can use before the server stops it. It starts when the server starts to read the body of the request, and so it includes the upload.
         maxCompileTimeout:
           $ref: '#/components/schemas/Duration'
           description: The longest compile timeout that a request can give.

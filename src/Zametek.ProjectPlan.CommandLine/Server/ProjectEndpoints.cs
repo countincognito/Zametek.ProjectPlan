@@ -5,6 +5,7 @@ using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
+using System.IO.Pipelines;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -361,7 +362,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 return NotAcceptable(context, [c_JsonMediaType, c_ZipMediaType]);
             }
 
-            (IFormCollection? form, Answer? refusal) = await ReadFormAsync(context, Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartCompile);
+            // The time limit of the job starts here, before the server reads the body of the request. A request has its
+            // place of a job from this moment, and a client that sends its body slowly holds the place. The limit thus
+            // bounds the upload and the job together.
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(m_Limits.JobTimeoutSeconds));
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, timeout.Token);
+
+            (IFormCollection? form, Answer? refusal) = await ReadFormAsync(context, Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartCompile, timeout);
             if (form is null)
             {
                 return refusal!;
@@ -450,23 +457,19 @@ namespace Zametek.ProjectPlan.CommandLine
             JobResult result;
             ExitCode exitCode;
 
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(m_Limits.JobTimeoutSeconds)))
-            using (var cancellation = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, timeout.Token))
+            try
             {
-                try
-                {
-                    result = await m_JobRunner.RunAsync(request, sink, cancellation.Token);
-                    exitCode = await JobConsoleHelper.WriteResultAsync(console, result, options.MetricsFormat);
-                }
-                catch (OperationCanceledException) when (HasTimedOut(context, timeout))
-                {
-                    return TimedOut(context);
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException || !cancellation.IsCancellationRequested)
-                {
-                    // Whatever zpp would have printed and exited with. A job the caller gave up on, nobody hears about.
-                    return await FailedAsync(context, ex, console, includeConsole, part);
-                }
+                result = await m_JobRunner.RunAsync(request, sink, cancellation.Token);
+                exitCode = await JobConsoleHelper.WriteResultAsync(console, result, options.MetricsFormat);
+            }
+            catch (OperationCanceledException) when (HasTimedOut(context, timeout))
+            {
+                return TimedOut(context);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !cancellation.IsCancellationRequested)
+            {
+                // Whatever zpp would have printed and exited with. A job the caller gave up on, nobody hears about.
+                return await FailedAsync(context, ex, console, includeConsole, part);
             }
 
             ConsoleResponse? consoleResponse = includeConsole ? ToConsoleResponse(console, exitCode) : null;
@@ -505,7 +508,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 return NotAcceptable(context, [c_JsonMediaType]);
             }
 
-            (IFormCollection? form, Answer? refusal) = await ReadFormAsync(context, Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartScenarios);
+            // The time limit of the job starts here, before the server reads the body of the request. A request has its
+            // place of a job from this moment, and a client that sends its body slowly holds the place. The limit thus
+            // bounds the upload and the job together.
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(m_Limits.JobTimeoutSeconds));
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, timeout.Token);
+
+            (IFormCollection? form, Answer? refusal) = await ReadFormAsync(context, Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartScenarios, timeout);
             if (form is null)
             {
                 return refusal!;
@@ -533,22 +542,18 @@ namespace Zametek.ProjectPlan.CommandLine
             var console = new BufferedConsole();
             IReadOnlyList<ScenarioSummary> scenarios;
 
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(m_Limits.JobTimeoutSeconds)))
-            using (var cancellation = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted, timeout.Token))
+            try
             {
-                try
-                {
-                    scenarios = await m_JobRunner.ListScenariosAsync(stream, cancellation.Token);
-                    await JobConsoleHelper.WriteScenariosAsync(console, scenarios);
-                }
-                catch (OperationCanceledException) when (HasTimedOut(context, timeout))
-                {
-                    return TimedOut(context);
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException || !cancellation.IsCancellationRequested)
-                {
-                    return await FailedAsync(context, ex, console, includeConsole, c_ProjectPart);
-                }
+                scenarios = await m_JobRunner.ListScenariosAsync(stream, cancellation.Token);
+                await JobConsoleHelper.WriteScenariosAsync(console, scenarios);
+            }
+            catch (OperationCanceledException) when (HasTimedOut(context, timeout))
+            {
+                return TimedOut(context);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !cancellation.IsCancellationRequested)
+            {
+                return await FailedAsync(context, ex, console, includeConsole, c_ProjectPart);
             }
 
             return new Answer(
@@ -602,19 +607,34 @@ namespace Zametek.ProjectPlan.CommandLine
             return includeConsole;
         }
 
-        // The request's parts, or why they cannot be read.
+        // The request's parts, or why they cannot be read. The time limit of the job bounds the read: the server waits for
+        // the body of a request no longer than it lets a job run.
         private async Task<(IFormCollection? Form, Answer? Refusal)> ReadFormAsync(
             HttpContext context,
-            string notMultipart)
+            string notMultipart,
+            CancellationTokenSource timeout)
         {
             if (!context.Request.HasFormContentType)
             {
                 return (null, Refuse(context, StatusCodes.Status415UnsupportedMediaType, notMultipart));
             }
 
+            // The reader of the body, as the server gives it, before the read of the parts puts a stream of its own in the
+            // place of the body. At the time limit, the read of the body stops and the read of the parts ends with an
+            // exception. The connection stays open, and the client gets the answer. A cancellation of ReadFormAsync is not
+            // used for this: it closes the connection, and the client gets no answer.
+            PipeReader body = context.Request.BodyReader;
+
             try
             {
-                return (await context.Request.ReadFormAsync(context.RequestAborted), null);
+                using (timeout.Token.Register(static x => ((PipeReader)x!).CancelPendingRead(), body))
+                {
+                    return (await context.Request.ReadFormAsync(context.RequestAborted), null);
+                }
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or IOException && HasTimedOut(context, timeout))
+            {
+                return (null, TimedOut(context, Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut));
             }
             catch (BadHttpRequestException ex) when (ex.StatusCode == StatusCodes.Status413PayloadTooLarge)
             {
@@ -789,7 +809,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 exitCode);
         }
 
-        private Answer TimedOut(HttpContext context)
+        // The answer to a request that the time limit of a job stopped: in the job, or before the whole request arrived.
+        private Answer TimedOut(
+            HttpContext context,
+            string? detail = null)
         {
             m_Logger.LogWarning("{Path}: stopped after running for {JobTimeoutSeconds} s", context.Request.Path, m_Limits.JobTimeoutSeconds);
 
@@ -798,7 +821,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 ProblemHelper.Create(
                     context,
                     ProblemKind.JobTimeout,
-                    string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, m_Limits.JobTimeoutSeconds)));
+                    string.Format(CultureInfo.CurrentCulture, detail ?? Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, m_Limits.JobTimeoutSeconds)));
         }
 
         // A job that stopped on an exception, as the problem it is: a file that cannot be read, a scenario that cannot be

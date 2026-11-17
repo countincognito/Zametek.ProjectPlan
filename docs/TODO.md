@@ -44,14 +44,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The cascades of the core use `IsBulkUpdating` and `MuteWhile` for this purpose. Find what the check protects. Then replace it with these two, or arm again at the end of the busy scope.
 
-- [ ] **Do not let a slow upload hold a place of a job** *(2026-11-14, from the review of `src`, suggested before the packaging of `zpp serve`)*
-
-  The two POST paths of `zpp serve` have the concurrency limiter (`RequireRateLimiting`). The endpoint reads the multipart body (`ReadFormAsync`) after the request has its permit. The time limit of the job starts only at `m_JobRunner.RunAsync`. `ConfigureKestrel` sets `MaxRequestBodySize`, and no time and no rate. Thus, a client that sends its body slowly holds a place for the whole upload. Only the default minimum rate of Kestrel bounds this time.
-
-  `MaxJobs` such clients stop the jobs of all the other clients. With a key, only a client that has the key can do this. Nobody tested a slow upload.
-
-  Choices: start one time limit at the start of the request, which covers the upload and the job. Or set `MinRequestBodyDataRate` to a rate that fits the largest upload. Or read the body before the permit, but then bound the number of uploads that the server reads at one time.
-
 - [ ] **Do two smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
 
   1. **The dock layout.** `MainViewModel.RestoreLayout` gives `DockLayout.json` to the `DockSerializer` of `Dock.Serializer.Newtonsoft`. The review reported that this serializer reads type names from the file, with no binder. Nobody confirmed this in the source code of the package. The file is in the settings folder of the user, and thus the risk is low. If the report is correct, do a check of the type names against the types of Dock before the read.

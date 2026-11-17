@@ -419,7 +419,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 - A project can have a maximum of `maxSimulationIterations` iterations for the server to run its simulation. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
 
-- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
+- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). This time starts when the server starts to read the body of the request. Thus, it includes the upload, and a request that does not arrive in this time gets the same problem. A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
@@ -747,6 +747,8 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 `503`, with `Retry-After: 5`. The job used more time than the server allows for a job (`jobTimeout` in `/v1/info`), and the server stopped it. The status is `503` and not `504`, because the own limit of the server stopped the job. The [RESTful API Guide](RESTFUL-API-GUIDE.md) gives this rule ([RL-5](RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection)). Do not send the request again without a change, because the job reaches the time limit again. Make the job smaller: use fewer outputs, smaller charts, or fewer iterations in the simulation.
 
+The time of a job includes the upload of the request. When the request does not arrive in that time, the `detail` says so.
+
 ```json
 {
   "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout",
@@ -880,6 +882,7 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
 - The import of a workbook is all or nothing. A workbook with problems in its cells gives a `project-not-readable` problem with one error for each problem (up to 100), at `#/import`, and the codes `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn`, `missingValue`, `duplicateId`, `unknownActivity`, `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice` and `notAColor`.
+- The time limit of a job includes the upload of the request. A client that sends its body slowly cannot hold a place of a job for longer than `jobTimeout`.
 - The import of a workbook has three limits. A workbook above one of them gives a `project-not-readable` problem with one error, at `#/import`, and the code `workbookTooLarge`, `tooManyRows` or `tooManyCells`. The time limit of a job stops the read of a workbook between two rows.
 - The output `simulationWorkbook`: the result of the simulation as one Excel workbook (`<name>-simulation.xlsx`). It is a new member of `outputs`, and a new kind of output in the answer.
 - The operation `GET /v1/jobs/{requestId}` tells how far a job that runs has got (the iterations of its simulation). The job is the request, and its id is the trace id that the request gave in its `traceparent`. The server keeps the status only while the job runs.

@@ -1092,6 +1092,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The request did not arrive within the limit of {0} seconds that the server gives a job, and the server stopped it..
+        /// </summary>
+        public static string Message_ServeUploadTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServeUploadTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Warning: the statistics of the simulation are too early. They leave out {0:N0} of {1:N0} iterations, in which an activity cannot finish by its maximum latest finish time..
         /// </summary>
         public static string Message_SimulationStatisticsTooEarly {
