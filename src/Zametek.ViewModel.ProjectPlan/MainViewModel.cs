@@ -210,6 +210,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
+            ToggleKeepRecoveryCopyCommand = ReactiveCommand.Create(ToggleKeepRecoveryCopy);
             TransitiveReductionCommand = ReactiveCommand.CreateFromTask(RunTransitiveReductionAsync);
             SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
@@ -512,6 +513,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
+        private void ToggleKeepRecoveryCopy() => KeepRecoveryCopy = !KeepRecoveryCopy;
+
         private void SyncToday() => Today = new DateTimeOffset(DateTime.Today);
 
         private async Task ProjectScenarioImportAsync(string filename) =>
@@ -572,7 +575,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
         }
 
-        private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
+        // The project as a save writes it, built off the UI thread. A recovery copy takes it too (ProjectRecovery).
+        public async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
 
         private ProjectModel BuildProject()
         {
@@ -981,6 +985,20 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
+        // The setting is the value. The settings service writes it to the settings file.
+        public bool KeepRecoveryCopy
+        {
+            get => m_SettingService.KeepRecoveryCopy;
+            set
+            {
+                if (m_SettingService.KeepRecoveryCopy != value)
+                {
+                    m_SettingService.KeepRecoveryCopy = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public string SelectedTheme
         {
             get => m_SelectedTheme.Value;
@@ -1045,6 +1063,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand CompileCommand { get; }
 
         public ICommand ToggleAutoCompileCommand { get; }
+
+        public ICommand ToggleKeepRecoveryCopyCommand { get; }
 
         public ICommand TransitiveReductionCommand { get; }
 

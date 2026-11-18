@@ -535,6 +535,7 @@ namespace Zametek.Data.ProjectPlan.Tests
                 MaxRecentProjectFilePaths = defaults.MaxRecentProjectFilePaths,
                 RecentProjectFilePaths = [],
                 CompilationTimeoutMilliseconds = defaults.CompilationTimeoutMilliseconds,
+                KeepRecoveryCopy = defaults.KeepRecoveryCopy,
             };
 
             ModelReflection.Differences(expected, roundTripped, c_VersionStamp).ShouldBeEmpty();

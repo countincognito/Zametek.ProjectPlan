@@ -26,5 +26,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_1
         public List<string> RecentProjectFilePaths { get; init; } = [];
 
         public int CompilationTimeoutMilliseconds { get; init; } = 5_000;
+
+        public bool KeepRecoveryCopy { get; init; } = true;
     }
 }

@@ -444,4 +444,7 @@
   <data name="Menu_ExportWorkbook" xml:space="preserve">
     <value>Export Workbook...</value>
   </data>
+  <data name="Menu_KeepRecoveryCopy" xml:space="preserve">
+    <value>Keep a Recovery Copy</value>
+  </data>
 </root>

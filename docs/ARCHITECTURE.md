@@ -620,3 +620,13 @@ The large projects group their files by function. The command line, view model a
 `Contracts` and `Exceptions` stay folders by kind, even when they hold one file. The root of a project holds its top-level classes, such as `Program` and `MainViewModel`. A small project, such as the engine, groups its files by kind: `Contracts`, `Models`, `Exceptions` and `Miscellaneous`.
 
 The namespace of a project stays flat. Thus, a move between folders changes no code. A test project has the same folders as the project that it tests, and its shared fixtures stay at its root.
+
+## 14. The recovery copy
+
+The desktop keeps a recovery copy of the open project, for a run that ends before the user saves. [`ProjectRecovery`](../src/Zametek.ViewModel.ProjectPlan/Recovery/ProjectRecovery.cs) writes the copy, and [`RecoveryStore`](../src/Zametek.ViewModel.ProjectPlan/Recovery/RecoveryStore.cs) keeps it as files. The copy is a project file. It is in the folder `recovery`, next to the settings and the logs, and not next to the file of the user. A project with no file has no folder, and a folder that the user syncs gets no file that the user did not make. `zpp`, the server and the Browser head keep no copies.
+
+**A copy is not a save.** It takes the project as a save takes it (`IMainViewModel.BuildProjectAsync`), and it changes nothing of the project. The marks of a change stay. Every 5 minutes (`ProjectRecovery.Interval`), the application writes a copy when the plan has changes that the last copy does not have. The two counters of the save tell this (section 9). The setting `KeepRecoveryCopy` turns these copies off, and the menu "Settings" has it.
+
+**The copy goes when the plan has no changes.** This is after a save, after a close of the project, and after a close of the application that the user agreed to. A copy of a saved plan is older than the file of the user, or the same, and nobody needs it. `ProjectRecovery` hears the change of `ProjectHasChanges` and removes the copy at once. When a save ends during the write of a copy, `ProjectRecovery` removes that copy after its write.
+
+**A session holds a lock file.** Each run of the application has an id, and up to three files with that id as their name. These are the copy, a small JSON file that says what the copy is of, and a lock file that the run holds open. The system closes the lock file when the process ends, however it ends. Thus, a copy whose lock file nobody holds is a copy that a run left. Two runs of the application at one time do not take the copy of each other.

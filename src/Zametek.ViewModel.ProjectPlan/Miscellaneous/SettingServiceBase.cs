@@ -221,6 +221,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract int CompilationTimeoutMilliseconds { get; set; }
 
+        // Only the desktop keeps recovery copies, and it keeps the setting in its settings file. For the other hosts
+        // this is a value that nothing reads.
+        public virtual bool KeepRecoveryCopy { get; set; }
+
         public abstract IReadOnlyList<string> RecentProjectFilePaths { get; }
 
         public abstract void RecordRecentProjectFilePath(string filename);

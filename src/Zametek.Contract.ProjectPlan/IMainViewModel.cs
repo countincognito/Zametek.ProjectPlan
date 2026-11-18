@@ -58,6 +58,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AutoCompile { get; set; }
 
+        bool KeepRecoveryCopy { get; set; }
+
         string SelectedTheme { get; set; }
 
         BaseTheme BaseTheme { get; set; }
@@ -112,6 +114,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ToggleAutoCompileCommand { get; }
 
+        ICommand ToggleKeepRecoveryCopyCommand { get; }
+
         ICommand TransitiveReductionCommand { get; }
 
         ICommand SyncTodayCommand { get; }
@@ -137,6 +141,9 @@ namespace Zametek.Contract.ProjectPlan
         void ResetLayout();
 
         Task ResetLayoutAsync();
+
+        // The project as a save writes it. The caller owns the copy: it is not the live project.
+        Task<ProjectModel> BuildProjectAsync();
 
         Task OpenProjectFileAsync();
 

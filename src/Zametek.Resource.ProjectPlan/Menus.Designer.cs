@@ -223,6 +223,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Keep a Recovery Copy.
+        /// </summary>
+        public static string Menu_KeepRecoveryCopy {
+            get {
+                return ResourceManager.GetString("Menu_KeepRecoveryCopy", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to _New.
         /// </summary>
         public static string Menu_New {

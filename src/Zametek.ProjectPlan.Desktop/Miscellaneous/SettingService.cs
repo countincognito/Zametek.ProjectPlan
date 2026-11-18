@@ -311,6 +311,22 @@ namespace Zametek.ProjectPlan.Desktop
             }
         }
 
+        public override bool KeepRecoveryCopy
+        {
+            get
+            {
+                return m_AppSettingsModel.KeepRecoveryCopy;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { KeepRecoveryCopy = value };
+                    SaveSettings();
+                }
+            }
+        }
+
         public override IReadOnlyList<string> RecentProjectFilePaths
         {
             get

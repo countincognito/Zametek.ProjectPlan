@@ -277,6 +277,16 @@
 
 						<MenuItem Header="{x:Static resources:Menus.Menu_ResetDockLayout}"
 								  Command="{Binding Path=ResetLayoutCommand, Mode=OneWay}" />
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_KeepRecoveryCopy}"
+								  Command="{Binding Path=ToggleKeepRecoveryCopyCommand, Mode=OneWay}">
+							<MenuItem.Icon>
+								<CheckBox BorderThickness="0"
+										  Theme="{StaticResource SimpleCheckBox}"
+										  IsHitTestVisible="False"
+										  IsChecked="{Binding Path=KeepRecoveryCopy, Mode=OneWay}" />
+							</MenuItem.Icon>
+						</MenuItem>
 					</MenuItem>
 
 					<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">

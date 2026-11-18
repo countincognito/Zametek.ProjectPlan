@@ -111,8 +111,13 @@ namespace Zametek.ProjectPlan.Desktop
 
                         DataContext = mainViewModel;
 
+                        // The recovery copy of the open project. A run that ends here ends well: the user saved, or
+                        // agreed to lose the changes, and so the copy goes.
+                        IProjectRecovery projectRecovery = GetRequiredService<IProjectRecovery>();
+
                         desktopLifetime.Exit += (a, b) =>
                         {
+                            projectRecovery.End(keepCopy: false);
                             mainViewModel.CloseLayout();
                             Log.Information("Application shutting down");
                             Log.CloseAndFlush();
@@ -157,6 +162,8 @@ namespace Zametek.ProjectPlan.Desktop
                         desktopLifetime.MainWindow = mainWindow;
 
                         mainWindow.Show();
+
+                        projectRecovery.Start();
 
                         if (input is not null)
                         {

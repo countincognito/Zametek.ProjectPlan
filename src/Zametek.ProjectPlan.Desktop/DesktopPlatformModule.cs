@@ -9,7 +9,8 @@ namespace Zametek.ProjectPlan.Desktop
     /// <summary>
     /// The three services <see cref="Shell.ProjectPlan.CompositionRoot"/> cannot register for
     /// itself, in their desktop forms: settings persisted as JSON files under the user's profile,
-    /// dialogs and file pickers owned by a real window, and MS Project import through MPXJ.
+    /// dialogs and file pickers owned by a real window, and MS Project import through MPXJ. It also
+    /// registers the recovery copies, which only the desktop keeps: in a folder under the user's profile.
     /// </summary>
     public sealed class DesktopPlatformModule
         : Module
@@ -38,6 +39,13 @@ namespace Zametek.ProjectPlan.Desktop
             builder.RegisterType<MicrosoftProjectFileImporter>()
                 .As<IMicrosoftProjectFileImporter>()
                 .As<MicrosoftProjectFileImporter>()
+                .SingleInstance();
+
+            builder.RegisterInstance(new RecoveryStore(SettingFileHelper.DefaultRecoveryFolderLocation()))
+                .As<IRecoveryStore>();
+
+            builder.RegisterType<ProjectRecovery>()
+                .As<IProjectRecovery>()
                 .SingleInstance();
         }
     }

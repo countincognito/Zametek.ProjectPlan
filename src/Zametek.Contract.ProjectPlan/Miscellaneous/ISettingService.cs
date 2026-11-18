@@ -45,6 +45,9 @@ namespace Zametek.Contract.ProjectPlan
         // GraphCompilationTimeoutException.
         int CompilationTimeoutMilliseconds { get; set; }
 
+        // Whether the application writes a recovery copy of a plan with changes, at an interval.
+        bool KeepRecoveryCopy { get; set; }
+
         IReadOnlyList<string> RecentProjectFilePaths { get; }
 
         void RecordRecentProjectFilePath(string filename);
