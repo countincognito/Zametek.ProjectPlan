@@ -915,4 +915,16 @@
   <data name="Message_RecoveryCopyOfNoName" xml:space="preserve">
     <value>a project with no name</value>
   </data>
+  <data name="Message_UnhandledError" xml:space="preserve">
+    <value>The application met an error, and it must close. {0} The error: {1}</value>
+  </data>
+  <data name="Message_UnhandledErrorCopyKept" xml:space="preserve">
+    <value>It kept a copy of the open project, and its next start offers that copy.</value>
+  </data>
+  <data name="Message_UnhandledErrorNoCopy" xml:space="preserve">
+    <value>It could not keep a copy of the open project.</value>
+  </data>
+  <data name="Message_UnhandledErrorNoChanges" xml:space="preserve">
+    <value>The open project had no changes that were not saved.</value>
+  </data>
 </root>

@@ -1287,10 +1287,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // The project has the name and the folder of the file that it is a copy of, and its title is not bound to
                 // that file. Thus, a save asks where to write, and the file of the user changes only when the user says
-                // so. A copy of a project with no file is a project with no title.
+                // so. A copy of a project with a title and no file has that title: the service takes a title as the name
+                // of a file without its extension, and a title can hold a full stop, so the title gets the extension.
                 if (!string.IsNullOrWhiteSpace(copy.ProjectFile))
                 {
                     m_SettingService.SetProjectFilePath(copy.ProjectFile, bindTitleToFilename: false);
+                }
+                else if (!string.IsNullOrWhiteSpace(copy.Title))
+                {
+                    m_SettingService.SetProjectTitle($@"{copy.Title}.{Resource.ProjectPlan.Filters.Filter_ProjectFileExtension}");
+                    m_SettingService.IsTitleBoundToFilename = false;
                 }
 
                 // The copy holds changes that no file of the user holds: the title shows it, and the close asks.

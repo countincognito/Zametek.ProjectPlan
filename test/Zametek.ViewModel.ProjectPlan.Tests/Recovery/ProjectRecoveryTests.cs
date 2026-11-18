@@ -311,6 +311,43 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             File.Exists(left.Filename).ShouldBeFalse();
         }
 
+        // A project can have a title and no file: a copy that the user opened and did not save, for one. Its copy has the
+        // title, and the project that opens from the copy has it too.
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_ACopyOfAProjectWithATitleAndNoFile_Then_TheProjectHasTheTitle()
+        {
+            using Harness first = Harness.Make(hasFile: false, realFiles: true);
+            first.Settings.SetProjectFilePath(Path.Combine(first.Folder, @"the wall v1.2.zpp"), bindTitleToFilename: false);
+            RecoveryCopyModel left = await LeaveCopyAsync(first, s_March);
+            left.ProjectFile.ShouldBeEmpty();
+            left.Title.ShouldBe(@"the wall v1.2");
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(c_Open);
+
+            (await second.Recovery.OfferLeftCopiesAsync()).ShouldBeTrue();
+
+            second.Dialogs.Choices.ShouldHaveSingleItem().Message.ShouldStartWith(@"The application ended before it saved the changes to the wall v1.2, and");
+            second.Settings.ProjectTitle.ShouldBe(@"the wall v1.2");
+            second.Settings.IsTitleBoundToFilename.ShouldBeFalse();
+            second.Store.Copy.ShouldNotBeNull().Title.ShouldBe(@"the wall v1.2");
+        }
+
+        // A copy of a project with no title is a project with no title.
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_ACopyOfAProjectWithNoTitle_Then_TheQuestionSaysSoAndTheProjectHasNone()
+        {
+            using Harness first = Harness.Make(hasFile: false, realFiles: true);
+            await LeaveCopyAsync(first, s_March);
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(c_Open);
+
+            (await second.Recovery.OfferLeftCopiesAsync()).ShouldBeTrue();
+
+            second.Dialogs.Choices.ShouldHaveSingleItem().Message.ShouldStartWith(@"The application ended before it saved the changes to a project with no name, and");
+            second.Settings.ProjectTitle.ShouldBeEmpty();
+            second.Main.ProjectHasChanges.ShouldBeTrue();
+        }
+
         // The file of the user changes only when the user says where to save.
         [Fact]
         public async Task SaveProjectFileAsync_Given_AnOpenedCopy_Then_TheSaveAsksWhereToWrite()

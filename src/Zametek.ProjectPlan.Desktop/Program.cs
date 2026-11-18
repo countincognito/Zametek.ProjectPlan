@@ -36,6 +36,8 @@ namespace Zametek.ProjectPlan.Desktop
                 .WithDeveloperTools()
 #endif
                 .LogToTrace()
-                .UseReactiveUI(builder => builder.WithAvalonia());
+                // An exception that leaves a command or a subscription of ReactiveUI goes to the application, which
+                // handles it as it handles one of the UI thread (see App.UnhandledErrors).
+                .UseReactiveUI(builder => builder.WithAvalonia().WithExceptionHandler(App.UnhandledErrors));
     }
 }

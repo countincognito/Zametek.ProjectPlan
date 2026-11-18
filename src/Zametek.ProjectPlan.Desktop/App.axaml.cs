@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Serilog;
 using Splat;
 using System;
@@ -8,8 +9,10 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Shell.ProjectPlan;
 using Zametek.View.ProjectPlan;
@@ -40,9 +43,48 @@ namespace Zametek.ProjectPlan.Desktop
                 .CreateLogger();
         }
 
+        // The handler of an exception that nothing handled. It is there from the moment that the main window is, with
+        // the project and the dialogs that it needs. Before that, an exception ends the start (see the catch below).
+        private static UnhandledErrorHandler? s_ErrorHandler;
+
+        // Keeps a recovery copy of a project with changes, when the process ends on an exception of a thread that is not
+        // the UI thread. Nothing can stop that end, and no message can show. The next start offers the copy.
+        private static Action? s_KeepCopyBeforeTheEnd;
+
+        /// <summary>
+        /// Takes the exceptions that leave a command or a subscription of ReactiveUI. ReactiveUI gives them on the thread
+        /// that met them, and the handler shows a message, so they go to the UI thread first. With no handler yet, the
+        /// exception is thrown on the UI thread, as ReactiveUI does it by default.
+        /// </summary>
+        public static IObserver<Exception> UnhandledErrors { get; } = new UnhandledErrorObserver();
+
+        private sealed class UnhandledErrorObserver
+            : IObserver<Exception>
+        {
+            public void OnNext(Exception value) =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (s_ErrorHandler is UnhandledErrorHandler handler)
+                    {
+                        handler.Handle(value);
+                    }
+                    else
+                    {
+                        ExceptionDispatchInfo.Capture(value).Throw();
+                    }
+                });
+
+            public void OnError(Exception error) => OnNext(error);
+
+            public void OnCompleted()
+            {
+            }
+        }
+
         // Records anything that escapes to the top of a thread or is never observed on a
         // task. These handlers only observe - the runtime still terminates the process
-        // exactly as it would otherwise - but without them a crash leaves nothing behind
+        // exactly as it would otherwise (the first one keeps a recovery copy before it
+        // does) - but without them a crash leaves nothing behind
         // except a stderr message no user ever sees. A render-thread exception, for
         // instance, is unreachable by any try/catch we could write, so the log file is the
         // only place its stack trace can survive.
@@ -51,6 +93,18 @@ namespace Zametek.ProjectPlan.Desktop
             AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             {
                 Log.Fatal(args.ExceptionObject as Exception, "Unhandled exception (terminating: {IsTerminating})", args.IsTerminating);
+
+                if (args.IsTerminating)
+                {
+                    try
+                    {
+                        s_KeepCopyBeforeTheEnd?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "The recovery copy before the end of the process failed");
+                    }
+                }
 
                 // Flush only when the process is actually going down: CloseAndFlush swaps
                 // in a silent logger, which would mute a survivable exception's successors.
@@ -111,13 +165,13 @@ namespace Zametek.ProjectPlan.Desktop
 
                         DataContext = mainViewModel;
 
-                        // The recovery copy of the open project. A run that ends here ends well: the user saved, or
-                        // agreed to lose the changes, and so the copy goes.
+                        // The recovery copy of the open project. A run that ends well removes it: the user saved, or
+                        // agreed to lose the changes. A run that ends after an exception keeps it for the next run.
                         IProjectRecovery projectRecovery = GetRequiredService<IProjectRecovery>();
 
                         desktopLifetime.Exit += (a, b) =>
                         {
-                            projectRecovery.End(keepCopy: false);
+                            projectRecovery.End(keepCopy: s_ErrorHandler?.IsEnding == true);
                             mainViewModel.CloseLayout();
                             Log.Information("Application shutting down");
                             Log.CloseAndFlush();
@@ -151,9 +205,38 @@ namespace Zametek.ProjectPlan.Desktop
                             },
                             reportFailure: ex => Log.Error(ex, "The check before the close of the main window failed"));
 
+                        // An exception that nothing handled: the application does not go on, because nobody knows what
+                        // state it is in. It keeps a recovery copy of a project with changes, tells the user, and ends.
+                        // From here on, the UI thread gives its exceptions to the handler and stays alive for the
+                        // message.
+                        var errorHandler = new UnhandledErrorHandler(
+                            hasChanges: () => mainViewModel.ProjectHasChanges,
+                            writeCopyAsync: () => projectRecovery.WriteCopyAsync(RecoveryCopyReasons.Error),
+                            showErrorAsync: message => dialogService.ShowErrorAsync(Resource.ProjectPlan.Titles.Title_Error, string.Empty, message),
+                            end: desktopLifetime.Shutdown,
+                            log: (ex, text) => Log.Fatal(ex, "{Text}", text));
+                        s_ErrorHandler = errorHandler;
+
+                        // The wait has a time limit: the thread that ends the process can hold what the copy needs.
+                        s_KeepCopyBeforeTheEnd = () =>
+                        {
+                            if (!errorHandler.IsEnding
+                                && mainViewModel.ProjectHasChanges)
+                            {
+                                projectRecovery.WriteCopyAsync(RecoveryCopyReasons.Error).Wait(UnhandledErrorHandler.CopyTimeLimit);
+                            }
+                        };
+
+                        Dispatcher.UIThread.UnhandledException += (_, args) =>
+                        {
+                            args.Handled = errorHandler.Handle(args.Exception);
+                        };
+
                         mainWindow.Closing += (_, args) =>
                         {
-                            if (closeGuard.ShouldCancel())
+                            // The end after an exception asks nothing: the recovery copy has the changes.
+                            if (!errorHandler.IsEnding
+                                && closeGuard.ShouldCancel())
                             {
                                 args.Cancel = true;
                             }

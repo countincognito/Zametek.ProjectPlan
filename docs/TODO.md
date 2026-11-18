@@ -12,11 +12,19 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The review read the source code. Nobody made a write fail to see the result.
 
-- [ ] **Tell the user about an exception that nothing handles, and keep a copy of the plan** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+- [ ] **Find where an exception of a `DispatcherTimer` goes** *(2026-11-18, from the check of the handler for exceptions that nothing handles)*
 
-  `RegisterGlobalExceptionHandlers` in `App.axaml.cs` writes two kinds of exception to the log: `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException`. Its comment says that the handlers only observe, and that the process still ends. Nothing handles `Dispatcher.UIThread.UnhandledException`, and nothing sets a default exception handler of ReactiveUI. Thus, an exception that leaves a command or a subscription can end the application. The edits since the last save are then lost.
+  Since 0.11.0-beta.2, `UnhandledErrorHandler` takes an exception of the UI thread, and one that leaves a command or a subscription of ReactiveUI. It keeps a recovery copy, tells the user, and ends the application ([ARCHITECTURE](ARCHITECTURE.md#14-the-recovery-copy)).
 
-  Add a handler for the UI thread. It shows the error, and it lets the session continue when the exception is not fatal. Before the process ends, write the open project to a recovery file, and offer that file at the next start. A copy at an interval (an autosave) is a larger feature. Decide if it is necessary.
+  In a check with the built application, the `Tick` handler of a `DispatcherTimer` threw an exception. The application went on. `Dispatcher.UIThread.UnhandledException` was not raised, and the log had no line of the exception. An action that `Dispatcher.UIThread.Post` runs does reach the handler. The application has one such timer (`FadeInBehavior`).
+
+  Find where Avalonia 12.1.3 puts the exception of a timer, and give it to the handler. Do the same check for a timer of the thread pool.
+
+- [ ] **Tell the users about the recovery copies in the wiki** *(2026-11-18, from the recovery copy of the desktop)*
+
+  Since 0.11.0-beta.2, the desktop keeps a recovery copy of a plan with changes, every 5 minutes and before it ends after an exception. The next start asks about a copy that a run left. The menu "Settings" has the item "Keep a Recovery Copy". The copies are in the folder `recovery`, next to the settings and the logs (`.zametek/projectplan.net` in the folder of the user). The wiki does not say this.
+
+  The time between two copies is 5 minutes, and no setting changes it. Decide if a user needs to change it.
 
 - [ ] **Run Reset Layout and Save Layout on the UI thread** *(2026-11-14, from the review of `src`)*
 

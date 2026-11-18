@@ -2297,6 +2297,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The application met an error, and it must close. {0} The error: {1}.
+        /// </summary>
+        public static string Message_UnhandledError {
+            get {
+                return ResourceManager.GetString("Message_UnhandledError", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to It kept a copy of the open project, and its next start offers that copy..
+        /// </summary>
+        public static string Message_UnhandledErrorCopyKept {
+            get {
+                return ResourceManager.GetString("Message_UnhandledErrorCopyKept", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The open project had no changes that were not saved..
+        /// </summary>
+        public static string Message_UnhandledErrorNoChanges {
+            get {
+                return ResourceManager.GetString("Message_UnhandledErrorNoChanges", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to It could not keep a copy of the open project..
+        /// </summary>
+        public static string Message_UnhandledErrorNoCopy {
+            get {
+                return ResourceManager.GetString("Message_UnhandledErrorNoCopy", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unit Billing must be equal to or greater than 0 .
         /// </summary>
         public static string Message_UnitBillingMustBeZeroOrGreater {
