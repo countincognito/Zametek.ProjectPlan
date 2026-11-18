@@ -20,6 +20,10 @@ namespace Zametek.Contract.ProjectPlan
 
         Task<bool> ShowConfirmationAsync(string title, string header, string message);
 
+        // A question with a button for each choice. It gives the place of the choice in the list, or -1 when the user
+        // closes the dialog and chooses nothing.
+        Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices);
+
         Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters);
 
         Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters);

@@ -909,4 +909,10 @@
   <data name="Message_ServeUploadTimedOut" xml:space="preserve">
     <value>The request did not arrive within the limit of {0} seconds that the server gives a job, and the server stopped it.</value>
   </data>
+  <data name="Message_RecoveryCopyFound" xml:space="preserve">
+    <value>The application ended before it saved the changes to {0}, and it kept a copy from {1}. Open the copy to go on with it: no file changes until you save. "{2}" keeps the copy, and the application asks again at its next start.</value>
+  </data>
+  <data name="Message_RecoveryCopyOfNoName" xml:space="preserve">
+    <value>a project with no name</value>
+  </data>
 </root>

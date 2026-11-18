@@ -231,4 +231,7 @@
   <data name="Title_ImportProblems" xml:space="preserve">
     <value>Import problems</value>
   </data>
+  <data name="Title_RecoveryCopy" xml:space="preserve">
+    <value>Recovery Copy</value>
+  </data>
 </root>

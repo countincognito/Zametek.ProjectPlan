@@ -936,4 +936,13 @@
   <data name="Label_SimulationStatisticsTooEarly" xml:space="preserve">
     <value>The statistics are too early: they leave out the iterations that missed a maximum LFT</value>
   </data>
+  <data name="Label_RecoveryCopyOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Label_RecoveryCopyNotNow" xml:space="preserve">
+    <value>Not Now</value>
+  </data>
+  <data name="Label_RecoveryCopyDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
 </root>

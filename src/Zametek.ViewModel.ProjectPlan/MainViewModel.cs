@@ -85,6 +85,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectFileOpen m_ProjectFileOpen;
+        private readonly ReactiveCommand<RecoveryCopyModel, bool> m_OpenRecoveryCopyCommand;
         private readonly IProjectFileSave m_ProjectFileSave;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
@@ -172,10 +173,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ReactiveCommand<string, RxVoid> openRecentProjectFileCommand = ReactiveCommand.CreateFromTask<string>(OpenRecentProjectFileAsync, m_CanRunFileCommand);
             OpenRecentProjectFileCommand = openRecentProjectFileCommand;
 
+            // The open of a recovery copy is a file command too: no other one starts while it loads. No menu has it.
+            m_OpenRecoveryCopyCommand = ReactiveCommand.CreateFromTask<RecoveryCopyModel, bool>(OpenRecoveryCopyInternalAsync, m_CanRunFileCommand);
+
             m_FileCommandsSub = Observable
                 .CombineLatest(
                     openProjectFileCommand.IsExecuting,
                     openRecentProjectFileCommand.IsExecuting,
+                    m_OpenRecoveryCopyCommand.IsExecuting,
                     saveProjectFileCommand.IsExecuting,
                     saveAsProjectFileCommand.IsExecuting,
                     importProjectScenarioFileCommand.IsExecuting,
@@ -1259,6 +1264,53 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public async Task<bool> OpenRecoveryCopyAsync(RecoveryCopyModel copy)
+        {
+            ArgumentNullException.ThrowIfNull(copy);
+            return await m_OpenRecoveryCopyCommand.Execute(copy);
+        }
+
+        private async Task<bool> OpenRecoveryCopyInternalAsync(RecoveryCopyModel copy)
+        {
+            try
+            {
+                m_Logger.LogInformation("Opening the recovery copy {RecoveryFile} of {ProjectFile}", copy.Filename, copy.ProjectFile);
+                ProjectModel projectModel;
+
+                await using (FileStream stream = File.OpenRead(copy.Filename))
+                {
+                    projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(stream);
+                }
+
+                // Off the UI thread, as each load is.
+                await Task.Run(() => m_ProjectScenarioManagerViewModel.ProcessProject(projectModel));
+
+                // The project has the name and the folder of the file that it is a copy of, and its title is not bound to
+                // that file. Thus, a save asks where to write, and the file of the user changes only when the user says
+                // so. A copy of a project with no file is a project with no title.
+                if (!string.IsNullOrWhiteSpace(copy.ProjectFile))
+                {
+                    m_SettingService.SetProjectFilePath(copy.ProjectFile, bindTitleToFilename: false);
+                }
+
+                // The copy holds changes that no file of the user holds: the title shows it, and the close asks.
+                m_ProjectScenarioManagerViewModel.IsProjectUpdated = true;
+                m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
+                m_Logger.LogInformation("Opened the recovery copy {RecoveryFile}", copy.Filename);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                m_Logger.LogError(ex, "Failed to open the recovery copy {RecoveryFile}", copy.Filename);
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+                ResetProject();
+                return false;
+            }
+        }
+
         public async Task OpenProjectFileAsync(string? filename)
         {
             try
@@ -1736,6 +1788,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_DefaultHideCost?.Dispose();
                 m_DefaultHideBilling?.Dispose();
                 m_AutoCompile?.Dispose();
+                m_OpenRecoveryCopyCommand?.Dispose();
                 m_SelectedTheme?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_DataGridLayoutManager?.Dispose();

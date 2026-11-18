@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
+using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -23,11 +24,16 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         public static readonly TimeSpan Interval = TimeSpan.FromMinutes(5);
 
+        // The places of the choices of the question about a copy that a run left.
+        private const int c_Open = 0;
+        private const int c_Delete = 2;
+
         private readonly IMainViewModel m_MainViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly IProjectFileSave m_ProjectFileSave;
         private readonly ISettingService m_SettingService;
+        private readonly IDialogService m_DialogService;
         private readonly IRecoveryStore m_Store;
         private readonly TimeProvider m_TimeProvider;
         private readonly ILogger<ProjectRecovery> m_Logger;
@@ -46,6 +52,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             IProjectFileSave projectFileSave,
             ISettingService settingService,
+            IDialogService dialogService,
             IRecoveryStore store,
             TimeProvider timeProvider,
             ILogger<ProjectRecovery> logger)
@@ -55,6 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(projectFileSave);
             ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(store);
             ArgumentNullException.ThrowIfNull(timeProvider);
             ArgumentNullException.ThrowIfNull(logger);
@@ -63,6 +71,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_ProjectFileSave = projectFileSave;
             m_SettingService = settingService;
+            m_DialogService = dialogService;
             m_Store = store;
             m_TimeProvider = timeProvider;
             m_Logger = logger;
@@ -155,6 +164,65 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_Gate.Release();
             }
+        }
+
+        public async Task<bool> OfferLeftCopiesAsync()
+        {
+            IReadOnlyList<RecoveryCopyModel> copies;
+
+            try
+            {
+                copies = m_Store.FindLeftCopies();
+            }
+            catch (Exception ex) when (IsOfTheFiles(ex))
+            {
+                m_Logger.LogError(ex, "The look for recovery copies failed");
+                return false;
+            }
+
+            string[] choices =
+            [
+                Resource.ProjectPlan.Labels.Label_RecoveryCopyOpen,
+                Resource.ProjectPlan.Labels.Label_RecoveryCopyNotNow,
+                Resource.ProjectPlan.Labels.Label_RecoveryCopyDelete,
+            ];
+
+            foreach (RecoveryCopyModel copy in copies)
+            {
+                m_Logger.LogInformation("Found the recovery copy {RecoveryFile} of {ProjectFile}, written at {WrittenAt}", copy.Filename, copy.ProjectFile, copy.WrittenAt);
+                int choice = await m_DialogService.ShowChoiceAsync(
+                    Resource.ProjectPlan.Titles.Title_RecoveryCopy,
+                    string.Empty,
+                    Describe(copy),
+                    choices);
+
+                switch (choice)
+                {
+                    case c_Open:
+                        if (await m_MainViewModel.OpenRecoveryCopyAsync(copy))
+                        {
+                            // This run keeps the project as its own copy from now on. The copy that the other run left goes
+                            // only when this run has its own: a run that ends between the two leaves one of them.
+                            if (await WriteCopyAsync(RecoveryCopyReasons.Opened) is not null)
+                            {
+                                Remove(copy);
+                            }
+
+                            return true;
+                        }
+
+                        break;
+                    case c_Delete:
+                        m_Logger.LogInformation("The user deleted the recovery copy {RecoveryFile}", copy.Filename);
+                        Remove(copy);
+                        break;
+                    default:
+                        // Not now, or a dialog that the user closed: the copy stays, and the next start asks again.
+                        break;
+                }
+            }
+
+            return false;
         }
 
         public void End(bool keepCopy)
@@ -284,6 +352,37 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex) when (IsOfTheFiles(ex))
             {
                 m_Logger.LogError(ex, "The recovery copy could not be removed");
+            }
+        }
+
+        // What the question says of a copy: the file that it is a copy of, or the title of a project with no file, and
+        // the time of the copy as the user writes a time.
+        private string Describe(RecoveryCopyModel copy)
+        {
+            string project = !string.IsNullOrWhiteSpace(copy.ProjectFile)
+                ? copy.ProjectFile
+                : !string.IsNullOrWhiteSpace(copy.Title)
+                    ? copy.Title
+                    : Resource.ProjectPlan.Messages.Message_RecoveryCopyOfNoName;
+            DateTimeOffset writtenAt = TimeZoneInfo.ConvertTime(copy.WrittenAt, m_TimeProvider.LocalTimeZone);
+
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_RecoveryCopyFound,
+                project,
+                writtenAt.ToString(@"g", CultureInfo.CurrentCulture),
+                Resource.ProjectPlan.Labels.Label_RecoveryCopyNotNow);
+        }
+
+        private void Remove(RecoveryCopyModel copy)
+        {
+            try
+            {
+                m_Store.Remove(copy);
+            }
+            catch (Exception ex) when (IsOfTheFiles(ex))
+            {
+                m_Logger.LogError(ex, "The recovery copy {RecoveryFile} could not be removed", copy.Filename);
             }
         }
 

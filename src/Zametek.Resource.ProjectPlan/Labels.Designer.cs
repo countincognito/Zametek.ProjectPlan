@@ -1565,6 +1565,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Label_RecoveryCopyDelete {
+            get {
+                return ResourceManager.GetString("Label_RecoveryCopyDelete", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Not Now.
+        /// </summary>
+        public static string Label_RecoveryCopyNotNow {
+            get {
+                return ResourceManager.GetString("Label_RecoveryCopyNotNow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string Label_RecoveryCopyOpen {
+            get {
+                return ResourceManager.GetString("Label_RecoveryCopyOpen", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Rename.
         /// </summary>
         public static string Label_RenameNode {

@@ -29,6 +29,14 @@ namespace Zametek.Contract.ProjectPlan
         Task<RecoveryCopyModel?> WriteCopyAsync(string reason);
 
         /// <summary>
+        /// Asks the user about each copy that an earlier run left, the newest first: to open it, to keep it for the next
+        /// start, or to delete it. A copy that the user opens is the project of this run, and the question about the other
+        /// copies waits for the next start.
+        /// </summary>
+        /// <returns>Whether the user opened a copy.</returns>
+        Task<bool> OfferLeftCopiesAsync();
+
+        /// <summary>
         /// Ends the session. A run that ends well removes its copy: the user saved, or agreed to lose the changes. A run
         /// that ends after an error keeps it for the next run.
         /// </summary>

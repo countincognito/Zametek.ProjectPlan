@@ -184,6 +184,10 @@ namespace Zametek.ProjectPlan.Desktop
                                     Resource.ProjectPlan.Messages.Message_UserSettingsNotReadable,
                                     settings.UnreadableSettingsFilename ?? settings.SettingsFilename));
                         }
+
+                        // A copy that an earlier run left, because it ended before a save: the user says what happens
+                        // to it. The main window is on the screen by now, and the question is a dialog of that window.
+                        await projectRecovery.OfferLeftCopiesAsync();
                     }
                     catch (TaskCanceledException)
                     {

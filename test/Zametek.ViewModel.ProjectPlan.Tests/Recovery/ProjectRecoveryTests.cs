@@ -2,6 +2,8 @@ using Dock.Model.Core;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
@@ -139,7 +141,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void ToggleKeepRecoveryCopyCommand_Given_TheSettingOn_Then_ItIsOffAndTheMenuHearsOfIt()
         {
             using Harness harness = Harness.Make();
-            var heard = new System.Collections.Generic.List<string?>();
+            var heard = new List<string?>();
             harness.Main.PropertyChanged += (_, e) => heard.Add(e.PropertyName);
             harness.Main.KeepRecoveryCopy.ShouldBeTrue();
 
@@ -235,6 +237,196 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
+        #region The copies that a run left
+
+        private const int c_Open = 0;
+        private const int c_NotNow = 1;
+        private const int c_Delete = 2;
+
+        private static readonly string[] s_Choices = [@"Open", @"Not Now", @"Delete"];
+        private static readonly DateTimeOffset s_March = new(2027, 3, 1, 0, 0, 0, TimeSpan.Zero);
+        private static readonly DateTimeOffset s_June = new(2027, 6, 1, 0, 0, 0, TimeSpan.Zero);
+
+        // A run that ended after an error: it had a project with changes, and it left its copy.
+        private static async Task<RecoveryCopyModel> LeaveCopyAsync(Harness run, DateTimeOffset projectStart)
+        {
+            run.Core.RequestedProjectStart = projectStart;
+            run.Main.ProjectHasChanges.ShouldBeTrue();
+            RecoveryCopyModel copy = (await run.Recovery.WriteCopyAsync(RecoveryCopyReasons.Error)).ShouldNotBeNull();
+            run.Recovery.End(keepCopy: true);
+            return copy;
+        }
+
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_NoCopy_Then_NoQuestion()
+        {
+            using Harness harness = Harness.Make(realFiles: true);
+
+            (await harness.Recovery.OfferLeftCopiesAsync()).ShouldBeFalse();
+
+            harness.Dialogs.Choices.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_ACopy_Then_TheQuestionNamesTheFileAndTheThreeChoices()
+        {
+            using Harness first = Harness.Make(realFiles: true);
+            await LeaveCopyAsync(first, s_March);
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+
+            await second.Recovery.OfferLeftCopiesAsync();
+
+            (string title, string message, IReadOnlyList<string> choices) = second.Dialogs.Choices.ShouldHaveSingleItem();
+            title.ShouldBe(@"Recovery Copy");
+            choices.ShouldBe(s_Choices);
+            message.ShouldBe(
+                $@"The application ended before it saved the changes to {first.Filename}, and it kept a copy from {s_Now.ToString(@"g", CultureInfo.CurrentCulture)}. "
+                + @"Open the copy to go on with it: no file changes until you save. ""Not Now"" keeps the copy, and the application asks again at its next start.");
+        }
+
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_TheUserOpensTheCopy_Then_ItIsTheProjectWithChangesAndNoFileOfTheUserChanged()
+        {
+            using Harness first = Harness.Make(realFiles: true);
+            RecoveryCopyModel left = await LeaveCopyAsync(first, s_March);
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(c_Open);
+
+            (await second.Recovery.OfferLeftCopiesAsync()).ShouldBeTrue();
+
+            second.Dialogs.Errors.ShouldBeEmpty();
+            second.Core.RequestedProjectStart.Date.ShouldBe(s_March.Date);
+            second.Main.ProjectHasChanges.ShouldBeTrue();
+
+            // The project has the name and the folder of the file, and it is not that file.
+            second.Settings.ProjectTitle.ShouldBe(@"plan");
+            second.Settings.ProjectDirectory.ShouldBe(first.Folder);
+            second.Settings.IsTitleBoundToFilename.ShouldBeFalse();
+            File.Exists(first.Filename).ShouldBeFalse(@"the open of the copy wrote the file of the user");
+
+            // This run has the project as its own copy, and the copy that the first run left is gone.
+            RecoveryCopyModel own = second.Store.Copy.ShouldNotBeNull();
+            own.Reason.ShouldBe(RecoveryCopyReasons.Opened);
+            own.Title.ShouldBe(@"plan");
+            File.Exists(left.Filename).ShouldBeFalse();
+        }
+
+        // The file of the user changes only when the user says where to save.
+        [Fact]
+        public async Task SaveProjectFileAsync_Given_AnOpenedCopy_Then_TheSaveAsksWhereToWrite()
+        {
+            using Harness first = Harness.Make(realFiles: true);
+            await LeaveCopyAsync(first, s_March);
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(c_Open);
+            await second.Recovery.OfferLeftCopiesAsync();
+
+            await second.Main.SaveProjectFileAsync();
+
+            (string name, string directory, _) = second.Dialogs.SaveDialogs.ShouldHaveSingleItem();
+            name.ShouldBe(@"plan");
+            directory.ShouldBe(first.Folder);
+            File.Exists(first.Filename).ShouldBeFalse(@"the save wrote with no answer of the user");
+
+            // The user gives the name, and the save writes there. The plan has no changes then, and the copy goes.
+            second.Dialogs.SaveFilename = first.Filename;
+
+            await second.Main.SaveProjectFileAsync();
+
+            second.Dialogs.Errors.ShouldBeEmpty();
+            File.Exists(first.Filename).ShouldBeTrue();
+            second.Main.ProjectHasChanges.ShouldBeFalse();
+            second.Store.Copy.ShouldBeNull();
+        }
+
+        [Theory]
+        [InlineData(c_NotNow)]
+        [InlineData(-1)]
+        public async Task OfferLeftCopiesAsync_Given_NotNowOrAClosedDialog_Then_TheCopyStaysForTheNextStart(int answer)
+        {
+            using Harness first = Harness.Make(realFiles: true);
+            RecoveryCopyModel left = await LeaveCopyAsync(first, s_March);
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(answer);
+
+            (await second.Recovery.OfferLeftCopiesAsync()).ShouldBeFalse();
+
+            second.Main.ProjectHasChanges.ShouldBeFalse();
+            second.Store.FindLeftCopies().ShouldBe([left]);
+        }
+
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_Delete_Then_TheCopyGoes()
+        {
+            using Harness first = Harness.Make(realFiles: true);
+            RecoveryCopyModel left = await LeaveCopyAsync(first, s_March);
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(c_Delete);
+
+            (await second.Recovery.OfferLeftCopiesAsync()).ShouldBeFalse();
+
+            second.Main.ProjectHasChanges.ShouldBeFalse();
+            second.Store.FindLeftCopies().ShouldBeEmpty();
+            File.Exists(left.Filename).ShouldBeFalse();
+        }
+
+        // One project is open at a time. After the user opens a copy, the question about the others waits.
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_TwoCopies_Then_TheNewestFirstAndNoQuestionAfterAnOpen()
+        {
+            using Harness older = Harness.Make(realFiles: true);
+            RecoveryCopyModel olderCopy = await LeaveCopyAsync(older, s_March);
+            using Harness newer = Harness.Make(directory: older.Folder, realFiles: true, now: s_Now.AddHours(1));
+            RecoveryCopyModel newerCopy = await LeaveCopyAsync(newer, s_June);
+            using Harness third = Harness.Make(hasFile: false, directory: older.Folder, realFiles: true);
+            third.Dialogs.ChoiceAnswers.Enqueue(c_Open);
+
+            (await third.Recovery.OfferLeftCopiesAsync()).ShouldBeTrue();
+
+            third.Dialogs.Choices.Count.ShouldBe(1);
+            third.Core.RequestedProjectStart.Date.ShouldBe(s_June.Date);
+            File.Exists(newerCopy.Filename).ShouldBeFalse();
+            third.Store.FindLeftCopies().ShouldBe([olderCopy]);
+        }
+
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_TwoCopiesAndNotNowForTheFirst_Then_TheQuestionAboutTheSecond()
+        {
+            using Harness older = Harness.Make(realFiles: true);
+            RecoveryCopyModel olderCopy = await LeaveCopyAsync(older, s_March);
+            using Harness newer = Harness.Make(directory: older.Folder, realFiles: true, now: s_Now.AddHours(1));
+            RecoveryCopyModel newerCopy = await LeaveCopyAsync(newer, s_June);
+            using Harness third = Harness.Make(hasFile: false, directory: older.Folder, realFiles: true);
+            third.Dialogs.ChoiceAnswers.Enqueue(c_NotNow);
+            third.Dialogs.ChoiceAnswers.Enqueue(c_Delete);
+
+            (await third.Recovery.OfferLeftCopiesAsync()).ShouldBeFalse();
+
+            third.Dialogs.Choices.Count.ShouldBe(2);
+            third.Store.FindLeftCopies().ShouldBe([newerCopy]);
+            File.Exists(olderCopy.Filename).ShouldBeFalse();
+        }
+
+        // A copy that cannot be read: the user hears of it, the copy stays, and the application has an empty project.
+        [Fact]
+        public async Task OfferLeftCopiesAsync_Given_ACopyThatCannotBeOpened_Then_AnErrorAndTheCopyStays()
+        {
+            using Harness first = Harness.Make(realFiles: true);
+            RecoveryCopyModel left = await LeaveCopyAsync(first, s_March);
+            File.WriteAllText(left.Filename, @"This is not a project file.");
+            using Harness second = Harness.Make(hasFile: false, directory: first.Folder, realFiles: true);
+            second.Dialogs.ChoiceAnswers.Enqueue(c_Open);
+
+            (await second.Recovery.OfferLeftCopiesAsync()).ShouldBeFalse();
+
+            second.Dialogs.Errors.Count.ShouldBe(1);
+            second.Main.ProjectHasChanges.ShouldBeFalse();
+            second.Store.Copy.ShouldBeNull();
+            File.Exists(left.Filename).ShouldBeTrue();
+        }
+
+        #endregion
+
         #region The end of the run
 
         // The user closed the application, and saved or agreed to lose the changes.
@@ -313,6 +505,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             : IDisposable
         {
             private readonly string m_Directory;
+            private readonly bool m_OwnsDirectory;
 
             private Harness(
                 CoreViewModel core,
@@ -323,8 +516,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 MainViewModel main,
                 RecoveryStore store,
                 ProjectRecovery recovery,
-                string directory)
+                string directory,
+                bool ownsDirectory)
             {
+                m_OwnsDirectory = ownsDirectory;
                 Core = core;
                 Settings = settings;
                 Project = project;
@@ -354,20 +549,31 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public ProjectRecovery Recovery { get; }
 
+            public string Folder => m_Directory;
+
             public string Filename { get; }
 
             public string RecoveryFolder { get; }
 
-            public static Harness Make(bool hasFile = true)
+            // A run of the application. With a directory, it is a later run in the folders of an earlier one. With real
+            // files, the project files are those that the application writes and reads.
+            public static Harness Make(
+                bool hasFile = true,
+                string? directory = null,
+                bool realFiles = false,
+                DateTimeOffset? now = null)
             {
                 (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
                 var dialogs = new ScriptedDialogService();
                 var saver = new ScriptedProjectFileSave();
+                var calculator = new DateTimeCalculator(TimeProvider.System);
+                IProjectFileSave projectFileSave = realFiles ? new ProjectFileSave() : saver;
+                IProjectFileOpen projectFileOpen = realFiles ? new ProjectFileOpen(calculator) : DoNothingProxy.Of<IProjectFileOpen>();
                 var project = new ProjectScenarioManagerViewModel(
                     core,
                     settings,
                     dialogs,
-                    new DateTimeCalculator(TimeProvider.System),
+                    calculator,
                     CoreViewModelFixture.CreateUIDispatcher());
 
                 var main = new MainViewModel(
@@ -376,25 +582,27 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     DoNothingProxy.Of<IDataGridLayoutManager>(),
                     project,
                     core,
-                    DoNothingProxy.Of<IProjectFileOpen>(),
-                    saver,
+                    projectFileOpen,
+                    projectFileSave,
                     settings,
                     dialogs,
                     DoNothingProxy.Of<IServiceProvider>(),
                     NullLogger<MainViewModel>.Instance);
 
-                string directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), $"zpp-recovery-{Guid.NewGuid():N}")).FullName;
+                bool ownsDirectory = directory is null;
+                directory ??= Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), $"zpp-recovery-{Guid.NewGuid():N}")).FullName;
                 var store = new RecoveryStore(Path.Combine(directory, @"recovery"));
                 var recovery = new ProjectRecovery(
                     main,
                     core,
                     project,
-                    saver,
+                    projectFileSave,
                     settings,
+                    dialogs,
                     store,
-                    new FixedTimeProvider(s_Now, TimeZoneInfo.Utc),
+                    new FixedTimeProvider(now ?? s_Now, TimeZoneInfo.Utc),
                     NullLogger<ProjectRecovery>.Instance);
-                var harness = new Harness(core, settings, project, dialogs, saver, main, store, recovery, directory);
+                var harness = new Harness(core, settings, project, dialogs, saver, main, store, recovery, directory, ownsDirectory);
                 settings.KeepRecoveryCopy = true;
 
                 if (hasFile)
@@ -412,6 +620,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Main.Dispose();
                 Project.Dispose();
                 Core.Dispose();
+
+                // The first run of a folder removes it, after the later runs.
+                if (!m_OwnsDirectory)
+                {
+                    return;
+                }
 
                 try
                 {

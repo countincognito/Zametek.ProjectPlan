@@ -1002,6 +1002,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The application ended before it saved the changes to {0}, and it kept a copy from {1}. Open the copy to go on with it: no file changes until you save. "{2}" keeps the copy, and the application asks again at its next start..
+        /// </summary>
+        public static string Message_RecoveryCopyFound {
+            get {
+                return ResourceManager.GetString("Message_RecoveryCopyFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to a project with no name.
+        /// </summary>
+        public static string Message_RecoveryCopyOfNoName {
+            get {
+                return ResourceManager.GetString("Message_RecoveryCopyOfNoName", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} is only for a server with no API key: a server with a key does not look at the Host of a request..
         /// </summary>
         public static string Message_ServeAllowHostNeedsNoApiKey {

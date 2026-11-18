@@ -156,6 +156,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public Task<bool> ShowConfirmationAsync(string title, string header, string message) => Task.FromResult(false);
 
+            public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices) => Task.FromResult(-1);
+
             public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) => Task.FromResult<string?>(null);
 
             public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters) =>

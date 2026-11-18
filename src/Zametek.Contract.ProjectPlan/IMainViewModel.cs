@@ -145,6 +145,11 @@ namespace Zametek.Contract.ProjectPlan
         // The project as a save writes it. The caller owns the copy: it is not the live project.
         Task<ProjectModel> BuildProjectAsync();
 
+        // Opens a recovery copy as a project with changes. The project has the name of the file that it is a copy of,
+        // and it is not that file: a save asks where to write. It gives false when the copy cannot be opened, which it
+        // tells the user.
+        Task<bool> OpenRecoveryCopyAsync(RecoveryCopyModel copy);
+
         Task OpenProjectFileAsync();
 
         Task OpenProjectFileAsync(string? filename);

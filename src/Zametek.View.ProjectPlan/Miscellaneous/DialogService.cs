@@ -5,6 +5,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Base;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using MsBox.Avalonia.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -221,6 +222,48 @@ namespace Zametek.View.ProjectPlan
                 Icon = Icon.Info,
             });
             return result == ButtonResult.Ok;
+        }
+
+        public async Task<int> ShowChoiceAsync(
+            string title,
+            string header,
+            string message,
+            IReadOnlyList<string> choices)
+        {
+            ArgumentNullException.ThrowIfNull(choices);
+
+            // The first choice is the one that the Enter key takes.
+            string? chosen = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (m_Parent is null)
+                {
+                    throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
+                }
+
+                IMsBox<string> box = MessageBoxManager.GetMessageBoxCustom(new MessageBoxCustomParams
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    SizeToContent = SizeToContent.WidthAndHeight,
+                    ContentTitle = title,
+                    ContentHeader = header,
+                    ContentMessage = message,
+                    ButtonDefinitions = [.. choices.Select((x, i) => new ButtonDefinition { Name = x, IsDefault = i == 0 })],
+                    Icon = Icon.Info,
+                    WindowIcon = m_Parent.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable),
+                });
+
+                return box.ShowWindowDialogAsync(m_Parent);
+            });
+
+            for (int i = 0; i < choices.Count; i++)
+            {
+                if (string.Equals(choices[i], chosen, StringComparison.Ordinal))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public async Task<string?> ShowOpenFileDialogAsync(

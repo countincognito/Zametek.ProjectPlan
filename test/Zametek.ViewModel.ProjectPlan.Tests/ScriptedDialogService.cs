@@ -15,6 +15,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public List<string> Questions { get; } = [];
 
+        /// <summary>The questions with named choices, each with its choices.</summary>
+        public List<(string Title, string Message, IReadOnlyList<string> Choices)> Choices { get; } = [];
+
+        /// <summary>The answers to the questions with named choices, in their order. With no answer left, the user closes the dialog.</summary>
+        public Queue<int> ChoiceAnswers { get; } = [];
+
         public List<(string Name, string Directory, IList<IFileFilter> Filters)> SaveDialogs { get; } = [];
 
         /// <summary>The answer to a question.</summary>
@@ -62,6 +68,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             Questions.Add(message);
             return ConfirmationGate?.Task ?? Task.FromResult(WantsReport);
+        }
+
+        public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices)
+        {
+            Choices.Add((title, message, choices));
+            return Task.FromResult(ChoiceAnswers.TryDequeue(out int answer) ? answer : -1);
         }
 
         public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) => OpenFileGate?.Task ?? Task.FromResult(OpenFilename);
