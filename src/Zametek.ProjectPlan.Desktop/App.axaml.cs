@@ -90,6 +90,10 @@ namespace Zametek.ProjectPlan.Desktop
         // only place its stack trace can survive.
         private static void RegisterGlobalExceptionHandlers()
         {
+            // A save that could not put its temporary file in the place of the file, and wrote the file in place.
+            FileStreamHelper.WroteInPlace += (filename, reason) =>
+                Log.Warning(reason, "The file {File} was written in place, and not by way of a temporary file", filename);
+
             AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             {
                 Log.Fatal(args.ExceptionObject as Exception, "Unhandled exception (terminating: {IsTerminating})", args.IsTerminating);

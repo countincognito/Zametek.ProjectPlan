@@ -535,6 +535,22 @@ Jobs run side by side, and each job produces exactly the same result as when it 
 
 **A date of a plan is a day.** A plan writes its dates with an offset from UTC, but the schedule uses the day that each date shows in its own offset. Thus, [`ProjectFileOpen`](../src/Zametek.ViewModel.ProjectPlan/Files/ProjectFileOpen.cs) reads a file with `DateParseHandling.None`, and each date reaches the typed reader as the file writes it. The default of Newtonsoft.Json made each date a moment in the time zone of the computer, where it could fall on another day. `DateTimeCalculator` counts days and not moments, so that two dates with different offsets count as the days that they show. The time zone of the process changes only the moments, such as the times of the nodes and the clock of a job.
 
+**A save writes a temporary file first.** [`FileStreamHelper`](../src/Zametek.ViewModel.ProjectPlan/Files/FileStreamHelper.cs) writes each file of the desktop and of `zpp`: the project, the exports, the outputs and the settings. A save builds the whole file in memory. Then it writes a temporary file (`<name>.tmp`) in the folder of the target, and flushes it to the disk. The temporary file then takes the place of the target. Thus, a write that does not finish leaves the file that was there.
+
+The graph library has its own copy of the helper (`Internal/FileStreamHelper.cs`), which writes in the same way. A change of one copy is a change of the other.
+
+The target keeps what it is:
+
+- A symbolic link stays a link: the save writes the file at the end of the links.
+- A hidden file stays hidden.
+- On Windows, the file keeps the time of its creation and its permissions (`File.Replace`), and on the other systems its mode.
+- A file that nobody may write is a failure, and the file is whole.
+- A file with a second name (a hard link) loses that name: the other name keeps the old content. A save in place changed both.
+
+A save in place is what the saves did before 0.11.0-beta.2. It empties the file and writes into it, and so a failure during it can leave a part of a file. It works in two cases where nothing can take the place of the file. In the first case, another program holds the file open, and it lets others write the file and not delete it. In the second case, the folder lets the user make no file. In these cases the save writes in place, so that a save that worked before still works.
+
+For a file that a program holds, the save tries for 2 seconds first. A scanner or a sync client holds a file for a moment only. The event `FileStreamHelper.WroteInPlace` tells a write in place, and each host puts it in its log as a warning. The copy of the graph library tells nobody.
+
 **The import of a workbook is all or nothing.** [`XlsxScenarioFileImporter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxScenarioFileImporter.cs) reads the whole workbook into tables of typed cells (`ImportTable`). [`XlsxWorkbookReader`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxWorkbookReader.cs) makes the tables. It is the one class that knows the library that reads the file. [`XlsxWorkbookWriter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxWorkbookWriter.cs) is the same for the library that writes the file: the exporter gives it text, numbers, truth values and dates, in four looks, and it gives back the zipped package, stamped with the clock of the calculator. The titles of the columns are the structure of a sheet. The importer finds a column by its title, and it leaves alone a column or a sheet that it does not know. Thus, a workbook that has more than the exporter writes can still be imported. The importer reads each cell as what it is: a number, a date, a truth value, a formula (its result) or text. A blank cell is not a value that was given. A cell with a value of the wrong kind is a problem. The importer collects every problem (`ImportIssue`, with the sheet, the cell, the title of the column and the name of the row) and does not stop at the first. If it finds one or more, it throws a `ScenarioImportException` with the list, and it imports nothing. Each host says the problems in its own way:
 
 - The desktop shows an error with the first ten, and it offers a CSV report of all of them ([`ImportProblemsPresenter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/ImportProblemsPresenter.cs)). The open project does not change, because the import fails before it changes anything.

@@ -2,15 +2,13 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Write a file to a temporary file, and then put it in the place of the old file** *(2026-11-14, from the review of `src`, suggested before the final 0.11.0)*
+- [ ] **Decide what a save does with a file that has a second name** *(2026-11-18, from the save by way of a temporary file)*
 
-  `FileStreamHelper.Save` and `SaveAsync` build the whole file in memory first. Thus, a failure of the build keeps the old file. But then `CreateFile` opens the target with `FileMode.Create`, which empties it, and the copy follows. A full disk, a lost network share or a stop of the process during the copy leaves an incomplete file. The comment above the two methods says that the old file stays as it was. This is true only for a failure before the copy.
+  Since 0.11.0-beta.2, a save writes a temporary file and puts it in the place of the target ([ARCHITECTURE](ARCHITECTURE.md#11-the-engine-the-pattern-at-its-extreme)). A file can have two names in one file system (a hard link). After a save to one name, the other name keeps the old content. Before, a save changed both, because it wrote in place.
 
-  Write to a temporary file in the folder of the target, and flush it. Then replace the target (`File.Replace`, or `File.Move` with `overwrite`). `Zametek.Graphs.Avalonia` has its own copy of the helper (`Internal/FileStreamHelper.cs`), which needs the same change.
+  The application does not see that a file has a second name: .NET gives no count of the names of a file. A check needs a call of the system on each platform. Decide if such a file gets a save in place.
 
-  Since 0.11.0-beta.2, the desktop writes its three settings files in this way (`FileStreamHelper.Replace`). The project files and the exports do not. First decide what a save does in three cases. The target is read-only or hidden. A sync client or a virus scanner holds the file open. The target is a link.
-
-  The review read the source code. Nobody made a write fail to see the result.
+  The save also gives the file to the user who saves it, on Linux and macOS: the new file is a file of that user. A save in place kept the owner of the file. Nobody made such a case to see the result.
 
 - [ ] **Find where an exception of a `DispatcherTimer` goes** *(2026-11-18, from the check of the handler for exceptions that nothing handles)*
 
