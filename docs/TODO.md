@@ -2,6 +2,91 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Read only the kept result of a formula in the import of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `XlsxWorkbookReader.Convert` reads `cell.Value`. For a formula that has no kept result in the file, ClosedXML 0.105.1 then calculates the formula. It also calculates each other formula of the workbook that has no kept result, on each sheet. One formula in a cell under a title starts this work. The other formulas can be in a sheet that the import does not read.
+
+  The three bounds of the reader (the size of the parts, the rows and the cells) do not see this work. All of it is in one read of a cell. Thus, the stop between two rows and the time limit of a job do not end it. The import of the desktop application reads a workbook in the same way.
+
+  A run with the Release build of `zpp` measured this. The workbook was `docs/assets/sample.xlsx` with a formula in `General!A2`, and with a new sheet of formulas `SUM(C1:CV20000*1)`. The file had 94 KB. The import took 1.4 s with no formula in the new sheet, 3.6 s with 20 formulas and 7.0 s with 60. That is about 0.1 s for each formula. With no formula in `General!A2`, the 20 formulas added no time.
+
+  Each of these imports ended with one problem, because the formula in `General!A2` gives a number and not a date. Nobody ran a formula over a full sheet, which has about 50 times the cells, or a workbook with thousands of formulas.
+
+  Read only the kept result (`CachedValue`), and report a formula that has none as a problem of its cell. `XlsxScenarioImportContractTests` says today that the import calculates such a formula. Thus, this changes the contract of the import, and the maintainer decides. A second choice is to refuse a workbook that has a formula with no kept result.
+
+- [ ] **Refuse a request that is not multipart before the server reads its body** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  Since 0.11.0-beta.2, the time limit of a job also bounds the upload. At the limit, `ProjectEndpoints.ReadFormAsync` calls `CancelPendingRead` on the reader of the body. This stops the read of a `multipart/form-data` body. It does not stop the read of an `application/x-www-form-urlencoded` body. `HasFormContentType` is true for both kinds, and ASP.NET Core reads the second kind with a reader that ignores the cancellation of a read.
+
+  A run confirmed this. The server had `--job-timeout 4`, and a client sent 6,000 bytes at 300 bytes for each second. The multipart request got the answer 503 (`job-timeout`) after 5 s. The form-encoded request got its answer (422) only after 20 s, when the whole body was there.
+
+  Such a request holds a place of a job for as long as its body takes. Then only the limit of the upload size and the minimum data rate of Kestrel bound the time. At 240 bytes for each second, 50 MB take more than two days.
+
+  The two POST operations take only `multipart/form-data`. Give the answer 415 to each other content type before the read of the body.
+
+- [ ] **Do not use a proxy for a server on this computer** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  Since 0.11.0-beta.2, `zpp --server` refuses to send the API key over plain http to a different computer. It permits an address of this computer, because the key then stays on the computer. But `JobClient.CreateClient` sets `UseProxy = false` only for a Unix domain socket. For an http address, .NET uses the proxy that the environment gives (`http_proxy`). It makes no exception for `localhost`, unless `no_proxy` has the name.
+
+  A run on Windows confirmed this. With `http_proxy` set and no `no_proxy`, `zpp --server http://localhost:9781` sent `GET http://localhost:9781/v1/info` to the proxy. The request had the `Authorization` header with the key. The request of the job has the plan, and it uses the same handler.
+
+  Set `UseProxy = false` when the address of the server is a loopback address (`Uri.IsLoopback`), as for a socket.
+
+- [ ] **Count the stored size of a part in the size bound of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `XlsxWorkbookReader.UnpackedLength` adds `ZipArchiveEntry.Length` of each part. That is the size that the ZIP records give for the unpacked part. The comment says that a part cannot unpack to more than this size. That is correct for a deflated part, because .NET stops at that size. It is not correct for a part that the file stores without compression. .NET then reads the stored bytes, whatever the record says.
+
+  A run confirmed this. A copy of `docs/assets/sample.xlsx` stored each part without compression, and the records of its 30 sheet parts gave 0 bytes. The import gave the same output as for the sample. The records gave 29 KB in total, and the parts had 655 KB. With 0 bytes in the record of each part, the import failed, because the library did not read the workbook.
+
+  Such a file is as large as its sheet data. Thus, the limit of the upload size (50 MB by default) still bounds it on a server. The bound of 100 MB does not hold when `--max-upload` is above 100. It also does not hold if some records refer to the same stored bytes, because the library then reads those bytes for each record. Nobody tried a file with such records.
+
+  Add the larger of `Length` and `CompressedLength` for each part. Then a stored part counts with its real size, and each record counts.
+
+- [ ] **Give the recovery copy a build that only reads the project** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `IProjectRecovery` and ARCHITECTURE section 14 say that a recovery copy changes nothing of the project. But `ProjectRecovery.WriteAsync` calls `IMainViewModel.BuildProjectAsync`, which is the build of a save. On a pool thread, `ProjectScenarioManagerViewModel.BuildProject` then does three things:
+
+  1. It calls `BeginBusy`. For the busy state of the scenario manager, `MainViewModel` shows the busy overlay with no delay (ARCHITECTURE section 8).
+  2. It puts the new scenario into the node of the current scenario, and it sets `ModifiedOn` of the node to the time of now. The list of the scenarios sorts again when `ModifiedOn` changes.
+  3. It calls `CoreViewModel.BuildProjectScenario`, which calls `PlanGraph.SetDisplayOrders`. That method sets `DisplayOrder` of each activity, and the setter raises each time. Refer to the entry "Do not read `OrderableActivities` on the thread of a compile".
+
+  A save does the same things, but at a moment that the user chooses. The copy does them every 5 minutes while the plan has changes, also during an edit. Nobody watched the running application at such a moment. No test examines what a copy changes.
+
+  First, watch the application when it writes a copy, to see if the overlay shows. Then give the copy a build that only reads. It builds the scenario of the core, and it puts the scenario into a copy of the list of the files. It does not call `BeginBusy` of the scenario manager. Add a test that a copy changes no `ModifiedOn` and raises no `IsBusy`. The harness of `ProjectRecoveryTests` uses the real view models.
+
+- [ ] **Wait for a recovery copy that is in progress when the application ends** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `ProjectRecovery.End` does not take `m_Gate`, which the write of a copy holds. `WriteAsync` does not read `HasEnded` after the write. Thus, a copy that is in progress at the end of the application can write its files after `End(keepCopy: false)` removed the copy. `RecoveryStore.WriteCopyAsync` writes after `Dispose` too. The next start then offers a copy of changes that the user agreed to lose. A process that ends during the write can also leave the file `<id>.zpp.tmp`, which nothing removes.
+
+  The time for this is short: the build and the write of one copy in each 5 minutes. Nobody reproduced it. Let `End` wait for the gate for a short time before it removes the copy. A second choice is that `WriteAsync` removes its copy after the end of the recovery.
+
+- [ ] **Do not let a slow download hold a place of a job** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `ProjectEndpoints.CompileAsync` and `ListScenariosAsync` write the answer inside the endpoint (`answer.Result.ExecuteAsync`). The limiter of the jobs frees the place of a job only after the endpoint returns. Thus, a client that reads a large answer slowly holds the place after the job ended. Only the minimum data rate of Kestrel for an answer bounds this time.
+
+  This is the case of the slow upload in the other direction, and 0.11.0-beta.2 bounds only the upload. The time limit that `zpp --server` calculates from the limits of the server (`JobClient.GetRequestTimeout`) does not count this time. Nobody ran this. The source code of this part did not change in 0.11.0-beta.2.
+
+  Free the place when the job ends, before the write of the answer. A second choice is a time limit for the write.
+
+- [ ] **Do the checks of the dates for an import, and for the target date in the application** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `PlanCheck` refuses a project file whose start is outside its range of dates. It also refuses a constraint date or a target date that is too far from the start. Since 0.11.0-beta.2, an import gets the check of the limits before the load (`PlanCheck.FindLimitViolations`). It gets none of the checks of the dates. A run showed one result. A workbook with the project start 9999-12-31 ends `zpp` with exit code 1 and the text of a .NET exception.
+
+  Nobody tried the server with such a workbook. Nobody tried a date that makes the calendar count for a long time.
+
+  The desktop application does not call `PlanCheck`. `SimulationTargetHelper.FinishTimeByEndOf` adds one day to the target date, and the getter of `TargetFinishTime` calculates the target at each read. Thus, a target date at the end of the range of dates throws in the getter and in each save. The setter reads the getter first, so the user cannot change the target. Only a program writes a target date today, and thus the risk is low. Nobody ran this.
+
+  Give the dates of an import the checks that the dates of a project file get. Decide if the application does these checks at the load of a file too.
+
+- [ ] **Do six smaller things from the review of 0.11.0-beta.2** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  1. **The name of the temporary file.** `FileStreamHelper.Write` always uses `<name>.tmp` next to the target, and the copy in Zametek.Graphs.Avalonia does the same. It writes over a file with that name, and it deletes the file at the end. A test pins this for a temporary file that an earlier write left. A file of the user with that name gets the same result. Decide if the name must be one that only the application makes.
+  2. **`--allow-host` with an IPv6 address in brackets.** `ServeSettingsHelper.ResolveAllowedHosts` accepts `[2001:db8::1]` and keeps the brackets. `LocalRequestMiddleware.IsAllowedHost` removes the brackets from the Host of a request before the comparison. A run confirmed the result: the server starts, and a request with that Host gets 403. Without the brackets in the option, the request gets 200. Remove the brackets of the option too.
+  3. **A value in `zpp-serve.json` that is not a number.** The check for a name that is not a limit reads only the names of the first level. The review reported that `{"MaxJobs": {"value": 2}}` thus passes, and that the server starts with the default. Nobody ran this.
+  4. **The largest `JobTimeoutSeconds`.** The limit has a smallest value and no largest value. A run with `--job-timeout 5000000` confirmed the result: the server starts, and each POST gets 500. A timer cannot wait for longer than about 49 days. Refuse such a value at the start.
+  5. **The test of the stop between two rows.** `Table_Given_ACancellationAfterTheWorkbookIsOpen_Then_TheRowsAreNotRead` cancels before it calls `Table`. Then the check before the titles throws, and the check before each row does not run. The review reported that each test passes without the check before each row. Nobody removed the check to see. Make the test cancel between two rows.
+  6. **Writes to the disk on the UI thread.** `FileStreamHelper.Replace` flushes to the disk, and it can wait for 2 s for a file that a program holds. `SettingService` calls it on the thread of each setter. `RecoveryStore.WriteCopyAsync` calls it under its lock, on the UI thread for a copy after an open or after an exception. `FileStreamHelper.SaveAsync` does the same write on a pool thread. Nobody measured a delay.
+
 - [ ] **Decide what a save does with a file that has a second name** *(2026-11-18, from the save by way of a temporary file)*
 
   Since 0.11.0-beta.2, a save writes a temporary file and puts it in the place of the target ([ARCHITECTURE](ARCHITECTURE.md#11-the-engine-the-pattern-at-its-extreme)). A file can have two names in one file system (a hard link). After a save to one name, the other name keeps the old content. Before, a save changed both, because it wrote in place.
@@ -37,6 +122,8 @@ This file lists the maintainer-internal engineering intents that must version wi
   But DynamicData binds `OrderableActivities` on the UI thread (`ObserveOn(RxSchedulers.MainThreadScheduler)`, then `Bind`). The lock of the core does not guard this bind. An add, a remove or a drag of a row during the loop can give an `ArgumentOutOfRangeException` or a wrong order. Nobody reproduced this.
 
   Let the UI thread publish the order as an array of ids each time the bound collection changes. Let `SetDisplayOrders` read the array. `ActivitiesManagerViewModel` also reads the collection by index under its own lock. Find on which thread it does this.
+
+  **A third caller** *(2026-11-20, from the review of 0.11.0-beta.2)*. Since 0.11.0-beta.2, the recovery copy at an interval builds a save too. Thus, `SetDisplayOrders` also runs on a pool thread every 5 minutes while the plan has changes. Refer to the entry "Give the recovery copy a build that only reads the project".
 
 - [ ] **Raise the properties of `DateTimeCalculator` after the release of its lock** *(2026-11-14, from the review of `src`)*
 
