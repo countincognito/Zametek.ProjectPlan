@@ -68,10 +68,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         public VertexGraphModel BuildVertexGraph(
-            IEnumerable<IDependentActivity> dependentActivities,
-            IEnumerable<ResourceModel> resources,
-            bool resourcesAreDisabled,
-            IEnumerable<WorkStreamModel> workStreams) =>
-            m_Inner.BuildVertexGraph(dependentActivities, resources, resourcesAreDisabled, workStreams);
+            IEnumerable<IDependentActivity> dependentActivities) =>
+            m_Inner.BuildVertexGraph(dependentActivities);
     }
 }

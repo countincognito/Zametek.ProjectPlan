@@ -173,7 +173,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   The review reported these costs from the source code. Nobody read these sites a second time, and nobody measured them. Measure before a change.
 
   1. `PlanGraph.RawActivities` returns `m_Activities.Items`, and DynamicData 9.4.33 makes a new array for each read. A loop that reads the property many times copies the list each time.
-  2. The graph outputs clone the activities two times and compile again (`CompilationOutputService`, `GraphCompilationService`). Refer to the entry about the two compiles of a job.
+  2. The graph outputs clone the activities two times (`CompilationOutputService`, `GraphCompilationService`). The arrow graph then compiles them again. The vertex graph calculates their critical path again. Since 0.11.0-beta.2, it does not schedule the resources a second time. Refer to the entry about the two compiles of a job.
   3. With rectilinear routing, a drag of a node resolves each edge two times for each move of the pointer (`InteractiveGraphViewModel`, `GraphClashResolver`).
   4. The save of a workbook holds some copies of it in memory (`XlsxWorkbookWriter`). The server holds each output of a job in memory until the answer (`OutputResponse`).
   5. The SVG export of a chart takes one lock for the whole process, on each operating system (`ScottPlotImageExporter`). Thus, the jobs of `zpp serve` that export SVG charts wait for each other.
@@ -503,6 +503,8 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The cascade of a large plan takes about 650 ms on the sample plan with 985 activities (`docs/assets/erp-migration.zpp`). The compile takes 100 to 170 ms. `CalculateTrackingSeriesSet` in `ResourceSchedulingService` takes 310 to 370 ms, and thus it is about half of the cascade. The arrow graph takes 50 to 90 ms, the vertex graph takes 160 to 190 ms, and all the metrics together take 30 to 70 ms.
 
+  *(2026-11-20)* The vertex graph now takes about 30 ms on this plan (26 to 29 ms in 15 runs of a Debug build, where the build as it was took 142 to 158 ms). Since 0.11.0-beta.2, it calculates the critical path of the compiled activities, and it does not schedule the resources a second time. Thus, the cascade is about 130 ms shorter than the 650 ms above. Nobody measured the full cascade again.
+
   The cascade no longer holds `m_Lock` (ARCHITECTURE §7 rule 14), and thus the time does not block the UI. But it delays the charts after each edit, and a bulk update waits for it. Profile the calculation and look for work that repeats for each activity. A faster tracking series shortens the wait for every chart.
 
   **A possible cause** *(2026-11-14, from the review of `src`, read in the source code and not measured)*. For the plan series, the method makes the list `progressTimeline`, with one dictionary for each day to the end of the plan. For each activity, it then adds a `TrackingPointModel` to the dictionary of each day. This includes the days before the activity starts and the days after it finishes. A second loop reads each entry of each day two times. For example, 985 activities and 450 days give about 443,000 objects and dictionary entries, also for a plan with no trackers.
@@ -720,7 +722,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Stop a job from compiling its plan two times** *(2026-10-02, noticed in phase 4, and worth more now that `zpp serve` takes the start-up out of the cost of a job)*
 
-  The load of a plan already compiles it and builds its outputs. `CoreViewModel.ProcessProjectScenario` and `ProcessProjectScenarioImport` both end with `RunCompile()` and `RunBuildCascade()`, whatever `AutoCompile` says. Then `JobRunner.RunAsync` sets the base theme and runs `RunCompile()` and all seven Build\* steps again. The arrow and vertex graphs each compile the plan once more. Thus, every job does all the compiling and building of the load a second time. The sequence came over from `Program.RunAsync` of zpp without a change.
+  The load of a plan already compiles it and builds its outputs. `CoreViewModel.ProcessProjectScenario` and `ProcessProjectScenarioImport` both end with `RunCompile()` and `RunBuildCascade()`, whatever `AutoCompile` says. Then `JobRunner.RunAsync` sets the base theme and runs `RunCompile()` and all seven Build\* steps again. The arrow graph compiles the plan once more, and the vertex graph calculates its critical path once more. Thus, every job does all the compiling and building of the load a second time. The sequence came over from `Program.RunAsync` of zpp without a change.
+
+  *(2026-11-20)* Since 0.11.0-beta.2, the vertex graph does not schedule the resources a second time. A second schedule was not always the same as the first, and the graph then showed other times than the list of the activities. `GraphCompilationService.BuildVertexGraph` has the reason.
 
   Before you remove the second pass, find what it sees that the first pass did not. The application sets the base theme between them. Thus, the removal can need only a change to set the theme before the load.
 

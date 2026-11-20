@@ -168,6 +168,9 @@
   <data name="Message_CannotBuildArrowGraph" xml:space="preserve">
     <value>Cannot build arrow graph</value>
   </data>
+  <data name="Message_CannotBuildVertexGraph" xml:space="preserve">
+    <value>Cannot build vertex graph</value>
+  </data>
   <data name="Message_ColumnTypeMustBeDerivedFromDataGridColumn" xml:space="preserve">
     <value>ColumnType must be derived from DataGridColumn</value>
   </data>

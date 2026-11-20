@@ -133,6 +133,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot build vertex graph.
+        /// </summary>
+        public static string Message_CannotBuildVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_CannotBuildVertexGraph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot get a project scenario file from a folder node:.
         /// </summary>
         public static string Message_CannotGetProjectScenarioFileFromFolderNode {

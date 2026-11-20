@@ -13,7 +13,6 @@ namespace Zametek.ViewModel.ProjectPlan
         IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation,
         bool HasCompilationErrors,
         ResourceSettingsModel ResourceSettings,
-        WorkStreamSettingsModel WorkStreamSettings,
         IReadOnlyList<ActivitySeverityModel> ActivitySeverities,
         DateTimeOffset ProjectStart,
         int? StartTime,

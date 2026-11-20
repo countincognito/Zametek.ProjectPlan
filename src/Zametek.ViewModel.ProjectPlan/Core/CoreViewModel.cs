@@ -392,7 +392,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 GraphCompilation,
                 HasCompilationErrors,
                 ResourceSettings,
-                WorkStreamSettings,
                 [.. GraphSettings.ActivitySeverities],
                 ProjectStart,
                 m_PlanGraph.StartTime,
@@ -2332,9 +2331,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 VertexGraph = m_OutputService.ComputeVertexGraph(
                     GraphCompilation,
-                    HasCompilationErrors,
-                    ResourceSettings,
-                    WorkStreamSettings);
+                    HasCompilationErrors);
             }
         }
 
