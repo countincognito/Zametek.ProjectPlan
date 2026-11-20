@@ -585,6 +585,20 @@ Version 4.1.1 of the library corrects a crash of the compile. The API does not c
 
 - **How it was checked.** A new test of `zpp` runs two plans, `maximum-finish-day-0.zpp` and `maximum-finish-date-before-start.zpp`. With version 4.1.0, `zpp` exited with code 1 on both. With version 4.1.1, it exits with code 3 and reports `C0010`.
 
+### The application uses version 4.2.0 of the library
+
+Version 4.2.0 of the library changes the result of a compile in two cases. The API does not change. The application moved from version 4.1.1 to version 4.2.0 on 2026-11-20. An examination of the vertex graph of a plan found the two cases.
+
+- **An activity gives way to one that has no other resource.** An activity that can use one of two or more resources took the first free resource. Sometimes a later activity in the priority list was ready at the same moment, and it had only that resource to use. The later activity then waited, and another resource did nothing. Now the first activity moves to the free resource, and the two start at the same moment. Thus, the schedule of some plans changes, and most of these plans finish earlier. The scheduler does not look ahead: an activity that becomes ready later can still wait.
+
+- **A plan with no resources.** A compile with no resources gave a dependency to each activity that followed another activity on a synthetic resource. Two activities with no connection then had a dependency, and the first lost slack or became critical. Now such a compile gives the times, the slack and the critical activities of the critical path of the plan alone. It gives no resource dependency. The application compiles a plan in this way when the user disables its resources. The text about synthetic resources in other sections of this document ("The lean path against the compile", "Decisions in phase 2" and "The possibilities") describes the library up to version 4.1.1.
+
+- **The simulation.** With no resources, an iteration was already the critical-path calculation alone, and thus a simulation and a compile now give the same critical activities. The setting `ScheduleOntoSyntheticResources` of the library has no effect any more. The application never set it.
+
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.2.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.2.0.
+
+- **How it was checked.** All the tests of the application pass with version 4.2.0, with no change to a test or to an expected output. `zpp` also compiled one plan with each version. The plan has 61 activities, and 39 of them can use one of two resources. The schedule data, the graphs and the metrics are the same with version 4.1.1 and with version 4.2.0.
+
 ## Performance work to explore later
 
 The maintainer decided that phase 2 builds none of the work in this section. The section records what phase 0 learned, so that the team can start from facts if speed becomes a priority. The library commits `1a73f3a` and `86d6c1e` (branch `mc-sim`) have the measurements. The efforts below are estimates, and nobody measured them. [TODO](TODO.md) has an entry for this section.
