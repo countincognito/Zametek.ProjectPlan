@@ -428,6 +428,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // The whole request arrived in time. It is the job that ran out of time, and the detail says so.
             problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 1));
+
+            // The server read the whole body, and so the connection can take the next request of the client.
+            response.Headers.ConnectionClose.ShouldNotBe(true);
         }
     }
 }
