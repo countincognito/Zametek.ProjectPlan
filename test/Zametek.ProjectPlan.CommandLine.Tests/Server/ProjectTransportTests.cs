@@ -18,7 +18,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// API at /v1/openapi, which is carried the same way but for needing no key, how what is answered as JSON, or as the
     /// description, is compressed, what a probe is answered with, what no response is without, and the protocols it takes over
     /// https.
+    /// In the same collection as ProgramExitCodeTests, because its servers write their log through the global logger of
+    /// Serilog, which the tests of that collection replace while they run (JobServerLogTests reads it).
     /// </summary>
+    [Collection(ProgramExitCodeTests.CollectionName)]
     public class ProjectTransportTests
         : IClassFixture<EngineFixture>, IAsyncLifetime
     {

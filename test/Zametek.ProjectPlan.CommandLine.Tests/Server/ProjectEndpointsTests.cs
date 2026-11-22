@@ -16,7 +16,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// metrics and outputs, the console when it asks for it, the zip when it accepts one - a project's scenarios, what the
     /// server says about itself, and its health. What it answers with when it cannot answer, ProjectProblemsTests pins; and
     /// what a job prints and produces - the same as zpp - ProjectEndpointsParityTests.
+    /// In the same collection as ProgramExitCodeTests, because its servers write their log through the global logger of
+    /// Serilog, which the tests of that collection replace while they run (JobServerLogTests reads it).
     /// </summary>
+    [Collection(ProgramExitCodeTests.CollectionName)]
     public class ProjectEndpointsTests
         : IClassFixture<EngineFixture>, IAsyncLifetime
     {
