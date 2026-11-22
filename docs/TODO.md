@@ -42,24 +42,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add the larger of `Length` and `CompressedLength` for each part. Then a stored part counts with its real size, and each record counts.
 
-- [ ] **Give the recovery copy a build that only reads the project** *(2026-11-20, from the review of 0.11.0-beta.2)*
-
-  `IProjectRecovery` and ARCHITECTURE section 14 say that a recovery copy changes nothing of the project. But `ProjectRecovery.WriteAsync` calls `IMainViewModel.BuildProjectAsync`, which is the build of a save. On a pool thread, `ProjectScenarioManagerViewModel.BuildProject` then does three things:
-
-  1. It calls `BeginBusy`. For the busy state of the scenario manager, `MainViewModel` shows the busy overlay with no delay (ARCHITECTURE section 8).
-  2. It puts the new scenario into the node of the current scenario, and it sets `ModifiedOn` of the node to the time of now. The list of the scenarios sorts again when `ModifiedOn` changes.
-  3. It calls `CoreViewModel.BuildProjectScenario`, which calls `PlanGraph.SetDisplayOrders`. That method sets `DisplayOrder` of each activity, and the setter raises each time. Refer to the entry "Do not read `OrderableActivities` on the thread of a compile".
-
-  A save does the same things, but at a moment that the user chooses. The copy does them every 5 minutes while the plan has changes, also during an edit. Nobody watched the running application at such a moment. No test examines what a copy changes.
-
-  First, watch the application when it writes a copy, to see if the overlay shows. Then give the copy a build that only reads. It builds the scenario of the core, and it puts the scenario into a copy of the list of the files. It does not call `BeginBusy` of the scenario manager. Add a test that a copy changes no `ModifiedOn` and raises no `IsBusy`. The harness of `ProjectRecoveryTests` uses the real view models.
-
-- [ ] **Wait for a recovery copy that is in progress when the application ends** *(2026-11-20, from the review of 0.11.0-beta.2)*
-
-  `ProjectRecovery.End` does not take `m_Gate`, which the write of a copy holds. `WriteAsync` does not read `HasEnded` after the write. Thus, a copy that is in progress at the end of the application can write its files after `End(keepCopy: false)` removed the copy. `RecoveryStore.WriteCopyAsync` writes after `Dispose` too. The next start then offers a copy of changes that the user agreed to lose. A process that ends during the write can also leave the file `<id>.zpp.tmp`, which nothing removes.
-
-  The time for this is short: the build and the write of one copy in each 5 minutes. Nobody reproduced it. Let `End` wait for the gate for a short time before it removes the copy. A second choice is that `WriteAsync` removes its copy after the end of the recovery.
-
 - [ ] **Do not let a slow download hold a place of a job** *(2026-11-20, from the review of 0.11.0-beta.2)*
 
   `ProjectEndpoints.CompileAsync` and `ListScenariosAsync` write the answer inside the endpoint (`answer.Result.ExecuteAsync`). The limiter of the jobs frees the place of a job only after the endpoint returns. Thus, a client that reads a large answer slowly holds the place after the job ended. Only the minimum data rate of Kestrel for an answer bounds this time.
@@ -123,7 +105,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Let the UI thread publish the order as an array of ids each time the bound collection changes. Let `SetDisplayOrders` read the array. `ActivitiesManagerViewModel` also reads the collection by index under its own lock. Find on which thread it does this.
 
-  **A third caller** *(2026-11-20, from the review of 0.11.0-beta.2)*. Since 0.11.0-beta.2, the recovery copy at an interval builds a save too. Thus, `SetDisplayOrders` also runs on a pool thread every 5 minutes while the plan has changes. Refer to the entry "Give the recovery copy a build that only reads the project".
+  **A third caller** *(2026-11-20, from the review of 0.11.0-beta.2, changed 2026-11-21)*. Since 0.11.0-beta.2, the recovery copy reads the order of the view on a pool thread, every 5 minutes while the plan has changes. It uses `PlanGraph.ReadDisplayOrders`, which writes no `DisplayOrder`. A read that the view stops, because the view became shorter, gives no places, and the copy then has the places of the last compile. A read during a drag can still give a wrong order in the copy. When the UI thread publishes the order as an array, let `ReadDisplayOrders` read the array too.
 
 - [ ] **Raise the properties of `DateTimeCalculator` after the release of its lock** *(2026-11-14, from the review of `src`)*
 

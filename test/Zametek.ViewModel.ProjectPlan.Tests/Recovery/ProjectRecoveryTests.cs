@@ -3,8 +3,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -132,6 +135,72 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             (await harness.Recovery.WriteCopyIfChangedAsync()).ShouldBeTrue();
         }
+
+        #endregion
+
+        #region A copy changes nothing of the project
+
+        // A save puts the time of the save into the scenario on show. A copy is written while the user works, and the
+        // list of the scenarios must not change under the user.
+        [Fact]
+        public async Task WriteCopyIfChangedAsync_Given_APlanWithChanges_Then_TheScenarioKeepsItsTimeOfChange()
+        {
+            using Harness harness = Harness.Make();
+            IManagedNodeViewModel node = harness.Project.GetNode(harness.Settings.ScenarioId).ShouldNotBeNull();
+            DateTimeOffset modifiedOn = node.ModifiedOn;
+            var heard = new List<string?>();
+            ((INotifyPropertyChanged)node).PropertyChanged += (_, e) => heard.Add(e.PropertyName);
+            harness.Core.IsProjectScenarioUpdated = true;
+
+            (await harness.Recovery.WriteCopyIfChangedAsync()).ShouldBeTrue();
+
+            node.ModifiedOn.ShouldBe(modifiedOn);
+            heard.ShouldNotContain(nameof(IManagedNodeViewModel.ModifiedOn));
+        }
+
+        // The main window shows its wait overlay for the busy state of the scenario manager with no delay, and for the
+        // busy state of the core after a delay.
+        [Fact]
+        public async Task WriteCopyIfChangedAsync_Given_APlanWithChanges_Then_NoBusyState()
+        {
+            using Harness harness = Harness.Make();
+            var heard = new List<string>();
+            harness.Project.PropertyChanged += (_, e) => heard.Add($@"scenario manager: {e.PropertyName}");
+            harness.Core.PropertyChanged += (_, e) => heard.Add($@"core: {e.PropertyName}");
+            harness.Core.IsProjectScenarioUpdated = true;
+            heard.Clear();
+
+            (await harness.Recovery.WriteCopyIfChangedAsync()).ShouldBeTrue();
+
+            heard.ShouldNotContain($@"scenario manager: {nameof(IProjectScenarioManagerViewModel.IsBusy)}");
+            heard.ShouldNotContain($@"core: {nameof(ICoreViewModel.IsBusy)}");
+        }
+
+        // The copy holds what a save writes at the same moment. Only the time of the scenario on show is the time of each
+        // build.
+        [Fact]
+        public async Task WriteCopyIfChangedAsync_Given_APlanWithActivities_Then_TheCopyIsTheProjectThatASaveBuilds()
+        {
+            using Harness harness = Harness.Make();
+            harness.Core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(3), harness.Settings.ScenarioId, harness.Settings.ScenarioTitle);
+            harness.Core.IsProjectScenarioUpdated = true;
+
+            (await harness.Recovery.WriteCopyIfChangedAsync()).ShouldBeTrue();
+
+            ProjectModel copied = harness.Saver.LastProject.ShouldNotBeNull();
+            ProjectModel saved = await harness.Main.BuildProjectAsync();
+            copied.Current.ShouldBe(harness.Settings.ScenarioId);
+            copied.Files.Single(x => x.NodeId == copied.Current).Scenario.DependentActivities.Count.ShouldBe(3);
+            WithNoTimeOfChange(copied).ShouldBeEquivalentTo(WithNoTimeOfChange(saved));
+        }
+
+        // The nodes and the files in one order, and no time of a change.
+        private static ProjectModel WithNoTimeOfChange(ProjectModel project) =>
+            project with
+            {
+                Nodes = [.. project.Nodes.OrderBy(x => x.Id).Select(x => x with { ModifiedOn = default })],
+                Files = [.. project.Files.OrderBy(x => x.NodeId)],
+            };
 
         #endregion
 
@@ -508,6 +577,87 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             File.Exists(copy.ShouldNotBeNull().Filename).ShouldBeTrue();
         }
 
+        // A copy at an interval is on its way when the user closes the application and agrees to lose the changes. The end
+        // waits for the write, and then it removes the copy. Thus, the next start has no copy of those changes.
+        [Fact]
+        public async Task End_Given_AWriteInProgress_Then_TheEndWaitsForItAndNoCopyStays()
+        {
+            using Harness harness = Harness.Make();
+            harness.Core.IsProjectScenarioUpdated = true;
+            using var started = new ManualResetEventSlim();
+            using var goOn = new ManualResetEventSlim();
+            harness.Saver.DuringTheWrite = () =>
+            {
+                started.Set();
+                goOn.Wait(s_TestLimit);
+            };
+            Task<bool> write = Task.Run(harness.Recovery.WriteCopyIfChangedAsync);
+            started.Wait(s_TestLimit).ShouldBeTrue();
+
+            Task end = Task.Run(() => harness.Recovery.End(keepCopy: false));
+
+            (await Task.WhenAny(end, Task.Delay(TimeSpan.FromMilliseconds(250)))).ShouldNotBe(end, @"the end did not wait for the write");
+            goOn.Set();
+            await end.WaitAsync(s_TestLimit);
+            await write.WaitAsync(s_TestLimit);
+
+            harness.Saver.Writes.ShouldBe(1);
+            harness.Store.Copy.ShouldBeNull();
+            FilesOf(harness.RecoveryFolder).ShouldBeEmpty();
+        }
+
+        // The wait of the end has a limit. A write that ends after the limit removes its own copy.
+        [Fact]
+        public async Task End_Given_AWriteThatEndsAfterTheWait_Then_ThatWriteRemovesItsCopy()
+        {
+            using Harness harness = Harness.Make(endWait: TimeSpan.FromMilliseconds(50));
+            harness.Core.IsProjectScenarioUpdated = true;
+
+            // The end comes on the thread of the write, and so its wait cannot end before its limit.
+            harness.Saver.DuringTheWrite = () => harness.Recovery.End(keepCopy: false);
+
+            (await harness.Recovery.WriteCopyIfChangedAsync()).ShouldBeFalse();
+
+            harness.Saver.Writes.ShouldBe(1);
+            harness.Store.Copy.ShouldBeNull();
+            FilesOf(harness.RecoveryFolder).ShouldBeEmpty();
+        }
+
+        // The end after an error keeps the copy, and so it keeps a copy that is on its way too.
+        [Fact]
+        public async Task End_Given_AWriteInProgressAndAnEndAfterAnError_Then_TheNextRunFindsTheCopy()
+        {
+            using Harness harness = Harness.Make();
+            harness.Core.IsProjectScenarioUpdated = true;
+            harness.Saver.DuringTheWrite = () => harness.Recovery.End(keepCopy: true);
+
+            RecoveryCopyModel? copy = await harness.Recovery.WriteCopyAsync(RecoveryCopyReasons.Error);
+
+            using var next = new RecoveryStore(harness.RecoveryFolder);
+            next.FindLeftCopies().ShouldBe([copy.ShouldNotBeNull()]);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task WriteCopyAsync_Given_ARunThatEnded_Then_NoCopy(bool keepCopy)
+        {
+            using Harness harness = Harness.Make();
+            harness.Core.IsProjectScenarioUpdated = true;
+            harness.Recovery.End(keepCopy);
+
+            (await harness.Recovery.WriteCopyAsync(RecoveryCopyReasons.Error)).ShouldBeNull();
+            (await harness.Recovery.WriteCopyIfChangedAsync()).ShouldBeFalse();
+
+            harness.Saver.Writes.ShouldBe(0);
+            FilesOf(harness.RecoveryFolder).ShouldBeEmpty();
+        }
+
+        private static readonly TimeSpan s_TestLimit = TimeSpan.FromSeconds(30);
+
+        private static string[] FilesOf(string folder) =>
+            Directory.Exists(folder) ? [.. Directory.GetFiles(folder).Select(Path.GetFileName).OfType<string>()] : [];
+
         #endregion
 
         // Writes a line in place of the project, counts the writes, and lets a test fail one or change the plan during one.
@@ -522,9 +672,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public Action? DuringTheWrite { get; set; }
 
+            public ProjectModel? LastProject { get; private set; }
+
             public async Task SaveProjectFileAsync(ProjectModel project, Stream stream)
             {
                 Writes++;
+                LastProject = project;
                 DuringTheWrite?.Invoke();
 
                 if (Failure is not null)
@@ -598,7 +751,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 bool hasFile = true,
                 string? directory = null,
                 bool realFiles = false,
-                DateTimeOffset? now = null)
+                DateTimeOffset? now = null,
+                TimeSpan? endWait = null)
             {
                 (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
                 var dialogs = new ScriptedDialogService();
@@ -639,6 +793,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     store,
                     new FixedTimeProvider(now ?? s_Now, TimeZoneInfo.Utc),
                     NullLogger<ProjectRecovery>.Instance);
+
+                if (endWait is TimeSpan wait)
+                {
+                    recovery.EndWait = wait;
+                }
+
                 var harness = new Harness(core, settings, project, dialogs, saver, main, store, recovery, directory, ownsDirectory);
                 settings.KeepRecoveryCopy = true;
 

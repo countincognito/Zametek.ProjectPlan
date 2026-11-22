@@ -196,6 +196,42 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             found.WrittenAt.UtcDateTime.ShouldBe(File.GetLastWriteTimeUtc(left.Filename));
         }
 
+        // A run that ended during the write of a copy left the temporary file of the write. That file is not a copy, and it
+        // goes when a later run looks for copies. The copy before it stays.
+        [Fact]
+        public async Task FindLeftCopies_Given_ATemporaryFileOfARunThatEnded_Then_ItGoesAndTheCopyBeforeItStays()
+        {
+            RecoveryCopyModel left = await LeaveCopyAsync(@"wall", @"first");
+            string second = $@"{left.Filename}.tmp";
+            File.WriteAllText(second, @"a part of a second copy");
+            string first = Path.Combine(m_Folder, $@"{Guid.NewGuid():N}{Path.GetExtension(left.Filename)}.tmp");
+            File.WriteAllText(first, @"a part of a first copy");
+            using var store = new RecoveryStore(m_Folder);
+            store.BeginSession();
+
+            store.FindLeftCopies().ShouldBe([left]);
+
+            File.Exists(second).ShouldBeFalse();
+            File.Exists(first).ShouldBeFalse();
+            File.ReadAllText(left.Filename).ShouldBe(@"first");
+        }
+
+        [Fact]
+        public async Task FindLeftCopies_Given_ATemporaryFileOfARunThatIsAlive_Then_ItStays()
+        {
+            using var alive = new RecoveryStore(m_Folder);
+            alive.BeginSession();
+            RecoveryCopyModel copy = await alive.WriteCopyAsync(CopyOf(@"wall"), Text(@"alive"));
+            string temporary = $@"{copy.Filename}.tmp";
+            File.WriteAllText(temporary, @"a write that is on its way");
+            using var store = new RecoveryStore(m_Folder);
+            store.BeginSession();
+
+            store.FindLeftCopies().ShouldBeEmpty();
+
+            File.Exists(temporary).ShouldBeTrue();
+        }
+
         [Fact]
         public async Task Remove_Given_ACopyThatARunLeft_Then_NoFileOfItStaysAndTheOthersDo()
         {

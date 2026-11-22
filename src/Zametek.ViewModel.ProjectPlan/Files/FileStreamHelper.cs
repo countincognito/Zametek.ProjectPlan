@@ -8,6 +8,9 @@ namespace Zametek.ViewModel.ProjectPlan
     // standalone.
     public static class FileStreamHelper
     {
+        // What a write adds to the name of a file for its temporary file.
+        internal const string TemporaryExtension = @".tmp";
+
         // The time that a write tries to put its temporary file in the place of a file that another program holds open.
         private static readonly TimeSpan s_RetryTime = TimeSpan.FromSeconds(2);
         private static readonly TimeSpan s_RetryPause = TimeSpan.FromMilliseconds(100);
@@ -101,7 +104,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return;
             }
 
-            string temporary = $@"{target}.tmp";
+            string temporary = $@"{target}{TemporaryExtension}";
             FileStream stream;
 
             try

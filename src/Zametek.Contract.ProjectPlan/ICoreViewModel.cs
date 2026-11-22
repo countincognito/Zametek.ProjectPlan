@@ -177,6 +177,10 @@ namespace Zametek.Contract.ProjectPlan
 
         ProjectScenarioModel BuildProjectScenario();
 
+        // The scenario that BuildProjectScenario gives, built with no change to the plan: no activity gets its place in the
+        // view, and nothing hears of a busy state. A recovery copy takes it while the user works.
+        ProjectScenarioModel BuildProjectScenarioCopy();
+
         int AddManagedActivity(int displayOrder);
 
         void AddManagedActivities(IEnumerable<DependentActivityModel> dependentActivityModels);

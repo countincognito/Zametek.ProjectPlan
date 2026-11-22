@@ -45,6 +45,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private ITimer? m_Timer;
         private bool m_HasStarted;
         private bool m_HasEnded;
+        private bool m_KeepsCopyAfterTheEnd;
 
         public ProjectRecovery(
             IMainViewModel mainViewModel,
@@ -76,6 +77,11 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TimeProvider = timeProvider;
             m_Logger = logger;
         }
+
+        /// <summary>
+        /// The longest time that an end which removes the copy waits for a copy that is on its way.
+        /// </summary>
+        internal TimeSpan EndWait { get; set; } = TimeSpan.FromSeconds(5);
 
         #region IProjectRecovery Members
 
@@ -118,7 +124,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // An interval that comes while a copy is written has nothing to add: the next one sees what is left.
-            if (!await m_Gate.WaitAsync(TimeSpan.Zero))
+            if (!await m_Gate.WaitAsync(TimeSpan.Zero).ConfigureAwait(false))
             {
                 return false;
             }
@@ -133,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     return false;
                 }
 
-                return await WriteAsync(RecoveryCopyReasons.Interval) is not null;
+                return await WriteAsync(RecoveryCopyReasons.Interval).ConfigureAwait(false) is not null;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -149,11 +155,19 @@ namespace Zametek.ViewModel.ProjectPlan
         public async Task<RecoveryCopyModel?> WriteCopyAsync(string reason)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(reason);
-            await m_Gate.WaitAsync();
+
+            // No part of the write comes back to the thread of the caller. Thus, the gate is free again also when that
+            // thread waits: the UI thread waits for the gate at the end of the application (see End).
+            await m_Gate.WaitAsync().ConfigureAwait(false);
 
             try
             {
-                return await WriteAsync(reason);
+                if (HasEnded)
+                {
+                    return null;
+                }
+
+                return await WriteAsync(reason).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -235,6 +249,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_HasEnded = true;
+                m_KeepsCopyAfterTheEnd = keepCopy;
             }
 
             m_Timer?.Dispose();
@@ -246,7 +261,23 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (!keepCopy)
             {
-                DeleteCopy();
+                // A copy that is on its way ends first, and no other copy starts after the end. Without the wait, that copy
+                // writes its files after the removal, or the process ends in the middle of the write. The wait has a limit,
+                // because this is the UI thread at the end of the application. A write that ends after the limit removes
+                // its own copy (see WriteAsync).
+                bool hasGate = m_Gate.Wait(EndWait);
+
+                try
+                {
+                    DeleteCopy();
+                }
+                finally
+                {
+                    if (hasGate)
+                    {
+                        m_Gate.Release();
+                    }
+                }
             }
 
             m_Store.Dispose();
@@ -263,6 +294,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     return m_HasEnded;
+                }
+            }
+        }
+
+        private bool HasEndedWithNoCopy
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    return m_HasEnded && !m_KeepsCopyAfterTheEnd;
                 }
             }
         }
@@ -301,8 +343,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 Reason = reason,
             };
 
-            ProjectModel projectModel = await m_MainViewModel.BuildProjectAsync();
-            RecoveryCopyModel written = await m_Store.WriteCopyAsync(copy, stream => m_ProjectFileSave.SaveProjectFileAsync(projectModel, stream));
+            // The build that changes nothing of the project: the user works while a copy is written.
+            ProjectModel projectModel = await m_MainViewModel.BuildProjectCopyAsync().ConfigureAwait(false);
+            RecoveryCopyModel written = await m_Store
+                .WriteCopyAsync(copy, stream => m_ProjectFileSave.SaveProjectFileAsync(projectModel, stream))
+                .ConfigureAwait(false);
+
+            // The run ended during the write, with an end that removes the copy: the user saved, or agreed to lose the
+            // changes. The end did not wait long enough for this write, and so the copy goes here.
+            if (HasEndedWithNoCopy)
+            {
+                DeleteCopy();
+                return null;
+            }
+
             CopiedRevisions = revisions;
             m_Logger.LogInformation("Wrote a recovery copy of {ProjectTitle} to {RecoveryFile} (reason: {Reason})", title, written.Filename, reason);
 

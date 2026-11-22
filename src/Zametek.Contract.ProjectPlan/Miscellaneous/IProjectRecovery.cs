@@ -38,7 +38,8 @@ namespace Zametek.Contract.ProjectPlan
 
         /// <summary>
         /// Ends the session. A run that ends well removes its copy: the user saved, or agreed to lose the changes. A run
-        /// that ends after an error keeps it for the next run.
+        /// that ends after an error keeps it for the next run. No copy starts after the end. An end that removes the copy
+        /// waits for a short time for a copy that is on its way, and a write that ends after that removes its own copy.
         /// </summary>
         void End(bool keepCopy);
     }

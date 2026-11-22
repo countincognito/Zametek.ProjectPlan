@@ -114,6 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return [];
             }
 
+            RemoveLeftTemporaryFiles();
             List<RecoveryCopyModel> copies = [];
 
             foreach (string filename in Directory.EnumerateFiles(m_Folder, $@"*{m_CopyExtension}"))
@@ -147,6 +148,33 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Private Members
 
         private string PathOf(string id, string extension) => Path.Combine(m_Folder, $@"{id}{extension}");
+
+        // A run that ended during the write of a copy left the temporary file of the write (see FileStreamHelper.Write).
+        // That file is a part of a copy, and nobody can use it. The temporary file of a run that is alive is a write that
+        // is on its way, and it stays. A file that does not go now goes at a later start.
+        private void RemoveLeftTemporaryFiles()
+        {
+            foreach (string filename in Directory.EnumerateFiles(m_Folder, $@"*{FileStreamHelper.TemporaryExtension}"))
+            {
+                string name = Path.GetFileName(filename);
+                string id = name[..name.IndexOf('.', StringComparison.Ordinal)];
+
+                if (string.Equals(id, m_SessionId, StringComparison.OrdinalIgnoreCase)
+                    || IsAlive(id))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    File.Delete(filename);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // The look for copies goes on: a file that stays does no harm.
+                }
+            }
+        }
 
         // Whether the session with this id holds its lock file. A lock file that nobody holds is what a run left that
         // ended with no chance to remove it, and it goes.

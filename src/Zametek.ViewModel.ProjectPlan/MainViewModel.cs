@@ -580,7 +580,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
         }
 
-        // The project as a save writes it, built off the UI thread. A recovery copy takes it too (ProjectRecovery).
+        // The project as a save writes it, built off the UI thread.
         public async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
 
         private ProjectModel BuildProject()
@@ -588,6 +588,19 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 return m_ProjectScenarioManagerViewModel.BuildProject();
+            }
+        }
+
+        // The same project, built with no change to the project, for a recovery copy (ProjectRecovery). It gives the task
+        // of the build as it is: no part of it comes back to the thread of the caller, which can be the UI thread at the
+        // end of the application.
+        public Task<ProjectModel> BuildProjectCopyAsync() => Task.Run(BuildProjectCopy);
+
+        private ProjectModel BuildProjectCopy()
+        {
+            lock (m_Lock)
+            {
+                return m_ProjectScenarioManagerViewModel.BuildProjectCopy();
             }
         }
 

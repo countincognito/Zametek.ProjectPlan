@@ -382,6 +382,34 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
+        /// Reads the order that the UI shows the activities in, and writes nothing: the place of each activity, by its id.
+        /// This is the order that <see cref="SetDisplayOrders"/> gives. An activity that the view does not have is not in
+        /// the answer.
+        /// </summary>
+        /// <remarks>
+        /// The UI thread changes the view, and the caller can be on another thread. A read that the view stops, because it
+        /// became shorter during the read, gives no places. Each activity then keeps the place that it has.
+        /// </remarks>
+        public Dictionary<int, int> ReadDisplayOrders()
+        {
+            Dictionary<int, int> displayOrders = [];
+
+            try
+            {
+                for (int i = 0; i < OrderableActivities.Count; i++)
+                {
+                    displayOrders[OrderableActivities[i].Id] = i;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return [];
+            }
+
+            return displayOrders;
+        }
+
+        /// <summary>
         /// Pushes the start of the project into every activity, so that it measures the times that it constrains from it.
         /// </summary>
         public void SetProjectStart(DateTimeOffset projectStart)

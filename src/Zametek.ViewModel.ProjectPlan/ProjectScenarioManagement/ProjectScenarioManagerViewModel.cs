@@ -2532,44 +2532,80 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now build the ProjectModel.
 
-                    Guid projectId = m_SettingService.ProjectId;
-                    Guid rootId = Root.Id;
-                    Guid currentId = m_SettingService.ScenarioId;
                     List<ProjectScenarioNodeModel> nodes = [.. m_ManagedNodeLookup.Values
                         .Select(x => x.Node)
                         .OrderBy(x => x.CreatedOn)];
 
                     List<ProjectScenarioFileModel> files = [.. m_FileScenarioLookup.Values];
 
-                    // Filter out any tags that apply to the Root node.
-                    List<ProjectScenarioTagModel> tags = [.. m_NodeTagLookup
-                        .Where(kvp => kvp.Key != rootId)
-                        .SelectMany(kvp => kvp.Value.Select(
-                            label => new ProjectScenarioTagModel
-                            {
-                                NodeId = kvp.Key,
-                                Label = label,
-                            }))];
-
-                    var projectModel = new ProjectModel
-                    {
-                        Version = Data.ProjectPlan.Versions.ProjectLatest,
-                        Id = projectId,
-                        Root = rootId,
-                        Current = currentId,
-                        Nodes = nodes,
-                        Files = files,
-                        Tags = tags,
-                        DisplaySettings = DisplaySettingsViewModel.GetValues(),
-                    };
-
-                    return projectModel;
+                    return BuildProject(nodes, files);
                 }
             }
             finally
             {
                 EndBusy();
             }
+        }
+
+        public ProjectModel BuildProjectCopy()
+        {
+            lock (m_Lock)
+            {
+                // What BuildProject gives, with the scenario on show and its time only in the copy: the node, the list of
+                // the files and the plan stay as they are. The build sets no busy state, because the main window shows
+                // its wait overlay for it with no delay, and the user works while a recovery copy is built.
+                Guid nodeId = m_SettingService.ScenarioId;
+                IManagedNodeViewModel? managedProjectScenario = GetNode(nodeId);
+                DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
+                IEnumerable<ProjectScenarioNodeModel> nodes = m_ManagedNodeLookup.Values.Select(x => x.Node);
+                List<ProjectScenarioFileModel> files = [.. m_FileScenarioLookup.Values];
+
+                if (managedProjectScenario is not null)
+                {
+                    var projectScenarioFile = new ProjectScenarioFileModel
+                    {
+                        NodeId = nodeId,
+                        Scenario = m_CoreViewModel.BuildProjectScenarioCopy(),
+                    };
+
+                    nodes = nodes.Select(x => x.Id == nodeId ? x with { ModifiedOn = localNow } : x);
+                    files.RemoveAll(x => x.NodeId == nodeId);
+                    files.Add(projectScenarioFile);
+                }
+
+                return BuildProject([.. nodes.OrderBy(x => x.CreatedOn)], files);
+            }
+        }
+
+        // The project from the nodes and the files that it is given, with the tags and the display settings of now. Call
+        // it with the lock held.
+        private ProjectModel BuildProject(
+            List<ProjectScenarioNodeModel> nodes,
+            List<ProjectScenarioFileModel> files)
+        {
+            Guid rootId = Root.Id;
+
+            // Filter out any tags that apply to the Root node.
+            List<ProjectScenarioTagModel> tags = [.. m_NodeTagLookup
+                .Where(kvp => kvp.Key != rootId)
+                .SelectMany(kvp => kvp.Value.Select(
+                    label => new ProjectScenarioTagModel
+                    {
+                        NodeId = kvp.Key,
+                        Label = label,
+                    }))];
+
+            return new ProjectModel
+            {
+                Version = Data.ProjectPlan.Versions.ProjectLatest,
+                Id = m_SettingService.ProjectId,
+                Root = rootId,
+                Current = m_SettingService.ScenarioId,
+                Nodes = nodes,
+                Files = files,
+                Tags = tags,
+                DisplaySettings = DisplaySettingsViewModel.GetValues(),
+            };
         }
 
         #endregion

@@ -1771,44 +1771,71 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     BeginBusy();
 
-                    // A file holds the dates of the default display mode. The mapper reads each date from its activity
-                    // as the plan keeps it (StoredMaximumLatestFinishDateTime). So the build writes nothing to the date
-                    // calculator, which the activities, the grid and the charts share.
                     UpdateActivityDisplayOrders();
 
-                    List<DependentActivityModel> dependentActivities =
-                        [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
-
-                    var plan = new ProjectScenarioModel
-                    {
-                        ProjectStart = RequestedProjectStart,
-                        EffectiveProjectStart = ProjectStart,
-                        Today = Today,
-                        DependentActivities = dependentActivities,
-                        GraphSettings = GraphSettings.CloneObject(),
-                        ResourceSettings = ResourceSettings.CloneObject(),
-                        WorkStreamSettings = WorkStreamSettings.CloneObject(),
-                        HolidaySettings = HolidaySettings.CloneObject(),
-                        Metrics = Metrics.CloneObject(),
-                        ResourceMetrics = [.. ResourceMetrics],
-                        // With the number that a target date gives in the calendar of now.
-                        SimulationSettings = SimulationTargetHelper.Normalize(SimulationSettings, m_DateTimeCalculator, ProjectStart),
-                        SimulationSummary = SimulationSummary,
-                        DisplaySettings = DisplaySettingsViewModel.GetValues(),
-                        ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
-                        VertexGraphLayout = VertexGraphLayout.CloneObject(),
-                    };
-
-                    // Reorder activity dependencies so they are more readable.
-                    ProjectScenarioHelper.SortDependencies(plan.DependentActivities);
-
-                    return plan;
+                    return BuildProjectScenario(displayOrders: null);
                 }
             }
             finally
             {
                 EndBusy();
             }
+        }
+
+        public ProjectScenarioModel BuildProjectScenarioCopy()
+        {
+            lock (m_Lock)
+            {
+                // The places that UpdateActivityDisplayOrders gives, and the activities do not get them. The build sets
+                // no busy state: nothing waits for this build, and the user works while it runs.
+                return BuildProjectScenario(m_PlanGraph.ReadDisplayOrders());
+            }
+        }
+
+        /// <summary>
+        /// The scenario from the plan as it is. Call it with <see cref="m_Lock"/> held. With places, each activity that has
+        /// one gets it in the scenario, and not in the plan.
+        /// </summary>
+        private ProjectScenarioModel BuildProjectScenario(Dictionary<int, int>? displayOrders)
+        {
+            // A file holds the dates of the default display mode. The mapper reads each date from its activity
+            // as the plan keeps it (StoredMaximumLatestFinishDateTime). So the build writes nothing to the date
+            // calculator, which the activities, the grid and the charts share.
+            List<DependentActivityModel> dependentActivities =
+                [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
+
+            if (displayOrders is not null)
+            {
+                dependentActivities =
+                    [.. dependentActivities.Select(x => displayOrders.TryGetValue(x.Activity.Id, out int displayOrder)
+                        ? x with { Activity = x.Activity with { DisplayOrder = displayOrder } }
+                        : x)];
+            }
+
+            var plan = new ProjectScenarioModel
+            {
+                ProjectStart = RequestedProjectStart,
+                EffectiveProjectStart = ProjectStart,
+                Today = Today,
+                DependentActivities = dependentActivities,
+                GraphSettings = GraphSettings.CloneObject(),
+                ResourceSettings = ResourceSettings.CloneObject(),
+                WorkStreamSettings = WorkStreamSettings.CloneObject(),
+                HolidaySettings = HolidaySettings.CloneObject(),
+                Metrics = Metrics.CloneObject(),
+                ResourceMetrics = [.. ResourceMetrics],
+                // With the number that a target date gives in the calendar of now.
+                SimulationSettings = SimulationTargetHelper.Normalize(SimulationSettings, m_DateTimeCalculator, ProjectStart),
+                SimulationSummary = SimulationSummary,
+                DisplaySettings = DisplaySettingsViewModel.GetValues(),
+                ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
+                VertexGraphLayout = VertexGraphLayout.CloneObject(),
+            };
+
+            // Reorder activity dependencies so they are more readable.
+            ProjectScenarioHelper.SortDependencies(plan.DependentActivities);
+
+            return plan;
         }
 
         public int AddManagedActivity(int displayOrder)
