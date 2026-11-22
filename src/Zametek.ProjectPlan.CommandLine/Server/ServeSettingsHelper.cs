@@ -88,8 +88,9 @@ namespace Zametek.ProjectPlan.CommandLine
         }
 
         // The names that --allow-host gives, each one time. A name is the name of a host and nothing else: the server
-        // compares it with the Host of a request without its port. With a key, the server does not look at the Host, and so
-        // the option is refused and does not do nothing in silence.
+        // compares it with the Host of a request without its port, and without the brackets of an IPv6 address. Thus, an
+        // IPv6 address is kept without its brackets too. With a key, the server does not look at the Host, and so the option
+        // is refused and does not do nothing in silence.
         private static List<string> ResolveAllowedHosts(
             ServeOptions options,
             string? apiKey)
@@ -104,6 +105,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 if (Uri.CheckHostName(name) == UriHostNameType.Unknown)
                 {
                     throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNotValid, given, allowHost));
+                }
+
+                // Only an IPv6 address passes the check with brackets.
+                if (name.StartsWith('[')
+                    && name.EndsWith(']'))
+                {
+                    name = name[1..^1];
                 }
 
                 if (!names.Contains(name, StringComparer.OrdinalIgnoreCase))
@@ -418,6 +426,7 @@ namespace Zametek.ProjectPlan.CommandLine
             RequireAtLeast(limits.MaxSimulationIterations, 1, nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations));
             RequireAtMost(limits.MaxSimulationIterations, GraphLimits.MaximumSimulationIterations, nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations));
             RequireAtLeast(limits.JobTimeoutSeconds, 1, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
+            RequireAtMost(limits.JobTimeoutSeconds, ServeLimits.MaximumJobTimeoutSeconds, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
             RequireAtLeast(limits.MaxCompileTimeoutMilliseconds, 1, nameof(ServeLimits.MaxCompileTimeoutMilliseconds), nameof(ServeOptions.MaxCompileTimeoutMilliseconds));
 
             return limits;

@@ -5,6 +5,10 @@ namespace Zametek.ProjectPlan.CommandLine
     // then the option of zpp serve's for it - each overriding the one before.
     public record ServeLimits
     {
+        // The longest time of a job (JobTimeoutSeconds), in whole seconds. The time limit of a job is a timer, and a timer of
+        // .NET waits for 4,294,967,294 milliseconds at most, about 49 days.
+        public const int MaximumJobTimeoutSeconds = (int)((uint.MaxValue - 1) / 1000);
+
         // How many jobs run at once.
         public int MaxJobs { get; init; } = Environment.ProcessorCount;
 

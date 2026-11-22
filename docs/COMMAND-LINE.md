@@ -272,6 +272,7 @@ To use a server by default, set `ZPP_SERVER` and do not use the option `--server
 - The value of `--server` is the `http` or `https` address of the server. The address can have a path, if a reverse proxy puts the server under a path. The value can also be `unix:` and the path of the socket of the server: `--server unix:/tmp/zpp.sock`, or on Windows `--server unix:C:\tmp\zpp.sock` (refer to [On a Unix domain socket](#on-a-unix-domain-socket)). For HTTPS, `zpp` trusts the certificates that this computer trusts.
 - If a server needs an API key, `zpp` gets the key from `ZPP_API_KEY` or from the file that `--api-key-file` gives. `zpp` never gets the key directly from the command line.
 - `zpp` does not send the key over plain `http` to a server on a different computer. Each computer on the way can read such a key. Thus, the run ends with a usage error (exit code 2). Use an `https` address. If the network between the two computers is private, for example between two containers, the option `--allow-key-over-http` lets `zpp` send the key.
+- `zpp` connects directly to a server on this computer or on a socket. It does not use a proxy that the environment gives (`http_proxy`), because the key and the plan must stay on this computer. For a server on a different computer, `zpp` uses that proxy.
 - `zpp` does not follow a redirect. If the server, or a proxy in front of it, answers with a redirect, the run ends with exit code 5. The message gives the new address. Give that address to `--server`.
 - Each request has a time limit. The limit includes the upload of the plan and the download of the answer. If the server gives no complete answer in that time, the run ends with exit code 5. Thus, a server that accepts a connection and then stays silent does not hold `zpp`.
 - The option `--server-timeout` gives the time limit in milliseconds. The value `0` means no time limit. Give the option more time than a job can wait and run on the server (refer to [Limits](#limits)).
@@ -352,7 +353,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | Largest request, in MB | 50 | `--max-upload` | `MaxUploadMegabytes` |
 | Largest chart, in pixels | 5000 x 5000 | `--max-chart-size <width>:<height>` | `MaxChartWidth`, `MaxChartHeight` |
 | Iterations of the simulation of a project that the server runs | 100000 (the maximum is 1000000) | `--max-simulation-iterations` | `MaxSimulationIterations` |
-| Time of a job, in seconds | 120 | `--job-timeout` | `JobTimeoutSeconds` |
+| Time of a job, in seconds | 120 (the maximum is 4294967, about 49 days) | `--job-timeout` | `JobTimeoutSeconds` |
 | Compile timeout of a job, in milliseconds | 60000 | `--max-compile-timeout` | `MaxCompileTimeoutMilliseconds` |
 
 Each limit has a default. You can change a limit in three ways:
@@ -385,7 +386,7 @@ A server that only this computer can reach needs no API key. But a web page that
 - A request with an `Origin` header. A browser adds this header to each POST that a page sends, and the page cannot remove it. `zpp` and scripts do not send it.
 - A request whose `Host` is not `localhost`, a name that ends with `.localhost`, or a loopback address. A page can reach the server through a name of its own that points at this computer.
 
-A proxy on this computer in front of the server sends its own name as the `Host`. Give this name to the server: `zpp serve --allow-host plan.example.com`. For more than one name, give the option more than once. The server refuses `--allow-host` together with an API key, because a server with a key does not do these checks. A request on a Unix domain socket also has no such check, because a browser cannot connect to a socket.
+A proxy on this computer in front of the server sends its own name as the `Host`. Give this name to the server: `zpp serve --allow-host plan.example.com`. For more than one name, give the option more than once. An IPv6 address can have brackets or not: `--allow-host [2001:db8::1]` and `--allow-host 2001:db8::1` are the same. The server refuses `--allow-host` together with an API key, because a server with a key does not do these checks. A request on a Unix domain socket also has no such check, because a browser cannot connect to a socket.
 
 ### Other computers
 

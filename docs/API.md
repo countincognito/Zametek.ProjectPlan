@@ -129,7 +129,7 @@ A request beyond a limit gets a problem that names the limit.
 
 ### Request
 
-The request is a `multipart/form-data` body with these parts. Its size is not more than the upload limit of the server:
+The request is a `multipart/form-data` body with these parts. Its size is not more than the upload limit of the server. The server refuses a different content type with `415` before it reads the body:
 
 | Part | Type | Notes |
 | ---- | ---- | ----- |
@@ -882,7 +882,7 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
 - The import of a workbook is all or nothing. A workbook with problems in its cells gives a `project-not-readable` problem with one error for each problem (up to 100), at `#/import`, and the codes `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn`, `missingValue`, `duplicateId`, `unknownActivity`, `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice` and `notAColor`.
-- The time limit of a job includes the upload of the request. A client that sends its body slowly cannot hold a place of a job for longer than `jobTimeout`.
+- The time limit of a job includes the upload of the request. A client that sends its body slowly cannot hold a place of a job for longer than `jobTimeout`. A request that is not `multipart/form-data` gets `415` before the server reads its body.
 - The import of a workbook has three limits. A workbook above one of them gives a `project-not-readable` problem with one error, at `#/import`, and the code `workbookTooLarge`, `tooManyRows` or `tooManyCells`. The time limit of a job stops the read of a workbook between two rows.
 - The output `simulationWorkbook`: the result of the simulation as one Excel workbook (`<name>-simulation.xlsx`). It is a new member of `outputs`, and a new kind of output in the answer.
 - The operation `GET /v1/jobs/{requestId}` tells how far a job that runs has got (the iterations of its simulation). The job is the request, and its id is the trace id that the request gave in its `traceparent`. The server keeps the status only while the job runs.

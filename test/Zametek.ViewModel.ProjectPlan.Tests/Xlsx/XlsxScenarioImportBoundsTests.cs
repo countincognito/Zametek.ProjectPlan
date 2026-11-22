@@ -1,8 +1,11 @@
 using Shouldly;
 using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -23,6 +26,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static readonly string s_Activities = Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities;
         private static readonly string s_ActivityTracker = Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker;
         private static readonly string[] s_Known = [nameof(ActivityModel.Id), nameof(ActivityModel.Name)];
+
+        // A part that holds nothing of a workbook.
+        private const string c_PaddingPart = @"xl/media/padding.bin";
 
         #region Helpers
 
@@ -70,6 +76,85 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             }
 
             return package.ToArray();
+        }
+
+        // The workbook with one more part, which the file stores as it is, without compression. The records of the part
+        // say that it holds nothing when it is unpacked. The reader of the package reads the stored bytes of such a part,
+        // whatever the records say.
+        private static byte[] WithStoredPadding(byte[] workbook, long length)
+        {
+            using var package = new MemoryStream();
+
+            using (var source = new ZipArchive(new MemoryStream(workbook)))
+            using (var zip = new ZipArchive(package, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                foreach (ZipArchiveEntry part in source.Entries)
+                {
+                    using Stream from = part.Open();
+                    using Stream to = zip.CreateEntry(part.FullName).Open();
+                    from.CopyTo(to);
+                }
+
+                using Stream entry = zip.CreateEntry(c_PaddingPart, CompressionLevel.NoCompression).Open();
+                var block = new byte[1 << 20];
+
+                for (long written = 0; written < length; written += block.Length)
+                {
+                    entry.Write(block, 0, (int)Math.Min(block.Length, length - written));
+                }
+            }
+
+            byte[] bytes = package.ToArray();
+            SayThatThePartHoldsNothing(bytes, c_PaddingPart);
+
+            using (var check = new ZipArchive(new MemoryStream(bytes)))
+            {
+                ZipArchiveEntry padding = check.GetEntry(c_PaddingPart).ShouldNotBeNull();
+                (padding.Length, padding.CompressedLength).ShouldBe((0, length));
+            }
+
+            return bytes;
+        }
+
+        // Puts 0 as the unpacked size of a stored part in its two records: its entry in the central directory, and its
+        // local header.
+        private static void SayThatThePartHoldsNothing(byte[] zip, string name)
+        {
+            // The record at the end of the central directory gives the number of entries and the place of the directory.
+            int end = zip.Length - 22;
+
+            while (BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(end)) != 0x06054b50)
+            {
+                end--;
+            }
+
+            int entries = BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(end + 10));
+            int place = (int)BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(end + 16));
+            int found = 0;
+
+            for (int i = 0; i < entries; i++)
+            {
+                BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(place)).ShouldBe(0x02014b50u);
+                int nameLength = BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(place + 28));
+                int extraLength = BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(place + 30));
+                int commentLength = BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(place + 32));
+
+                if (Encoding.UTF8.GetString(zip, place + 46, nameLength) == name)
+                {
+                    // Method 0: stored.
+                    BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(place + 10)).ShouldBe((ushort)0);
+                    BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(place + 24), 0);
+
+                    int local = (int)BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(place + 42));
+                    BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(local)).ShouldBe(0x04034b50u);
+                    BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(local + 22), 0);
+                    found++;
+                }
+
+                place += 46 + nameLength + extraLength + commentLength;
+            }
+
+            found.ShouldBe(1);
         }
 
         #endregion
@@ -229,7 +314,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             using (var zip = new ZipArchive(new MemoryStream(small)))
             {
-                parts = zip.Entries.Sum(x => x.Length);
+                parts = zip.Entries.Sum(x => Math.Max(x.Length, x.CompressedLength));
             }
 
             byte[] workbook = WithPadding(small, XlsxWorkbookReader.MaximumUnpackedBytes - parts);
@@ -253,6 +338,31 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             issue.Message.ShouldBe(@"The workbook holds 101 MB when it is unpacked. The import reads no workbook that holds more than 100 MB.");
         }
 
+        // A part that the file stores without compression is as large as its stored bytes, whatever its records say. The
+        // bound counted the records only, and the import read such a workbook.
+        [Fact]
+        public void Import_Given_StoredPartsLargerThanTheLargestSizeWhoseRecordsSayNothing_Then_TheImportStopsWithOneProblemBeforeItReadsTheWorkbook()
+        {
+            byte[] small = new XlsxPackageBuilder().Sheet(s_Activities, s => Ids(s, 3)).Build();
+            byte[] workbook = WithStoredPadding(small, XlsxWorkbookReader.MaximumUnpackedBytes);
+
+            ScenarioImportException failure = ImportFailure(workbook);
+
+            failure.TotalCount.ShouldBe(1);
+            ImportIssue issue = failure.Issues.Single();
+            (issue.Code, issue.Sheet, issue.Row).ShouldBe((ImportIssueCodes.WorkbookTooLarge, null, null));
+            issue.Message.ShouldBe(@"The workbook holds 101 MB when it is unpacked. The import reads no workbook that holds more than 100 MB.");
+        }
+
+        // Such a part does not make the workbook unreadable: the bound only counts it.
+        [Fact]
+        public void Import_Given_AStoredPartWhoseRecordsSayNothing_Then_TheWorkbookIsImported()
+        {
+            byte[] small = new XlsxPackageBuilder().Sheet(s_Activities, s => Ids(s, 3)).Build();
+
+            Import(WithStoredPadding(small, 1 << 20)).DependentActivities.Count.ShouldBe(3);
+        }
+
         #endregion
 
         #region A stop
@@ -267,9 +377,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Should.Throw<OperationCanceledException>(() => Import(workbook, cancellation.Token));
         }
 
-        // The stop comes between two rows: the reader asks before each row.
+        // The reader asks before the titles of a sheet.
         [Fact]
-        public void Table_Given_ACancellationAfterTheWorkbookIsOpen_Then_TheRowsAreNotRead()
+        public void Table_Given_ACancellationAfterTheWorkbookIsOpen_Then_TheSheetIsNotRead()
         {
             byte[] workbook = new XlsxPackageBuilder().Sheet(s_Activities, s => Ids(s, 3)).Build();
             using var cancellation = new CancellationTokenSource();
@@ -279,6 +389,32 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             cancellation.Cancel();
 
             Should.Throw<OperationCanceledException>(() => reader.Table(s_Activities, s_Known));
+
+            reader.CellsRead.ShouldBe(0);
+        }
+
+        // The stop comes between two rows: the reader asks before each row.
+        [Fact]
+        public void Table_Given_ACancellationAfterTheFirstRow_Then_TheNextRowsAreNotRead()
+        {
+            byte[] workbook = new XlsxPackageBuilder().Sheet(s_Activities, s => Ids(s, 3)).Build();
+            using var cancellation = new CancellationTokenSource();
+            var issues = new ImportIssueCollector();
+            using var stream = new MemoryStream(workbook);
+            using XlsxWorkbookReader reader = XlsxWorkbookReader.Open(stream, issues, cancellation.Token);
+            List<int> rowsRead = [];
+            reader.RowRead = row =>
+            {
+                rowsRead.Add(row);
+                cancellation.Cancel();
+            };
+
+            Should.Throw<OperationCanceledException>(() => reader.Table(s_Activities, s_Known));
+
+            rowsRead.ShouldBe([2]);
+
+            // The title, and the one cell of the first row.
+            reader.CellsRead.ShouldBe(2);
         }
 
         #endregion

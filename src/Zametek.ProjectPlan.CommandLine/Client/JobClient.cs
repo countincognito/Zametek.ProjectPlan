@@ -197,12 +197,31 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private static HttpClient CreateClient(ClientSettings settings)
         {
-            // zpp sends the plan and the key to the server that it was given, and to no other: it follows no redirect.
-            var handler = new SocketsHttpHandler { ConnectTimeout = s_ConnectTimeout, AllowAutoRedirect = false };
+            // The server's own limits bound how long a job may take. A request has a time limit of its own when the
+            // settings give one (RequestTimeout), which PostAsync applies.
+            return new HttpClient(CreateHandler(settings))
+            {
+                BaseAddress = settings.BaseAddress,
+                Timeout = Timeout.InfiniteTimeSpan,
+            };
+        }
+
+        internal static SocketsHttpHandler CreateHandler(ClientSettings settings)
+        {
+            // zpp sends the plan and the key to the server that it was given, and to no other: it follows no redirect. A server
+            // on this computer is connected to directly, never through a proxy that the environment names for the web
+            // (http_proxy): .NET sends a request for localhost through that proxy too. The key goes over plain http to such a
+            // server only because it stays on this computer (see ClientSettingsHelper).
+            var handler = new SocketsHttpHandler
+            {
+                ConnectTimeout = s_ConnectTimeout,
+                AllowAutoRedirect = false,
+                UseProxy = !settings.BaseAddress.IsLoopback,
+            };
 
             if (settings.UnixSocket is string socket)
             {
-                // A socket is connected to directly, never through a proxy the environment names for the web.
+                // A socket is connected to directly too.
                 handler.UseProxy = false;
                 handler.ConnectCallback = async (_, cancellationToken) =>
                 {
@@ -230,13 +249,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 };
             }
 
-            // The server's own limits bound how long a job may take. A request has a time limit of its own when the
-            // settings give one (RequestTimeout), which PostAsync applies.
-            return new HttpClient(handler)
-            {
-                BaseAddress = settings.BaseAddress,
-                Timeout = Timeout.InfiniteTimeSpan,
-            };
+            return handler;
         }
 
         // The plan as the named part - project or import - under its own name, and the request's options, if any, as

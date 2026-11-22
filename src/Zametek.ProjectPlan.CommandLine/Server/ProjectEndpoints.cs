@@ -61,6 +61,9 @@ namespace Zametek.ProjectPlan.CommandLine
         // The media types that the schema of the project file is offered as: that of a JSON Schema, and then JSON as such.
         internal const string ProjectSchemaMediaType = @"application/schema+json";
 
+        // The media type of the body of each POST.
+        internal const string MultipartMediaType = @"multipart/form-data";
+
         // The earliest and latest times a zip can stamp on its files.
         private static readonly DateTime s_EarliestZipTime = new(1980, 1, 1);
         private static readonly DateTime s_LatestZipTime = new(2107, 12, 31, 23, 59, 58);
@@ -614,7 +617,9 @@ namespace Zametek.ProjectPlan.CommandLine
             string notMultipart,
             CancellationTokenSource timeout)
         {
-            if (!context.Request.HasFormContentType)
+            // Only multipart/form-data, before the read of the body. The framework also reads a body of
+            // application/x-www-form-urlencoded as a form, but with a reader that does not stop at the time limit.
+            if (!IsMultipartForm(context.Request))
             {
                 return (null, Refuse(context, StatusCodes.Status415UnsupportedMediaType, notMultipart));
             }
@@ -653,6 +658,11 @@ namespace Zametek.ProjectPlan.CommandLine
                         [new ProblemError { Pointer = c_RequestPointer, Code = ProblemCodes.InvalidFormat, Detail = Resource.ProjectPlan.Messages.Message_ServeErrorMustBeMultipart }])));
             }
         }
+
+        // Whether the body of the request is multipart/form-data. The case of the letters of a media type is not important.
+        private static bool IsMultipartForm(HttpRequest request) =>
+            MediaTypeHeaderValue.TryParse(request.ContentType, out MediaTypeHeaderValue? type)
+            && type.MediaType.Equals(MultipartMediaType, StringComparison.OrdinalIgnoreCase);
 
         // The parts that are not ones the endpoint takes, the parts that are files and were sent as fields, and the parts that
         // were sent more than once. The endpoint reads only the first of a part, and so a second one is probably a mistake of

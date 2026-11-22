@@ -87,7 +87,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option(c_MaxSimulationIterationsLongName, HelpText = "Most iterations a simulation may be asked to run (defaults to 100000, and cannot be above 1000000) - the job's time limit stops a simulation that is too slow")]
         public int? MaxSimulationIterations { get; set; } = default;
 
-        [Option(c_JobTimeoutLongName, HelpText = "Seconds a job may run before it is stopped (defaults to 120)")]
+        [Option(c_JobTimeoutLongName, HelpText = "Seconds a job may run before it is stopped (defaults to 120, and cannot be above 4294967, about 49 days)")]
         public int? JobTimeoutSeconds { get; set; } = default;
 
         [Option(c_MaxCompileTimeoutLongName, HelpText = "Most milliseconds a job may give its compilation (defaults to 60000) - a job cannot switch the limit off")]

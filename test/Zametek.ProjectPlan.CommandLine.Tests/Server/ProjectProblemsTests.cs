@@ -491,6 +491,27 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
         }
 
+        // The longest time limit of a job is one that the server can start its timers for: the one of each job, and the
+        // one of its stop, which lets the jobs that run finish in that time.
+        [Fact]
+        public async Task Post_Given_TheLongestTimeOfAJob_Then_TheJobsRun()
+        {
+            RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = ServeLimits.MaximumJobTimeoutSeconds } });
+
+            await using (server)
+            {
+                using var compileContent = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+                using HttpResponseMessage compile = await server.Client.PostAsync(@"/v1/projects/compile", compileContent);
+                using var scenariosContent = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+                using HttpResponseMessage scenarios = await server.Client.PostAsync(@"/v1/projects/scenarios", scenariosContent);
+
+                compile.StatusCode.ShouldBe(HttpStatusCode.OK);
+                scenarios.StatusCode.ShouldBe(HttpStatusCode.OK);
+            }
+        }
+
         // A client that sends its body slowly holds a place of a job. The time limit of a job starts before the server
         // reads the body. Thus, the server stops the request after that time, and the place is free again.
         [Theory]
@@ -571,6 +592,73 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             response.StatusCode.ShouldBe(HttpStatusCode.UnsupportedMediaType);
             problem.Detail.ShouldBe(Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartScenarios);
+        }
+
+        // A form that is not multipart is a form for the framework too, but the operations take only multipart/form-data.
+        [Theory]
+        [InlineData(@"/v1/projects/compile")]
+        [InlineData(@"/v1/projects/scenarios")]
+        public async Task Post_Given_AFormThatIsNotMultipart_Then_UnsupportedMediaType(string path)
+        {
+            using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>(@"project", @"{}")]);
+            using HttpResponseMessage response = await Server.Client.PostAsync(path, content);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnsupportedMediaType);
+            problem.Detail.ShouldBe(path.EndsWith(@"/compile", StringComparison.Ordinal)
+                ? Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartCompile
+                : Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartScenarios);
+        }
+
+        // The case of the letters of a media type is not important (RFC 9110).
+        [Fact]
+        public async Task ListScenarios_Given_MultipartInCapitals_Then_TheScenarios()
+        {
+            using var content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            content.Headers.ContentType!.MediaType = @"Multipart/Form-Data";
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/scenarios", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        // The server reads a body of application/x-www-form-urlencoded with a reader that the time limit of a job cannot
+        // stop. Thus, it refuses such a request before it reads the body, and the request does not hold a place of a job
+        // while its body arrives.
+        [Theory]
+        [InlineData(@"/v1/projects/compile")]
+        [InlineData(@"/v1/projects/scenarios")]
+        public async Task Post_Given_AFormThatIsNotMultipartAndABodyThatDoesNotArrive_Then_UnsupportedMediaTypeAtOnce(string path)
+        {
+            var address = new Uri(Server.Address);
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(address.Host, address.Port);
+            NetworkStream stream = tcp.GetStream();
+
+            // The start of a request of 100,000 bytes: its head, and the first bytes of its body. No more bytes come.
+            string start =
+                $"POST {path} HTTP/1.1\r\nHost: {address.Authority}\r\nAccept: application/json\r\n"
+                + "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: 100000\r\n\r\nproject=";
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(start));
+
+            // The head of the answer comes while the body is not complete. The time limit of a job (2 minutes) is not
+            // what answers.
+            using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            var answer = new StringBuilder();
+            var buffer = new byte[8192];
+
+            while (!answer.ToString().Contains("\r\n\r\n", StringComparison.Ordinal))
+            {
+                int read = await stream.ReadAsync(buffer, limit.Token);
+
+                if (read == 0)
+                {
+                    break;
+                }
+
+                answer.Append(Encoding.UTF8.GetString(buffer, 0, read));
+            }
+
+            answer.ToString().ShouldStartWith(@"HTTP/1.1 415");
         }
 
         [Theory]

@@ -73,6 +73,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool HasFoundASheet { get; private set; }
 
         /// <summary>
+        /// Called with the number of each row that the reader reads, after the read of its cells. A test stops the reader
+        /// there, to see that the reader stops before the next row.
+        /// </summary>
+        internal Action<int>? RowRead { get; set; }
+
+        /// <summary>
         /// Opens the workbook that the stream holds, and leaves the stream open. A file that cannot be read as a workbook is
         /// a problem that the import reports at once, because there is nothing in it to look for more. A workbook with parts
         /// that are too large is refused before the library unpacks them.
@@ -116,9 +122,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void Dispose() => m_Workbook.Dispose();
 
-        // The size that the parts of the file say that they have when they are unpacked, or null for a file that is not a
-        // package (the library then says why it cannot read the file) and for a stream that cannot go back to its place.
-        // A part cannot unpack to more than it says: the reader of the package stops at that size.
+        // The size of the parts of the file when they are unpacked, or null for a file that is not a package (the library
+        // then says why it cannot read the file) and for a stream that cannot go back to its place. A packed part cannot
+        // unpack to more than its records say: the reader of the package stops at that size. A part that the file stores
+        // without compression is read with its stored bytes, whatever its records say. Thus, a part counts with the larger
+        // of the two sizes, and each record counts, also when two records give the same bytes.
         private static long? UnpackedLength(Stream stream)
         {
             if (!stream.CanSeek)
@@ -136,7 +144,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 foreach (ZipArchiveEntry entry in package.Entries)
                 {
                     // A size above the bound is all that the caller needs to know, and a sum that stops there cannot overflow.
-                    total += Math.Min(Math.Max(entry.Length, 0), MaximumUnpackedBytes + 1);
+                    total += Math.Min(Math.Max(Math.Max(entry.Length, entry.CompressedLength), 0), MaximumUnpackedBytes + 1);
 
                     if (total > MaximumUnpackedBytes)
                     {
@@ -279,6 +287,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     throw m_Issues.ToException();
                 }
 
+                RowRead?.Invoke(row);
                 yield return (row, cells);
             }
         }
