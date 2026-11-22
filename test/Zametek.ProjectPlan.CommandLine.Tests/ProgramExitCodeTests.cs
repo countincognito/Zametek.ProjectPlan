@@ -118,15 +118,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return (freshFile, overwrittenFile);
         }
 
-        // Runs Main while the file an export is about to write is held open with
-        // no sharing, so the export's own write fails the way it does when a
-        // viewer has the file open: a sharing violation on Windows, and on Unix
-        // a clash with the flock that .NET takes for FileShare.None.
-        private static async Task<(int ExitCode, string Output)> RunCapturedWithFileLockedAsync(
-            string lockedFile,
+        // Runs Main while a folder is in the place of the file that an export is about to write, so that the export's own
+        // write fails, on each system and also for root. A file that a program holds open does not do this: a save puts a
+        // temporary file in the place of the target, and on Unix a rename ignores the flock that .NET takes for
+        // FileShare.None (FileStreamHelperWriteTests has the cases of a file that a program holds, on Windows). The save
+        // tries again for 2 s before it fails.
+        private static async Task<(int ExitCode, string Output)> RunCapturedWithTargetBlockedAsync(
+            string blockedFile,
             params string[] args)
         {
-            using var lockStream = new FileStream(lockedFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+            Directory.CreateDirectory(blockedFile);
             return await RunCapturedAsync(args);
         }
 
@@ -956,7 +957,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // would exit 0 with the chart stale or missing.
             string ganttFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_GanttChart, PlotExport.Png.GetDescription());
 
-            (int exitCode, _) = await RunCapturedWithFileLockedAsync(
+            (int exitCode, _) = await RunCapturedWithTargetBlockedAsync(
                 ganttFile,
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", m_TempDirectory, @"--gantt-size", @"800:600", @"--gantt-format", @"png");
 
@@ -969,7 +970,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // A failed graph save is reported the same way.
             string vertexFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_VertexChart, GraphExport.Svg.GetDescription());
 
-            (int exitCode, _) = await RunCapturedWithFileLockedAsync(
+            (int exitCode, _) = await RunCapturedWithTargetBlockedAsync(
                 vertexFile,
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--vertex-directory", m_TempDirectory, @"--vertex-format", @"svg");
 
@@ -1008,7 +1009,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string ganttFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_GanttChart, PlotExport.Png.GetDescription());
             string vertexFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_VertexChart, GraphExport.Svg.GetDescription());
 
-            (int exitCode, string output) = await RunCapturedWithFileLockedAsync(
+            (int exitCode, string output) = await RunCapturedWithTargetBlockedAsync(
                 ganttFile,
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", m_TempDirectory, @"--gantt-size", @"800:600", @"--gantt-format", @"png", @"--vertex-directory", m_TempDirectory, @"--vertex-format", @"svg", @"--metrics-format", @"json");
 
