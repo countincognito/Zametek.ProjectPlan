@@ -137,8 +137,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole()));
 
-            // One request was the job, and none was a question: the log would not show the answer.
-            server.ApiRequests.ShouldBe(1);
+            // One request was for the limits of the server and one was the job. None was a question: the log would not
+            // show the answer.
+            server.ApiRequests.ShouldBe(2);
         }
     }
 }

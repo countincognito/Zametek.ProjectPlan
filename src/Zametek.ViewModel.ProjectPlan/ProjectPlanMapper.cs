@@ -191,6 +191,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // user gave (null where the user gave none). So these two are named, as for DependentActivity.
         [MapProperty(nameof(ManagedActivityViewModel.OwnOptimisticDuration), nameof(ActivityModel.OptimisticDuration))]
         [MapProperty(nameof(ManagedActivityViewModel.OwnPessimisticDuration), nameof(ActivityModel.PessimisticDuration))]
+        // The model holds the maximum latest finish date that the plan keeps. MaximumLatestFinishDateTime of the view model
+        // is the date that the application shows, which is another day with classic dates.
+        [MapProperty(nameof(ManagedActivityViewModel.StoredMaximumLatestFinishDateTime), nameof(ActivityModel.MaximumLatestFinishDateTime))]
         public partial ActivityModel ToActivityModel(ManagedActivityViewModel src);
 
         public DependentActivityModel ToDependentActivityModel(ManagedActivityViewModel src)

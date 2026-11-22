@@ -13,6 +13,7 @@ namespace Zametek.ProjectPlan.Desktop
         private const string c_UserSettings = @"UserSettings.json";
         private const string c_DockLayout = @"DockLayout.json";
         private const string c_DataGridLayout = @"DataGridLayout.json";
+        private const string c_Recovery = @"recovery";
 
         public static string? UserProfileFolderLocation()
         {
@@ -93,6 +94,14 @@ namespace Zametek.ProjectPlan.Desktop
         {
             string productFolderPath = ProductSettingsFolderLocation();
             return Path.Combine(productFolderPath, c_DataGridLayout);
+        }
+
+        // The recovery copies are next to the settings and the logs, and not next to the files of the user: a project
+        // with no file has no folder, and a folder that the user shares or syncs gets no file that the user did not make.
+        public static string DefaultRecoveryFolderLocation()
+        {
+            string productFolderPath = ProductSettingsFolderLocation();
+            return Path.Combine(productFolderPath, c_Recovery);
         }
     }
 }

@@ -133,8 +133,18 @@ namespace Zametek.ProjectPlan.CommandLine
             return environment;
         }
 
+        private static int s_LogsWritesInPlace;
+
         internal static void ConfigureSerilog(bool verbose)
         {
+            // A write that could not put its temporary file in the place of the file, and wrote the file in place. The
+            // log hears of it. One time for the process: a test calls the entry point many times.
+            if (Interlocked.Exchange(ref s_LogsWritesInPlace, 1) == 0)
+            {
+                FileStreamHelper.WroteInPlace += (filename, reason) =>
+                    Log.Warning("The file {File} was written in place, and not by way of a temporary file ({Reason})", filename, reason.Message);
+            }
+
             // Everything goes to stderr so stdout stays clean for parseable output
             // (the metrics table or JSON). Warnings and errors always show - this
             // is where the view models' ILogger<T> output surfaces, via the

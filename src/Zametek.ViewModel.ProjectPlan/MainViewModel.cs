@@ -6,6 +6,7 @@ using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -20,6 +21,10 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+
+        // True when no file command runs. The file commands can start only then.
+        private readonly BehaviorSubject<bool> m_CanRunFileCommand;
+        private readonly IDisposable m_FileCommandsSub;
 
         private static readonly IList<IFileFilter> s_ProjectFileFilters =
             [
@@ -80,6 +85,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectFileOpen m_ProjectFileOpen;
+        private readonly ReactiveCommand<RecoveryCopyModel, bool> m_OpenRecoveryCopyCommand;
         private readonly IProjectFileSave m_ProjectFileSave;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
@@ -135,38 +141,55 @@ namespace Zametek.ViewModel.ProjectPlan
             m_RecentProjectFileMenuItems = [];
             m_HasRecentProjectFilePaths = false;
 
-            {
-                ReactiveCommand<RxVoid, RxVoid> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
-                openProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
-                OpenProjectFileCommand = openProjectFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync);
-                saveProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
-                SaveProjectFileCommand = saveProjectFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync);
-                saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
-                SaveAsProjectFileCommand = saveAsProjectFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync);
-                importProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
-                ImportProjectScenarioFileCommand = importProjectScenarioFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync);
-                exportProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
-                ExportProjectScenarioFileCommand = exportProjectScenarioFileCommand;
-            }
-            {
-                ReactiveCommand<RxVoid, RxVoid> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
-                closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
-                CloseProjectCommand = closeProjectCommand;
-            }
+            // One file command runs at a time. While one of them runs - also while its dialog is open - none of them can
+            // start: an open must not start while a save writes the file, and a save must not start while an import loads.
+            // A command stops only a second run of itself, and so the commands share this one condition.
+            m_CanRunFileCommand = new BehaviorSubject<bool>(true);
 
-            OpenRecentProjectFileCommand = ReactiveCommand.CreateFromTask<string>(OpenRecentProjectFileAsync);
+            ReactiveCommand<RxVoid, RxVoid> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync, m_CanRunFileCommand);
+            openProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
+            OpenProjectFileCommand = openProjectFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync, m_CanRunFileCommand);
+            saveProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
+            SaveProjectFileCommand = saveProjectFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync, m_CanRunFileCommand);
+            saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
+            SaveAsProjectFileCommand = saveAsProjectFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync, m_CanRunFileCommand);
+            importProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
+            ImportProjectScenarioFileCommand = importProjectScenarioFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync, m_CanRunFileCommand);
+            exportProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
+            ExportProjectScenarioFileCommand = exportProjectScenarioFileCommand;
+
+            ReactiveCommand<RxVoid, RxVoid> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync, m_CanRunFileCommand);
+            closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
+            CloseProjectCommand = closeProjectCommand;
+
+            ReactiveCommand<string, RxVoid> openRecentProjectFileCommand = ReactiveCommand.CreateFromTask<string>(OpenRecentProjectFileAsync, m_CanRunFileCommand);
+            OpenRecentProjectFileCommand = openRecentProjectFileCommand;
+
+            // The open of a recovery copy is a file command too: no other one starts while it loads. No menu has it.
+            m_OpenRecoveryCopyCommand = ReactiveCommand.CreateFromTask<RecoveryCopyModel, bool>(OpenRecoveryCopyInternalAsync, m_CanRunFileCommand);
+
+            m_FileCommandsSub = Observable
+                .CombineLatest(
+                    openProjectFileCommand.IsExecuting,
+                    openRecentProjectFileCommand.IsExecuting,
+                    m_OpenRecoveryCopyCommand.IsExecuting,
+                    saveProjectFileCommand.IsExecuting,
+                    saveAsProjectFileCommand.IsExecuting,
+                    importProjectScenarioFileCommand.IsExecuting,
+                    exportProjectScenarioFileCommand.IsExecuting,
+                    closeProjectCommand.IsExecuting)
+                .Select(running => !running.Any(isRunning => isRunning))
+                .DistinctUntilChanged()
+                .Subscribe(m_CanRunFileCommand.OnNext);
+
             ClearRecentProjectFilePathsCommand = ReactiveCommand.CreateFromTask(ClearRecentProjectFilePathsAsync);
             RefreshRecentProjectFileMenuItems();
 
@@ -192,7 +215,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
-            TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
+            ToggleKeepRecoveryCopyCommand = ReactiveCommand.Create(ToggleKeepRecoveryCopy);
+            TransitiveReductionCommand = ReactiveCommand.CreateFromTask(RunTransitiveReductionAsync);
             SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
             OpenDocumentationCommand = ReactiveCommand.CreateFromTask(OpenDocumentationAsync);
@@ -200,7 +224,7 @@ namespace Zametek.ViewModel.ProjectPlan
             OpenMainPageCommand = ReactiveCommand.CreateFromTask(OpenMainPageAsync);
             OpenReportIssueCommand = ReactiveCommand.CreateFromTask(OpenReportIssueAsync);
             OpenViewLicenseCommand = ReactiveCommand.CreateFromTask(OpenViewLicenseAsync);
-            OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
+            OpenAboutCommand = ReactiveCommand.CreateFromTask(OpenAboutAsync);
 
             // The busy chrome (the loading overlay) is immediate for long-form
             // operations (project loads, scenario processing, layout work) but
@@ -494,6 +518,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
+        private void ToggleKeepRecoveryCopy() => KeepRecoveryCopy = !KeepRecoveryCopy;
+
         private void SyncToday() => Today = new DateTimeOffset(DateTime.Today);
 
         private async Task ProjectScenarioImportAsync(string filename) =>
@@ -554,13 +580,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
         }
 
-        private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
+        // The project as a save writes it, built off the UI thread.
+        public async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
 
         private ProjectModel BuildProject()
         {
             lock (m_Lock)
             {
                 return m_ProjectScenarioManagerViewModel.BuildProject();
+            }
+        }
+
+        // The same project, built with no change to the project, for a recovery copy (ProjectRecovery). It gives the task
+        // of the build as it is: no part of it comes back to the thread of the caller, which can be the UI thread at the
+        // end of the application.
+        public Task<ProjectModel> BuildProjectCopyAsync() => Task.Run(BuildProjectCopy);
+
+        private ProjectModel BuildProjectCopy()
+        {
+            lock (m_Lock)
+            {
+                return m_ProjectScenarioManagerViewModel.BuildProjectCopy();
             }
         }
 
@@ -696,19 +736,37 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Logger.LogInformation("Saving project {ProjectFile}", filename);
                 long startTimestamp = Stopwatch.GetTimestamp();
 
+                // The save sets no busy state, and so the user can change the plan while it writes the file. A change
+                // that comes after the save took its copy of the project is not in the file. The two counters are read
+                // before the copy (ARCHITECTURE section 9): if one of them moved, the marks of a change stay, so that
+                // the title shows the change and the next save writes it.
+                int scenarioUpdateRevision = m_CoreViewModel.ProjectScenarioUpdateRevision;
+                int projectUpdateRevision = m_ProjectScenarioManagerViewModel.ProjectUpdateRevision;
+
                 ProjectModel projectModel = await BuildProjectAsync();
                 await FileStreamHelper.SaveAsync(filename, stream => m_ProjectFileSave.SaveProjectFileAsync(projectModel, stream));
-                // Clear the node markers BEFORE the scenario flag: the nodes'
-                // IsUpdated latch subscriptions observe the flag, so clearing
-                // the flag first would interleave their (async) delivery with
-                // the reset - the ordering half of the stale-asterisk race the
-                // latch-only stream in ManagedNodeViewModel closes.
-                CascadeDiagnostics.RecordMarker(@"Save: file written; ResetManagedNodes begin");
-                m_ProjectScenarioManagerViewModel.ResetManagedNodes();
-                CascadeDiagnostics.RecordMarker(@"Save: ResetManagedNodes end; clearing IsProjectScenarioUpdated");
-                m_CoreViewModel.IsProjectScenarioUpdated = false;
-                CascadeDiagnostics.RecordMarker(@"Save: clearing IsProjectUpdated");
-                m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
+
+                if (scenarioUpdateRevision == m_CoreViewModel.ProjectScenarioUpdateRevision
+                    && projectUpdateRevision == m_ProjectScenarioManagerViewModel.ProjectUpdateRevision)
+                {
+                    // Clear the node markers BEFORE the scenario flag: the nodes'
+                    // IsUpdated latch subscriptions observe the flag, so clearing
+                    // the flag first would interleave their (async) delivery with
+                    // the reset - the ordering half of the stale-asterisk race the
+                    // latch-only stream in ManagedNodeViewModel closes.
+                    CascadeDiagnostics.RecordMarker(@"Save: file written; ResetManagedNodes begin");
+                    m_ProjectScenarioManagerViewModel.ResetManagedNodes();
+                    CascadeDiagnostics.RecordMarker(@"Save: ResetManagedNodes end; clearing IsProjectScenarioUpdated");
+                    m_CoreViewModel.IsProjectScenarioUpdated = false;
+                    CascadeDiagnostics.RecordMarker(@"Save: clearing IsProjectUpdated");
+                    m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
+                }
+                else
+                {
+                    CascadeDiagnostics.RecordMarker(@"Save: file written; the plan changed during the save, and the marks stay");
+                    m_Logger.LogInformation("The project changed while {ProjectFile} was saved, and so it keeps its marks of a change", filename);
+                }
+
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 m_SettingService.RecordRecentProjectFilePath(filename);
                 RefreshRecentProjectFileMenuItems();
@@ -945,6 +1003,20 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
+        // The setting is the value. The settings service writes it to the settings file.
+        public bool KeepRecoveryCopy
+        {
+            get => m_SettingService.KeepRecoveryCopy;
+            set
+            {
+                if (m_SettingService.KeepRecoveryCopy != value)
+                {
+                    m_SettingService.KeepRecoveryCopy = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public string SelectedTheme
         {
             get => m_SelectedTheme.Value;
@@ -1009,6 +1081,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand CompileCommand { get; }
 
         public ICommand ToggleAutoCompileCommand { get; }
+
+        public ICommand ToggleKeepRecoveryCopyCommand { get; }
 
         public ICommand TransitiveReductionCommand { get; }
 
@@ -1079,7 +1153,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     catch (Exception ex)
                     {
                         // The persisted dock layout is corrupt or incompatible - reset to default.
-                        Debug.WriteLine($"[MainViewModel] Failed to deserialize dock layout, resetting: {ex.Message}");
+                        m_Logger.LogWarning(ex, "Could not read the saved dock layout, and so the default layout is in use");
                         m_Layout = null;
                     }
                 }
@@ -1094,7 +1168,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (defaultLayout is not null
                         && !DockLayoutHelper.CollectToolIds(defaultLayout).IsSubsetOf(DockLayoutHelper.CollectToolIds(m_Layout)))
                     {
-                        Debug.WriteLine(@"[MainViewModel] Persisted dock layout is missing tools, resetting");
+                        m_Logger.LogWarning("The saved dock layout does not have each tool of this version, and so the default layout is in use");
                         m_Layout = defaultLayout;
                     }
                 }
@@ -1200,6 +1274,59 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
                 ResetProject();
+            }
+        }
+
+        public async Task<bool> OpenRecoveryCopyAsync(RecoveryCopyModel copy)
+        {
+            ArgumentNullException.ThrowIfNull(copy);
+            return await m_OpenRecoveryCopyCommand.Execute(copy);
+        }
+
+        private async Task<bool> OpenRecoveryCopyInternalAsync(RecoveryCopyModel copy)
+        {
+            try
+            {
+                m_Logger.LogInformation("Opening the recovery copy {RecoveryFile} of {ProjectFile}", copy.Filename, copy.ProjectFile);
+                ProjectModel projectModel;
+
+                await using (FileStream stream = File.OpenRead(copy.Filename))
+                {
+                    projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(stream);
+                }
+
+                // Off the UI thread, as each load is.
+                await Task.Run(() => m_ProjectScenarioManagerViewModel.ProcessProject(projectModel));
+
+                // The project has the name and the folder of the file that it is a copy of, and its title is not bound to
+                // that file. Thus, a save asks where to write, and the file of the user changes only when the user says
+                // so. A copy of a project with a title and no file has that title: the service takes a title as the name
+                // of a file without its extension, and a title can hold a full stop, so the title gets the extension.
+                if (!string.IsNullOrWhiteSpace(copy.ProjectFile))
+                {
+                    m_SettingService.SetProjectFilePath(copy.ProjectFile, bindTitleToFilename: false);
+                }
+                else if (!string.IsNullOrWhiteSpace(copy.Title))
+                {
+                    m_SettingService.SetProjectTitle($@"{copy.Title}.{Resource.ProjectPlan.Filters.Filter_ProjectFileExtension}");
+                    m_SettingService.IsTitleBoundToFilename = false;
+                }
+
+                // The copy holds changes that no file of the user holds: the title shows it, and the close asks.
+                m_ProjectScenarioManagerViewModel.IsProjectUpdated = true;
+                m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
+                m_Logger.LogInformation("Opened the recovery copy {RecoveryFile}", copy.Filename);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                m_Logger.LogError(ex, "Failed to open the recovery copy {RecoveryFile}", copy.Filename);
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+                ResetProject();
+                return false;
             }
         }
 
@@ -1659,6 +1786,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsImporting?.Dispose();
                 m_IsExporting?.Dispose();
                 m_IsClosing?.Dispose();
+                m_FileCommandsSub?.Dispose();
+                m_CanRunFileCommand?.Dispose();
                 m_IsProjectUpdated?.Dispose();
                 m_IsProjectScenarioUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();
@@ -1678,6 +1807,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_DefaultHideCost?.Dispose();
                 m_DefaultHideBilling?.Dispose();
                 m_AutoCompile?.Dispose();
+                m_OpenRecoveryCopyCommand?.Dispose();
                 m_SelectedTheme?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_DataGridLayoutManager?.Dispose();

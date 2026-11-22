@@ -133,6 +133,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot build vertex graph.
+        /// </summary>
+        public static string Message_CannotBuildVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_CannotBuildVertexGraph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot get a project scenario file from a folder node:.
         /// </summary>
         public static string Message_CannotGetProjectScenarioFileFromFolderNode {
@@ -583,6 +592,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The workbook has more cells than the import reads ({0:N0})..
+        /// </summary>
+        public static string Message_ImportTooManyCells {
+            get {
+                return ResourceManager.GetString("Message_ImportTooManyCells", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The sheet has more than {0:N0} rows that hold a value. The import reads no sheet that has more..
+        /// </summary>
+        public static string Message_ImportTooManyRows {
+            get {
+                return ResourceManager.GetString("Message_ImportTooManyRows", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The workbook has no activity with the Id {0}..
         /// </summary>
         public static string Message_ImportUnknownActivity {
@@ -600,6 +627,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The workbook holds {0:N0} MB when it is unpacked. The import reads no workbook that holds more than {1:N0} MB..
+        /// </summary>
+        public static string Message_ImportWorkbookTooLarge {
+            get {
+                return ResourceManager.GetString("Message_ImportWorkbookTooLarge", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid Frequency value: &apos;{0}&apos;.
         /// </summary>
@@ -867,6 +903,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to is {0}, before ProjectStart ({1}), and so the schedule uses day 0 for activity {2}.
+        /// </summary>
+        public static string Message_PlanDateBeforeStart {
+            get {
+                return ResourceManager.GetString("Message_PlanDateBeforeStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to must be within {0:N0} days of ProjectStart.
         /// </summary>
         public static string Message_PlanDateTooFarFromStart {
@@ -921,6 +966,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to is {0}, before ProjectStart ({1}), and so the target of the simulation is day 0.
+        /// </summary>
+        public static string Message_PlanTargetDateBeforeStart {
+            get {
+                return ResourceManager.GetString("Message_PlanTargetDateBeforeStart", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to work streams.
         /// </summary>
         public static string Message_PlanWorkStreams {
@@ -953,6 +1007,132 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_PlanWarning {
             get {
                 return ResourceManager.GetString("Message_PlanWarning", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The application ended before it saved the changes to {0}, and it kept a copy from {1}. Open the copy to go on with it: no file changes until you save. "{2}" keeps the copy, and the application asks again at its next start..
+        /// </summary>
+        public static string Message_RecoveryCopyFound {
+            get {
+                return ResourceManager.GetString("Message_RecoveryCopyFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to a project with no name.
+        /// </summary>
+        public static string Message_RecoveryCopyOfNoName {
+            get {
+                return ResourceManager.GetString("Message_RecoveryCopyOfNoName", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is only for a server with no API key: a server with a key does not look at the Host of a request..
+        /// </summary>
+        public static string Message_ServeAllowHostNeedsNoApiKey {
+            get {
+                return ResourceManager.GetString("Message_ServeAllowHostNeedsNoApiKey", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to '{0}', from {1}, is not the name of a host: give a name such as plan.example.com, with no port..
+        /// </summary>
+        public static string Message_ServeAllowHostNotValid {
+            get {
+                return ResourceManager.GetString("Message_ServeAllowHostNotValid", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server has no API key, and so it takes only a request for localhost or a loopback address, or for a name that {0} gives: the Host of the request is a different name..
+        /// </summary>
+        public static string Message_ServeHostNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_ServeHostNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server has no API key, and so it takes no request from a web page: the request has an Origin header..
+        /// </summary>
+        public static string Message_ServeOriginNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_ServeOriginNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to zpp does not send the API key to {0} over plain http, because each computer on the way can read the key: use an https address, or {1} if the network between the two computers is private..
+        /// </summary>
+        public static string Message_ServerKeyOverPlainHttp {
+            get {
+                return ResourceManager.GetString("Message_ServerKeyOverPlainHttp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave no answer about its limits in {1} milliseconds, so zpp stopped. zpp does not ask for the limits when {2} gives the time limit..
+        /// </summary>
+        public static string Message_ServerLimitsTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServerLimitsTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} answered with a redirect to {1}, and zpp does not follow a redirect: give that address to {2}..
+        /// </summary>
+        public static string Message_ServerRedirected {
+            get {
+                return ResourceManager.GetString("Message_ServerRedirected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request ({2})..
+        /// </summary>
+        public static string Message_ServerTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServerTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request. zpp calculated this time limit from the limits of the server. To change it, use {2}..
+        /// </summary>
+        public static string Message_ServerTimedOutFromLimits {
+            get {
+                return ResourceManager.GetString("Message_ServerTimedOutFromLimits", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has the setting '{1}', which is not a limit of zpp serve. The limits are {2}..
+        /// </summary>
+        public static string Message_ServeSettingNotKnown {
+            get {
+                return ResourceManager.GetString("Message_ServeSettingNotKnown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The request did not arrive within the limit of {0} seconds that the server gives a job, and the server stopped it..
+        /// </summary>
+        public static string Message_ServeUploadTimedOut {
+            get {
+                return ResourceManager.GetString("Message_ServeUploadTimedOut", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: the statistics of the simulation are too early. They leave out {0:N0} of {1:N0} iterations, in which an activity cannot finish by its maximum latest finish time..
+        /// </summary>
+        public static string Message_SimulationStatisticsTooEarly {
+            get {
+                return ResourceManager.GetString("Message_SimulationStatisticsTooEarly", resourceCulture);
             }
         }
 
@@ -2126,6 +2306,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The application met an error, and it must close. {0} The error: {1}.
+        /// </summary>
+        public static string Message_UnhandledError {
+            get {
+                return ResourceManager.GetString("Message_UnhandledError", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to It kept a copy of the open project, and its next start offers that copy..
+        /// </summary>
+        public static string Message_UnhandledErrorCopyKept {
+            get {
+                return ResourceManager.GetString("Message_UnhandledErrorCopyKept", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The open project had no changes that were not saved..
+        /// </summary>
+        public static string Message_UnhandledErrorNoChanges {
+            get {
+                return ResourceManager.GetString("Message_UnhandledErrorNoChanges", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to It could not keep a copy of the open project..
+        /// </summary>
+        public static string Message_UnhandledErrorNoCopy {
+            get {
+                return ResourceManager.GetString("Message_UnhandledErrorNoCopy", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unit Billing must be equal to or greater than 0 .
         /// </summary>
         public static string Message_UnitBillingMustBeZeroOrGreater {
@@ -2251,6 +2467,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The application could not read its settings, and so it started with the default settings. The file that it could not read is now {0}..
+        /// </summary>
+        public static string Message_UserSettingsNotReadable {
+            get {
+                return ResourceManager.GetString("Message_UserSettingsNotReadable", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Vertex graph cannot contain Normal nodes without any End nodes.
         /// </summary>

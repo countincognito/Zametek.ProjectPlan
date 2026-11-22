@@ -96,6 +96,10 @@ Give the id to the person who operates the server, who can find the request in t
 
 **Authentication.** A server that only this computer can reach needs no API key. A server that other computers can reach must have a key. Then each path under `/v1` needs the key, in the header `Authorization: Bearer <key>`. A request without the key, or with an incorrect key, gets status `401` with `WWW-Authenticate: Bearer`. The health endpoints, [the description of the API](#fetch-the-description) and [the schema of a project file](#fetch-the-schema-of-a-project-file) are the only paths that need no key.
 
+**A server with no key.** A web page in a browser on the same computer can also reach such a server. Thus, a server with no key refuses a request with an `Origin` header, which a browser adds for a page. It also refuses a request whose `Host` is not `localhost`, a name that ends with `.localhost`, or a loopback address. Each refusal has status `403`, and `detail` says why.
+
+The option `--allow-host` of `zpp serve` adds a name, for example the name that a proxy sends (refer to [A server with no API key](COMMAND-LINE.md#a-server-with-no-api-key)). A request on a Unix domain socket has no such check.
+
 A key has a minimum of 32 characters. A random 256-bit key in base64 has 44 characters, and `openssl rand -base64 32` makes such a key. The server keeps only a hash of the key and compares it in constant time. It logs each request that it refuses, at warning level, with the method, the path and the trace id, but never the key.
 
 Other users of the computer can read a key on a command line. Thus, give `curl` the header from a file with `-H @key-header.txt`. The file has the one line `Authorization: Bearer <key>`.
@@ -125,7 +129,7 @@ A request beyond a limit gets a problem that names the limit.
 
 ### Request
 
-The request is a `multipart/form-data` body with these parts. Its size is not more than the upload limit of the server:
+The request is a `multipart/form-data` body with these parts. Its size is not more than the upload limit of the server. The server refuses a different content type with `415` before it reads the body:
 
 | Part | Type | Notes |
 | ---- | ---- | ----- |
@@ -170,11 +174,13 @@ The members of `outputs` are the outputs that the job can produce, in the order 
 | `simulation` | `--simulation-*` | The chart of the simulation (`<name>-simulation.<format>`), and its CSV files (`<name>-simulation-statistics.csv`, `-histogram.csv`, `-paths.csv`, `-activities.csv` and `-iterations.csv`). Refer to [The simulation](#the-simulation). | A chart |
 | `simulationWorkbook` | `--simulation-workbook-directory` | The result of the simulation as one Excel workbook (`<name>-simulation.xlsx`), with a sheet for the settings and for each of the CSV files, and, for a run, a sheet for the iterations. It is independent of `simulation`. | `{}` |
 
-`<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`.
+`<name>` is the name of the file of the project, without its extension. For `plan.zpp`, `<name>` is `plan`. If the request gives a path as the name of the file, `<name>` comes from the part after the last `/`, `\` or `:`. Thus, the name of an output never has a part of a path.
 
 A **chart** is `{ "format": "png", "width": 1600, "height": 900 }`. The `format` is `jpeg` (the default), `png`, `bmp`, `webp` or `svg`. The size is in pixels, from 1 to the chart limit of the server, and the request must give it.
 
 A **graph** is `{ "format": "svg" }`. The `format` is `jpeg` (the default), `png`, `pdf`, `svg`, `graphml` or `dot`. Each option, and each setting of an output, can be `null`. This is the same as if the request does not give it.
+
+A **CSV file** holds the names of the project as data, as RFC 4180 writes them. A name that starts with `=`, `+`, `-` or `@` goes into the file as it is. A spreadsheet program can read such a field as a formula. Thus, do not open a CSV file of a project that you do not trust in a spreadsheet program. A program that reads the file gets each name without a change.
 
 #### The simulation
 
@@ -274,7 +280,7 @@ The answer has `simulation` when the request ran the simulation, or the project 
 - `plannedFinishDays` is the finish of the project as it stands, with the expected duration of each activity. It is the same as `metrics.projectFinishDays` for a project that has no resources to schedule.
 - `meanDays` is the mean of the finish. `standardDeviationDays` is the standard deviation of the population, which divides by the number of valid iterations. `earliestFinishDays` and `latestFinishDays` are the smallest and the largest finish.
 - `percentiles` lists the 5th, 10th, 25th, 50th, 75th, 80th, 90th, 95th and 99th percentiles. A percentile is the smallest finish that at least that share of the valid iterations reach.
-- `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the request gave a target. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
+- `targetFinishDays`, `targetFinishDate` and `targetProbability` are in the answer when the project gives a target. The project gives it as a number of working days or as a date (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)). `targetFinishDate` is the date of the finish time `targetFinishDays`, as `zpp` shows a finish. Thus, without classic dates, it is the first working day after a target date. `targetProbability` is the share of the valid iterations that finish by the target, from 0 to 1.
 
 The panel of the application, `zpp` and this API make these numbers in the same way. Refer to the [simulation plan](SIMULATION-PLAN.md) for how the simulation works.
 
@@ -387,7 +393,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 ```json
 {
-  "version": "0.11.0-beta.1",
+  "version": "0.11.0-beta.2",
   "culture": "en-GB",
   "timeZone": "Europe/London",
   "limits": {
@@ -413,7 +419,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 - A project can have a maximum of `maxSimulationIterations` iterations for the server to run its simulation. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
 
-- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
+- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). This time starts when the server starts to read the body of the request. Thus, it includes the upload, and a request that does not arrive in this time gets the same problem. A simulation stops between two groups of iterations. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
@@ -500,19 +506,20 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `wrongType` | A value of a different type than the member takes. |
 | `notAllowed` | A value that the member does not take, or a member that is not allowed here. |
 | `invalidFormat` | A value that is not in the format of the member, or JSON that is not valid JSON. |
-| `outOfRange` | A number or a duration outside the limits. |
+| `outOfRange` | A number, a duration or a date outside the limits. |
 | `notAllowedWithImport` | `scenario` with a workbook to import. Only a project has scenarios. |
 | `noResult` | The outputs of the simulation, asked for from a project that holds no result, in a request that does not run the simulation. |
 | `tooLarge` | A part larger than the limit. |
 | `unsupportedFormat` | A file in a format that the server does not read. |
 | `unreadable` | A file that the server cannot read. |
+| `workbookTooLarge`, `tooManyRows`, `tooManyCells` | The size of a workbook to import: its parts hold more than 100 MB when they are unpacked, a sheet has more than 10000 rows that hold a value, or the workbook has more than 10 million cells to read. |
 | `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn` | The shape of a workbook to import: it has none of the sheets that the import reads, a sheet has no row of titles, a sheet that has rows has no column `Id`, or two columns have a title that the import reads. |
 | `missingValue`, `duplicateId`, `unknownActivity` | The rows of a workbook to import: an `Id` is blank, an `Id` is the `Id` of an earlier row of the sheet, or a row of a tracker sheet is for an activity that the workbook does not have. |
 | `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. |
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
 
-The check of a project before the load also uses `required`, `outOfRange`, `notAllowed`, `duplicateId` and `hasNoData`, and `notFound` for a warning. Each error is then at the place of its problem in the project (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)).
+The check of a project before the load also uses `required`, `outOfRange`, `notAllowed`, `duplicateId` and `hasNoData`, and `notFound` and `outOfRange` for a warning. Each error is then at the place of its problem in the project (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)).
 
 ### Codes of the compiler
 
@@ -635,6 +642,8 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 `422`. The project compiled with errors. `errors` has each error of the compiler, with its code, at `#/project` (or `#/import`). The example [above](#problems) is such a problem. With `include=console`, the console has the report of the compiler as `zpp` prints it, and the exit code is 3.
 
+`warnings` has the warnings of the check of the project, as in the answer of a compile, when the project has some. For example, a maximum finish date before the start of the project explains a `C0010` of its activity.
+
 #### compilation-timed-out
 
 `422`. The compilation did not end within its `compileTimeout`. This does not show if the project is valid. Increase `compileTimeout`, up to the limit of the server. The exit code is 4.
@@ -687,6 +696,8 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 `500`. The project compiled, but the job did not produce an output that the request asked for. `errors` names each output that the job did not produce, at `#/options/outputs/<kind>`, with `failed`. `outputs` has the other outputs, which the job produced, and `metrics` has the metrics of the project. `simulation` has the statistics of the simulation, when the job ran one and it gave a result. `trackedScenarios` has the tracked scenarios, when the request has `compileTracked`. `scenarioChart` has the data of the scenario chart, as the answer has it. A simulation that cannot run, for a project that has no activities, is a failure of the job in the same way. The exit code is 1.
 
+`warnings` has the warnings of the check of the project, as in the answer of a compile, when the project has some.
+
 ```json
 {
   "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#output-failed",
@@ -736,6 +747,8 @@ A workbook to import can have problems in its cells. The server reads the whole 
 
 `503`, with `Retry-After: 5`. The job used more time than the server allows for a job (`jobTimeout` in `/v1/info`), and the server stopped it. The status is `503` and not `504`, because the own limit of the server stopped the job. The [RESTful API Guide](RESTFUL-API-GUIDE.md) gives this rule ([RL-5](RESTFUL-API-GUIDE.md#11-rate-limiting-and-resource-protection)). Do not send the request again without a change, because the job reaches the time limit again. Make the job smaller: use fewer outputs, smaller charts, or fewer iterations in the simulation.
 
+The time of a job includes the upload of the request. When the request does not arrive in that time, the `detail` says so.
+
 ```json
 {
   "type": "https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#job-timeout",
@@ -753,6 +766,7 @@ These problems have only their status, with the `type` that RFC 9110 gives to it
 | Status | When |
 | ------ | ---- |
 | `401` | The request needs the API key and does not have it, or it has an incorrect key. The response has `WWW-Authenticate: Bearer`. |
+| `403` | The server has no API key, and the request has an `Origin` header, or its `Host` is not this computer. |
 | `404` | There is nothing at the path. |
 | `405` | The path does not take the method. `Allow` shows the methods that it takes. |
 | `406` | `Accept` offers nothing that the operation can answer with. `detail` says what it can answer with. |
@@ -772,8 +786,9 @@ The web server itself refuses a request that it cannot read at all. Examples: a 
 | `422` `compilation-failed` | Plays back the console: the report of the compiler. | 3 |
 | `422` `compilation-timed-out` | Plays back the console. | 4 |
 | `500` `output-failed` | Writes the outputs that came, and plays back the console. | 1 |
+| A redirect (a status from `300` to `399`) | Does not follow it, and sends nothing to the new address. Shows the address from `Location`. | 5 |
 | `503` `busy` | Waits for the time in `Retry-After`, and longer each time. The wait doubles, up to half a minute, with a small random addition. Then it tries again, for up to two minutes. | Then 5 |
-| `503` `job-timeout`, the statuses `400`, `401`, `406`, `413` and `415`, `422` `validation-failed`, no answer, and an answer that `zpp` cannot read | Shows the reason from `detail` and `errors`, with the id of the request. | 5 |
+| `503` `job-timeout`, the statuses `400`, `401`, `403`, `406`, `413` and `415`, `422` `validation-failed`, no answer, and an answer that `zpp` cannot read | Shows the reason from `detail` and `errors`, with the id of the request. | 5 |
 
 An answer whose console has an exit code that does not match its kind is an answer that `zpp` cannot read. An example is a `compilation-failed` with exit code 0. Then `zpp` exits with code 5, and it prints and writes nothing.
 
@@ -867,6 +882,8 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - `?include=console` adds the text and the exit code of a local run to an answer or a problem.
 - Optional features: zip answers, `Accept` negotiation, compression and `ETag`.
 - The import of a workbook is all or nothing. A workbook with problems in its cells gives a `project-not-readable` problem with one error for each problem (up to 100), at `#/import`, and the codes `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn`, `missingValue`, `duplicateId`, `unknownActivity`, `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice` and `notAColor`.
+- The time limit of a job includes the upload of the request. A client that sends its body slowly cannot hold a place of a job for longer than `jobTimeout`. A request that is not `multipart/form-data` gets `415` before the server reads its body.
+- The import of a workbook has three limits. A workbook above one of them gives a `project-not-readable` problem with one error, at `#/import`, and the code `workbookTooLarge`, `tooManyRows` or `tooManyCells`. The time limit of a job stops the read of a workbook between two rows.
 - The output `simulationWorkbook`: the result of the simulation as one Excel workbook (`<name>-simulation.xlsx`). It is a new member of `outputs`, and a new kind of output in the answer.
 - The operation `GET /v1/jobs/{requestId}` tells how far a job that runs has got (the iterations of its simulation). The job is the request, and its id is the trace id that the request gave in its `traceparent`. The server keeps the status only while the job runs.
 - The simulation of the schedule. Its settings are the project's. A request has the option `runSimulation` and the output `simulation`. The answer has the member `simulation`, and it lists the output as six outputs (`simulationChart`, and the CSV files `simulationStatistics`, `simulationHistogram`, `simulationPaths`, `simulationActivities` and `simulationIterations`). There is a problem, `simulation-not-possible`, with the code `noResult`, and a limit, `maxSimulationIterations`.
@@ -875,8 +892,10 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The metrics `peakHeadcount`, `averageHeadcount` and `peakToAverageHeadcount`.
 - The output `data`: the data of the compiled scenario as three CSV files, which the answer lists as `schedule`, `resourceSeries` and `earnedValueSeries`.
 - The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
-- The member `warnings` of the answer: the ids of the project that match nothing.
+- The member `warnings` of the answer and of the problems `compilation-failed` and `output-failed`: the warnings of the check of the project.
+- The status `403` of a server with no API key: the request has an `Origin` header, or its `Host` is not this computer.
 - The member `errors` of each item of `trackedScenarios`: why the scenario did not compile.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.
 - The dates of a project do not depend on the time zone of the server. Each date is the day that it shows, in its own offset.
+- A project can give the target of its simulation as a date: `TargetFinishDateTime` in its `SimulationSettings`. The project is done by the end of that date. The answer does not change.

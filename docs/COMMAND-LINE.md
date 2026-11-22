@@ -84,6 +84,12 @@ Activities!C3 (Duration, Build the wall): "later" is not a whole number.
 
 A blank cell is not a problem. It gives the default of its column. A cell is a problem when it holds a value that is not of the kind of its column. Examples are text in a column of numbers, a number in a column of true and false values, and an error of Excel such as `#N/A`. A row is also a problem when its `Id` is blank or is the `Id` of an earlier row, and when a row of a tracker sheet is for an activity that the workbook does not have. A column or a sheet that `zpp` does not know is not a problem: `zpp` does not read it. Thus, you can add columns and sheets to a workbook that `zpp` exported, and import it again. `zpp` keeps the first 10000 problems and counts the others. The last line says how many there are.
 
+The import reads a workbook up to three limits. They stop a small file that says that it holds a very large sheet. A workbook above a limit is one problem, and the import stops at once:
+
+- The parts of the file hold more than 100 MB when they are unpacked. The import does not unpack such a file.
+- A sheet has more than 10000 rows that hold a value.
+- The workbook has more than 10 million cells to read. The import reads the titles, and each row up to its last value.
+
 A formula is its result, and a date cell is its date. A number that you type as text is read as the culture of the computer writes numbers, and without a thousands separator: in a culture where a comma is the decimal mark, `1,5` is 1.5 and `1.5` is a problem.
 
 For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. To show the version of `zpp`, enter `zpp --version`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
@@ -151,7 +157,7 @@ The absolute option changes only what the chart shows. The coefficients are thos
 
 An activity can have three estimates of its duration: an optimistic, a most likely and a pessimistic duration. A Monte Carlo simulation of the schedule draws a duration for each activity from its estimates in each iteration. It schedules the resources again, and it finds the finish and its critical path. An activity that has no estimates keeps its duration.
 
-The settings of the simulation are in the project. They are the iterations, the distribution, its shape value, the seed, whether to draw a new seed each time, and the target finish. You set them in the dock "Simulation" of the desktop application. The application saves them with the project, together with the result of the last run. `zpp` does not have options for them. It uses what the input file holds. A file that was saved before the simulation has the settings of a new scenario: 5000 iterations, the distribution `BetaPert`, and the seed 1.
+The settings of the simulation are in the project. They are the iterations, the distribution, its shape value, the seed, whether to draw a new seed each time, and the target finish. You set them in the dock "Simulation" of the desktop application. The application saves them with the project, together with the result of the last run. `zpp` does not have options for them. It uses what the input file holds. The file can give the target finish as a number of working days or as a date (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)). A file that was saved before the simulation has the settings of a new scenario: 5000 iterations, the distribution `BetaPert`, and the seed 1.
 
 The option `--run-simulation` runs the simulation after the plan compiles. `zpp` prints the statistics of the finish after the metrics, in a table of their own:
 
@@ -173,6 +179,7 @@ The statistics are those of the dock "Simulation Metrics" of the desktop applica
 zpp -i plan.zpp --run-simulation -o simulated.zpp --simulation-directory out --simulation-size 1600:900 --simulation-format png
 ```
 
+- An iteration in which an activity cannot finish by its maximum latest finish time fails, and the statistics leave it out. Such an iteration is a late one, and thus the statistics are then too early. The table of the statistics has the row `Warning`, and `zpp` writes a warning to the standard error stream.
 - A project that holds the result of an earlier run gives its statistics without `--run-simulation`. `zpp` prints them after the metrics, and `--simulation-directory` draws that result and writes its CSV files. A project does not hold the iterations of a run, and thus a job that does not run the simulation writes no file `-iterations.csv`. `--simulation-directory` is a failure for a project that holds no result, without `--run-simulation`. `zpp` writes the reason to the standard error stream and exits with code 1.
 - `-o` saves the project with the settings and the result of the run. `-x` writes them to the Excel workbook, in the sheets "Simulation Settings", "Simulation Statistics", "Simulation Percentiles", "Simulation Histogram", "Simulation Paths" and "Simulation Criticalities". The simulation runs before the project and the workbook are written. A plan with the default settings and no result has none of these sheets.
 - The result does not depend on the number of processors. The iterations run on all of them. A server shares the processors between the simulations that run at one time (refer to [Limits](#limits)).
@@ -194,6 +201,8 @@ If `zpp` cannot write to this folder, it stops before it does its work. The mess
 DOTNET_BUNDLE_EXTRACT_BASE_DIR=/var/cache/zpp zpp serve
 ```
 
+On Windows, write the folder with backslashes, for example `C:\zpp-cache`. With forward slashes, `zpp.exe` unpacks its files, and then it stops with the message "Failed to load System.Private.CoreLib.dll".
+
 ## Exit codes
 
 The exit codes are a contract for scripts and CI gates. The test suite `Zametek.ProjectPlan.CommandLine.Tests` makes sure that they stay the same:
@@ -210,7 +219,7 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 
 A tracked scenario that does not compile does not change the exit code. `zpp --compile-tracked` writes its errors on the standard error stream, and its metrics are empty.
 
-A plan that is out of the limits of the compiler also gives exit code 3 (`P0080`). The limits are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. A calendar with no working day in 366 days in a row also gives `P0080` (refer to [The calendar](PROJECT-FILE.md#the-calendar)).
+A plan that is out of the limits of the compiler also gives exit code 3 (`P0080`). The limits are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. `zpp` counts the activities, the active resources and the work streams before it loads the plan, for a project file and for an import. A calendar with no working day in 366 days in a row also gives `P0080` (refer to [The calendar](PROJECT-FILE.md#the-calendar)).
 
 A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
 
@@ -222,7 +231,7 @@ Press Ctrl+C to stop a run of `zpp`. A `SIGTERM` has the same effect. `zpp` then
 2. The run stops before the next step. A simulation is the exception, because it stops between two chunks of its iterations. This takes a fraction of a second, also for a simulation of a million iterations.
 3. `zpp` writes `The run was cancelled.` to the standard error stream. It does not print the metrics, and it exits with code 130.
 
-A file that `zpp` wrote before the stop stays where it is. Each of these files is complete, because `zpp` writes one output at a time and does not stop in the middle of one. The project (`-o`) and the workbook (`-x`) come after the simulation, and thus a run that you stop in the simulation does not write them.
+A file that `zpp` wrote before the stop stays where it is. Each of these files is complete, because `zpp` writes one output at a time and does not stop in the middle of one. `zpp` writes each file to a temporary file first (`<name>.tmp`, in the same folder). That file then takes the place of the old one. Thus, a write that fails leaves the old file as it was. The project (`-o`) and the workbook (`-x`) come after the simulation, and thus a run that you stop in the simulation does not write them.
 
 Press Ctrl+C a second time to stop `zpp` at once. The system then ends the process, and the exit code is the one that your system gives to a program that Ctrl+C ended. A file that `zpp` was writing at that time can be incomplete.
 
@@ -262,10 +271,18 @@ To use a server by default, set `ZPP_SERVER` and do not use the option `--server
 
 - The value of `--server` is the `http` or `https` address of the server. The address can have a path, if a reverse proxy puts the server under a path. The value can also be `unix:` and the path of the socket of the server: `--server unix:/tmp/zpp.sock`, or on Windows `--server unix:C:\tmp\zpp.sock` (refer to [On a Unix domain socket](#on-a-unix-domain-socket)). For HTTPS, `zpp` trusts the certificates that this computer trusts.
 - If a server needs an API key, `zpp` gets the key from `ZPP_API_KEY` or from the file that `--api-key-file` gives. `zpp` never gets the key directly from the command line.
+- `zpp` does not send the key over plain `http` to a server on a different computer. Each computer on the way can read such a key. Thus, the run ends with a usage error (exit code 2). Use an `https` address. If the network between the two computers is private, for example between two containers, the option `--allow-key-over-http` lets `zpp` send the key.
+- `zpp` connects directly to a server on this computer or on a socket. It does not use a proxy that the environment gives (`http_proxy`), because the key and the plan must stay on this computer. For a server on a different computer, `zpp` uses that proxy.
+- `zpp` does not follow a redirect. If the server, or a proxy in front of it, answers with a redirect, the run ends with exit code 5. The message gives the new address. Give that address to `--server`.
+- Each request has a time limit. The limit includes the upload of the plan and the download of the answer. If the server gives no complete answer in that time, the run ends with exit code 5. Thus, a server that accepts a connection and then stays silent does not hold `zpp`.
+- The option `--server-timeout` gives the time limit in milliseconds. The value `0` means no time limit. Give the option more time than a job can wait and run on the server (refer to [Limits](#limits)).
+- Without the option, `zpp` calculates the time limit from the limits of the server. Before the job, it asks the server for them one time (`GET /v1/info`). The time of one job is `jobTimeout + maxCompileTimeout`, because a job that reaches its time limit ends its compile first. `zpp` multiplies that time by `maxQueue ÷ maxJobs + 1`, with the division rounded up: the jobs in front in the queue, and the job itself. Then it adds a margin of 10%, and not less than 30 seconds.
+- For example, a server has 4 jobs at once, 8 jobs in the queue, 120 seconds for a job and 60 seconds for a compile. Then the time limit is 180 seconds × 3 + 54 seconds = 594 seconds. With `-v`, the log gives the time limit of the run.
+- If the server gives no answer about its limits in 30 seconds, the run ends with exit code 5. If the answer does not give the limits, the job runs with no time limit, and `zpp` writes a warning to the log. This occurs, for example, when a proxy passes only the paths of the jobs. To prevent the request and the warning, use `--server-timeout`.
 - If a server is busy, `zpp` tries again when the server says to. The delay increases each time, with a small random change, and `zpp` tries again for up to two minutes. If a server stops a job at its time limit, `zpp` does not try again, because the job reaches the time limit again.
 - The checks of `zpp` itself come first. A usage error, a missing plan or a missing directory fails in the same way as without a server. An export to a file that `zpp` does not write also fails in the same way. In these cases, `zpp` sends nothing to the server.
 - If a server does not run the job, the run ends with exit code 5. `zpp` writes the reason to the standard error stream, with the id of the request. The log of the server uses the same id.
-- A server does not run the job in these cases. `zpp` cannot connect to the server. The server needs its key. The server refuses the request, because the request is invalid or beyond its limits. The server stays busy. The server stops the job at its time limit.
+- A server does not run the job in these cases. `zpp` cannot connect to the server. The server needs its key. The server refuses the request, because the request is invalid or beyond its limits. The server stays busy. The server stops the job at its time limit. The server gives no answer in the time limit of a request.
 - If a server runs the job, and the job fails, the run ends in the same way as the same run on the local computer. `zpp` writes the same text to the standard error stream, for each status of the answer. For example, the plan does not compile, `zpp` cannot read a file, or `zpp` cannot select a scenario.
 - The compile timeout goes with the run. It is 5000 milliseconds, unless `--compile-timeout` gives another value. It must be within the limit of the server (refer to [Limits](#limits)). The server refuses `0`, which disables the watchdog on the local computer, and it refuses a timeout above the limit.
 - A simulation of a large plan can take minutes. With `-v`, `zpp` asks the server how far the job has got, after two seconds and then as often as the server says (every two seconds), and it writes `Simulation on <server>: <done> of <total> iterations` to the standard error stream. This is the same information as the progress that a local run writes to its log. Without `-v`, `zpp` does not ask. Ctrl+C stops the run (refer to [Stop a run](#stop-a-run)).
@@ -336,7 +353,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | Largest request, in MB | 50 | `--max-upload` | `MaxUploadMegabytes` |
 | Largest chart, in pixels | 5000 x 5000 | `--max-chart-size <width>:<height>` | `MaxChartWidth`, `MaxChartHeight` |
 | Iterations of the simulation of a project that the server runs | 100000 (the maximum is 1000000) | `--max-simulation-iterations` | `MaxSimulationIterations` |
-| Time of a job, in seconds | 120 | `--job-timeout` | `JobTimeoutSeconds` |
+| Time of a job, in seconds | 120 (the maximum is 4294967, about 49 days) | `--job-timeout` | `JobTimeoutSeconds` |
 | Compile timeout of a job, in milliseconds | 60000 | `--max-compile-timeout` | `MaxCompileTimeoutMilliseconds` |
 
 Each limit has a default. You can change a limit in three ways:
@@ -354,9 +371,22 @@ Each way overrides the one before it. The server reads the file one time, when i
 }
 ```
 
-`GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The server checks the time of a job between the steps of the job. Thus, a step that is in progress, such as a compile or the drawing of a chart, ends first. A simulation is the exception: it stops between two groups of its iterations, and the job stops with it. Each iteration schedules the resources again, and it costs about as much as a compilation. Thus, the time of a job (`--job-timeout`) is the limit for a simulation of a large plan, and the limit for the iterations is the limit for a simulation of a small plan. A job cannot disable its compile timeout, but `zpp` can.
+The file holds limits only. If it has a name that is not the setting of a limit, the server does not start. The message gives the name and the settings. Thus, a setting with a wrong letter cannot leave the default in place without a message. The letter case of a name is not important.
+
+`GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The time of a job starts when the server starts to read the request, and so it includes the upload.
+
+The server checks the time of a job between the steps of the job. Thus, a step that is in progress, such as a compile or the drawing of a chart, ends first. A simulation is the exception: it stops between two groups of its iterations, and the job stops with it. Each iteration schedules the resources again, and it costs about as much as a compilation. Thus, the time of a job (`--job-timeout`) is the limit for a simulation of a large plan, and the limit for the iterations is the limit for a simulation of a small plan. A job cannot disable its compile timeout, but `zpp` can.
 
 The simulations of the jobs of a server share the processors. A simulation that begins takes the processors divided by the number of simulations that run at that time, itself among them. The first takes all the processors, the second half of them, the third a third, and so on, and each takes at least one. A simulation keeps its share to its end. This does not change the result of a simulation, which is the same for any number of threads. It limits the threads that the jobs ask for. A run of `zpp` is one job, and it has all the processors. There is no setting for this.
+
+### A server with no API key
+
+A server that only this computer can reach needs no API key. But a web page that the user opens in a browser is also on this computer. The browser can send a request to `http://localhost:9770` for the page. Thus, a server with no key refuses two kinds of request, with status `403`:
+
+- A request with an `Origin` header. A browser adds this header to each POST that a page sends, and the page cannot remove it. `zpp` and scripts do not send it.
+- A request whose `Host` is not `localhost`, a name that ends with `.localhost`, or a loopback address. A page can reach the server through a name of its own that points at this computer.
+
+A proxy on this computer in front of the server sends its own name as the `Host`. Give this name to the server: `zpp serve --allow-host plan.example.com`. For more than one name, give the option more than once. An IPv6 address can have brackets or not: `--allow-host [2001:db8::1]` and `--allow-host 2001:db8::1` are the same. The server refuses `--allow-host` together with an API key, because a server with a key does not do these checks. A request on a Unix domain socket also has no such check, because a browser cannot connect to a socket.
 
 ### Other computers
 

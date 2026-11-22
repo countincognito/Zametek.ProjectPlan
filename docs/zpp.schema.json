@@ -1145,6 +1145,13 @@
                       "integer",
                       "null"
                     ]
+                  },
+                  "TargetFinishDateTime": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
                   }
                 },
                 "additionalProperties": false

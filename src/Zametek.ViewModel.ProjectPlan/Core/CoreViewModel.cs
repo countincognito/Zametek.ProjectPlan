@@ -392,7 +392,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 GraphCompilation,
                 HasCompilationErrors,
                 ResourceSettings,
-                WorkStreamSettings,
                 [.. GraphSettings.ActivitySeverities],
                 ProjectStart,
                 m_PlanGraph.StartTime,
@@ -605,6 +604,23 @@ namespace Zametek.ViewModel.ProjectPlan
             AutoCompile = false;
         }
 
+        /// <summary>
+        /// Applies the state that follows an exception in the automatic work of a subscription: an automatic compilation,
+        /// the build of the outputs after a compilation, or the build of the risk metrics. The exception stays in the
+        /// handler, because an exception that leaves it ends the subscription for the rest of the session, and then no
+        /// later edit compiles. The outputs on display do not match the plan, so they are flagged stale, which the window
+        /// shows. The log has the exception.
+        /// </summary>
+        /// <remarks>
+        /// Automatic compilation stays on: the next edit can take the cause away, and it then compiles again. A
+        /// compilation that runs out of time is a different case (see <see cref="AbandonCompilation"/>).
+        /// </remarks>
+        private void AbandonAutomaticWork(Exception ex, string work)
+        {
+            m_Logger.LogError(ex, "The {AutomaticWork} failed", work);
+            HasStaleOutputs = true;
+        }
+
         #endregion
 
         #region ICoreViewModel Members
@@ -623,26 +639,45 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool IsProjectScenarioUpdated
         {
             get => m_IsProjectScenarioUpdated;
-            set
+            set => MarkProjectScenario(value, isChange: true);
+        }
+
+        // Marks the scenario as updated, or clears the mark. A change to the plan or to its settings also moves
+        // ProjectScenarioUpdateRevision, which tells a save that a change came while it wrote the file. The publication of a
+        // compilation marks the scenario too, because the file holds the compiled values, but it is not such a change: the
+        // file has the plan that was compiled, and a load compiles it again. If the publication moved the counter, a save
+        // that overlaps the automatic compilation of an edit left the title with the mark of a change.
+        private void MarkProjectScenario(bool value, bool isChange)
+        {
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                HasStaleOutputs = value;
+                if (m_TrackIsProjectScenarioUpdated)
                 {
-                    HasStaleOutputs = value;
-                    if (m_TrackIsProjectScenarioUpdated)
+                    if (value && !m_IsProjectScenarioUpdated)
                     {
-                        if (value && !m_IsProjectScenarioUpdated)
-                        {
-                            CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to true");
-                        }
-                        else if (!value && m_IsProjectScenarioUpdated)
-                        {
-                            CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to false");
-                        }
-                        this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value);
+                        CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to true");
+                    }
+                    else if (!value && m_IsProjectScenarioUpdated)
+                    {
+                        CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to false");
+                    }
+                    this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value, nameof(IsProjectScenarioUpdated));
+
+                    if (value && isChange)
+                    {
+                        // Each mark counts, also when the scenario has the mark already: the flag cannot say that it
+                        // was set again.
+                        Interlocked.Increment(ref m_ProjectScenarioUpdateRevision);
+                        this.RaisePropertyChanged(nameof(ProjectScenarioUpdateRevision));
                     }
                 }
             }
         }
+
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_ProjectScenarioUpdateRevision;
+        public int ProjectScenarioUpdateRevision => Volatile.Read(ref m_ProjectScenarioUpdateRevision);
 
         private bool m_HasStaleOutputs;
         public bool HasStaleOutputs
@@ -1136,6 +1171,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The reset of a scenario clears the summary and counts the revision under the same lock. So the comparison and the
+        // write here are one step for it.
+        public bool TrySetSimulationSummary(SimulationSummaryModel? simulationSummary, int projectScenarioRevision)
+        {
+            lock (m_Lock)
+            {
+                if (Volatile.Read(ref m_ProjectScenarioRevision) != projectScenarioRevision)
+                {
+                    return false;
+                }
+                SimulationSummary = simulationSummary;
+                return true;
+            }
+        }
+
         // A revision counter (ARCHITECTURE section 9).
         private int m_ProjectScenarioRevision;
         public int ProjectScenarioRevision => Volatile.Read(ref m_ProjectScenarioRevision);
@@ -1402,15 +1452,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The importer reads the file and returns a model, and it uses nothing of the core. A large file can take seconds.
+        // So this shows that the core is busy, and it does not hold the lock of the core: a setter on the UI thread, which
+        // takes that lock, does not wait for the file.
         public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format)
         {
+            BeginBusy();
             try
             {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-                    return m_ProjectScenarioFileImport.ImportProjectScenarioFile(stream, format);
-                }
+                return m_ProjectScenarioFileImport.ImportProjectScenarioFile(stream, format);
             }
             finally
             {
@@ -1426,19 +1476,18 @@ namespace Zametek.ViewModel.ProjectPlan
             Stream stream,
             ProjectScenarioExportFormat format)
         {
+            // The exporter writes the models that it gets, and it uses nothing of the core. So, as for an import, this
+            // does not hold the lock of the core.
+            BeginBusy();
             try
             {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-                    m_ProjectScenarioFileExport.ExportProjectScenarioFile(
-                        projectScenarioModel,
-                        resourceSeriesSetModel,
-                        trackingSeriesSetModel,
-                        showDates,
-                        stream,
-                        format);
-                }
+                m_ProjectScenarioFileExport.ExportProjectScenarioFile(
+                    projectScenarioModel,
+                    resourceSeriesSetModel,
+                    trackingSeriesSetModel,
+                    showDates,
+                    stream,
+                    format);
             }
             finally
             {
@@ -1722,47 +1771,71 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     BeginBusy();
 
-                    // Default display mode is required for all file opening and closing.
-                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
-                    m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
-
                     UpdateActivityDisplayOrders();
 
-                    List<DependentActivityModel> dependentActivities =
-                        [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
-
-                    var plan = new ProjectScenarioModel
-                    {
-                        ProjectStart = RequestedProjectStart,
-                        EffectiveProjectStart = ProjectStart,
-                        Today = Today,
-                        DependentActivities = dependentActivities,
-                        GraphSettings = GraphSettings.CloneObject(),
-                        ResourceSettings = ResourceSettings.CloneObject(),
-                        WorkStreamSettings = WorkStreamSettings.CloneObject(),
-                        HolidaySettings = HolidaySettings.CloneObject(),
-                        Metrics = Metrics.CloneObject(),
-                        ResourceMetrics = [.. ResourceMetrics],
-                        SimulationSettings = SimulationSettings,
-                        SimulationSummary = SimulationSummary,
-                        DisplaySettings = DisplaySettingsViewModel.GetValues(),
-                        ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
-                        VertexGraphLayout = VertexGraphLayout.CloneObject(),
-                    };
-
-                    // Reorder activity dependencies so they are more readable.
-                    ProjectScenarioHelper.SortDependencies(plan.DependentActivities);
-
-                    // Put display mode back to the way it was.
-                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
-
-                    return plan;
+                    return BuildProjectScenario(displayOrders: null);
                 }
             }
             finally
             {
                 EndBusy();
             }
+        }
+
+        public ProjectScenarioModel BuildProjectScenarioCopy()
+        {
+            lock (m_Lock)
+            {
+                // The places that UpdateActivityDisplayOrders gives, and the activities do not get them. The build sets
+                // no busy state: nothing waits for this build, and the user works while it runs.
+                return BuildProjectScenario(m_PlanGraph.ReadDisplayOrders());
+            }
+        }
+
+        /// <summary>
+        /// The scenario from the plan as it is. Call it with <see cref="m_Lock"/> held. With places, each activity that has
+        /// one gets it in the scenario, and not in the plan.
+        /// </summary>
+        private ProjectScenarioModel BuildProjectScenario(Dictionary<int, int>? displayOrders)
+        {
+            // A file holds the dates of the default display mode. The mapper reads each date from its activity
+            // as the plan keeps it (StoredMaximumLatestFinishDateTime). So the build writes nothing to the date
+            // calculator, which the activities, the grid and the charts share.
+            List<DependentActivityModel> dependentActivities =
+                [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
+
+            if (displayOrders is not null)
+            {
+                dependentActivities =
+                    [.. dependentActivities.Select(x => displayOrders.TryGetValue(x.Activity.Id, out int displayOrder)
+                        ? x with { Activity = x.Activity with { DisplayOrder = displayOrder } }
+                        : x)];
+            }
+
+            var plan = new ProjectScenarioModel
+            {
+                ProjectStart = RequestedProjectStart,
+                EffectiveProjectStart = ProjectStart,
+                Today = Today,
+                DependentActivities = dependentActivities,
+                GraphSettings = GraphSettings.CloneObject(),
+                ResourceSettings = ResourceSettings.CloneObject(),
+                WorkStreamSettings = WorkStreamSettings.CloneObject(),
+                HolidaySettings = HolidaySettings.CloneObject(),
+                Metrics = Metrics.CloneObject(),
+                ResourceMetrics = [.. ResourceMetrics],
+                // With the number that a target date gives in the calendar of now.
+                SimulationSettings = SimulationTargetHelper.Normalize(SimulationSettings, m_DateTimeCalculator, ProjectStart),
+                SimulationSummary = SimulationSummary,
+                DisplaySettings = DisplaySettingsViewModel.GetValues(),
+                ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
+                VertexGraphLayout = VertexGraphLayout.CloneObject(),
+            };
+
+            // Reorder activity dependencies so they are more readable.
+            ProjectScenarioHelper.SortDependencies(plan.DependentActivities);
+
+            return plan;
         }
 
         public int AddManagedActivity(int displayOrder)
@@ -2157,7 +2230,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             compilationErrorCount = graphCompilation.CompilationErrors.Count();
                             GraphCompilation = graphCompilation;
 
-                            IsProjectScenarioUpdated = true;
+                            MarkProjectScenario(true, isChange: false);
 
                             // The outputs match the plan only if nothing that a compilation reads has changed since the
                             // snapshot. If something has, these results are the newest there are and they stay on
@@ -2285,9 +2358,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 VertexGraph = m_OutputService.ComputeVertexGraph(
                     GraphCompilation,
-                    HasCompilationErrors,
-                    ResourceSettings,
-                    WorkStreamSettings);
+                    HasCompilationErrors);
             }
         }
 
@@ -2455,6 +2526,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         // service here to report it either - see the note on
                         // AbandonCompilation.
                     }
+                    catch (Exception ex)
+                    {
+                        // Any other exception stays here too, for the same reason.
+                        AbandonAutomaticWork(ex, @"automatic compilation");
+                    }
                 });
 
             // One compile, one cascade: a GraphCompilation change runs the whole
@@ -2483,6 +2559,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         // state, and an escaping exception would end the cascade
                         // subscription for the rest of the session.
                     }
+                    catch (Exception ex)
+                    {
+                        // Any other exception stays here too, for the same reason.
+                        AbandonAutomaticWork(ex, @"build of the outputs of a compilation");
+                    }
                 });
 
             // Risk metrics are the one output with a non-compile trigger: the
@@ -2492,7 +2573,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(core => core.GraphSettings)
                 .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildRiskMetrics());
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        BuildRiskMetrics();
+                    }
+                    catch (Exception ex)
+                    {
+                        // An exception that escapes would end this subscription for the rest of the session.
+                        AbandonAutomaticWork(ex, @"build of the risk metrics");
+                    }
+                });
 
             // The activities made before the start start with it; those made after it start as they are made.
             m_PlanGraph.StartActivities();

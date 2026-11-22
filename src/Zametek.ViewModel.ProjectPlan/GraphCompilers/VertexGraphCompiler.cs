@@ -52,6 +52,43 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
+        /// Calculates the times and the slack of each activity from the links that the graph holds, and schedules no
+        /// resource. Call it on a compiler that only one thread can reach.
+        /// </summary>
+        /// <remarks>
+        /// <c>Compile</c> of the library always schedules. With resources, it puts the activities on them, and it gives
+        /// resource dependencies, which can change the times. With no resources, it puts the activities on lanes of its
+        /// own. Each schedule also clears the resources of each activity and gives them again. Thus, <c>Compile</c> cannot
+        /// give the times of a graph whose links and resources must stay as they are, and this method can. It does the
+        /// two steps of <c>Compile</c> that give the times, and no other step: the critical path, and then the values of
+        /// the activities that have no link.
+        /// <para>
+        /// The vertex graph of a compiled plan is such a graph (refer to <see cref="GraphCompilationService.BuildVertexGraph"/>).
+        /// Its links hold the schedule that the compilation of the plan made, and a second schedule can be a different one.
+        /// </para>
+        /// <para>
+        /// The method uses the builder outside the lock of the compiler, because that lock is private to the library
+        /// (<see cref="SetUserDependencies"/> does the same). It changes nothing in the activities but their times and
+        /// their slack: the resources of an activity and its dependencies stay as they are.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// The calculation is not possible: the links make a circle, or an activity has a constraint that its links do not
+        /// let it meet. A plan that compiled with no errors has neither.
+        /// </exception>
+        public void CalculateCriticalPath()
+        {
+            m_VertexGraphBuilder.CalculateCriticalPath();
+
+            // The critical path does not reach an activity that has no link. Compile fills in its values with this step,
+            // and treats a refusal as a failure.
+            if (!m_VertexGraphBuilder.BackFillIsolatedNodes())
+            {
+                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildVertexGraph);
+            }
+        }
+
+        /// <summary>
         /// Sets the dependencies and the planning dependencies that the user entered for an activity, and leaves no link in
         /// the graph that only a resource gave. Call it with the leaf lock of the plan held.
         /// </summary>

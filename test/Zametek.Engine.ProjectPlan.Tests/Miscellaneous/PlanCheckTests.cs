@@ -93,6 +93,43 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindScenarioProblems_Given_ATargetDateOfTheSimulationThatTheCalendarCannotCountTo_Then_OutOfRange()
+        {
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = s_Monday.AddDays(GraphLimits.MaximumTimeValue + 1) };
+
+            Problems(Scenario() with { SimulationSettings = settings })
+                .ShouldBe([($@"{c_Scenario}/SimulationSettings/TargetFinishDateTime", PlanCheck.OutOfRange)]);
+        }
+
+        [Fact]
+        public void FindScenarioProblems_Given_ATargetDateOfTheSimulationThatTheLimitsAllow_Then_None()
+        {
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = s_Monday.AddDays(GraphLimits.MaximumTimeValue) };
+
+            Problems(Scenario() with { SimulationSettings = settings }).ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_ATargetDateOfTheSimulationBeforeTheStart_Then_AWarning()
+        {
+            // No day of work is before the end of such a date, and so the target is day 0. It is usually a mistake.
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = new DateTimeOffset(2026, 12, 1, 0, 0, 0, TimeSpan.Zero) };
+
+            List<PlanProblem> warnings = PlanCheck.FindScenarioWarnings(Project(Scenario() with { SimulationSettings = settings }), 0);
+
+            warnings.Select(x => (x.Pointer, x.Code)).ShouldBe([($@"{c_Scenario}/SimulationSettings/TargetFinishDateTime", PlanCheck.OutOfRange)]);
+            warnings[0].Detail.ShouldBe(@"is 2026-12-01, before ProjectStart (2027-01-04), and so the target of the simulation is day 0");
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_ATargetDateOfTheSimulationOnTheDayOfTheStart_Then_None()
+        {
+            var settings = new SimulationSettingsModel { TargetFinishDateTime = s_Monday.AddHours(9) };
+
+            PlanCheck.FindScenarioWarnings(Project(Scenario() with { SimulationSettings = settings }), 0).ShouldBeEmpty();
+        }
+
+        [Fact]
         public void FindScenarioProblems_Given_ANonWorkingDayModeThatDoesNotExist_Then_NotAllowed()
         {
             ProjectScenarioModel scenario = Scenario();
@@ -208,6 +245,62 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindScenarioWarnings_Given_ConstraintDatesBeforeTheStart_Then_AWarningAtEach()
+        {
+            // The calendar gives such a date day 0, and nothing said so. A minimum EST then has no effect, and an activity that
+            // takes time cannot meet the maximum LFT (C0010). A date before the start is usually a mistake, for example the
+            // wrong year (phase 3 of the zpp skill).
+            ProjectScenarioModel scenario = Scenario();
+            scenario = scenario with
+            {
+                DependentActivities =
+                [
+                    scenario.DependentActivities[0] with
+                    {
+                        Activity = scenario.DependentActivities[0].Activity with { MinimumEarliestStartDateTime = s_Monday.AddDays(-1) },
+                    },
+                    scenario.DependentActivities[1] with
+                    {
+                        Activity = scenario.DependentActivities[1].Activity with { MaximumLatestFinishDateTime = new DateTimeOffset(2026, 12, 1, 0, 0, 0, TimeSpan.Zero) },
+                    },
+                ],
+            };
+
+            List<PlanProblem> warnings = PlanCheck.FindScenarioWarnings(Project(scenario), 0);
+
+            warnings.Select(x => (x.Pointer, x.Code)).ShouldBe(
+            [
+                ($@"{c_Scenario}/DependentActivities/0/Activity/MinimumEarliestStartDateTime", PlanCheck.OutOfRange),
+                ($@"{c_Scenario}/DependentActivities/1/Activity/MaximumLatestFinishDateTime", PlanCheck.OutOfRange),
+            ]);
+            warnings[1].Detail.ShouldBe(@"is 2026-12-01, before ProjectStart (2027-01-04), and so the schedule uses day 0 for activity 2");
+        }
+
+        [Fact]
+        public void FindScenarioWarnings_Given_ConstraintDatesOnTheDayOfTheStart_Then_None()
+        {
+            // Each date of a plan is a day, and so the time of the day does not count. The start itself is day 0.
+            ProjectScenarioModel scenario = Scenario();
+            scenario = scenario with
+            {
+                ProjectStart = s_Monday.AddHours(9),
+                DependentActivities =
+                [
+                    scenario.DependentActivities[0] with
+                    {
+                        Activity = scenario.DependentActivities[0].Activity with { MinimumEarliestStartDateTime = s_Monday },
+                    },
+                    scenario.DependentActivities[1] with
+                    {
+                        Activity = scenario.DependentActivities[1].Activity with { MaximumLatestFinishDateTime = s_Monday.AddDays(10) },
+                    },
+                ],
+            };
+
+            PlanCheck.FindScenarioWarnings(Project(scenario), 0).ShouldBeEmpty();
+        }
+
+        [Fact]
         public void FindProjectProblems_Given_ANodeWithNoDataAndNoOtherScenario_Then_TheFilesHaveNoData()
         {
             ProjectModel project = Project(Scenario()) with { Files = [] };
@@ -280,6 +373,30 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 .ShouldBe([@"The number of resources is 1001, which exceeds the maximum supported count of 1000"]);
             PlanCheck.FindLimitViolations(scenario with { ResourceSettings = scenario.ResourceSettings with { Resources = [.. resources.Select(x => x with { IsInactive = false })], AreDisabled = true } })
                 .ShouldBeEmpty();
+        }
+
+        // An import has the same counts as a scenario, and the check gives the same words for them.
+        [Fact]
+        public void FindLimitViolations_Given_AnImportWithMoreThanTheCompilerTakes_Then_TheCountsInTheWordsOfTheCompiler()
+        {
+            List<ResourceModel> resources = [.. Enumerable.Range(1, GraphLimits.MaximumResourceCount + 2).Select(x => new ResourceModel { Id = x, IsInactive = x == 1 })];
+            var import = new ProjectScenarioImportModel
+            {
+                DependentActivities = [.. Enumerable.Range(1, GraphLimits.MaximumActivityCount + 1).Select(x => new DependentActivityModel { Activity = new ActivityModel { Id = x, Duration = 1 } })],
+                ResourceSettings = new ResourceSettingsModel { Resources = resources },
+                WorkStreams = [.. Enumerable.Range(1, GraphLimits.MaximumWorkStreamCount + 1).Select(x => new WorkStreamModel { Id = x })],
+            };
+
+            PlanCheck.FindLimitViolations(import).ShouldBe(
+            [
+                @"The number of activities is 2001, which exceeds the maximum supported count of 2000",
+                @"The number of resources is 1001, which exceeds the maximum supported count of 1000",
+                @"The number of work streams is 101, which exceeds the maximum supported count of 100",
+            ]);
+
+            // The compiler counts the active resources only, and none when the resources are disabled.
+            PlanCheck.FindLimitViolations(new ProjectScenarioImportModel { ResourceSettings = new ResourceSettingsModel { Resources = resources, AreDisabled = true } }).ShouldBeEmpty();
+            PlanCheck.FindLimitViolations(new ProjectScenarioImportModel()).ShouldBeEmpty();
         }
 
         [Fact]

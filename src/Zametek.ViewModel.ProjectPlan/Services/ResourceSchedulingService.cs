@@ -669,6 +669,17 @@ namespace Zametek.ViewModel.ProjectPlan
                         activityOrder[orderedActivities[index].Id] = index;
                     }
 
+                    // The name of each activity for the effort points. A .zpp file keeps no activity name for an entry of a
+                    // resource tracker, and only the import of a workbook fills it. Thus, the points take the name of the
+                    // activity, as the plan and the progress points do. An entry for an activity that the plan does not have
+                    // keeps its own name.
+                    Dictionary<int, string> activityNames = [];
+
+                    foreach (ActivityModel activity in activities)
+                    {
+                        activityNames.TryAdd(activity.Id, activity.Name);
+                    }
+
                     // Cycle through each time index.
                     for (int timeIndex = 0; timeIndex <= endTime; timeIndex++)
                     {
@@ -739,11 +750,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 foreach (ResourceActivityTrackerModel activityTracker in tracker.ActivityTrackers.Where(x => x.ResourceId == resourceId))
                                 {
+                                    string activityName = activityNames.GetValueOrDefault(activityTracker.ActivityId, activityTracker.ActivityName);
+
                                     effortPointSeries.Add(new TrackingPointModel
                                     {
                                         Time = time,
                                         ActivityId = activityTracker.ActivityId,
-                                        ActivityName = activityTracker.ActivityName,
+                                        ActivityName = activityName,
                                         Value = currentWorkingEffort,
                                         ValuePercentage = effortPercentage
                                     });
@@ -754,7 +767,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                         {
                                             Time = time,
                                             ActivityId = activityTracker.ActivityId,
-                                            ActivityName = activityTracker.ActivityName,
+                                            ActivityName = activityName,
                                             Value = accumulator.CurrentValue,
                                             ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * accumulator.CurrentValue / totalWorkingTime
                                         });

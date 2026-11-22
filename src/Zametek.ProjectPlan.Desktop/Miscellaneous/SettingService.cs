@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
@@ -46,6 +46,15 @@ namespace Zametek.ProjectPlan.Desktop
 
             Directory.CreateDirectory(directory);
 
+            if (SettingsReadFailure is not null)
+            {
+                Log.Error(
+                    SettingsReadFailure,
+                    "Could not read the settings file {SettingsFile}, and so the default settings are in use. The file is now {UnreadableSettingsFile}",
+                    SettingsFilename,
+                    UnreadableSettingsFilename ?? SettingsFilename);
+            }
+
             if (File.Exists(DockLayoutFilename))
             {
                 using StreamReader reader = File.OpenText(DockLayoutFilename);
@@ -69,7 +78,10 @@ namespace Zametek.ProjectPlan.Desktop
                 catch (Exception ex)
                 {
                     // The data grid layout file is corrupt or unreadable - reset to defaults.
-                    Debug.WriteLine($"[SettingService] Failed to deserialize data grid layout, resetting: {ex.Message}");
+                    Log.Warning(
+                        ex,
+                        "Could not read the saved layout of the grids from {DataGridLayoutFile}, and so the default layout is in use",
+                        DataGridLayoutFilename);
                     m_DataGridLayouts.Clear();
                 }
             }
@@ -77,12 +89,18 @@ namespace Zametek.ProjectPlan.Desktop
 
         #endregion
 
+        // Each of the three files goes to a temporary file first, which then takes the place of the file. Thus, a write
+        // that does not finish leaves the file that was there (see FileStreamHelper.Replace).
+
         private void SaveDockLayout()
         {
             lock (m_Lock)
             {
-                using StreamWriter writer = File.CreateText(DockLayoutFilename);
-                writer.WriteLine(DockLayout);
+                FileStreamHelper.Replace(DockLayoutFilename, stream =>
+                {
+                    using var writer = new StreamWriter(stream, leaveOpen: true);
+                    writer.WriteLine(DockLayout);
+                });
             }
         }
 
@@ -90,8 +108,11 @@ namespace Zametek.ProjectPlan.Desktop
         {
             lock (m_Lock)
             {
-                using StreamWriter writer = File.CreateText(DataGridLayoutFilename);
-                writer.WriteLine(JsonConvert.SerializeObject(m_DataGridLayouts, Formatting.Indented));
+                FileStreamHelper.Replace(DataGridLayoutFilename, stream =>
+                {
+                    using var writer = new StreamWriter(stream, leaveOpen: true);
+                    writer.WriteLine(JsonConvert.SerializeObject(m_DataGridLayouts, Formatting.Indented));
+                });
             }
         }
 
@@ -99,7 +120,6 @@ namespace Zametek.ProjectPlan.Desktop
         {
             lock (m_Lock)
             {
-                using StreamWriter writer = File.CreateText(SettingsFilename);
                 var jsonSerializer = JsonSerializer.Create(
                     new JsonSerializerSettings
                     {
@@ -107,7 +127,12 @@ namespace Zametek.ProjectPlan.Desktop
                         NullValueHandling = NullValueHandling.Ignore,
                     });
                 Data.ProjectPlan.v0_6_1.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
-                jsonSerializer.Serialize(writer, output, output.GetType());
+
+                FileStreamHelper.Replace(SettingsFilename, stream =>
+                {
+                    using var writer = new StreamWriter(stream, leaveOpen: true);
+                    jsonSerializer.Serialize(writer, output, output.GetType());
+                });
             }
         }
 
@@ -281,6 +306,22 @@ namespace Zametek.ProjectPlan.Desktop
                 lock (m_Lock)
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { CompilationTimeoutMilliseconds = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override bool KeepRecoveryCopy
+        {
+            get
+            {
+                return m_AppSettingsModel.KeepRecoveryCopy;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { KeepRecoveryCopy = value };
                     SaveSettings();
                 }
             }

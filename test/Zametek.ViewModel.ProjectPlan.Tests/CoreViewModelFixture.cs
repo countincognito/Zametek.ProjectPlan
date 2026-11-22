@@ -61,12 +61,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         public static (CoreViewModel CoreViewModel, ISettingService SettingService) CreateWithSettingService(
             IProjectScenarioFileImport? projectScenarioFileImport = null,
-            ILogger<CoreViewModel>? logger = null)
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileExport? projectScenarioFileExport = null)
         {
             (CoreViewModel coreViewModel, ISettingService settingService) = Build(
                 AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
                 projectScenarioFileImport: projectScenarioFileImport,
-                logger: logger);
+                logger: logger,
+                projectScenarioFileExport: projectScenarioFileExport);
 
             coreViewModel.AutoCompile = false;
             return (coreViewModel, settingService);
@@ -98,10 +100,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             return (core, settingService);
         }
 
+        /// <summary>
+        /// Builds a core as <see cref="CreateGated"/> does, over a metric service that a test can make fail: for the tests
+        /// of what the automatic work of the core does about an exception.
+        /// </summary>
+        public static (GatedCoreViewModel Core, FaultyMetricCalculationService Metrics) CreateGatedWithFaultyMetrics()
+        {
+            FaultyMetricCalculationService? metrics = null;
+            (GatedCoreViewModel core, _, _) = BuildGated(
+                AppSettingsModel.DefaultCompilationTimeoutMilliseconds,
+                wrapMetrics: inner => metrics = new FaultyMetricCalculationService(inner));
+            return (core, metrics!);
+        }
+
         private static (GatedCoreViewModel Core, GatedGraphCompilationService Graphs, ISettingService SettingService) BuildGated(
             int compilationTimeoutMilliseconds,
             ILogger<CoreViewModel>? logger = null,
-            IProjectScenarioFileImport? projectScenarioFileImport = null)
+            IProjectScenarioFileImport? projectScenarioFileImport = null,
+            Func<IMetricCalculationService, IMetricCalculationService>? wrapMetrics = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -112,6 +128,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             };
             var dateTimeCalculator = new DateTimeCalculator(TimeProvider.System);
             var graphs = new GatedGraphCompilationService(new GraphCompilationService(mapper, settingService));
+            IMetricCalculationService metrics = new MetricCalculationService(mapper, dateTimeCalculator);
 
             var coreViewModel = new GatedCoreViewModel(
                 projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
@@ -121,7 +138,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 mapper,
                 graphs,
                 new ResourceSchedulingService(mapper),
-                new MetricCalculationService(mapper, dateTimeCalculator),
+                wrapMetrics?.Invoke(metrics) ?? metrics,
                 new TestDataGridScrollManager(),
                 logger ?? NullLogger<CoreViewModel>.Instance);
 
@@ -183,7 +200,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             int compilationTimeoutMilliseconds,
             TimeProvider? clock = null,
             IProjectScenarioFileImport? projectScenarioFileImport = null,
-            ILogger<CoreViewModel>? logger = null)
+            ILogger<CoreViewModel>? logger = null,
+            IProjectScenarioFileExport? projectScenarioFileExport = null)
         {
             EnsureReactiveUIInitialized();
 
@@ -196,7 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             var coreViewModel = new CoreViewModel(
                 projectScenarioFileImport ?? new TestProjectScenarioFileImport(),
-                new TestProjectScenarioFileExport(),
+                projectScenarioFileExport ?? new TestProjectScenarioFileExport(),
                 settingService,
                 dateTimeCalculator,
                 mapper,
@@ -359,6 +377,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             {
             }
 
+            // For the tests of what the base does with a settings file.
+            public TestSettingService(string settingsFilename)
+                : base(settingsFilename)
+            {
+            }
+
             public override string ProjectDirectory
             {
                 get => m_ProjectDirectory;
@@ -407,7 +431,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private sealed class TestProjectScenarioFileImport
             : IProjectScenarioFileImport
         {
-            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format) =>
+            public ProjectScenarioImportModel ImportProjectScenarioFile(Stream stream, ProjectScenarioImportFormat format, CancellationToken cancellationToken = default) =>
                 throw new NotSupportedException();
         }
 
@@ -449,6 +473,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 throw new NotSupportedException(message);
 
             public Task<bool> ShowConfirmationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices) =>
                 throw new NotSupportedException(message);
 
             public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) =>

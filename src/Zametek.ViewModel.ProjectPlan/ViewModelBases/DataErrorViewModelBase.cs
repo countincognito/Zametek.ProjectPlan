@@ -53,6 +53,21 @@ namespace Zametek.ViewModel.ProjectPlan
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
         }
 
+        // Removes one message of a property, and keeps its other messages.
+        protected void ClearError(string propertyName, string error)
+        {
+            if (m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList)
+                && errorList.Remove(error))
+            {
+                if (errorList.Count == 0)
+                {
+                    m_ErrorsByPropertyName.Remove(propertyName);
+                }
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+                this.RaisePropertyChanged(nameof(HasErrors));
+            }
+        }
+
         protected void ClearErrors()
         {
             IList<string> propertyNames = [.. m_ErrorsByPropertyName.Keys];

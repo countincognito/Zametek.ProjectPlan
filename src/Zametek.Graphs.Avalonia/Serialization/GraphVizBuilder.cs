@@ -17,7 +17,7 @@ namespace Zametek.Graphs.Avalonia
 
             foreach (var node in diagramGraph.Nodes)
             {
-                string tooltip = node.Name ?? string.Empty;
+                string tooltip = Escape(node.Name);
                 string style = node.BorderDashStyle switch
                 {
                     GraphDashStyle.Normal => @"solid",
@@ -25,7 +25,7 @@ namespace Zametek.Graphs.Avalonia
                     _ => throw new NotSupportedException($@"{node.BorderDashStyle} is not supported"),
                 };
 
-                string label = node.Text ?? string.Empty;
+                string label = Escape(node.Text);
                 double nodeBorderWidth = node.BorderThickness;
                 string nodeBorderColor = node.BorderColorHexCode ?? @"black";
 
@@ -35,14 +35,14 @@ namespace Zametek.Graphs.Avalonia
 
             foreach (var edge in diagramGraph.Edges)
             {
-                string tooltip = edge.Name ?? string.Empty;
+                string tooltip = Escape(edge.Name);
                 string style = edge.DashStyle switch
                 {
                     GraphDashStyle.Normal => @"solid",
                     GraphDashStyle.Dashed => @"dashed",
                     _ => throw new NotSupportedException($@"{edge.DashStyle} is not supported"),
                 };
-                string label = edge.ShowLabel ? edge.Label ?? string.Empty : string.Empty;
+                string label = edge.ShowLabel ? Escape(edge.Label) : string.Empty;
                 string edgeColor = edge.ForegroundColorHexCode ?? string.Empty;
 
                 string activity = string.Create(CultureInfo.InvariantCulture, $"\"{edge.SourceId}\" -> \"{edge.TargetId}\" [ id=\"{edge.Id}\" style=\"{style}\" edgetooltip=\"{tooltip}\" labeltooltip=\"{tooltip}\" color=\"{edgeColor}\" fontsize=8 fontname=\"Consolas\" label=\"{label}\" ];");
@@ -54,5 +54,14 @@ namespace Zametek.Graphs.Avalonia
 
             return NewLineHelper.JoinLines(lines);
         }
+
+        // A text between the double quotes of a Dot string. A double quote in the text would end the string, and a
+        // backslash would start an escape (a backslash at the end would take the closing quote into the string). Each gets
+        // a backslash before it, the backslash first. A line end stays as it is: a Dot string can hold one, and the labels
+        // have had them from the start.
+        private static string Escape(string? text) =>
+            (text ?? string.Empty)
+                .Replace(@"\", @"\\", StringComparison.Ordinal)
+                .Replace(@"""", @"\""", StringComparison.Ordinal);
     }
 }

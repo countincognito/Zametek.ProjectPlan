@@ -422,6 +422,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
             ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
             problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.JobTimeout));
+
+            // The whole request arrived in time. It is the job that ran out of time, and the detail says so.
+            problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 1));
         }
     }
 }

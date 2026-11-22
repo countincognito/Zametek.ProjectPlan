@@ -24,7 +24,7 @@ namespace Zametek.ProjectPlan.CommandLine
             ArgumentNullException.ThrowIfNull(console);
             ArgumentNullException.ThrowIfNull(result);
 
-            // The ids of the plan that match nothing: on stderr, so that stdout keeps the result of the run.
+            // The warnings of the check before the load: on stderr, so that stdout keeps the result of the run.
             foreach (PlanProblem warning in result.Warnings)
             {
                 await console.WriteErrorLineAsync(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_PlanWarning, warning.Pointer, warning.Detail));
@@ -55,6 +55,17 @@ namespace Zametek.ProjectPlan.CommandLine
                         await console.DisplayAsync(BuildMetricsText(metrics, result.Simulation, result.TrackedScenarios, result.ScenarioChart, x => x.ToMarkDownString()), hasErrors: false);
                         break;
                 }
+            }
+
+            // The statistics of a simulation leave out the iterations that missed a maximum latest finish time, and those
+            // are the late ones. The table has the counts, and this line says what they mean, on stderr.
+            if (result.Simulation is { InvalidConstraintsIterations: > 0 } simulation)
+            {
+                await console.WriteErrorLineAsync(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.ProjectPlan.Messages.Message_SimulationStatisticsTooEarly,
+                    simulation.InvalidConstraintsIterations,
+                    simulation.Iterations));
             }
 
             // Why a tracked scenario did not compile, on stderr: its metrics are empty in the output.

@@ -118,7 +118,8 @@ namespace Zametek.ProjectPlan.CommandLine
             IReadOnlyList<OutputResponse>? outputs = null,
             SimulationResponse? simulation = null,
             IReadOnlyList<TrackedScenarioResponse>? trackedScenarios = null,
-            ScenarioChartResponse? scenarioChart = null)
+            ScenarioChartResponse? scenarioChart = null,
+            IReadOnlyList<ProblemError>? warnings = null)
         {
             ArgumentNullException.ThrowIfNull(context);
 
@@ -135,6 +136,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 TrackedScenarios = trackedScenarios,
                 ScenarioChart = scenarioChart,
                 Outputs = outputs,
+                Warnings = warnings,
                 Console = console,
             };
         }

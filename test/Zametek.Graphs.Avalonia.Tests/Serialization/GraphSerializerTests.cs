@@ -50,6 +50,64 @@ namespace Zametek.Graphs.Avalonia.Tests.Serialization
             graphViz.ShouldNotContain(@"1,5");
         }
 
+        // A double quote ends a string of Dot, and a backslash starts an escape. A name with one of them gave a file that
+        // Graphviz cannot read, and a name could add attributes of its own to the file. Each is now written with a
+        // backslash before it. A line end in a label stays as it is, because a string of Dot can have one.
+        [Fact]
+        public void GraphViz_escapes_a_quote_and_a_backslash_in_each_text()
+        {
+            var diagram = new DiagramGraphModel
+            {
+                Nodes =
+                [
+                    new DiagramNodeModel
+                    {
+                        Id = 0,
+                        Text = NewLineHelper.JoinLines(@"|a ""b"" c\|", @"|0|"),
+                        Name = @"node ""one"" in C:\plans\",
+                        BorderColorHexCode = @"#000000",
+                    },
+                    new DiagramNodeModel { Id = 1, Text = @"|1|", Name = @"plain", BorderColorHexCode = @"#000000" },
+                ],
+                Edges =
+                [
+                    new DiagramEdgeModel
+                    {
+                        Id = 0,
+                        SourceId = 0,
+                        TargetId = 1,
+                        Name = @"edge "" color=""red",
+                        Label = @"C:\ ""x""",
+                        ShowLabel = true,
+                        ForegroundColorHexCode = @"#000000",
+                    },
+                ],
+            };
+
+            string graphViz = Encoding.UTF8.GetString(new GraphSerializer().BuildGraphVizData(diagram));
+
+            graphViz.ShouldContain(@"label=""|a \""b\"" c\\|" + NewLineHelper.NewLine + @"|0|"" ");
+            graphViz.ShouldContain(@"tooltip=""node \""one\"" in C:\\plans\\"" ");
+            graphViz.ShouldContain(@"edgetooltip=""edge \"" color=\""red"" ");
+            graphViz.ShouldContain(@"labeltooltip=""edge \"" color=\""red"" ");
+            graphViz.ShouldContain(@"label=""C:\\ \""x\"""" ];");
+
+            // No text ends a string early. Without the escapes, the quotes are those that open and close a string. The
+            // file has 8 strings for each of the two nodes, 9 for the edge, and one for the direction of the graph. A
+            // label can go over two lines, and so the count is of the whole file.
+            string bare = graphViz.Replace(@"\\", string.Empty, StringComparison.Ordinal).Replace(@"\""", string.Empty, StringComparison.Ordinal);
+            bare.Count(x => x == '"').ShouldBe(2 * ((2 * 8) + 9 + 1));
+        }
+
+        [Fact]
+        public void GraphViz_writes_a_text_with_no_quote_and_no_backslash_as_before()
+        {
+            string graphViz = Encoding.UTF8.GetString(new GraphSerializer().BuildGraphVizData(BuildDiagram()));
+
+            graphViz.ShouldContain(@"label=""|0|" + NewLineHelper.NewLine + @"|0|"" ");
+            graphViz.ShouldContain(@"label=""1 (5)" + NewLineHelper.NewLine + @"0|2"" ];");
+        }
+
         // The text has lines, and each of them ends with NewLineHelper.NewLine: there is no carriage return anywhere.
         private static void ShouldEndLinesWithNewLine(string text)
         {

@@ -108,6 +108,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             public Task<bool> ShowConfirmationAsync(string title, string header, string message) =>
                 throw new NotSupportedException(message);
 
+            public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices) =>
+                throw new NotSupportedException(message);
+
             public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) =>
                 throw new NotSupportedException();
 

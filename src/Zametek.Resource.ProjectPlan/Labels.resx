@@ -175,7 +175,7 @@
     <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.11.0-beta.1</value>
+    <value>0.11.0-beta.2</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
@@ -503,6 +503,9 @@
   </data>
   <data name="Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualToDuration" xml:space="preserve">
     <value>Minimum EST to Maximum LFT must be &gt;= Duration</value>
+  </data>
+  <data name="Label_ConstraintDateBeforeProjectStart" xml:space="preserve">
+    <value>The date is before the start of the project ({0}), and so the schedule uses the start in its place.</value>
   </data>
   <data name="Label_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum FS</value>
@@ -926,5 +929,20 @@
   </data>
   <data name="Label_CurveFittingDerivativeY2" xml:space="preserve">
     <value>Y2 Derivative</value>
+  </data>
+  <data name="Label_SimulationWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="Label_SimulationStatisticsTooEarly" xml:space="preserve">
+    <value>The statistics are too early: they leave out the iterations that missed a maximum LFT</value>
+  </data>
+  <data name="Label_RecoveryCopyOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Label_RecoveryCopyNotNow" xml:space="preserve">
+    <value>Not Now</value>
+  </data>
+  <data name="Label_RecoveryCopyDelete" xml:space="preserve">
+    <value>Delete</value>
   </data>
 </root>

@@ -58,6 +58,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AutoCompile { get; set; }
 
+        bool KeepRecoveryCopy { get; set; }
+
         string SelectedTheme { get; set; }
 
         BaseTheme BaseTheme { get; set; }
@@ -112,6 +114,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ToggleAutoCompileCommand { get; }
 
+        ICommand ToggleKeepRecoveryCopyCommand { get; }
+
         ICommand TransitiveReductionCommand { get; }
 
         ICommand SyncTodayCommand { get; }
@@ -137,6 +141,19 @@ namespace Zametek.Contract.ProjectPlan
         void ResetLayout();
 
         Task ResetLayoutAsync();
+
+        // The project as a save writes it. The caller owns the copy: it is not the live project.
+        Task<ProjectModel> BuildProjectAsync();
+
+        // The project as a save writes it, built with no change to the project: a save puts the time of the save into the
+        // scenario on show, gives each activity its place in the view, and sets a busy state. A recovery copy takes this
+        // one, because it is written while the user works.
+        Task<ProjectModel> BuildProjectCopyAsync();
+
+        // Opens a recovery copy as a project with changes. The project has the name of the file that it is a copy of,
+        // and it is not that file: a save asks where to write. It gives false when the copy cannot be opened, which it
+        // tells the user.
+        Task<bool> OpenRecoveryCopyAsync(RecoveryCopyModel copy);
 
         Task OpenProjectFileAsync();
 

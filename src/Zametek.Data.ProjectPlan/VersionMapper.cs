@@ -791,6 +791,7 @@ namespace Zametek.Data.ProjectPlan
         [MapperIgnoreTarget(nameof(AppSettingsModel.MaxRecentProjectFilePaths))]
         [MapperIgnoreTarget(nameof(AppSettingsModel.RecentProjectFilePaths))]
         [MapperIgnoreTarget(nameof(AppSettingsModel.CompilationTimeoutMilliseconds))]
+        [MapperIgnoreTarget(nameof(AppSettingsModel.KeepRecoveryCopy))]
         public partial AppSettingsModel FromV0_6_0ToCurrent(v0_6_0.AppSettingsModel src);
 
         [MapProperty(nameof(v0_4_4.AppSettingsModel.DefaultUseBusinessDays), nameof(v0_6_0.AppSettingsModel.DefaultNonWorkingDayMode), Use = nameof(MapUseBusinessDays))]

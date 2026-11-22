@@ -38,58 +38,104 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (File.Exists(SettingsFilename))
             {
-                using StreamReader reader = File.OpenText(SettingsFilename);
-                string content = reader.ReadToEnd();
-
-                if (string.IsNullOrWhiteSpace(content))
+                try
                 {
-                    return;
+                    m_AppSettingsModel = ReadSettings(SettingsFilename) ?? m_AppSettingsModel;
                 }
-
-                JObject json = JObject.Parse(content);
-                string version =
-                    json?.GetValue(nameof(AppSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
-                    ?? string.Empty;
-                string jsonString = json?.ToString() ?? string.Empty;
-
-                Func<string, AppSettingsModel> func =
-                    jString => new AppSettingsModel();
-
-                version.ValueSwitchOn()
-                    .Case(Versions.v0_3_0, x =>
-                    {
-                        func = jString => Converter.Upgrade(
-                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.AppSettingsModel>(jString)
-                            ?? new Data.ProjectPlan.v0_3_0.AppSettingsModel());
-                    })
-                    .Case(Versions.v0_4_1, x =>
-                    {
-                        func = jString => Converter.Upgrade(
-                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.AppSettingsModel>(jString)
-                            ?? new Data.ProjectPlan.v0_4_1.AppSettingsModel());
-                    })
-                    .Case(Versions.v0_4_4, x =>
-                    {
-                        func = jString => Converter.Upgrade(
-                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.AppSettingsModel>(jString)
-                            ?? new Data.ProjectPlan.v0_4_4.AppSettingsModel());
-                    })
-                    .Case(Versions.v0_6_0, x =>
-                    {
-                        func = jString => Converter.Upgrade(
-                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_0.AppSettingsModel>(jString)
-                            ?? new Data.ProjectPlan.v0_6_0.AppSettingsModel());
-                    })
-                    .Case(Versions.v0_6_1, x =>
-                    {
-                        func = jString => Converter.Upgrade(
-                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_1.AppSettingsModel>(jString)
-                            ?? new Data.ProjectPlan.v0_6_1.AppSettingsModel());
-                    });
-
-                m_AppSettingsModel = func(jsonString);
+                catch (Exception ex)
+                {
+                    // The start must not stop for a settings file that cannot be read: a write that did not finish, or a
+                    // file that a person changed. The service starts with the default settings. It moves the file out of
+                    // the way, so that the next start finds none and the next write does not lose what the file holds.
+                    SettingsReadFailure = ex;
+                    UnreadableSettingsFilename = SetAside(SettingsFilename);
+                }
             }
         }
+
+        // The settings that a file holds, or null when the file is empty. A file that is not JSON, or whose values are not
+        // of the kinds that its version has, throws.
+        private static AppSettingsModel? ReadSettings(string settingsFilename)
+        {
+            string content = File.ReadAllText(settingsFilename);
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return null;
+            }
+
+            JObject json = JObject.Parse(content);
+            string version =
+                json?.GetValue(nameof(AppSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
+                ?? string.Empty;
+            string jsonString = json?.ToString() ?? string.Empty;
+
+            Func<string, AppSettingsModel> func =
+                jString => new AppSettingsModel();
+
+            version.ValueSwitchOn()
+                .Case(Versions.v0_3_0, x =>
+                {
+                    func = jString => Converter.Upgrade(
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.AppSettingsModel>(jString)
+                        ?? new Data.ProjectPlan.v0_3_0.AppSettingsModel());
+                })
+                .Case(Versions.v0_4_1, x =>
+                {
+                    func = jString => Converter.Upgrade(
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.AppSettingsModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_1.AppSettingsModel());
+                })
+                .Case(Versions.v0_4_4, x =>
+                {
+                    func = jString => Converter.Upgrade(
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.AppSettingsModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_4.AppSettingsModel());
+                })
+                .Case(Versions.v0_6_0, x =>
+                {
+                    func = jString => Converter.Upgrade(
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_0.AppSettingsModel>(jString)
+                        ?? new Data.ProjectPlan.v0_6_0.AppSettingsModel());
+                })
+                .Case(Versions.v0_6_1, x =>
+                {
+                    func = jString => Converter.Upgrade(
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_1.AppSettingsModel>(jString)
+                        ?? new Data.ProjectPlan.v0_6_1.AppSettingsModel());
+                });
+
+            return func(jsonString);
+        }
+
+        // Moves a settings file that cannot be read to the same name with .bad after it, in place of an earlier one. Gives
+        // the new name, or null when the file cannot be moved.
+        private static string? SetAside(string settingsFilename)
+        {
+            string aside = $@"{settingsFilename}.bad";
+
+            try
+            {
+                File.Move(settingsFilename, aside, overwrite: true);
+                return aside;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+        }
+
+        #endregion
+
+        #region Public Members
+
+        // Why the settings file could not be read, when the service started with the default settings in its place. Null
+        // when the file was read, or when there was none.
+        public Exception? SettingsReadFailure { get; }
+
+        // Where the settings file that could not be read is now. Null when the service could not move it, and it is then
+        // still in its place.
+        public string? UnreadableSettingsFilename { get; }
 
         #endregion
 
@@ -174,6 +220,10 @@ namespace Zametek.ViewModel.ProjectPlan
         public abstract int MaxRecentProjectFilePaths { get; }
 
         public abstract int CompilationTimeoutMilliseconds { get; set; }
+
+        // Only the desktop keeps recovery copies, and it keeps the setting in its settings file. For the other hosts
+        // this is a value that nothing reads.
+        public virtual bool KeepRecoveryCopy { get; set; }
 
         public abstract IReadOnlyList<string> RecentProjectFilePaths { get; }
 

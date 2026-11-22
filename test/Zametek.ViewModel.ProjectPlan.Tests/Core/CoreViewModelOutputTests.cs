@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
@@ -55,6 +56,102 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             Describe(core.ArrowGraph, core.VertexGraph).ShouldBe(empty, "a Build method built a graph for a plan that does not compile");
         }
+
+        #region The times of the vertex graph
+
+        // The vertex graph shows the schedule that the compilation of the plan made. Its build does not schedule the
+        // resources a second time: a second schedule can be a different one, and the graph then shows other times than
+        // the list of the activities and the arrow graph. GraphCompilationServiceTests has the reason and more plans.
+
+        // The times that the list of the activities shows for each activity, and that a node of the vertex graph shows.
+        private static List<string> ActivityTimes(CoreViewModel core) =>
+            [.. core.RawActivities
+                .OrderBy(x => x.Id)
+                .Select(x => $@"{x.Id}: {x.EarliestStartTime}-{x.EarliestFinishTime}, {x.LatestStartTime}-{x.LatestFinishTime}, total slack {x.TotalSlack}")];
+
+        private static List<string> VertexGraphTimes(CoreViewModel core) =>
+            [.. core.VertexGraph.Nodes
+                .Select(x => x.Content)
+                .OrderBy(x => x.Id)
+                .Select(x => $@"{x.Id}: {x.EarliestStartTime}-{x.EarliestFinishTime}, {x.LatestStartTime}-{x.LatestFinishTime}, total slack {x.TotalSlack}")];
+
+        // The finish of the arrow graph: the latest time of its events.
+        private static int? ArrowGraphFinish(CoreViewModel core) =>
+            core.ArrowGraph.Nodes.Max(x => x.Content.EarliestFinishTime);
+
+        [Fact]
+        public void ProcessProjectScenario_Given_APlanThatASecondScheduleMakesLonger_Then_TheVertexGraphHasTheTimesOfTheActivities()
+        {
+            // Two resources that an activity must name to get. The scheduler tries resource 1 first.
+            static ResourceModel Resource(int id, int allocationOrder) => new()
+            {
+                Id = id,
+                Name = $@"Resource {id}",
+                DisplayOrder = id,
+                IsExplicitTarget = true,
+                AllocationOrder = allocationOrder,
+                InterActivityAllocationType = InterActivityAllocationType.Direct,
+                UnitCost = 1.0,
+                UnitBilling = 1.0,
+                ColorFormat = new ColorFormatModel { A = 255, R = 10, G = 20, B = 30 },
+            };
+
+            // An activity that one of its target resources does.
+            static DependentActivityModel Activity(int id, int duration, List<int> targetResources, params int[] dependencies) => new()
+            {
+                Activity = new ActivityModel
+                {
+                    Id = id,
+                    DisplayOrder = id,
+                    Name = $@"Activity {id}",
+                    Duration = duration,
+                    TargetResources = targetResources,
+                    TargetResourceOperator = LogicalOperator.OR,
+                },
+                Dependencies = [.. dependencies],
+            };
+
+            // The plan of GraphCompilationServiceTests.PlanThatASecondScheduleMakesLonger, which says why a second schedule
+            // differs. Activity 1 is on resource 1, and the other three come after it. Either resource can do activity 2
+            // (one day) and activity 3 (two days), and only resource 2 can do activity 4 (one day). The schedule of the plan
+            // finishes at time 3, with activity 4 after activity 2 on resource 2. A second schedule that starts from this
+            // one finishes at time 4.
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(4) with
+            {
+                DependentActivities =
+                [
+                    Activity(1, 1, [1]),
+                    Activity(2, 1, [1, 2], 1),
+                    Activity(3, 2, [1, 2], 1),
+                    Activity(4, 1, [2], 1),
+                ],
+                ResourceSettings = new ResourceSettingsModel
+                {
+                    Resources = [Resource(1, allocationOrder: 0), Resource(2, allocationOrder: 1)],
+                    DefaultUnitCost = 1.0,
+                    DefaultUnitBilling = 1.0,
+                    AreDisabled = false,
+                },
+            };
+            using CoreViewModel core = CoreViewModelFixture.Create();
+
+            // A load builds the outputs with the cascade.
+            core.ProcessProjectScenario(scenario, Guid.NewGuid(), @"Test");
+
+            core.HasCompilationErrors.ShouldBeFalse();
+            core.RawActivities.Max(x => x.EarliestFinishTime).ShouldBe(3);
+            core.RawActivities.Single(x => x.Id == 4).ResourceDependencies.ShouldBe(new HashSet<int> { 2 });
+
+            VertexGraphTimes(core).ShouldBe(ActivityTimes(core), "the cascade built a vertex graph with another schedule than that of the activities");
+            ArrowGraphFinish(core).ShouldBe(3, "the arrow graph does not finish when the activities do");
+
+            // The Build method gives the same graph.
+            core.BuildVertexGraph();
+
+            VertexGraphTimes(core).ShouldBe(ActivityTimes(core), "the Build method built a vertex graph with another schedule than that of the activities");
+        }
+
+        #endregion
 
         [Fact]
         public void BuildNetworkMetrics_Given_ATodayThatIsNotTheProjectStart_Then_TheDurationInManMonthsIsThatOfTheStart()

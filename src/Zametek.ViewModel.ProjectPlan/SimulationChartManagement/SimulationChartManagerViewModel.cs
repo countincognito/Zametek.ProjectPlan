@@ -545,6 +545,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     CountAndShare(activity.MaximumLatestFinishTimeMissCount, summary.IterationCount));
             }
 
+            // The rows above give the counts. This row says what they mean for the statistics that follow: an iteration that
+            // missed a maximum latest finish time is a late one, and it is in none of them.
+            if (summary.InvalidConstraintsIterationCount > 0)
+            {
+                Add(
+                    Resource.ProjectPlan.Labels.Label_SimulationWarning,
+                    Resource.ProjectPlan.Labels.Label_SimulationStatisticsTooEarly);
+            }
+
             if (!summary.HasResult)
             {
                 return statistics;
@@ -854,12 +863,19 @@ namespace Zametek.ViewModel.ProjectPlan
             set => ChangeSettings(x => x with { ModifiedBetaShape = value }, nameof(ModifiedBetaShape));
         }
 
+        // The target that a run uses. When the settings give the target as a date (a file can), it is the finish time of the
+        // end of that date in the calendar of now, and the date stays in the settings. A number from the user is a new
+        // target: it takes the place of the date. A number that is the one that the date gives changes nothing.
         public int? TargetFinishTime
         {
-            get => m_CoreViewModel.SimulationSettings.TargetFinishTime;
+            get => SimulationTargetHelper.Resolve(m_CoreViewModel.SimulationSettings, m_DateTimeCalculator, m_CoreViewModel.ProjectStart);
             set
             {
-                ChangeSettings(x => x with { TargetFinishTime = value }, nameof(TargetFinishTime));
+                if (value != TargetFinishTime)
+                {
+                    ChangeSettings(x => x with { TargetFinishTime = value, TargetFinishDateTime = null }, nameof(TargetFinishTime));
+                }
+
                 this.RaisePropertyChanged(nameof(TargetFinishDate));
             }
         }
@@ -1068,8 +1084,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     throw new OperationCanceledException(token);
                 }
 
+                SimulationResult<int>? resultBefore;
+                SimulationSummaryModel? resultSummaryBefore;
+                IReadOnlyDictionary<int, string> activityNamesBefore;
+                SimulationSummaryModel? presentedSummaryBefore;
+                int resultRevisionBefore = ResultRevision;
+
                 lock (m_Lock)
                 {
+                    resultBefore = m_Result;
+                    resultSummaryBefore = m_ResultSummary;
+                    activityNamesBefore = m_ActivityNames;
+                    presentedSummaryBefore = m_PresentedSummary;
                     m_Result = outcome.Result;
                     m_ResultSummary = outcome.Summary;
                     m_ActivityNames = outcome.ActivityNames;
@@ -1077,7 +1103,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 ResultRevision = outcome.CompilationOutputRevision;
-                m_CoreViewModel.SimulationSummary = outcome.Summary;
+
+                // The comparison above and a write here would be two steps, and a scenario can load or reset between them.
+                // It would then get the result of the scenario before it, and the next save would write that result to
+                // the file. So the core compares the revision and writes in one step.
+                if (!m_CoreViewModel.TrySetSimulationSummary(outcome.Summary, scenarioRevision))
+                {
+                    lock (m_Lock)
+                    {
+                        // Only when nothing else changed them since: the panel holds what it held before the run.
+                        if (ReferenceEquals(m_ResultSummary, outcome.Summary))
+                        {
+                            m_Result = resultBefore;
+                            m_ResultSummary = resultSummaryBefore;
+                            m_ActivityNames = activityNamesBefore;
+                            m_PresentedSummary = presentedSummaryBefore;
+                        }
+                    }
+
+                    ResultRevision = resultRevisionBefore;
+                    throw new OperationCanceledException(token);
+                }
+
                 BuildPresentation();
 
                 SetStatus(

@@ -2,6 +2,192 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Read only the kept result of a formula in the import of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `XlsxWorkbookReader.Convert` reads `cell.Value`. For a formula that has no kept result in the file, ClosedXML 0.105.1 then calculates the formula. It also calculates each other formula of the workbook that has no kept result, on each sheet. One formula in a cell under a title starts this work. The other formulas can be in a sheet that the import does not read.
+
+  The three bounds of the reader (the size of the parts, the rows and the cells) do not see this work. All of it is in one read of a cell. Thus, the stop between two rows and the time limit of a job do not end it. The import of the desktop application reads a workbook in the same way.
+
+  A run with the Release build of `zpp` measured this. The workbook was `docs/assets/sample.xlsx` with a formula in `General!A2`, and with a new sheet of formulas `SUM(C1:CV20000*1)`. The file had 94 KB. The import took 1.4 s with no formula in the new sheet, 3.6 s with 20 formulas and 7.0 s with 60. That is about 0.1 s for each formula. With no formula in `General!A2`, the 20 formulas added no time.
+
+  Each of these imports ended with one problem, because the formula in `General!A2` gives a number and not a date. Nobody ran a formula over a full sheet, which has about 50 times the cells, or a workbook with thousands of formulas.
+
+  Read only the kept result (`CachedValue`), and report a formula that has none as a problem of its cell. `XlsxScenarioImportContractTests` says today that the import calculates such a formula. Thus, this changes the contract of the import, and the maintainer decides. A second choice is to refuse a workbook that has a formula with no kept result.
+
+- [ ] **Do not let a slow download hold a place of a job** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `ProjectEndpoints.CompileAsync` and `ListScenariosAsync` write the answer inside the endpoint (`answer.Result.ExecuteAsync`). The limiter of the jobs frees the place of a job only after the endpoint returns. Thus, a client that reads a large answer slowly holds the place after the job ended. Only the minimum data rate of Kestrel for an answer bounds this time.
+
+  This is the case of the slow upload in the other direction, and 0.11.0-beta.2 bounds only the upload. The time limit that `zpp --server` calculates from the limits of the server (`JobClient.GetRequestTimeout`) does not count this time. Nobody ran this. The source code of this part did not change in 0.11.0-beta.2.
+
+  Free the place when the job ends, before the write of the answer. A second choice is a time limit for the write.
+
+- [ ] **Do the checks of the dates for an import, and for the target date in the application** *(2026-11-20, from the review of 0.11.0-beta.2)*
+
+  `PlanCheck` refuses a project file whose start is outside its range of dates. It also refuses a constraint date or a target date that is too far from the start. Since 0.11.0-beta.2, an import gets the check of the limits before the load (`PlanCheck.FindLimitViolations`). It gets none of the checks of the dates. A run showed one result. A workbook with the project start 9999-12-31 ends `zpp` with exit code 1 and the text of a .NET exception.
+
+  Nobody tried the server with such a workbook. Nobody tried a date that makes the calendar count for a long time.
+
+  The desktop application does not call `PlanCheck`. `SimulationTargetHelper.FinishTimeByEndOf` adds one day to the target date, and the getter of `TargetFinishTime` calculates the target at each read. Thus, a target date at the end of the range of dates throws in the getter and in each save. The setter reads the getter first, so the user cannot change the target. Only a program writes a target date today, and thus the risk is low. Nobody ran this.
+
+  Give the dates of an import the checks that the dates of a project file get. Decide if the application does these checks at the load of a file too.
+
+- [ ] **Do three smaller things from the review of 0.11.0-beta.2** *(2026-11-20, from the review of 0.11.0-beta.2, changed 2026-11-22)*
+
+  1. **The name of the temporary file.** `FileStreamHelper.Write` always uses `<name>.tmp` next to the target, and the copy in Zametek.Graphs.Avalonia does the same. It writes over a file with that name, and it deletes the file at the end. A test pins this for a temporary file that an earlier write left. A file of the user with that name gets the same result. Decide if the name must be one that only the application makes.
+  2. **A value in `zpp-serve.json` that is not a number.** The check for a name that is not a limit reads only the names of the first level. The review reported that `{"MaxJobs": {"value": 2}}` thus passes, and that the server starts with the default. Nobody ran this.
+  3. **Writes to the disk on the UI thread.** `FileStreamHelper.Replace` flushes to the disk, and it can wait for 2 s for a file that a program holds. `SettingService` calls it on the thread of each setter. `RecoveryStore.WriteCopyAsync` calls it under its lock, on the UI thread for a copy after an open or after an exception. `FileStreamHelper.SaveAsync` does the same write on a pool thread. Nobody measured a delay.
+
+- [ ] **Decide what a save does with a file that has a second name** *(2026-11-18, from the save by way of a temporary file)*
+
+  Since 0.11.0-beta.2, a save writes a temporary file and puts it in the place of the target ([ARCHITECTURE](ARCHITECTURE.md#11-the-engine-the-pattern-at-its-extreme)). A file can have two names in one file system (a hard link). After a save to one name, the other name keeps the old content. Before, a save changed both, because it wrote in place.
+
+  The application does not see that a file has a second name: .NET gives no count of the names of a file. A check needs a call of the system on each platform. Decide if such a file gets a save in place.
+
+  The save also gives the file to the user who saves it, on Linux and macOS: the new file is a file of that user. A save in place kept the owner of the file. Nobody made such a case to see the result.
+
+- [ ] **Find where an exception of a `DispatcherTimer` goes** *(2026-11-18, from the check of the handler for exceptions that nothing handles)*
+
+  Since 0.11.0-beta.2, `UnhandledErrorHandler` takes an exception of the UI thread, and one that leaves a command or a subscription of ReactiveUI. It keeps a recovery copy, tells the user, and ends the application ([ARCHITECTURE](ARCHITECTURE.md#14-the-recovery-copy)).
+
+  In a check with the built application, the `Tick` handler of a `DispatcherTimer` threw an exception. The application went on. `Dispatcher.UIThread.UnhandledException` was not raised, and the log had no line of the exception. An action that `Dispatcher.UIThread.Post` runs does reach the handler. The application has one such timer (`FadeInBehavior`).
+
+  Find where Avalonia 12.1.3 puts the exception of a timer, and give it to the handler. Do the same check for a timer of the thread pool.
+
+- [ ] **Tell the users about the recovery copies in the wiki** *(2026-11-18, from the recovery copy of the desktop)*
+
+  Since 0.11.0-beta.2, the desktop keeps a recovery copy of a plan with changes, every 5 minutes and before it ends after an exception. The next start asks about a copy that a run left. The menu "Settings" has the item "Keep a Recovery Copy". The copies are in the folder `recovery`, next to the settings and the logs (`.zametek/projectplan.net` in the folder of the user). The wiki does not say this.
+
+  The time between two copies is 5 minutes, and no setting changes it. Decide if a user needs to change it.
+
+- [ ] **Run Reset Layout and Save Layout on the UI thread** *(2026-11-14, from the review of `src`)*
+
+  `ResetLayoutAsync` and `SaveLayoutAsync` of `MainViewModel` call `ResetLayout` and `SaveLayout` through `Task.Run`. On the pool thread, `ResetLayout` holds `m_Lock` of `MainViewModel`. Under the lock, it closes the dock layout, sets `Layout`, starts the new layout and calls `DataGridLayoutManager.ResetDataGridModels()`. Each reset action is `DataGridPersistLayoutBehavior.ResetDataGridModel`, which calls `Dispatcher.UIThread.Invoke` and waits. The setters of `ShowDates` and `UseClassicDates`, and `CloseLayout`, take the same lock on the UI thread. If the UI thread waits for the lock at that moment, the two threads wait for each other, and the application stops.
+
+  The two methods also use Dock objects off the UI thread. `ResetActions` is a plain list, and the UI thread changes it when a grid attaches or detaches. Call the two methods on the UI thread, without `Task.Run`. Then the lock is not necessary around the Dock calls. The Debug assertion of the entry "Add a Debug assertion for the locks that the application holds when it announces a change" finds this site. Nobody reproduced the deadlock.
+
+- [ ] **Do not read `OrderableActivities` on the thread of a compile** *(2026-11-14, from the review of `src`)*
+
+  `PlanGraph.SetDisplayOrders()` reads `OrderableActivities` by index, and it sets the `DisplayOrder` of each activity. Its caller holds the lock of the core. The thread is the one that takes the snapshot for a compile, or the one that builds a save.
+
+  But DynamicData binds `OrderableActivities` on the UI thread (`ObserveOn(RxSchedulers.MainThreadScheduler)`, then `Bind`). The lock of the core does not guard this bind. An add, a remove or a drag of a row during the loop can give an `ArgumentOutOfRangeException` or a wrong order. Nobody reproduced this.
+
+  Let the UI thread publish the order as an array of ids each time the bound collection changes. Let `SetDisplayOrders` read the array. `ActivitiesManagerViewModel` also reads the collection by index under its own lock. Find on which thread it does this.
+
+  **A third caller** *(2026-11-20, from the review of 0.11.0-beta.2, changed 2026-11-21)*. Since 0.11.0-beta.2, the recovery copy reads the order of the view on a pool thread, every 5 minutes while the plan has changes. It uses `PlanGraph.ReadDisplayOrders`, which writes no `DisplayOrder`. A read that the view stops, because the view became shorter, gives no places, and the copy then has the places of the last compile. A read during a drag can still give a wrong order in the copy. When the UI thread publishes the order as an array, let `ReadDisplayOrders` read the array too.
+
+- [ ] **Raise the properties of `DateTimeCalculator` after the release of its lock** *(2026-11-14, from the review of `src`)*
+
+  The setters of `NonWorkingDayMode`, `DisplayMode`, `ProjectStart`, `NonWorkingDaysStart` and `NonWorkingDaysFinish` call `RaiseAndSetIfChanged` inside `lock (m_Lock)`. ARCHITECTURE §7 rule 6 forbids this shape, and the list of the entry about the surgery for rule 6 does not have these sites. The compile, the chart builds and the UI thread take the same lock in `AddDays` and `CountDays`. An observer of one of these properties that waits for a lock of another of those threads makes a cycle.
+
+  The review found no such cycle. Set the field under the lock, and raise after the release. The Debug assertion finds these sites too.
+
+- [ ] **Arm the tracked metrics without a check of `IsBusy`** *(2026-11-14, from the review of `src`)*
+
+  Two subscriptions of `ProjectScenarioManagerViewModel` deliver on the task pool: `m_AreScenariosDisplayedSub` and `m_MetricsSub`. Each one sets `IsReadyToReviseTrackedMetrics` only when `IsBusy` is false. `IsBusy` is a counted scope for the UI, and nothing arms the revision again when the scope ends. If a delivery comes while the manager is busy, the application drops it. The scenario chart can then show the metrics from before the change, until another site arms the revision. Nobody reproduced this.
+
+  The cascades of the core use `IsBulkUpdating` and `MuteWhile` for this purpose. Find what the check protects. Then replace it with these two, or arm again at the end of the busy scope.
+
+- [ ] **Do two smaller things for input that is not trusted** *(2026-11-14, from the review of `src`)*
+
+  1. **The dock layout.** `MainViewModel.RestoreLayout` gives `DockLayout.json` to the `DockSerializer` of `Dock.Serializer.Newtonsoft`. The review reported that this serializer reads type names from the file, with no binder. Nobody confirmed this in the source code of the package. The file is in the settings folder of the user, and thus the risk is low. If the report is correct, do a check of the type names against the types of Dock before the read.
+  2. **The MS Project reader.** `MicrosoftProjectFileImporter` uses `UniversalProjectReader`, which finds the format from the contents of the file. It reads many formats that the import dialog does not offer. Use a reader for the one format, if MPXJ.Net has one. If it has none, do a check of the first bytes of the file before the read.
+
+- [ ] **Change a day number to a date for a chart without a count from the project start** *(2026-11-14, from the review of `src`)*
+
+  `DateTimeCalculator.AddNonWorkingDays` goes one day at a time from its start date, and it counts the working days under the lock of the calculator. `ChartHelper.CalculateChartStartTimeXValue` calls `AddDays` from the project start for each point, when the chart shows dates. `ResourceChartManagerViewModel` calls it for each resource on each day, and two times in the Block style. Thus, the steps for each resource grow with the square of the days. For example, 500 resources and 300 days give about 45 million steps for one build of the chart.
+
+  Without dates, the chart does no count. This is a candidate for the work that the entry "Bound the work after the compile" asks for. Nobody measured it.
+
+  Make the dates of day 0 to the last day one time for each build, with one count, and read them by index. The calculator can also keep such a table, and clear it with the cache of non-working days.
+
+- [ ] **Raise each compiled property of an activity one time for each publish** *(2026-11-14, from the review of `src`)*
+
+  `ManagedActivityViewModel.SetCompiledValues` sets `EarliestStartTime`, `LatestFinishTime` and `FreeSlack`. Each setter raises without a comparison, with 11, 11 and 6 calls of `RaisePropertyChanged`. That is 28 calls for each activity at each publish of a compilation, also when no value changed. Each of the four dependency strings gets three calls. For 985 activities, one publish makes about 27,600 calls, and the grid reads each bound cell again.
+
+  Compare the values first, collect the names, and raise each name one time after the three writes. Measure the publish on `docs/assets/erp-migration.zpp` before and after the change.
+
+- [ ] **Do not make a model of each activity for each booked day at each revision of the trackers** *(2026-11-14, from the review of `src`)*
+
+  `ResourceTrackerSetViewModel` makes one `ResourceActivitySelectorViewModel` for each day that a resource has a tracker. Each selector has its own subscription to `TrackersRevision` of the core. At each revision, `ReviseTrackers()` of each selector makes a `ResourceActivityTrackerModel` for each activity of the plan. Then it compares them with its list. `PublishLists` keeps the arrays of a list that did not change, but the selector makes the models first. For example, 985 activities and 2,000 such days give about two million objects for each revision.
+
+  Let one owner make the list of the ids and the names one time for each revision, and let each selector read it. Then one subscription is enough. Nobody measured this.
+
+- [ ] **Decide if a chart or a graph that is not on the screen must build after each compilation** *(2026-11-14, from the review of `src`)*
+
+  Each chart manager builds its plot when `CompilationOutputRevision` changes (for example `m_BuildGanttChartPlotModelSub`). Each graph manager asks for a new layout when `ArrowGraph` or `VertexGraph` changes (`m_RebuildSub`). No subscription asks if its tab shows. Thus, the MSAGL layout of the two graphs and the plots of the charts run after each edit. They also run when the user sees only a grid.
+
+  A build on demand needs a mark that says that the output is stale. It also needs a build when the tab becomes active, and before each export. `zpp` and the server build all that a job asks for, so they do not change. Measure the builds on `docs/assets/erp-migration.zpp` first. Nobody measured them.
+
+- [ ] **Measure the smaller costs that the review reported** *(2026-11-14, from the review of `src`)*
+
+  The review reported these costs from the source code. Nobody read these sites a second time, and nobody measured them. Measure before a change.
+
+  1. `PlanGraph.RawActivities` returns `m_Activities.Items`, and DynamicData 9.4.33 makes a new array for each read. A loop that reads the property many times copies the list each time.
+  2. The graph outputs clone the activities two times (`CompilationOutputService`, `GraphCompilationService`). The arrow graph then compiles them again. The vertex graph calculates their critical path again. Since 0.11.0-beta.2, it does not schedule the resources a second time. Refer to the entry about the two compiles of a job.
+  3. With rectilinear routing, a drag of a node resolves each edge two times for each move of the pointer (`InteractiveGraphViewModel`, `GraphClashResolver`).
+  4. The save of a workbook holds some copies of it in memory (`XlsxWorkbookWriter`). The server holds each output of a job in memory until the answer (`OutputResponse`).
+  5. The SVG export of a chart takes one lock for the whole process, on each operating system (`ScottPlotImageExporter`). Thus, the jobs of `zpp serve` that export SVG charts wait for each other.
+
+- [ ] **Make a compiler warning stop the build** *(2026-11-14, from the review of `src`)*
+
+  The hook and CI do `dotnet format style` and `dotnet format analyzers` with `--verify-no-changes`, and then a plain `dotnet build`. No project sets `TreatWarningsAsErrors`, `AnalysisLevel` or `EnforceCodeStyleInBuild`, and `Directory.Build.props` does not set them either. Thus, a warning of the compiler, for example a nullable warning, does not stop a commit. On 2026-11-03, f52cd6cb added a CS8600 to a test, and 2d37e6fa removed it.
+
+  The comment in `ci.yml` says that `/WarnAsError` is off because of NU1903 for `System.Security.Cryptography.Xml` 8.0.2. On 2026-11-14, `dotnet list package --vulnerable --include-transitive` found no vulnerable package in a project, and the restore now takes version 10.0.11 of that package. Thus, the reason is probably gone.
+
+  Add `TreatWarningsAsErrors` to `Directory.Build.props`, or pass `-warnaserror` in the hook and in CI. List the warnings that must stay warnings. They are the IKVM warnings of the projects that reference MPXJ, and the one SDK warning of the Browser head (`NativeFileReference`). Build Debug and Release first, and read what each build gives.
+
+- [ ] **Keep the versions of the packages in one file, and let Dependabot watch NuGet** *(2026-11-14, from the review of `src`)*
+
+  Each project file gives the versions of its packages. Avalonia and ReactiveUI.Avalonia are in six project files each. A bump must change each file, and nothing stops two projects with two versions. No lock file exists, and thus a restore can take another transitive version on another day. `dependabot.yml` watches only `github-actions`.
+
+  Add `Directory.Packages.props` (central package management). Then decide about lock files (`RestorePackagesWithLockFile`) for the programs. Add the `nuget` ecosystem to Dependabot, with `ignore` rules for the packages that the repository holds on purpose. These are Dock (after 12.1.0.6, it needs ReactiveUI 26), SkiaSharp 4 and Svg.Skia from 5.2 (they break Linux), `Microsoft.Extensions.*` 11 and xunit v3.
+
+  On 2026-11-14, the packages that follow were behind, and the review knows no reason to hold them. Each line gives the version in use, and then the newest version. Do a check of each one before a bump.
+
+  - Avalonia 12.1.3 (12.1.6) and ReactiveUI.Avalonia 12.1.2 (12.1.6).
+  - Irihi.Ursa 2.2.0 (2.3.1) and Xaml.Behaviors.Avalonia 12.0.7 (12.1.5).
+  - DynamicData 9.4.33 (9.5.0) and Splat.Autofac 20.2.0 (21.0.0).
+  - MPXJ.Net 16.9.0 (16.11.0) and Ical.Net 5.2.3 (5.2.4).
+  - JsonSchema.Net 9.4.0 (9.7.0) and MessageBox.Avalonia 12.0.0 (12.1.0).
+  - Svg.Controls.Skia.Avalonia 12.0.0.13 (12.0.0.17) and Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2).
+
+- [ ] **Build and test on Windows in CI, and collect the coverage** *(2026-11-14, from the review of `src`)*
+
+  `ci.yml` has one job, on `ubuntu-24.04`. The desktop ships for Windows, and the hook on the computer of the maintainer is the only gate on Windows. Thus, CI does not test the things that differ there. Examples are the MS Project import through IKVM, the sharing of open files, the fonts and the paths with a backslash. The test projects reference `coverlet.collector`, but no step collects coverage. Thus, nobody knows which lines the tests do not reach.
+
+  Add a job on Windows. The entry "Package `zpp serve`" already asks for Windows, Linux and macOS, for its golden files. Collect the coverage in one job, and publish the report as an artifact. Do not make a threshold a gate at first.
+
+- [ ] **Map the paths of the XAML files in the symbols of a release** *(2026-11-14, found after the change to `ContinuousIntegrationBuild`)*
+
+  A `Release` build starts each path of a C# file in the symbols with `/_/` (2e3f20cb). The XAML compiler of Avalonia writes the paths of the `.axaml` files into the symbols itself. It makes each path from the folder of the project, and it does not use `PathMap`. Thus, the symbols of a release keep the full path of each `.axaml` file on the build machine. On 2026-11-14, these were 34 files in four DLLs of the desktop application, and one file in `zpp`. Such a path shows only in a frame of compiled XAML in a stack trace.
+
+  Avalonia 12.1.3 has no setting for this. The target `CompileAvaloniaXaml` gives `$(MSBuildProjectDirectory)` to the task as `ProjectDirectory`, and the task has no parameter for `PathMap` or `SourceRoot`. Ask Avalonia to map these paths, or look for a newer version that does. Do not change `ProjectDirectory` in a copy of the target before you know what else the task does with it. Each new version of Avalonia can also break such a copy.
+
+  To do a check of the paths, read the documents of the embedded PDB of `Zametek.View.ProjectPlan.dll` with `System.Reflection.Metadata`. After the change, each document must start with `/_/`.
+
+- [ ] **Suggestion: make `Zametek.ViewModel.ProjectPlan` smaller** *(2026-11-14, from the review of `src`)*
+
+  The project has about 45,700 lines. That is about 70 % of the source code under `src`, without the resources and the Browser head. It holds the view models. It also holds the file formats, the Excel and MS Project imports, the services for the schedule and the metrics, and the chart exports. Four files have more than 1,600 lines: `ProjectScenarioManagerViewModel.cs` (2,716), `CoreViewModel.cs` (2,557), `GanttChartManagerViewModel.cs` (1,813) and `MainViewModel.cs` (1,699).
+
+  Three steps are possible, and each is independent:
+
+  1. Move the MS Project importer to an assembly of its own. Point 6 of the entry "Package `zpp serve`" asks for this too.
+  2. Move the source code that needs no view model (probably `Xlsx`, `Files` and `Services`) to a library of its own. Its tests then need no view model.
+  3. Continue the decomposition of the core with `ProjectScenarioManagerViewModel`.
+
+  ARCHITECTURE §13 says where a file goes. Change it together with a move.
+
+- [ ] **Suggestion: make the collections of the models read-only** *(2026-11-14, from the review of `src`)*
+
+  `Zametek.Common.ProjectPlan` has 79 records. They have 74 public members that are a `List<T>` or another collection that a holder can change. The application gives these records to other threads as snapshots, but nothing stops a change. The equality of such a record compares its lists by reference, and the entry about rule 7 found a guard that this made dead. Until 0.11.0-beta.2, the build of the Gantt chart changed a set of a published activity, and ARCHITECTURE §7 rule 10 tells of a torn `HashSet`.
+
+  Types such as `IReadOnlyList<T>` or `ImmutableArray<T>` make the snapshot rule a rule of the compiler. Mapperly and Newtonsoft.Json must still read and write the models. Thus, try one model first, when it changes for another reason.
+
+- [ ] **Give the controls names for a screen reader** *(2026-11-14, from the review of `src`)*
+
+  No `.axaml` file under `src` sets `AutomationProperties`. Thus, a button that has only an icon has no name for a screen reader, and the charts and the graphs have none. Start with the buttons that have only an icon, and take `AutomationProperties.Name` from the resources. The review reported one such button in `MainView.axaml`. The names also give a UI test a stable way to find a control.
+
 - [ ] **Bound the work after the compile** *(2026-11-13, from the stress test of 0.11.0-beta.1)*
 
   Since 0.11.0-beta.1, the effort series no longer reads each activity for each resource on each day. The series of 1500 activities and 500 resources took 34 seconds and 38 GB of allocations, and it now takes 1.3 seconds and 278 MB. A job of that plan now takes 9 seconds, and not 60. The rest of this entry is from before the change. Measure it again, and then decide what to bound. A job still builds each output of the cascade two times (refer to the entry about the two compiles of a job).
@@ -40,10 +226,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   On 2026-11-12, the maintainer removed the MSI files of v0.11.0-alpha and v0.11.0-beta from their releases, and the next pre-releases have no MSI. But a user who installed one of these MSI files has 0.11.0.0. Before the final release, install its MSI over the beta, and make sure that the installed apps show one entry.
 
-- [ ] **Let the export to Excel take a resource tracker with two entries for one activity** *(2026-11-13, found during the fix of B10)*
-
-  A resource tracker can have two entries for one activity on one day. Then `zpp -x` fails with exit code 1, and the message is "An item with the same key has already been added". The application does not write such a tracker, but a program can. The tracking series adds the two entries. Add them in the export too, or refuse such a tracker in the check before the load (`duplicateId`).
-
 - [ ] **Suggestion: give the headcount for each day in the data output** *(2026-11-12, a suggestion from phase 1 of the zpp skill)*
 
   `outputs.data` writes `-resources.csv`, with one row for each resource on each day. It has no total for each day. The Excel export has this total, in the column `Total` of the sheet "Resource Chart (Activity)". Add the headcount for each day to the data output. For example, add a file `-headcount.csv` with the columns `Time` and `Headcount`.
@@ -59,6 +241,50 @@ This file lists the maintainer-internal engineering intents that must version wi
   An option of the scenario can make the scheduler prefer a free resource that did a predecessor of the activity. It must be an option, because it can add idle days.
 
   The priority list is in the library Zametek.Maths.Graphs (`PriorityListResourceScheduler`, and `scheduling/scheduler.rs` in Rust). Thus, the change starts in the library. Today, `TargetResources` can keep an activity on one resource, but the user must set it on each activity.
+
+- [ ] **Suggestion: give the days on critical activities for each resource** *(2026-11-12, a suggestion from phase 2 of the zpp skill)*
+
+  Righting Software compresses a project with better resources on the critical path only. To select the person to replace with a senior, it counts the critical activities and the critical days of each person. The schedule CSV of `outputs.data` gives `AllocatedToResources` and `TotalSlack` for each activity. Thus, a client must add the durations to get the critical days of a resource. The zpp skill does not add numbers that `zpp` can calculate, so it only lists the critical activities of each resource.
+
+  Add the number of critical activities and the sum of their durations for each resource. For example, add a file `-resources-summary.csv` with the columns `ResourceId`, `Resource`, `CriticalActivities` and `CriticalDays`. Say in the documentation which activities are critical: a total slack of zero, or the critical band of `ActivitySeverities`.
+
+  On 2026-11-14, the maintainer moved this suggestion to a release after 0.11.0.
+
+- [ ] **Suggestion: let a fit of the scenario chart ignore some tracked scenarios** *(2026-11-12, a suggestion from phase 2 of the zpp skill)*
+
+  The scenario chart fits a curve to all the tracked scenarios. The time–cost–risk curve of Righting Software uses one family of plans: the normal plan, its compressed plans and its decompressed plans. Some options are not on that curve, for example a compressed plan with float. In the worked example of the zpp skill, one such option changes the r² of the cubic risk fit from 0.91 to 0.71. Thus, the zpp skill tracks only one family, and the other options are not on the chart.
+
+  Let a person or a client keep a tracked scenario on the chart as a point, but not in the fits. For example, add a flag to the node of the scenario, or fit only the scenarios of one folder.
+
+  On 2026-11-14, the maintainer moved this suggestion to a release after 0.11.0.
+
+- [ ] **Suggestion: keep the late iterations in the statistics of a simulation** *(2026-11-14, a suggestion from phase 3 of the zpp skill)*
+
+  A simulation leaves its failed iterations out of the mean, the percentiles and the chance of the target. The maintainer chose this rule for Zametek.Maths.Graphs 4.1.0 on 2026-11-11, because a compile with the durations of such an iteration gives an error. But an iteration that misses a maximum finish is a late one. Thus, without these iterations, the percentiles are too early, and the chance of the target is too high.
+
+  The zpp skill measured the effect on its claims example, with 5,000 iterations and the seed 1. PaymentsAccess must finish by day 80, and 552 iterations miss this day. Then the chance of a finish by day 172 is 96.6%, and P80 is 165. Without the maximum finish, the chance is 95.1%, and P80 is 166.
+
+  When End must finish by day 166, 977 iterations fail. Each iteration that is left finishes by day 166, and thus the chance of a finish by day 168 is 100%. Without that maximum finish, the chance is 86.9%.
+
+  Since 0.11.0-beta.2, a warning says this next to the statistics. The table "Statistics" of the application and of `zpp` has the row "Warning". `zpp` also writes a line to its standard error stream, with the number of these iterations. The answer of the API has the counts as before (`invalidConstraintsIterations`), and API.md tells what they mean.
+
+  Three more changes are possible:
+
+  - The chance of the target over all the iterations. A failed iteration then counts as a miss of the target. In the example with End, the chance is then 80.5% (4,023 of 5,000).
+
+  - A second run of the plan without its maximum finishes, with the same seed. The durations of an iteration come only from the seed, the order of the activities and their estimates. Thus, each iteration has the same durations in the two runs. The second run gives the statistics, and the first run gives the misses. This doubles the time of a simulation.
+
+  - An option of the simulation in Zametek.Maths.Graphs (4.2.0, in C# and in Rust). It schedules an iteration that misses a maximum finish again, without that maximum. Its late finish goes into the statistics, and it still counts as a miss.
+
+  The last two changes make a maximum finish a deadline in a simulation. In a compile, a maximum finish pins the activity, and a plan that cannot meet it has an error. For a deadline of the whole project, the target of the simulation already gives the chance without this problem. Decide which change to make.
+
+- [ ] **Let the date of the target in the dock "Simulation" write the target date** *(2026-11-15, left from the target date of the simulation)*
+
+  Since 0.11.0-beta.2, `SimulationSettings` can give the target as a date (`TargetFinishDateTime`). The project is done by the end of that date: "done by June 30" is "done by the end of June 30". `zpp`, the server and the application use the date, and a save keeps it. [The project file](PROJECT-FILE.md#times-and-constraints) gives the rule.
+
+  The dock "Simulation" does not write the date. Its date gives a number of days, as before, and a number from the user removes the target date of a file. Thus, a target that a user gives as a date in the dock does not follow a change of the calendar.
+
+  Let the date of the dock write `TargetFinishDateTime`. The date of the dock is the date that the application shows for a finish. Without classic dates, that is the first working day after the target date. The Excel export and import have only the number of days. Decide if they need the date.
 
 - [ ] **Put Inter into the chart SVG files** *(2026-11-12, from the smoke test of v0.11.0-beta)*
 
@@ -102,17 +328,19 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Righting Software compresses a plan with better resources. A senior developer finishes an activity sooner, but costs more. zpp cannot show this today. A factor on the resource, for example 0.8, can scale the duration of each activity that the resource does. With the operator `OR`, the duration then depends on the resource that the scheduler selects, and the priority list must allow for this. The simulation and the Rust port must give the same result. Until then, a client gives the activities of the senior shorter estimates and targets them at that resource.
 
-- [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-10-29)*
+- [ ] **Remove System.Reactive when DynamicData and Dock have no dependency on Rx** *(2026-08-02, last checked 2026-11-20)*
 
   ReactiveUI 24 no longer uses System.Reactive. But removal has no value while other packages still depend on it. Thus, the assembly ships in all cases.
 
   **Dock.** Dock now ships two lanes. The Dock documentation recommends the suffixed System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, with `ReactiveUI.Reactive`). It calls the unsuffixed family the optional ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repository).
 
-  The unsuffixed lane keeps `System.Reactive`. Version 12.1.0.13 of `Dock.Model.ReactiveUI` declares `System.Reactive` 7.0.0, and so does the suffixed twin. On Dock master, the props file `build/ReactiveUI.Primitives.props` of the unsuffixed project references `ReactiveUI` and `System.Reactive` together. Thus, the Dock gate can stay closed for good. The earlier expectation, that the next unsuffixed release drops the reference, does not hold.
+  The unsuffixed lane keeps `System.Reactive`. Version 12.1.5 of `Dock.Model.ReactiveUI` declares `System.Reactive` 7.0.0, and so does the suffixed twin. On Dock master, the props file `build/ReactiveUI.Primitives.props` of the unsuffixed project references `ReactiveUI` and `System.Reactive` together. Thus, the Dock gate can stay closed for good. The earlier expectation, that the next unsuffixed release drops the reference, does not hold.
 
   **DynamicData.** `DynamicData` is the remaining hard blocker in released packages. Version 9.5.0 (2026-10-13) declares `System.Reactive` 6.1.0, and no suffixed twin exists. PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116) migrates DynamicData to ReactiveUI.Primitives. It is open, and it has conflicts with main.
 
   On 2026-10-28, a maintainer wrote in this PR that Primitives support will be opt-in. The default `DynamicData` package stays on `System.Reactive`. Primitives support ships as a separate package that consumers choose to reference. Thus, the default package does not become free of Rx.
+
+  On 2026-11-20, version 9.5.0 was still the newest version, and the PR had no later comment. nuget.org had no package of the DynamicData maintainers for Primitives.
 
   **Watch.** Watch for the separate DynamicData package for Primitives, and for a Dock release whose unsuffixed package drops `System.Reactive`. If both packages keep the dependency, the assembly ships in all cases, and you cannot complete this entry. Then decide whether to delete the entry.
 
@@ -228,7 +456,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The cascade of a large plan takes about 650 ms on the sample plan with 985 activities (`docs/assets/erp-migration.zpp`). The compile takes 100 to 170 ms. `CalculateTrackingSeriesSet` in `ResourceSchedulingService` takes 310 to 370 ms, and thus it is about half of the cascade. The arrow graph takes 50 to 90 ms, the vertex graph takes 160 to 190 ms, and all the metrics together take 30 to 70 ms.
 
+  *(2026-11-20)* The vertex graph now takes about 30 ms on this plan (26 to 29 ms in 15 runs of a Debug build, where the build as it was took 142 to 158 ms). Since 0.11.0-beta.2, it calculates the critical path of the compiled activities, and it does not schedule the resources a second time. Thus, the cascade is about 130 ms shorter than the 650 ms above. Nobody measured the full cascade again.
+
   The cascade no longer holds `m_Lock` (ARCHITECTURE §7 rule 14), and thus the time does not block the UI. But it delays the charts after each edit, and a bulk update waits for it. Profile the calculation and look for work that repeats for each activity. A faster tracking series shortens the wait for every chart.
+
+  **A possible cause** *(2026-11-14, from the review of `src`, read in the source code and not measured)*. For the plan series, the method makes the list `progressTimeline`, with one dictionary for each day to the end of the plan. For each activity, it then adds a `TrackingPointModel` to the dictionary of each day. This includes the days before the activity starts and the days after it finishes. A second loop reads each entry of each day two times. For example, 985 activities and 450 days give about 443,000 objects and dictionary entries, also for a plan with no trackers.
+
+  The loops for the progress and the effort read each day again. One pass in the order of the days is enough for the plan series. It adds the activities that start on a day to a running sum, and it removes those that finish. Profile first, because nobody measured which loop takes the time.
 
 - [ ] **Bring the browser head up to the desktop application** *(2026-08-21)*
 
@@ -276,33 +510,23 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The direction "delete locks rather than order them" in the entry for rule 6 above becomes more attractive if the browser stays single-threaded. A layer of view models with affinity to the UI thread has nothing to contend over.
 
-- [ ] **Stop the MSIX build from depending on whether NuGet restores** *(2026-08-21)*
+- [ ] **Build the packages as a step of each release** *(2026-11-15, from the audit of the packaging path)*
 
-  The packaging build needs the `project.assets.json` file of every project to carry a target for each RID in the bundle. `build-msix.ps1` arranges this. It sets `RuntimeIdentifiers` in the environment, and thus the restore fills all three targets in one pass. This works only if the restore runs.
+  The packaging projects are outside the filter `Zametek.ProjectPlan.slnf`, and thus no gate builds them. A fault in that path can stay there in silence. For example, `-Clean` in `build-msix.ps1` deleted nothing from the day that someone wrote it, and it printed "Cleaned obj/bin". The WiX components once took their files from a folder that the publish no longer wrote to.
 
-  Sometimes the restore does not run. NuGet then reports "All projects are up-to-date for restore" and keeps the assets file that is already there. An ordinary `dotnet build` can leave such a file, and this file has no RIDs at all. Then the inner publish for each RID fails with `NETSDK1047`, and the message names a project that looks innocent.
+  On 2026-11-15, an audit read `build-msix.ps1`, the two `.wapproj` files and the WiX project for more faults of this kind. It found two in the script, and both now stop the script. The first was a build that wrote no bundle, or only the bundle of an earlier run. The second was a `bin` folder that `-Clean` could not delete. The script also forces the NuGet restore now (`RestoreForce`). Before, a restore that NuGet did not do made the build fail with `NETSDK1047`.
 
-  This occurred once, during the `PlatformTarget` investigation, on `Zametek.Shell.ProjectPlan`. It was immediately after a plain build of `Zametek.ProjectPlan.slnx`. The run before and the run after both succeeded. Thus, the fault looks like flakiness and not like a missing input.
+  After these changes, a run of the script built the two bundles in 7 minutes, directly after an ordinary build of the solution. No package in the bundles had a `.pdb` file.
 
-  Three attempts failed. The comments of the script record all three, and thus the next person does not repeat them:
+  A gate in the hook or in CI is not practical. The build needs the MSBuild of Visual Studio with the Windows App Packaging SDK, and it takes minutes. Thus, build the two bundles and the MSI before the tag of each release that has them. The WiX project stops a build for a wrong platform, or with a publish that is older than the code (the target `CheckTheInstallerInputs`). A bundle has no signature unless the script gets `-Sign`.
 
-  1. Deleting `obj` in `-Clean` forces a restore and closes the fault in theory. The attempt on 2026-08-21 failed. MSBuild evaluates every project before it runs any target, and that evaluation imports `obj\<project>.nuget.g.props`. With an empty `obj`, the DesktopBridge targets fail with `MSB4024`. They look for a file that the same command is about to write.
-  2. A separate invocation for the restore fixes that problem. But then the targets for each RID are not filled. The `RuntimeIdentifiers` environment variable does not reach a standalone `/t:Restore` in the way it reaches the `/restore` switch.
-  3. Passing `RuntimeIdentifiers` as a global property is worse. The inner publishes for each RID cannot then override it. The SDK rejects the whole list as a single identifier (`NETSDK1083`).
+- [ ] **Find why a publish of the Browser head waits in the workload restore** *(2026-11-15, from the audit of the packaging path)*
 
-  Two options remain. The first is `-p:RestoreForce=true` on the existing single invocation. It costs a few seconds of re-evaluation on a build that takes minutes, and it makes the RID targets unconditional. The second option is cheaper and less certain. It reads the assets file of each referenced project at the start. It fails early with a message that names the real problem, and `NETSDK1047` does not misdirect.
+  On 2026-11-15, `dotnet publish -c Release` of `Zametek.ProjectPlan.Browser` wrote "Determining projects to restore...", and then nothing for 11 minutes. Its child process was `dotnet workload restore`, which the target `WasmWorkloadRestore` in `Directory.Build.targets` starts before each restore of the Browser head. The workload was on the computer already. With `WASM_WORKLOAD=0`, which skips the target, the same publish took 4 minutes.
 
-- [ ] **Audit the packaging path for more commands and paths that fail in silence** *(2026-08-21)*
+  The hook does not meet this, because it builds with `--no-restore`. The comment of the target says that the installation of a workload needs administrator rights. Thus, the restore possibly waits for a question that a shell with no window cannot show. Find what it waits for. Then give the target a time limit, or let it start the restore only when the workload is not there.
 
-  `-Clean` in `build-msix.ps1` never deleted anything, from the day that someone wrote it. It used `Get-ChildItem -Path $dir -Include bin,obj -Directory`. `-Include` filters the leaf of `-Path` and not the children, unless the path itself ends in a wildcard. Thus, the pipeline matched nothing, and the script still printed "Cleaned obj/bin".
-
-  Nothing failed, and this is the reason why nobody noticed it for a year. It also silently invalidated every "clean build" that anyone believed they ran. One example is the first comparison in the `PlatformTarget` investigation. Stale IKVM native staging made 64 files look as if a change to a managed compiler switch rearranged the JDK.
-
-  A second case appeared almost immediately, in 349baed0. The WiX components took their files from `$(var.<project>.TargetDir)publish\`. The publish no longer wrote to this directory, and nothing reported a missing input.
-
-  The packaging projects are outside the filter `Zametek.ProjectPlan.slnf`. Thus, no gate builds or exercises them. The same class of fault can be in the rest of that path. Its sign is a command or a path that seems correct, because its failure mode is silence.
-
-  Read `build-msix.ps1`, the two `.wapproj` files and the WiX project with this specific suspicion. Then ask if a gate can cover any of them. Since 2026-11-06, the WiX project stops a build for a platform that is not x64. It also stops when a file of its publish is not there or is older than a file under `src` (the target `CheckTheInstallerInputs`).
+  `make publish-browser` has the same wait. The release workflow does not publish the Browser head.
 
 - [ ] **Add a Debug assertion for the locks that the application holds when it announces a change** *(2026-08-21, extracted from the rule-6 entry as the piece that is worth doing on its own)*
 
@@ -451,7 +675,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Stop a job from compiling its plan two times** *(2026-10-02, noticed in phase 4, and worth more now that `zpp serve` takes the start-up out of the cost of a job)*
 
-  The load of a plan already compiles it and builds its outputs. `CoreViewModel.ProcessProjectScenario` and `ProcessProjectScenarioImport` both end with `RunCompile()` and `RunBuildCascade()`, whatever `AutoCompile` says. Then `JobRunner.RunAsync` sets the base theme and runs `RunCompile()` and all seven Build\* steps again. The arrow and vertex graphs each compile the plan once more. Thus, every job does all the compiling and building of the load a second time. The sequence came over from `Program.RunAsync` of zpp without a change.
+  The load of a plan already compiles it and builds its outputs. `CoreViewModel.ProcessProjectScenario` and `ProcessProjectScenarioImport` both end with `RunCompile()` and `RunBuildCascade()`, whatever `AutoCompile` says. Then `JobRunner.RunAsync` sets the base theme and runs `RunCompile()` and all seven Build\* steps again. The arrow graph compiles the plan once more, and the vertex graph calculates its critical path once more. Thus, every job does all the compiling and building of the load a second time. The sequence came over from `Program.RunAsync` of zpp without a change.
+
+  *(2026-11-20)* Since 0.11.0-beta.2, the vertex graph does not schedule the resources a second time. A second schedule was not always the same as the first, and the graph then showed other times than the list of the activities. `GraphCompilationService.BuildVertexGraph` has the reason.
 
   Before you remove the second pass, find what it sees that the first pass did not. The application sets the base theme between them. Thus, the removal can need only a change to set the theme before the load.
 

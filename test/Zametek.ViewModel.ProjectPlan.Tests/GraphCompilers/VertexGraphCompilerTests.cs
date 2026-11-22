@@ -1,4 +1,5 @@
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -6,8 +7,10 @@ using Xunit;
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
     /// <summary>
-    /// Tests for the compiler of the application, in the part that the live graph of a plan needs: setting the dependencies
-    /// that the user entered without leaving the links of the resources in the graph.
+    /// Tests for the compiler of the application, in the two parts that it adds to the compiler of the library. The live
+    /// graph of a plan needs the first: setting the dependencies that the user entered without leaving the links of the
+    /// resources in the graph. The vertex graph of a compiled plan needs the second: the times of the links that a graph
+    /// holds, with no schedule of the resources.
     /// </summary>
     /// <remarks>
     /// A resource dependency is a result of a compilation, and a compilation writes it into the activity. The library makes
@@ -143,6 +146,80 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             compiler.IsIsolated(1).ShouldBeTrue();
             compiler.IsIsolated(2).ShouldBeTrue();
         }
+
+        #region The critical path with no schedule
+
+        // CalculateCriticalPath gives the times of the links that the graph holds, and it schedules no resource. The
+        // vertex graph of a compiled plan needs this: its links hold the schedule of the plan, and Compile of the library
+        // makes a new schedule each time (GraphCompilationServiceTests has the plans that show the difference).
+
+        [Fact]
+        public void CalculateCriticalPath_Given_ActivitiesWithAndWithoutLinks_Then_GivesTheTimesOfTheLinks()
+        {
+            // Activity 1 takes five days, and it sets the finish. Activity 4 comes after activity 3. Activities 1 and 2
+            // have no link.
+            var compiler = new ProbeCompiler();
+            var first = new DependentActivity(1, 5, canBeRemoved: false);
+            var second = new DependentActivity(2, 1, canBeRemoved: false);
+            var third = new DependentActivity(3, 2, canBeRemoved: false);
+            var fourth = new DependentActivity(4, 1, canBeRemoved: false);
+            fourth.Dependencies.Add(3);
+            foreach (DependentActivity activity in new[] { first, second, third, fourth })
+            {
+                compiler.AddActivity(activity).ShouldBeTrue();
+            }
+
+            compiler.CalculateCriticalPath();
+
+            Times(first).ShouldBe(@"0-5, 0-5");
+            Times(third).ShouldBe(@"0-2, 2-4");
+            Times(fourth).ShouldBe(@"2-3, 4-5");
+
+            // An activity with no link can finish as late as the plan does.
+            Times(second).ShouldBe(@"0-1, 4-5");
+            second.TotalSlack.ShouldBe(4);
+        }
+
+        [Fact]
+        public void CalculateCriticalPath_Given_TheResultsOfASchedule_Then_LeavesThemAndAddsNone()
+        {
+            // The activities as a compilation leaves them: each is on a resource, and the second follows the first on it.
+            ProbeCompiler compiler = CreateCompiler(out DependentActivity first, out DependentActivity second);
+            first.AllocatedToResources.Add(7);
+            second.AllocatedToResources.Add(7);
+            second.ResourceDependencies.Add(1);
+            compiler.SetActivityDependencies(2, [], []);
+            compiler.LinksOf(2).ShouldBe(new[] { 1 }, "the test cannot tell a link of a resource from none");
+
+            compiler.CalculateCriticalPath();
+
+            // The link of the resource gives the times, as it did in the compilation.
+            Times(first).ShouldBe(@"0-2, 0-2");
+            Times(second).ShouldBe(@"2-4, 2-4");
+
+            // A schedule clears the resources of each activity and gives them again. This is no schedule.
+            first.AllocatedToResources.ShouldBe(new HashSet<int> { 7 });
+            second.AllocatedToResources.ShouldBe(new HashSet<int> { 7 });
+            first.ResourceDependencies.ShouldBeEmpty();
+            second.ResourceDependencies.ShouldBe(new HashSet<int> { 1 });
+            compiler.LinksOf(2).ShouldBe(new[] { 1 });
+        }
+
+        [Fact]
+        public void CalculateCriticalPath_Given_LinksThatMakeACircle_Then_Throws()
+        {
+            ProbeCompiler compiler = CreateCompiler(out DependentActivity first, out DependentActivity second);
+            compiler.SetActivityDependencies(1, [2], []);
+            compiler.SetActivityDependencies(2, [1], []);
+
+            Should.Throw<InvalidOperationException>(compiler.CalculateCriticalPath);
+        }
+
+        // The earliest start and finish, and then the latest start and finish.
+        private static string Times(DependentActivity activity) =>
+            $@"{activity.EarliestStartTime}-{activity.EarliestFinishTime}, {activity.LatestStartTime}-{activity.LatestFinishTime}";
+
+        #endregion
 
         // A compiler over a builder that the test keeps, so that the test can read the links of the graph.
         private sealed class ProbeCompiler

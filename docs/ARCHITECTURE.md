@@ -445,6 +445,8 @@ These rules apply to each consumer:
 | Counter | Owner | What it counts | What increments it | Its consumers |
 | --- | --- | --- | --- | --- |
 | `ProjectScenarioRevision` | [`CoreViewModel`](../src/Zametek.ViewModel.ProjectPlan/Core/CoreViewModel.cs) | Each load and reset of a scenario | `ResetProjectScenario()` | A snapshot and a cascade keep a copy, and they publish nothing if the value changes (§7 rule 14). A run of the simulation keeps a copy, and it stops if the value changes (§7 rule 13). |
+| `ProjectScenarioUpdateRevision` | `CoreViewModel` | Each mark of a change to the scenario, also when the scenario has the mark already | The setter of `IsProjectScenarioUpdated`, when the value is true. The publication of a compilation marks the scenario too, but it does not count. | A copy: a save of `MainViewModel` reads it before it builds the project. If the value changes before the end of the write, the save keeps the marks of a change. |
+| `ProjectUpdateRevision` | `ProjectScenarioManagerViewModel` | Each mark of a change to the project, also when the project has the mark already | The setter of `IsProjectUpdated`, when the value is true | A copy: the same save of `MainViewModel`. |
 | `TitleRevision` | [`ProjectScenarioManagerViewModel`](../src/Zametek.ViewModel.ProjectPlan/ProjectScenarioManagement/ProjectScenarioManagerViewModel.cs) | Each arm of the title | The setter of `IsReadyToReviseTitle` | Two triggers: the title of the window in `MainViewModel`, and the name of the scenario in `SimulationManagerViewModel`. |
 | `m_InputRevision` | [`CompilationScheduler`](../src/Zametek.ViewModel.ProjectPlan/Core/CompilationScheduler.cs) | Each change of what a compilation reads | `NoteInputsChanged()` | A snapshot keeps a copy. If the value changes, the results are stale and the plan is due another compilation (§7 rule 14). |
 | `CompilationRequestRevision` | `CoreViewModel` | Each request for a compilation, except during a bulk update | `RequestCompilation()` | A trigger: `m_CompileOnSettingsUpdateSub`. The handler reads `m_InputRevision`, which says if the plan is due a compilation. |
@@ -484,7 +486,7 @@ No test can make two billion increments. Thus, a test sets the private field nea
 
 It also checks that a getter does not wait for the lock of its owner. For each filter of the display settings, it checks that the filter is in place when the raise occurs. A further case takes `CompilationOutputRevision` past 1,000,000, where it used to wrap.
 
-The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request.
+The consumers have tests of their own across the rollover. `MainViewModelStartTests` has the test for the title. `MainViewModelSaveTests` has the tests for a change during a save. `SimulationChartManagerViewModelTests` has the tests for a stale result and for a run that stops. `CoreViewModelOffLockTests` has the tests for the publication of a compilation and of a cascade. It also has the tests for an edit after a load that overlaps a compilation or a request.
 
 `GanttActivitySelectorViewModelTests` and `EarnedValueResourceSelectorViewModelTests` have the tests for a filter. They also test a load across a rollover, and two deliveries across a rollover. `RevisionCounterTests` has the test for the comparisons of `m_InputRevision`. `TrackerRevisionTests` has the tests for a request during a compilation and during a load. It also tests the first value and the copy of the watcher, across a rollover.
 
@@ -533,11 +535,35 @@ Jobs run side by side, and each job produces exactly the same result as when it 
 
 **A date of a plan is a day.** A plan writes its dates with an offset from UTC, but the schedule uses the day that each date shows in its own offset. Thus, [`ProjectFileOpen`](../src/Zametek.ViewModel.ProjectPlan/Files/ProjectFileOpen.cs) reads a file with `DateParseHandling.None`, and each date reaches the typed reader as the file writes it. The default of Newtonsoft.Json made each date a moment in the time zone of the computer, where it could fall on another day. `DateTimeCalculator` counts days and not moments, so that two dates with different offsets count as the days that they show. The time zone of the process changes only the moments, such as the times of the nodes and the clock of a job.
 
+**A save writes a temporary file first.** [`FileStreamHelper`](../src/Zametek.ViewModel.ProjectPlan/Files/FileStreamHelper.cs) writes each file of the desktop and of `zpp`: the project, the exports, the outputs and the settings. A save builds the whole file in memory. Then it writes a temporary file (`<name>.tmp`) in the folder of the target, and flushes it to the disk. The temporary file then takes the place of the target. Thus, a write that does not finish leaves the file that was there.
+
+The graph library has its own copy of the helper (`Internal/FileStreamHelper.cs`), which writes in the same way. A change of one copy is a change of the other.
+
+The target keeps what it is:
+
+- A symbolic link stays a link: the save writes the file at the end of the links.
+- A hidden file stays hidden.
+- On Windows, the file keeps the time of its creation and its permissions (`File.Replace`), and on the other systems its mode.
+- A file that nobody may write is a failure, and the file is whole.
+- A file with a second name (a hard link) loses that name: the other name keeps the old content. A save in place changed both.
+
+A save in place is what the saves did before 0.11.0-beta.2. It empties the file and writes into it, and so a failure during it can leave a part of a file. It works in two cases where nothing can take the place of the file. In the first case, another program holds the file open, and it lets others write the file and not delete it. In the second case, the folder lets the user make no file. In these cases the save writes in place, so that a save that worked before still works.
+
+For a file that a program holds, the save tries for 2 seconds first. A scanner or a sync client holds a file for a moment only. The event `FileStreamHelper.WroteInPlace` tells a write in place, and each host puts it in its log as a warning. The copy of the graph library tells nobody.
+
 **The import of a workbook is all or nothing.** [`XlsxScenarioFileImporter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxScenarioFileImporter.cs) reads the whole workbook into tables of typed cells (`ImportTable`). [`XlsxWorkbookReader`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxWorkbookReader.cs) makes the tables. It is the one class that knows the library that reads the file. [`XlsxWorkbookWriter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/XlsxWorkbookWriter.cs) is the same for the library that writes the file: the exporter gives it text, numbers, truth values and dates, in four looks, and it gives back the zipped package, stamped with the clock of the calculator. The titles of the columns are the structure of a sheet. The importer finds a column by its title, and it leaves alone a column or a sheet that it does not know. Thus, a workbook that has more than the exporter writes can still be imported. The importer reads each cell as what it is: a number, a date, a truth value, a formula (its result) or text. A blank cell is not a value that was given. A cell with a value of the wrong kind is a problem. The importer collects every problem (`ImportIssue`, with the sheet, the cell, the title of the column and the name of the row) and does not stop at the first. If it finds one or more, it throws a `ScenarioImportException` with the list, and it imports nothing. Each host says the problems in its own way:
 
 - The desktop shows an error with the first ten, and it offers a CSV report of all of them ([`ImportProblemsPresenter`](../src/Zametek.ViewModel.ProjectPlan/Xlsx/ImportProblemsPresenter.cs)). The open project does not change, because the import fails before it changes anything.
 - `zpp` writes one line for each problem to the standard error stream and exits with code 1.
 - The server answers with the problem `project-not-readable` and an error for each of the first 100 problems.
+
+**The reader bounds what it reads of a workbook.** A workbook is a file that anyone can make. A file of some kilobytes can say that a sheet has a million rows and thousands of titles. Its parts can also unpack to many times its size. Thus, `XlsxWorkbookReader` goes only to the rows and the cells that the file holds, and it reads a row up to its last value. It also has three bounds, and a workbook above a bound is one `ImportIssue`: the import stops at once.
+
+- The parts of the file hold 100 MB at most when the library unpacks them.
+- A sheet has 10,000 rows that hold a value at most.
+- The reader reads 10 million cells of a workbook at most.
+
+The library loads the whole workbook, and nothing can stop that load. The bound on the parts is thus the bound on its time and its memory. The reader does the check of that bound before the load, from the sizes that the package gives for its parts. After the load, the `CancellationToken` of the job stops the reader between two rows. The desktop gives no token. The import of a file of Microsoft Project has no bound and no stop.
 
 **ClosedXML reads and writes the workbooks.** Only `XlsxWorkbookReader` and `XlsxWorkbookWriter` use it. Some rules follow from how the library works:
 
@@ -610,3 +636,29 @@ The large projects group their files by function. The command line, view model a
 `Contracts` and `Exceptions` stay folders by kind, even when they hold one file. The root of a project holds its top-level classes, such as `Program` and `MainViewModel`. A small project, such as the engine, groups its files by kind: `Contracts`, `Models`, `Exceptions` and `Miscellaneous`.
 
 The namespace of a project stays flat. Thus, a move between folders changes no code. A test project has the same folders as the project that it tests, and its shared fixtures stay at its root.
+
+## 14. The recovery copy
+
+The desktop keeps a recovery copy of the open project, for a run that ends before the user saves. [`ProjectRecovery`](../src/Zametek.ViewModel.ProjectPlan/Recovery/ProjectRecovery.cs) writes the copy, and [`RecoveryStore`](../src/Zametek.ViewModel.ProjectPlan/Recovery/RecoveryStore.cs) keeps it as files. The copy is a project file. It is in the folder `recovery`, next to the settings and the logs, and not next to the file of the user. A project with no file has no folder, and a folder that the user syncs gets no file that the user did not make. `zpp`, the server and the Browser head keep no copies.
+
+**A copy is not a save.** It holds the project that a save writes, and it changes nothing of the project. The marks of a change stay. Every 5 minutes (`ProjectRecovery.Interval`), the application writes a copy when the plan has changes that the last copy does not have. The two counters of the save tell this (section 9). The setting `KeepRecoveryCopy` turns these copies off, and the menu "Settings" has it.
+
+A save puts the time of the save into the scenario on show, and it gives each activity its place in the view. It also sets a busy state, and the main window shows its wait overlay for that state. The application writes a copy while the user works. Thus, the copy takes a build that does none of these things (`IMainViewModel.BuildProjectCopyAsync`). The time of the scenario and the places of the activities are only in the copy.
+
+**The copy goes when the plan has no changes.** This is after a save, after a close of the project, and after a close of the application that the user agreed to. A copy of a saved plan is older than the file of the user, or the same, and nobody needs it. `ProjectRecovery` hears the change of `ProjectHasChanges` and removes the copy at once. When a save ends during the write of a copy, `ProjectRecovery` removes that copy after its write.
+
+An end of the application that removes the copy waits for a copy that is on its way, for 5 seconds at most. Then it removes the copy, and no copy starts after it. A write that ends after the wait removes its own copy. A run that ends during a write can leave the temporary file of the write. The next look for the copies that a run left removes such a file, when the run that wrote it is not alive.
+
+**A session holds a lock file.** Each run of the application has an id, and up to three files with that id as their name. These are the copy, a small JSON file that says what the copy is of, and a lock file that the run holds open. The system closes the lock file when the process ends, however it ends. Thus, a copy whose lock file nobody holds is a copy that a run left. Two runs of the application at one time do not take the copy of each other.
+
+**The next start asks about a copy that a run left.** `ProjectRecovery.OfferLeftCopiesAsync` asks about each copy, the newest first. The user opens the copy, keeps it for the next start, or deletes it. `IDialogService.ShowChoiceAsync` shows the question, with a button for each choice. The application has one project at a time. Thus, after the user opens a copy, the question about the other copies waits for the next start.
+
+A copy that the user opens is a project with changes. It has the name and the folder of the file that it is a copy of, and its title is not bound to that file. Thus, a save asks where to write, and the file of the user changes only when the user says so. After the open, the run writes the project as its own copy, and then it removes the copy that the other run left. A run that ends between the two steps leaves one of the copies.
+
+**An exception that nothing handles ends the application.** [`UnhandledErrorHandler`](../src/Zametek.ViewModel.ProjectPlan/Recovery/UnhandledErrorHandler.cs) takes an exception of the UI thread (`Dispatcher.UIThread.UnhandledException`). It also takes an exception that leaves a command or a subscription of ReactiveUI (`App.UnhandledErrors`, which `Program` gives to the builder of ReactiveUI). Nobody knows the state of the application after such an exception, and so the application does not go on.
+
+The handler writes the exception to the log, and it keeps a recovery copy of a project with changes. It waits 15 seconds at most for the copy. Then it tells the user, and it ends the application with exit code 1. The close of the main window asks no question then, and the copy stays for the next start.
+
+The handler does its work one time. An exception that comes while the message shows goes to the log. A view that fails at each frame can keep the user from the message. Thus, after five exceptions, the application ends without the answer of the user. The host gives the handler its parts: the copy, the dialog and the end. Thus, the handler has tests, and `App` only connects the parts.
+
+An exception on a thread that is not the UI thread ends the process, and nothing can stop that. The handler of `AppDomain.UnhandledException` keeps a recovery copy first, with the same time limit, and it shows no message. An exception in the `Tick` of a `DispatcherTimer` does not reach `UnhandledErrorHandler`. In a check with the built application, the application went on after such an exception, and the log had no line of it ([TODO](TODO.md)).

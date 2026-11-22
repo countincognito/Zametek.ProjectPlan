@@ -58,6 +58,10 @@ namespace Zametek.ProjectPlan.Browser
 
         public object Parent { set => m_Parent = (ContentControl)value; }
 
+        // Nothing in the browser asks such a question: only the desktop keeps recovery copies.
+        public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices) =>
+            throw new NotSupportedException(@"A question with named choices is not available in the browser.");
+
         public async Task ShowNotificationAsync(
             string title,
             string header,

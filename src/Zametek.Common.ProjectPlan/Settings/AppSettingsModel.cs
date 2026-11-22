@@ -32,5 +32,9 @@
         // the recent file cap above, it is an escape hatch for the settings file, for
         // the rare plan that legitimately needs longer than the default.
         public int CompilationTimeoutMilliseconds { get; init; } = DefaultCompilationTimeoutMilliseconds;
+
+        // Whether the application writes a recovery copy of a plan with changes, at an interval. A settings file
+        // from before this setting has no word of it, and so the copies are on.
+        public bool KeepRecoveryCopy { get; init; } = true;
     }
 }

@@ -156,6 +156,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public Task<bool> ShowConfirmationAsync(string title, string header, string message) => Task.FromResult(false);
 
+            public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices) => Task.FromResult(-1);
+
             public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) => Task.FromResult<string?>(null);
 
             public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters) =>
@@ -713,12 +715,35 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 Value = countAndShare,
             });
 
+            // The row after them says what the counts mean for the statistics that follow.
+            panel.Statistics.ShouldContain(new SimulationStatisticModel
+            {
+                Name = Resource.ProjectPlan.Labels.Label_SimulationWarning,
+                Value = Resource.ProjectPlan.Labels.Label_SimulationStatisticsTooEarly,
+            });
+
             // A reason that no iteration had has no row.
             panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationFailedResourceScheduling);
             panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationFailedTimeLimit);
 
             // The activity is in the table of the activities with its misses.
             panel.Activities.Single(x => x.ActivityId == 3).MaximumLatestFinishTimeMissCount.ShouldBe(failed);
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_NoIterationThatMissesAMaximum_Then_TheStatisticsHaveNoWarning()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+
+            await panel.RunSimulationAsync();
+
+            panel.Summary.ShouldNotBeNull().InvalidConstraintsIterationCount.ShouldBe(0);
+            panel.Statistics.ShouldNotBeEmpty();
+            panel.Statistics.Select(x => x.Name).ShouldNotContain(Resource.ProjectPlan.Labels.Label_SimulationWarning);
         }
 
         [Fact]
@@ -872,6 +897,36 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.Iterations.ShouldBe(new SimulationSettingsModel().Iterations);
             panel.TargetFinishTime.ShouldBeNull();
             panel.UseRandomSeed.ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task RunSimulationAsync_Given_AScenarioThatResetsWhileTheRunGivesItsResult_Then_TheNewScenarioDoesNotGetTheResult()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+            bool wasReset = false;
+
+            // The panel sets the revision of its result after it compared the revision of the scenario with the one of the
+            // run, and before it gives the result to the core. A scenario that resets at that moment is a new scenario.
+            panel.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == @"ResultRevision" && !wasReset)
+                {
+                    wasReset = true;
+                    harness.Core.ResetProjectScenario();
+                }
+            };
+
+            await panel.RunSimulationAsync();
+
+            wasReset.ShouldBeTrue();
+            harness.Core.SimulationSummary.ShouldBeNull();
+            panel.Summary.ShouldBeNull();
+            panel.StatusText.ShouldBe(Resource.ProjectPlan.Labels.Label_SimulationCancelled);
+            harness.Dialogs.Errors.ShouldBeEmpty();
         }
 
         [Fact]
@@ -1085,6 +1140,56 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             panel.TargetFinishDate = harness.Core.ProjectStart.AddYears(-3);
 
             panel.TargetFinishTime.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task TargetFinishTime_Given_SettingsWithATargetDate_Then_IsTheDaysUpToTheEndOfThatDate()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            DateTimeOffset date = harness.Core.ProjectStart.AddDays(41);
+
+            // Each day is a working day here: by the end of the 42nd day of the plan, 42 days of work are possible.
+            harness.Core.SimulationSettings = harness.Core.SimulationSettings with { TargetFinishTime = 7, TargetFinishDateTime = date };
+
+            panel.TargetFinishTime.ShouldBe(42);
+
+            panel.Iterations = c_Iterations;
+            panel.UseRandomSeed = false;
+            panel.Seed = 5;
+            await panel.RunSimulationAsync();
+
+            panel.Summary.ShouldNotBeNull().TargetFinishTime.ShouldBe(42);
+            panel.Summary.TargetProbability.ShouldNotBeNull();
+            harness.Core.SimulationSettings.TargetFinishDateTime.ShouldBe(date);
+        }
+
+        [Fact]
+        public async Task TargetFinishTime_Given_ANumberFromTheUserAfterATargetDate_Then_TheNumberIsTheTargetAndTheDateIsGone()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            harness.Core.SimulationSettings = harness.Core.SimulationSettings with { TargetFinishDateTime = harness.Core.ProjectStart.AddDays(41) };
+
+            panel.TargetFinishTime = 50;
+
+            panel.TargetFinishTime.ShouldBe(50);
+            harness.Core.SimulationSettings.TargetFinishDateTime.ShouldBeNull();
+            harness.Core.SimulationSettings.TargetFinishTime.ShouldBe(50);
+        }
+
+        [Fact]
+        public async Task TargetFinishTime_Given_TheSameNumberFromTheUserAsTheTargetDateGives_Then_TheDateStays()
+        {
+            using Harness harness = await Harness.MakeAsync();
+            SimulationChartManagerViewModel panel = harness.Panel;
+            DateTimeOffset date = harness.Core.ProjectStart.AddDays(41);
+            harness.Core.SimulationSettings = harness.Core.SimulationSettings with { TargetFinishDateTime = date };
+
+            // A binding that writes back the value that it read is not a change of the target.
+            panel.TargetFinishTime = 42;
+
+            harness.Core.SimulationSettings.TargetFinishDateTime.ShouldBe(date);
         }
 
         [Fact]

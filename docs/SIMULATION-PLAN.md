@@ -353,7 +353,7 @@ Phase 4 finished on 2026-10-16. All the work is in this repository, on the branc
 7. **The limits.** The server limits the iterations (`MaxSimulationIterations`, 100000 by default, at most 1000000). The time of a job (`JobTimeoutSeconds`) limits a simulation of a large plan, and the simulation stops between two chunks of its iterations. A request with no iterations on a server whose limit is lower than 5000 gets the limit.
 8. **Progress is in the log.** A run of `zpp` or of a server has no progress bar. The panel view model writes the settings, the progress (about every two seconds) and the time to the log, at the information level. `--verbose` shows these lines.
 9. **The header row.** The table of the metrics wraps a cell of more than about 40 characters. A name with a prefix on each row made the longest row wrap, and thus the table has one row, "Schedule Simulation", before the statistics. The statistics are a table of their own now, and this row is gone (refer to [The statistics are a table of their own](#the-statistics-are-a-table-of-their-own)).
-10. **The target is in days.** `--simulation-target` and `targetFinishDays` are whole days from the start of the project. The panel also takes a date.
+10. **The target is in days.** `--simulation-target` and `targetFinishDays` are whole days from the start of the project. The panel also takes a date. Since 0.11.0-beta.2, the settings of a project can also give the target as a date (`TargetFinishDateTime`). The project is done by the end of that date.
 11. **A cancel is never lost.** The first version of the engine registered `CancelSimulation()` with the token of the job. That call does nothing when the run has not yet made its own token, and so a cancel in that window (the time limit of a job, for example) let the simulation run to its end. The run now takes the token of the job and links it to its own (`RunSimulationAsync(CancellationToken)`). The hook found this: a test of the time limit failed one time in three. Its other cause was a bound of 30 seconds on the answer, which the test projects of a build, running side by side, can exceed. The test now asks for the problem `job-timeout` and no more, and a test of the engine, with no clock, says that the run stops.
 
 ### What is not done
@@ -568,11 +568,36 @@ Version 4.1.0 of the library corrects two crashes of the compile and an error of
 - **The outputs.** The library tells why each iteration failed, and which activities missed their maximum LFT. Each output of a simulation now shows this:
   - The table "Statistics" shows the failed iterations with their share of all the iterations. It has a row for each reason that an iteration had, and a row "Missed maximum LFT" for each activity that missed its maximum.
   - The table "Criticalities" also has the activities that missed their maximum, and the column "Missed maximum LFT".
+  - Since 0.11.0-beta.2, the table "Statistics" also has the row "Warning" when an iteration missed a maximum. The row says that the statistics are too early, because they leave out the late iterations. `zpp` writes the same warning to its standard error stream, with the number of these iterations.
   - The statistics file has the rows `ResourceSchedulingStallIterations`, `MaximumTimeValueExceededIterations` and `InvalidConstraintsIterations` after `FailedIterations`. The activities file has the column `MaximumLatestFinishTimeMisses`. The iterations file has the column `Failure`, with the reason of each failed iteration.
   - The workbook, the project file, the JSON of `zpp` and the API have the same values. A result from an earlier version has zeros.
   - The test plan `missed-maximum-lft.zpp` has an activity of 8 to 20 days before a milestone with a maximum LFT of 12 days. Some iterations of it fail.
 - **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.1.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.1.0.
 - **How it was checked.** Two new tests of `zpp` run the plans of the two crashes, `milestone-after-phase.zpp` and `unmet-maximum-lft.zpp`. With version 4.0.1, `zpp` exited with code 1 on both. With version 4.1.0, it exits with code 0 and code 3.
+
+### The application uses version 4.1.1 of the library
+
+Version 4.1.1 of the library corrects a crash of the compile. The API does not change. The application moved from version 4.1.0 to version 4.1.1 on 2026-11-14. Phase 3 of the tests of the zpp skill found the crash.
+
+- **The crash.** An activity that must finish by day 0 crashed the compile when no activity finished after day 0. A maximum finish date before the start of the project also gives day 0. `zpp` exited with code 1. The compile now gives `C0010`, and `zpp` exits with code 3.
+
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.1.1, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.1.1.
+
+- **How it was checked.** A new test of `zpp` runs two plans, `maximum-finish-day-0.zpp` and `maximum-finish-date-before-start.zpp`. With version 4.1.0, `zpp` exited with code 1 on both. With version 4.1.1, it exits with code 3 and reports `C0010`.
+
+### The application uses version 4.2.0 of the library
+
+Version 4.2.0 of the library changes the result of a compile in two cases. The API does not change. The application moved from version 4.1.1 to version 4.2.0 on 2026-11-20. An examination of the vertex graph of a plan found the two cases.
+
+- **An activity gives way to one that has no other resource.** An activity that can use one of two or more resources took the first free resource. Sometimes a later activity in the priority list was ready at the same moment, and it had only that resource to use. The later activity then waited, and another resource did nothing. Now the first activity moves to the free resource, and the two start at the same moment. Thus, the schedule of some plans changes, and most of these plans finish earlier. The scheduler does not look ahead: an activity that becomes ready later can still wait.
+
+- **A plan with no resources.** A compile with no resources gave a dependency to each activity that followed another activity on a synthetic resource. Two activities with no connection then had a dependency, and the first lost slack or became critical. Now such a compile gives the times, the slack and the critical activities of the critical path of the plan alone. It gives no resource dependency. The application compiles a plan in this way when the user disables its resources. The text about synthetic resources in other sections of this document ("The lean path against the compile", "Decisions in phase 2" and "The possibilities") describes the library up to version 4.1.1.
+
+- **The simulation.** With no resources, an iteration was already the critical-path calculation alone, and thus a simulation and a compile now give the same critical activities. The setting `ScheduleOntoSyntheticResources` of the library has no effect any more. The application never set it.
+
+- **The packages.** `Zametek.Common.ProjectPlan` names `Zametek.Maths.Graphs.Primitives` 4.2.0, and `Zametek.ViewModel.ProjectPlan` names `Zametek.Maths.Graphs.Compilers` 4.2.0.
+
+- **How it was checked.** All the tests of the application pass with version 4.2.0, with no change to a test or to an expected output. `zpp` also compiled one plan with each version. The plan has 61 activities, and 39 of them can use one of two resources. The schedule data, the graphs and the metrics are the same with version 4.1.1 and with version 4.2.0.
 
 ## Performance work to explore later
 

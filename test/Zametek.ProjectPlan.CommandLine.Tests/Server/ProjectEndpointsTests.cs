@@ -205,6 +205,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Compile_Given_AConstraintDateBeforeTheStart_Then_TheAnswerWarnsAtItsPlace()
+        {
+            // The calendar gives such a date day 0, and so a minimum EST has no effect (phase 3 of the zpp skill).
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+            using var content = RunningServer.CompileContent(Encoding.UTF8.GetBytes(plan.ToString()), @"plan.zpp");
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime outOfRange"]);
+        }
+
+        [Fact]
         public async Task Compile_Given_ATrackedScenarioThatDoesNotCompile_Then_ItsItemSaysWhy()
         {
             // Its metrics were null, and nothing said why (C23 of the stress test of 0.11.0-beta.1).
@@ -219,6 +235,43 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             IReadOnlyList<TrackedScenarioResponse> tracked = compiled.TrackedScenarios.ShouldNotBeNull();
             tracked.Single(x => x.Path == @"Beta").Errors.Select(x => x.Code).ShouldBe([@"P0010"]);
             tracked.Single(x => x.Path == @"Alpha").Errors.ShouldBeEmpty();
+        }
+
+        // A client can send a path as the name of its file, and a path of Windows has separators that Linux does not take
+        // as separators. The name is what follows the last of them, on each system.
+        [Theory]
+        [InlineData(@"plan.zpp", @"plan.zpp")]
+        [InlineData(@"..\..\plan.zpp", @"plan.zpp")]
+        [InlineData(@"../../plan.zpp", @"plan.zpp")]
+        [InlineData(@"C:\plans\plan.zpp", @"plan.zpp")]
+        [InlineData(@"C:plan.zpp", @"plan.zpp")]
+        [InlineData(@"/plans\mixed/plan.zpp", @"plan.zpp")]
+        [InlineData(@"plans\", @"")]
+        [InlineData(@"", @"")]
+        public void UploadFileName_Given_ANameWithAPath_Then_OnlyTheName(string sent, string expected)
+        {
+            ProjectEndpoints.UploadFileName(sent).ShouldBe(expected);
+        }
+
+        [Theory]
+        [InlineData(@"..\\..\\escape.zpp")]
+        [InlineData(@"../../escape.zpp")]
+        [InlineData(@"C:escape.zpp")]
+        public async Task Compile_Given_AFileNameWithAPath_Then_TheOutputsHaveOnlyTheName(string sent)
+        {
+            // In the header of a part, a backslash comes with a backslash before it.
+            using ByteArrayContent content = RunningServer.RawMultipart(
+                @"path",
+                closed: true,
+                (@"project", sent, TwoScenarios()),
+                (@"options", null, Encoding.UTF8.GetBytes(@"{ ""outputs"": { ""data"": {} } }")));
+
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            compiled.Outputs.ShouldNotBeEmpty();
+            compiled.Outputs.ShouldAllBe(x => x.FileName.StartsWith(@"escape-", StringComparison.Ordinal));
         }
 
         [Fact]

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using System.Globalization;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -32,6 +33,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // Hosts that stand for every address the machine has, as Kestrel reads them.
         private static readonly string[] s_AnyHosts = [@"*", @"+"];
+
+        // The names of the limits, as zpp-serve.json and the environment give them.
+        private static readonly string[] s_LimitNames = [.. typeof(ServeLimits).GetProperties().Select(x => x.Name)];
 
         // The extensions of certificates read as PEM rather than as PKCS #12.
         private static readonly string[] s_PemExtensions = [@".pem", @".crt"];
@@ -78,8 +82,51 @@ namespace Zametek.ProjectPlan.CommandLine
                 Verbose = options.Verbose,
                 LogFormat = options.LogFormat,
                 BehindTlsProxy = options.BehindTlsProxy,
+                AllowedHosts = ResolveAllowedHosts(options, apiKey),
                 Limits = ResolveLimits(options, settingsDirectory, environment),
             };
+        }
+
+        // The names that --allow-host gives, each one time. A name is the name of a host and nothing else: the server
+        // compares it with the Host of a request without its port, and without the brackets of an IPv6 address. Thus, an
+        // IPv6 address is kept without its brackets too. With a key, the server does not look at the Host, and so the option
+        // is refused and does not do nothing in silence.
+        private static List<string> ResolveAllowedHosts(
+            ServeOptions options,
+            string? apiKey)
+        {
+            string allowHost = OptionLongName(nameof(ServeOptions.AllowHost));
+            List<string> names = [];
+
+            foreach (string given in options.AllowHost)
+            {
+                string name = given.Trim();
+
+                if (Uri.CheckHostName(name) == UriHostNameType.Unknown)
+                {
+                    throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNotValid, given, allowHost));
+                }
+
+                // Only an IPv6 address passes the check with brackets.
+                if (name.StartsWith('[')
+                    && name.EndsWith(']'))
+                {
+                    name = name[1..^1];
+                }
+
+                if (!names.Contains(name, StringComparer.OrdinalIgnoreCase))
+                {
+                    names.Add(name);
+                }
+            }
+
+            if (names.Count > 0
+                && apiKey is not null)
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNeedsNoApiKey, allowHost));
+            }
+
+            return names;
         }
 
         // The directory zpp is in, where it looks for zpp-serve.json: the executable's, unless zpp was started through
@@ -336,6 +383,23 @@ namespace Zametek.ProjectPlan.CommandLine
                     .Build();
 
                 configuration.Bind(limits);
+
+                // Bind takes no notice of a name that it does not know. Thus, a limit with a wrong letter in the file had
+                // no effect, and the server started with the default. Only the file is held to the names of the limits:
+                // the environment has other variables that start with ZPP_.
+                string? unknown = configuration.Providers
+                    .OfType<JsonConfigurationProvider>()
+                    .SelectMany(x => x.GetChildKeys([], null))
+                    .FirstOrDefault(x => !s_LimitNames.Contains(x, StringComparer.OrdinalIgnoreCase));
+
+                if (unknown is not null)
+                {
+                    throw new UsageException(string.Format(
+                        Resource.ProjectPlan.Messages.Message_ServeSettingNotKnown,
+                        settingsFile,
+                        unknown,
+                        string.Join(@", ", s_LimitNames)));
+                }
             }
             catch (Exception ex) when (ex is InvalidDataException or FormatException or InvalidOperationException)
             {
@@ -362,6 +426,7 @@ namespace Zametek.ProjectPlan.CommandLine
             RequireAtLeast(limits.MaxSimulationIterations, 1, nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations));
             RequireAtMost(limits.MaxSimulationIterations, GraphLimits.MaximumSimulationIterations, nameof(ServeLimits.MaxSimulationIterations), nameof(ServeOptions.MaxSimulationIterations));
             RequireAtLeast(limits.JobTimeoutSeconds, 1, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
+            RequireAtMost(limits.JobTimeoutSeconds, ServeLimits.MaximumJobTimeoutSeconds, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
             RequireAtLeast(limits.MaxCompileTimeoutMilliseconds, 1, nameof(ServeLimits.MaxCompileTimeoutMilliseconds), nameof(ServeOptions.MaxCompileTimeoutMilliseconds));
 
             return limits;

@@ -118,15 +118,16 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             return (freshFile, overwrittenFile);
         }
 
-        // Runs Main while the file an export is about to write is held open with
-        // no sharing, so the export's own write fails the way it does when a
-        // viewer has the file open: a sharing violation on Windows, and on Unix
-        // a clash with the flock that .NET takes for FileShare.None.
-        private static async Task<(int ExitCode, string Output)> RunCapturedWithFileLockedAsync(
-            string lockedFile,
+        // Runs Main while a folder is in the place of the file that an export is about to write, so that the export's own
+        // write fails, on each system and also for root. A file that a program holds open does not do this: a save puts a
+        // temporary file in the place of the target, and on Unix a rename ignores the flock that .NET takes for
+        // FileShare.None (FileStreamHelperWriteTests has the cases of a file that a program holds, on Windows). The save
+        // tries again for 2 s before it fails.
+        private static async Task<(int ExitCode, string Output)> RunCapturedWithTargetBlockedAsync(
+            string blockedFile,
             params string[] args)
         {
-            using var lockStream = new FileStream(lockedFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+            Directory.CreateDirectory(blockedFile);
             return await RunCapturedAsync(args);
         }
 
@@ -370,6 +371,42 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         public async Task Main_Given_AMaximumLatestFinishTimeThatAMilestoneCannotMeet_Then_ExitCompilationErrors()
         {
             (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"unmet-maximum-lft.zpp"));
+
+            exitCode.ShouldBe(3);
+            (output + error).ShouldContain(@"C0010");
+        }
+
+        // In some iterations, End cannot finish by its maximum of day 12. Such an iteration is a late one, and the statistics
+        // leave it out. The table has the counts, and a line on the standard error stream says that the statistics are then
+        // too early.
+        [Fact]
+        public async Task Main_Given_ASimulationWithIterationsThatMissAMaximum_Then_AWarningSaysThatTheStatisticsAreTooEarly()
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"missed-maximum-lft.zpp"), @"--run-simulation");
+
+            exitCode.ShouldBe(0);
+            error.ShouldMatch(@"Warning: the statistics of the simulation are too early\. They leave out [\d,.]+ of 5[,.]000 iterations");
+            output.ShouldContain(Resource.ProjectPlan.Labels.Label_SimulationWarning);
+        }
+
+        [Fact]
+        public async Task Main_Given_ASimulationWithNoIterationThatMissesAMaximum_Then_NoWarning()
+        {
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"estimated.zpp"), @"--run-simulation");
+
+            exitCode.ShouldBe(0);
+            error.ShouldNotContain(@"too early");
+        }
+
+        // The only activity must finish by day 0: as a number, or as a date before the start of the project, which the load
+        // makes day 0. The schedule then finishes on day 0. Up to version 4.1.0, the library threw when it marked the
+        // allocations of the resources, and zpp exited with 1. The compile now reports the broken constraints.
+        [Theory]
+        [InlineData(@"maximum-finish-day-0.zpp")]
+        [InlineData(@"maximum-finish-date-before-start.zpp")]
+        public async Task Main_Given_AMaximumFinishOfDayZero_Then_ExitCompilationErrors(string asset)
+        {
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(asset));
 
             exitCode.ShouldBe(3);
             (output + error).ShouldContain(@"C0010");
@@ -658,6 +695,33 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public async Task Main_Given_AConstraintDateBeforeTheStart_Then_AWarningOnStandardErrorAndExitCode0()
+        {
+            // The calendar gives such a date day 0, and so a minimum EST has no effect. Nothing said so (phase 3 of the zpp
+            // skill).
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+            string planFile = Path.Combine(m_TempDirectory, @"date-before-start.zpp");
+            File.WriteAllText(planFile, plan.ToString());
+
+            (int exitCode, _, string error) = await RunCapturedWithErrorAsync(@"-i", planFile);
+
+            exitCode.ShouldBe(0);
+            error.ShouldContain(@"Warning: /Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime: is 2023-12-01, before ProjectStart (2024-01-01), and so the schedule uses day 0 for activity 1");
+        }
+
+        [Fact]
+        public async Task Main_Given_AMaximumFinishDateBeforeTheStart_Then_C0010AndAWarningThatNamesTheDate()
+        {
+            // C0010 names the activity, but not the date that the compile could not meet.
+            (int exitCode, string output, string error) = await RunCapturedWithErrorAsync(@"-i", AssetPath(@"maximum-finish-date-before-start.zpp"));
+
+            exitCode.ShouldBe(3);
+            (output + error).ShouldContain(@"C0010");
+            error.ShouldContain(@"Warning: /Files/0/Scenario/DependentActivities/0/Activity/MaximumLatestFinishDateTime: is 2026-12-01, before ProjectStart (2027-01-04), and so the schedule uses day 0 for activity 1");
+        }
+
+        [Fact]
         public async Task Main_Given_CompileTrackedAndATrackedScenarioThatDoesNotCompile_Then_ItsErrorsOnStandardErrorAndExitCode0()
         {
             JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"stale-tracked.zpp")));
@@ -893,7 +957,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // would exit 0 with the chart stale or missing.
             string ganttFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_GanttChart, PlotExport.Png.GetDescription());
 
-            (int exitCode, _) = await RunCapturedWithFileLockedAsync(
+            (int exitCode, _) = await RunCapturedWithTargetBlockedAsync(
                 ganttFile,
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", m_TempDirectory, @"--gantt-size", @"800:600", @"--gantt-format", @"png");
 
@@ -906,7 +970,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // A failed graph save is reported the same way.
             string vertexFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_VertexChart, GraphExport.Svg.GetDescription());
 
-            (int exitCode, _) = await RunCapturedWithFileLockedAsync(
+            (int exitCode, _) = await RunCapturedWithTargetBlockedAsync(
                 vertexFile,
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--vertex-directory", m_TempDirectory, @"--vertex-format", @"svg");
 
@@ -945,7 +1009,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string ganttFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_GanttChart, PlotExport.Png.GetDescription());
             string vertexFile = Program.BuildExportFilePath(m_TempDirectory, @"two-scenarios", Resource.ProjectPlan.Suffixes.Suffix_VertexChart, GraphExport.Svg.GetDescription());
 
-            (int exitCode, string output) = await RunCapturedWithFileLockedAsync(
+            (int exitCode, string output) = await RunCapturedWithTargetBlockedAsync(
                 ganttFile,
                 @"-i", AssetPath(@"two-scenarios.zpp"), @"--gantt-directory", m_TempDirectory, @"--gantt-size", @"800:600", @"--gantt-format", @"png", @"--vertex-directory", m_TempDirectory, @"--vertex-format", @"svg", @"--metrics-format", @"json");
 

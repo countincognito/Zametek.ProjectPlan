@@ -121,7 +121,7 @@ You can also build the installer from the command line, without the extension:
 dotnet build pkg/Zametek.ProjectPlan.MsiPackager/Zametek.ProjectPlan.MsiPackager.wixproj -c Release
 ```
 
-The build writes the installer (for example `projectplandotnet.0.11.0-beta.1.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
+The build writes the installer (for example `projectplandotnet.0.11.0-beta.2.installer.x64.msi`) to the output folder of the project. The CI does not make the MSI. The release workflow supplies only the portable zip and tar.gz archives. Thus, you must build the installer on your computer.
 
 ## MSIX packages (Windows)
 
@@ -129,7 +129,7 @@ Two packaging projects in the folder `pkg/` make the MSIX packages: `Zametek.Pro
 
 The script is necessary because the .NET CLI cannot build these projects. A `.wapproj` project must have the Windows App Packaging SDK and the full MSBuild. The script finds MSBuild with `vswhere`. Thus, you must install Visual Studio 2022 or a newer version.
 
-The script also sets the `RuntimeIdentifiers` environment variable during the build. The packaging project publishes its entry point one time for each architecture in the bundle. Thus, one NuGet restore must prepare each of these targets. If it does not, the build stops with the error `NETSDK1047`.
+The script also sets the `RuntimeIdentifiers` environment variable during the build. The packaging project publishes its entry point one time for each architecture in the bundle. Thus, one NuGet restore must prepare each of these targets. If it does not, the build stops with the error `NETSDK1047`. The script makes NuGet do this restore each time (`RestoreForce`), also when NuGet finds nothing to restore.
 
 Start the script from the root of the repository:
 
@@ -137,7 +137,7 @@ Start the script from the root of the repository:
 .\build-msix.ps1
 ```
 
-This command builds the two packages in `Release` for `x86|x64|arm64`, without a signature. It shows the path of each `.msixbundle` that it makes. The table that follows gives a list of the parameters:
+This command builds the two packages in `Release` for `x86|x64|arm64`, without a signature. It shows the path of each `.msixbundle` that it makes. If a build writes no bundle, the script stops with an error. The table that follows gives a list of the parameters:
 
 | Parameter | Default | Effect |
 | --------- | ------- | ------ |
@@ -147,7 +147,7 @@ This command builds the two packages in `Release` for `x86|x64|arm64`, without a
 | `-Platform` | Set by the script | The build platform. It must be one of the bundle platforms, or `APPX3104` occurs. The script uses `x64` if the bundle has `x64`. If not, it uses `x86` if the bundle has `x86`. If not, it uses the first platform in the list. |
 | `-BuildMode` | `SideloadOnly` | `SideloadOnly` for a local installation, `StoreUpload` for the upload to the Microsoft Store |
 | `-Sign` | off | This parameter signs the package with the certificate that you set in the packaging project. |
-| `-Clean` | off | This parameter first deletes the `bin` folder of the selected packaging projects and of each project in `src`. The script does not delete `obj` on purpose. Refer to the comment in the script. |
+| `-Clean` | off | This parameter first deletes the `bin` folder of the selected packaging projects and of each project in `src`. The script does not delete `obj` on purpose. Refer to the comment in the script. If the script cannot delete a `bin` folder, it stops. |
 
 The script writes each bundle to the `AppPackages` folder of its packaging project. As for the MSI, the CI does not make these bundles. You must build them on your computer.
 
@@ -203,3 +203,7 @@ make publish-cli OS=linux ARCH=arm64
 ```
 
 The published output goes to `src/<project>/bin/<configuration>/net10.0/<os>-<arch>/publish/`. For example, the default `make publish-cli` writes a self-contained `zpp.exe` to `src/Zametek.ProjectPlan.CommandLine/bin/Release/net10.0/win-x64/publish/`.
+
+A `Release` publish has no `.pdb` file. Each assembly of this repository holds its symbols (an embedded portable PDB). Thus, a stack trace from a release gives file names and line numbers. `Directory.Build.props` sets this, and `Directory.Build.targets` removes the `.pdb` files of the packages from the publish.
+
+A `Release` build also starts each source path in the symbols with `/_/` (`ContinuousIntegrationBuild`). Thus, a stack trace from a release does not show the folders of the build machine. A `Debug` build and the test projects keep the full paths. Shouldly uses the full path of a test to show the expression of an assertion that fails.

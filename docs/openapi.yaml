@@ -123,6 +123,8 @@ paths:
           $ref: '#/components/responses/MalformedRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '406':
           $ref: '#/components/responses/NotAcceptable'
         '413':
@@ -145,6 +147,8 @@ paths:
           $ref: '#/components/responses/OptionsPost'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/projects/scenarios:
     post:
       operationId: listScenarios
@@ -182,6 +186,8 @@ paths:
           $ref: '#/components/responses/MalformedRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '406':
           $ref: '#/components/responses/NotAcceptable'
         '413':
@@ -204,6 +210,8 @@ paths:
           $ref: '#/components/responses/OptionsPost'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/info:
     get:
       operationId: getInfo
@@ -246,6 +254,8 @@ paths:
               $ref: '#/components/headers/ETag'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '406':
           $ref: '#/components/responses/NotAcceptable'
     head:
@@ -263,6 +273,8 @@ paths:
               $ref: '#/components/headers/ETag'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     options:
       operationId: optionsInfo
       tags: [Server]
@@ -273,6 +285,8 @@ paths:
           $ref: '#/components/responses/OptionsGet'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/jobs/{requestId}:
     parameters:
       - $ref: '#/components/parameters/RequestIdPath'
@@ -312,6 +326,8 @@ paths:
           $ref: '#/components/responses/MalformedRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '406':
@@ -326,6 +342,8 @@ paths:
           $ref: '#/components/responses/OptionsGetOnly'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/openapi:
     get:
       operationId: getDescription
@@ -382,6 +400,8 @@ paths:
               $ref: '#/components/headers/RequestId'
             ETag:
               $ref: '#/components/headers/ETag'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '406':
           $ref: '#/components/responses/NotAcceptable'
     head:
@@ -398,6 +418,8 @@ paths:
               $ref: '#/components/headers/RequestId'
             ETag:
               $ref: '#/components/headers/ETag'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     options:
       operationId: optionsDescription
       tags: [Server]
@@ -407,6 +429,8 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/OptionsGet'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/schemas/project:
     get:
       operationId: getProjectSchema
@@ -457,6 +481,8 @@ paths:
               $ref: '#/components/headers/RequestId'
             ETag:
               $ref: '#/components/headers/ETag'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '406':
           $ref: '#/components/responses/NotAcceptable'
     head:
@@ -473,6 +499,8 @@ paths:
               $ref: '#/components/headers/RequestId'
             ETag:
               $ref: '#/components/headers/ETag'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     options:
       operationId: optionsProjectSchema
       tags: [Projects]
@@ -482,6 +510,8 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/OptionsGet'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /health/live:
     get:
       operationId: getLive
@@ -492,6 +522,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Healthy'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /health/ready:
     get:
       operationId: getReady
@@ -502,6 +534,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Healthy'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '503':
           description: The warm-up of the server is not complete.
           headers:
@@ -616,6 +650,18 @@ components:
           examples:
             unauthorized:
               $ref: '#/components/examples/Unauthorized'
+    Forbidden:
+      description: The server has no API key, and the request can come from a web page. It has an `Origin` header, or its `Host` is not this computer. `detail` says which.
+      headers:
+        Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/StatusProblem'
+          examples:
+            forbidden:
+              $ref: '#/components/examples/Forbidden'
     NotFound:
       description: No job with this id runs now. It has not begun, or it has ended.
       headers:
@@ -969,7 +1015,7 @@ components:
     Server:
       summary: A server with the limits that it has at its start
       value:
-        version: 0.11.0-beta.1
+        version: 0.11.0-beta.2
         culture: en-GB
         timeZone: Europe/London
         limits:
@@ -1203,6 +1249,14 @@ components:
         status: 401
         detail: 'The request needs the server''s API key, as Authorization: Bearer <key>.'
         traceId: f9e88ee6a376f8b7f7abc3e52fad53ef
+    Forbidden:
+      summary: A request with an `Origin` header to a server with no API key
+      value:
+        type: https://tools.ietf.org/html/rfc9110#section-15.5.4
+        title: Forbidden
+        status: 403
+        detail: 'The server has no API key, and so it takes no request from a web page: the request has an Origin header.'
+        traceId: 3c1f0b7e5d2a49868a7b6c5d4e3f2a10
     NotAcceptable:
       summary: An `Accept` that the operation cannot meet
       value:
@@ -1418,7 +1472,7 @@ components:
             $ref: '#/components/schemas/Output'
         warnings:
           type: array
-          description: The ids of the project that match nothing, for example a target resource that no resource has. The job ignores them, and it goes on. Each has its place in the project and the code `notFound`. The answer has this member only when the project has such an id.
+          description: The warnings of the check of the project. The job goes on. An id that matches nothing has the code `notFound`, for example a target resource that no resource has, and the job ignores it. A constraint date before the start of the project has the code `outOfRange`, and the job gives it day 0. Each warning has its place in the project. The answer has this member only when the project has a warning.
           items:
             $ref: '#/components/schemas/ProblemError'
         console:
@@ -1987,7 +2041,7 @@ components:
           description: The most iterations that a simulation of a project can have for the server to run it. The `jobTimeout` also stops a simulation that is too slow.
         jobTimeout:
           $ref: '#/components/schemas/Duration'
-          description: The time that a job can use before the server stops it.
+          description: The time that a job can use before the server stops it. It starts when the server starts to read the body of the request, and so it includes the upload.
         maxCompileTimeout:
           $ref: '#/components/schemas/Duration'
           description: The longest compile timeout that a request can give.
@@ -2019,6 +2073,9 @@ components:
                 - tooLarge
                 - unsupportedFormat
                 - unreadable
+                - workbookTooLarge
+                - tooManyRows
+                - tooManyCells
                 - noKnownSheet
                 - missingHeader
                 - missingColumn
@@ -2108,7 +2165,7 @@ components:
             status:
               const: 422
     CompilationFailedProblem:
-      description: The project has compilation errors. `errors` has each error with the code of the compiler.
+      description: The project has compilation errors. `errors` has each error with the code of the compiler. `warnings` has the warnings of the check of the project, when it has some.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -2118,6 +2175,11 @@ components:
               const: https://github.com/countincognito/Zametek.ProjectPlan/blob/master/docs/API.md#compilation-failed
             status:
               const: 422
+            warnings:
+              type: array
+              description: The warnings of the check of the project, as in the answer of a compile. For example, a maximum finish date before the start of the project explains a `C0010` of its activity. The problem has this member only when the project has a warning.
+              items:
+                $ref: '#/components/schemas/ProblemError'
     CompilationTimedOutProblem:
       description: The compilation did not end within its time limit. This does not show if the project is valid.
       allOf:
@@ -2151,7 +2213,7 @@ components:
             status:
               const: 422
     OutputFailedProblem:
-      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, the data of the scenario chart as the answer has it, and the outputs that the job produced.
+      description: The project compiled, but the job did not produce an output that the request asked for. The problem has the metrics, the statistics of the simulation if the job ran one, the tracked scenarios if the request has `compileTracked`, the data of the scenario chart as the answer has it, the outputs that the job produced, and the warnings of the check of the project if it has some.
       allOf:
         - $ref: '#/components/schemas/Problem'
         - type: object
@@ -2174,6 +2236,11 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Output'
+            warnings:
+              type: array
+              description: The warnings of the check of the project, as in the answer of a compile. The problem has this member only when the project has a warning.
+              items:
+                $ref: '#/components/schemas/ProblemError'
     UnexpectedErrorProblem:
       description: A failure that the server did not expect. The cause is in the log of the server, under the trace id of the request. It is not in the answer.
       allOf:

@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -135,6 +136,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problem.Console.ShouldBeNull();
             problem.Metrics.ShouldBeNull();
             problem.Outputs.ShouldBeNull();
+            problem.Warnings.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task Compile_Given_AMaximumFinishDateBeforeTheStart_Then_TheProblemHasTheErrorAndTheWarning()
+        {
+            // The calendar gives the date day 0, and the activity, which takes time, cannot finish by it. C0010 names the
+            // activity, and only the warning names the date (phase 3 of the zpp skill).
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(Asset(@"maximum-finish-date-before-start.zpp"), @"maximum-finish-date-before-start.zpp");
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.CompilationFailed));
+            Where(problem).ShouldBe([@"#/project C0010"]);
+            problem.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/MaximumLatestFinishDateTime outOfRange"]);
         }
 
         [Fact]
@@ -369,6 +386,28 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problem.Outputs.ShouldNotBeNull().Select(x => x.Kind).ShouldBe([JobOutput.Project, JobOutput.ArrowGraph]);
             problem.Outputs.ShouldAllBe(x => x.Content != null && x.Content.Length > 0);
             problem.Console.ShouldBeNull();
+            problem.Warnings.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task Compile_Given_AnOutputThatCannotBeProducedAndAConstraintDateBeforeTheStart_Then_TheProblemHasTheWarning()
+        {
+            // The project compiled, and so the problem has what the answer of a compile has: also its warnings.
+            await using FailingEngine engine = FailingEngine.WithAGanttChartThatCannotBeDrawn();
+            await using RunningServer server = await RunningServer.StartAsync(engine.JobRunner);
+            JObject plan = JObject.Parse(Encoding.UTF8.GetString(TwoScenarios()));
+            plan[@"Files"]![0]![@"Scenario"]![@"DependentActivities"]![0]![@"Activity"]![@"MinimumEarliestStartDateTime"] = @"2023-12-01T00:00:00+00:00";
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(
+                Encoding.UTF8.GetBytes(plan.ToString()),
+                options: new CompileOptions { Outputs = new OutputsOptions { GanttChart = new ChartOptions { Format = PlotExport.Png, Width = 100, Height = 100 } } },
+                server: server);
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.OutputFailed));
+            problem.Warnings.ShouldNotBeNull().Select(x => $@"{x.Pointer} {x.Code}")
+                .ShouldBe([@"#/project/Files/0/Scenario/DependentActivities/0/Activity/MinimumEarliestStartDateTime outOfRange"]);
         }
 
         [Fact]
@@ -431,7 +470,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Fact]
         public async Task Compile_Given_AJobThatRunsOutOfTime_Then_ServiceUnavailableAndToldToWait()
         {
-            // A limit of no time at all is one no job can keep to.
+            // A limit of no time at all is one no job can keep to. The time of a job starts before the server reads the body
+            // of the request, and so the server stops the request there.
             await using RunningServer server = await RunningServer.StartAsync(
                 m_Engine.JobRunner,
                 new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = 0 } });
@@ -447,8 +487,87 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
                 response.Headers.RetryAfter.ShouldNotBeNull().Delta.ShouldBe(TimeSpan.FromSeconds(JobServer.RetryAfterSeconds));
                 problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.JobTimeout));
-                problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 0));
+                problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 0));
             }
+        }
+
+        // The longest time limit of a job is one that the server can start its timers for: the one of each job, and the
+        // one of its stop, which lets the jobs that run finish in that time.
+        [Fact]
+        public async Task Post_Given_TheLongestTimeOfAJob_Then_TheJobsRun()
+        {
+            RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = ServeLimits.MaximumJobTimeoutSeconds } });
+
+            await using (server)
+            {
+                using var compileContent = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+                using HttpResponseMessage compile = await server.Client.PostAsync(@"/v1/projects/compile", compileContent);
+                using var scenariosContent = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+                using HttpResponseMessage scenarios = await server.Client.PostAsync(@"/v1/projects/scenarios", scenariosContent);
+
+                compile.StatusCode.ShouldBe(HttpStatusCode.OK);
+                scenarios.StatusCode.ShouldBe(HttpStatusCode.OK);
+            }
+        }
+
+        // A client that sends its body slowly holds a place of a job. The time limit of a job starts before the server
+        // reads the body. Thus, the server stops the request after that time, and the place is free again.
+        [Theory]
+        [InlineData(@"/v1/projects/compile")]
+        [InlineData(@"/v1/projects/scenarios")]
+        public async Task Post_Given_ABodyThatDoesNotArrive_Then_TheTimeLimitOfAJobStopsTheRequestAndItsPlaceIsFree(string path)
+        {
+            await using RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = 3, MaxJobs = 1, MaxQueue = 0 } });
+            var address = new Uri(server.Address);
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(address.Host, address.Port);
+            NetworkStream stream = tcp.GetStream();
+
+            // The start of a request of 100,000 bytes: its head, and the first bytes of its one part. No more bytes come.
+            string start =
+                $"POST {path} HTTP/1.1\r\nHost: {address.Authority}\r\nAccept: application/json\r\n"
+                + "Content-Type: multipart/form-data; boundary=x\r\nContent-Length: 100000\r\n\r\n"
+                + "--x\r\nContent-Disposition: form-data; name=\"project\"; filename=\"plan.zpp\"\r\n\r\n{";
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(start));
+
+            // The answer comes while the body is not complete. Without the time limit, the server waits for the body.
+            using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var answer = new StringBuilder();
+            var buffer = new byte[8192];
+
+            // The server closes the connection after its answer, because the rest of the body did not come.
+            try
+            {
+                while (true)
+                {
+                    int read = await stream.ReadAsync(buffer, limit.Token);
+
+                    if (read == 0)
+                    {
+                        break;
+                    }
+
+                    answer.Append(Encoding.UTF8.GetString(buffer, 0, read));
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            answer.ToString().ShouldStartWith(@"HTTP/1.1 503");
+            answer.ToString().ShouldContain(@"Retry-After: 5");
+            answer.ToString().ShouldContain(ProblemHelper.GetType(ProblemKind.JobTimeout));
+            answer.ToString().ShouldContain(string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 3));
+
+            // The server has one place for a job and no queue: the next request gets that place.
+            using var content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            using HttpResponseMessage next = await server.Client.PostAsync(@"/v1/projects/scenarios", content);
+
+            next.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         [Fact]
@@ -473,6 +592,73 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             response.StatusCode.ShouldBe(HttpStatusCode.UnsupportedMediaType);
             problem.Detail.ShouldBe(Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartScenarios);
+        }
+
+        // A form that is not multipart is a form for the framework too, but the operations take only multipart/form-data.
+        [Theory]
+        [InlineData(@"/v1/projects/compile")]
+        [InlineData(@"/v1/projects/scenarios")]
+        public async Task Post_Given_AFormThatIsNotMultipart_Then_UnsupportedMediaType(string path)
+        {
+            using var content = new FormUrlEncodedContent([new KeyValuePair<string, string>(@"project", @"{}")]);
+            using HttpResponseMessage response = await Server.Client.PostAsync(path, content);
+            ProblemResponse problem = await RunningServer.ReadProblemAsync(response);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnsupportedMediaType);
+            problem.Detail.ShouldBe(path.EndsWith(@"/compile", StringComparison.Ordinal)
+                ? Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartCompile
+                : Resource.ProjectPlan.Messages.Message_ServeRequestNotMultipartScenarios);
+        }
+
+        // The case of the letters of a media type is not important (RFC 9110).
+        [Fact]
+        public async Task ListScenarios_Given_MultipartInCapitals_Then_TheScenarios()
+        {
+            using var content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
+            content.Headers.ContentType!.MediaType = @"Multipart/Form-Data";
+            using HttpResponseMessage response = await Server.Client.PostAsync(@"/v1/projects/scenarios", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        // The server reads a body of application/x-www-form-urlencoded with a reader that the time limit of a job cannot
+        // stop. Thus, it refuses such a request before it reads the body, and the request does not hold a place of a job
+        // while its body arrives.
+        [Theory]
+        [InlineData(@"/v1/projects/compile")]
+        [InlineData(@"/v1/projects/scenarios")]
+        public async Task Post_Given_AFormThatIsNotMultipartAndABodyThatDoesNotArrive_Then_UnsupportedMediaTypeAtOnce(string path)
+        {
+            var address = new Uri(Server.Address);
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(address.Host, address.Port);
+            NetworkStream stream = tcp.GetStream();
+
+            // The start of a request of 100,000 bytes: its head, and the first bytes of its body. No more bytes come.
+            string start =
+                $"POST {path} HTTP/1.1\r\nHost: {address.Authority}\r\nAccept: application/json\r\n"
+                + "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: 100000\r\n\r\nproject=";
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(start));
+
+            // The head of the answer comes while the body is not complete. The time limit of a job (2 minutes) is not
+            // what answers.
+            using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            var answer = new StringBuilder();
+            var buffer = new byte[8192];
+
+            while (!answer.ToString().Contains("\r\n\r\n", StringComparison.Ordinal))
+            {
+                int read = await stream.ReadAsync(buffer, limit.Token);
+
+                if (read == 0)
+                {
+                    break;
+                }
+
+                answer.Append(Encoding.UTF8.GetString(buffer, 0, read));
+            }
+
+            answer.ToString().ShouldStartWith(@"HTTP/1.1 415");
         }
 
         [Theory]

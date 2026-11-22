@@ -128,5 +128,34 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             problem.Detail.ShouldBe(Resource.ProjectPlan.Messages.Message_ServeWorkbookNotReadable);
             problem.Errors.ShouldNotBeNull().Select(x => (x.Pointer, x.Code)).ShouldBe([(@"#/import", @"unreadable")]);
         }
+
+        // A workbook above a limit of the import: one error, and the import stops at once.
+        [Fact]
+        public async Task Compile_Given_AWorkbookWithMoreRowsThanTheImportReads_Then_UnprocessableWithOneError()
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_Activities, s =>
+                {
+                    s.Row(1, ("A", TitleOf(nameof(ActivityModel.Id))));
+
+                    for (int i = 0; i < 10_001; i++)
+                    {
+                        s.Row(i + 2, ("A", NumberOf(i + 1)));
+                    }
+                })
+                .Build();
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(workbook);
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.ProjectNotReadable));
+            problem.Detail.ShouldBe(ImportIssueText.BuildHeader(1));
+            problem.Errors.ShouldNotBeNull().Select(x => (x.Pointer, x.Code, x.Detail)).ShouldBe(
+            [
+                (@"#/import", ImportIssueCodes.TooManyRows, @"Activities: The sheet has more than 10,000 rows that hold a value. The import reads no sheet that has more."),
+            ]);
+            problem.Console.ShouldNotBeNull().ExitCode.ShouldBe((int)ExitCode.Failure);
+        }
     }
 }

@@ -268,6 +268,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recovery Copy.
+        /// </summary>
+        public static string Title_RecoveryCopy {
+            get {
+                return ResourceManager.GetString("Title_RecoveryCopy", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Resource Chart.
         /// </summary>
         public static string Title_ResourceChartView {

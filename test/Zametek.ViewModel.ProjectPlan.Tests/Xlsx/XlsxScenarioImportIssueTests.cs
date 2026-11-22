@@ -185,11 +185,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         {
             byte[] workbook = Activities(s =>
             {
-                s.Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))));
+                s.Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))), ("C", TitleOf(nameof(ActivityModel.DisplayOrder))));
 
-                for (int i = 0; i < 10_050; i++)
+                // Two problems in each row: a sheet does not have as many rows as the import keeps problems.
+                for (int i = 0; i < 5_025; i++)
                 {
-                    s.Row(i + 2, ("A", NumberOf(i + 1)), ("B", TextOf(@"x")));
+                    s.Row(i + 2, ("A", NumberOf(i + 1)), ("B", TextOf(@"x")), ("C", TextOf(@"x")));
                 }
             });
 

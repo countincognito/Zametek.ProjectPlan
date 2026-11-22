@@ -33,7 +33,8 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server }).ShouldNotBeNull();
 
-            settings.ShouldBe(new ClientSettings { Server = c_Server, BaseAddress = new Uri(c_Server + @"/") });
+            // No key, and no time limit of a request yet: no option gave one, and so it comes from the limits of the server.
+            settings.ShouldBe(new ClientSettings { Server = c_Server, BaseAddress = new Uri(c_Server + @"/"), RequestTimeoutFromServer = true });
         }
 
         [Fact]
@@ -143,6 +144,96 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 File.Delete(keyFile);
             }
+        }
+
+        // The key goes in a header of each request. Over plain http, each computer on the way to a server that is not this
+        // computer can read it, and so zpp refuses before it sends anything.
+        [Theory]
+        [InlineData(@"http://zpp.example.com:9770")]
+        [InlineData(@"http://10.0.0.5:9770")]
+        [InlineData(@"http://[2001:db8::1]:9770")]
+        public void Resolve_Given_AKeyAndPlainHttpToAnotherComputer_Then_UsageException(string server)
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", Server = server }, (ClientSettingsHelper.ApiKeyVariable, @"the-key")))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServerKeyOverPlainHttp, server, @"--allow-key-over-http"));
+        }
+
+        [Theory]
+        [InlineData(@"http://localhost:9770")]
+        [InlineData(@"http://127.0.0.1:9770")]
+        [InlineData(@"http://[::1]:9770")]
+        [InlineData(@"https://zpp.example.com")]
+        [InlineData(@"unix:/tmp/zpp.sock")]
+        public void Resolve_Given_AKeyAndThisComputerOrHttpsOrASocket_Then_TheKey(string server)
+        {
+            Resolve(new Options { InputFilename = @"plan.zpp", Server = server }, (ClientSettingsHelper.ApiKeyVariable, @"the-key"))
+                .ShouldNotBeNull().ApiKey.ShouldBe(@"the-key");
+        }
+
+        [Fact]
+        public void Resolve_Given_AKeyAndPlainHttpToAnotherComputerAndTheOptionThatAllowsIt_Then_TheKey()
+        {
+            Resolve(
+                new Options { InputFilename = @"plan.zpp", Server = @"http://zpp.example.com:9770", AllowKeyOverHttp = true },
+                (ClientSettingsHelper.ApiKeyVariable, @"the-key"))
+                .ShouldNotBeNull().ApiKey.ShouldBe(@"the-key");
+        }
+
+        [Fact]
+        public void Resolve_Given_NoKeyAndPlainHttpToAnotherComputer_Then_RunsThere()
+        {
+            Resolve(new Options { InputFilename = @"plan.zpp", Server = @"http://zpp.example.com:9770" })
+                .ShouldNotBeNull().ApiKey.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Resolve_Given_TheOptionThatAllowsAKeyOverHttpAndNoServer_Then_UsageException()
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", AllowKeyOverHttp = true }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithServer, @"--allow-key-over-http", @"--server", ClientSettingsHelper.ServerVariable));
+        }
+
+        [Fact]
+        public void Resolve_Given_NoServerTimeout_Then_TheTimeLimitOfARequestComesFromTheServer()
+        {
+            ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server }).ShouldNotBeNull();
+
+            settings.RequestTimeoutFromServer.ShouldBeTrue();
+            settings.RequestTimeout.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Resolve_Given_AServerTimeout_Then_ARequestHasThatTimeLimit()
+        {
+            ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = 1500 }).ShouldNotBeNull();
+
+            settings.RequestTimeoutFromServer.ShouldBeFalse();
+            settings.RequestTimeout.ShouldBe(TimeSpan.FromMilliseconds(1500));
+        }
+
+        [Fact]
+        public void Resolve_Given_AServerTimeoutOfZero_Then_ARequestHasNoTimeLimit()
+        {
+            ClientSettings settings = Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = 0 }).ShouldNotBeNull();
+
+            settings.RequestTimeoutFromServer.ShouldBeFalse();
+            settings.RequestTimeout.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Resolve_Given_ANegativeServerTimeout_Then_UsageException()
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", Server = c_Server, ServerTimeoutMilliseconds = -1 }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionCannotBeNegative, @"--server-timeout"));
+        }
+
+        [Theory]
+        [InlineData(1500)]
+        [InlineData(0)]
+        public void Resolve_Given_AServerTimeoutAndNoServer_Then_UsageException(int timeout)
+        {
+            Should.Throw<UsageException>(() => Resolve(new Options { InputFilename = @"plan.zpp", ServerTimeoutMilliseconds = timeout }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionOnlyValidWithServer, @"--server-timeout", @"--server", ClientSettingsHelper.ServerVariable));
         }
 
         [Fact]

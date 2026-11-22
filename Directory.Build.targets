@@ -72,4 +72,18 @@
   -->
   <Import Project="$(MSBuildThisFileDirectory)Zametek.Maths.Graphs.local.targets"
           Condition="Exists('$(MSBuildThisFileDirectory)Zametek.Maths.Graphs.local.targets')" />
+
+  <!--
+    A Release publish has no .pdb file. The assemblies of this repository hold their own symbols (refer to
+    Directory.Build.props), and this target removes the .pdb files of the packages from the publish. These are the
+    native libSkiaSharp.pdb and libHarfBuzzSharp.pdb, and the symbols that IKVM makes for the Java libraries of MPXJ.
+    A Debug publish keeps them. The publish of the browser head keeps them too, because nobody tried it without them.
+  -->
+  <Target Name="RemoveSymbolFilesFromThePublish"
+          AfterTargets="ComputeResolvedFilesToPublishList"
+          Condition="'$(Configuration)' == 'Release' AND !$(TargetFramework.Contains('-browser'))">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
 </Project>

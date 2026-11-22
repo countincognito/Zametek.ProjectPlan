@@ -101,6 +101,15 @@ namespace Zametek.Engine.ProjectPlan
             throw new InvalidOperationException();
         }
 
+        public Task<int> ShowChoiceAsync(
+            string title,
+            string header,
+            string message,
+            IReadOnlyList<string> choices)
+        {
+            throw new InvalidOperationException();
+        }
+
         public Task<bool> ShowContextAsync(
             string title,
             string header,

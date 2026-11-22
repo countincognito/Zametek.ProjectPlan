@@ -1,0 +1,32 @@
+<Project>
+  <!--
+    A Release build puts the symbols of each assembly of this repository into the assembly (an embedded portable PDB).
+    Thus, a stack trace from a release gives file names and line numbers, and the publish has no .pdb file of ours.
+    A Debug build keeps the separate .pdb files. Directory.Build.targets removes the .pdb files of the packages from a
+    Release publish.
+
+    DebugType is set in this file, and not in Directory.Build.targets. MSBuild uses it to decide if a build copies a
+    separate .pdb file, and it does this before it imports Directory.Build.targets.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!--
+    A Release build also starts each source path in the symbols with "/_/", in place of the folder of the repository on
+    the build machine (ContinuousIntegrationBuild). Thus, a stack trace from a release shows "/_/src/...", and Source Link
+    still finds each file on GitHub. A Debug build keeps the full paths, which the debugger uses to find the files.
+
+    The test projects keep the full paths. Shouldly reads the source file to show the expression of an assertion that
+    fails, and it cannot read "/_/test/...". The test projects are not part of a release.
+
+    The SDK gets the root of the repository from git. A build from a copy with no .git folder, for example the source code
+    zip of a release on GitHub, thus keeps the full paths of the files of this repository.
+
+    ContinuousIntegrationBuild is set in this file because the SDK reads it before it imports Directory.Build.targets.
+    IsTestProject is not set yet when MSBuild reads this file, and so the condition uses the names of the test projects.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' AND !$(MSBuildProjectName.EndsWith('.Tests'))">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>

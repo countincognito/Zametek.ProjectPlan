@@ -1,5 +1,6 @@
 using ReactiveUI;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
@@ -16,6 +17,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private DateTimeOffset? m_MinimumEarliestStartDateTime;
         private DateTimeOffset? m_MaximumLatestFinishDateTime;
+
+        // The warning of a constraint date before the start of the project, or null. The calculator gives such a date day 0,
+        // and the activity shows the start in place of the date. The warning stays until the constraint changes.
+        private string? m_MinimumEarliestStartDateWarning;
+        private string? m_MaximumLatestFinishDateWarning;
+
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
@@ -197,6 +204,9 @@ namespace Zametek.ViewModel.ProjectPlan
             // Validate integer value.
             ValidateMinimumEarliestStartTime(intValue);
 
+            // A number counts from the start, and so it never gives a date before it.
+            SetDateBeforeStartWarning(ref m_MinimumEarliestStartDateWarning, null, nameof(MinimumEarliestStartTime), nameof(MinimumEarliestStartDateTime));
+
             // Set integer and DateTimeOffset values.
             lock (m_DataLock)
             {
@@ -207,7 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
             RefreshStartAndFinishValues();
         }
 
-        private void SetMinimumEarliestStartTimes(DateTimeOffset? input, bool skipValidation = false)
+        private void SetMinimumEarliestStartTimes(DateTimeOffset? input, bool skipValidation = false, bool keepWarning = false)
         {
             (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateConstraintTimeAndDateTime(ProjectStart, input);
 
@@ -215,6 +225,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // Validate integer value.
                 ValidateMinimumEarliestStartTime(intValue);
+            }
+
+            if (!keepWarning)
+            {
+                SetDateBeforeStartWarning(ref m_MinimumEarliestStartDateWarning, input, nameof(MinimumEarliestStartTime), nameof(MinimumEarliestStartDateTime));
             }
 
             // Set integer and DateTimeOffset values.
@@ -234,6 +249,9 @@ namespace Zametek.ViewModel.ProjectPlan
             // Validate integer value.
             ValidateMaximumLatestFinishTime(intValue);
 
+            // A number counts from the start, and so it never gives a date before it.
+            SetDateBeforeStartWarning(ref m_MaximumLatestFinishDateWarning, null, nameof(MaximumLatestFinishTime), nameof(MaximumLatestFinishDateTime));
+
             // Set integer and DateTimeOffset values.
             lock (m_DataLock)
             {
@@ -244,7 +262,7 @@ namespace Zametek.ViewModel.ProjectPlan
             RefreshStartAndFinishValues();
         }
 
-        private void SetMaximumLatestFinishTimes(DateTimeOffset? input, bool skipValidation = false)
+        private void SetMaximumLatestFinishTimes(DateTimeOffset? input, bool skipValidation = false, bool keepWarning = false)
         {
             (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateConstraintTimeAndDateTime(ProjectStart, input);
 
@@ -252,6 +270,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // Validate integer value.
                 ValidateMaximumLatestFinishTime(intValue);
+            }
+
+            if (!keepWarning)
+            {
+                SetDateBeforeStartWarning(ref m_MaximumLatestFinishDateWarning, input, nameof(MaximumLatestFinishTime), nameof(MaximumLatestFinishDateTime));
             }
 
             // Set integer and DateTimeOffset values.
@@ -397,6 +420,44 @@ namespace Zametek.ViewModel.ProjectPlan
                     SetError(nameof(MaximumLatestFinishTime), errorMessage);
                     SetError(nameof(MaximumLatestFinishDateTime), errorMessage);
                 }
+            }
+
+            // The checks above clear each error of the constraints, but a date before the start keeps its warning.
+            ShowDateBeforeStartWarning(m_MinimumEarliestStartDateWarning, nameof(MinimumEarliestStartTime), nameof(MinimumEarliestStartDateTime));
+            ShowDateBeforeStartWarning(m_MaximumLatestFinishDateWarning, nameof(MaximumLatestFinishTime), nameof(MaximumLatestFinishDateTime));
+        }
+
+        // Puts the warning of a date before the start of the project in place of the warning that the constraint had. A date
+        // on the start or after it, and no date, have no warning. Each date of a plan is a day, and so the time of the day does
+        // not count, as in the calculator.
+        private void SetDateBeforeStartWarning(
+            ref string? warning,
+            DateTimeOffset? date,
+            string timePropertyName,
+            string dateTimePropertyName)
+        {
+            if (warning is not null)
+            {
+                ClearError(timePropertyName, warning);
+                ClearError(dateTimePropertyName, warning);
+            }
+
+            warning = date.HasValue && date.GetValueOrDefault().Date < ProjectStart.Date
+                ? string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.ProjectPlan.Labels.Label_ConstraintDateBeforeProjectStart,
+                    ProjectStart.ToString(@"d", CultureInfo.CurrentCulture))
+                : null;
+
+            ShowDateBeforeStartWarning(warning, timePropertyName, dateTimePropertyName);
+        }
+
+        private void ShowDateBeforeStartWarning(string? warning, string timePropertyName, string dateTimePropertyName)
+        {
+            if (warning is not null)
+            {
+                SetError(timePropertyName, warning);
+                SetError(dateTimePropertyName, warning);
             }
         }
 
@@ -1084,6 +1145,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The maximum latest finish date as the plan keeps it: the first day after the last day of work, which is the
+        // value of MaximumLatestFinishDateTime in the default display mode. The build of a scenario for a save reads this,
+        // so that it does not have to change the display mode of the date calculator.
+        public DateTime? StoredMaximumLatestFinishDateTime => m_MaximumLatestFinishDateTime?.DateTime;
+
         public IResourceSelectorViewModel ResourceSelector { get; }
 
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
@@ -1198,13 +1264,15 @@ namespace Zametek.ViewModel.ProjectPlan
         /// the calendar between them and the project start, so a calendar change alone
         /// makes those integers wrong. Validation is skipped: nothing the user typed has
         /// changed, so a recount must not start reporting errors against values that
-        /// were accepted when they were entered.
+        /// were accepted when they were entered. The warning of a date before the start
+        /// of the project stays as it is too: the stored date is then the start, and
+        /// it no longer shows what the user gave.
         /// </summary>
         public void UpdateEarliestStartAndLatestFinishDateTimes()
         {
             RefreshStartAndFinishValues();
-            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
-            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
+            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true, keepWarning: true);
+            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true, keepWarning: true);
         }
 
         public DependentActivityModel DeepCopy()

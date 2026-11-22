@@ -15,6 +15,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public List<string> Questions { get; } = [];
 
+        /// <summary>The questions with named choices, each with its choices.</summary>
+        public List<(string Title, string Message, IReadOnlyList<string> Choices)> Choices { get; } = [];
+
+        /// <summary>The answers to the questions with named choices, in their order. With no answer left, the user closes the dialog.</summary>
+        public Queue<int> ChoiceAnswers { get; } = [];
+
         public List<(string Name, string Directory, IList<IFileFilter> Filters)> SaveDialogs { get; } = [];
 
         /// <summary>The answer to a question.</summary>
@@ -25,6 +31,18 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         /// <summary>The file that the dialog that opens a file gives, or null when the user cancels it.</summary>
         public string? OpenFilename { get; set; }
+
+        /// <summary>When a test sets this, the dialog that opens a file stays open until the test completes it.</summary>
+        public TaskCompletionSource<string?>? OpenFileGate { get; set; }
+
+        /// <summary>When a test sets this, the dialog that saves a file stays open until the test completes it.</summary>
+        public TaskCompletionSource<string?>? SaveFileGate { get; set; }
+
+        /// <summary>When a test sets this, a question stays open until the test completes it.</summary>
+        public TaskCompletionSource<bool>? ConfirmationGate { get; set; }
+
+        /// <summary>When a test sets this, a dialog that gives information stays open until the test completes it.</summary>
+        public TaskCompletionSource? InfoGate { get; set; }
 
         public object Parent { set { } }
 
@@ -38,9 +56,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public Task ShowWarningAsync(string title, string header, string message) => Task.CompletedTask;
 
-        public Task ShowInfoAsync(string title, string header, string message, bool showMainPageLink = false) => Task.CompletedTask;
+        public Task ShowInfoAsync(string title, string header, string message, bool showMainPageLink = false) => InfoGate?.Task ?? Task.CompletedTask;
 
-        public Task ShowInfoAsync(string title, string header, string message, double height, double width, bool showMainPageLink = false) => Task.CompletedTask;
+        public Task ShowInfoAsync(string title, string header, string message, double height, double width, bool showMainPageLink = false) => InfoGate?.Task ?? Task.CompletedTask;
 
         public Task<bool> ShowContextAsync(string title, string header, string message, object context) => Task.FromResult(false);
 
@@ -49,15 +67,21 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public Task<bool> ShowConfirmationAsync(string title, string header, string message)
         {
             Questions.Add(message);
-            return Task.FromResult(WantsReport);
+            return ConfirmationGate?.Task ?? Task.FromResult(WantsReport);
         }
 
-        public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) => Task.FromResult(OpenFilename);
+        public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices)
+        {
+            Choices.Add((title, message, choices));
+            return Task.FromResult(ChoiceAnswers.TryDequeue(out int answer) ? answer : -1);
+        }
+
+        public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) => OpenFileGate?.Task ?? Task.FromResult(OpenFilename);
 
         public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters)
         {
             SaveDialogs.Add((initialFilename, initialDirectory, fileFilters));
-            return Task.FromResult(SaveFilename);
+            return SaveFileGate?.Task ?? Task.FromResult(SaveFilename);
         }
     }
 }

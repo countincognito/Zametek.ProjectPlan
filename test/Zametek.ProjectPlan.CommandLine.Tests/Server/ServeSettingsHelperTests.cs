@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System.Globalization;
 using Xunit;
@@ -234,6 +236,134 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     nameof(ServeLimits.MaxSimulationIterations),
                     Option(nameof(ServeOptions.MaxSimulationIterations)),
                     1_000_000));
+        }
+
+        // The time limit of a job is a timer, and a timer of .NET waits for 4,294,967,294 milliseconds at most (about 49
+        // days). A longer limit let the server start, and each POST then failed with 500.
+        [Fact]
+        public void Resolve_Given_TheLongestTimeOfAJob_Then_ThatLimit()
+        {
+            ServeLimits.MaximumJobTimeoutSeconds.ShouldBe(4_294_967);
+            Resolve(new ServeOptions { JobTimeoutSeconds = 4_294_967 }).Limits.JobTimeoutSeconds.ShouldBe(4_294_967);
+            Resolve(settingsJson: @"{ ""JobTimeoutSeconds"": 4294967 }").Limits.JobTimeoutSeconds.ShouldBe(4_294_967);
+        }
+
+        [Theory]
+        [InlineData(4_294_968)]
+        [InlineData(5_000_000)]
+        [InlineData(int.MaxValue)]
+        public void Resolve_Given_ATimeOfAJobLongerThanATimerWaits_Then_UsageException(int seconds)
+        {
+            string expected = string.Format(
+                Resource.ProjectPlan.Messages.Message_ServeLimitTooHigh,
+                nameof(ServeLimits.JobTimeoutSeconds),
+                Option(nameof(ServeOptions.JobTimeoutSeconds)),
+                4_294_967);
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { JobTimeoutSeconds = seconds })).Message.ShouldBe(expected);
+            Should.Throw<UsageException>(() => Resolve(settingsJson: $@"{{ ""JobTimeoutSeconds"": {seconds} }}")).Message.ShouldBe(expected);
+        }
+
+        // The largest value is the longest time that a timer waits, and no more.
+        [Fact]
+        public void MaximumJobTimeoutSeconds_Then_TheLongestTimeThatATimerWaitsInWholeSeconds()
+        {
+            using var longest = new CancellationTokenSource(TimeSpan.FromSeconds(ServeLimits.MaximumJobTimeoutSeconds));
+
+            Should.Throw<ArgumentOutOfRangeException>(() => new CancellationTokenSource(TimeSpan.FromSeconds(ServeLimits.MaximumJobTimeoutSeconds + 1)));
+        }
+
+        // A name with a wrong letter had no effect, and the server started with the default of the limit.
+        [Theory]
+        [InlineData(@"{ ""MaxJob"": 2 }", @"MaxJob")]
+        [InlineData(@"{ ""MaxJobs"": 2, ""JobTimeout"": 30 }", @"JobTimeout")]
+        [InlineData(@"{ ""Limits"": { ""MaxJobs"": 2 } }", @"Limits")]
+        public void Resolve_Given_ASettingsFileWithANameThatIsNotALimit_Then_UsageExceptionNamingIt(string settingsJson, string name)
+        {
+            string message = Should.Throw<UsageException>(() => Resolve(settingsJson: settingsJson)).Message;
+
+            message.ShouldContain(ServeSettingsHelper.SettingsFilename);
+            message.ShouldContain($@"'{name}'");
+            message.ShouldContain(nameof(ServeLimits.MaxJobs));
+            message.ShouldContain(nameof(ServeLimits.JobTimeoutSeconds));
+        }
+
+        [Fact]
+        public void Resolve_Given_ASettingsFileWithALimitInOtherLetterCase_Then_ThatLimit()
+        {
+            Resolve(settingsJson: @"{ ""maxjobs"": 3 }").Limits.MaxJobs.ShouldBe(3);
+        }
+
+        [Fact]
+        public void Resolve_Given_OtherVariablesOfZppInTheEnvironment_Then_TheyAreNoLimits()
+        {
+            // The environment has variables that start with ZPP_ and are not limits. Only the file is held to the names.
+            Resolve(environment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [@"ZPP_SERVER"] = @"http://localhost:9770",
+                [@"ZPP_MaxJobs"] = @"3",
+            }).Limits.MaxJobs.ShouldBe(3);
+        }
+
+        [Fact]
+        public void Resolve_Given_NamesThatAProxySends_Then_TheServerTakesThem()
+        {
+            Resolve(new ServeOptions { AllowHost = [@" plan.example.com ", @"PLAN.example.com", @"zpp.internal"] })
+                .AllowedHosts.ShouldBe([@"plan.example.com", @"zpp.internal"]);
+            Resolve().AllowedHosts.ShouldBeEmpty();
+        }
+
+        // The server compares an IPv6 address without its brackets, and so it keeps the name without them. With the
+        // brackets, the server started, and a request for that address got 403.
+        [Fact]
+        public void Resolve_Given_AnIPv6AddressThatAProxySendsInBrackets_Then_TheServerTakesItWithoutTheBrackets()
+        {
+            Resolve(new ServeOptions { AllowHost = [@"[2001:db8::1]", @"2001:DB8::1", @"[2001:db8::2] "] })
+                .AllowedHosts.ShouldBe([@"2001:db8::1", @"2001:db8::2"]);
+        }
+
+        [Theory]
+        [InlineData(@"[2001:db8::1]:9770")]
+        [InlineData(@"[2001:db8::1]")]
+        public void Resolve_Given_AnIPv6AddressInBrackets_Then_ARequestForThatAddressIsTaken(string host)
+        {
+            ServeSettings settings = Resolve(new ServeOptions { AllowHost = [@"[2001:db8::1]"] });
+            var middleware = new LocalRequestMiddleware(_ => Task.CompletedTask, settings.AllowedHosts, NullLogger<LocalRequestMiddleware>.Instance);
+
+            middleware.IsAllowedHost(new HostString(host)).ShouldBeTrue();
+            middleware.IsAllowedHost(new HostString(@"[2001:db8::3]:9770")).ShouldBeFalse();
+        }
+
+        // Brackets are for an IPv6 address only.
+        [Theory]
+        [InlineData(@"[plan.example.com]")]
+        [InlineData(@"[10.0.0.5]")]
+        [InlineData(@"[2001:db8::1")]
+        public void Resolve_Given_BracketsAroundANameThatIsNotAnIPv6Address_Then_UsageException(string name)
+        {
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { AllowHost = [name] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNotValid, name, Option(nameof(ServeOptions.AllowHost))));
+        }
+
+        [Theory]
+        [InlineData(@"plan.example.com:443")]
+        [InlineData(@"https://plan.example.com")]
+        [InlineData(@"plan example")]
+        [InlineData(@"")]
+        public void Resolve_Given_ANameThatIsNotTheNameOfAHost_Then_UsageException(string name)
+        {
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { AllowHost = [name] }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNotValid, name, Option(nameof(ServeOptions.AllowHost))));
+        }
+
+        [Fact]
+        public void Resolve_Given_NamesThatAProxySendsAndAKey_Then_UsageException()
+        {
+            // A server with a key does not look at the name that a request gives, and so the option would do nothing.
+            var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [ServeSettingsHelper.ApiKeyVariable] = c_Key };
+
+            Should.Throw<UsageException>(() => Resolve(new ServeOptions { AllowHost = [@"plan.example.com"] }, environment: environment))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeAllowHostNeedsNoApiKey, Option(nameof(ServeOptions.AllowHost))));
         }
 
         [Fact]

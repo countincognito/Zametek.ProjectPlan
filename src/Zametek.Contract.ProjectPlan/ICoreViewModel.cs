@@ -13,6 +13,13 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsProjectScenarioUpdated { get; set; }
 
+        /// <summary>
+        /// How many times a change marked the scenario as updated, also when the scenario had the mark already. The
+        /// publication of a compilation marks the scenario too, but it does not count. A save reads the counter before it
+        /// takes its copy of the project, to know if a change came while it wrote the file. Observe changes only.
+        /// </summary>
+        int ProjectScenarioUpdateRevision { get; }
+
         bool HasStaleOutputs { get; set; }
 
         // The start that the user, the file or an import gives. The file keeps it as ProjectStart.
@@ -95,6 +102,14 @@ namespace Zametek.Contract.ProjectPlan
         SimulationSummaryModel? SimulationSummary { get; set; }
 
         /// <summary>
+        /// Sets <see cref="SimulationSummary"/>, but only when <see cref="ProjectScenarioRevision"/> still has the given
+        /// value. The core compares and writes in one step. A run of the simulation gives its result in this way, with
+        /// the revision that it read before it started. Then a scenario that loaded or reset since does not get the
+        /// result of the scenario before it. False when nothing was written.
+        /// </summary>
+        bool TrySetSimulationSummary(SimulationSummaryModel? simulationSummary, int projectScenarioRevision);
+
+        /// <summary>
         /// How many times a scenario has been loaded or reset (a project that closes or begins is a reset too). A run
         /// of the simulation belongs to one scenario, and it stops when this changes. Observe changes only.
         /// </summary>
@@ -161,6 +176,10 @@ namespace Zametek.Contract.ProjectPlan
         void ProcessProjectScenario(ProjectScenarioModel projectScenarioModel, Guid projectScenarioId, string projectScenarioTitle);
 
         ProjectScenarioModel BuildProjectScenario();
+
+        // The scenario that BuildProjectScenario gives, built with no change to the plan: no activity gets its place in the
+        // view, and nothing hears of a busy state. A recovery copy takes it while the user works.
+        ProjectScenarioModel BuildProjectScenarioCopy();
 
         int AddManagedActivity(int displayOrder);
 

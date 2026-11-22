@@ -250,7 +250,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.11.0-beta.1.
+        ///   Looks up a localized string similar to 0.11.0-beta.2.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -339,6 +339,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The date is before the start of the project ({0}), and so the schedule uses the start in its place..
+        /// </summary>
+        public static string Label_ConstraintDateBeforeProjectStart {
+            get {
+                return ResourceManager.GetString("Label_ConstraintDateBeforeProjectStart", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Copy.
         /// </summary>
@@ -1556,6 +1565,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Label_RecoveryCopyDelete {
+            get {
+                return ResourceManager.GetString("Label_RecoveryCopyDelete", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Not Now.
+        /// </summary>
+        public static string Label_RecoveryCopyNotNow {
+            get {
+                return ResourceManager.GetString("Label_RecoveryCopyNotNow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string Label_RecoveryCopyOpen {
+            get {
+                return ResourceManager.GetString("Label_RecoveryCopyOpen", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Rename.
         /// </summary>
         public static string Label_RenameNode {
@@ -2213,6 +2249,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The statistics are too early: they leave out the iterations that missed a maximum LFT.
+        /// </summary>
+        public static string Label_SimulationStatisticsTooEarly {
+            get {
+                return ResourceManager.GetString("Label_SimulationStatisticsTooEarly", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Target finish.
         /// </summary>
         public static string Label_SimulationTarget {
@@ -2248,6 +2293,15 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string Label_SimulationWarning {
+            get {
+                return ResourceManager.GetString("Label_SimulationWarning", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Slack Limit.
         /// </summary>

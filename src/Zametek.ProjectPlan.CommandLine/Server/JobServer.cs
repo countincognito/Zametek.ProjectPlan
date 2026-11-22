@@ -64,7 +64,6 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private const string c_JobsPolicy = @"jobs";
         private const string c_JsonMediaType = @"application/json";
-        private const string c_MultipartMediaType = @"multipart/form-data";
         private const string c_ReadyTag = @"ready";
         private const string c_Localhost = @"localhost";
         private const long c_Megabyte = 1024 * 1024;
@@ -297,6 +296,11 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 app.UseMiddleware<ApiKeyMiddleware>(apiKey);
             }
+            else
+            {
+                // A server with no key takes no request from a web page, which has no key to give either.
+                app.UseMiddleware<LocalRequestMiddleware>(settings.AllowedHosts);
+            }
 
             app.UseRateLimiter();
 
@@ -333,11 +337,11 @@ namespace Zametek.ProjectPlan.CommandLine
             api.MapMethods(
                 @"/projects/compile",
                 [HttpMethods.Options],
-                x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType));
+                x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", ProjectEndpoints.MultipartMediaType));
             api.MapMethods(
                 @"/projects/scenarios",
                 [HttpMethods.Options],
-                x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", c_MultipartMediaType));
+                x => ProjectEndpoints.GetOptionsAsync(x, @"POST, OPTIONS", ProjectEndpoints.MultipartMediaType));
             api.MapMethods(
                 @"/info",
                 [HttpMethods.Options],

@@ -168,6 +168,9 @@
   <data name="Message_CannotBuildArrowGraph" xml:space="preserve">
     <value>Cannot build arrow graph</value>
   </data>
+  <data name="Message_CannotBuildVertexGraph" xml:space="preserve">
+    <value>Cannot build vertex graph</value>
+  </data>
   <data name="Message_ColumnTypeMustBeDerivedFromDataGridColumn" xml:space="preserve">
     <value>ColumnType must be derived from DataGridColumn</value>
   </data>
@@ -227,6 +230,9 @@
   </data>
   <data name="Message_PlanCountExceedsMaximum" xml:space="preserve">
     <value>The number of {0} is {1}, which exceeds the maximum supported count of {2}</value>
+  </data>
+  <data name="Message_PlanDateBeforeStart" xml:space="preserve">
+    <value>is {0}, before ProjectStart ({1}), and so the schedule uses day 0 for activity {2}</value>
   </data>
   <data name="Message_PlanDateTooFarFromStart" xml:space="preserve">
     <value>must be within {0:N0} days of ProjectStart</value>
@@ -854,5 +860,74 @@
   </data>
   <data name="Message_ScenarioChartFilesSaved" xml:space="preserve">
     <value>{0} files were saved in {1}.</value>
+  </data>
+  <data name="Message_UserSettingsNotReadable" xml:space="preserve">
+    <value>The application could not read its settings, and so it started with the default settings. The file that it could not read is now {0}.</value>
+  </data>
+  <data name="Message_ServerKeyOverPlainHttp" xml:space="preserve">
+    <value>zpp does not send the API key to {0} over plain http, because each computer on the way can read the key: use an https address, or {1} if the network between the two computers is private.</value>
+  </data>
+  <data name="Message_ServerRedirected" xml:space="preserve">
+    <value>The server at {0} answered with a redirect to {1}, and zpp does not follow a redirect: give that address to {2}.</value>
+  </data>
+  <data name="Message_ServeSettingNotKnown" xml:space="preserve">
+    <value>{0} has the setting '{1}', which is not a limit of zpp serve. The limits are {2}.</value>
+  </data>
+  <data name="Message_ServeOriginNotAllowed" xml:space="preserve">
+    <value>The server has no API key, and so it takes no request from a web page: the request has an Origin header.</value>
+  </data>
+  <data name="Message_ServeHostNotAllowed" xml:space="preserve">
+    <value>The server has no API key, and so it takes only a request for localhost or a loopback address, or for a name that {0} gives: the Host of the request is a different name.</value>
+  </data>
+  <data name="Message_ServeAllowHostNotValid" xml:space="preserve">
+    <value>'{0}', from {1}, is not the name of a host: give a name such as plan.example.com, with no port.</value>
+  </data>
+  <data name="Message_ServeAllowHostNeedsNoApiKey" xml:space="preserve">
+    <value>{0} is only for a server with no API key: a server with a key does not look at the Host of a request.</value>
+  </data>
+  <data name="Message_SimulationStatisticsTooEarly" xml:space="preserve">
+    <value>Warning: the statistics of the simulation are too early. They leave out {0:N0} of {1:N0} iterations, in which an activity cannot finish by its maximum latest finish time.</value>
+  </data>
+  <data name="Message_ServerTimedOut" xml:space="preserve">
+    <value>The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request ({2}).</value>
+  </data>
+  <data name="Message_PlanTargetDateBeforeStart" xml:space="preserve">
+    <value>is {0}, before ProjectStart ({1}), and so the target of the simulation is day 0</value>
+  </data>
+  <data name="Message_ServerLimitsTimedOut" xml:space="preserve">
+    <value>The server at {0} gave no answer about its limits in {1} milliseconds, so zpp stopped. zpp does not ask for the limits when {2} gives the time limit.</value>
+  </data>
+  <data name="Message_ServerTimedOutFromLimits" xml:space="preserve">
+    <value>The server at {0} gave no answer in {1} milliseconds, so zpp stopped the request. zpp calculated this time limit from the limits of the server. To change it, use {2}.</value>
+  </data>
+  <data name="Message_ImportTooManyRows" xml:space="preserve">
+    <value>The sheet has more than {0:N0} rows that hold a value. The import reads no sheet that has more.</value>
+  </data>
+  <data name="Message_ImportTooManyCells" xml:space="preserve">
+    <value>The workbook has more cells than the import reads ({0:N0}).</value>
+  </data>
+  <data name="Message_ImportWorkbookTooLarge" xml:space="preserve">
+    <value>The workbook holds {0:N0} MB when it is unpacked. The import reads no workbook that holds more than {1:N0} MB.</value>
+  </data>
+  <data name="Message_ServeUploadTimedOut" xml:space="preserve">
+    <value>The request did not arrive within the limit of {0} seconds that the server gives a job, and the server stopped it.</value>
+  </data>
+  <data name="Message_RecoveryCopyFound" xml:space="preserve">
+    <value>The application ended before it saved the changes to {0}, and it kept a copy from {1}. Open the copy to go on with it: no file changes until you save. "{2}" keeps the copy, and the application asks again at its next start.</value>
+  </data>
+  <data name="Message_RecoveryCopyOfNoName" xml:space="preserve">
+    <value>a project with no name</value>
+  </data>
+  <data name="Message_UnhandledError" xml:space="preserve">
+    <value>The application met an error, and it must close. {0} The error: {1}</value>
+  </data>
+  <data name="Message_UnhandledErrorCopyKept" xml:space="preserve">
+    <value>It kept a copy of the open project, and its next start offers that copy.</value>
+  </data>
+  <data name="Message_UnhandledErrorNoCopy" xml:space="preserve">
+    <value>It could not keep a copy of the open project.</value>
+  </data>
+  <data name="Message_UnhandledErrorNoChanges" xml:space="preserve">
+    <value>The open project had no changes that were not saved.</value>
   </data>
 </root>

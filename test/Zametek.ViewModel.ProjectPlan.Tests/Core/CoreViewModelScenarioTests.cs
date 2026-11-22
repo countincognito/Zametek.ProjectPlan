@@ -1,6 +1,7 @@
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
 using Xunit;
@@ -299,6 +300,62 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             // The sort is on the copy in the scenario, and not on the live activity.
             core.RawActivities.Single(x => x.Id == 4).Dependencies.ShouldBe(new[] { 3, 1, 2 });
+        }
+
+        #endregion
+
+        #region BuildProjectScenarioCopy
+
+        // A recovery copy takes the scenario while the user works. It reads the order of the view, and it writes nothing:
+        // no activity gets a place, and nothing hears of a busy state.
+        [Fact]
+        public void BuildProjectScenarioCopy_Given_ActivitiesMovedInTheView_Then_TheCopyHasTheirPlacesAndNothingChanges()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            core.StartSubscriptions();
+            core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(3), Guid.NewGuid(), @"Test");
+            SequencerScopes.Drain(main, pool);
+            core.OrderableActivities.Move(0, 2);
+            core.OrderableActivities.Select(x => x.Id).ShouldBe(new[] { 2, 3, 1 });
+            core.RawActivities.OrderBy(x => x.DisplayOrder).Select(x => x.Id).ShouldBe(new[] { 1, 2, 3 });
+            var heard = new List<string>();
+            core.PropertyChanged += (_, e) => heard.Add($@"core: {e.PropertyName}");
+
+            foreach (IManagedActivityViewModel activity in core.RawActivities)
+            {
+                ((INotifyPropertyChanged)activity).PropertyChanged += (_, e) => heard.Add($@"activity {activity.Id}: {e.PropertyName}");
+            }
+
+            ProjectScenarioModel copy = core.BuildProjectScenarioCopy();
+            SequencerScopes.Drain(main, pool);
+
+            copy.DependentActivities.OrderBy(x => x.Activity.DisplayOrder).Select(x => x.Activity.Id).ShouldBe(new[] { 2, 3, 1 });
+            copy.DependentActivities.Select(x => x.Activity.DisplayOrder).Order().ShouldBe(new[] { 0, 1, 2 });
+            core.RawActivities.OrderBy(x => x.DisplayOrder).Select(x => x.Id).ShouldBe(new[] { 1, 2, 3 });
+            heard.ShouldBeEmpty();
+
+            // A save builds the same scenario, and it gives each activity its place.
+            ProjectScenarioModel saved = core.BuildProjectScenario();
+
+            copy.ShouldBeEquivalentTo(saved);
+            core.RawActivities.OrderBy(x => x.DisplayOrder).Select(x => x.Id).ShouldBe(new[] { 2, 3, 1 });
+        }
+
+        // The view of a core that did not start has no activities. Each activity then keeps the place that it has.
+        [Fact]
+        public void BuildProjectScenarioCopy_Given_AViewWithoutTheActivities_Then_EachActivityKeepsItsPlace()
+        {
+            using CoreViewModel core = CoreViewModelFixture.Create();
+            core.ProcessProjectScenario(CoreViewModelFixture.CreateProjectScenario(3), Guid.NewGuid(), @"Test");
+            core.OrderableActivities.ShouldBeEmpty();
+
+            ProjectScenarioModel copy = core.BuildProjectScenarioCopy();
+
+            copy.DependentActivities.OrderBy(x => x.Activity.DisplayOrder).Select(x => x.Activity.Id).ShouldBe(new[] { 1, 2, 3 });
+            copy.ShouldBeEquivalentTo(core.BuildProjectScenario());
         }
 
         #endregion

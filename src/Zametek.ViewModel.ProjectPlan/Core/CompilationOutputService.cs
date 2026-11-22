@@ -64,9 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             VertexGraphModel vertexGraph = ComputeVertexGraph(
                 inputs.GraphCompilation,
-                inputs.HasCompilationErrors,
-                inputs.ResourceSettings,
-                inputs.WorkStreamSettings);
+                inputs.HasCompilationErrors);
 
             ResourceSeriesSetModel resourceSeriesSet = ComputeResourceSeriesSet(
                 inputs.GraphCompilation,
@@ -135,11 +133,13 @@ namespace Zametek.ViewModel.ProjectPlan
             return ArrowEventIdMapper.ApplyStableIds(arrowGraph);
         }
 
+        // The vertex graph reads the compilation and nothing else, as the arrow graph does. It does not read the settings
+        // of the resources or of the work streams: the compiled activities hold the schedule already, and the graph shows
+        // that schedule. A build that got the resources made a second schedule from them, which was not always the same
+        // one (refer to GraphCompilationService.BuildVertexGraph).
         public VertexGraphModel ComputeVertexGraph(
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-            bool hasCompilationErrors,
-            ResourceSettingsModel resourceSettings,
-            WorkStreamSettingsModel workStreamSettings)
+            bool hasCompilationErrors)
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(CoreViewModel.BuildVertexGraph)}");
 
@@ -149,10 +149,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return m_GraphCompilationService.BuildVertexGraph(
-                graphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()),
-                resourceSettings.Resources,
-                resourceSettings.AreDisabled,
-                workStreamSettings.WorkStreams);
+                graphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()));
         }
 
         // The series of the resources and of the tracking draw colours for the resources that have none, and the second

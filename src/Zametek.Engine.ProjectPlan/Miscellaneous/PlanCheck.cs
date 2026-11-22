@@ -156,6 +156,16 @@ namespace Zametek.Engine.ProjectPlan
                 }
             }
 
+            // The target date of the simulation: a date that the calendar can count to.
+            if (hasStart)
+            {
+                AddIfFar(
+                    scenario.ProjectStart,
+                    scenario.SimulationSettings?.TargetFinishDateTime,
+                    $@"{root}/{nameof(ProjectScenarioModel.SimulationSettings)}/{nameof(SimulationSettingsModel.TargetFinishDateTime)}",
+                    problems);
+            }
+
             // The resources and the work streams: an id of their own.
             AddDuplicates(
                 scenario.ResourceSettings?.Resources,
@@ -175,9 +185,10 @@ namespace Zametek.Engine.ProjectPlan
         }
 
         /// <summary>
-        /// The ids of a scenario that match nothing, as warnings with the code notFound: a target resource that no resource has
-        /// (the load drops it, and the activity can then go to any resource), and a target work stream or a phase of a resource
-        /// that no work stream has. A plan with such an id loads.
+        /// The warnings of a scenario. A plan with a warning loads. The ids that match nothing have the code notFound: a target
+        /// resource that no resource has (the load drops it, and the activity can then go to any resource), and a target work
+        /// stream or a phase of a resource that no work stream has. A constraint date before the start of the project has the
+        /// code outOfRange: the calendar gives it day 0.
         /// </summary>
         public static List<PlanProblem> FindScenarioWarnings(ProjectModel project, int fileIndex)
         {
@@ -203,7 +214,20 @@ namespace Zametek.Engine.ProjectPlan
                     string place = $@"{root}/{nameof(ProjectScenarioModel.DependentActivities)}/{index}/{nameof(DependentActivityModel.Activity)}";
                     AddUnknown(activity.TargetResources, resourceIds, $@"{place}/{nameof(ActivityModel.TargetResources)}", Resource.ProjectPlan.Messages.Message_PlanNotAResource, warnings);
                     AddUnknown(activity.TargetWorkStreams, workStreamIds, $@"{place}/{nameof(ActivityModel.TargetWorkStreams)}", Resource.ProjectPlan.Messages.Message_PlanNotAWorkStream, warnings);
+                    AddIfBeforeStart(scenario.ProjectStart, activity.MinimumEarliestStartDateTime, activity.Id, $@"{place}/{nameof(ActivityModel.MinimumEarliestStartDateTime)}", warnings);
+                    AddIfBeforeStart(scenario.ProjectStart, activity.MaximumLatestFinishDateTime, activity.Id, $@"{place}/{nameof(ActivityModel.MaximumLatestFinishDateTime)}", warnings);
                 }
+            }
+
+            // No day of work is before the end of a target date that is before the start: the target is then day 0.
+            if (scenario.ProjectStart != default
+                && scenario.SimulationSettings?.TargetFinishDateTime is DateTimeOffset target
+                && target.Date < scenario.ProjectStart.Date)
+            {
+                warnings.Add(new PlanProblem(
+                    $@"{root}/{nameof(ProjectScenarioModel.SimulationSettings)}/{nameof(SimulationSettingsModel.TargetFinishDateTime)}",
+                    OutOfRange,
+                    Say(Resource.ProjectPlan.Messages.Message_PlanTargetDateBeforeStart, Date(target.Date), Date(scenario.ProjectStart.Date))));
             }
 
             for (int index = 0; index < resources.Count; index++)
@@ -225,17 +249,25 @@ namespace Zametek.Engine.ProjectPlan
         public static List<string> FindLimitViolations(ProjectScenarioModel scenario)
         {
             ArgumentNullException.ThrowIfNull(scenario);
-            var violations = new List<string>();
-            ResourceSettingsModel? resources = scenario.ResourceSettings;
-            int resourceCount = resources is null || resources.AreDisabled
-                ? 0
-                : resources.Resources?.Count(x => x is not null && !x.IsInactive) ?? 0;
 
-            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanActivities, scenario.DependentActivities?.Count ?? 0, GraphLimits.MaximumActivityCount);
-            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanResources, resourceCount, GraphLimits.MaximumResourceCount);
-            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanWorkStreams, scenario.WorkStreamSettings?.WorkStreams?.Count ?? 0, GraphLimits.MaximumWorkStreamCount);
+            return FindLimitViolations(
+                scenario.DependentActivities?.Count ?? 0,
+                scenario.ResourceSettings,
+                scenario.WorkStreamSettings?.WorkStreams?.Count ?? 0);
+        }
 
-            return violations;
+        /// <summary>
+        /// The counts of an import that are above the limits of the compiler, as
+        /// <see cref="FindLimitViolations(ProjectScenarioModel)"/> gives them for a scenario of a project file.
+        /// </summary>
+        public static List<string> FindLimitViolations(ProjectScenarioImportModel import)
+        {
+            ArgumentNullException.ThrowIfNull(import);
+
+            return FindLimitViolations(
+                import.DependentActivities?.Count ?? 0,
+                import.ResourceSettings,
+                import.WorkStreams?.Count ?? 0);
         }
 
         /// <summary>
@@ -351,6 +383,44 @@ namespace Zametek.Engine.ProjectPlan
                     OutOfRange,
                     Say(Resource.ProjectPlan.Messages.Message_PlanDateTooFarFromStart, GraphLimits.MaximumTimeValue)));
             }
+        }
+
+        private static void AddIfBeforeStart(
+            DateTimeOffset start,
+            DateTimeOffset? date,
+            int activityId,
+            string place,
+            List<PlanProblem> warnings)
+        {
+            // The calendar gives a date before the start day 0, and the load writes the start in place of the date. A minimum
+            // EST then has no effect, and an activity that takes time cannot meet a maximum LFT (C0010). Each date of a plan is
+            // a day, and so the time of the day does not count.
+            if (start != default
+                && date is DateTimeOffset value
+                && value.Date < start.Date)
+            {
+                warnings.Add(new PlanProblem(
+                    place,
+                    OutOfRange,
+                    Say(Resource.ProjectPlan.Messages.Message_PlanDateBeforeStart, Date(value.Date), Date(start.Date), activityId)));
+            }
+        }
+
+        private static List<string> FindLimitViolations(
+            int activityCount,
+            ResourceSettingsModel? resources,
+            int workStreamCount)
+        {
+            var violations = new List<string>();
+            int resourceCount = resources is null || resources.AreDisabled
+                ? 0
+                : resources.Resources?.Count(x => x is not null && !x.IsInactive) ?? 0;
+
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanActivities, activityCount, GraphLimits.MaximumActivityCount);
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanResources, resourceCount, GraphLimits.MaximumResourceCount);
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanWorkStreams, workStreamCount, GraphLimits.MaximumWorkStreamCount);
+
+            return violations;
         }
 
         private static void AddCount(

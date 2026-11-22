@@ -89,5 +89,27 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             roundTripped.ShouldBeEquivalentTo(current);
         }
+
+        // The setting of the recovery copies came after v0.6.1 was released, as a member with a default. The copies are
+        // on by default, and so a test of the member must turn them off.
+        [Fact]
+        public void VersionMapper_Given_RecoveryCopiesOff_When_RoundTrippedThrough_v0_6_1_Then_TheyStayOff()
+        {
+            var mapper = new VersionMapper();
+            var current = new AppSettingsModel { Version = Versions.v0_6_1, KeepRecoveryCopy = false };
+
+            mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(current)).KeepRecoveryCopy.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void VersionMapper_Given_ASettingsFileFromBeforeTheRecoveryCopies_Then_TheyAreOn()
+        {
+            var mapper = new VersionMapper();
+            v0_6_1.AppSettingsModel stored = Newtonsoft.Json.JsonConvert.DeserializeObject<v0_6_1.AppSettingsModel>(@"{ ""SelectedTheme"": ""Dark"" }")!;
+
+            stored.KeepRecoveryCopy.ShouldBeTrue();
+            mapper.FromV0_6_1ToCurrent(stored).KeepRecoveryCopy.ShouldBeTrue();
+            mapper.FromV0_6_0ToCurrent(new v0_6_0.AppSettingsModel()).KeepRecoveryCopy.ShouldBeTrue();
+        }
     }
 }
