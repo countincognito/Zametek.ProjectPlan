@@ -639,6 +639,10 @@ namespace Zametek.ProjectPlan.CommandLine
             }
             catch (Exception ex) when (ex is OperationCanceledException or IOException && HasTimedOut(context, timeout))
             {
+                // The rest of the body is not read, and the web server closes the connection after the answer. The answer
+                // says so (RFC 9112, section 9.6). Without it, a client sent its next request on the connection that the server
+                // closed, and got no answer. For a body that is too large, the web server says it itself.
+                context.Response.Headers.Connection = @"close";
                 return (null, TimedOut(context, Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut));
             }
             catch (BadHttpRequestException ex) when (ex.StatusCode == StatusCodes.Status413PayloadTooLarge)

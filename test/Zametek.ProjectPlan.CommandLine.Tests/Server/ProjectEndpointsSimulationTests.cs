@@ -14,7 +14,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     /// files among the outputs, a result that the project holds, the limit on the iterations of a project that the server runs,
     /// and that the time of a job stops it. The settings of a simulation are the project's, and so each test that needs some
     /// makes a project that holds them, as zpp saves one with -o.
+    /// In the same collection as ProgramExitCodeTests, because its servers write their log through the global logger of
+    /// Serilog, which the tests of that collection replace while they run (JobServerLogTests reads it).
     /// </summary>
+    [Collection(ProgramExitCodeTests.CollectionName)]
     public class ProjectEndpointsSimulationTests
         : IClassFixture<EngineFixture>
     {
@@ -425,6 +428,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             // The whole request arrived in time. It is the job that ran out of time, and the detail says so.
             problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 1));
+
+            // The server read the whole body, and so the connection can take the next request of the client.
+            response.Headers.ConnectionClose.ShouldNotBe(true);
         }
     }
 }

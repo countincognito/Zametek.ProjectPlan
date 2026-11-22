@@ -488,6 +488,11 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 response.Headers.RetryAfter.ShouldNotBeNull().Delta.ShouldBe(TimeSpan.FromSeconds(JobServer.RetryAfterSeconds));
                 problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.JobTimeout));
                 problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 0));
+
+                // The server reads no more of the body, and so it closes the connection after the answer. The answer says so,
+                // and the client sends its next request on a new connection. Without it, the client sent the next request on
+                // the connection that the server closed, and it got no answer.
+                response.Headers.ConnectionClose.ShouldBe(true);
             }
         }
 
@@ -562,6 +567,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             answer.ToString().ShouldContain(@"Retry-After: 5");
             answer.ToString().ShouldContain(ProblemHelper.GetType(ProblemKind.JobTimeout));
             answer.ToString().ShouldContain(string.Format(Resource.ProjectPlan.Messages.Message_ServeUploadTimedOut, 3));
+            answer.ToString().ShouldContain("\r\nConnection: close\r\n");
 
             // The server has one place for a job and no queue: the next request gets that place.
             using var content = RunningServer.CompileContent(TwoScenarios(), @"two-scenarios.zpp");
