@@ -2,6 +2,279 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Refuse a project file whose scenario nodes make a cycle** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `ProjectScenarioManagerViewModel.GetNodePath` goes from a node to its parent until it finds no parent. It keeps no record of the nodes that it saw. `AddManagedNodes` accepts each `ParentId` that the file gives, also the id of the node itself. `PlanCheck` does no check of `ParentId`.
+
+  Thus, a file of some hundred bytes can stop a job. Its tracked node is its own parent, or two nodes are the parent of each other. `BuildTrackedMetrics` calls `GetNodePath` for each tracked node. The loop then adds a name to a list with no end, under the lock of the scenario manager.
+
+  A job of the server does this for `compileTracked` and for the scenario chart. The time limit of a job does not end a step that is in progress. The desktop does it after the open of the file. Nobody ran such a file.
+
+  `ScenarioSelector` and `ProjectScenarioNodeHelper` already stop at a node that they saw. The review also reported that `ManagedNodeViewModel.Dispose` calls itself for a node that is its own child, because it sets `m_Disposed` only at its end.
+
+  Add a problem for a cycle to `PlanCheck.FindProjectProblems`. Let `AddManagedNodes` put a node of a cycle below the root, and give `GetNodePath` the same stop.
+
+- [ ] **Refuse a project file with two nodes that have the same id** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `ScenarioSelector.ListScenarios` makes a dictionary of the nodes by `Id` (`ToDictionary`). Two nodes with one id make it throw an `ArgumentException`. `JobRunner.ListScenariosAsync` calls it directly after the open. Each job on a project file calls it after `ProcessProject`.
+
+  The endpoint does not know this exception. Thus, both POST operations answer 500 (`unexpected-error`). `zpp --list-scenarios` ends with exit code 1 and the text of .NET.
+
+  `PlanCheck.FindProjectProblems` does a check of the choices and of `hasNoData` only. `PlanCheckTests` has a test of two equal ids for the activities, the resources and the work streams, and none for the nodes. Nobody ran such a file.
+
+  Add the problem `duplicateId` for `/Nodes/{i}/Id`. Do the checks of the project in `ListScenariosAsync` too.
+
+- [ ] **Do a check of each holiday rule before the calendar reads it** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `DateTimeCalculator` gives the text of a holiday rule to Ical.Net (`new RecurrencePattern(...)`). Then it reads each occurrence in its range of days into a list. No path does a check of the text: not the load of a file, not the import of a workbook, and not `PlanCheck`.
+
+  A rule with `FREQ=SECONDLY` has about 2.6 million occurrences in 30 days, and they give 30 dates. Each time that the calculator makes its range longer, it reads each rule again, under its lock. This work is in the load and in the build cascade. Thus, the limit of a compile does not end it.
+
+  Nobody ran such a file, and the cost depends on Ical.Net 5.2.3. Run one first.
+
+  Accept the frequencies `DAILY`, `WEEKLY`, `MONTHLY` and `YEARLY` only, and no part for hours, minutes or seconds. Give the number of the holidays a limit. Report a bad rule as a problem of the plan, and as a problem of its cell for a workbook.
+
+- [ ] **Keep the default of a member that a project file gives as null** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  The models of a project file give each list and each part a default, for example `Dependencies = []`. `ProjectFileOpen` reads the file with the default settings of Newtonsoft.Json. With these settings, a `null` in the file replaces the default. The steps of the upgrade then read the member with no check, for example `[.. project.Nodes]` in the converter of version 0.6.2.
+
+  Thus, a file that a program writes with `"Dependencies": null` probably ends with a `NullReferenceException`. `PlanCheck` looks for a null item in some lists, but it runs after the upgrade. [The project file](PROJECT-FILE.md) says only that a program can leave a member out. Nobody ran such a file, and no test has one.
+
+  Read with `NullValueHandling.Ignore`, so that the defaults stay. Add a test with a null for each list of the newest version.
+
+- [ ] **Bound the projected finish of the earned value chart** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `ResourceSchedulingService` divides the last tracked value by the slope of a line fit, and the result is the day of the projected finish (three sites). The only check is that the slope is more than zero. A slope near zero gives a day number of many millions.
+
+  With projections and dates, `EarnedValueChartManagerViewModel` gives this day number to `DateTimeCalculator.AddDays`. That method counts one day at a time, under the lock of the calculator. The review reported the result: the count goes to the end of the range of dates and throws. The build of the chart then shows an error after each compilation, and the export of the chart from `zpp` fails. A smaller day number makes each build slow.
+
+  Nobody ran this. Leave the projection out when it is beyond a multiple of the finish of the plan, or beyond the range of the dates.
+
+- [ ] **Test the total working time before two divisions of the tracking series** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  In `CalculateTrackingSeriesSet` of `ResourceSchedulingService`, two lines have the form `endTime == 0 ? 0.0 : 100.0 * ... / totalWorkingTime`. One line is for the progress, and one is for the effort. Both lines are inside `if (endTime > 0)`, and thus the test is never true. The other divisions of the method test `totalWorkingTime == 0`.
+
+  When the total working time is 0 and the trackers give an end time, the progress is `NaN` and the effort is `Infinity`. The review reported two such plans: a plan whose compilation has errors, and a plan of milestones with trackers. `ScheduleCsvWriter` writes these values into the CSV file of the earned value. Nobody ran this.
+
+  Test `totalWorkingTime == 0` in the two lines. Add a test with a compilation that has errors and one tracker.
+
+- [ ] **Decide if a tracked scenario that passes the limit of a compile ends the job** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `JobRunner` loads and compiles each other tracked scenario for `compileTracked` and for the scenario chart. A tracked scenario with compilation errors gets its errors in the answer, and the job goes on. But a tracked scenario that passes the limit of a compile throws `GraphCompilationTimeoutException` out of the loop. The job then ends with exit code 4 (`compilation-timed-out`), with no metrics and no outputs. The message does not name the scenario.
+
+  [The command line tool](COMMAND-LINE.md#exit-codes) says that a tracked scenario that does not compile does not change the exit code. No test has a tracked scenario that passes the limit.
+
+  If the limit must not end the job, catch the exception in the loop, and record it as the error of that scenario. If it must, name the scenario in the message, and say so in the documentation.
+
+- [ ] **Cut a text at the limit of a cell in the export of a scenario** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `XlsxScenarioFileExporter` gives each text to `XlsxSheetWriter.Text` as it is. A cell of a workbook holds 32,767 characters. The sheets of the simulation cut a text at this limit (`XlsxSimulationSheets.MaximumCellLength`). The review reported that a longer note, or a long list of ids, makes the export of a scenario fail with the message of ClosedXML. Nobody ran this.
+
+  Use the same cut in `XlsxSheetWriter.Text`, or report the cell.
+
+- [ ] **Do not write an upload to the disk, and do not answer a failure of the disk as 400** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `JobServer` sets one option of the form: `MultipartBodyLengthLimit`. It does not set `MemoryBufferThreshold`. With the default, ASP.NET Core keeps a file part of more than 64 KB in a temporary file. The file is in the folder of `ASPNETCORE_TEMP`, or in the temporary folder of the user.
+
+  Thus, each such job writes its plan to the disk, and a server that ends suddenly can leave the file. The security review in [the reference](API.md) says that the server stores nothing.
+
+  `ProjectEndpoints.ReadFormAsync` answers each `IOException` of the read as 400 (`malformed-request`), with the detail that the body must be multipart. It writes no line to the log. A temporary folder that is full, or that the server cannot write, thus gives each larger upload an answer that blames the client.
+
+  The review read the options and the catch. Nobody looked at the temporary folder during an upload. Set `MemoryBufferThreshold` to the limit of the upload, or name the folder in the entry "Package `zpp serve`". Write an `IOException` that is not the end of the time of a job to the log, and answer 500.
+
+- [ ] **Send the intermediate certificates of the server** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `ServeSettingsHelper` loads the certificate of the server with `X509Certificate2.CreateFromPemFile` or with `X509CertificateLoader.LoadPkcs12FromFile`. Each of them gives one certificate. `JobServer` sets `ServerCertificate` only, and nothing sets `ServerCertificateChain`. Thus, the server loses the intermediate certificates of a `fullchain.pem` file, or of a `.pfx` file with its chain.
+
+  The server then sends its own certificate alone, unless the system has the intermediate certificates or can get them. On a computer that has neither, for example a container with no network, a client probably refuses the certificate. The tests use certificates that sign themselves. Nobody tried a certificate from a certificate authority.
+
+  Load the collection of the file, and give the other certificates to `ServerCertificateChain`. Also say in the documentation that the server reads the certificate one time, at its start. A new certificate needs a new start.
+
+- [ ] **Write the output of `zpp` as UTF-8 on each system** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `Program.Main` uses `Console.Out` and `Console.Error` as they are, and nothing in the project sets `Console.OutputEncoding`. On Windows, the encoding is then the code page of the console, for example 850. The JSON of the metrics does not escape a letter that is not ASCII. Thus, after `zpp ... > metrics.json`, a name with such a letter gives a file that is not UTF-8. A letter that the code page does not have becomes `?`.
+
+  The same applies to the list of the scenarios, to the tables, and to the text that `zpp --server` shows again. The comment in `StandardConsole` says that the bytes are the same on Windows and on Linux. The tests read the output through writers, and thus they cannot see the encoding. Nobody looked at the bytes of such a file on Windows.
+
+  At the start of `Main`, set the encoding of the two streams to UTF-8 with no byte order mark.
+
+- [ ] **Read a project file one time** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `ProjectFileOpen` reads the stream into a string, and it parses the string into a `JObject`. Then it writes the tree to a second string, with indents, and it reads that string into the model of its version. Each step of the upgrade makes one more model. `PlanCheck` runs after all of this. `SettingServiceBase` reads the settings in the same way.
+
+  Thus, a job holds some forms of its file at one time, and only the limit of the upload (50 MB by default) bounds them. The operation that lists the scenarios pays the same cost, and it uses only the nodes. Nobody measured the memory. The other entries about the memory of a job are about the work after the compile.
+
+  Read the version with a reader that goes forward only, or make the model from the tree (`ToObject`). Measure a job on `docs/assets/erp-migration.zpp` and on a file of 50 MB, before and after the change.
+
+- [ ] **Do seven smaller things for the server and the command line tool** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  1. **A defect that looks like a bad file.** `JobRunner.IsUnreadable` is true for each exception, except a cancellation and `OutOfMemoryException`. Thus, a `NullReferenceException` in a mapper becomes `project-not-readable` (422). `ProjectEndpoints` writes no error to the log for this answer. Write the inner exception to the log as a warning when it is not an exception of a reader.
+  2. **The answer in the memory of the client.** `JobClient` reads each answer into memory, and its `HttpClient` has no `MaxResponseContentBufferSize`. A wrong address that sends a body with no end makes `zpp` hold as much as 2 GB. Set the largest size from the limits of the server.
+  3. **The limits of the connections.** `JobServer` sets `MaxRequestBodySize` and no other limit of Kestrel. Thus, the number of the connections has no limit. The paths that have no key (`/v1/openapi`, `/v1/schemas/project` and `/health/*`) are outside the limiter of the jobs, and the server compresses the description for each request. Set `MaxConcurrentConnections`, and keep the compressed description.
+  4. **Two status codes of the read of a form.** The review reported that an `options` field of more than 4 MB gets 400 and not 413. The limit of ASP.NET Core for a value comes first. It also reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent these requests.
+  5. **The size of a chart on the command line.** `Program.RequireSize` only makes sure that a size is there. The server refuses a size below 1 or above its maximum (`CompileOptionsHelper`). The review reported that `--gantt-size 0:600` thus fails in the export, after `zpp` wrote other files. Refuse it as a usage error.
+  6. **The extension of a file name.** `FileFormatHelper` compares the extension exactly. Thus, the application refuses `PLAN.MPP` and `chart.PNG`, although the file dialog of Windows shows such files. `.jpg` is not one of the image formats. Compare with no difference between capital and small letters, and accept `.jpg`.
+  7. **The key for a different server.** `zpp` sends `ZPP_API_KEY` to the server that `--server` or `ZPP_SERVER` gives, when the address is https or an address of this computer. Thus, the key for one server can go to a second server. Say this in the documentation, or let a key belong to one address.
+
+- [ ] **Let one reader read the holiday rules** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  The calendar reads a holiday rule with Ical.Net. The dock of the holidays reads the same text with a reader of its own, `RecurrencePatternHelper`, which knows less of RFC 5545. Three results:
+
+  1. **A rule that the desktop cannot read.** `ParseUntil` accepts `yyyyMMdd'T'HHmmss` and `yyyyMMdd` only. Thus, `UNTIL=20271231T000000Z`, which is the UTC form of the RFC, throws a `FormatException`. The throw is in the constructor of `ManagedHolidayViewModel`. A subscription of `HolidaySettingsManagerViewModel` calls it on the main thread, with no catch. The handler for exceptions that nothing handles then probably ends the application ([ARCHITECTURE](ARCHITECTURE.md#14-the-recovery-copy)). `zpp` compiles the same file.
+  2. **A rule that changes.** `ParseDay` gives Monday for a day that it does not know, and thus `BYDAY=-1FR` becomes `BYDAY=MO`. `ToRule` ignores the parts that it does not know. After an add, a remove or an edit of one holiday, `UpdateHolidaySettingsToCore` writes each holiday again, from the rule that the reader made. The schedule then changes with no message.
+  3. **The edit dialog.** The review reported that the dialog keeps only the first value of `BYMONTHDAY`, `BYMONTH` and `BYSETPOS`.
+
+  A program, the zpp skill or a workbook can give such a rule. Nobody ran a file with one.
+
+  Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there. Catch a rule that the reader cannot read, and report it.
+
+- [ ] **Stop a drag in the Gantt chart when the window loses the pointer capture** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  No handler under `src` listens to `PointerCaptureLost`. In `GanttChartManagerView`, only `Gantt_PointerReleased` ends the drag that changes a duration, and it calls `SetActivityDuration`. If the window loses the capture during the drag, for example with Alt+Tab, no release arrives.
+
+  The review reported the result. The bar then follows the pointer with no button down, and the next release of a button writes a duration into the plan. Nobody did this in the application.
+
+  Handle `PointerCaptureLost`, and stop the drag with no change to the plan. The drag of a node and the pan of a graph have the same form ([the TODO file of the library](../src/Zametek.Graphs.Avalonia/TODO.md)).
+
+- [ ] **Do nine smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  1. **The rule of the holiday dialog.** `HolidayEditViewModel` builds its rule in four subscriptions that deliver on the task pool. `HolidaySettingsManagerViewModel` reads the rule when the dialog closes. If the pool is busy, for example during a simulation, the rule can be the one from before the last change. Build the rule with no `ObserveOn`.
+  2. **A failure at the start.** In `App.OnFrameworkInitializationCompleted`, the set-up of the log is before the `try`. The catch writes to the log and to the standard error stream, which a `WinExe` program does not show. Then it ends the application with exit code 1. Thus, a settings folder that the application cannot make gives no message and no log. Show a message with the cause.
+  3. **The build of a chart that fails.** Five subscriptions build a chart or the output with `Subscribe(async _ => await ...)`. Each build catches its exception and shows a dialog. Thus, a plan whose chart fails shows one dialog after each compilation, and the log has no line. Write the exception to the log, and show the state in the panel.
+  4. **`IsLoading` and `IsCreating`.** In the constructor of `ProjectScenarioManagerViewModel`, two commands each write `m_IsLoading`, and two commands each write `m_IsCreating`. Each property then follows its second command only. No UI component binds them today. Merge the two streams, or remove the properties.
+  5. **Two instances and the settings.** Each setter of `SettingService` writes all of the settings from memory, and nothing reads the file again. Thus, the last write of two instances removes the changes of the other instance, for example a recent file. The recovery copies already allow for two instances.
+  6. **Save Image with no size.** The review reported that the save of a chart image writes no file and shows no message when `ImageBounds` has no value (`GanttChartManagerViewModel`, `EarnedValueChartManagerViewModel`).
+  7. **A long number in the dependencies.** `DependenciesStringValidationRule` accepts a number of any length, and then it calls `int.Parse`. The review reported that a number of more than 10 digits thus throws an `OverflowException` in the setter of `DependenciesString`. The `Separator` of the rule is a public static field that can change, and nothing sets it.
+  8. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
+  9. **Things that nothing uses.** `DataGridTriStateSortingBehavior` is not complete, and nothing attaches it. `Zametek.View.ProjectPlan` references `Markdown.Avalonia.SyntaxHigh`, and no file uses it. Thus, the package and AvaloniaEdit are in each release. `Zametek.Resource.ProjectPlan` and the graph library copy `.resx` files to the output folder (`CopyToOutputDirectory`). Remove the three.
+
+- [ ] **Give a test that waits for ever a time limit and a name** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  No test has a time limit, and no test project has an `xunit.runner.json` file or a `.runsettings` file. The `dotnet test` command of the hook and of CI has no `--blame-hang-timeout`. The job of `ci.yml` has no `timeout-minutes`, and the default of GitHub is 6 hours.
+
+  The tests of the locks exist to find a deadlock. A deadlock that comes back makes the hook wait with no output, and it makes CI wait for 6 hours. Neither says which test waits. Some tests wait with no limit, for example `RunCompile_Given_APoisonedTargetSet_Then_DoesNotHang` and the tests of `UnhandledErrorHandlerTests` that await `handler.Completion`.
+
+  Add `--blame-hang-timeout` to the two commands, and `timeout-minutes` to the job. The time must be longer than the slowest test. The server tests of the huge graph exports have a limit of 3 minutes.
+
+- [ ] **Initialise ReactiveUI in the scope that installs the scheduler of a test** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `CoreViewModelFixture.EnsureReactiveUIInitialized` sets the schedulers one time for each process. Its comment says that a test that installs a scheduler of its own must call it first. The review counted 134 sites of `new MainThreadSequencerScope()`, and 128 of them do so.
+
+  Six tests do not: three in `CoreViewModelSubscriptionFaultTests` and three in `WorkStreamSettingsDeliveryTests`. They make the scope first, and the fixture then initialises ReactiveUI. These tests pass because a different class ran first.
+
+  If one of them is the first test of a run, for example with a filter, the initialisation replaces the scheduler of the test. The scope then puts back the scheduler from before the initialisation, for the rest of the process. Nobody ran one of these classes alone.
+
+  Call `EnsureReactiveUIInitialized` in the constructors of `MainThreadSequencerScope` and `TaskpoolSequencerScope`. Then the 128 calls before a scope are not necessary.
+
+- [ ] **Wait for a signal, and not for a time, in the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  Some tests wait for a fixed time and then make an assertion. On a slow computer, such a test fails with no defect, or it passes with no check. The harness of the server says that a test can stop for more than one minute (`RunningServer`). This occurs when the other test projects run at the same time. Six groups:
+
+  1. **The server is full.** Ten sites wait 250 ms after a request starts, and then they expect 503 (`s_Settle` in `JobServerTests`, `JobClientTests` and `OpenApiContractTests`, and a delay in `ProjectEndpointsJobStatusTests`). `RunningServer.ApiRequests` already counts the requests that are past the limiter. Wait for that number.
+  2. **A command.** Nine sites poll for the result of a command, for as long as 60 s. Two tests wait 200 ms or 300 ms and then say that nothing happened (`ScenarioChartManagerViewModelTests`, `SimulationChartManagerViewModelTests`). Each command is a `ReactiveCommand`, and `ProjectScenarioManagerLoadFailureTests` already awaits one. Await the command.
+  3. **A thread that must wait.** Four assertions wait 250 ms or 300 ms and then say that a different thread is not complete (`CoreViewModelOffLockTests`, `TrackerRevisionTests`, `ProjectRecoveryTests`, `PlanGraphTests`). They also pass when that thread did not start. First wait for a signal that the thread started.
+  4. **The clock.** `JobClientLimitsTests` waits 30 s in each run. `ProgramCancellationTests` cancels after 3 s, and it does not make sure that the simulation started. Give `JobClient` its times as parameters, and cancel when the job reports progress.
+  5. **The UI tests.** `ApplicationDriver.SettleAsync` waits until `IsBusy` is false for 150 ms. `IsBusy` is a signal for the UI only ([ARCHITECTURE](ARCHITECTURE.md#8-isbusy-versus-isbulkupdating)). Use the settled signal of section 9.
+  6. **A free port.** `JobServerStartTests.FreePort` finds a free port and closes it, and the server binds the port later. A different process can take the port between the two. Let the server bind port 0, and read the port from its log.
+
+  The review read these sites. Nobody saw one of these tests fail.
+
+- [ ] **Read the fixtures of the converter tests as the application reads a file** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  `ConverterFixture.ReadJsonFile` reads each fixture with `JObject.Parse`, and it writes the tree to a string again. `JObject.Parse` reads a text that looks like a date as a moment, in the time zone of the computer. `ProjectFileOpen` stopped this for the application (`DateParseHandling.None`), and its comment says why. Thus, the tests of `ConverterTests` give the converters dates that the application does not give them.
+
+  The fixtures have dates with an offset, for example `2015-01-05T09:00:00+01:00`. The assertions compare moments. Thus, a step of the upgrade that changes the offset or the day of a date passes. Since 0.11.0-beta.1, a date of a plan is the day that it shows, in its own offset.
+
+  Read the text of the file as it is, from the folder of the test assembly. For each version, compare the date and the offset of one date or more. `ConverterTests` also has assertions in comments, for the times of the creation and for the step from 0.5.0 to 0.6.0. Put them back, or remove them.
+
+- [ ] **Keep the tests away from the network and from the environment of the developer** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  1. **The child process.** For one test, `ProgramExitCodeTests` starts `zpp` as a process of its own, with the environment of the test run. The other tests call `Main` with an empty environment, so that `ZPP_SERVER` and `ZPP_API_KEY` cannot send a run to a server (`ZppMain`). On a computer that has `ZPP_SERVER`, this one test sends the plan of the test and the key to that server. Remove the two variables from the start information, or add `--local`.
+  2. **The server on each interface.** One test of `JobServerStartTests` starts a server on `http://0.0.0.0`, with a key that is a constant of the test class. During the test, each computer of the network can get to the server, with a key that is in the repository. Use a random key for each run.
+
+- [ ] **Show a test that does not run on a system as skipped** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  Some tests are for one operating system. On a different system, such a test returns at its start, and its result is "passed". `FileStreamHelperWriteTests` has nine such returns, and its header says so. The tests of the copy in `Zametek.Graphs.Avalonia.Tests` and `UnixSocketFileHelperTests` do the same.
+
+  CI runs on Linux only. Thus, the Windows cases of the save by way of a temporary file are green in CI, and they never ran there. The results do not show this. The entry "Build and test on Windows in CI, and collect the coverage" asks for the job on Windows. This entry is about the result of a test.
+
+  Add two attributes that derive from `FactAttribute` and set `Skip` on the wrong system. xunit v2 permits this.
+
+- [ ] **Throw at each step of a load in the tests of a load that fails** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  ARCHITECTURE section 7 rule 16 says that a load that fails changes nothing, and that a load can fail at each of its steps. This rule protects against a loss of data. The tests throw at three places: at two changes of `ArrowGraphEdgeRoutingMode` (`RoutingModeFault`), and at a null list of the dependent activities. For "nothing changed", they compare three values of each scenario: the number of the activities, the number of the resources and the routing mode (`ProjectScenarioManagerLoadFailureTests`).
+
+  Thus, a failure at a different raise of a load has no test. A way back that gives the correct number of activities with wrong durations passes.
+
+  Add a theory that counts the raises of a load that works. For each number, it then throws at that raise, and it compares all of the saved scenario with the original. `ProjectRecoveryTests` already compares projects in this way. The review read the tests. Nobody changed the application to see if a test finds the defect.
+
+- [ ] **Run the tests in more than one time zone** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  CI runs in UTC, and the hook runs in the time zone of the maintainer. The review counted 11 test files of `Zametek.ViewModel.ProjectPlan.Tests` that read `TimeZoneInfo.Local`, and the fixtures use the clock of the system. Earlier defects depended on the zone. For example, a load failed on a computer east of UTC (`DateTimeCalculatorTests` tells of it).
+
+  `DateTimeCalculatorTests` has tests with zones of its own. But the core, the imports and the saves run only in the zone of the computer.
+
+  On Linux, the variable `TZ` changes `TimeZoneInfo.Local`. Run the test project two more times in CI. Use a zone far to the east for one run, for example `Pacific/Kiritimati`. Use a zone far to the west for the other run, for example `America/Los_Angeles`.
+
+- [ ] **Do seven smaller things for the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  1. **A test that cannot fail.** `RunCompile_Given_APoisonedTargetSet_Then_DoesNotHang` sets `completed` to true after the compile and in the catch, and then it asserts that `completed` is true. Assert the result: a compilation error, or the timeout. Also assert that the copy of the activity keeps the bad set.
+  2. **The switch for the golden files.** With `ZPP_REGENERATE_XLSX_GOLDENS=1`, a test writes the golden workbooks into the source folder, and it passes. A variable that stays in a shell writes them again at each run, also in the hook. From the next build, the comparison uses files that the source code under test wrote. Make the test fail with a message after it writes.
+  3. **A server that stops.** `JobServer` gives a stopped server the time limit of a job to complete its jobs (`HostOptions.ShutdownTimeout`). No test stops a server that has a job in progress.
+  4. **An upload with no length.** Each test of the answer 413 sends a body with `Content-Length`. No test sends a body in chunks that is too large. The review reported that such a body possibly gets 400.
+  5. **An assertion that can do nothing.** `ProjectTransportTests` has `ContentType?.MediaType.ShouldBe(...)`. With no content type, the assertion does not run.
+  6. **Copies of the harness.** The review counted 22 private `Harness` classes. Seven files construct `MainViewModel` with its 11 arguments, and three files make a certificate that signs itself. The copies are no longer the same: the harness of `MainViewModelStartTests` does not dispose the main view model. Make one harness for the main view model and one set of helpers for the server tests, in small steps.
+  7. **The project files.** Two test projects set `EnablePreviewFeatures`, and no project under `src` does. The same two projects copy each test file at each build (`CopyToOutputDirectory` is `Always`).
+
+- [ ] **Give the release workflow fewer permissions, a draft release and checksums** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  No earlier review read `release.yml`. This review found five things:
+
+  1. **The permissions.** The workflow gives `contents: write` to each job. The seven build jobs restore the packages of other parties, and they run the build tasks of those packages with this token. Only the job `create-release` needs the permission. Give the workflow `contents: read`, and give `contents: write` to that one job.
+  2. **A release with some of its files.** `create-release` makes the release public, and then it uploads the files one at a time. If an upload fails, the public release has only some of the files. Make a draft, upload the files, and then make the release public.
+  3. **No test.** The workflow runs no test, and it does not make sure that CI passed for the commit of the tag. A tag on any commit makes a release.
+  4. **The name of the tag in the scripts.** The scripts contain `${{ github.ref_name }}`. The pattern of the trigger (`v[0-9]+.[0-9]+.[0-9]+-*`) permits a tag with characters that a shell reads as a command. `enforce-master-source.yml` gives such a value to its script through the environment, and its comment says why. The check of the tag against the SemVer pattern is in the last job only. Give the name through the environment, and do the check first. Only a person who can push a tag can use this, and thus the risk is low.
+  5. **Nothing to verify a download.** A release has no file of checksums and no build provenance. The programs for Windows and the MSI have no signature. The programs for macOS have only the signature that the SDK makes. Add a file of SHA-256 checksums and an attestation of the build. A signature costs money, and the maintainer decides.
+
+- [ ] **Give the version of the application in one place** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  No project file sets `Version`. Thus, each assembly and each program of a release has the version 1.0.0.0 in its file properties. The version that the application shows is the resource `Label_AppVersion` in `Labels.resx`.
+
+  For each release, a person changes the version by hand in about seven places. These are the resource, the two MSIX manifests, `Package.wxs`, the name of the MSI in the `.wixproj` file, and the examples in `docs/API.md` and `docs/openapi.yaml`. Nothing makes sure that the places agree.
+
+  Set `Version` one time in `Directory.Build.props`. Let the application read it from the assembly (`AssemblyInformationalVersionAttribute`), and give it to WiX as a constant. A test can then compare the manifests and the documents with it. The numeric fields of the MSIX and the MSI stay `X.Y.Z.0`.
+
+- [ ] **Fix the package sources of a build, and refuse a package build that has the local library** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  The repository has no `nuget.config` file. Thus, a restore uses each package source of the computer. On 2026-11-21, a restore on the computer of the maintainer used a local folder as a source, together with nuget.org. The MSI and the MSIX packages come from that computer. A package in a local source that has the name of a real package can thus go into a release.
+
+  Add a `nuget.config` file that clears the sources, names nuget.org, and maps each package to it (`packageSourceMapping`).
+
+  `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The build then uses the source code of the library from the folder next to the repository ([Build from source](BUILDING.md)). `build-msix.ps1` and the check of the inputs of the installer (`CheckTheInstallerInputs`) do not look for this file. Thus, a package can contain a library that is not the released one. Stop the two package builds when the file exists.
+
+- [ ] **Make sure that the MSI does not repair itself for a second user** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  The MSI installs for the computer. Its component `DesktopShortcut` has a registry value below `HKCU` as its key path. The start menu has an advertised shortcut (`Advertise="yes"`). For a user who did not install the product, the key path is not there. Windows Installer then usually starts a repair when that user starts the advertised shortcut. It asks for the MSI file if it cannot find the file.
+
+  The review read `DesktopComponents.wxs`. Nobody installed the MSI on a computer with two users. Do this check together with the entry "Install the MSI of the final 0.11.0 over a 0.11.0 pre-release". If the repair starts, put the shortcut of the desktop into a component for the computer, or remove `Advertise`.
+
+- [ ] **Put the licenses of the other parties into each package** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  A release contains many libraries of other parties in one file. Examples are MPXJ, the Java runtime image of IKVM (which has source code of OpenJDK), Avalonia, ScottPlot, ClosedXML and MSAGL, and the fonts Inter and Cascadia Mono. The repository has `LICENSE` for its own source code, and one `OFL.txt` next to Cascadia Mono. The dialog "About" shows the version and the copyright only.
+
+  Most licenses ask that the text of the license goes with each copy of the library. The review believes that MPXJ has the LGPL, which asks for more. The review did not read each license, and this entry is not legal advice.
+
+  Read the license of each library. Make a file `THIRD-PARTY-NOTICES`, put it into each archive and each installer, and show it from the dialog "About".
+
+- [ ] **Do six smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+
+  1. **The MSIX manifests.** Both manifests name the device family `Windows.Universal`, which is not correct for a desktop application with full trust. `MaxVersionTested` is 10.0.14393.0, and the packaging projects give 10.0.19041.0 as the minimum. The `.wapproj` files also keep configurations for 32-bit ARM, which .NET 10 does not have, and package references in a comment.
+  2. **`build-msix.ps1`.** The script calls `vswhere` with `-prerelease`, and thus a preview of Visual Studio can build a release package. With `-Sign`, the script does not make sure that the bundle has a signature.
+  3. **The runs of CI.** `ci.yml` has no `concurrency` group, and thus a new push does not stop the run of the push before it. The step for Spectral pins the tool, but `npx` gets the newest dependencies of the tool at each run.
+  4. **Reports about security.** The repository has no `SECURITY.md` file, and `zpp serve` is a server.
+  5. **The line endings.** `.gitattributes` asks for LF in the repository, and `.editorconfig` asks for CRLF. On 2026-11-21, 143 files were CRLF in the index, and 1,161 were LF. A tool that follows `.gitattributes` changes each line of a CRLF file. Decide the rule. Then make all the files agree in one commit, and name that commit in `.git-blame-ignore-revs`.
+  6. **The task runner of the hook.** `.husky/task-runner.json` has the same four commands as `.husky/pre-commit`, and nothing uses it. The hook also says "Running ViewModel tests" before it runs all the tests. Remove the file, or let the hook use it.
+
 - [ ] **Read only the kept result of a formula in the import of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
 
   `XlsxWorkbookReader.Convert` reads `cell.Value`. For a formula that has no kept result in the file, ClosedXML 0.105.1 then calculates the formula. It also calculates each other formula of the workbook that has no kept result, on each sheet. One formula in a cell under a title starts this work. The other formulas can be in a sheet that the import does not read.
@@ -34,7 +307,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Do three smaller things from the review of 0.11.0-beta.2** *(2026-11-20, from the review of 0.11.0-beta.2, changed 2026-11-22)*
 
-  1. **The name of the temporary file.** `FileStreamHelper.Write` always uses `<name>.tmp` next to the target, and the copy in Zametek.Graphs.Avalonia does the same. It writes over a file with that name, and it deletes the file at the end. A test pins this for a temporary file that an earlier write left. A file of the user with that name gets the same result. Decide if the name must be one that only the application makes.
+  1. **The name of the temporary file.** `FileStreamHelper.Write` always uses `<name>.tmp` next to the target, and the copy in Zametek.Graphs.Avalonia does the same. It writes over a file with that name, and it deletes the file at the end. A test pins this for a temporary file that an earlier write left. A file of the user with that name gets the same result. Decide if the name must be one that only the application makes. *(2026-11-23)* A second case for the same decision: two writes of one file at the same time, for example from two instances. The second write cannot open the temporary file, and `Write` then writes into the target directly. The review reported the result on Linux and macOS: the first write then puts its file in the place of the target. The file then does not have the content of the second write. A name for each write removes this case too.
   2. **A value in `zpp-serve.json` that is not a number.** The check for a name that is not a limit reads only the names of the first level. The review reported that `{"MaxJobs": {"value": 2}}` thus passes, and that the server starts with the default. Nobody ran this.
   3. **Writes to the disk on the UI thread.** `FileStreamHelper.Replace` flushes to the disk, and it can wait for 2 s for a file that a program holds. `SettingService` calls it on the thread of each setter. `RecoveryStore.WriteCopyAsync` calls it under its lock, on the UI thread for a copy after an open or after an exception. `FileStreamHelper.SaveAsync` does the same write on a pool thread. Nobody measured a delay.
 
@@ -125,8 +398,8 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   1. `PlanGraph.RawActivities` returns `m_Activities.Items`, and DynamicData 9.4.33 makes a new array for each read. A loop that reads the property many times copies the list each time.
   2. The graph outputs clone the activities two times (`CompilationOutputService`, `GraphCompilationService`). The arrow graph then compiles them again. The vertex graph calculates their critical path again. Since 0.11.0-beta.2, it does not schedule the resources a second time. Refer to the entry about the two compiles of a job.
-  3. With rectilinear routing, a drag of a node resolves each edge two times for each move of the pointer (`InteractiveGraphViewModel`, `GraphClashResolver`).
-  4. The save of a workbook holds some copies of it in memory (`XlsxWorkbookWriter`). The server holds each output of a job in memory until the answer (`OutputResponse`).
+  3. With rectilinear routing, a drag of a node resolves each edge two times for each move of the pointer (`InteractiveGraphViewModel`, `GraphClashResolver`). *(2026-11-23)* A possible cause: `GraphNodeDragBehavior.OnPointerMoved` sets `node.X` and then `node.Y`, and each of them raises. One method that sets the two values and raises one time can make the work half.
+  4. The save of a workbook holds some copies of it in memory (`XlsxWorkbookWriter`). The server holds each output of a job in memory until the answer (`OutputResponse`). *(2026-11-23)* An example for the measurement: a chart can have the format `Bmp`, and the default maximum size of a chart is 5000 by 5000. Such an image has about 100 MB with no compression. A job can ask for more than one such chart.
   5. The SVG export of a chart takes one lock for the whole process, on each operating system (`ScottPlotImageExporter`). Thus, the jobs of `zpp serve` that export SVG charts wait for each other.
 
 - [ ] **Make a compiler warning stop the build** *(2026-11-14, from the review of `src`)*
@@ -150,7 +423,9 @@ This file lists the maintainer-internal engineering intents that must version wi
   - DynamicData 9.4.33 (9.5.0) and Splat.Autofac 20.2.0 (21.0.0).
   - MPXJ.Net 16.9.0 (16.11.0) and Ical.Net 5.2.3 (5.2.4).
   - JsonSchema.Net 9.4.0 (9.7.0) and MessageBox.Avalonia 12.0.0 (12.1.0).
-  - Svg.Controls.Skia.Avalonia 12.0.0.13 (12.0.0.17) and Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2).
+  - Svg.Controls.Skia.Avalonia 12.0.0.13 (12.0.0.17).
+
+  *(2026-11-23)* This list had Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2). Nothing uses that package. Remove the reference, and do not bump it. Refer to the entry "Do nine smaller things for the desktop application".
 
 - [ ] **Build and test on Windows in CI, and collect the coverage** *(2026-11-14, from the review of `src`)*
 
@@ -168,7 +443,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Suggestion: make `Zametek.ViewModel.ProjectPlan` smaller** *(2026-11-14, from the review of `src`)*
 
-  The project has about 45,700 lines. That is about 70 % of the source code under `src`, without the resources and the Browser head. It holds the view models. It also holds the file formats, the Excel and MS Project imports, the services for the schedule and the metrics, and the chart exports. Four files have more than 1,600 lines: `ProjectScenarioManagerViewModel.cs` (2,716), `CoreViewModel.cs` (2,557), `GanttChartManagerViewModel.cs` (1,813) and `MainViewModel.cs` (1,699).
+  On 2026-11-23, the C# files of the project had about 47,800 lines. That is about 55 % of the lines of the C# files under `src`, without the resources and the Browser head (about 86,200 lines). It holds the view models. It also holds the file formats, the Excel and MS Project imports, the services for the schedule and the metrics, and the chart exports. Four files have more than 1,600 lines: `ProjectScenarioManagerViewModel.cs` (2,764), `CoreViewModel.cs` (2,649), `MainViewModel.cs` (1,829) and `GanttChartManagerViewModel.cs` (1,815).
 
   Three steps are possible, and each is independent:
 
@@ -204,7 +479,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   `AppendNonWorkingDays` in `DateTimeCalculator` searches the non-working days of a range. Then it makes the known span reach the range. When the range does not touch the span, the days between them become known, but the method did not search them. Their non-working days then count as working days. The first fix of a constraint date on a non-working day checked the date before it counted from the project start. Then a minimum earliest start of 220 became 306.
 
-  The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time (refer to the entry about the five inputs that give 500).
+  The counts of the days start at the project start, and the shades of the Gantt chart go from one day to the next. Thus, nothing in the application gets a gap now, except maybe a shade before the project start. Make the span grow only next to itself: search the days from the span to the new range. Do not search the whole range to a date that is far away, for example in the year 9999. That can take a long time.
+
+  **A count to an earlier day** *(2026-11-23, from the review of `src`, `test` and `pkg`)*. `AddNonWorkingDays` first searches `days + 30` days from its start date. For a negative number of days, that range is after the start date and not before it. In the loop, the method makes the known span longer only when the day is at or after `NonWorkingDaysFinish`. Thus, a count to a day before the known span takes each day there as a working day. The review reported that the callers give -1 only, and that they stay at or after the project start today. Search the days before `NonWorkingDaysStart` too.
 
 - [ ] **When the schedule counts hours, store the times of a plan without an offset** *(2026-11-13, a decision of the maintainer)*
 
@@ -520,6 +797,8 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   A gate in the hook or in CI is not practical. The build needs the MSBuild of Visual Studio with the Windows App Packaging SDK, and it takes minutes. Thus, build the two bundles and the MSI before the tag of each release that has them. The WiX project stops a build for a wrong platform, or with a publish that is older than the code (the target `CheckTheInstallerInputs`). A bundle has no signature unless the script gets `-Sign`.
 
+  **The MSI in the release workflow** *(2026-11-23, from the review of `src`, `test` and `pkg`)*. The WiX project uses `WixToolset.Sdk`, and `dotnet build` builds it with no Visual Studio ([Build from source](BUILDING.md)). Thus, the Windows job of `release.yml` can publish the two programs for x64 and then build the MSI. The release then has an MSI from the same commit as its archives, and a fault in the WiX project stops the release. That is a step of a release, and not a gate of each commit. Nobody tried if a runner of GitHub builds a `.wapproj` project.
+
 - [ ] **Find why a publish of the Browser head waits in the workload restore** *(2026-11-15, from the audit of the packaging path)*
 
   On 2026-11-15, `dotnet publish -c Release` of `Zametek.ProjectPlan.Browser` wrote "Determining projects to restore...", and then nothing for 11 minutes. Its child process was `dotnet workload restore`, which the target `WasmWorkloadRestore` in `Directory.Build.targets` starts before each restore of the Browser head. The workload was on the computer already. With `WASM_WORKLOAD=0`, which skips the target, the same publish took 4 minutes.
@@ -628,7 +907,9 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   `zpp serve` (2026-10-02) has the same behavior, and so does `zpp --server`. Their parity tests pin their graphs to the graphs of `zpp`. Thus, a switch changes all three at once.
 
-  A switch needs two changes. First, the interactive render must stop its run inside `Dispatcher.UIThread.Invoke` (`InteractiveGraphViewModel.cs:869`). This is the same hazard as the `Refresh` call that leaks a parked thread for each job, where there is no user interface. Second, a node without a saved position still needs a deterministic fallback, and the same MSAGL layout gives it.
+  A switch needs two changes. First, the interactive render must stop its run inside `Dispatcher.UIThread.Invoke`. This is the same hazard as the `Refresh` call that leaks a parked thread for each job, where there is no user interface. Second, a node without a saved position still needs a deterministic fallback, and the same MSAGL layout gives it.
+
+  *(2026-11-23, from the review of `src`, `test` and `pkg`)* The first change is complete. `InteractiveGraphViewModel` now calls the render through `IGraphDispatcher`, and a host with no user interface gives `InlineGraphDispatcher`, which calls it directly. One thing remains. The font cache of `InteractiveGraphRenderer` is a static dictionary for one thread, and two jobs can then use it at the same time. [The TODO file of the library](../src/Zametek.Graphs.Avalonia/TODO.md) has this item.
 
   A third need is already met. It is to draw with the bundled font through the own font cache of `InteractiveGraphRenderer`, which does not use the typeface providers of Svg.Skia. It came with the bundled fonts on 2026-09-25. A run of the CLI already computes the interactive layout, because the `Refresh` subscription fires. Then the run discards the layout.
 
@@ -720,6 +1001,8 @@ This file lists the maintainer-internal engineering intents that must version wi
 - [ ] **Report the problems of an MS Project import in the same way** *(2026-10-17)*
 
   The import of an Excel workbook collects its problems and cancels (`ScenarioImportException`, `ImportProblemsPresenter`). The import of an MS Project file (`MicrosoftProjectFileImporter`) does not. A file that MPXJ cannot read, or a value that the importer cannot use, fails with the message of the library. The open project stays as it is, but the user sees only this message. The importer can collect its problems as `ImportIssue` records and throw the same exception. Then the desktop, `zpp` and the server show them in the same way. `ImportIssue` has a sheet, a row and a column, and an MS Project file has none of these. Decide first what the place of a problem is: the kind of item (task, resource or calendar), its unique id and the name of the field.
+
+  **What the import drops with no message** *(2026-11-23, from the review of `src`, `test` and `pkg`)*. `MicrosoftProjectFileImporter` keeps only the id of each predecessor. Thus, the import loses the lag of a link and its type, for example start-to-start. It reads one type of constraint, `StartNoEarlierThan`, and it ignores each other type. A plan with such links or constraints thus gets a different schedule after the import, and nothing tells the user. Report each item that the import drops as a warning of the import.
 
 - [ ] **Say where a bad date is in a workbook that counts from 1904** *(2026-10-17)*
 
