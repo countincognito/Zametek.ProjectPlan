@@ -604,9 +604,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(outputFile, directory, s_ImageExportFileFilters);
 
-                if (!string.IsNullOrWhiteSpace(filename)
-                    && ImageBounds is Rect bounds)
+                if (!string.IsNullOrWhiteSpace(filename))
                 {
+                    // The size of the chart on the screen is the size of the image. A chart that the screen has not shown has no
+                    // size, and the save wrote no file and said nothing.
+                    if (ImageBounds is not Rect bounds)
+                    {
+                        throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_ChartHasNoSize);
+                    }
+
                     int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
                     ChartImageFormat format = FileFormatHelper.GetChartImageFormat(filename);

@@ -225,6 +225,9 @@
   <data name="Message_UnknownNonWorkingDayMode" xml:space="preserve">
     <value>Unknown NonWorkingDayMode value:</value>
   </data>
+  <data name="Message_ChartHasNoSize" xml:space="preserve">
+    <value>The chart has no size yet, because the screen has not shown it. Show the chart, and then save its image again.</value>
+  </data>
   <data name="Message_PlanActivities" xml:space="preserve">
     <value>activities</value>
   </data>

@@ -78,14 +78,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Handle `PointerCaptureLost`, and stop the drag with no change to the plan. The drag of a node and the pan of a graph have the same form ([the TODO file of the library](../src/Zametek.Graphs.Avalonia/TODO.md)).
 
-- [ ] **Do six smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do five smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The rule of the holiday dialog.** `HolidayEditViewModel` builds its rule in four subscriptions that deliver on the task pool. `HolidaySettingsManagerViewModel` reads the rule when the dialog closes. If the pool is busy, for example during a simulation, the rule can be the one from before the last change. Build the rule with no `ObserveOn`.
   2. **A failure at the start.** In `App.OnFrameworkInitializationCompleted`, the set-up of the log is before the `try`. The catch writes to the log and to the standard error stream, which a `WinExe` program does not show. Then it ends the application with exit code 1. Thus, a settings folder that the application cannot make gives no message and no log. Show a message with the cause.
   3. **The build of a chart that fails.** Five subscriptions build a chart or the output with `Subscribe(async _ => await ...)`. Each build catches its exception and shows a dialog. Thus, a plan whose chart fails shows one dialog after each compilation, and the log has no line. Write the exception to the log, and show the state in the panel.
   4. **Two instances and the settings.** Each setter of `SettingService` writes all of the settings from memory, and nothing reads the file again. Thus, the last write of two instances removes the changes of the other instance, for example a recent file. The recovery copies already allow for two instances.
-  5. **Save Image with no size.** The review reported that the save of a chart image writes no file and shows no message when `ImageBounds` has no value (`GanttChartManagerViewModel`, `EarnedValueChartManagerViewModel`).
-  6. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
+  5. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
 
 - [ ] **Wait for a signal, and not for a time, in the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

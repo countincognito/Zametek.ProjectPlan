@@ -196,6 +196,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The chart has no size yet, because the screen has not shown it. Show the chart, and then save its image again..
+        /// </summary>
+        public static string Message_ChartHasNoSize {
+            get {
+                return ResourceManager.GetString("Message_ChartHasNoSize", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Copying the chart image to the clipboard failed. Use Save As instead..
         /// </summary>
         public static string Message_ClipboardCopyFailed {
