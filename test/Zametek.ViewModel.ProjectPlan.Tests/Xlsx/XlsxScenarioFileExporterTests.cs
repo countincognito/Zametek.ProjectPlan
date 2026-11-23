@@ -1,5 +1,6 @@
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -66,6 +67,36 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             archive.Entries.Select(x => x.LastWriteTime.DateTime).Distinct().ShouldBe(
                 [new DateTime(expectedYear, expectedMonth, expectedDay, expectedHour, expectedMinute, expectedSecond)]);
             XlsxPackageReader.Read(workbook).Created.ShouldBe(new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc));
+        }
+
+        [Fact]
+        public async Task Export_Given_TextsLongerThanACell_Then_EachCellIsCutAndTheWorkbookIsWritten()
+        {
+            // A note of more than 32,767 characters made the export of the scenario fail with the message of ClosedXML (from
+            // the review of src, test and pkg). The second text starts with an apostrophe, which the writer doubles, and the
+            // library counts the doubled apostrophe: that cell is one character shorter.
+            ProjectScenarioModel scenario = await CoreViewModelFixture.LoadProjectScenarioAsync(@"sample_v0_6_1.zpp");
+            DependentActivityModel first = scenario.DependentActivities[0];
+            DependentActivityModel second = scenario.DependentActivities[1];
+            scenario = scenario with
+            {
+                DependentActivities =
+                [
+                    first with { Activity = first.Activity with { Notes = new string('n', 40_000) } },
+                    second with { Activity = second.Activity with { Notes = string.Concat("'", new string('q', 40_000)) } },
+                    .. scenario.DependentActivities.Skip(2),
+                ],
+            };
+
+            byte[] workbook = Export(scenario, new FixedTimeProvider(new DateTimeOffset(2026, 9, 27, 12, 0, 0, TimeSpan.Zero), TimeZoneInfo.Utc));
+
+            List<string> cut = [.. XlsxPackageReader.Read(workbook).Sheets
+                .SelectMany(x => x.Cells)
+                .Select(x => x.Text)
+                .Where(x => x.EndsWith('…'))];
+            cut.Count.ShouldBe(2);
+            cut.ShouldContain(string.Concat(new string('n', XlsxSheetWriter.MaximumCellLength - 1), "…"));
+            cut.ShouldContain(string.Concat("'", new string('q', XlsxSheetWriter.MaximumCellLength - 3), "…"));
         }
 
         private static byte[] Export(ProjectScenarioModel scenario, TimeProvider clock)

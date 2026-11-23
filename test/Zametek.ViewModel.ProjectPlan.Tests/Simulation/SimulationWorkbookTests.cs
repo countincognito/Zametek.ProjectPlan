@@ -254,32 +254,32 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void Truncate_Given_TextThatACellHolds_Then_IsTheSameText()
         {
-            string text = new('a', XlsxSimulationSheets.MaximumCellLength);
+            string text = new('a', XlsxSheetWriter.MaximumCellLength);
 
-            XlsxSimulationSheets.Truncate(text).ShouldBe(text);
+            XlsxSheetWriter.Truncate(text).ShouldBe(text);
         }
 
         [Fact]
         public void Truncate_Given_TextThatACellDoesNotHold_Then_EndsInAnEllipsisAndFits()
         {
-            string truncated = XlsxSimulationSheets.Truncate(new string('a', XlsxSimulationSheets.MaximumCellLength + 1));
+            string truncated = XlsxSheetWriter.Truncate(new string('a', XlsxSheetWriter.MaximumCellLength + 1));
 
-            truncated.Length.ShouldBe(XlsxSimulationSheets.MaximumCellLength);
+            truncated.Length.ShouldBe(XlsxSheetWriter.MaximumCellLength);
             truncated.ShouldEndWith("…");
-            truncated.TrimEnd('…').ShouldBe(new string('a', XlsxSimulationSheets.MaximumCellLength - 1));
+            truncated.TrimEnd('…').ShouldBe(new string('a', XlsxSheetWriter.MaximumCellLength - 1));
         }
 
         [Fact]
         public void Truncate_Given_ACharacterOfTwoUnitsAtTheCut_Then_DoesNotCutItInTheMiddle()
         {
             // The pair of units starts at the last place before the ellipsis: a cut there would leave half of it.
-            string text = new string('a', XlsxSimulationSheets.MaximumCellLength - 2) + "\U0001F600" + "bbb";
+            string text = new string('a', XlsxSheetWriter.MaximumCellLength - 2) + "\U0001F600" + "bbb";
 
-            string truncated = XlsxSimulationSheets.Truncate(text);
+            string truncated = XlsxSheetWriter.Truncate(text);
 
             truncated.ShouldEndWith("…");
             char.IsHighSurrogate(truncated[^2]).ShouldBeFalse();
-            truncated.Length.ShouldBeLessThanOrEqualTo(XlsxSimulationSheets.MaximumCellLength);
+            truncated.Length.ShouldBeLessThanOrEqualTo(XlsxSheetWriter.MaximumCellLength);
         }
 
         [Fact]
@@ -302,7 +302,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             XlsxSheet sheet = XlsxPackageReader.Read(stream.ToArray()).Sheet("Simulation Iterations")!;
             string cell = sheet.Cell("C2")!.Text;
-            cell.Length.ShouldBe(XlsxSimulationSheets.MaximumCellLength);
+            cell.Length.ShouldBe(XlsxSheetWriter.MaximumCellLength);
             cell.ShouldEndWith("…");
         }
     }

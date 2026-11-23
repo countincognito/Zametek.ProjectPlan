@@ -219,9 +219,15 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </summary>
     internal sealed class XlsxSheetWriter
     {
+        // What a cell of Excel holds: the characters of a text.
+        internal const int MaximumCellLength = 32_767;
+
         // The largest number that is kept to 15 digits and is still a number: one more digit in the last place, and the
         // number is more than a number can hold, which the library that reads the workbook does not take.
         private const double c_LargestNumber = 1.79769313486231E+308;
+
+        // The last character of a cell that holds less than the text it was given.
+        private const string c_Truncated = @"…";
 
         private readonly IXLWorksheet m_Sheet;
         private readonly XlsxDateStyles? m_DateStyles;
@@ -241,17 +247,46 @@ namespace Zametek.ViewModel.ProjectPlan
             Create(row, column, style);
 
         /// <summary>
-        /// A cell of text. No text is a cell with no value.
+        /// A cell of text. No text is a cell with no value. A text that is longer than a cell can hold is cut, and it ends with
+        /// an ellipsis (<see cref="Truncate"/>): the library refuses such a text, and the whole workbook then failed.
         /// </summary>
         public void Text(int row, int column, string? text, XlsxCellStyle style = XlsxCellStyle.Plain)
         {
             IXLCell cell = Create(row, column, style);
 
+            if (text is null)
+            {
+                cell.Value = text;
+                return;
+            }
+
             // The library takes an apostrophe at the start of a text for the mark of a text that looks like something else (a
-            // number, say), and removes it. An apostrophe in front of that one is the one that stays.
-            cell.Value = text is not null && text.StartsWith('\'')
-                ? string.Concat("'", text)
-                : text;
+            // number, say), and removes it. An apostrophe in front of that one is the one that stays. The library counts the
+            // characters with the mark, and so such a text is cut one character shorter.
+            cell.Value = text.StartsWith('\'')
+                ? string.Concat("'", Truncate(text, MaximumCellLength - 1))
+                : Truncate(text);
+        }
+
+        /// <summary>
+        /// The text, or its start and an ellipsis when a cell cannot hold it. A character of two UTF-16 units is not cut in the
+        /// middle.
+        /// </summary>
+        internal static string Truncate(string text, int maximum = MaximumCellLength)
+        {
+            if (text.Length <= maximum)
+            {
+                return text;
+            }
+
+            int length = maximum - c_Truncated.Length;
+
+            if (char.IsHighSurrogate(text[length - 1]))
+            {
+                length--;
+            }
+
+            return string.Concat(text.AsSpan(0, length), c_Truncated);
         }
 
         public void Number(int row, int column, double number, XlsxCellStyle style = XlsxCellStyle.Plain)

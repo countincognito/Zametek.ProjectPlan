@@ -36,12 +36,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   If the limit must not end the job, catch the exception in the loop, and record it as the error of that scenario. If it must, name the scenario in the message, and say so in the documentation.
 
-- [ ] **Cut a text at the limit of a cell in the export of a scenario** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `XlsxScenarioFileExporter` gives each text to `XlsxSheetWriter.Text` as it is. A cell of a workbook holds 32,767 characters. The sheets of the simulation cut a text at this limit (`XlsxSimulationSheets.MaximumCellLength`). The review reported that a longer note, or a long list of ids, makes the export of a scenario fail with the message of ClosedXML. Nobody ran this.
-
-  Use the same cut in `XlsxSheetWriter.Text`, or report the cell.
-
 - [ ] **Do not write an upload to the disk, and do not answer a failure of the disk as 400** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `JobServer` sets one option of the form: `MultipartBodyLengthLimit`. It does not set `MemoryBufferThreshold`. With the default, ASP.NET Core keeps a file part of more than 64 KB in a temporary file. The file is in the folder of `ASPNETCORE_TEMP`, or in the temporary folder of the user.

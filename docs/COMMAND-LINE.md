@@ -92,6 +92,8 @@ The import reads a workbook up to three limits. They stop a small file that says
 
 A formula is its result, and a date cell is its date. A number that you type as text is read as the culture of the computer writes numbers, and without a thousands separator: in a culture where a comma is the decimal mark, `1,5` is 1.5 and `1.5` is a problem.
 
+A cell of a workbook holds 32,767 characters. An Excel export cuts a longer text, for example a long note, and ends it with an ellipsis (`…`). An import of that workbook then gives the shorter text.
+
 For the full list of options, enter `zpp --help`. For the options of the server, enter `zpp serve --help`. To show the version of `zpp`, enter `zpp --version`. The exports of charts and graphs use the display settings that the plan file holds. The theme is an exception: use `--base-theme Dark` for dark output.
 
 `zpp` writes diagnostic messages to the standard error stream, and never to the standard output. Warnings and errors always show. The option `--verbose` adds informational messages about the lifecycle. A control character in a value, for example a line end in the title of a scenario, is written as an escape such as `\n`.

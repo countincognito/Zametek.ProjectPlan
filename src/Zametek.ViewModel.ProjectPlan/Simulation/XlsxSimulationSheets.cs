@@ -26,12 +26,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // The histogram has one column for the weight of each group of paths: PathGroupWeight1, PathGroupWeight2, and so on.
         private const string c_PathGroupWeightColumnPrefix = @"PathGroupWeight";
 
-        // What Excel holds: the rows of a sheet (the titles among them) and the characters of a cell.
+        // What Excel holds: the rows of a sheet (the titles among them). A sheet writer cuts a text that a cell cannot hold
+        // (XlsxSheetWriter.MaximumCellLength).
         internal const int MaximumRows = 1_048_576;
-        internal const int MaximumCellLength = 32_767;
-
-        // The last character of a cell that holds less than the text it was given.
-        private const string c_Truncated = @"…";
 
         private static readonly IReadOnlyList<string> s_IterationColumnTitles =
             [
@@ -233,7 +230,7 @@ namespace Zametek.ViewModel.ProjectPlan
         /// </summary>
         /// <remarks>
         /// A sheet of Excel has <see cref="MaximumRows"/> rows, and so a run of more iterations than that has no sheet (a run has up to
-        /// one million). A cell holds <see cref="MaximumCellLength"/> characters. The critical paths of an iteration that has more than
+        /// one million). A cell holds <see cref="XlsxSheetWriter.MaximumCellLength"/> characters. The critical paths of an iteration that has more than
         /// that are cut, and end with an ellipsis.
         /// </remarks>
         public static void WriteIterations(
@@ -293,7 +290,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (result.HasCriticalPaths)
                 {
-                    sheet.Text(row, 2, Truncate(string.Join(@" | ", result.CriticalPathIndexes(i).ToArray().Select(x => labels[x]))));
+                    sheet.Text(row, 2, string.Join(@" | ", result.CriticalPathIndexes(i).ToArray().Select(x => labels[x])));
                 }
                 else
                 {
@@ -302,24 +299,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 sheet.Blank(row, 3);
             }
-        }
-
-        // The text, or its start and an ellipsis when a cell cannot hold it. A character of two UTF-16 units is not cut in the middle.
-        internal static string Truncate(string text)
-        {
-            if (text.Length <= MaximumCellLength)
-            {
-                return text;
-            }
-
-            int length = MaximumCellLength - c_Truncated.Length;
-
-            if (char.IsHighSurrogate(text[length - 1]))
-            {
-                length--;
-            }
-
-            return string.Concat(text.AsSpan(0, length), c_Truncated);
         }
 
         private static void WriteSheet(
@@ -347,7 +326,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         // A value that is not there is a blank cell. The seed is text, as the remarks of the class say. A text that is longer than a
-        // cell holds is cut (see Truncate).
+        // cell holds is cut (see XlsxSheetWriter.Truncate).
         private static void SetCellValue(
             XlsxSheetWriter sheet,
             int row,
@@ -360,8 +339,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     sheet.Blank(row, column);
                     break;
                 case string text:
-                    // A critical path through a very large plan can have a label that a cell cannot hold.
-                    sheet.Text(row, column, Truncate(text));
+                    // A critical path through a very large plan can have a label that a cell cannot hold. The sheet writer cuts it.
+                    sheet.Text(row, column, text);
                     break;
                 case bool flag:
                     sheet.Boolean(row, column, flag);
