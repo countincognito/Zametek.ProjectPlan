@@ -390,6 +390,21 @@ namespace Zametek.Graphs.Avalonia
             SaveViewState();
         }
 
+        // The window can lose the capture during a pan, for example with Alt+Tab, and then no release arrives: the graph
+        // followed the pointer with no button down. A lost capture ends the pan where it is, as a release does. A release
+        // has already ended the pan when it lets the capture go, and so this does nothing after a release.
+        private void Viewport_PointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+        {
+            if (!m_IsPanning)
+            {
+                return;
+            }
+
+            m_IsPanning = false;
+            viewport.Cursor = new Cursor(StandardCursorType.Arrow);
+            SaveViewState();
+        }
+
         private void Zoom_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
         {
             m_LastPointer = e.GetPosition(viewport);

@@ -27,6 +27,7 @@ namespace Zametek.View.ProjectPlan
         private int? m_ResizeActivityDuration;
         private int? m_ResizeActivityStartTime;
         private AnnotatedBar? m_ResizingBar;
+        private double m_ResizingBarStartValue;
 
         private static readonly AvaloniaInput.Cursor s_SizeWestEastCursor = new(StandardCursorType.SizeWestEast);
         private static readonly AvaloniaInput.Cursor s_HandCursor = new(StandardCursorType.Hand);
@@ -51,6 +52,7 @@ namespace Zametek.View.ProjectPlan
             scottplot.AddHandler(PointerPressedEvent, Gantt_PointerPressed, RoutingStrategies.Tunnel, handledEventsToo: false);
             scottplot.PointerMoved += Gantt_PointerMoved;
             scottplot.AddHandler(PointerReleasedEvent, Gantt_PointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
+            scottplot.PointerCaptureLost += Gantt_PointerCaptureLost;
         }
 
         // Copy the Gantt chart image to the clipboard. The view-model renders the bytes (whole chart, the
@@ -90,6 +92,10 @@ namespace Zametek.View.ProjectPlan
             m_ResizeActivityDuration = hit.Duration;
             m_ResizeActivityStartTime = hit.StartTime;
             m_ResizingBar = hit;
+            m_ResizingBarStartValue = hit.Value;
+
+            // The release must come here, also outside the chart, and a lost capture must say so (Gantt_PointerCaptureLost).
+            e.Pointer.Capture(scottplot);
 
             // Suppress ScottPlot's default left-drag pan.
             e.Handled = true;
@@ -106,6 +112,13 @@ namespace Zametek.View.ProjectPlan
 
             Avalonia.Point pos = e.GetPosition(plot);
             Pixel mousePixel = new(pos.X, pos.Y);
+
+            // A move with no button down is a drag whose release did not arrive: it stops with no change to the plan.
+            if (m_IsResizeDragging
+                && !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                CancelResizeDrag(plot);
+            }
 
             if (m_IsResizeDragging
                 && m_ResizingBar is not null)
@@ -189,6 +202,38 @@ namespace Zametek.View.ProjectPlan
                 vm.SetActivityDuration(m_ResizeActivityId.GetValueOrDefault(), newDuration);
             }
 
+            m_IsResizeDragging = false;
+            m_ResizeActivityId = null;
+            m_ResizeActivityDuration = null;
+            m_ResizeActivityStartTime = null;
+            m_ResizingBar = null;
+            Cursor = AvaloniaInput.Cursor.Default;
+        }
+
+        // The window can lose the capture during a drag, for example with Alt+Tab, and then no release arrives. The bar
+        // followed the pointer with no button down, and the next release of a button wrote a duration into the plan. A lost
+        // capture now stops the drag with no change to the plan. A release has already stopped the drag when the capture
+        // goes, and so this does nothing after a release.
+        private void Gantt_PointerCaptureLost(
+            object? sender,
+            PointerCaptureLostEventArgs e)
+        {
+            if (m_IsResizeDragging)
+            {
+                CancelResizeDrag(m_PlotContainer?.Content as AvaPlot);
+            }
+        }
+
+        // Stops a drag with no change to the plan: the bar goes back to where the drag began.
+        private void CancelResizeDrag(AvaPlot? plot)
+        {
+            if (m_ResizingBar is not null)
+            {
+                m_ResizingBar.Value = m_ResizingBarStartValue;
+                plot?.Refresh();
+            }
+
+            dragTooltipBorder.IsVisible = false;
             m_IsResizeDragging = false;
             m_ResizeActivityId = null;
             m_ResizeActivityDuration = null;

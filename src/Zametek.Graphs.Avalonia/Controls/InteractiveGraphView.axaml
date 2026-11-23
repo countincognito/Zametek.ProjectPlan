@@ -106,6 +106,7 @@
             PointerPressed="Viewport_PointerPressed"
             PointerMoved="Viewport_PointerMoved"
             PointerReleased="Viewport_PointerReleased"
+            PointerCaptureLost="Viewport_PointerCaptureLost"
             PointerWheelChanged="Zoom_PointerWheelChanged"
             SizeChanged="Graph_SizeChanged">
       <Border.ContextMenu>

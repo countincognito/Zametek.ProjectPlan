@@ -8,14 +8,6 @@ This file lists the items for the library only. It stays with the folder when th
   - Move `test/Zametek.Graphs.Avalonia.Tests` and `test/Zametek.Graphs.Avalonia.TestApp` with the library. The `InternalsVisibleTo("Zametek.Graphs.Avalonia.Tests")` declaration continues to work if the name of the test assembly does not change.
   - Change Zametek.ProjectPlan to use the published package and not the project reference.
 
-- [ ] **Stop a drag when the window loses the pointer capture** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  No handler of the library listens to `PointerCaptureLost`. `GraphNodeDragBehavior` clears `m_IsDragging` only when the user releases the button, and `OnPointerMoved` does not make sure that the button is down. The pan in `InteractiveGraphView` (`m_IsPanning`) has the same form.
-
-  If the window loses the capture during a drag, for example with Alt+Tab, no release arrives. The review reported that a node then follows the pointer with no button down. Nobody did this in an application.
-
-  Handle `PointerCaptureLost` in the two places, and stop the drag.
-
 - [ ] **Do five things before the library has consumers** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **Classes with no namespace.** `Serialization/Schema/GraphmlSchemaClass.cs` has no namespace. It gives each consumer 23 public classes in the global namespace, with names such as `data`, `graphml` and `ShapeNode`. `GraphMLBuilder.ToGraphML` is public and returns `graphml`. Put the file in a namespace, and make the classes and the builders internal. `IGraphSerializer` is the public way to the format.

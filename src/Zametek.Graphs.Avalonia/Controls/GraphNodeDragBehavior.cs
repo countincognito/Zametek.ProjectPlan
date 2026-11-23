@@ -30,6 +30,7 @@ namespace Zametek.Graphs.Avalonia
                 AssociatedObject.PointerPressed += OnPointerPressed;
                 AssociatedObject.PointerMoved += OnPointerMoved;
                 AssociatedObject.PointerReleased += OnPointerReleased;
+                AssociatedObject.PointerCaptureLost += OnPointerCaptureLost;
             }
         }
 
@@ -40,6 +41,7 @@ namespace Zametek.Graphs.Avalonia
                 AssociatedObject.PointerPressed -= OnPointerPressed;
                 AssociatedObject.PointerMoved -= OnPointerMoved;
                 AssociatedObject.PointerReleased -= OnPointerReleased;
+                AssociatedObject.PointerCaptureLost -= OnPointerCaptureLost;
             }
             base.OnDetaching();
         }
@@ -119,6 +121,32 @@ namespace Zametek.Graphs.Avalonia
             m_Manager = null;
             e.Pointer.Capture(null);
             e.Handled = true;
+        }
+
+        // The window can lose the capture during a drag, for example with Alt+Tab, and then no release arrives: the node
+        // followed the pointer with no button down. A lost capture stops the drag, and puts the node back where the drag
+        // began, because a place that the host was not told of (OnNodeMoved) must not stay on the screen. A release has
+        // already stopped the drag when it lets the capture go, and so this does nothing after a release.
+        private void OnPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+        {
+            if (!m_IsDragging)
+            {
+                return;
+            }
+
+            if (AssociatedObject?.DataContext is GraphNodeViewModel node)
+            {
+                node.X = m_StartX;
+                node.Y = m_StartY;
+                m_Manager?.EnsureWorkspaceContains(node);
+            }
+
+            m_Manager?.SelectNode(null);
+
+            m_IsDragging = false;
+            m_HasMoved = false;
+            m_Canvas = null;
+            m_Manager = null;
         }
     }
 }

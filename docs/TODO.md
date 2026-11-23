@@ -70,14 +70,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there. Catch a rule that the reader cannot read, and report it.
 
-- [ ] **Stop a drag in the Gantt chart when the window loses the pointer capture** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  No handler under `src` listens to `PointerCaptureLost`. In `GanttChartManagerView`, only `Gantt_PointerReleased` ends the drag that changes a duration, and it calls `SetActivityDuration`. If the window loses the capture during the drag, for example with Alt+Tab, no release arrives.
-
-  The review reported the result. The bar then follows the pointer with no button down, and the next release of a button writes a duration into the plan. Nobody did this in the application.
-
-  Handle `PointerCaptureLost`, and stop the drag with no change to the plan. The drag of a node and the pan of a graph have the same form ([the TODO file of the library](../src/Zametek.Graphs.Avalonia/TODO.md)).
-
 - [ ] **Do five smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The rule of the holiday dialog.** `HolidayEditViewModel` builds its rule in four subscriptions that deliver on the task pool. `HolidaySettingsManagerViewModel` reads the rule when the dialog closes. If the pool is busy, for example during a simulation, the rule can be the one from before the last change. Build the rule with no `ObserveOn`.
