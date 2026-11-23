@@ -900,3 +900,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The dates of a project do not depend on the time zone of the server. Each date is the day that it shows, in its own offset.
 - A project can give the target of its simulation as a date: `TargetFinishDateTime` in its `SimulationSettings`. The project is done by the end of that date. The answer does not change.
 - The check of a project refuses two nodes with the same `Id` (`duplicateId`), and a node that is a parent of itself (`notAllowed` at its `ParentId`). `POST /v1/projects/scenarios` does this check of the nodes too, and it then gives `422` `project-not-readable`. Before, two nodes with one `Id` gave `500`.
+- The check of a project refuses a holiday rule that repeats more often than each day (`notAllowed` at its `RecurrencePattern`). The load of a plan with such a rule did not end in the time of a job.

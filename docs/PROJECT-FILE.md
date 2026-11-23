@@ -123,7 +123,7 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`. The same limit is for the target date of the simulation.
 
-- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7. A node that is a parent of itself gets this code at its `ParentId` too. Examples are a node whose `ParentId` is its own `Id`, and two nodes that are the parent of each other.
+- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7. A node that is a parent of itself gets this code at its `ParentId` too. Examples are a node whose `ParentId` is its own `Id`, and two nodes that are the parent of each other. A holiday rule gets this code at its `RecurrencePattern` when it repeats more often than each day (refer to [The calendar](#the-calendar)).
 
 - `duplicateId`: two activities, two resources or two work streams of the scenario have the same `Id`, or two nodes have the same `Id`.
 
@@ -152,6 +152,8 @@ The check also counts the activities, the active resources and the work streams 
 - `2` (`CustomCalendar`): only the holidays in the `HolidaySettings` of the scenario are not working days. Thus, the weekends are working days, unless a holiday makes them days off. The default holidays of the application have a holiday for the weekends (`FREQ=WEEKLY;BYDAY=SA,SU`), Christmas Day and New Year's Day.
 
 A holiday has a `RecurrencePattern`, which is a recurrence rule of iCalendar (RFC 5545). Its rule starts on its `StartDateTime`, or on `ProjectStart` when it has no `StartDateTime`. A holiday of one day has its date as `StartDateTime` and the rule `FREQ=DAILY;COUNT=1`.
+
+The smallest unit of a plan is a day. Thus, a rule must have the frequency `DAILY`, `WEEKLY`, `MONTHLY` or `YEARLY`, and no `BYHOUR`, `BYMINUTE` or `BYSECOND`. The calendar reads each occurrence of a rule. A rule that repeats each second has millions of occurrences in a month. The load of a plan with such a rule did not end in minutes. `zpp` and `zpp serve` refuse such a rule before the load.
 
 The compile gives `P0080` when the calendar cannot give the dates of the plan:
 

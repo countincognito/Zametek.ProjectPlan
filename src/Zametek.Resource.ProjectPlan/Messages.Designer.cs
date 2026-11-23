@@ -957,6 +957,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND.
+        /// </summary>
+        public static string Message_PlanHolidayRuleNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_PlanHolidayRuleNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Values or counts outside the supported limits:.
         /// </summary>
         public static string Message_PlanLimitsExceeded {

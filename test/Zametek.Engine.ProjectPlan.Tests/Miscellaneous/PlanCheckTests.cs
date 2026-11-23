@@ -351,6 +351,33 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindScenarioProblems_Given_AHolidayRuleThatRepeatsMoreOftenThanEachDay_Then_NotAllowedAtItsRule()
+        {
+            // A count of 30 days took more than 2 minutes with FREQ=SECONDLY, in the load (measured on 2026-11-23).
+            ProjectScenarioModel scenario = Scenario() with
+            {
+                HolidaySettings = new HolidaySettingsModel
+                {
+                    Holidays =
+                    [
+                        new HolidayModel { Id = 1, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=SA,SU" },
+                        new HolidayModel { Id = 2, RecurrencePattern = @"FREQ=SECONDLY" },
+                        new HolidayModel { Id = 3, RecurrencePattern = @"FREQ=DAILY;BYHOUR=9" },
+                    ],
+                },
+            };
+
+            List<PlanProblem> problems = PlanCheck.FindScenarioProblems(Project(scenario), 0);
+
+            problems.Select(x => (x.Pointer, x.Code)).ShouldBe(
+            [
+                ($@"{c_Scenario}/HolidaySettings/Holidays/1/RecurrencePattern", PlanCheck.NotAllowed),
+                ($@"{c_Scenario}/HolidaySettings/Holidays/2/RecurrencePattern", PlanCheck.NotAllowed),
+            ]);
+            problems[0].Detail.ShouldBe(@"must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND");
+        }
+
+        [Fact]
         public void FindProjectProblems_Given_TwoNodesWithOneId_Then_DuplicateIdAtTheSecond()
         {
             ProjectModel project = Project(Scenario());

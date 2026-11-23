@@ -246,6 +246,9 @@
   <data name="Message_PlanHasNoData" xml:space="preserve">
     <value>has no data for the scenario '{0}', which the plan loads</value>
   </data>
+  <data name="Message_PlanHolidayRuleNotAllowed" xml:space="preserve">
+    <value>must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND</value>
+  </data>
   <data name="Message_PlanLimitsExceeded" xml:space="preserve">
     <value>Values or counts outside the supported limits:</value>
   </data>

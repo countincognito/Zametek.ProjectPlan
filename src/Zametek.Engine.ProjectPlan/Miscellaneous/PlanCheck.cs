@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.Engine.ProjectPlan
 {
@@ -239,6 +240,24 @@ namespace Zametek.Engine.ProjectPlan
                 x => x.Id,
                 $@"{root}/{nameof(ProjectScenarioModel.WorkStreamSettings)}/{nameof(WorkStreamSettingsModel.WorkStreams)}",
                 problems);
+
+            // The holiday rules: a rule that repeats more often than each day can hold the load for minutes (HolidayRuleCheck).
+            List<HolidayModel>? holidays = scenario.HolidaySettings?.Holidays;
+
+            if (holidays is not null)
+            {
+                for (int index = 0; index < holidays.Count; index++)
+                {
+                    if (holidays[index] is HolidayModel holiday
+                        && !HolidayRuleCheck.IsAllowed(holiday.RecurrencePattern))
+                    {
+                        problems.Add(new PlanProblem(
+                            $@"{root}/{nameof(ProjectScenarioModel.HolidaySettings)}/{nameof(HolidaySettingsModel.Holidays)}/{index}/{nameof(HolidayModel.RecurrencePattern)}",
+                            NotAllowed,
+                            Resource.ProjectPlan.Messages.Message_PlanHolidayRuleNotAllowed));
+                    }
+                }
+            }
 
             // The choices.
             FindChoices(scenario, root, problems, 0);
