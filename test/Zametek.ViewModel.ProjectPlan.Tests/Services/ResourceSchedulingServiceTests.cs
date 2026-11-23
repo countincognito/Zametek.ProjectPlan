@@ -343,6 +343,77 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             set.ByResource[0].Effort.Skip(1).Select(x => (x.ActivityId, x.ActivityName)).ShouldBe(expected);
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void BuildTrackingSeriesSet_GivenNoWorkingTimeAndTrackers_Then_EachPercentageIsZero(bool isMilestone)
+        {
+            // A plan of milestones, or a plan whose compilation has errors and thus allocates no resource, has a total working
+            // time of 0. Its trackers still give an end time. The percentage of the progress was then 0 / 0 (NaN), and the
+            // percentage of the effort was 0.5 / 0 (Infinity). The CSV file of the earned value wrote these values (from the
+            // review of src, test and pkg).
+            List<ActivityModel> activities =
+            [
+                new ActivityModel
+                {
+                    Id = 1,
+                    Name = @"Act One",
+                    Duration = isMilestone ? 0 : 3,
+                    EarliestStartTime = isMilestone ? 0 : null,
+                    EarliestFinishTime = isMilestone ? 0 : null,
+                    AllocatedToResources = isMilestone ? [1] : [],
+                    Trackers =
+                    [
+                        new ActivityTrackerModel { Time = 2, ActivityId = 1, PercentageComplete = 100 },
+                    ],
+                },
+            ];
+            var settings = new ResourceSettingsModel
+            {
+                Resources =
+                [
+                    new ResourceModel
+                    {
+                        Id = 1,
+                        Name = @"Res One",
+                        Trackers =
+                        [
+                            new ResourceTrackerModel
+                            {
+                                Time = 1,
+                                ResourceId = 1,
+                                ActivityTrackers =
+                                [
+                                    new ResourceActivityTrackerModel { Time = 1, ResourceId = 1, ActivityId = 1, PercentageWorked = 50 },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            TrackingSeriesSetModel set = CreateService().BuildTrackingSeriesSet(activities, settings, hasResources: true, new PresetColorSequence());
+
+            set.TotalWorkingTime.ShouldBe(0.0);
+            set.Progress.Count.ShouldBeGreaterThan(1);
+            set.Effort.Count.ShouldBeGreaterThan(1);
+            set.Effort.Last().Value.ShouldBe(0.5, c_Tolerance);
+
+            IEnumerable<TrackingPointModel> points = set.Plan
+                .Concat(set.Progress)
+                .Concat(set.Effort)
+                .Concat(set.PlanProjection)
+                .Concat(set.ProgressProjection)
+                .Concat(set.EffortProjection)
+                .Concat(set.ByResource.SelectMany(x => x.Plan.Concat(x.Progress).Concat(x.Effort)));
+
+            foreach (TrackingPointModel point in points)
+            {
+                point.ValuePercentage.ShouldBe(0.0);
+                double.IsFinite(point.Value).ShouldBeTrue();
+            }
+        }
+
         [Fact]
         public void BuildTrackingSeriesSet_GivenAllocatedResources_ThenPerResourcePercentagesAreWholeProjectShares()
         {

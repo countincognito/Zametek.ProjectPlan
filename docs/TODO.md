@@ -50,14 +50,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Nobody ran this. Leave the projection out when it is beyond a multiple of the finish of the plan, or beyond the range of the dates.
 
-- [ ] **Test the total working time before two divisions of the tracking series** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  In `CalculateTrackingSeriesSet` of `ResourceSchedulingService`, two lines have the form `endTime == 0 ? 0.0 : 100.0 * ... / totalWorkingTime`. One line is for the progress, and one is for the effort. Both lines are inside `if (endTime > 0)`, and thus the test is never true. The other divisions of the method test `totalWorkingTime == 0`.
-
-  When the total working time is 0 and the trackers give an end time, the progress is `NaN` and the effort is `Infinity`. The review reported two such plans: a plan whose compilation has errors, and a plan of milestones with trackers. `ScheduleCsvWriter` writes these values into the CSV file of the earned value. Nobody ran this.
-
-  Test `totalWorkingTime == 0` in the two lines. Add a test with a compilation that has errors and one tracker.
-
 - [ ] **Decide if a tracked scenario that passes the limit of a compile ends the job** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `JobRunner` loads and compiles each other tracked scenario for `compileTracked` and for the scenario chart. A tracked scenario with compilation errors gets its errors in the answer, and the job goes on. But a tracked scenario that passes the limit of a compile throws `GraphCompilationTimeoutException` out of the loop. The job then ends with exit code 4 (`compilation-timed-out`), with no metrics and no outputs. The message does not name the scenario.

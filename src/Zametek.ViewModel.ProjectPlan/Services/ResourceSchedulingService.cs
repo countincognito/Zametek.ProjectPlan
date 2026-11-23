@@ -587,7 +587,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                         }
 
-                        double progressPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
+                        double progressPercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
                         int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
                         foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
@@ -737,7 +737,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             accumulator.CurrentValue = resourceWorkingEffort;
                         }
 
-                        double effortPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingEffort / totalWorkingTime;
+                        double effortPercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * currentWorkingEffort / totalWorkingTime;
                         int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
                         foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)
