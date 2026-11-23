@@ -32,7 +32,7 @@ This file lists the items for the library only. It stays with the folder when th
 
   Handle `PointerCaptureLost` in the two places, and stop the drag.
 
-- [ ] **Do eight things before the library has consumers** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do seven things before the library has consumers** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **Classes with no namespace.** `Serialization/Schema/GraphmlSchemaClass.cs` has no namespace. It gives each consumer 23 public classes in the global namespace, with names such as `data`, `graphml` and `ShapeNode`. `GraphMLBuilder.ToGraphML` is public and returns `graphml`. Put the file in a namespace, and make the classes and the builders internal. `IGraphSerializer` is the public way to the format.
   2. **The font cache.** `InteractiveGraphRenderer.s_FontCache` is a static `Dictionary`, and its comment says that the render is on the UI thread only. The README offers the renderer to a host with no UI thread, for example a server. Two jobs can then write the dictionary at the same time, and they share `SKFont` objects. Use a `ConcurrentDictionary`, or a lock.
@@ -40,8 +40,7 @@ This file lists the items for the library only. It stays with the folder when th
   4. **A diagram with a fault.** `MsaglGraphLayoutEngine` does no check of the diagram. An edge to a node that does not exist gives a `KeyNotFoundException`, and two nodes with one id give an `ArgumentException`. `NodeLabelFontSize` divides by the length of the text, and thus an empty text gives a font size with no limit. Do one check at the start of the layout, with clear messages.
   5. **The format of a color.** The README says that a color is `#RRGGBB` or `#AARRGGBB`. `ColorHelper` reads the alpha value last (`#RRGGBBAA`). For a text that it cannot read, it returns a color that is fully transparent. Thus, a consumer who follows the README gets a wrong color, or a node that the user cannot see. Correct the README, and use the fallback brush for a text that `ColorHelper` cannot read.
   6. **The ids in GraphML.** `GraphMLBuilder.FormatGraphNodeId` and `FormatGraphEdgeId` write the id in the current culture. Some cultures have a minus sign that is not `-`, and an id can be negative. The comment of `FormatNumber` in the same file says that the file is the same in each culture. Use the invariant culture.
-  7. **The extension of a file name.** `GraphFileExtensions.GetFileFormat` compares the extension exactly. Thus, `graph.PNG` and `graph.jpg` give the error "unable to save file". Compare with no difference between capital and small letters, and accept `.jpg`.
-  8. **Long work on the UI thread.** For a High Fidelity export, `InteractiveGraphRasterRenderer` encodes the bitmap as PNG and decodes it again on the UI thread. The bitmap can have 67 megapixels. `ResetLayout` of `InteractiveGraphViewModel` runs the MSAGL layout on the UI thread, and `Refresh` runs the same layout on a different thread. Nobody measured the two.
+  7. **Long work on the UI thread.** For a High Fidelity export, `InteractiveGraphRasterRenderer` encodes the bitmap as PNG and decodes it again on the UI thread. The bitmap can have 67 megapixels. `ResetLayout` of `InteractiveGraphViewModel` runs the MSAGL layout on the UI thread, and `Refresh` runs the same layout on a different thread. Nobody measured the two.
 
 - [ ] **Report the 32-bit byte count of a bitmap to Avalonia** *(2026-11-04)*
 

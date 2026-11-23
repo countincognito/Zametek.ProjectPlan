@@ -12,12 +12,17 @@ namespace Zametek.Graphs.Avalonia
         public const string GraphML = "graphml";
         public const string GraphViz = "dot";
 
-        // The format a file name's extension names. Used by the Save-As path, which has only the name the user picked.
+        // The other extension of a JPEG image, which the file dialog of Windows shows with the files of that kind.
+        private const string c_Jpg = "jpg";
+
+        // The format a file name's extension names. Used by the Save-As path, which has only the name the user picked. The
+        // extension can have capital letters: the file dialog of Windows shows graph.PNG with the files of its kind.
         public static GraphFileFormat GetFileFormat(string filename)
         {
-            return Path.GetExtension(filename) switch
+            return Path.GetExtension(filename).ToLowerInvariant() switch
             {
                 $".{Jpeg}" => GraphFileFormat.Jpeg,
+                $".{c_Jpg}" => GraphFileFormat.Jpeg,
                 $".{Png}" => GraphFileFormat.Png,
                 $".{Pdf}" => GraphFileFormat.Pdf,
                 $".{Svg}" => GraphFileFormat.Svg,

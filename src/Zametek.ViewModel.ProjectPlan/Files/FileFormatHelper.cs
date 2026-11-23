@@ -10,6 +10,9 @@ namespace Zametek.ViewModel.ProjectPlan
     // that zpp can read a file name without them when it runs a job on a server.
     public static class FileFormatHelper
     {
+        // The other extension of a JPEG image, which the file dialog of Windows shows with the files of that kind.
+        private const string c_JpgExtension = @".jpg";
+
         // The title a project takes from the name of the file it came from.
         public static string GetProjectTitle(string filename)
         {
@@ -22,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(filename);
             ProjectScenarioImportFormat? format = null;
 
-            Path.GetExtension(filename).ValueSwitchOn()
+            Extension(filename).ValueSwitchOn()
                 .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => format = ProjectScenarioImportFormat.MicrosoftProject)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => format = ProjectScenarioImportFormat.MicrosoftProject)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => format = ProjectScenarioImportFormat.Xlsx);
@@ -37,7 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(filename);
             ProjectScenarioExportFormat? format = null;
 
-            Path.GetExtension(filename).ValueSwitchOn()
+            Extension(filename).ValueSwitchOn()
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => format = ProjectScenarioExportFormat.Xlsx);
 
             return format ?? throw new ArgumentOutOfRangeException(
@@ -50,8 +53,9 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(filename);
             ChartImageFormat? format = null;
 
-            Path.GetExtension(filename).ValueSwitchOn()
+            Extension(filename).ValueSwitchOn()
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ => format = ChartImageFormat.Jpeg)
+                .Case(c_JpgExtension, _ => format = ChartImageFormat.Jpeg)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ => format = ChartImageFormat.Png)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ => format = ChartImageFormat.Bmp)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ => format = ChartImageFormat.Webp)
@@ -62,5 +66,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(filename),
                 @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}");
         }
+
+        // The extension in small letters. The file dialog of Windows shows PLAN.MPP and chart.PNG with the files of their
+        // kind, and the name of such a file was refused.
+        private static string Extension(string filename) => Path.GetExtension(filename).ToLowerInvariant();
     }
 }

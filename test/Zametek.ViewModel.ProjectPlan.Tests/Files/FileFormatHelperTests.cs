@@ -14,6 +14,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(@"plan.mpp", ProjectScenarioImportFormat.MicrosoftProject)]
         [InlineData(@"plan.xml", ProjectScenarioImportFormat.MicrosoftProject)]
         [InlineData(@"plan.xlsx", ProjectScenarioImportFormat.Xlsx)]
+        [InlineData(@"PLAN.MPP", ProjectScenarioImportFormat.MicrosoftProject)]
+        [InlineData(@"Plan.Xlsx", ProjectScenarioImportFormat.Xlsx)]
         public void GetProjectScenarioImportFormat_Given_KnownExtension_Then_NamesItsFormat(string filename, ProjectScenarioImportFormat expected)
         {
             FileFormatHelper.GetProjectScenarioImportFormat(filename).ShouldBe(expected);
@@ -32,6 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void GetProjectScenarioExportFormat_Given_Xlsx_Then_NamesXlsx()
         {
             FileFormatHelper.GetProjectScenarioExportFormat(@"plan.xlsx").ShouldBe(ProjectScenarioExportFormat.Xlsx);
+            FileFormatHelper.GetProjectScenarioExportFormat(@"PLAN.XLSX").ShouldBe(ProjectScenarioExportFormat.Xlsx);
         }
 
         [Fact]
@@ -50,6 +53,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(@"chart.webp", ChartImageFormat.Webp)]
         [InlineData(@"chart.svg", ChartImageFormat.Svg)]
         [InlineData(@"chart.pdf", ChartImageFormat.Pdf)]
+        [InlineData(@"chart.jpg", ChartImageFormat.Jpeg)]
+        [InlineData(@"chart.PNG", ChartImageFormat.Png)]
+        [InlineData(@"chart.JPG", ChartImageFormat.Jpeg)]
         public void GetChartImageFormat_Given_KnownExtension_Then_NamesItsFormat(string filename, ChartImageFormat expected)
         {
             FileFormatHelper.GetChartImageFormat(filename).ShouldBe(expected);

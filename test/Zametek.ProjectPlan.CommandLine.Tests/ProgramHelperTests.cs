@@ -79,6 +79,22 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionRequiredWithOption, @"--simulation-size", @"--simulation-directory"));
         }
 
+        [Theory]
+        [InlineData(0, 600)]
+        [InlineData(800, 0)]
+        [InlineData(-1, 600)]
+        public void ValidateOptions_Given_ASizeBelowOnePixel_Then_UsageException(int width, int height)
+        {
+            // The export failed after zpp had written the other files. The server refuses such a size too.
+            Should.Throw<UsageException>(() => Program.ValidateOptions(new Options
+            {
+                InputFilename = @"a.zpp",
+                GanttDirectory = Path.GetTempPath(),
+                GanttSize = [width, height],
+            }))
+                .Message.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_OptionSizeMustBePositive, @"--gantt-size"));
+        }
+
         [Fact]
         public void ValidateOptions_Given_ASimulationDirectoryThatIsNotThere_Then_TheRunFailsBeforeAnythingIsWritten()
         {

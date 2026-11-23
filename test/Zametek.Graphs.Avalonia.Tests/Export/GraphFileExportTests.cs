@@ -16,6 +16,9 @@ namespace Zametek.Graphs.Avalonia.Tests.Export
         [InlineData(@"graph.svg", GraphFileFormat.Svg)]
         [InlineData(@"graph.graphml", GraphFileFormat.GraphML)]
         [InlineData(@"graph.dot", GraphFileFormat.GraphViz)]
+        [InlineData(@"graph.jpg", GraphFileFormat.Jpeg)]
+        [InlineData(@"graph.PNG", GraphFileFormat.Png)]
+        [InlineData(@"Graph.GraphML", GraphFileFormat.GraphML)]
         public void A_file_extension_names_its_format(string filename, GraphFileFormat expected)
         {
             GraphFileExtensions.GetFileFormat(filename).ShouldBe(expected);

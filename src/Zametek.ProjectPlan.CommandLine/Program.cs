@@ -365,6 +365,13 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionRequiredWithOption, sizeOption, directoryOption));
             }
+
+            // A chart has at least one pixel on each side, as the server says (CompileOptionsHelper). A size of 0 failed in the
+            // export, after zpp had written the other files.
+            if (size.Any(x => x < 1))
+            {
+                throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_OptionSizeMustBePositive, sizeOption));
+            }
         }
 
         // Resolves an option's display name ("--long-name") from the Option

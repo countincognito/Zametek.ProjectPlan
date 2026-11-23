@@ -14,7 +14,7 @@ Compile a plan and print its metrics:
 zpp -i plan.zpp
 ```
 
-Make chart and graph images. A size is `<width>:<height>` in pixels:
+Make chart and graph images. A size is `<width>:<height>` in pixels, and each side is 1 pixel or more:
 
 ```
 zpp -i plan.zpp --gantt-directory out --gantt-size 1200:800 --gantt-format png --arrow-directory out --arrow-format svg --scenario-chart-directory out --scenario-chart-size 1200:800
@@ -273,6 +273,7 @@ To use a server by default, set `ZPP_SERVER` and do not use the option `--server
 
 - The value of `--server` is the `http` or `https` address of the server. The address can have a path, if a reverse proxy puts the server under a path. The value can also be `unix:` and the path of the socket of the server: `--server unix:/tmp/zpp.sock`, or on Windows `--server unix:C:\tmp\zpp.sock` (refer to [On a Unix domain socket](#on-a-unix-domain-socket)). For HTTPS, `zpp` trusts the certificates that this computer trusts.
 - If a server needs an API key, `zpp` gets the key from `ZPP_API_KEY` or from the file that `--api-key-file` gives. `zpp` never gets the key directly from the command line.
+- `zpp` sends the key to each server that `--server` or `ZPP_SERVER` gives. The key does not belong to one address. Thus, `ZPP_API_KEY` can have the key of one server. A run with `--server` and the address of a second server then sends that key to the second server. For a second server, give its own key with `--api-key-file`.
 - `zpp` does not send the key over plain `http` to a server on a different computer. Each computer on the way can read such a key. Thus, the run ends with a usage error (exit code 2). Use an `https` address. If the network between the two computers is private, for example between two containers, the option `--allow-key-over-http` lets `zpp` send the key.
 - `zpp` connects directly to a server on this computer or on a socket. It does not use a proxy that the environment gives (`http_proxy`), because the key and the plan must stay on this computer. For a server on a different computer, `zpp` uses that proxy.
 - `zpp` does not follow a redirect. If the server, or a proxy in front of it, answers with a redirect, the run ends with exit code 5. The message gives the new address. Give that address to `--server`.

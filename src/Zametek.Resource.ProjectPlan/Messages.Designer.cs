@@ -856,6 +856,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_OptionRequiredWithOption", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} takes a width and a height of 1 pixel or more..
+        /// </summary>
+        public static string Message_OptionSizeMustBePositive {
+            get {
+                return ResourceManager.GetString("Message_OptionSizeMustBePositive", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} and {1} are only valid with {2}..

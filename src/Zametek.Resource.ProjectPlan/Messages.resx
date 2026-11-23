@@ -477,6 +477,9 @@
   <data name="Message_OptionRequiredWithOption" xml:space="preserve">
     <value>{0} is required when {1} is specified.</value>
   </data>
+  <data name="Message_OptionSizeMustBePositive" xml:space="preserve">
+    <value>{0} takes a width and a height of 1 pixel or more.</value>
+  </data>
   <data name="Message_DirectoryDoesNotExist" xml:space="preserve">
     <value>Directory {0} does not exist</value>
   </data>
