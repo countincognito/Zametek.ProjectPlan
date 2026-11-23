@@ -484,15 +484,16 @@ namespace Zametek.Graphs.Avalonia
             ];
         }
 
+        // The fallback for no text, and for a text that is not a color in the form #RRGGBB or #RRGGBBAA.
         private static IBrush ToBrush(string? hexCode, IBrush fallback)
         {
-            if (string.IsNullOrWhiteSpace(hexCode))
+            if (!ColorHelper.TryHtmlHexCodeToColor(hexCode, out Color color))
             {
                 return fallback;
             }
             // Immutable so the brush stays renderable no matter which thread builds the view-model
             // (see the THREADING note on GraphAppearance).
-            return new ImmutableSolidColorBrush(ColorHelper.HtmlHexCodeToColor(hexCode));
+            return new ImmutableSolidColorBrush(color);
         }
 
         public void Dispose()

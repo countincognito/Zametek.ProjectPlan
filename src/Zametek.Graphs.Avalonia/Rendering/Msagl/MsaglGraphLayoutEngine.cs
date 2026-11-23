@@ -306,14 +306,13 @@ namespace Zametek.Graphs.Avalonia
             };
         }
 
+        // Null, and so the default color of the caller, for no text and for a text that is not a color.
         private static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            if (!ColorHelper.TryHtmlHexCodeToColor(input, out Color color))
             {
                 return null;
             }
-
-            Color color = ColorHelper.HtmlHexCodeToColor(input);
 
             return new Microsoft.Msagl.Drawing.Color
             {

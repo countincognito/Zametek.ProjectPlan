@@ -28,27 +28,31 @@ namespace Zametek.Graphs.Avalonia
             return BytesToHtmlHexCode(color.R, color.G, color.B, color.A);
         }
 
-        public static Color HtmlHexCodeToColor(string input)
+        // A color in the form #RRGGBB or #RRGGBBAA: the alpha value is last, as the application writes it, and not first, as
+        // Color.Parse of Avalonia reads it. A text in another form is not a color. Before, it gave a color that is fully
+        // transparent, and thus a node that the user cannot see (from the review of src, test and pkg). The callers now use
+        // their fallback for it.
+        public static bool TryHtmlHexCodeToColor(string? input, out Color color)
         {
-            MatchCollection matches = s_HtmlHexMatch.Matches(input);
+            color = default;
 
-            if (matches.Count > 0
-                && matches[0].Groups.Count > 1)
+            if (string.IsNullOrWhiteSpace(input))
             {
-                string value = matches[0].Groups[1].Value;
-                byte[] bytes = Convert.FromHexString(value);
-
-                if (bytes.Length == 3)
-                {
-                    return Color.FromArgb(byte.MaxValue, bytes[0], bytes[1], bytes[2]);
-                }
-                else if (bytes.Length == 4)
-                {
-                    return Color.FromArgb(bytes[3], bytes[0], bytes[1], bytes[2]);
-                }
+                return false;
             }
 
-            return Color.FromArgb(0, 0, 0, 0);
+            Match match = s_HtmlHexMatch.Match(input);
+
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            byte[] bytes = Convert.FromHexString(match.Groups[1].Value);
+            color = bytes.Length == 3
+                ? Color.FromArgb(byte.MaxValue, bytes[0], bytes[1], bytes[2])
+                : Color.FromArgb(bytes[3], bytes[0], bytes[1], bytes[2]);
+            return true;
         }
 
         public static string BytesToHtmlHexCode(byte r, byte g, byte b)

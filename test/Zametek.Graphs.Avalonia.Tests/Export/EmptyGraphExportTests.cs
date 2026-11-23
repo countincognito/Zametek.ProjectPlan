@@ -84,6 +84,55 @@ namespace Zametek.Graphs.Avalonia.Tests.Export
                 stream.Length.ShouldBeGreaterThan(0);
             });
 
+        [Theory]
+        [InlineData(GraphFileFormat.Png)]
+        [InlineData(GraphFileFormat.Svg)]
+        public Task WriteImageAsync_Given_AFixedLayoutOfAHostWithCompilationErrors_Then_FailsAndWritesNothing(GraphFileFormat format) =>
+            OnTheUIThreadAsync(async () =>
+            {
+                // Before, the export returned and wrote nothing, and the README says that it throws (from the review of src,
+                // test and pkg).
+                var host = new TestGraphHost(s_TwoNodes) { HasCompilationErrors = true };
+                using InteractiveGraphViewModel graph = CreateGraph(host);
+                using var stream = new MemoryStream();
+
+                InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(
+                    () => graph.WriteImageAsync(stream, format, GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex));
+
+                ex.Message.ShouldBe(Graphs_Messages.Message_GraphHasCompilationErrors);
+                stream.Length.ShouldBe(0);
+            });
+
+        [Fact]
+        public Task WriteImageAsync_Given_AFixedLayoutOfTheGraphTypeNone_Then_FailsAndWritesNothing() =>
+            OnTheUIThreadAsync(async () =>
+            {
+                var host = new TestGraphHost(s_TwoNodes);
+                using InteractiveGraphViewModel graph = CreateGraph(host);
+                using var stream = new MemoryStream();
+
+                InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(
+                    () => graph.WriteImageAsync(stream, GraphFileFormat.Png, GraphImageSource.FixedLayout, FixedLayoutGraphType.None));
+
+                ex.Message.ShouldBe(Graphs_Messages.Message_GraphTypeHasNoFixedLayout);
+                stream.Length.ShouldBe(0);
+            });
+
+        [Theory]
+        [InlineData(FixedLayoutGraphType.Arrow)]
+        [InlineData(FixedLayoutGraphType.Vertex)]
+        public Task WriteImageAsync_Given_AFixedLayoutOfAGoodHost_Then_WritesTheImage(FixedLayoutGraphType imageType) =>
+            OnTheUIThreadAsync(async () =>
+            {
+                var host = new TestGraphHost(s_TwoNodes);
+                using InteractiveGraphViewModel graph = CreateGraph(host);
+                using var stream = new MemoryStream();
+
+                await graph.WriteImageAsync(stream, GraphFileFormat.Png, GraphImageSource.FixedLayout, imageType);
+
+                stream.Length.ShouldBeGreaterThan(0);
+            });
+
         [Fact]
         public Task HasNodes_Given_AGraphWithNoNodes_Then_IsFalseAndTheSaveCommandsCannotRun() =>
             OnTheUIThreadAsync(() =>
@@ -202,7 +251,7 @@ namespace Zametek.Graphs.Avalonia.Tests.Export
 
             public bool ShowNames { get; set; }
 
-            public bool HasCompilationErrors => false;
+            public bool HasCompilationErrors { get; set; }
 
             public DiagramGraphModel BuildDiagram(bool multiLineEdgeLabels) => Diagram;
 

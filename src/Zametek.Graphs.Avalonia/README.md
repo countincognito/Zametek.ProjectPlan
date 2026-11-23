@@ -169,7 +169,7 @@ var diagram = new DiagramGraphModel
         {
             Id = 1,                          // unique int; edges reference it
             Text = "1",                      // the node's label
-            FillColorHexCode = "#EAF1FB",    // "#RRGGBB" or "#AARRGGBB"
+            FillColorHexCode = "#EAF1FB",    // "#RRGGBB" or "#RRGGBBAA"
             BorderColorHexCode = "#33475B",
             BorderThickness = 1.2,
             BorderDashStyle = GraphDashStyle.Normal,   // or Dashed
@@ -207,7 +207,7 @@ var diagram = new DiagramGraphModel
 
 - `GraphDashStyle` has the values `Normal` and `Dashed`.
 - `GraphTheme` has the values `Light` and `Dark`. Map your own theme to it in `IGraphHost.Theme`. The canvas background and the export background follow it.
-- Colors are hex strings that `Color.Parse` of Avalonia reads (`#RRGGBB` or `#AARRGGBB`). For `null`, the library uses the fallback brushes of `GraphAppearance`.
+- Colors are hex strings in the form `#RRGGBB` or `#RRGGBBAA`. The alpha value is last. This is not the order of `Color.Parse` of Avalonia, which reads `#AARRGGBB`. For `null`, and for a text in another form, the library uses the fallback brushes of `GraphAppearance`.
 
 ### Choose and tune the configuration
 

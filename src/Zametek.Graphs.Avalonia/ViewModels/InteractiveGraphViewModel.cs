@@ -905,6 +905,10 @@ namespace Zametek.Graphs.Avalonia
                     return;
                 }
             }
+
+            // A fixed layout of the graph type None, or a source that the library does not know. Before, the export returned
+            // and wrote nothing, and the README says that it throws (from the review of src, test and pkg).
+            throw new InvalidOperationException(Graphs_Messages.Message_GraphTypeHasNoFixedLayout);
         }
 
         private async Task WriteInteractiveCanvasImageFormatAsync(Stream stream, GraphFileFormat format, GraphExportMode mode)
@@ -960,10 +964,11 @@ namespace Zametek.Graphs.Avalonia
             ArgumentNullException.ThrowIfNull(layoutEngine);
             ArgumentNullException.ThrowIfNull(graphConfiguration);
             // FixedLayout: built straight from the diagram, so no interactive surface is needed
-            // (this is the path a headless caller such as the CLI uses).
+            // (this is the path a headless caller such as the CLI uses). A host with compilation errors has no image: the
+            // export fails, and it writes nothing, as for a graph with no nodes. Before, it returned with no write.
             if (graphHost.HasCompilationErrors)
             {
-                return;
+                throw new InvalidOperationException(Graphs_Messages.Message_GraphHasCompilationErrors);
             }
 
             byte[] svgData = layoutEngine.RenderSvg(
@@ -983,10 +988,14 @@ namespace Zametek.Graphs.Avalonia
             using SKSvg svg = GraphFonts.CreateSvg();
             using var svgStream = new MemoryStream(svgData);
             svg.Load(svgStream);
-            if (svg.Picture is not null)
+
+            // An SVG with no picture has no image to write. Before, the export returned with no write.
+            if (svg.Picture is null)
             {
-                await ImageExporter.WriteImageAsync(svg.Picture, stream, format, scaleX: 2, scaleY: 2);
+                throw new InvalidOperationException(Graphs_Messages.Message_UnableToMakeImage);
             }
+
+            await ImageExporter.WriteImageAsync(svg.Picture, stream, format, scaleX: 2, scaleY: 2);
         }
 
         #endregion

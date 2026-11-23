@@ -79,6 +79,24 @@ namespace Zametek.Graphs.Avalonia {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The host has compilation errors, and so the graph has no fixed-layout image..
+        /// </summary>
+        public static string Message_GraphHasCompilationErrors {
+            get {
+                return ResourceManager.GetString("Message_GraphHasCompilationErrors", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A fixed-layout image needs the graph type Arrow or Vertex..
+        /// </summary>
+        public static string Message_GraphTypeHasNoFixedLayout {
+            get {
+                return ResourceManager.GetString("Message_GraphTypeHasNoFixedLayout", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unable to make the graph image..
         /// </summary>
         public static string Message_UnableToMakeImage {

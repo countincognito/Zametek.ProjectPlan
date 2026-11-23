@@ -123,6 +123,12 @@
   <data name="Message_GraphHasNoImage" xml:space="preserve">
     <value>The graph has no nodes, and so it has no image to copy or save.</value>
   </data>
+  <data name="Message_GraphHasCompilationErrors" xml:space="preserve">
+    <value>The host has compilation errors, and so the graph has no fixed-layout image.</value>
+  </data>
+  <data name="Message_GraphTypeHasNoFixedLayout" xml:space="preserve">
+    <value>A fixed-layout image needs the graph type Arrow or Vertex.</value>
+  </data>
   <data name="Message_UnableToMakeImage" xml:space="preserve">
     <value>Unable to make the graph image.</value>
   </data>
