@@ -1685,7 +1685,7 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 var about = new StringBuilder();
-                about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}");
+                about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Version} {AppVersion.Text}");
                 about.AppendLine();
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}");
                 about.AppendLine();
@@ -1750,7 +1750,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 scenario = scenarioTitle;
                             }
 
-                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {scenario} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {scenario} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {AppVersion.Text}";
                         }
 
                         return newTitle;

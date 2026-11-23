@@ -174,9 +174,6 @@
   <data name="Label_AppName" xml:space="preserve">
     <value>projectplan.net</value>
   </data>
-  <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.11.0-beta.2</value>
-  </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
   </data>

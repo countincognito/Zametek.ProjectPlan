@@ -480,7 +480,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         // The name and the version of zpp, as the heading of the help gives them.
         private static readonly string s_VersionLine =
-            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {AppVersion.Text}";
 
         // A date of a plan is the day that it shows, whatever the time zone of the computer (PROJECT-FILE.md). The plan has a
         // custom calendar: the weekends by a weekly rule, and Christmas and New Year. It starts on a Tuesday, and B has a

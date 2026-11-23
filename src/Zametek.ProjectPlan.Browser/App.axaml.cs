@@ -59,7 +59,7 @@ namespace Zametek.ProjectPlan.Browser
             RegisterGlobalExceptionHandlers();
             Log.Information(
                 "Application starting up (version {Version}, {FrameworkDescription}, {OSDescription})",
-                Resource.ProjectPlan.Labels.Label_AppVersion,
+                Zametek.Common.ProjectPlan.AppVersion.Text,
                 RuntimeInformation.FrameworkDescription,
                 RuntimeInformation.OSDescription);
 

@@ -722,7 +722,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             InfoResponse info = await RunningServer.ReadAsync<InfoResponse>(response);
-            info.Version.ShouldBe(Resource.ProjectPlan.Labels.Label_AppVersion);
+            info.Version.ShouldBe(Zametek.Common.ProjectPlan.AppVersion.Text);
             info.Culture.ShouldBe(CultureInfo.CurrentCulture.Name);
             info.TimeZone.ShouldBe(TimeZoneHelper.GetIanaId(TimeZoneInfo.Local));
             info.Limits.ShouldBe(LimitsResponse.From(s_Limits));

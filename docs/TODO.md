@@ -77,14 +77,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   1. **No test.** The workflow runs no test, and it does not make sure that CI passed for the commit of the tag. A tag on any commit makes a release.
   2. **Provenance and signatures.** A release has no attestation of the build. The programs for Windows and the MSI have no signature. The programs for macOS have only the signature that the SDK makes. An attestation needs a new pinned action and the permissions `id-token` and `attestations`. A signature costs money, and the maintainer decides.
 
-- [ ] **Give the version of the application in one place** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  No project file sets `Version`. Thus, each assembly and each program of a release has the version 1.0.0.0 in its file properties. The version that the application shows is the resource `Label_AppVersion` in `Labels.resx`.
-
-  For each release, a person changes the version by hand in about seven places. These are the resource, the two MSIX manifests, `Package.wxs`, the name of the MSI in the `.wixproj` file, and the examples in `docs/API.md` and `docs/openapi.yaml`. Nothing makes sure that the places agree.
-
-  Set `Version` one time in `Directory.Build.props`. Let the application read it from the assembly (`AssemblyInformationalVersionAttribute`), and give it to WiX as a constant. A test can then compare the manifests and the documents with it. The numeric fields of the MSIX and the MSI stay `X.Y.Z.0`.
-
 - [ ] **Make sure that the MSI does not repair itself for a second user** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   The MSI installs for the computer. Its component `DesktopShortcut` has a registry value below `HKCU` as its key path. The start menu has an advertised shortcut (`Advertise="yes"`). For a user who did not install the product, the key path is not there. Windows Installer then usually starts a repair when that user starts the advertised shortcut. It asks for the MSI file if it cannot find the file.

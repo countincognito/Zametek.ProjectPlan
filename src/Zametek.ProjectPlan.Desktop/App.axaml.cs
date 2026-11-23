@@ -132,7 +132,7 @@ namespace Zametek.ProjectPlan.Desktop
             RegisterGlobalExceptionHandlers();
             Log.Information(
                 "Application starting up (version {Version}, {FrameworkDescription}, {OSDescription})",
-                Resource.ProjectPlan.Labels.Label_AppVersion,
+                AppVersion.Text,
                 RuntimeInformation.FrameworkDescription,
                 RuntimeInformation.OSDescription);
 

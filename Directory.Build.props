@@ -1,5 +1,22 @@
 <Project>
   <!--
+    The version of the application, in one place. Each assembly of this repository has it (the file properties, and the
+    informational version that AppVersion reads), and the MSI takes it: VersionPrefix.0 as the version of the package, and
+    Version in the name of the file. VersionPrefix is the numeric part. VersionSuffix is the label of a pre-release, and it
+    is empty for a release. The two MSIX manifests and the examples in docs/API.md, docs/openapi.yaml and
+    docs/CLIENT-SERVER-QUICK-START.md still have the version as text. AppVersionTests fails when one of them differs.
+
+    The informational version has no hash of the commit, so that the application shows the version as it is here.
+  -->
+  <PropertyGroup>
+    <VersionPrefix>0.11.0</VersionPrefix>
+    <VersionSuffix>beta.3</VersionSuffix>
+    <Version Condition="'$(VersionSuffix)' != ''">$(VersionPrefix)-$(VersionSuffix)</Version>
+    <Version Condition="'$(VersionSuffix)' == ''">$(VersionPrefix)</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <!--
     A Release build puts the symbols of each assembly of this repository into the assembly (an embedded portable PDB).
     Thus, a stack trace from a release gives file names and line numbers, and the publish has no .pdb file of ours.
     A Debug build keeps the separate .pdb files. Directory.Build.targets removes the .pdb files of the packages from a

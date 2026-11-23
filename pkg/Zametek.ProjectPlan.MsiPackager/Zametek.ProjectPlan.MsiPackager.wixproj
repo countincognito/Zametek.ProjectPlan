@@ -4,7 +4,10 @@
          CheckTheInstallerInputs stops a build for a different platform. The default comes before OutputName, which uses it. -->
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <Platforms>x64</Platforms>
-    <OutputName>projectplandotnet.0.11.0-beta.2.installer.$(Platform)</OutputName>
+    <!-- The version comes from Directory.Build.props: VersionPrefix.0 as the version of the package (Package.wxs), and Version,
+         with the label of a pre-release, in the name of the file. -->
+    <OutputName>projectplandotnet.$(Version).installer.$(Platform)</OutputName>
+    <DefineConstants>$(DefineConstants);Version=$(VersionPrefix).0</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>false</SuppressValidation>

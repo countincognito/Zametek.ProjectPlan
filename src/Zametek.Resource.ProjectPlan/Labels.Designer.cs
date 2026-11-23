@@ -250,15 +250,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.11.0-beta.2.
-        /// </summary>
-        public static string Label_AppVersion {
-            get {
-                return ResourceManager.GetString("Label_AppVersion", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to R. M. Bennett-Lovsey.
         /// </summary>
         public static string Label_Author {

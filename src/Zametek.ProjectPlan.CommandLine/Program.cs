@@ -591,7 +591,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         // The name and the version of zpp: the heading of the help, and what --version prints.
         private static string VersionLine =>
-            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+            $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {AppVersion.Text}";
 
         private static void DisplayHelp<T>(
             ParserResult<T> result,

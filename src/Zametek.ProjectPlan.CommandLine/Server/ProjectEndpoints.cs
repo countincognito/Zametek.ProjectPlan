@@ -192,7 +192,7 @@ namespace Zametek.ProjectPlan.CommandLine
             }
 
             var info = new InfoResponse(
-                Resource.ProjectPlan.Labels.Label_AppVersion,
+                AppVersion.Text,
                 CultureInfo.CurrentCulture.Name,
                 TimeZoneHelper.GetIanaId(TimeZoneInfo.Local),
                 LimitsResponse.From(m_Limits));
