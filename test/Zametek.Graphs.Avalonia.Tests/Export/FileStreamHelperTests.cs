@@ -83,14 +83,9 @@ namespace Zametek.Graphs.Avalonia.Tests.Export
             Directory.GetFiles(m_TempDirectory).ShouldBe([path]);
         }
 
-        [Fact]
+        [WindowsFact]
         public void A_write_to_a_hidden_file_works_and_the_file_stays_hidden()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Path.Combine(m_TempDirectory, @"graph.svg");
             File.WriteAllBytes(path, [9, 9, 9]);
             File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
@@ -104,14 +99,9 @@ namespace Zametek.Graphs.Avalonia.Tests.Export
 
         // A program holds the file and lets others write it and not delete it: nothing can take the place of the file,
         // and the write goes in place, as the save did before.
-        [Fact]
+        [WindowsFact]
         public void A_write_to_a_file_that_a_program_holds_without_delete_sharing_goes_in_place()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Path.Combine(m_TempDirectory, @"graph.svg");
             File.WriteAllBytes(path, [9, 9, 9]);
 

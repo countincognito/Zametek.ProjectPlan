@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -12,7 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// A save writes a temporary file next to its target, and then puts that file in the place of the target. Thus, a write
     /// that does not finish leaves the file that was there. These tests give the targets that are not plain files: one that
     /// nobody may write, a hidden one, one that another program holds open, and a link. Some of them are cases of Windows
-    /// only, and some of Linux only: a test of another system passes with no check.
+    /// only, and some of Linux only: a test of another system is skipped (WindowsFact, UnixFact).
     /// </summary>
     public sealed class FileStreamHelperWriteTests
         : IDisposable
@@ -171,14 +172,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         // Before, a save to a hidden file failed. The save works now, and the file stays hidden.
-        [Fact]
+        [WindowsFact]
         public void Write_Given_AHiddenFile_Then_TheNewContentAndTheFileStaysHidden()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing();
             File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
 
@@ -190,14 +186,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         // Linux: the file keeps the permissions that it had.
-        [Fact]
+        [UnixFact]
+        [UnsupportedOSPlatform(@"windows")]
         public void Write_Given_AFileWithPermissionsOfItsOwn_Then_TheFileKeepsThem()
         {
-            if (OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing();
             UnixFileMode mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead;
             File.SetUnixFileMode(path, mode);
@@ -210,11 +202,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         // Linux: a file that the user may write, in a folder where the user may make no file. A save in place works
         // there, and so the save writes in place, as it did before.
-        [Fact]
+        [UnixFact]
+        [UnsupportedOSPlatform(@"windows")]
         public void Write_Given_AFolderWhereNoFileCanBeMade_Then_TheSaveWritesInPlaceAndSaysSo()
         {
-            if (OperatingSystem.IsWindows()
-                || Environment.UserName == @"root")
+            // Root can make a file in any folder.
+            if (Environment.UserName == @"root")
             {
                 return;
             }
@@ -235,14 +228,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         #region A file that another program holds open (Windows)
 
         // A sync client and a virus scanner let others read, write and delete the file that they hold.
-        [Fact]
+        [WindowsFact]
         public void Write_Given_AFileHeldByAProgramThatSharesAll_Then_TheNewContentInItsPlace()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing();
 
             using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
@@ -257,14 +245,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         // A program that lets others write the file, and not delete it. Nothing can take the place of such a file, and a
         // save in place works, as it did before. The save tries for a time, then it writes in place, and it says so.
-        [Fact]
+        [WindowsFact]
         public void Write_Given_AFileHeldByAProgramThatDoesNotShareDelete_Then_TheSaveWritesInPlaceAndSaysSo()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing();
 
             using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -280,14 +263,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         // A program that lets nobody write the file. The save failed before, and it fails now, with the file whole.
-        [Fact]
+        [WindowsFact]
         public void Write_Given_AFileHeldByAProgramThatSharesOnlyReading_Then_TheSaveFailsAndTheFileIsAsItWas()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing();
 
             using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -303,14 +281,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         // The program lets go of the file while the save tries: the save puts the file in place, and writes nothing in place.
-        [Fact]
+        [WindowsFact]
         public async Task Write_Given_AFileThatAProgramLetsGoOfInTime_Then_TheNewContentInItsPlace()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing();
             var holder = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             Task release = Task.Run(async () =>
@@ -385,14 +358,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Files().ShouldBe([path]);
         }
 
-        [Fact]
+        [WindowsFact]
         public void Replace_Given_AHiddenFile_Then_TheNewContentAndTheFileStaysHidden()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                return;
-            }
-
             string path = Existing(@"UserSettings.json");
             File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
 

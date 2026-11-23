@@ -108,14 +108,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read the text of the file as it is, from the folder of the test assembly. For each version, compare the date and the offset of one date or more. `ConverterTests` also has assertions in comments, for the times of the creation and for the step from 0.5.0 to 0.6.0. Put them back, or remove them.
 
-- [ ] **Show a test that does not run on a system as skipped** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  Some tests are for one operating system. On a different system, such a test returns at its start, and its result is "passed". `FileStreamHelperWriteTests` has nine such returns, and its header says so. The tests of the copy in `Zametek.Graphs.Avalonia.Tests` and `UnixSocketFileHelperTests` do the same.
-
-  CI runs on Linux only. Thus, the Windows cases of the save by way of a temporary file are green in CI, and they never ran there. The results do not show this. The entry "Build and test on Windows in CI, and collect the coverage" asks for the job on Windows. This entry is about the result of a test.
-
-  Add two attributes that derive from `FactAttribute` and set `Skip` on the wrong system. xunit v2 permits this.
-
 - [ ] **Throw at each step of a load in the tests of a load that fails** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   ARCHITECTURE section 7 rule 16 says that a load that fails changes nothing, and that a load can fail at each of its steps. This rule protects against a loss of data. The tests throw at three places: at two changes of `ArrowGraphEdgeRoutingMode` (`RoutingModeFault`), and at a null list of the dependent activities. For "nothing changed", they compare three values of each scenario: the number of the activities, the number of the resources and the routing mode (`ProjectScenarioManagerLoadFailureTests`).
