@@ -94,14 +94,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   2. **The texts that are not from a file.** The text of the MS-PL (Svg.Custom) is the published text, written into the script, because no file on the computer had it. The copyright of MSAGL and of Inter is from their projects, because the packages do not give it. Read these against the projects.
   3. **The LGPL of MPXJ.** The license of MPXJ.Net is the LGPL 2.1 or later. A release puts it into one file with the program (`PublishSingleFile`). The LGPL asks that a user can change the library and use the program with the changed library. The review did not decide if a single file permits this, and this entry is not legal advice.
 
-- [ ] **Give zpp the versions of Avalonia.Skia and SkiaSharp that the desktop application has** *(2026-11-23, found by the script of the notices)*
-
-  `zpp` ships Avalonia.Skia 12.0.0 and SkiaSharp 3.119.3-preview.1.1 (with its native packages). The desktop application ships Avalonia.Skia 12.1.3 and SkiaSharp 3.119.4. The desktop application gets these versions from Avalonia.Desktop. `zpp` does not have Avalonia.Desktop. It gets Avalonia.Skia from `Svg.Controls.Skia.Avalonia` 12.0.0.13 in Zametek.Graphs.Avalonia, and NuGet takes the lowest version that the package allows.
-
-  Thus, `zpp` draws its charts and graphs with a preview of SkiaSharp. It also has the native packages of two versions on Linux, because Zametek.Graphs.Avalonia references `SkiaSharp.NativeAssets.Linux.NoDependencies` 3.119.4.
-
-  Nobody saw a different picture or a failure. A reference to Avalonia.Skia 12.1.3 in Zametek.Graphs.Avalonia probably gives both programs the same versions. Then make the notices again.
-
 - [ ] **Do four smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The MSIX manifests.** Both manifests name the device family `Windows.Universal`, which is not correct for a desktop application with full trust. `MaxVersionTested` is 10.0.14393.0, and the packaging projects give 10.0.19041.0 as the minimum. The `.wapproj` files also keep configurations for 32-bit ARM, which .NET 10 does not have, and package references in a comment.

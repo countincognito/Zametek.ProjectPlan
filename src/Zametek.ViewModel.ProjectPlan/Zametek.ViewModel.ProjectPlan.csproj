@@ -23,6 +23,10 @@
     <!-- The charts' font (see ChartFonts): referenced here, rather than only by the views, so that it
          ships with every head that draws charts - the headless CLI included. -->
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+    <!-- Svg.Controls.Skia.Avalonia asks for Avalonia.Skia 12.0.0 or later, and NuGet takes the lowest version that a package
+         allows. zpp has no Avalonia.Desktop, and so it got Avalonia.Skia 12.0.0 and a preview of SkiaSharp. This reference
+         gives zpp the versions of the desktop application. Keep it at the version of Avalonia (DrawingPackagesTests). -->
+    <PackageReference Include="Avalonia.Skia" Version="12.1.3" />
     <!-- Reads and writes the workbooks of Excel (see XlsxWorkbookReader and XlsxWorkbookWriter). It is given the graphic engine
          of XlsxGraphicEngine, so that it does not search the fonts of the system. -->
     <PackageReference Include="ClosedXML" Version="0.105.1" />
