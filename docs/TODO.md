@@ -28,16 +28,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   If the limit must not end the job, catch the exception in the loop, and record it as the error of that scenario. If it must, name the scenario in the message, and say so in the documentation.
 
-- [ ] **Do not write an upload to the disk, and do not answer a failure of the disk as 400** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `JobServer` sets one option of the form: `MultipartBodyLengthLimit`. It does not set `MemoryBufferThreshold`. With the default, ASP.NET Core keeps a file part of more than 64 KB in a temporary file. The file is in the folder of `ASPNETCORE_TEMP`, or in the temporary folder of the user.
-
-  Thus, each such job writes its plan to the disk, and a server that ends suddenly can leave the file. The security review in [the reference](API.md) says that the server stores nothing.
-
-  `ProjectEndpoints.ReadFormAsync` answers each `IOException` of the read as 400 (`malformed-request`), with the detail that the body must be multipart. It writes no line to the log. A temporary folder that is full, or that the server cannot write, thus gives each larger upload an answer that blames the client.
-
-  The review read the options and the catch. Nobody looked at the temporary folder during an upload. Set `MemoryBufferThreshold` to the limit of the upload, or name the folder in the entry "Package `zpp serve`". Write an `IOException` that is not the end of the time of a job to the log, and answer 500.
-
 - [ ] **Send the intermediate certificates of the server** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `ServeSettingsHelper` loads the certificate of the server with `X509Certificate2.CreateFromPemFile` or with `X509CertificateLoader.LoadPkcs12FromFile`. Each of them gives one certificate. `JobServer` sets `ServerCertificate` only, and nothing sets `ServerCertificateChain`. Thus, the server loses the intermediate certificates of a `fullchain.pem` file, or of a `.pfx` file with its chain.

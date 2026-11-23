@@ -378,6 +378,8 @@ The file holds limits only. If it has a name that is not the setting of a limit,
 
 `GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The time of a job starts when the server starts to read the request, and so it includes the upload.
 
+The server keeps each request in memory, up to the largest request. It writes no part of a request to the disk. Thus, give the server memory for the largest request of each job that runs at once. The server reads the request of a job that waits only when the job starts.
+
 The server checks the time of a job between the steps of the job. Thus, a step that is in progress, such as a compile or the drawing of a chart, ends first. A simulation is the exception: it stops between two groups of its iterations, and the job stops with it. Each iteration schedules the resources again, and it costs about as much as a compilation. Thus, the time of a job (`--job-timeout`) is the limit for a simulation of a large plan, and the limit for the iterations is the limit for a simulation of a small plan. A job cannot disable its compile timeout, but `zpp` can.
 
 The simulations of the jobs of a server share the processors. A simulation that begins takes the processors divided by the number of simulations that run at that time, itself among them. The first takes all the processors, the second half of them, the third a third, and so on, and each takes at least one. A simulation keeps its share to its end. This does not change the result of a simulation, which is the same for any number of threads. It limits the threads that the jobs ask for. A run of `zpp` is one job, and it has all the processors. There is no setting for this.

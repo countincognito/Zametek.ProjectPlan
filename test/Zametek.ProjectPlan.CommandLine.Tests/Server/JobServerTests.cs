@@ -443,6 +443,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (await ProblemDetailAsync(response)).ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1));
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(50)]
+        public async Task Build_Given_ALimitOfTheUpload_Then_APartUpToThatSizeStaysInMemory(int megabytes)
+        {
+            // With the default threshold of 64 KB, the framework kept a larger part in a temporary file, and the plan of each
+            // such job went through the disk (from the review of src, test and pkg).
+            await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxUploadMegabytes = megabytes } });
+
+            Microsoft.AspNetCore.Http.Features.FormOptions form = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+                .GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Http.Features.FormOptions>>(server.Services)
+                .Value;
+
+            form.MemoryBufferThreshold.ShouldBe(megabytes * 1024 * 1024);
+            form.MultipartBodyLengthLimit.ShouldBe(megabytes * 1024L * 1024L);
+        }
+
         [Fact]
         public async Task Health_Given_AServerThatWarmsUp_Then_ReadyOnceItHas()
         {

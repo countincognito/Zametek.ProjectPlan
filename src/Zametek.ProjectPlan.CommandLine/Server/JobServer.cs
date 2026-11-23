@@ -231,7 +231,16 @@ namespace Zametek.ProjectPlan.CommandLine
             });
             services.Configure<BrotliCompressionProviderOptions>(x => x.Level = CompressionLevel.Fastest);
             services.Configure<GzipCompressionProviderOptions>(x => x.Level = CompressionLevel.Fastest);
-            services.Configure<FormOptions>(x => x.MultipartBodyLengthLimit = maxRequestBodySize);
+            // A part of the form stays in memory up to the limit of the upload. With the default (64 KB), the framework kept a
+            // larger part in a temporary file, and the plan of each such job went through the disk: a server that ended
+            // suddenly could leave it there, and a temporary folder that is full gave each larger upload an IOException, which
+            // the endpoint answers as a body that the client did not send correctly (400). The job reads the whole plan into
+            // memory in any case.
+            services.Configure<FormOptions>(x =>
+            {
+                x.MultipartBodyLengthLimit = maxRequestBodySize;
+                x.MemoryBufferThreshold = (int)Math.Min(maxRequestBodySize, int.MaxValue);
+            });
 
             // A server that is stopped lets the jobs it is running finish, as long as they do within their time limit.
             services.Configure<HostOptions>(x => x.ShutdownTimeout = TimeSpan.FromSeconds(limits.JobTimeoutSeconds));

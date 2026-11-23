@@ -31,6 +31,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         // The requests the API has taken - past its API key and its limits.
         public int ApiRequests => Volatile.Read(ref m_ApiRequests);
 
+        // The services of the server, for a test of its options.
+        public IServiceProvider Services => m_App.Services;
+
         // The routes the server maps, each with a method it takes - GET, for the health checks, which take any - as the
         // description of the API is held to them.
         public IReadOnlyList<(string Method, string Path)> Routes => [.. ((IEndpointRouteBuilder)m_App).DataSources
