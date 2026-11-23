@@ -119,6 +119,10 @@ def read(path):
             break
         except UnicodeDecodeError:
             continue
+    else:
+        # cp1252 has no character for the bytes 0x81, 0x8D, 0x8F, 0x90 and 0x9D. Without this, the loop ended with no text,
+        # and the script ended with UnboundLocalError and no file name (from the review of the branch).
+        fail(f'{path} is not UTF-8 or Windows-1252 text')
     text = text.replace('\r\n', '\n').replace('\r', '\n')
     return '\n'.join(x.rstrip() for x in text.split('\n')).strip('\n') + '\n'
 
