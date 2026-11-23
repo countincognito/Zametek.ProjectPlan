@@ -93,7 +93,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             using HttpResponseMessage response = await SendAsync(HttpMethod.Get, path, headers => headers.Add(@"Origin", @"http://evil.example.com"));
 
             response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe(@"application/problem+json");
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(@"application/problem+json");
             ProblemResponse problem = await RunningServer.ReadAsync<ProblemResponse>(response);
             problem.Status.ShouldBe(403);
             problem.Title.ShouldBe(@"Forbidden");

@@ -130,6 +130,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         // Makes the files again, from what the exporter and the importer do now. It does nothing unless the variable says so.
+        // After it writes, it fails: a variable that stays in a shell wrote the files again at each run, also in the hook, and
+        // the comparisons then used files that the source code under test wrote.
         [Fact]
         public async Task Regenerate_Given_TheVariable_Then_TheFilesAreMadeAgain()
         {
@@ -154,6 +156,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             // The file of the documents is not made here, and so its snapshot is made from the file itself.
             string docs = Path.Combine(Path.GetDirectoryName(FolderToWrite)!, @"..", @"..", @"..", @"docs", @"assets", @"sample.xlsx");
             File.WriteAllText(Path.Combine(FolderToWrite, @"docs-sample.import.json"), Snapshot(Import(File.ReadAllBytes(docs))));
+
+            Assert.Fail($@"The files were made again in {FolderToWrite}. Look at the changes, remove the variable {c_Regenerate}, and run the tests again.");
         }
     }
 }

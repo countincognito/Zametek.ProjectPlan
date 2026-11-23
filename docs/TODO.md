@@ -119,11 +119,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read the text of the file as it is, from the folder of the test assembly. For each version, compare the date and the offset of one date or more. `ConverterTests` also has assertions in comments, for the times of the creation and for the step from 0.5.0 to 0.6.0. Put them back, or remove them.
 
-- [ ] **Keep the tests away from the network and from the environment of the developer** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  1. **The child process.** For one test, `ProgramExitCodeTests` starts `zpp` as a process of its own, with the environment of the test run. The other tests call `Main` with an empty environment, so that `ZPP_SERVER` and `ZPP_API_KEY` cannot send a run to a server (`ZppMain`). On a computer that has `ZPP_SERVER`, this one test sends the plan of the test and the key to that server. Remove the two variables from the start information, or add `--local`.
-  2. **The server on each interface.** One test of `JobServerStartTests` starts a server on `http://0.0.0.0`, with a key that is a constant of the test class. During the test, each computer of the network can get to the server, with a key that is in the repository. Use a random key for each run.
-
 - [ ] **Show a test that does not run on a system as skipped** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   Some tests are for one operating system. On a different system, such a test returns at its start, and its result is "passed". `FileStreamHelperWriteTests` has nine such returns, and its header says so. The tests of the copy in `Zametek.Graphs.Avalonia.Tests` and `UnixSocketFileHelperTests` do the same.
@@ -148,15 +143,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   On Linux, the variable `TZ` changes `TimeZoneInfo.Local`. Run the test project two more times in CI. Use a zone far to the east for one run, for example `Pacific/Kiritimati`. Use a zone far to the west for the other run, for example `America/Los_Angeles`.
 
-- [ ] **Do seven smaller things for the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do three smaller things for the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  1. **A test that cannot fail.** `RunCompile_Given_APoisonedTargetSet_Then_DoesNotHang` sets `completed` to true after the compile and in the catch, and then it asserts that `completed` is true. Assert the result: a compilation error, or the timeout. Also assert that the copy of the activity keeps the bad set.
-  2. **The switch for the golden files.** With `ZPP_REGENERATE_XLSX_GOLDENS=1`, a test writes the golden workbooks into the source folder, and it passes. A variable that stays in a shell writes them again at each run, also in the hook. From the next build, the comparison uses files that the source code under test wrote. Make the test fail with a message after it writes.
-  3. **A server that stops.** `JobServer` gives a stopped server the time limit of a job to complete its jobs (`HostOptions.ShutdownTimeout`). No test stops a server that has a job in progress.
-  4. **An upload with no length.** Each test of the answer 413 sends a body with `Content-Length`. No test sends a body in chunks that is too large. The review reported that such a body possibly gets 400.
-  5. **An assertion that can do nothing.** `ProjectTransportTests` has `ContentType?.MediaType.ShouldBe(...)`. With no content type, the assertion does not run.
-  6. **Copies of the harness.** The review counted 22 private `Harness` classes. Seven files construct `MainViewModel` with its 11 arguments, and three files make a certificate that signs itself. The copies are no longer the same: the harness of `MainViewModelStartTests` does not dispose the main view model. Make one harness for the main view model and one set of helpers for the server tests, in small steps.
-  7. **The project files.** Two test projects set `EnablePreviewFeatures`, and no project under `src` does. The same two projects copy each test file at each build (`CopyToOutputDirectory` is `Always`).
+  1. **A server that stops.** `JobServer` gives a stopped server the time limit of a job to complete its jobs (`HostOptions.ShutdownTimeout`). No test stops a server that has a job in progress.
+  2. **An upload with no length.** Each test of the answer 413 sends a body with `Content-Length`. No test sends a body in chunks that is too large. The review reported that such a body possibly gets 400.
+  3. **Copies of the harness.** The review counted 22 private `Harness` classes. Seven files construct `MainViewModel` with its 11 arguments, and three files make a certificate that signs itself. The copies are no longer the same: the harness of `MainViewModelStartTests` does not dispose the main view model. Make one harness for the main view model and one set of helpers for the server tests, in small steps.
 
 - [ ] **Give the release workflow fewer permissions, a draft release and checksums** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

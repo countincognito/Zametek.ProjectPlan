@@ -47,6 +47,9 @@ namespace Zametek.Data.ProjectPlan.Tests
             }
 
             File.WriteAllText(Path.Combine(DocsFolder, c_FileName), ProjectFileSchema.BuildText());
+
+            // A variable that stays in a shell would write the file again at each run, also in the hook.
+            Assert.Fail($@"The file {c_FileName} was made again in {DocsFolder}. Look at the change, remove the variable {c_Regenerate}, and run the tests again.");
         }
 
         [Fact]

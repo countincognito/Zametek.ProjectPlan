@@ -844,6 +844,12 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
+
+            // The other tests call Main with an empty environment (ZppMain). This process gets the environment of the run, and
+            // on a computer with ZPP_SERVER it sent the plan of the test and the key to that server.
+            start.Environment.Remove(@"ZPP_SERVER");
+            start.Environment.Remove(@"ZPP_API_KEY");
+
             foreach (string argument in new[]
             {
                 Path.Combine(AppContext.BaseDirectory, @"zpp.dll"),

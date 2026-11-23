@@ -1,6 +1,7 @@
 using Shouldly;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using Xunit;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
@@ -15,7 +16,9 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
     [Collection(ProgramExitCodeTests.CollectionName)]
     public class JobServerStartTests
     {
-        private const string c_Key = @"0123456789abcdef0123456789abcdef0123456789";
+        // A key of its own for each run: a server on http://0.0.0.0 can be reached from each computer of the network for the
+        // time of its test, and a key in the repository would let any of them in.
+        private static readonly string s_Key = RandomNumberGenerator.GetHexString(48, lowercase: true);
 
         private static readonly TimeSpan s_RunLimit = TimeSpan.FromSeconds(60);
 
@@ -96,7 +99,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 int port = FreePort();
                 string url = $@"http://0.0.0.0:{port}";
-                string keyFile = await WriteKeyAsync(directory, c_Key);
+                string keyFile = await WriteKeyAsync(directory, s_Key);
 
                 (ExitCode exitCode, RecordingJobConsole console, string log) = await RunAsync(port, @"--listen", url, @"--api-key-file", keyFile);
 
@@ -146,7 +149,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 int port = FreePort();
                 string url = $@"http://0.0.0.0:{port}";
-                string keyFile = await WriteKeyAsync(directory, c_Key);
+                string keyFile = await WriteKeyAsync(directory, s_Key);
 
                 (ExitCode exitCode, _, string log) = await RunAsync(port, @"--listen", url, @"--api-key-file", keyFile, @"--behind-tls-proxy");
 

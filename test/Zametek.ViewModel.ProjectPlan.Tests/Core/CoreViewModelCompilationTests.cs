@@ -274,19 +274,22 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             // It must come back - as a compilation error from the scheduler's own stall
             // detection, or as the watchdog cancelling it - either way without hanging.
-            var completed = false;
+            // The test set a mark to true in both ways and asserted the mark, and so it
+            // could not fail (from the review of src, test and pkg): it now asserts the
+            // result.
+            Exception? thrown = Record.Exception(core.RunCompile);
 
-            try
+            if (thrown is null)
             {
-                core.RunCompile();
-                completed = true;
+                core.HasCompilationErrors.ShouldBeTrue(@"a compile of an activity that no resource can take must give errors");
             }
-            catch (GraphCompilationTimeoutException)
+            else
             {
-                completed = true;
+                thrown.ShouldBeOfType<GraphCompilationTimeoutException>();
             }
 
-            completed.ShouldBeTrue();
+            // The compile must not have healed the set of the activity, or it tested nothing.
+            poisoned.TargetResources.All(poisoned.TargetResources.Contains).ShouldBeFalse();
         }
 
         /// <summary>
