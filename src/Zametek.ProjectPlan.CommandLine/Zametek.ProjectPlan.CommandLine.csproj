@@ -57,5 +57,10 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Zametek.ProjectPlan.CommandLine.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The licenses and the notices of the software of other parties (THIRD-PARTY-NOTICES.txt at the root of the repository),
+         next to the program in each output and each publish, and not in the single file. -->
+    <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
 
 </Project>

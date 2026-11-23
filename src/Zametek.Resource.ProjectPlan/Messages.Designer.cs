@@ -1209,6 +1209,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The licenses of the software of other parties are in the file THIRD-PARTY-NOTICES.txt, in the folder of the application..
+        /// </summary>
+        public static string Message_ThirdPartyNotices {
+            get {
+                return ResourceManager.GetString("Message_ThirdPartyNotices", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The tracked scenario '{0}' did not compile:.
         /// </summary>
         public static string Message_TrackedScenarioDidNotCompile {

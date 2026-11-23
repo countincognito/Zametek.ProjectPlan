@@ -957,4 +957,7 @@
   <data name="Message_ProjectTooManyHolidays" xml:space="preserve">
     <value>The file cannot be opened. The scenario "{0}" has {1} holidays, and the calendar takes {2} at most.</value>
   </data>
+  <data name="Message_ThirdPartyNotices" xml:space="preserve">
+    <value>The licenses of the software of other parties are in the file THIRD-PARTY-NOTICES.txt, in the folder of the application.</value>
+  </data>
 </root>

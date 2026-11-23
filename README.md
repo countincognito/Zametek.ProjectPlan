@@ -35,4 +35,6 @@ All documentation in this repository is written loosely following [ASD-STE100 Si
 
 The application icon uses [Project management icons created by Flat Icons - Flaticon](https://www.flaticon.com/free-icons/project-management).
 
+The application and `zpp` contain software of other parties. [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) gives the license and the copyright of each part. Each release has this file next to the programs.
+
 [![Gitter](https://badges.gitter.im/Zametek-ProjectPlan/Lobby.svg)](https://gitter.im/Zametek-ProjectPlan/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

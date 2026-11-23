@@ -1688,6 +1688,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}");
                 about.AppendLine();
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}");
+                about.AppendLine();
+                about.AppendLine(Resource.ProjectPlan.Messages.Message_ThirdPartyNotices);
 
                 await m_DialogService.ShowInfoAsync(
                     title: Resource.ProjectPlan.Titles.Title_ProjectPlan,

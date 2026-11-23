@@ -93,13 +93,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   *(2026-11-23)* The maintainer decided to do this check at the install of the final release, and to change the components only if the repair starts.
 
-- [ ] **Put the licenses of the other parties into each package** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Keep the notices of the other parties current** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  A release contains many libraries of other parties in one file. Examples are MPXJ, the Java runtime image of IKVM (which has source code of OpenJDK), Avalonia, ScottPlot, ClosedXML and MSAGL, and the fonts Inter and Cascadia Mono. The repository has `LICENSE` for its own source code, and one `OFL.txt` next to Cascadia Mono. The dialog "About" shows the version and the copyright only.
+  Since 0.11.0-beta.3, `THIRD-PARTY-NOTICES.txt` at the root of the repository gives the license and the copyright of each package that the two programs ship. It also has the texts of the licenses and the notices of the packages. The build copies it next to each program, and the MSI installs it. The dialog "About" names it. A script that is not in the repository made it from the packages of the build (the `deps.json` files of the two programs and the `.nuspec` files in the cache of NuGet). Three things remain:
 
-  Most licenses ask that the text of the license goes with each copy of the library. The review believes that MPXJ has the LGPL, which asks for more. The review did not read each license, and this entry is not legal advice.
-
-  Read the license of each library. Make a file `THIRD-PARTY-NOTICES`, put it into each archive and each installer, and show it from the dialog "About".
+  1. **A new package.** Nothing makes sure that the file has each package. Make the file again when a package changes, or add a test that compares it with the `deps.json` files.
+  2. **The texts that are not from a file.** The text of the MS-PL (Svg.Custom) is the published text, written into the script, because no file on the computer had it. The copyright of MSAGL and of Inter is from their projects, because the packages do not give it. Read these against the projects.
+  3. **The LGPL of MPXJ.** The license of MPXJ.Net is the LGPL 2.1 or later. A release puts it into one file with the program (`PublishSingleFile`). The LGPL asks that a user can change the library and use the program with the changed library. The review did not decide if a single file permits this, and this entry is not legal advice.
 
 - [ ] **Do four smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

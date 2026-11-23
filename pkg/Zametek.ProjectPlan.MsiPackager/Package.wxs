@@ -32,11 +32,13 @@
 				 Description="!(loc.DesktopFeatureDescription)"
 				 AllowAbsent="no">
 			<ComponentGroupRef Id="DesktopComponents" />
+			<ComponentGroupRef Id="NoticesComponents" />
 		</Feature>
 		<Feature Id="CommandLineFeature"
 				 Title="!(loc.CommandLineFeatureTitle)"
 				 Description="!(loc.CommandLineFeatureDescription)">
 			<ComponentGroupRef Id="CommandLineComponents" />
+			<ComponentGroupRef Id="NoticesComponents" />
 		</Feature>
 
 		<ui:WixUI Id="WixUI_FeatureTree" />

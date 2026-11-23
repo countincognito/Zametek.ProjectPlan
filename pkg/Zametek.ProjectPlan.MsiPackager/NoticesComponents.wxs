@@ -1,0 +1,16 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<Fragment>
+		<!-- The licenses and the notices of the software of other parties in the two programs: THIRD-PARTY-NOTICES.txt at the
+		     root of the repository. Each feature installs it. -->
+		<ComponentGroup Id="NoticesComponents"
+						Directory="INSTALLFOLDER">
+			<Component Id="ThirdPartyNotices"
+					   Bitness="default">
+				<File Id="ThirdPartyNoticesTxt"
+					  Name="THIRD-PARTY-NOTICES.txt"
+					  Source="$(sys.SOURCEFILEDIR)..\..\THIRD-PARTY-NOTICES.txt"
+					  KeyPath="true" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
