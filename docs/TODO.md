@@ -38,13 +38,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there.
 
-- [ ] **Do five smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do three smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  1. **The rule of the holiday dialog.** `HolidayEditViewModel` builds its rule in four subscriptions that deliver on the task pool. `HolidaySettingsManagerViewModel` reads the rule when the dialog closes. If the pool is busy, for example during a simulation, the rule can be the one from before the last change. Build the rule with no `ObserveOn`.
-  2. **A failure at the start.** In `App.OnFrameworkInitializationCompleted`, the set-up of the log is before the `try`. The catch writes to the log and to the standard error stream, which a `WinExe` program does not show. Then it ends the application with exit code 1. Thus, a settings folder that the application cannot make gives no message and no log. Show a message with the cause.
-  3. **The build of a chart that fails.** Five subscriptions build a chart or the output with `Subscribe(async _ => await ...)`. Each build catches its exception and shows a dialog. Thus, a plan whose chart fails shows one dialog after each compilation, and the log has no line. Write the exception to the log, and show the state in the panel.
-  4. **Two instances and the settings.** Each setter of `SettingService` writes all of the settings from memory, and nothing reads the file again. Thus, the last write of two instances removes the changes of the other instance, for example a recent file. The recovery copies already allow for two instances.
-  5. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
+  1. **The build of a chart that fails.** Five subscriptions build a chart or the output with `Subscribe(async _ => await ...)`. Each build catches its exception and shows a dialog. Thus, a plan whose chart fails shows one dialog after each compilation, and the log has no line. Write the exception to the log, and show the state in the panel.
+  2. **Two instances and the settings.** Each setter of `SettingService` writes all of the settings from memory, and nothing reads the file again. Thus, the last write of two instances removes the changes of the other instance, for example a recent file. The recovery copies already allow for two instances.
+  3. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
 
 - [ ] **Wait for a signal, and not for a time, in the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

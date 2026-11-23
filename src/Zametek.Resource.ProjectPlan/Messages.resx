@@ -972,4 +972,7 @@
   <data name="Message_ImportDateTooFarFromStart" xml:space="preserve">
     <value>"{0}" is too far from the project start. A date must be within {1:N0} days of ProjectStart.</value>
   </data>
+  <data name="Message_StartupFailed" xml:space="preserve">
+    <value>The application cannot start: {0}</value>
+  </data>
 </root>

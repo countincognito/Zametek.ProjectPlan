@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -128,19 +129,23 @@ namespace Zametek.ProjectPlan.Desktop
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            Log.Logger = ConfigureSerilog();
-            RegisterGlobalExceptionHandlers();
-            Log.Information(
-                "Application starting up (version {Version}, {FrameworkDescription}, {OSDescription})",
-                AppVersion.Text,
-                RuntimeInformation.FrameworkDescription,
-                RuntimeInformation.OSDescription);
+            SplashView? splashView = null;
 
             try
             {
+                // The log is in the settings folder. A folder that the application cannot make threw here, before the
+                // catch, and the application ended with no message and no log (from the review of src, test and pkg).
+                Log.Logger = ConfigureSerilog();
+                RegisterGlobalExceptionHandlers();
+                Log.Information(
+                    "Application starting up (version {Version}, {FrameworkDescription}, {OSDescription})",
+                    AppVersion.Text,
+                    RuntimeInformation.FrameworkDescription,
+                    RuntimeInformation.OSDescription);
+
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
                 {
-                    var splashView = new SplashView();
+                    splashView = new SplashView();
                     var splashViewModel = new SplashViewModel();
 
                     splashView.DataContext = splashViewModel;
@@ -300,8 +305,31 @@ namespace Zametek.ProjectPlan.Desktop
                 Log.CloseAndFlush();
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    desktop.Shutdown(1);
+                    ShowStartupFailure(desktop, splashView, ex);
                 }
+            }
+        }
+
+        // A Windows program has no console, and so the user sees only a message. The application ends with exit code 1 when
+        // the user closes it, or at once if it cannot show the message.
+        private static void ShowStartupFailure(
+            IClassicDesktopStyleApplicationLifetime desktop,
+            SplashView? splashView,
+            Exception exception)
+        {
+            try
+            {
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                var window = new StartupFailureWindow(exception);
+                window.Closed += (_, _) => desktop.Shutdown(1);
+                desktop.MainWindow = window;
+                window.Show();
+                splashView?.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"The message of the fatal startup error failed: {ex}");
+                desktop.Shutdown(1);
             }
         }
     }

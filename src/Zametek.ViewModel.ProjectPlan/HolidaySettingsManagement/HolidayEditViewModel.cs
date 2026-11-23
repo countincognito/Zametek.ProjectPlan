@@ -1,5 +1,4 @@
 using ReactiveUI;
-using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -951,6 +950,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 return;
             }
 
+            // Each pipeline builds the rule on the thread of the change, before the setter returns. The manager reads the rule
+            // when the dialog closes, and a rule that the task pool built could be the rule from before the last change, for
+            // example while a simulation kept the pool busy (from the review of src, test and pkg).
+
             m_ReviseRecurrencePattern01Sub = this
                 .WhenAnyValue(
                     x => x.StartDateTime,
@@ -960,7 +963,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.IsEndUntil,
                     x => x.IsEndCount,
                     x => x.Until)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_ReviseRecurrencePattern02Sub = this
@@ -972,7 +974,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.ByWeekDaysFriday,
                     x => x.ByWeekDaysSaturday,
                     x => x.ByWeekDaysSunday)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_ReviseRecurrencePattern03Sub = this
@@ -983,7 +984,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.ByMonthDay,
                     x => x.ByMonthSetPosSelection,
                     x => x.ByMonthWeekdaySelection)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_ReviseRecurrencePattern04Sub = this
@@ -994,7 +994,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.YearlySetPosSelection,
                     x => x.YearlyWeekdaySelection,
                     x => x.YearlyMonthSelection)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
         }
 

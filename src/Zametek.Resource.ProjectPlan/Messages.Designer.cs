@@ -2315,6 +2315,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The application cannot start: {0}.
+        /// </summary>
+        public static string Message_StartupFailed {
+            get {
+                return ResourceManager.GetString("Message_StartupFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tag already exists.
         /// </summary>
         public static string Message_TagAlreadyExists {

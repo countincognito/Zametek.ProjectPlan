@@ -52,6 +52,30 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             edit.RecurrenceRule.Frequency.ShouldBe(RecurrenceFrequency.None);
         }
 
+        // The manager reads the rule of the edit view model when the dialog closes. The rule was built on the task pool, and
+        // with a busy pool, for example during a simulation, it could be the rule from before the last change (from the review
+        // of src, test and pkg). The rule is now built on the thread of the change, before the setter returns.
+        [Fact]
+        public void RecurrenceRule_Given_AStartedEditViewModel_Then_EachChangeIsInTheRuleWithNoDelivery()
+        {
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = Harness.Make();
+            harness.Manager.StartSubscriptions();
+            Drain(main, pool);
+            HolidayEditViewModel edit = harness.OpenEditViewModel();
+            Drain(main, pool);
+
+            edit.RecurrenceFrequency = RecurrenceFrequency.Weekly;
+            edit.ByWeekDaysFriday = true;
+
+            edit.RecurrenceRule.Frequency.ShouldBe(RecurrenceFrequency.Weekly);
+            edit.RecurrenceRule.ByDay.ShouldBe([RecurrenceDay.FR]);
+            edit.RecurrencePattern.ShouldBe(@"FREQ=WEEKLY;BYDAY=FR");
+            pool.Pump.PendingCount.ShouldBe(0);
+        }
+
         [Fact]
         public void KillSubscriptions_Given_AStartedEditViewModel_Then_ItsPipelinesDeliverNothingMore()
         {
@@ -63,12 +87,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Drain(main, pool);
             HolidayEditViewModel edit = harness.OpenEditViewModel();
             edit.RecurrenceFrequency = RecurrenceFrequency.Weekly;
-            (main.Pump.PendingCount + pool.Pump.PendingCount).ShouldBeGreaterThan(0, "the pipelines were not running to begin with");
             Drain(main, pool);
+            edit.RecurrenceRule.Frequency.ShouldBe(RecurrenceFrequency.Weekly, "the pipelines were not running to begin with");
 
             edit.KillSubscriptions();
             edit.RecurrenceFrequency = RecurrenceFrequency.Monthly;
+            Drain(main, pool);
 
+            edit.RecurrenceRule.Frequency.ShouldBe(RecurrenceFrequency.Weekly);
             main.Pump.PendingCount.ShouldBe(0);
             pool.Pump.PendingCount.ShouldBe(0);
         }
