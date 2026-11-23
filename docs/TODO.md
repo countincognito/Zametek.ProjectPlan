@@ -91,13 +91,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The review read these sites. Nobody saw one of these tests fail.
 
-- [ ] **Read the fixtures of the converter tests as the application reads a file** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Compare the date and the offset in the converter tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  `ConverterFixture.ReadJsonFile` reads each fixture with `JObject.Parse`, and it writes the tree to a string again. `JObject.Parse` reads a text that looks like a date as a moment, in the time zone of the computer. `ProjectFileOpen` stopped this for the application (`DateParseHandling.None`), and its comment says why. Thus, the tests of `ConverterTests` give the converters dates that the application does not give them.
+  The fixtures have dates with an offset, for example `2015-01-05T09:00:00+01:00`. The assertions of `ConverterTests` compare moments. Thus, a step of the upgrade that changes the offset or the day of a date passes. Since 0.11.0-beta.1, a date of a plan is the day that it shows, in its own offset.
 
-  The fixtures have dates with an offset, for example `2015-01-05T09:00:00+01:00`. The assertions compare moments. Thus, a step of the upgrade that changes the offset or the day of a date passes. Since 0.11.0-beta.1, a date of a plan is the day that it shows, in its own offset.
+  Since 0.11.0-beta.3, `ConverterFixture` gives the converters the text of each file as it is, as `ProjectFileOpen` does. Before, it read each fixture with `JObject.Parse`. That reads a text that looks like a date as a moment in the time zone of the computer.
 
-  Read the text of the file as it is, from the folder of the test assembly. For each version, compare the date and the offset of one date or more. `ConverterTests` also has assertions in comments, for the times of the creation and for the step from 0.5.0 to 0.6.0. Put them back, or remove them.
+  For each version, compare the date and the offset of one date or more. `ConverterTests` also has assertions in comments, for the times of the creation and for the step from 0.5.0 to 0.6.0. Put them back, or remove them.
 
 - [ ] **Throw at each step of a load in the tests of a load that fails** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

@@ -1,4 +1,3 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 
@@ -30,13 +29,13 @@ namespace Zametek.Data.ProjectPlan.Tests
             V0_6_1_JsonString = ReadJsonFile(@"test_v0_6_1.zpp");
             V0_6_2_JsonString = ReadJsonFile(@"test_v0_6_2.zpp");
 
+            // The text of the file as it is, as ProjectFileOpen gives it to the converters. JObject.Parse read a text that
+            // looks like a date as a moment, in the time zone of the computer, and wrote it again with the offset of that
+            // zone: the converters then got dates that the application does not give them. The folder is that of the test
+            // assembly, and not the current folder of the process.
             static string ReadJsonFile(string filename)
             {
-                string path = Path.Combine(@"TestFiles", filename);
-                using StreamReader reader = File.OpenText(path);
-                string content = reader.ReadToEnd();
-                JObject json = JObject.Parse(content);
-                return json.ToString();
+                return File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"TestFiles", filename));
             }
         }
 
