@@ -112,6 +112,8 @@ On this computer, the server can listen on plain HTTP, on a Unix domain socket, 
 
 **Caching.** Each response has `Cache-Control: no-store`, because the answers contain the project of a user. Two responses are exceptions. A client can cache the response from [`/v1/info`](#ask-what-the-server-is) for one minute. Any cache can keep the response with [the description of the API](#fetch-the-description) for one hour. Each of them has an `ETag` for validation.
 
+**Validation.** Each encoding of a response with an `ETag` (no encoding, brotli or gzip) has its own strong `ETag`, as RFC 9110 asks. A request with `If-None-Match` gets status `304` when one of its tags is the `ETag` of the encoding that the request gets. A response with status `304` has no `Content-Encoding`.
+
 **Limits.** [`/v1/info`](#ask-what-the-server-is) gives the limits of the server, which the operator of the server sets (refer to [Limits](COMMAND-LINE.md#limits)). The server has limits for:
 
 - The size of a request and of a chart
@@ -908,3 +910,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The import of a workbook does the checks of the dates that a project file gets (`outOfRange` at its cell). A project start must be from 1900-01-01 to 2999-12-31, and a constraint date within 100,000 days of the start. Before, a workbook with the project start 9999-12-31 gave `500`.
 - A scenario and an import can have 1,000 holidays at most (`P0080`).
 - The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time.
+- Each encoding of a response with an `ETag` has its own strong `ETag`, and a response with status `304` has no `Content-Encoding`. Before, the three encodings of the description, of the schema and of `GET /v1/info` had one `ETag`.

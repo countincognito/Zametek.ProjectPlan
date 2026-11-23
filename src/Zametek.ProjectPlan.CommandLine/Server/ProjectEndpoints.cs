@@ -77,15 +77,15 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private static readonly string[] s_DescriptionMediaTypes = [DescriptionMediaType, YamlMediaType];
 
-        // The description of the API as it was embedded when the server was built, its compressed forms and its strong ETag:
-        // read and compressed when first asked for.
-        private static readonly Lazy<FixedBody> s_Description = new(() => FixedBody.From(ReadResource(c_DescriptionResourceName)));
+        // The description of the API as it was embedded when the server was built, and its compressed forms, each with its strong
+        // ETag: read when first asked for, and each form compressed when first asked for.
+        private static readonly Lazy<FixedBody> s_Description = new(() => new FixedBody(ReadResource(c_DescriptionResourceName)));
 
         private static readonly string[] s_ProjectSchemaMediaTypes = [ProjectSchemaMediaType, c_JsonMediaType];
 
-        // The schema of the project file as it was embedded when the server was built, its compressed forms and its strong ETag:
-        // read and compressed when first asked for.
-        private static readonly Lazy<FixedBody> s_ProjectSchema = new(() => FixedBody.From(ReadResource(c_ProjectSchemaResourceName)));
+        // The schema of the project file as it was embedded when the server was built, and its compressed forms, each with its
+        // strong ETag: read when first asked for, and each form compressed when first asked for.
+        private static readonly Lazy<FixedBody> s_ProjectSchema = new(() => new FixedBody(ReadResource(c_ProjectSchemaResourceName)));
 
         // The part of the path of a job that is its id.
         private const string c_RequestIdRoute = @"requestId";
@@ -197,8 +197,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 TimeZoneHelper.GetIanaId(TimeZoneInfo.Local),
                 LimitsResponse.From(m_Limits));
 
+            // The form that the request gets is compressed here, and not by the middleware, which kept the ETag of the form with no
+            // encoding (from the review of the branch).
             byte[] body = JsonSerializer.SerializeToUtf8Bytes(info, JsonOptions);
-            await WriteFixedAsync(context, body, GetStrongTag(body), c_InfoCacheControl, c_InfoContentType);
+            await WriteFixedAsync(context, new FixedBody(body), c_InfoCacheControl, c_InfoContentType);
         }
 
         // The description of the API: docs/openapi.yaml, as it was when the server was built. It holds nothing that is not in the
@@ -281,34 +283,15 @@ namespace Zametek.ProjectPlan.CommandLine
             return new EntityTagHeaderValue($@"""{Convert.ToHexStringLower(SHA256.HashData(body))[..32]}""");
         }
 
-        // A body that cannot change while the server runs, with the ETag that says so: answered 304, and without the body, to a
-        // client that has it.
-        private static async Task WriteFixedAsync(
-            HttpContext context,
-            byte[] body,
-            EntityTagHeaderValue tag,
-            string cacheControl,
-            string contentType)
-        {
-            IHeaderDictionary headers = context.Response.Headers;
-            headers.ETag = tag.ToString();
-            headers.CacheControl = cacheControl;
-
-            if (context.Request.GetTypedHeaders().IfNoneMatch.Any(x => x.Equals(EntityTagHeaderValue.Any) || x.Compare(tag, useStrongComparison: false)))
-            {
-                context.Response.StatusCode = StatusCodes.Status304NotModified;
-                return;
-            }
-
-            context.Response.ContentType = contentType;
-            context.Response.ContentLength = body.Length;
-            await context.Response.Body.WriteAsync(body, context.RequestAborted);
-        }
-
-        // A body that cannot change while the server runs, in the encoding that the request accepts. The middleware of
-        // compression compressed the description again for each request (from the review of src, test and pkg). The body has
-        // its forms in brotli and in gzip from the start, and the middleware does not compress an answer that has a
-        // Content-Encoding. As with the middleware, the answer to a request with Accept-Encoding says that it varies with it.
+        // A body that cannot change while the server runs, in the encoding that the request accepts, with the strong ETag of that
+        // form: answered 304, and without the body, to a client that has it. The middleware of compression compressed the
+        // description again for each request (from the review of src, test and pkg). The middleware does not compress an answer
+        // that has a Content-Encoding. As with the middleware, the answer to a request with Accept-Encoding says that it varies
+        // with it.
+        // RFC 9110 (8.8.1) asks for a different strong validator for each content coding, and each form has the ETag of its own
+        // bytes (from the review of the branch). If-None-Match is compared with the ETag of the form that the request gets, as
+        // RFC 9110 (13.1.2) says: a cache that keeps more than one form sends the ETag of each, and the 304 gives the ETag of the
+        // form that is current for the request. A 304 has no content, and so it has no Content-Encoding.
         private static async Task WriteFixedAsync(
             HttpContext context,
             FixedBody body,
@@ -320,19 +303,26 @@ namespace Zametek.ProjectPlan.CommandLine
                 context.Response.Headers.Append(HeaderNames.Vary, c_AcceptEncodingHeader);
             }
 
-            (byte[] content, string? encoding) = ChooseEncoding(context.Request) switch
+            string? encoding = ChooseEncoding(context.Request);
+            FixedBody.Form form = body.In(encoding);
+            IHeaderDictionary headers = context.Response.Headers;
+            headers.ETag = form.Tag.ToString();
+            headers.CacheControl = cacheControl;
+
+            if (context.Request.GetTypedHeaders().IfNoneMatch.Any(x => x.Equals(EntityTagHeaderValue.Any) || x.Compare(form.Tag, useStrongComparison: false)))
             {
-                c_BrotliEncoding => (body.Brotli, c_BrotliEncoding),
-                c_GzipEncoding => (body.Gzip, c_GzipEncoding),
-                _ => (body.Identity, null),
-            };
+                context.Response.StatusCode = StatusCodes.Status304NotModified;
+                return;
+            }
 
             if (encoding is not null)
             {
-                context.Response.Headers.ContentEncoding = encoding;
+                headers.ContentEncoding = encoding;
             }
 
-            await WriteFixedAsync(context, content, body.Tag, cacheControl, contentType);
+            context.Response.ContentType = contentType;
+            context.Response.ContentLength = form.Content.Length;
+            await context.Response.Body.WriteAsync(form.Content, context.RequestAborted);
         }
 
         // Brotli or gzip, whichever the request accepts with the higher quality, and brotli at the same quality, as the
@@ -379,7 +369,7 @@ namespace Zametek.ProjectPlan.CommandLine
             return memory.ToArray();
         }
 
-        private static (byte[] Body, EntityTagHeaderValue Tag) ReadResource(string name)
+        private static byte[] ReadResource(string name)
         {
             Type type = typeof(ProjectEndpoints);
             using Stream stream = type.Assembly.GetManifestResourceStream(name)
@@ -387,19 +377,32 @@ namespace Zametek.ProjectPlan.CommandLine
             using var memory = new MemoryStream();
             stream.CopyTo(memory);
 
-            byte[] body = memory.ToArray();
-            return (body, GetStrongTag(body));
+            return memory.ToArray();
         }
 
-        // A body that cannot change while the server runs, with its forms in brotli and in gzip, and its strong ETag.
-        private sealed record FixedBody(
-            byte[] Identity,
-            byte[] Brotli,
-            byte[] Gzip,
-            EntityTagHeaderValue Tag)
+        // A body that cannot change while the server runs, with its forms in brotli and in gzip. Each form has the strong ETag of
+        // its own bytes, and each compressed form is made when it is first asked for.
+        private sealed class FixedBody(byte[] identity)
         {
-            public static FixedBody From((byte[] Body, EntityTagHeaderValue Tag) resource) =>
-                new(resource.Body, Compress(resource.Body, brotli: true), Compress(resource.Body, brotli: false), resource.Tag);
+            private readonly Lazy<Form> m_Brotli = new(() => Form.Of(Compress(identity, brotli: true)));
+            private readonly Lazy<Form> m_Gzip = new(() => Form.Of(Compress(identity, brotli: false)));
+            private readonly Form m_Identity = Form.Of(identity);
+
+            // The form for an encoding that ChooseEncoding gives: brotli, gzip, or null for the form with no encoding.
+            public Form In(string? encoding) =>
+                encoding switch
+                {
+                    c_BrotliEncoding => m_Brotli.Value,
+                    c_GzipEncoding => m_Gzip.Value,
+                    _ => m_Identity,
+                };
+
+            public sealed record Form(
+                byte[] Content,
+                EntityTagHeaderValue Tag)
+            {
+                public static Form Of(byte[] content) => new(content, GetStrongTag(content));
+            }
         }
 
         private Answer GetJobAnswer(HttpContext context)

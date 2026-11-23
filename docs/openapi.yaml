@@ -591,7 +591,7 @@ components:
     IfNoneMatch:
       name: If-None-Match
       in: header
-      description: The `ETag` that the client has. The server answers `304` if the `ETag` is current.
+      description: The `ETag` values that the client has. The server answers `304` if one of them is the `ETag` of the response that the request gets, in its encoding.
       required: false
       schema:
         type: string
@@ -602,7 +602,7 @@ components:
       schema:
         $ref: '#/components/schemas/TraceId'
     ETag:
-      description: A strong validator of the response.
+      description: A strong validator of the response. Each encoding of the response (no encoding, brotli or gzip) has its own.
       required: true
       schema:
         type: string

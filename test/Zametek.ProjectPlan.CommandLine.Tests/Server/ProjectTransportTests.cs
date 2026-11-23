@@ -575,14 +575,89 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             {
                 response.Content.Headers.ContentEncoding.ShouldBeEmpty();
                 (await response.Content.ReadAsByteArrayAsync()).ShouldBe(expectedBody);
+                response.Headers.ETag.ShouldBe(plain.Headers.ETag);
             }
             else
             {
                 response.Content.Headers.ContentEncoding.ShouldBe([expected]);
                 (await DecompressAsync(response, expected)).ShouldBe(expectedBody);
+                response.Headers.ETag.ShouldNotBe(plain.Headers.ETag);
+            }
+        }
+
+        // RFC 9110 (8.8.1) asks for a different strong validator for each content coding of a representation. The three forms of
+        // the description and of the schema had one strong ETag, and the compression of /v1/info kept the ETag of its form with
+        // no encoding (from the review of the branch). A cache could then give a client a form that it did not ask for.
+        [Theory]
+        [InlineData(@"/v1/openapi")]
+        [InlineData(@"/v1/schemas/project")]
+        [InlineData(@"/v1/info")]
+        public async Task ETag_Given_EachEncoding_Then_EachFormHasItsOwnStrongETag(string path)
+        {
+            using HttpResponseMessage identity = await SendAsync(HttpMethod.Get, path);
+            using HttpResponseMessage brotli = await SendAsync(HttpMethod.Get, path, headers => headers.TryAddWithoutValidation(@"Accept-Encoding", @"br"));
+            using HttpResponseMessage gzip = await SendAsync(HttpMethod.Get, path, headers => headers.TryAddWithoutValidation(@"Accept-Encoding", @"gzip"));
+            using HttpResponseMessage gzipAgain = await SendAsync(HttpMethod.Get, path, headers => headers.TryAddWithoutValidation(@"Accept-Encoding", @"gzip"));
+
+            brotli.Content.Headers.ContentEncoding.ShouldBe([@"br"]);
+            gzip.Content.Headers.ContentEncoding.ShouldBe([@"gzip"]);
+            EntityTagHeaderValue[] tags = [.. new[] { identity, brotli, gzip }.Select(x => x.Headers.ETag.ShouldNotBeNull())];
+
+            foreach (EntityTagHeaderValue tag in tags)
+            {
+                tag.IsWeak.ShouldBeFalse();
+                tag.Tag.ShouldMatch(@"^""[0-9a-f]{32}""$");
             }
 
-            response.Headers.ETag.ShouldBe(plain.Headers.ETag);
+            tags.Select(x => x.Tag).Distinct().Count().ShouldBe(3);
+            gzipAgain.Headers.ETag.ShouldBe(gzip.Headers.ETag);
+        }
+
+        // A request with If-None-Match gets 304 when one of its tags is the tag of the form that the request gets. A cache that
+        // keeps more than one form sends the tag of each, and the 304 says which form is current. The 304 has no content, and so
+        // it has no Content-Encoding (from the review of the branch).
+        [Theory]
+        [InlineData(@"/v1/openapi")]
+        [InlineData(@"/v1/schemas/project")]
+        [InlineData(@"/v1/info")]
+        public async Task ETag_Given_TheETagOfOneForm_Then_NotModifiedOnlyForARequestThatGetsThatForm(string path)
+        {
+            using HttpResponseMessage identity = await SendAsync(HttpMethod.Get, path);
+            using HttpResponseMessage gzip = await SendAsync(HttpMethod.Get, path, headers => headers.TryAddWithoutValidation(@"Accept-Encoding", @"gzip"));
+            string identityTag = identity.Headers.ETag.ShouldNotBeNull().Tag;
+            string gzipTag = gzip.Headers.ETag.ShouldNotBeNull().Tag;
+
+            using HttpResponseMessage same = await SendAsync(
+                HttpMethod.Get,
+                path,
+                headers =>
+                {
+                    headers.TryAddWithoutValidation(@"Accept-Encoding", @"gzip");
+                    headers.TryAddWithoutValidation(@"If-None-Match", gzipTag);
+                });
+
+            same.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+            same.Headers.ETag.ShouldBe(gzip.Headers.ETag);
+            same.Content.Headers.ContentEncoding.ShouldBeEmpty();
+            same.Headers.Vary.ShouldContain(@"Accept-Encoding");
+
+            using HttpResponseMessage other = await SendAsync(HttpMethod.Get, path, headers => headers.TryAddWithoutValidation(@"If-None-Match", gzipTag));
+
+            other.StatusCode.ShouldBe(HttpStatusCode.OK);
+            other.Headers.ETag.ShouldBe(identity.Headers.ETag);
+            other.Content.Headers.ContentEncoding.ShouldBeEmpty();
+
+            using HttpResponseMessage both = await SendAsync(
+                HttpMethod.Get,
+                path,
+                headers =>
+                {
+                    headers.TryAddWithoutValidation(@"Accept-Encoding", @"gzip");
+                    headers.TryAddWithoutValidation(@"If-None-Match", $@"{identityTag}, {gzipTag}");
+                });
+
+            both.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+            both.Headers.ETag.ShouldBe(gzip.Headers.ETag);
         }
 
         [Theory]
