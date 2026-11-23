@@ -73,28 +73,17 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Add a theory that counts the raises of a load that works. For each number, it then throws at that raise, and it compares all of the saved scenario with the original. `ProjectRecoveryTests` already compares projects in this way. The review read the tests. Nobody changed the application to see if a test finds the defect.
 
-- [ ] **Run the tests in more than one time zone** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  CI runs in UTC, and the hook runs in the time zone of the maintainer. The review counted 11 test files of `Zametek.ViewModel.ProjectPlan.Tests` that read `TimeZoneInfo.Local`, and the fixtures use the clock of the system. Earlier defects depended on the zone. For example, a load failed on a computer east of UTC (`DateTimeCalculatorTests` tells of it).
-
-  `DateTimeCalculatorTests` has tests with zones of its own. But the core, the imports and the saves run only in the zone of the computer.
-
-  On Linux, the variable `TZ` changes `TimeZoneInfo.Local`. Run the test project two more times in CI. Use a zone far to the east for one run, for example `Pacific/Kiritimati`. Use a zone far to the west for the other run, for example `America/Los_Angeles`.
-
 - [ ] **Do two smaller things for the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **A server that stops.** `JobServer` gives a stopped server the time limit of a job to complete its jobs (`HostOptions.ShutdownTimeout`). No test stops a server that has a job in progress.
   2. **Copies of the harness.** The review counted 22 private `Harness` classes. Seven files construct `MainViewModel` with its 11 arguments, and three files make a certificate that signs itself. The copies are no longer the same: the harness of `MainViewModelStartTests` does not dispose the main view model. Make one harness for the main view model and one set of helpers for the server tests, in small steps.
 
-- [ ] **Give the release workflow fewer permissions, a draft release and checksums** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Let the release workflow check CI, and decide on provenance and signatures** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  No earlier review read `release.yml`. This review found five things:
+  Since 0.11.0-beta.3, `release.yml` gives `contents: write` only to the job `create-release`. A first job checks the name of the tag against SemVer, and each script gets the name through the environment. The release is a draft until each file is there, and `SHA256SUMS.txt` has the SHA-256 checksum of each file. The tag of beta.3 is the first run of these changes. Two things remain:
 
-  1. **The permissions.** The workflow gives `contents: write` to each job. The seven build jobs restore the packages of other parties, and they run the build tasks of those packages with this token. Only the job `create-release` needs the permission. Give the workflow `contents: read`, and give `contents: write` to that one job.
-  2. **A release with some of its files.** `create-release` makes the release public, and then it uploads the files one at a time. If an upload fails, the public release has only some of the files. Make a draft, upload the files, and then make the release public.
-  3. **No test.** The workflow runs no test, and it does not make sure that CI passed for the commit of the tag. A tag on any commit makes a release.
-  4. **The name of the tag in the scripts.** The scripts contain `${{ github.ref_name }}`. The pattern of the trigger (`v[0-9]+.[0-9]+.[0-9]+-*`) permits a tag with characters that a shell reads as a command. `enforce-master-source.yml` gives such a value to its script through the environment, and its comment says why. The check of the tag against the SemVer pattern is in the last job only. Give the name through the environment, and do the check first. Only a person who can push a tag can use this, and thus the risk is low.
-  5. **Nothing to verify a download.** A release has no file of checksums and no build provenance. The programs for Windows and the MSI have no signature. The programs for macOS have only the signature that the SDK makes. Add a file of SHA-256 checksums and an attestation of the build. A signature costs money, and the maintainer decides.
+  1. **No test.** The workflow runs no test, and it does not make sure that CI passed for the commit of the tag. A tag on any commit makes a release.
+  2. **Provenance and signatures.** A release has no attestation of the build. The programs for Windows and the MSI have no signature. The programs for macOS have only the signature that the SDK makes. An attestation needs a new pinned action and the permissions `id-token` and `attestations`. A signature costs money, and the maintainer decides.
 
 - [ ] **Give the version of the application in one place** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -104,19 +93,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Set `Version` one time in `Directory.Build.props`. Let the application read it from the assembly (`AssemblyInformationalVersionAttribute`), and give it to WiX as a constant. A test can then compare the manifests and the documents with it. The numeric fields of the MSIX and the MSI stay `X.Y.Z.0`.
 
-- [ ] **Fix the package sources of a build** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  The repository has no `nuget.config` file. Thus, a restore uses each package source of the computer. On 2026-11-21, a restore on the computer of the maintainer used a local folder as a source, together with nuget.org. The MSI and the MSIX packages come from that computer. A package in a local source that has the name of a real package can thus go into a release.
-
-  Add a `nuget.config` file that clears the sources, names nuget.org, and maps each package to it (`packageSourceMapping`).
-
-  Since 0.11.0-beta.3, `build-msix.ps1` and the build of the MSI stop when the file `Zametek.Maths.Graphs.local.targets` is there. With that file, the build uses the source code of the library and not the released package.
-
 - [ ] **Make sure that the MSI does not repair itself for a second user** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   The MSI installs for the computer. Its component `DesktopShortcut` has a registry value below `HKCU` as its key path. The start menu has an advertised shortcut (`Advertise="yes"`). For a user who did not install the product, the key path is not there. Windows Installer then usually starts a repair when that user starts the advertised shortcut. It asks for the MSI file if it cannot find the file.
 
   The review read `DesktopComponents.wxs`. Nobody installed the MSI on a computer with two users. Do this check together with the entry "Install the MSI of the final 0.11.0 over a 0.11.0 pre-release". If the repair starts, put the shortcut of the desktop into a component for the computer, or remove `Advertise`.
+
+  *(2026-11-23)* The maintainer decided to do this check at the install of the final release, and to change the components only if the repair starts.
 
 - [ ] **Put the licenses of the other parties into each package** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -126,13 +109,14 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read the license of each library. Make a file `THIRD-PARTY-NOTICES`, put it into each archive and each installer, and show it from the dialog "About".
 
-- [ ] **Do five smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do four smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The MSIX manifests.** Both manifests name the device family `Windows.Universal`, which is not correct for a desktop application with full trust. `MaxVersionTested` is 10.0.14393.0, and the packaging projects give 10.0.19041.0 as the minimum. The `.wapproj` files also keep configurations for 32-bit ARM, which .NET 10 does not have, and package references in a comment.
   2. **`build-msix.ps1`.** With `-Sign`, the script does not make sure that the bundle has a signature. Since 0.11.0-beta.3, the script calls `vswhere` without `-prerelease`, and thus a preview of Visual Studio cannot build a release package.
   3. **The dependencies of Spectral.** The step for Spectral in `ci.yml` pins the tool, but `npx` gets the newest dependencies of the tool at each run. Since 0.11.0-beta.3, `ci.yml` has a `concurrency` group: a new push to a pull request stops the run of the push before it.
-  4. **Reports about security.** The repository has no `SECURITY.md` file, and `zpp serve` is a server.
-  5. **The line endings.** `.gitattributes` asks for LF in the repository, and `.editorconfig` asks for CRLF. On 2026-11-21, 143 files were CRLF in the index, and 1,161 were LF. A tool that follows `.gitattributes` changes each line of a CRLF file. Decide the rule. Then make all the files agree in one commit, and name that commit in `.git-blame-ignore-revs`.
+  4. **The line endings.** `.gitattributes` asks for LF in the repository, and `.editorconfig` asks for CRLF. On 2026-11-21, 143 files were CRLF in the index, and 1,161 were LF. A tool that follows `.gitattributes` changes each line of a CRLF file. Decide the rule. Then make all the files agree in one commit, and name that commit in `.git-blame-ignore-revs`. *(2026-11-23)* The maintainer decided on LF, in the repository and in `.editorconfig`. Make the change in one commit on `develop` after the merge of beta.3, when no other branch is open.
+
+  Since 0.11.0-beta.3, `SECURITY.md` asks for a report through the private vulnerability reporting of GitHub.
 
 - [ ] **Read only the kept result of a formula in the import of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
 

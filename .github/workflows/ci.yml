@@ -19,7 +19,8 @@ jobs:
     name: Build, Lint, Format & Test
     # Pinned rather than ubuntu-latest, so that the image changes only when this line does.
     runs-on: ubuntu-24.04
-    # A run takes 12 to 19 minutes. The default of GitHub is 6 hours, which a test that waits for ever would use.
+    # A run takes 12 to 19 minutes, and the two more time zones add about 5. The default of GitHub is 6 hours, which a test
+    # that waits for ever would use.
     timeout-minutes: 60
 
     steps:
@@ -110,6 +111,20 @@ jobs:
             --logger "trx;LogFileName=test-results.trx" \
             --blame-hang-timeout 10m --blame-hang-dump-type none \
             Zametek.ProjectPlan.slnf
+
+      - name: Run the tests of the view models in two more time zones
+        # The step above runs in UTC, and the hook runs in the time zone of the maintainer. Earlier defects depended on the
+        # zone, for example a load that failed on a computer east of UTC (DateTimeCalculatorTests). On Linux, TZ sets
+        # TimeZoneInfo.Local. Pacific/Kiritimati is 14 hours east of UTC, and America/Los_Angeles is 7 or 8 hours west. The core,
+        # the imports and the saves are in this project. On 2026-11-23 it passed in the three zones in WSL, in 1.5 to 3 minutes
+        # each.
+        run: |
+          for zone in Pacific/Kiritimati America/Los_Angeles; do
+            echo "Time zone: $zone"
+            TZ="$zone" dotnet test --no-build --configuration Release --verbosity normal \
+              --blame-hang-timeout 10m --blame-hang-dump-type none \
+              test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj
+          done
 
       - name: Upload test results
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

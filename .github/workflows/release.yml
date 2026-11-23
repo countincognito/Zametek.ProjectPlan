@@ -6,13 +6,37 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
+# The token of each job can only read. The build jobs restore the packages of other parties and run their build tasks, and
+# so only the job that makes the release can write (permissions of create-release).
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  # The name of the tag is checked first, before any job uses it. The pattern of the trigger takes any characters after
+  # the hyphen. Each script gets the name through the environment, and not in its text, so that a shell does not read it as
+  # a command (as enforce-master-source.yml does).
+  check-tag:
+    name: Check the tag
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check the tag against SemVer
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          SEMVER_REGEX='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'
+
+          if [[ "$VERSION" =~ $SEMVER_REGEX ]]; then
+            echo "Valid SemVer: $VERSION"
+          else
+            echo "Invalid SemVer: $VERSION"
+            exit 1
+          fi
+
   build-windows:
     name: Build Windows (${{ matrix.arch }})
     runs-on: windows-2025
+    needs: check-tag
     strategy:
       matrix:
         arch: [x64, x86, arm64]
@@ -46,14 +70,18 @@ jobs:
 
       - name: Package Desktop
         shell: pwsh
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          $version = "${{ github.ref_name }}"
+          $version = $env:VERSION
           Compress-Archive -Path artifacts/desktop/win-${{ matrix.arch }}/* -DestinationPath "projectplandotnet-${version}-win-${{ matrix.arch }}.zip"
 
       - name: Package CLI
         shell: pwsh
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          $version = "${{ github.ref_name }}"
+          $version = $env:VERSION
           Compress-Archive -Path artifacts/cli/win-${{ matrix.arch }}/* -DestinationPath "zpp-${version}-win-${{ matrix.arch }}.zip"
 
       - name: Upload artifacts
@@ -66,6 +94,7 @@ jobs:
   build-linux:
     name: Build Linux (${{ matrix.arch }})
     runs-on: ubuntu-24.04
+    needs: check-tag
     strategy:
       matrix:
         arch: [x64, arm64]
@@ -98,13 +127,15 @@ jobs:
           HUSKY: 0
 
       - name: Package Desktop
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${{ github.ref_name }}"
           tar -czf "projectplandotnet-${VERSION}-linux-${{ matrix.arch }}.tar.gz" -C artifacts/desktop/linux-${{ matrix.arch }} .
 
       - name: Package CLI
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${{ github.ref_name }}"
           tar -czf "zpp-${VERSION}-linux-${{ matrix.arch }}.tar.gz" -C artifacts/cli/linux-${{ matrix.arch }} .
 
       - name: Upload artifacts
@@ -117,6 +148,7 @@ jobs:
   build-macos:
     name: Build macOS (${{ matrix.arch }})
     runs-on: macos-26
+    needs: check-tag
     strategy:
       matrix:
         arch: [x64, arm64]
@@ -149,13 +181,15 @@ jobs:
           HUSKY: 0
 
       - name: Package Desktop
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${{ github.ref_name }}"
           tar -czf "projectplandotnet-${VERSION}-osx-${{ matrix.arch }}.tar.gz" -C artifacts/desktop/osx-${{ matrix.arch }} .
 
       - name: Package CLI
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${{ github.ref_name }}"
           tar -czf "zpp-${VERSION}-osx-${{ matrix.arch }}.tar.gz" -C artifacts/cli/osx-${{ matrix.arch }} .
 
       - name: Upload artifacts
@@ -169,6 +203,8 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-24.04
     needs: [build-windows, build-linux, build-macos]
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -183,20 +219,17 @@ jobs:
       - name: List artifacts
         run: ls -la release-artifacts/
 
+      - name: Write the checksums
+        working-directory: release-artifacts
+        run: |
+          sha256sum -- * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - name: Generate release notes
         id: release-notes
+        env:
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${{ github.ref_name }}"
-          
-          SEMVER_REGEX="^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$"
-          
-          if [[ "$VERSION" =~ $SEMVER_REGEX ]]; then
-            echo "Valid SemVer: $VERSION"
-          else
-            echo "Invalid SemVer: $VERSION"
-            exit 1
-          fi
-
           cat > release-notes.md << EOF
           ## Downloads
 
@@ -229,6 +262,10 @@ jobs:
           **Windows:** Extract the zip file and run \`projectplandotnet.exe\` (Desktop) or \`zpp.exe\` (CLI).
 
           **Linux/macOS:** Extract the tar.gz, make executable (\`chmod +x projectplandotnet\` or \`chmod +x zpp\`), and run.
+
+          ## Checksums
+
+          \`SHA256SUMS.txt\` has the SHA-256 checksum of each file. On Linux, \`sha256sum -c SHA256SUMS.txt --ignore-missing\` checks the files that you downloaded. On macOS, use \`shasum -a 256 -c SHA256SUMS.txt --ignore-missing\`. On Windows, compare the result of \`Get-FileHash <file>\` with the line of the file.
           EOF
 
       - name: Create GitHub Release
@@ -241,14 +278,15 @@ jobs:
             const releaseNotes = fs.readFileSync('release-notes.md', 'utf8');
             const tag = context.ref.replace('refs/tags/', '');
 
-            // Create the release
+            // Create the release as a draft. Only after each file is uploaded does the release become public: a failed upload
+            // leaves a draft, and not a public release with some of its files.
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: tag,
               name: tag,
               body: releaseNotes,
-              draft: false,
+              draft: true,
               prerelease: tag.includes('-'),
             });
 
@@ -263,7 +301,9 @@ jobs:
 
               const contentType = file.endsWith('.zip')
                 ? 'application/zip'
-                : 'application/gzip';
+                : file.endsWith('.txt')
+                  ? 'text/plain'
+                  : 'application/gzip';
 
               console.log(`Uploading ${file} (${stat.size} bytes)...`);
 
@@ -281,5 +321,13 @@ jobs:
 
               console.log(`Uploaded ${file}`);
             }
+
+            // Each file is there: make the release public.
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.data.id,
+              draft: false,
+            });
 
             console.log(`Release ${tag} created: ${release.data.html_url}`);
