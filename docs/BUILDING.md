@@ -129,7 +129,22 @@ The build writes the installer (for example `projectplandotnet.0.11.0-beta.3.ins
 
 `Directory.Build.props` sets the version of the application: `VersionPrefix` (for example `0.11.0`) and `VersionSuffix` (for example `beta.3`, and empty for a release). Each assembly gets the version, and the application, `zpp --version` and `GET /v1/info` show it. The MSI gets `VersionPrefix` with `.0` after it as the version of the package, and the version in the name of its file.
 
-Some files still have the version as text. These are the two MSIX manifests (`Package.appxmanifest`, with `VersionPrefix` and `.0`), and the examples in `docs/API.md`, `docs/openapi.yaml` and `docs/CLIENT-SERVER-QUICK-START.md`. When you change the version, change these files too. The test `AppVersionTests` fails when one of them differs.
+Some files still have the version as text. These are the two MSIX manifests (`Package.appxmanifest`, with `VersionPrefix` and `.0`), and the examples in `docs/API.md`, `docs/openapi.yaml` and `docs/CLIENT-SERVER-QUICK-START.md`. When you change the version, change these files too. `THIRD-PARTY-NOTICES.txt` also has the version: make it again with the script (refer to [The notices of the other parties](#the-notices-of-the-other-parties)). The test `AppVersionTests` fails when one of these files differs.
+
+## The notices of the other parties
+
+`THIRD-PARTY-NOTICES.txt` at the root of the repository gives each package that the desktop application and `zpp` ship, with its version, its license and its copyright. It also has the texts of the licenses, and the license files and the notices of the packages. The license and the notices of the runtime of .NET are in it too. The build copies the file next to each program, and the MSI installs it.
+
+The script `pkg/notices/make-notices.py` makes the file. Run it after each change of a package and each change of the version. It needs Python 3.8 or a newer version and a build of the two programs. It also needs the runtime packs of .NET 10 in the cache of NuGet. A self-contained publish puts the runtime packs there, for example `make publish-cli`. Enter these commands from the root of the repository:
+
+```
+dotnet build Zametek.ProjectPlan.slnf
+python pkg/notices/make-notices.py
+```
+
+The script reads the `deps.json` file of each program, and the `.nuspec` file of each package in the cache of NuGet. The two programs can ship two versions of one package, and the file then gives both. Three texts do not come from a package, and thus the script has them. These are the text of the MS-PL (for Svg.Custom), and the copyright of MSAGL and of the font Inter.
+
+The test `ThirdPartyNoticesTests` fails when a package that `zpp` ships is not in the file with its version. No test reads the build of the desktop application. Thus, after a change of a package that only the desktop application uses, run the script.
 
 ## MSIX packages (Windows)
 

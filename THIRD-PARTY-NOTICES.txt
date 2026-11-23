@@ -96,6 +96,11 @@ Avalonia.Remote.Protocol 12.1.3
   Copyright: Copyright 2013-2026 © The AvaloniaUI Project
   Project: https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link
 
+Avalonia.Skia 12.0.0
+  License: MIT
+  Copyright: Copyright 2013-2026 © The AvaloniaUI Project
+  Project: https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link
+
 Avalonia.Skia 12.1.3
   License: MIT
   Copyright: Copyright 2013-2026 © The AvaloniaUI Project
@@ -495,12 +500,22 @@ SixLabors.Fonts 1.0.0
   Copyright: Copyright © Six Labors
   Project: https://github.com/SixLabors/Fonts
 
+SkiaSharp 3.119.3-preview.1.1
+  License: MIT
+  Copyright: © Microsoft Corporation. All rights reserved.
+  Project: https://go.microsoft.com/fwlink/?linkid=868515
+
 SkiaSharp 3.119.4
   License: MIT
   Copyright: © Microsoft Corporation. All rights reserved.
   Project: https://go.microsoft.com/fwlink/?linkid=868515
 
 SkiaSharp.HarfBuzz 3.119.0
+  License: MIT
+  Copyright: © Microsoft Corporation. All rights reserved.
+  Project: https://go.microsoft.com/fwlink/?linkid=868515
+
+SkiaSharp.NativeAssets.Linux 3.119.3-preview.1.1
   License: MIT
   Copyright: © Microsoft Corporation. All rights reserved.
   Project: https://go.microsoft.com/fwlink/?linkid=868515
@@ -515,7 +530,17 @@ SkiaSharp.NativeAssets.Linux.NoDependencies 3.119.4
   Copyright: © Microsoft Corporation. All rights reserved.
   Project: https://go.microsoft.com/fwlink/?linkid=868515
 
+SkiaSharp.NativeAssets.macOS 3.119.3-preview.1.1
+  License: MIT
+  Copyright: © Microsoft Corporation. All rights reserved.
+  Project: https://go.microsoft.com/fwlink/?linkid=868515
+
 SkiaSharp.NativeAssets.macOS 3.119.4
+  License: MIT
+  Copyright: © Microsoft Corporation. All rights reserved.
+  Project: https://go.microsoft.com/fwlink/?linkid=868515
+
+SkiaSharp.NativeAssets.Win32 3.119.3-preview.1.1
   License: MIT
   Copyright: © Microsoft Corporation. All rights reserved.
   Project: https://go.microsoft.com/fwlink/?linkid=868515
@@ -679,8 +704,8 @@ Cascadia Mono, in Zametek.Graphs.Avalonia
 .NET
 ====================================================================================================
 
-The runtime of .NET, and the runtime of ASP.NET Core in zpp (version 10.0.15 when this file was made). License: MIT.
-The license and the notices of the two runtimes follow.
+The runtime of .NET 10, and the runtime of ASP.NET Core 10 in zpp. License: MIT. The license and the notices of the two
+runtimes follow.
 
 ----------------------------------------------------------------------------------------------------
 The MIT License (MIT)
@@ -4606,7 +4631,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 NOTICES OF THE PACKAGES
 ====================================================================================================
 
-Notices of HarfBuzzSharp.NativeAssets.Linux 8.3.1.3 (THIRD-PARTY-NOTICES.txt), HarfBuzzSharp.NativeAssets.macOS 8.3.1.3 (THIRD-PARTY-NOTICES.txt), HarfBuzzSharp.NativeAssets.Win32 8.3.1.3 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Linux 3.119.4 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Linux.NoDependencies 3.119.4 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.macOS 3.119.4 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Win32 3.119.4 (THIRD-PARTY-NOTICES.txt)
+Notices of HarfBuzzSharp.NativeAssets.Linux 8.3.1.3 (THIRD-PARTY-NOTICES.txt), HarfBuzzSharp.NativeAssets.macOS 8.3.1.3 (THIRD-PARTY-NOTICES.txt), HarfBuzzSharp.NativeAssets.Win32 8.3.1.3 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Linux 3.119.3-preview.1.1 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Linux 3.119.4 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Linux.NoDependencies 3.119.4 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.macOS 3.119.3-preview.1.1 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.macOS 3.119.4 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Win32 3.119.3-preview.1.1 (THIRD-PARTY-NOTICES.txt), SkiaSharp.NativeAssets.Win32 3.119.4 (THIRD-PARTY-NOTICES.txt)
 ----------------------------------------------------------------------------------------------------
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do not translate or localize

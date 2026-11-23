@@ -65,8 +65,18 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             text.ShouldContain(string.Format(System.Globalization.CultureInfo.InvariantCulture, format, AppVersion.Text));
         }
 
+        // The notices of the other parties give the version of the release that they are for. The script that makes them reads
+        // it from Directory.Build.props (pkg/notices/make-notices.py), and so a new version needs the file made again.
+        [Fact]
+        public void Notices_Given_TheNoticesOfTheOtherParties_Then_TheyAreForThisVersion()
+        {
+            string[] lines = File.ReadAllLines(Path.Combine(Root(), @"THIRD-PARTY-NOTICES.txt"));
+
+            lines.ShouldContain($@"projectplan.net and zpp, version {AppVersion.Text}", @"Run pkg/notices/make-notices.py (docs/BUILDING.md).");
+        }
+
         // The folder of the repository: the first folder above the tests that has the solution filter.
-        private static string Root()
+        internal static string Root()
         {
             for (DirectoryInfo? folder = new(AppContext.BaseDirectory); folder is not null; folder = folder.Parent)
             {

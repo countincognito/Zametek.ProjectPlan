@@ -98,12 +98,19 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Keep the notices of the other parties current** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  Since 0.11.0-beta.3, `THIRD-PARTY-NOTICES.txt` at the root of the repository gives the license and the copyright of each package that the two programs ship. It also has the texts of the licenses and the notices of the packages. The build copies it next to each program, and the MSI installs it. The dialog "About" names it. A script that is not in the repository made it from the packages of the build (the `deps.json` files of the two programs and the `.nuspec` files in the cache of NuGet). Four things remain:
+  Since 0.11.0-beta.3, `THIRD-PARTY-NOTICES.txt` at the root of the repository gives the license and the copyright of each package that the two programs ship. It also has the texts of the licenses and the notices of the packages. The build copies it next to each program, and the MSI installs it. The dialog "About" names it. The script `pkg/notices/make-notices.py` makes it (refer to [The notices of the other parties](BUILDING.md#the-notices-of-the-other-parties)). Three things remain:
 
-  1. **A new package or a new version.** The file gives the version of each package. Nothing makes sure that the file has each package of a build, with its version. Thus, each bump of a package makes the file wrong. [Build from source](BUILDING.md) does not name the file. Put the script into the repository, and say in that document when to run it. A test can then compare the file with the `deps.json` files.
+  1. **The packages of the desktop application.** `ThirdPartyNoticesTests` compares the file with the `deps.json` file of `zpp` only, because no test project has the build of the desktop application. Thus, the file can lack a package that only the desktop application ships, and no test fails.
   2. **The texts that are not from a file.** The text of the MS-PL (Svg.Custom) is the published text, written into the script, because no file on the computer had it. The copyright of MSAGL and of Inter is from their projects, because the packages do not give it. Read these against the projects.
   3. **The LGPL of MPXJ.** The license of MPXJ.Net is the LGPL 2.1 or later. A release puts it into one file with the program (`PublishSingleFile`). The LGPL asks that a user can change the library and use the program with the changed library. The review did not decide if a single file permits this, and this entry is not legal advice.
-  4. **The version of the application.** The head of the file says `version 0.11.0-beta.3`. `AppVersionTests` does not read this file, and [The version of a release](BUILDING.md#the-version-of-a-release) does not list it. Thus, the file of the next release keeps this version, unless a person makes the file again. Add the file to the test, or remove the version from the file. The section ".NET" of the file also gives the version of the runtime on the day of the script (10.0.15). A release from `release.yml` can have a later runtime.
+
+- [ ] **Give zpp the versions of Avalonia.Skia and SkiaSharp that the desktop application has** *(2026-11-23, found by the script of the notices)*
+
+  `zpp` ships Avalonia.Skia 12.0.0 and SkiaSharp 3.119.3-preview.1.1 (with its native packages). The desktop application ships Avalonia.Skia 12.1.3 and SkiaSharp 3.119.4. The desktop application gets these versions from Avalonia.Desktop. `zpp` does not have Avalonia.Desktop. It gets Avalonia.Skia from `Svg.Controls.Skia.Avalonia` 12.0.0.13 in Zametek.Graphs.Avalonia, and NuGet takes the lowest version that the package allows.
+
+  Thus, `zpp` draws its charts and graphs with a preview of SkiaSharp. It also has the native packages of two versions on Linux, because Zametek.Graphs.Avalonia references `SkiaSharp.NativeAssets.Linux.NoDependencies` 3.119.4.
+
+  Nobody saw a different picture or a failure. A reference to Avalonia.Skia 12.1.3 in Zametek.Graphs.Avalonia probably gives both programs the same versions. Then make the notices again.
 
 - [ ] **Do four smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
