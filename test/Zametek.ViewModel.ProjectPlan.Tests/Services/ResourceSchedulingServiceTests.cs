@@ -345,25 +345,30 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Theory]
-        [InlineData(1_024, 4_096)]
-        [InlineData(32_768, null)]
-        public void BuildTrackingSeriesSet_GivenASlowProgress_Then_AProjectedFinishOnlyWithinTheLargestTimeOfTheCompiler(int pointTime, int? finish)
+        [InlineData(8, 16, 64)]
+        [InlineData(8, 32, null)]
+        [InlineData(16_384, 16_384, 65_536)]
+        [InlineData(16_384, 32_768, null)]
+        public void BuildTrackingSeriesSet_GivenASlowProgress_Then_AProjectedFinishOnlyWithinTheBounds(int duration, int pointTime, int? finish)
         {
-            // 25 % of an activity of 8 days is 2 days of progress at the time of the point. The slope is 2 / time, and the
-            // projected finish is 8 / slope = 4 x time: day 4,096, or day 131,072. A slope near zero gave a finish of many
-            // millions of days, and the chart with dates then counted to it one day at a time (from the review of src, test and
-            // pkg). A finish beyond the largest time of the compiler (100,000 days) is now no finish. The numbers are exact in
-            // binary, so that the round up of the finish does not depend on an error of the last bit.
-            GraphLimits.MaximumTimeValue.ShouldBeInRange(4_096, 131_071);
+            // 25 % of the activity is done at the time of the point. The slope is (duration / 4) / time, and the projected
+            // finish is duration / slope = 4 x time. A slope near zero gave a finish of many millions of days, and the chart with
+            // dates then counted to it one day at a time (from the review of src, test and pkg). Two bounds now apply. A finish
+            // after 10 times the finish of the plan is no finish: day 64 is in the bound of a plan of 8 days, and day 128 is
+            // not. A finish after the largest time of the compiler (100,000 days) is no finish: for a plan of 16,384 days, day
+            // 65,536 is in both bounds, and day 131,072 is in the first bound only. The numbers are exact in binary, so that the
+            // round up of the finish does not depend on an error of the last bit.
+            ResourceSchedulingService.MaximumProjectedFinishMultiple.ShouldBe(10);
+            GraphLimits.MaximumTimeValue.ShouldBeInRange(65_536, 131_071);
             List<ActivityModel> activities =
             [
                 new ActivityModel
                 {
                     Id = 1,
                     Name = @"Act One",
-                    Duration = 8,
+                    Duration = duration,
                     EarliestStartTime = 0,
-                    EarliestFinishTime = 8,
+                    EarliestFinishTime = duration,
                     AllocatedToResources = [1],
                     Trackers = [new ActivityTrackerModel { Time = pointTime - 1, ActivityId = 1, PercentageComplete = 25 }],
                 },

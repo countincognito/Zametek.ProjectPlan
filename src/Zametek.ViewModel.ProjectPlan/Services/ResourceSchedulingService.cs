@@ -8,6 +8,11 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ResourceSchedulingService
         : IResourceSchedulingService
     {
+        /// <summary>
+        /// A projected finish of the progress after this multiple of the finish of the plan is no finish.
+        /// </summary>
+        public const int MaximumProjectedFinishMultiple = 10;
+
         #region Fields
 
         private readonly ProjectPlanMapper m_Mapper;
@@ -800,7 +805,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var lastTrackingPoint = planPointSeries.Last();
 
-                    if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit) is int projectedFinishTime)
+                    if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit, lastTrackingPoint.Time) is int projectedFinishTime)
                     {
                         progressProjectionPointSeries.Add(new TrackingPointModel
                         {
@@ -868,7 +873,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var lastTrackingPoint = accumulator.Plan.Last();
 
-                        if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit) is int projectedFinishTime)
+                        if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit, lastTrackingPoint.Time) is int projectedFinishTime)
                         {
                             accumulator.ProgressProjection.Add(new TrackingPointModel
                             {
@@ -921,8 +926,10 @@ namespace Zametek.ViewModel.ProjectPlan
         // The day of the projected finish: the planned value over the slope of the line through the progress. A slope that is
         // not above zero gives no finish. A slope near zero gave a day of many millions: the cast to int then had no meaning,
         // and the chart with dates counted to that day one day at a time, to the end of the range of the dates, and threw. A
-        // day beyond the largest time of the compiler is not a day of a schedule, and so it gives no finish too.
-        private static int? ProjectedFinishTime(double plannedValue, double slope)
+        // day beyond the largest time of the compiler is not a day of a schedule, and so it gives no finish too. Nor does a
+        // day after MaximumProjectedFinishMultiple times the finish of the plan: such a projection is of no use in the chart,
+        // and the first count of its days to a date takes seconds (about 5 s for 100,000 days).
+        private static int? ProjectedFinishTime(double plannedValue, double slope, int planFinishTime)
         {
             if (double.IsNaN(slope)
                 || slope <= 0)
@@ -933,7 +940,8 @@ namespace Zametek.ViewModel.ProjectPlan
             double finish = Math.Ceiling(plannedValue / slope);
 
             if (!double.IsFinite(finish)
-                || finish > GraphLimits.MaximumTimeValue)
+                || finish > GraphLimits.MaximumTimeValue
+                || finish > (double)MaximumProjectedFinishMultiple * planFinishTime)
             {
                 return null;
             }
@@ -1081,7 +1089,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var lastTrackingPoint = planPointSeries.Last();
 
-                        if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit) is int projectedFinishTime)
+                        if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit, lastTrackingPoint.Time) is int projectedFinishTime)
                         {
                             progressProjectionPointSeries.Add(new TrackingPointModel
                             {

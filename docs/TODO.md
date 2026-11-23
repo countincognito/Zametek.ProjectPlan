@@ -14,14 +14,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   2. **The desktop.** The desktop opens a project file with no check before the load. Decide if the calendar ignores such a rule, or if the open refuses the file.
   3. **The number of the holidays.** Each rule costs a read for each range of days. Give the number of the holidays a limit, and decide the number.
 
-- [ ] **Decide if the projected finish of the earned value chart needs a bound from the plan** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `ResourceSchedulingService` divides the planned value by the slope of a line fit, and the result is the day of the projected finish. A slope near zero gave a day number of many millions. The review reported that the chart with dates then counted to the end of the range of dates and threw.
-
-  Since 0.11.0-beta.3, a finish after the largest time of the compiler (100,000 days) is no finish (`ProjectedFinishTime`). But `DateTimeCalculator.AddDays` still counts to a far finish one day at a time, under the lock of the calculator. On 2026-11-23, the first count of 100,000 days took about 5 s, with weekends or with the default holidays. The next count of the same range took 3 ms.
-
-  A bound of a multiple of the finish of the plan, for example 10 times, keeps this cost small. Such a projection is also of no use in the chart. Decide the multiple.
-
 - [ ] **Decide if a tracked scenario that passes the limit of a compile ends the job** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `JobRunner` loads and compiles each other tracked scenario for `compileTracked` and for the scenario chart. A tracked scenario with compilation errors gets its errors in the answer, and the job goes on. But a tracked scenario that passes the limit of a compile throws `GraphCompilationTimeoutException` out of the loop. The job then ends with exit code 4 (`compilation-timed-out`), with no metrics and no outputs. The message does not name the scenario.
