@@ -800,17 +800,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var lastTrackingPoint = planPointSeries.Last();
 
-                    if (projectedLinearFit > 0)
+                    if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit) is int projectedFinishTime)
                     {
-                        var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
-
                         progressProjectionPointSeries.Add(new TrackingPointModel
                         {
                             ActivityId = lastTrackingPoint.ActivityId,
                             ActivityName = lastTrackingPoint.ActivityName,
                             Value = lastTrackingPoint.Value,
                             ValuePercentage = lastTrackingPoint.ValuePercentage,
-                            Time = (int)Math.Ceiling(projectedCompletion)
+                            Time = projectedFinishTime
                         });
                     }
                 }
@@ -870,17 +868,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var lastTrackingPoint = accumulator.Plan.Last();
 
-                        if (projectedLinearFit > 0)
+                        if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit) is int projectedFinishTime)
                         {
-                            var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
-
                             accumulator.ProgressProjection.Add(new TrackingPointModel
                             {
                                 ActivityId = lastTrackingPoint.ActivityId,
                                 ActivityName = lastTrackingPoint.ActivityName,
                                 Value = lastTrackingPoint.Value,
                                 ValuePercentage = lastTrackingPoint.ValuePercentage,
-                                Time = (int)Math.Ceiling(projectedCompletion)
+                                Time = projectedFinishTime
                             });
                         }
                     }
@@ -920,6 +916,29 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return trackingSeriesSet;
+        }
+
+        // The day of the projected finish: the planned value over the slope of the line through the progress. A slope that is
+        // not above zero gives no finish. A slope near zero gave a day of many millions: the cast to int then had no meaning,
+        // and the chart with dates counted to that day one day at a time, to the end of the range of the dates, and threw. A
+        // day beyond the largest time of the compiler is not a day of a schedule, and so it gives no finish too.
+        private static int? ProjectedFinishTime(double plannedValue, double slope)
+        {
+            if (double.IsNaN(slope)
+                || slope <= 0)
+            {
+                return null;
+            }
+
+            double finish = Math.Ceiling(plannedValue / slope);
+
+            if (!double.IsFinite(finish)
+                || finish > GraphLimits.MaximumTimeValue)
+            {
+                return null;
+            }
+
+            return (int)finish;
         }
 
         private static List<TrackingPointModel> CombineStepSeries(
@@ -1062,17 +1081,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var lastTrackingPoint = planPointSeries.Last();
 
-                        if (projectedLinearFit > 0)
+                        if (ProjectedFinishTime(lastTrackingPoint.Value, projectedLinearFit) is int projectedFinishTime)
                         {
-                            var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
-
                             progressProjectionPointSeries.Add(new TrackingPointModel
                             {
                                 ActivityId = lastTrackingPoint.ActivityId,
                                 ActivityName = lastTrackingPoint.ActivityName,
                                 Value = lastTrackingPoint.Value,
                                 ValuePercentage = lastTrackingPoint.ValuePercentage,
-                                Time = (int)Math.Ceiling(projectedCompletion)
+                                Time = projectedFinishTime
                             });
                         }
                     }

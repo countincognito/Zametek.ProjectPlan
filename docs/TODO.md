@@ -20,13 +20,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read with `NullValueHandling.Ignore`, so that the defaults stay. Add a test with a null for each list of the newest version.
 
-- [ ] **Bound the projected finish of the earned value chart** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Decide if the projected finish of the earned value chart needs a bound from the plan** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  `ResourceSchedulingService` divides the last tracked value by the slope of a line fit, and the result is the day of the projected finish (three sites). The only check is that the slope is more than zero. A slope near zero gives a day number of many millions.
+  `ResourceSchedulingService` divides the planned value by the slope of a line fit, and the result is the day of the projected finish. A slope near zero gave a day number of many millions. The review reported that the chart with dates then counted to the end of the range of dates and threw.
 
-  With projections and dates, `EarnedValueChartManagerViewModel` gives this day number to `DateTimeCalculator.AddDays`. That method counts one day at a time, under the lock of the calculator. The review reported the result: the count goes to the end of the range of dates and throws. The build of the chart then shows an error after each compilation, and the export of the chart from `zpp` fails. A smaller day number makes each build slow.
+  Since 0.11.0-beta.3, a finish after the largest time of the compiler (100,000 days) is no finish (`ProjectedFinishTime`). But `DateTimeCalculator.AddDays` still counts to a far finish one day at a time, under the lock of the calculator. On 2026-11-23, the first count of 100,000 days took about 5 s, with weekends or with the default holidays. The next count of the same range took 3 ms.
 
-  Nobody ran this. Leave the projection out when it is beyond a multiple of the finish of the plan, or beyond the range of the dates.
+  A bound of a multiple of the finish of the plan, for example 10 times, keeps this cost small. Such a projection is also of no use in the chart. Decide the multiple.
 
 - [ ] **Decide if a tracked scenario that passes the limit of a compile ends the job** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
