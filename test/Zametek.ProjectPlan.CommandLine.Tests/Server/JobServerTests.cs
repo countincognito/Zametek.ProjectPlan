@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Text.Json;
 using Xunit;
 
@@ -448,19 +449,39 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         {
             // Each other test of the answer 413 sends a body with Content-Length. A body in chunks has no length, and the web
             // server finds that it is too large only while it reads it (from the review of src, test and pkg).
+            //
+            // The test writes the request on a socket, and it stops a little after the limit. Then it reads the answer. Before,
+            // HttpClient sent all of the body, and the server answered and closed the connection while the client still sent.
+            // On a busy computer the client then got a reset of the connection and no answer (the hook of 2026-11-23, with
+            // other tests in WSL at the same time). HttpClient reads the answer only after it has sent the body.
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxUploadMegabytes = 1 } });
-
             using MultipartFormDataContent form = RunningServer.CompileContent(new byte[2 * 1024 * 1024], @"large.zpp");
             byte[] body = await form.ReadAsByteArrayAsync();
-            using var chunked = new StreamContent(new MemoryStream(body));
-            chunked.Headers.ContentType = form.Headers.ContentType;
-            using var request = new HttpRequestMessage(HttpMethod.Post, @"/v1/projects/compile") { Content = chunked };
-            request.Headers.TransferEncodingChunked = true;
+            var address = new Uri(server.Address);
 
-            using HttpResponseMessage response = await server.Client.SendAsync(request);
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(address.Host, address.Port);
+            await using NetworkStream network = tcp.GetStream();
+            string head = $"POST /v1/projects/compile HTTP/1.1\r\nHost: {address.Authority}\r\nContent-Type: {form.Headers.ContentType}\r\nTransfer-Encoding: chunked\r\n\r\n";
+            await network.WriteAsync(Encoding.ASCII.GetBytes(head));
 
-            response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
-            (await ProblemDetailAsync(response)).ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1));
+            const int chunk = 64 * 1024;
+
+            for (int sent = 0; sent < (1024 * 1024) + chunk; sent += chunk)
+            {
+                await network.WriteAsync(Encoding.ASCII.GetBytes($"{chunk:X}\r\n"));
+                await network.WriteAsync(body.AsMemory(sent, chunk));
+                await network.WriteAsync(Encoding.ASCII.GetBytes("\r\n"));
+            }
+
+            await network.FlushAsync();
+
+            // The server closes the connection after the answer.
+            using var reader = new StreamReader(network, Encoding.UTF8);
+            string answer = await reader.ReadToEndAsync().WaitAsync(TimeSpan.FromMinutes(1));
+
+            answer.ShouldStartWith(@"HTTP/1.1 413 ");
+            answer.ShouldContain(JsonSerializer.Serialize(string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1), ProjectEndpoints.JsonOptions));
         }
 
         [Theory]
