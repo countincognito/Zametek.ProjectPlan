@@ -220,9 +220,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static DateTime ParseUntil(string value)
         {
+            // The form with Z is the form of UTC in RFC 5545, which a program or a workbook can give. The reader threw
+            // FormatException for it, in the constructor of ManagedHolidayViewModel on the main thread, and the
+            // application then ended. The calendar (Ical.Net) reads the same rule. The form without Z is read as UTC too.
             string[] formats =
             [
                 @"yyyyMMdd'T'HHmmss",
+                @"yyyyMMdd'T'HHmmss'Z'",
                 @"yyyyMMdd"
             ];
 

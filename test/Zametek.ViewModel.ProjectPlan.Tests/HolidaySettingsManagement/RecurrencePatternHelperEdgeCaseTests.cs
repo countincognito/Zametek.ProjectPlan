@@ -206,6 +206,18 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         #region ToRule - UNTIL date-only format is accepted
 
         [Fact]
+        public void ToRule_UntilInTheFormOfUtc_Is_ParsedAsTheFormWithoutZ()
+        {
+            // RFC 5545 writes a time in UTC with a Z at its end. The reader threw FormatException for it, and the desktop
+            // then ended (from the review of src, test and pkg).
+            RecurrenceRuleModel utc = RecurrencePatternHelper.ToRule("FREQ=DAILY;UNTIL=20271231T000000Z");
+            RecurrenceRuleModel plain = RecurrencePatternHelper.ToRule("FREQ=DAILY;UNTIL=20271231T000000");
+
+            utc.Until.ShouldNotBeNull().ShouldBe(plain.Until.ShouldNotBeNull());
+            utc.Until.Value.Kind.ShouldBe(plain.Until.Value.Kind);
+        }
+
+        [Fact]
         public void ToRule_UntilDateOnly_Format_Is_Parsed()
         {
             // iCal allows UNTIL=YYYYMMDD (without the time component).
