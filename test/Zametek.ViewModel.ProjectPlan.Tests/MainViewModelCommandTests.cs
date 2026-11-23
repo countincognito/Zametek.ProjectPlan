@@ -120,10 +120,12 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Theory]
         [InlineData(@"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=26", false)]
         [InlineData(@"FREQ=MINUTELY", true)]
-        public async Task OpenProjectFileAsync_Given_AHolidayRule_Then_TheDesktopRefusesOneThatRepeatsMoreOftenThanEachDay(string rule, bool refused)
+        [InlineData(@"FREQ=YEARLY;UNTIL=2027-12-31", true)]
+        public async Task OpenProjectFileAsync_Given_AHolidayRule_Then_TheDesktopRefusesOneThatRepeatsMoreOftenThanEachDayOrThatItCannotRead(string rule, bool refused)
         {
-            // The desktop opens a project file with no check before the load, and the load of such a rule took minutes (from
-            // the review of src, test and pkg). It now refuses the file with the message of HolidayRuleCheck, and loads nothing.
+            // The desktop opens a project file with no check before the load. The load of a rule that repeats more often than
+            // each day took minutes, and a rule that the dock of the holidays cannot read ended the application (from the
+            // review of src, test and pkg). It now refuses the file with the message of HolidayRuleCheck, and loads nothing.
             CoreViewModelFixture.EnsureReactiveUIInitialized();
             using var main = new MainThreadSequencerScope();
             using var pool = new TaskpoolSequencerScope();

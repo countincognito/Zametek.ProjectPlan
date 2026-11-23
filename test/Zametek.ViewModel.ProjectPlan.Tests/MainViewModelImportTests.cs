@@ -153,6 +153,37 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             m_Core.BuildProjectScenario().DependentActivities.ShouldNotBeEmpty();
         }
 
+        // The dock of the holidays reads each rule with a reader that knows less of RFC 5545 than the calendar, on the main
+        // thread with no catch, and a rule that it cannot read ended the application (from the review of src, test and pkg).
+        [Fact]
+        public async Task ImportProjectScenarioFileAsync_Given_AHolidayRuleThatTheDesktopCannotRead_Then_ItIsShownAndTheOpenProjectStaysAsItIs()
+        {
+            const string rule = @"FREQ=YEARLY;UNTIL=2027-12-31";
+            Guid scenarioId = m_Settings.ScenarioId;
+            HolidaySettingsModel holidaysBefore = m_Core.HolidaySettings;
+            m_Dialogs.OpenFilename = Write(new XlsxPackageBuilder()
+                .Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetHolidays, s => s
+                    .Row(1, ("A", TitleOf(nameof(HolidayModel.Id))), ("B", TitleOf(nameof(HolidayModel.Name))), ("C", TitleOf(nameof(HolidayModel.RecurrencePattern))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", TextOf(@"Last year")), ("C", TextOf(rule))))
+                .Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0))))
+                .Build());
+
+            await m_Main.ImportProjectScenarioFileAsync();
+
+            m_Dialogs.Errors.ShouldHaveSingleItem().Message.ShouldBe(string.Format(
+                System.Globalization.CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotReadable,
+                @"Last year",
+                rule,
+                HolidayRuleCheck.FindReadProblem(rule)));
+            m_Settings.ScenarioId.ShouldBe(scenarioId);
+            m_Settings.ScenarioTitle.ShouldBe(@"Alpha");
+            m_Core.BuildProjectScenario().DependentActivities.ShouldBeEmpty();
+            m_Core.HolidaySettings.ShouldBeSameAs(holidaysBefore);
+        }
+
         [Fact]
         public async Task ImportProjectScenarioFileAsync_Given_ACancelledDialog_Then_NothingHappens()
         {

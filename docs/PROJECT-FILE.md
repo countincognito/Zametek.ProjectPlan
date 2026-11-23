@@ -157,6 +157,8 @@ The smallest unit of a plan is a day. Thus, a rule must have the frequency `DAIL
 
 The import of a workbook refuses such a rule at its cell (`notAllowed`). The desktop application does not open a file with such a rule.
 
+The desktop application also reads each rule with a reader of its own, for the dock of the holidays. That reader knows less of RFC 5545 than the calendar. Thus, the desktop application does not open or import a file with a rule that this reader cannot read, for example `FREQ=YEARLY;UNTIL=2027-12-31`. `zpp` and `zpp serve` do not do this check.
+
 Each rule costs time in each count of the calendar. Thus, a scenario can have 1,000 holidays at most. `zpp` and `zpp serve` refuse more holidays before the load (`P0080`), for a project file and for an import. The desktop application does not open a file with more holidays.
 
 The compile gives `P0080` when the calendar cannot give the dates of the plan:

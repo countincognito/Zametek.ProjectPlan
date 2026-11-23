@@ -25,17 +25,18 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Let one reader read the holiday rules** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  The calendar reads a holiday rule with Ical.Net. The dock of the holidays reads the same text with a reader of its own, `RecurrencePatternHelper`, which knows less of RFC 5545. Three results:
+  The calendar reads a holiday rule with Ical.Net. The dock of the holidays reads the same text with a reader of its own, `RecurrencePatternHelper`, which knows less of RFC 5545. Two results:
 
-  1. **A rule that the desktop cannot read.** `ParseUntil` throws a `FormatException` for a value that it cannot read. The throw is in the constructor of `ManagedHolidayViewModel`. A subscription of `HolidaySettingsManagerViewModel` calls it on the main thread, with no catch. The handler for exceptions that nothing handles then probably ends the application ([ARCHITECTURE](ARCHITECTURE.md#14-the-recovery-copy)). `zpp` compiles the same file. Since 0.11.0-beta.3, the reader accepts `UNTIL=20271231T000000Z`, which is the UTC form of the RFC.
-  2. **A rule that changes.** `ParseDay` gives Monday for a day that it does not know, and thus `BYDAY=-1FR` becomes `BYDAY=MO`. `ToRule` ignores the parts that it does not know. After an add, a remove or an edit of one holiday, `UpdateHolidaySettingsToCore` writes each holiday again, from the rule that the reader made. The schedule then changes with no message.
-  3. **The edit dialog.** The review reported that the dialog keeps only the first value of `BYMONTHDAY`, `BYMONTH` and `BYSETPOS`.
+  1. **A rule that changes.** `ParseDay` gives Monday for a day that it does not know, and thus `BYDAY=-1FR` becomes `BYDAY=MO`. `ToRule` ignores the parts that it does not know. After an add, a remove or an edit of one holiday, `UpdateHolidaySettingsToCore` writes each holiday again, from the rule that the reader made. The schedule then changes with no message.
+  2. **The edit dialog.** The review reported that the dialog keeps only the first value of `BYMONTHDAY`, `BYMONTH` and `BYSETPOS`.
 
   A program, the zpp skill or a workbook can give such a rule. Nobody ran a file with one.
 
   *(2026-11-23)* Since 0.11.0-beta.3, `HolidayRuleCheck` reads the text of a rule too. It looks for a frequency below one day and for a part of a day, with a split of the text that is its own. Thus, three readers now read one text. When one reader reads the rules, let the check use the result of that reader.
 
-  Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there. Catch a rule that the reader cannot read, and report it.
+  *(2026-11-23)* Since 0.11.0-beta.3, the desktop refuses a file, a recovery copy or an import with a rule that `RecurrencePatternHelper` cannot read (`HolidayRuleCheck.FindReadProblem`). Before, the dock of the holidays threw on the main thread with no catch, and the application ended. `zpp` does not do this check. When the dock can show each rule that the calendar reads, remove this refusal.
+
+  Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there.
 
 - [ ] **Do five smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -139,7 +140,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The desktop application does not call `PlanCheck`. `SimulationTargetHelper.FinishTimeByEndOf` adds one day to the target date, and the getter of `TargetFinishTime` calculates the target at each read. Thus, a target date at the end of the range of dates throws in the getter and in each save. The setter reads the getter first, so the user cannot change the target. Only a program writes a target date today, and thus the risk is low. Nobody ran this.
 
-  *(2026-11-23)* Since 0.11.0-beta.3, the desktop does one check before the load of a file and of a recovery copy (`HolidayRuleCheck.FindProblem`). The check reads the holiday rules and the number of the holidays. It still does none of the checks of `PlanCheck`.
+  *(2026-11-23)* Since 0.11.0-beta.3, the desktop does one check before the load of a file and of a recovery copy (`HolidayRuleCheck.FindProblem`). The check reads the holiday rules and the number of the holidays. It also refuses a rule that the dock of the holidays cannot read, for an import too. It still does none of the checks of `PlanCheck`.
 
   Give the dates of an import the checks that the dates of a project file get. Decide if the application does these checks at the load of a file too.
 

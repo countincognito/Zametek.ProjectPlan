@@ -493,6 +493,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file cannot be imported. The holiday "{0}" has the rule "{1}", which the application cannot read: {2}.
+        /// </summary>
+        public static string Message_ImportHolidayRuleNotReadable {
+            get {
+                return ResourceManager.GetString("Message_ImportHolidayRuleNotReadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The sheet has no column with the title "{0}"..
         /// </summary>
         public static string Message_ImportMissingColumn {
@@ -1070,6 +1079,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ProjectHolidayRuleNotAllowed {
             get {
                 return ResourceManager.GetString("Message_ProjectHolidayRuleNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file cannot be opened. The holiday "{0}" of the scenario "{1}" has the rule "{2}", which the application cannot read: {3}.
+        /// </summary>
+        public static string Message_ProjectHolidayRuleNotReadable {
+            get {
+                return ResourceManager.GetString("Message_ProjectHolidayRuleNotReadable", resourceCulture);
             }
         }
         

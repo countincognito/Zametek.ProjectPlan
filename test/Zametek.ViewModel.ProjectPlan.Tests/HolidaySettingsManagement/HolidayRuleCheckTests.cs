@@ -59,6 +59,69 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 @"FREQ=MINUTELY"));
         }
 
+        // The dock of the holidays reads each rule with RecurrencePatternHelper, on the main thread with no catch. A rule that it
+        // cannot read ended the application (from the review of src, test and pkg). Each rule here is allowed (IsAllowed).
+        [Theory]
+        [InlineData(@"FREQ=YEARLY;UNTIL=2027-12-31")]
+        [InlineData(@"FREQ=YEARLY;COUNT=2;UNTIL=20271231")]
+        [InlineData(@"FREQ=YEARLY;INTERVAL=0")]
+        [InlineData(@"FREQ=YEARLY;BYMONTHDAY=last")]
+        [InlineData(@"RRULE:FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25")]
+        public void FindReadProblem_Given_ARuleThatTheDesktopCannotRead_Then_TheCauseFromTheReader(string rule)
+        {
+            HolidayRuleCheck.IsAllowed(rule).ShouldBeTrue();
+            Exception? thrown = Record.Exception(() => RecurrencePatternHelper.ToRule(rule));
+
+            thrown.ShouldNotBeNull();
+            HolidayRuleCheck.FindReadProblem(rule).ShouldBe(thrown.Message);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData(@"")]
+        [InlineData(@"FREQ=WEEKLY;BYDAY=SA,SU")]
+        [InlineData(@"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25")]
+        [InlineData(@"FREQ=DAILY;UNTIL=20271231T000000Z")]
+        public void FindReadProblem_Given_ARuleThatTheDesktopCanRead_Then_Null(string? rule)
+        {
+            HolidayRuleCheck.FindReadProblem(rule).ShouldBeNull();
+        }
+
+        [Fact]
+        public void FindProblem_Given_ARuleThatTheDesktopCannotRead_Then_TheHolidayTheScenarioTheRuleAndTheCause()
+        {
+            ProjectModel project = Project(
+                new HolidayModel { Id = 1, Name = @"Christmas Day", RecurrencePattern = @"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25" },
+                new HolidayModel { Id = 2, Name = @"Last year", RecurrencePattern = @"FREQ=YEARLY;UNTIL=2027-12-31" });
+
+            HolidayRuleCheck.FindProblem(project).ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ProjectHolidayRuleNotReadable,
+                @"Last year",
+                @"Base",
+                @"FREQ=YEARLY;UNTIL=2027-12-31",
+                HolidayRuleCheck.FindReadProblem(@"FREQ=YEARLY;UNTIL=2027-12-31")));
+        }
+
+        [Fact]
+        public void FindImportProblem_Given_ARuleThatTheDesktopCannotRead_Then_TheHolidayTheRuleAndTheCause()
+        {
+            HolidayModel[] holidays =
+            [
+                new HolidayModel { Id = 1, Name = @"Christmas Day", RecurrencePattern = @"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25" },
+                new HolidayModel { Id = 2, Name = @"Last year", RecurrencePattern = @"FREQ=YEARLY;UNTIL=2027-12-31" },
+            ];
+
+            HolidayRuleCheck.FindImportProblem(holidays).ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotReadable,
+                @"Last year",
+                @"FREQ=YEARLY;UNTIL=2027-12-31",
+                HolidayRuleCheck.FindReadProblem(@"FREQ=YEARLY;UNTIL=2027-12-31")));
+            HolidayRuleCheck.FindImportProblem(holidays[..1]).ShouldBeNull();
+            HolidayRuleCheck.FindImportProblem([]).ShouldBeNull();
+        }
+
         [Fact]
         public void FindProblem_Given_MoreHolidaysThanTheCalendarTakes_Then_TheScenarioAndTheCount()
         {

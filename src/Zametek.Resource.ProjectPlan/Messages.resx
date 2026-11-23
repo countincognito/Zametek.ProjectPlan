@@ -960,4 +960,10 @@
   <data name="Message_ThirdPartyNotices" xml:space="preserve">
     <value>The licenses of the software of other parties are in the file THIRD-PARTY-NOTICES.txt, in the folder of the application.</value>
   </data>
+  <data name="Message_ProjectHolidayRuleNotReadable" xml:space="preserve">
+    <value>The file cannot be opened. The holiday "{0}" of the scenario "{1}" has the rule "{2}", which the application cannot read: {3}</value>
+  </data>
+  <data name="Message_ImportHolidayRuleNotReadable" xml:space="preserve">
+    <value>The file cannot be imported. The holiday "{0}" has the rule "{1}", which the application cannot read: {2}</value>
+  </data>
 </root>

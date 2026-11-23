@@ -541,6 +541,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     importModel = m_CoreViewModel.ImportProjectScenarioFile(stream, format);
                 }
 
+                // The dock of the holidays reads each rule with a reader that knows less of RFC 5545 than the calendar, and a
+                // rule that it cannot read ended the application (HolidayRuleCheck.FindReadProblem). The import then fails
+                // before it changes anything.
+                if (HolidayRuleCheck.FindImportProblem(importModel.Holidays) is string problem)
+                {
+                    throw new InvalidDataException(problem);
+                }
+
                 m_ProjectScenarioManagerViewModel.ProcessProjectScenarioImport(importModel);
             }
 
@@ -726,7 +734,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // The desktop does no check before the load, as zpp does (PlanCheck). A holiday rule that repeats more often than each
         // day, or too many holidays, held the open for minutes, on a pool thread that nothing can stop (from the review of
-        // src, test and pkg). The open then fails with the message, as for a file that cannot be read.
+        // src, test and pkg). A rule that the dock of the holidays cannot read ended the application. The open then fails with
+        // the message, as for a file that cannot be read.
         private static void ThrowIfHolidaysNotAllowed(ProjectModel projectModel)
         {
             if (HolidayRuleCheck.FindProblem(projectModel) is string problem)
