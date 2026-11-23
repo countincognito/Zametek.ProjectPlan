@@ -102,18 +102,23 @@ namespace Zametek.ViewModel.ProjectPlan
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder),
                     RxSchedulers.MainThreadScheduler);
-                loadProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
                 LoadProjectScenarioFileCommand = loadProjectScenarioFileCommand;
-            }
-            {
+
                 ReactiveCommand<RxVoid, RxVoid> loadSelectedProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(
                     LoadSelectedProjectScenarioFileAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder),
                     RxSchedulers.MainThreadScheduler);
-                loadSelectedProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
                 LoadSelectedProjectScenarioFileCommand = loadSelectedProjectScenarioFileCommand;
+
+                // Each of the two commands that load writes IsLoading. Two calls of ToProperty gave the field the second
+                // helper only, and the first one was not disposed.
+                Observable.CombineLatest(
+                    loadProjectScenarioFileCommand.IsExecuting,
+                    loadSelectedProjectScenarioFileCommand.IsExecuting,
+                    (isLoading, isLoadingSelected) => isLoading || isLoadingSelected)
+                    .ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
             }
             {
                 ReactiveCommand<RxVoid, RxVoid> createEmptyProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(
@@ -122,18 +127,22 @@ namespace Zametek.ViewModel.ProjectPlan
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => true),
                     RxSchedulers.MainThreadScheduler);
-                createEmptyProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectScenarioFileCommand = createEmptyProjectScenarioFileCommand;
-            }
-            {
+
                 ReactiveCommand<RxVoid, RxVoid> createEmptyProjectScenarioFolderCommand = ReactiveCommand.CreateFromTask(
                     CreateEmptyProjectScenarioFolderAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => true),
                     RxSchedulers.MainThreadScheduler);
-                createEmptyProjectScenarioFolderCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectScenarioFolderCommand = createEmptyProjectScenarioFolderCommand;
+
+                // As IsLoading: each of the two commands that create writes IsCreating.
+                Observable.CombineLatest(
+                    createEmptyProjectScenarioFileCommand.IsExecuting,
+                    createEmptyProjectScenarioFolderCommand.IsExecuting,
+                    (isCreatingFile, isCreatingFolder) => isCreatingFile || isCreatingFolder)
+                    .ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
             }
             {
                 ReactiveCommand<RxVoid, RxVoid> renameProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(

@@ -16,7 +16,6 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
     <PackageReference Include="Dock.Avalonia" Version="12.1.0.6" />
     <PackageReference Include="Irihi.Ursa" Version="2.2.0" />
-    <PackageReference Include="Markdown.Avalonia.SyntaxHigh" Version="11.0.3" />
     <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
 	  <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.2" />
 	  <PackageReference Include="ScottPlot.Avalonia" Version="5.1.59" />

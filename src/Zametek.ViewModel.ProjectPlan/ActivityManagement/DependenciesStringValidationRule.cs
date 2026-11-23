@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -6,41 +7,11 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
+        // The separator of the ids in a text. It was a static property that anything could change, and nothing did.
+        public const char Separator = ',';
+
         private readonly static Regex s_Whitespace = new(@"\s+", RegexOptions.Compiled);
-        private static Regex? s_StrippedMatch;
-
-        #endregion
-
-        #region Ctors
-
-        static DependenciesStringValidationRule()
-        {
-            RefreshStrippedMatch();
-        }
-
-        #endregion
-
-        #region Properties
-
-        private static char s_Separator = ',';
-        public static char Separator
-        {
-            get => s_Separator;
-            set
-            {
-                s_Separator = value;
-                RefreshStrippedMatch();
-            }
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private static void RefreshStrippedMatch()
-        {
-            s_StrippedMatch = new Regex(@"^[0-9]*(" + Separator + @"[0-9]+)*$", RegexOptions.Compiled);
-        }
+        private readonly static Regex s_StrippedMatch = new($@"^[0-9]*({Separator}[0-9]+)*$", RegexOptions.Compiled);
 
         #endregion
 
@@ -51,13 +22,24 @@ namespace Zametek.ViewModel.ProjectPlan
             return s_Whitespace.Replace(input, string.Empty);
         }
 
-        public static IList<int> Parse(string input)//!!)
+        // The ids of a text that the pattern accepts, or null when an id is too large for an int. The pattern accepts a
+        // number of any length, and int.Parse threw OverflowException for a number of more than 10 digits, in the setter of
+        // DependenciesString.
+        public static IList<int>? Parse(string input)
         {
-            return [.. input
-                .Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(int.Parse)
-                .Distinct()
-                .OrderBy(x => x)];
+            var ids = new List<int>();
+
+            foreach (string part in input.Split(Separator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out int id))
+                {
+                    return null;
+                }
+
+                ids.Add(id);
+            }
+
+            return [.. ids.Distinct().Order()];
         }
 
         public static (IEnumerable<int>? output, string? errorMessage) Validate(string? value, int id)
@@ -67,13 +49,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 return ([], null);
             }
             string stripped = StripWhitespace(value);
-            if (!s_StrippedMatch?.IsMatch(stripped) ?? false)
+            if (!s_StrippedMatch.IsMatch(stripped))
             {
                 return (null, Resource.ProjectPlan.Labels.Label_InvalidFormat);
             }
             if (id != 0)
             {
-                IList<int> output = Parse(stripped);
+                IList<int>? output = Parse(stripped);
+                if (output is null)
+                {
+                    return (null, Resource.ProjectPlan.Labels.Label_InvalidFormat);
+                }
                 if (output.Contains(id))
                 {
                     return (null, Resource.ProjectPlan.Labels.Label_SelfDependency);

@@ -89,17 +89,14 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Handle `PointerCaptureLost`, and stop the drag with no change to the plan. The drag of a node and the pan of a graph have the same form ([the TODO file of the library](../src/Zametek.Graphs.Avalonia/TODO.md)).
 
-- [ ] **Do nine smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do six smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The rule of the holiday dialog.** `HolidayEditViewModel` builds its rule in four subscriptions that deliver on the task pool. `HolidaySettingsManagerViewModel` reads the rule when the dialog closes. If the pool is busy, for example during a simulation, the rule can be the one from before the last change. Build the rule with no `ObserveOn`.
   2. **A failure at the start.** In `App.OnFrameworkInitializationCompleted`, the set-up of the log is before the `try`. The catch writes to the log and to the standard error stream, which a `WinExe` program does not show. Then it ends the application with exit code 1. Thus, a settings folder that the application cannot make gives no message and no log. Show a message with the cause.
   3. **The build of a chart that fails.** Five subscriptions build a chart or the output with `Subscribe(async _ => await ...)`. Each build catches its exception and shows a dialog. Thus, a plan whose chart fails shows one dialog after each compilation, and the log has no line. Write the exception to the log, and show the state in the panel.
-  4. **`IsLoading` and `IsCreating`.** In the constructor of `ProjectScenarioManagerViewModel`, two commands each write `m_IsLoading`, and two commands each write `m_IsCreating`. Each property then follows its second command only. No UI component binds them today. Merge the two streams, or remove the properties.
-  5. **Two instances and the settings.** Each setter of `SettingService` writes all of the settings from memory, and nothing reads the file again. Thus, the last write of two instances removes the changes of the other instance, for example a recent file. The recovery copies already allow for two instances.
-  6. **Save Image with no size.** The review reported that the save of a chart image writes no file and shows no message when `ImageBounds` has no value (`GanttChartManagerViewModel`, `EarnedValueChartManagerViewModel`).
-  7. **A long number in the dependencies.** `DependenciesStringValidationRule` accepts a number of any length, and then it calls `int.Parse`. The review reported that a number of more than 10 digits thus throws an `OverflowException` in the setter of `DependenciesString`. The `Separator` of the rule is a public static field that can change, and nothing sets it.
-  8. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
-  9. **Things that nothing uses.** `DataGridTriStateSortingBehavior` is not complete, and nothing attaches it. `Zametek.View.ProjectPlan` references `Markdown.Avalonia.SyntaxHigh`, and no file uses it. Thus, the package and AvaloniaEdit are in each release. `Zametek.Resource.ProjectPlan` and the graph library copy `.resx` files to the output folder (`CopyToOutputDirectory`). Remove the three.
+  4. **Two instances and the settings.** Each setter of `SettingService` writes all of the settings from memory, and nothing reads the file again. Thus, the last write of two instances removes the changes of the other instance, for example a recent file. The recovery copies already allow for two instances.
+  5. **Save Image with no size.** The review reported that the save of a chart image writes no file and shows no message when `ImageBounds` has no value (`GanttChartManagerViewModel`, `EarnedValueChartManagerViewModel`).
+  6. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
 
 - [ ] **Give a test that waits for ever a time limit and a name** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -378,7 +375,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   - JsonSchema.Net 9.4.0 (9.7.0) and MessageBox.Avalonia 12.0.0 (12.1.0).
   - Svg.Controls.Skia.Avalonia 12.0.0.13 (12.0.0.17).
 
-  *(2026-11-23)* This list had Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2). Nothing uses that package. Remove the reference, and do not bump it. Refer to the entry "Do nine smaller things for the desktop application".
+  *(2026-11-23)* This list had Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2). Nothing used that package, and 0.11.0-beta.3 removes the reference.
 
 - [ ] **Build and test on Windows in CI, and collect the coverage** *(2026-11-14, from the review of `src`)*
 
