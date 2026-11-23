@@ -13,6 +13,10 @@ namespace Zametek.ProjectPlan.CommandLine
         TimeSpan JobTimeout,
         TimeSpan MaxCompileTimeout)
     {
+        // The connections that the server keeps open at once. It is not in the list above, so that the answer of a server
+        // before 0.11.0-beta.3, which does not have it, is still read: it is then 0.
+        public int MaxConnections { get; init; }
+
         public static LimitsResponse From(ServeLimits limits)
         {
             ArgumentNullException.ThrowIfNull(limits);
@@ -25,7 +29,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 limits.MaxChartHeight,
                 limits.MaxSimulationIterations,
                 TimeSpan.FromSeconds(limits.JobTimeoutSeconds),
-                TimeSpan.FromMilliseconds(limits.MaxCompileTimeoutMilliseconds));
+                TimeSpan.FromMilliseconds(limits.MaxCompileTimeoutMilliseconds))
+            {
+                MaxConnections = limits.MaxConnections,
+            };
         }
     }
 }

@@ -385,6 +385,23 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
         }
 
+        [Fact]
+        public async Task Run_Given_AnAnswerLargerThanZppReads_Then_ServerFailureThatSaysSo()
+        {
+            // zpp read each answer into memory with no limit of its own, and an address that sends a body with no end made it
+            // hold as much as 2 GB (from the review of src, test and pkg). Here the limit is 16 bytes, and the answer is larger.
+            // The time limit of the option keeps zpp from the request for the limits of the server.
+            await using FakeServer server = await FakeServer.StartAsync(_ => Ok());
+            var options = new Options { InputFilename = Plan, Server = server.Address, ServerTimeoutMilliseconds = 60_000 };
+            ClientSettings settings = ClientSettingsHelper.Resolve(options, Variables()).ShouldNotBeNull() with { MaxAnswerBytes = 16 };
+
+            ServerException thrown = await Should.ThrowAsync<ServerException>(() => JobClient.RunAsync(options, settings, new RecordingJobConsole(), TimeSpan.FromSeconds(30)));
+
+            thrown.Message.ShouldStartWith(string.Format(Resource.ProjectPlan.Messages.Message_ServerAnswerTooLarge, server.Address, 0, string.Empty));
+            server.Requests.Count.ShouldBe(1);
+            ClientSettings.DefaultMaxAnswerBytes.ShouldBe(1024L * 1024 * 1024);
+        }
+
         [Theory]
         [InlineData(false)]
         [InlineData(true)]

@@ -464,6 +464,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             RequireAtLeast(limits.MaxJobs, 1, nameof(ServeLimits.MaxJobs), nameof(ServeOptions.MaxJobs));
             RequireAtLeast(limits.MaxQueue, 0, nameof(ServeLimits.MaxQueue), nameof(ServeOptions.MaxQueue));
+            RequireAtLeast(limits.MaxConnections, 1, nameof(ServeLimits.MaxConnections), nameof(ServeOptions.MaxConnections));
             RequireAtLeast(limits.MaxUploadMegabytes, 1, nameof(ServeLimits.MaxUploadMegabytes), nameof(ServeOptions.MaxUploadMegabytes));
             RequireAtLeast(limits.MaxChartWidth, 1, nameof(ServeLimits.MaxChartWidth), nameof(ServeOptions.MaxChartSize));
             RequireAtLeast(limits.MaxChartHeight, 1, nameof(ServeLimits.MaxChartHeight), nameof(ServeOptions.MaxChartSize));
@@ -495,6 +496,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
             Add(values, nameof(ServeLimits.MaxJobs), options.MaxJobs);
             Add(values, nameof(ServeLimits.MaxQueue), options.MaxQueue);
+            Add(values, nameof(ServeLimits.MaxConnections), options.MaxConnections);
             Add(values, nameof(ServeLimits.MaxUploadMegabytes), options.MaxUploadMegabytes);
             Add(values, nameof(ServeLimits.MaxSimulationIterations), options.MaxSimulationIterations);
             Add(values, nameof(ServeLimits.JobTimeoutSeconds), options.JobTimeoutSeconds);

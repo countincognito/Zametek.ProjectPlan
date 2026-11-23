@@ -404,7 +404,8 @@ The server answers a request to compile a project when the job ends. A simulatio
     "maxChartHeight": 5000,
     "maxSimulationIterations": 100000,
     "jobTimeout": "PT2M",
-    "maxCompileTimeout": "PT1M"
+    "maxCompileTimeout": "PT1M",
+    "maxConnections": 100
   }
 }
 ```
@@ -412,6 +413,8 @@ The server answers a request to compile a project when the job ends. A simulatio
 - `culture` is the culture in which the server writes numbers and dates. It is an empty string for the invariant culture, which a server on Linux has when nobody sets a culture. `timeZone` is the time zone in which the server writes times. It gives the IANA name, for example `Europe/London`, and not the name that the system uses. It does not change the dates of a project, which are days (refer to [Times and constraints](PROJECT-FILE.md#times-and-constraints)).
 
 - `maxJobs` jobs can run at one time, and `maxQueue` more jobs can wait for a free place. The server turns away more requests (`503 busy`).
+
+- The server keeps `maxConnections` connections open at one time. It closes a connection above the limit at once, with no answer. The limit counts each connection, also one to a path that needs no API key.
 
 - A request with its files has a maximum of `maxUploadMegabytes` megabytes. A client that sends a larger request gets status `413` at once only when it sends the header `Expect: 100-continue`, as curl does. Without this header, the server closes the connection while the client sends the request, and the client gets no answer. Thus, compare the size of a request with `maxUploadMegabytes` before you send it. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
 
@@ -901,3 +904,4 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - A project can give the target of its simulation as a date: `TargetFinishDateTime` in its `SimulationSettings`. The project is done by the end of that date. The answer does not change.
 - The check of a project refuses two nodes with the same `Id` (`duplicateId`), and a node that is a parent of itself (`notAllowed` at its `ParentId`). `POST /v1/projects/scenarios` does this check of the nodes too, and it then gives `422` `project-not-readable`. Before, two nodes with one `Id` gave `500`.
 - The check of a project refuses a holiday rule that repeats more often than each day (`notAllowed` at its `RecurrencePattern`). The load of a plan with such a rule did not end in the time of a job.
+- The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time.

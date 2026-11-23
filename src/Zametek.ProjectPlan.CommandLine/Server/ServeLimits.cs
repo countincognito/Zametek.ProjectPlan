@@ -16,6 +16,11 @@ namespace Zametek.ProjectPlan.CommandLine
         // configured, it is twice MaxJobs.
         public int MaxQueue { get; init; } = 2 * Environment.ProcessorCount;
 
+        // How many connections the server keeps open at once. The web server closes a connection above the limit at once,
+        // with no answer. The paths that need no key (the description of the API, the schema and the health checks) are
+        // outside the limiter of the jobs, and so this limit is the only one that bounds their requests.
+        public int MaxConnections { get; init; } = 100;
+
         // The largest request, in megabytes of 1,048,576 bytes: the plan, its options, and the framing around them.
         public int MaxUploadMegabytes { get; init; } = 50;
 

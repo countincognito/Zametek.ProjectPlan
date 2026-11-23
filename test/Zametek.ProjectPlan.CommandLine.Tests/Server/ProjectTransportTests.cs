@@ -221,7 +221,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             document.RootElement.EnumerateObject().Select(x => x.Name).ShouldBe([@"version", @"culture", @"timeZone", @"limits"]);
             document.RootElement.GetProperty(@"timeZone").GetString().ShouldBe(TimeZoneHelper.GetIanaId(TimeZoneInfo.Local));
             document.RootElement.GetProperty(@"limits").EnumerateObject().Select(x => x.Name)
-                .ShouldBe([@"maxJobs", @"maxQueue", @"maxUploadMegabytes", @"maxChartWidth", @"maxChartHeight", @"maxSimulationIterations", @"jobTimeout", @"maxCompileTimeout"]);
+                .ShouldBe([@"maxJobs", @"maxQueue", @"maxUploadMegabytes", @"maxChartWidth", @"maxChartHeight", @"maxSimulationIterations", @"jobTimeout", @"maxCompileTimeout", @"maxConnections"]);
 
             InfoResponse info = await RunningServer.ReadAsync<InfoResponse>(response);
             info.Limits.ShouldBe(LimitsResponse.From(s_Limits));
@@ -548,6 +548,41 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             byte[] expected = await plain.Content.ReadAsByteArrayAsync();
             (await response.Content.ReadAsByteArrayAsync()).Length.ShouldBeLessThan(expected.Length);
             (await DecompressAsync(response, encoding)).ShouldBe(expected);
+        }
+
+        [Theory]
+        [InlineData(@"br, gzip", @"br")]
+        [InlineData(@"gzip, br", @"br")]
+        [InlineData(@"br;q=0.5, gzip", @"gzip")]
+        [InlineData(@"br;q=0, gzip;q=0.1", @"gzip")]
+        [InlineData(@"*", @"br")]
+        [InlineData(@"*, br;q=0", @"gzip")]
+        [InlineData(@"deflate", null)]
+        [InlineData(@"br;q=0, gzip;q=0", null)]
+        public async Task Compression_Given_TheSchemaAndAnEncoding_Then_TheFormThatTheRequestPrefers(string accepted, string? expected)
+        {
+            // The description and the schema are compressed one time, when they are first asked for, and not by the middleware
+            // for each request (from the review of src, test and pkg). The choice of the encoding is the choice of the
+            // middleware: the higher quality, and brotli at the same quality.
+            using HttpResponseMessage plain = await SendAsync(HttpMethod.Get, @"/v1/schemas/project");
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, @"/v1/schemas/project", headers => headers.TryAddWithoutValidation(@"Accept-Encoding", accepted));
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Headers.Vary.ShouldContain(@"Accept-Encoding");
+            byte[] expectedBody = await plain.Content.ReadAsByteArrayAsync();
+
+            if (expected is null)
+            {
+                response.Content.Headers.ContentEncoding.ShouldBeEmpty();
+                (await response.Content.ReadAsByteArrayAsync()).ShouldBe(expectedBody);
+            }
+            else
+            {
+                response.Content.Headers.ContentEncoding.ShouldBe([expected]);
+                (await DecompressAsync(response, expected)).ShouldBe(expectedBody);
+            }
+
+            response.Headers.ETag.ShouldBe(plain.Headers.ETag);
         }
 
         [Theory]

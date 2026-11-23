@@ -203,6 +203,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         [Theory]
         [InlineData(@"{ ""MaxJobs"": 0 }", nameof(ServeLimits.MaxJobs), nameof(ServeOptions.MaxJobs), 1)]
         [InlineData(@"{ ""MaxQueue"": -1 }", nameof(ServeLimits.MaxQueue), nameof(ServeOptions.MaxQueue), 0)]
+        [InlineData(@"{ ""MaxConnections"": 0 }", nameof(ServeLimits.MaxConnections), nameof(ServeOptions.MaxConnections), 1)]
         [InlineData(@"{ ""MaxUploadMegabytes"": 0 }", nameof(ServeLimits.MaxUploadMegabytes), nameof(ServeOptions.MaxUploadMegabytes), 1)]
         [InlineData(@"{ ""MaxChartWidth"": 0 }", nameof(ServeLimits.MaxChartWidth), nameof(ServeOptions.MaxChartSize), 1)]
         [InlineData(@"{ ""MaxChartHeight"": 0 }", nameof(ServeLimits.MaxChartHeight), nameof(ServeOptions.MaxChartSize), 1)]

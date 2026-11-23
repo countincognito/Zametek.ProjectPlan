@@ -15,6 +15,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_VerboseLongName = "verbose";
         private const string c_MaxJobsLongName = "max-jobs";
         private const string c_MaxQueueLongName = "max-queue";
+        private const string c_MaxConnectionsLongName = "max-connections";
         private const string c_MaxUploadLongName = "max-upload";
         private const string c_MaxChartSizeLongName = "max-chart-size";
         private const string c_MaxSimulationIterationsLongName = "max-simulation-iterations";
@@ -77,6 +78,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option(c_MaxQueueLongName, HelpText = "Jobs that may wait for one to finish before more are turned away (defaults to twice --" + c_MaxJobsLongName + ")")]
         public int? MaxQueue { get; set; } = default;
+
+        [Option(c_MaxConnectionsLongName, HelpText = "Connections that the server keeps open at once (defaults to 100) - it closes a connection above the limit with no answer")]
+        public int? MaxConnections { get; set; } = default;
 
         [Option(c_MaxUploadLongName, HelpText = "Largest request, in megabytes (defaults to 50)")]
         public int? MaxUploadMegabytes { get; set; } = default;

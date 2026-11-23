@@ -277,6 +277,7 @@ To use a server by default, set `ZPP_SERVER` and do not use the option `--server
 - `zpp` does not send the key over plain `http` to a server on a different computer. Each computer on the way can read such a key. Thus, the run ends with a usage error (exit code 2). Use an `https` address. If the network between the two computers is private, for example between two containers, the option `--allow-key-over-http` lets `zpp` send the key.
 - `zpp` connects directly to a server on this computer or on a socket. It does not use a proxy that the environment gives (`http_proxy`), because the key and the plan must stay on this computer. For a server on a different computer, `zpp` uses that proxy.
 - `zpp` does not follow a redirect. If the server, or a proxy in front of it, answers with a redirect, the run ends with exit code 5. The message gives the new address. Give that address to `--server`.
+- `zpp` reads an answer of 1 GB at most. A larger answer ends the run with exit code 5. A large answer is usually an answer with many images in `Bmp` format.
 - Each request has a time limit. The limit includes the upload of the plan and the download of the answer. If the server gives no complete answer in that time, the run ends with exit code 5. Thus, a server that accepts a connection and then stays silent does not hold `zpp`.
 - The option `--server-timeout` gives the time limit in milliseconds. The value `0` means no time limit. Give the option more time than a job can wait and run on the server (refer to [Limits](#limits)).
 - Without the option, `zpp` calculates the time limit from the limits of the server. Before the job, it asks the server for them one time (`GET /v1/info`). The time of one job is `jobTimeout + maxCompileTimeout`, because a job that reaches its time limit ends its compile first. `zpp` multiplies that time by `maxQueue ÷ maxJobs + 1`, with the division rounded up: the jobs in front in the queue, and the job itself. Then it adds a margin of 10%, and not less than 30 seconds.
@@ -353,6 +354,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | ----- | ------- | ------ | ------- |
 | Jobs at once | The number of processors | `--max-jobs` | `MaxJobs` |
 | Jobs that wait for another job to finish | Twice the jobs at once | `--max-queue` | `MaxQueue` |
+| Connections at once | 100 | `--max-connections` | `MaxConnections` |
 | Largest request, in MB | 50 | `--max-upload` | `MaxUploadMegabytes` |
 | Largest chart, in pixels | 5000 x 5000 | `--max-chart-size <width>:<height>` | `MaxChartWidth`, `MaxChartHeight` |
 | Iterations of the simulation of a project that the server runs | 100000 (the maximum is 1000000) | `--max-simulation-iterations` | `MaxSimulationIterations` |
@@ -375,6 +377,8 @@ Each way overrides the one before it. The server reads the file one time, when i
 ```
 
 The file holds limits only. If it has a name that is not the setting of a limit, the server does not start. The message gives the name and the settings. Thus, a setting with a wrong letter cannot leave the default in place without a message. The letter case of a name is not important.
+
+The server closes a connection above `MaxConnections` at once, and the client gets no answer. The limit counts each connection. This includes a connection that waits for a free place of a job, and a connection to a path that needs no API key. Thus, give it more than the jobs at once and the jobs that wait together.
 
 `GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The time of a job starts when the server starts to read the request, and so it includes the upload.
 

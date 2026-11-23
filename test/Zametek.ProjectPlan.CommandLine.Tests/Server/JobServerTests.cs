@@ -465,6 +465,40 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
         [Theory]
         [InlineData(1)]
+        [InlineData(100)]
+        public async Task Build_Given_ALimitOfTheConnections_Then_TheWebServerHasIt(int connections)
+        {
+            // Kestrel has no limit of the connections by default, and the paths that need no key are outside the limiter of
+            // the jobs (from the review of src, test and pkg).
+            await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxConnections = connections } });
+
+            Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions kestrel = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+                .GetRequiredService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>>(server.Services)
+                .Value;
+
+            kestrel.Limits.MaxConcurrentConnections.ShouldBe(connections);
+        }
+
+        [Fact]
+        public async Task Request_Given_AConnectionAboveTheLimit_Then_ClosedWithNoAnswer()
+        {
+            // The client of the harness keeps its connection open after its first request, and so it holds the only place. A
+            // second client then gets its connection closed, and no answer. The first client still gets answers.
+            await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxConnections = 1 } });
+            using (HttpResponseMessage first = await server.Client.GetAsync(@"/health/live"))
+            {
+                first.StatusCode.ShouldBe(HttpStatusCode.OK);
+            }
+
+            using var other = new HttpClient { BaseAddress = server.Client.BaseAddress, Timeout = TimeSpan.FromMinutes(1) };
+            await Should.ThrowAsync<HttpRequestException>(() => other.GetAsync(@"/health/live"));
+
+            using HttpResponseMessage again = await server.Client.GetAsync(@"/health/live");
+            again.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Theory]
+        [InlineData(1)]
         [InlineData(50)]
         public async Task Build_Given_ALimitOfTheUpload_Then_APartUpToThatSizeStaysInMemory(int megabytes)
         {

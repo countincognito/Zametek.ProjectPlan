@@ -461,6 +461,10 @@ namespace Zametek.ProjectPlan.CommandLine
             kestrel.AddServerHeader = false;
             kestrel.Limits.MaxRequestBodySize = maxRequestBodySize;
 
+            // Kestrel has no limit of the connections by default. The paths that need no key are outside the limiter of the
+            // jobs, and so nothing bounded the number of their requests (from the review of src, test and pkg).
+            kestrel.Limits.MaxConcurrentConnections = settings.Limits.MaxConnections;
+
             foreach (ListenAddress address in settings.Listen)
             {
                 void Configure(ListenOptions listen)

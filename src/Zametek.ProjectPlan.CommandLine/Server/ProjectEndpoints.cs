@@ -42,6 +42,10 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ZipMediaType = @"application/zip";
         private const string c_AcceptHeader = @"Accept";
         private const string c_AcceptPostHeader = @"Accept-Post";
+        private const string c_AcceptEncodingHeader = @"Accept-Encoding";
+        private const string c_BrotliEncoding = @"br";
+        private const string c_GzipEncoding = @"gzip";
+        private const string c_AnyEncoding = @"*";
         private const string c_InfoCacheControl = @"private, max-age=60";
         private const string c_InfoContentType = @"application/json; charset=utf-8";
         private const string c_DescriptionCacheControl = @"public, max-age=3600";
@@ -73,14 +77,15 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private static readonly string[] s_DescriptionMediaTypes = [DescriptionMediaType, YamlMediaType];
 
-        // The description of the API as it was embedded when the server was built, and its strong ETag: read when first asked for.
-        private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_Description = new(() => ReadResource(c_DescriptionResourceName));
+        // The description of the API as it was embedded when the server was built, its compressed forms and its strong ETag:
+        // read and compressed when first asked for.
+        private static readonly Lazy<FixedBody> s_Description = new(() => FixedBody.From(ReadResource(c_DescriptionResourceName)));
 
         private static readonly string[] s_ProjectSchemaMediaTypes = [ProjectSchemaMediaType, c_JsonMediaType];
 
-        // The schema of the project file as it was embedded when the server was built, and its strong ETag: read when first asked
-        // for.
-        private static readonly Lazy<(byte[] Body, EntityTagHeaderValue Tag)> s_ProjectSchema = new(() => ReadResource(c_ProjectSchemaResourceName));
+        // The schema of the project file as it was embedded when the server was built, its compressed forms and its strong ETag:
+        // read and compressed when first asked for.
+        private static readonly Lazy<FixedBody> s_ProjectSchema = new(() => FixedBody.From(ReadResource(c_ProjectSchemaResourceName)));
 
         // The part of the path of a job that is its id.
         private const string c_RequestIdRoute = @"requestId";
@@ -214,8 +219,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 return;
             }
 
-            (byte[] body, EntityTagHeaderValue tag) = s_Description.Value;
-            await WriteFixedAsync(context, body, tag, c_DescriptionCacheControl, mediaType);
+            await WriteFixedAsync(context, s_Description.Value, c_DescriptionCacheControl, mediaType);
         }
 
         // The JSON Schema of the project file: docs/zpp.schema.json, as it was when the server was built. A program that writes a
@@ -236,8 +240,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 return;
             }
 
-            (byte[] body, EntityTagHeaderValue tag) = s_ProjectSchema.Value;
-            await WriteFixedAsync(context, body, tag, c_DescriptionCacheControl, mediaType);
+            await WriteFixedAsync(context, s_ProjectSchema.Value, c_DescriptionCacheControl, mediaType);
         }
 
         // What an endpoint takes, as OPTIONS says it: no content, the methods it answers, and - for a POST - the media type
@@ -302,6 +305,80 @@ namespace Zametek.ProjectPlan.CommandLine
             await context.Response.Body.WriteAsync(body, context.RequestAborted);
         }
 
+        // A body that cannot change while the server runs, in the encoding that the request accepts. The middleware of
+        // compression compressed the description again for each request (from the review of src, test and pkg). The body has
+        // its forms in brotli and in gzip from the start, and the middleware does not compress an answer that has a
+        // Content-Encoding. As with the middleware, the answer to a request with Accept-Encoding says that it varies with it.
+        private static async Task WriteFixedAsync(
+            HttpContext context,
+            FixedBody body,
+            string cacheControl,
+            string contentType)
+        {
+            if (!StringValues.IsNullOrEmpty(context.Request.Headers.AcceptEncoding))
+            {
+                context.Response.Headers.Append(HeaderNames.Vary, c_AcceptEncodingHeader);
+            }
+
+            (byte[] content, string? encoding) = ChooseEncoding(context.Request) switch
+            {
+                c_BrotliEncoding => (body.Brotli, c_BrotliEncoding),
+                c_GzipEncoding => (body.Gzip, c_GzipEncoding),
+                _ => (body.Identity, null),
+            };
+
+            if (encoding is not null)
+            {
+                context.Response.Headers.ContentEncoding = encoding;
+            }
+
+            await WriteFixedAsync(context, content, body.Tag, cacheControl, contentType);
+        }
+
+        // Brotli or gzip, whichever the request accepts with the higher quality, and brotli at the same quality, as the
+        // middleware of compression chooses; or null, for a request that accepts neither.
+        internal static string? ChooseEncoding(HttpRequest request)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            IList<StringWithQualityHeaderValue> accepted = request.GetTypedHeaders().AcceptEncoding;
+            double brotli = QualityOf(accepted, c_BrotliEncoding);
+            double gzip = QualityOf(accepted, c_GzipEncoding);
+
+            if (brotli > 0
+                && brotli >= gzip)
+            {
+                return c_BrotliEncoding;
+            }
+
+            return gzip > 0 ? c_GzipEncoding : null;
+        }
+
+        // The quality that a request gives an encoding: by its name, or else by *, or 0 when it gives neither.
+        private static double QualityOf(
+            IList<StringWithQualityHeaderValue> accepted,
+            string encoding)
+        {
+            StringWithQualityHeaderValue? value = accepted.FirstOrDefault(x => StringSegment.Equals(x.Value, encoding, StringComparison.OrdinalIgnoreCase))
+                ?? accepted.FirstOrDefault(x => StringSegment.Equals(x.Value, c_AnyEncoding, StringComparison.Ordinal));
+
+            return value is null ? 0 : value.Quality ?? 1;
+        }
+
+        private static byte[] Compress(byte[] body, bool brotli)
+        {
+            using var memory = new MemoryStream();
+
+            using (Stream compressor = brotli
+                ? new BrotliStream(memory, CompressionLevel.Optimal, leaveOpen: true)
+                : new GZipStream(memory, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                compressor.Write(body);
+            }
+
+            return memory.ToArray();
+        }
+
         private static (byte[] Body, EntityTagHeaderValue Tag) ReadResource(string name)
         {
             Type type = typeof(ProjectEndpoints);
@@ -312,6 +389,17 @@ namespace Zametek.ProjectPlan.CommandLine
 
             byte[] body = memory.ToArray();
             return (body, GetStrongTag(body));
+        }
+
+        // A body that cannot change while the server runs, with its forms in brotli and in gzip, and its strong ETag.
+        private sealed record FixedBody(
+            byte[] Identity,
+            byte[] Brotli,
+            byte[] Gzip,
+            EntityTagHeaderValue Tag)
+        {
+            public static FixedBody From((byte[] Body, EntityTagHeaderValue Tag) resource) =>
+                new(resource.Body, Compress(resource.Body, brotli: true), Compress(resource.Body, brotli: false), resource.Tag);
         }
 
         private Answer GetJobAnswer(HttpContext context)

@@ -582,6 +582,9 @@
   <data name="Message_ServerAnswerNotValid" xml:space="preserve">
     <value>The server at {0} gave an answer zpp cannot read: {1}</value>
   </data>
+  <data name="Message_ServerAnswerTooLarge" xml:space="preserve">
+    <value>The answer of the server at {0} is larger than zpp reads ({1} MB at most): {2}</value>
+  </data>
   <data name="Message_ServerAnswerDoesNotMatchJob" xml:space="preserve">
     <value>it does not match the job zpp sent.</value>
   </data>

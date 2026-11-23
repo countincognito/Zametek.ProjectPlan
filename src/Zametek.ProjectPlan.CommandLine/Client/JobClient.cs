@@ -203,6 +203,7 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 BaseAddress = settings.BaseAddress,
                 Timeout = Timeout.InfiniteTimeSpan,
+                MaxResponseContentBufferSize = settings.MaxAnswerBytes,
             };
         }
 
@@ -529,6 +530,16 @@ namespace Zametek.ProjectPlan.CommandLine
             try
             {
                 return await client.SendAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException ex) when (ex.HttpRequestError == HttpRequestError.ConfigurationLimitExceeded)
+            {
+                // An answer above the largest that zpp reads (ClientSettings.MaxAnswerBytes), or with headers above the
+                // limit of .NET: the error at the root of it says which.
+                throw new ServerException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServerAnswerTooLarge,
+                    settings.Server,
+                    settings.MaxAnswerBytes / (1024 * 1024),
+                    ex.GetBaseException().Message));
             }
             catch (Exception ex) when (ex is HttpRequestException || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
             {

@@ -22,5 +22,12 @@ namespace Zametek.ProjectPlan.CommandLine
         // No option gave the time limit of a request, and so it comes from the limits of the server. RequestTimeout is
         // null until zpp has them.
         public bool RequestTimeoutFromServer { get; init; }
+
+        // The largest answer that zpp reads into memory. Without a limit, an address that sends a body with no end made zpp
+        // hold as much as 2 GB (from the review of src, test and pkg). An answer of a real server can be large: a chart in
+        // Bmp of 5000 by 5000 pixels is about 100 MB.
+        public long MaxAnswerBytes { get; init; } = DefaultMaxAnswerBytes;
+
+        public const long DefaultMaxAnswerBytes = 1L << 30;
     }
 }

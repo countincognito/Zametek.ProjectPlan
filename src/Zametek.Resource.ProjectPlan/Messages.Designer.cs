@@ -1718,6 +1718,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_ServerAnswerNotValid", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The answer of the server at {0} is larger than zpp reads ({1} MB at most): {2}.
+        /// </summary>
+        public static string Message_ServerAnswerTooLarge {
+            get {
+                return ResourceManager.GetString("Message_ServerAnswerTooLarge", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to zpp serve imports .xlsx files only: to import {0}, run zpp without {1}..

@@ -30,11 +30,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read the version with a reader that goes forward only, or make the model from the tree (`ToObject`). Measure a job on `docs/assets/erp-migration.zpp` and on a file of 50 MB, before and after the change.
 
-- [ ] **Do three smaller things for the server and the command line tool** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Find the status code of a body that arrives too slowly** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  1. **The answer in the memory of the client.** `JobClient` reads each answer into memory, and its `HttpClient` has no `MaxResponseContentBufferSize`. A wrong address that sends a body with no end makes `zpp` hold as much as 2 GB. Set the largest size from the limits of the server.
-  2. **The limits of the connections.** `JobServer` sets `MaxRequestBodySize` and no other limit of Kestrel. Thus, the number of the connections has no limit. The paths that have no key (`/v1/openapi`, `/v1/schemas/project` and `/health/*`) are outside the limiter of the jobs, and the server compresses the description for each request. Set `MaxConcurrentConnections`, and keep the compressed description.
-  3. **A status code of the read of a form.** The review reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent such a request. The review also reported that an `options` field of more than 4 MB gets 400. On 2026-11-23, an `options` field of 5 MB got 413 with the code `tooLarge`, as the API says.
+  The review reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent such a request. The review also reported that an `options` field of more than 4 MB gets 400. On 2026-11-23, an `options` field of 5 MB got 413 with the code `tooLarge`, as the API says.
+
+  Since 0.11.0-beta.3, `zpp` reads an answer of 1 GB at most (`ClientSettings.MaxAnswerBytes`). The server keeps 100 connections open at one time by default (`MaxConnections`). The server compresses the description of the API and the schema one time.
 
 - [ ] **Let one reader read the holiday rules** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

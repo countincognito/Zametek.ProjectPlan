@@ -1027,6 +1027,7 @@ components:
           maxSimulationIterations: 100000
           jobTimeout: PT2M
           maxCompileTimeout: PT1M
+          maxConnections: 100
     JobRunning:
       summary: A simulation that has run 2,340 of its 5,000 iterations
       value:
@@ -2014,7 +2015,7 @@ components:
           $ref: '#/components/schemas/Limits'
     Limits:
       type: object
-      required: [maxJobs, maxQueue, maxUploadMegabytes, maxChartWidth, maxChartHeight, maxSimulationIterations, jobTimeout, maxCompileTimeout]
+      required: [maxJobs, maxQueue, maxUploadMegabytes, maxChartWidth, maxChartHeight, maxSimulationIterations, jobTimeout, maxCompileTimeout, maxConnections]
       properties:
         maxJobs:
           type: integer
@@ -2045,6 +2046,10 @@ components:
         maxCompileTimeout:
           $ref: '#/components/schemas/Duration'
           description: The longest compile timeout that a request can give.
+        maxConnections:
+          type: integer
+          minimum: 1
+          description: The connections that the server keeps open at one time. It closes a connection above the limit at once, with no answer.
     ProblemError:
       type: object
       required: [detail]

@@ -47,6 +47,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             options.BehindTlsProxy.ShouldBeFalse();
             options.MaxJobs.ShouldBeNull();
             options.MaxQueue.ShouldBeNull();
+            options.MaxConnections.ShouldBeNull();
             options.MaxUploadMegabytes.ShouldBeNull();
             options.MaxChartSize.ShouldBeEmpty();
             options.MaxSimulationIterations.ShouldBeNull();
@@ -121,6 +122,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ServeOptions options = ParsedValue(
                 @"--max-jobs", @"2",
                 @"--max-queue", @"3",
+                @"--max-connections", @"9",
                 @"--max-upload", @"4",
                 @"--max-chart-size", @"600:400",
                 @"--max-simulation-iterations", @"2500",
@@ -129,6 +131,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
 
             options.MaxJobs.ShouldBe(2);
             options.MaxQueue.ShouldBe(3);
+            options.MaxConnections.ShouldBe(9);
             options.MaxUploadMegabytes.ShouldBe(4);
             options.MaxChartSize.ShouldBe([600, 400]);
             options.MaxSimulationIterations.ShouldBe(2500);
