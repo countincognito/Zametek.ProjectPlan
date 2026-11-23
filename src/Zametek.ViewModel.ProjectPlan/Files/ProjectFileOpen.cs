@@ -10,6 +10,15 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ProjectFileOpen
         : IProjectFileOpen
     {
+        // A null in the file keeps the default of its member, as a member that the file leaves out does. The models give each
+        // list and each part a default, for example Dependencies = [], and the steps of the upgrade read them with no check:
+        // a file with "Nodes": null ended with a NullReferenceException. No member of a model that can be null has a default
+        // other than null, and so a null that a save wrote still reads as null.
+        private static readonly JsonSerializerSettings s_ReadSettings = new()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+        };
+
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
         public ProjectFileOpen(IDateTimeCalculator dateTimeCalculator)
@@ -47,7 +56,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     func = jString => Converter.Upgrade(
                         localNow,
                         localTimeZone,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_1_0.ProjectModel());
                 })
                 .Case(Versions.v0_1_0, x =>
@@ -55,7 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     func = jString => Converter.Upgrade(
                         localNow,
                         localTimeZone,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_1_0.ProjectModel());
                 })
                 .Case(Versions.v0_2_0, x =>
@@ -63,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     func = jString => Converter.Upgrade(
                         localNow,
                         localTimeZone,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_2_0.ProjectModel());
                 })
                 .Case(Versions.v0_2_1, x =>
@@ -71,88 +80,88 @@ namespace Zametek.ViewModel.ProjectPlan
                     func = jString => Converter.Upgrade(
                         localNow,
                         localTimeZone,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_1.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_1.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_2_1.ProjectModel());
                 })
                 .Case(Versions.v0_3_0, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_3_0.ProjectModel());
                 })
                 .Case(Versions.v0_3_1, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_1.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_1.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_3_1.ProjectModel());
                 })
                 .Case(Versions.v0_3_2, x =>
                  {
                      func = jString => Converter.Upgrade(
                         localNow,
-                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_2.ProjectModel>(jString)
+                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_2.ProjectModel>(jString, s_ReadSettings)
                          ?? new Data.ProjectPlan.v0_3_2.ProjectModel());
                  })
                 .Case(Versions.v0_4_0, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_4_0.ProjectModel());
                 })
                 .Case(Versions.v0_4_1, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_4_1.ProjectModel());
                 })
                 .Case(Versions.v0_4_2, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_2.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_2.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_4_2.ProjectModel());
                 })
                 .Case(Versions.v0_4_3, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_3.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_3.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_4_3.ProjectModel());
                 })
                 .Case(Versions.v0_4_4, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_4_4.ProjectModel());
                 })
                 .Case(Versions.v0_5_0, x =>
                 {
                     func = jString => Converter.Upgrade(
                         localNow,
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_5_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_5_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_5_0.ProjectModel());
                 })
                 .Case(Versions.v0_6_0, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_0.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_0.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_6_0.ProjectModel());
                 })
                 .Case(Versions.v0_6_1, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_1.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_1.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_6_1.ProjectModel());
                 })
                 .Case(Versions.v0_6_2, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_2.ProjectModel>(jString)
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_2.ProjectModel>(jString, s_ReadSettings)
                         ?? new Data.ProjectPlan.v0_6_2.ProjectModel());
                 });
 

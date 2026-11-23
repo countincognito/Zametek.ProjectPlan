@@ -12,7 +12,7 @@ This page gives the rules of the format that a schema cannot say. The [glossary]
 - The schema is strict about the names of the members. `zpp` ignores a member that it does not know, and it finds a name in capitals or in small letters. Thus, a misspelt member changes nothing, and `zpp` does not tell you. Check a plan against the schema before you send it.
 - The schema requires only the members that a plan cannot do without. These are the version, and the ids of the nodes, the files, the activities, the resources and the work streams. `zpp` gives each other member its default. A scenario with no `GraphSettings`, or with an empty list in them, gets the default list, as an import does.
 - An enumeration is a number. The description of each enumeration in the schema gives the name of each number.
-- `zpp` writes no member that is `null`. A program can leave out a member that has no value.
+- `zpp` writes no member that is `null`. A program can leave out a member that has no value. A member that is `null` in the file has the same effect: it gets its default, for example an empty list.
 - A test makes the schema from the classes that `zpp` writes the file from. Thus, the schema and `zpp` always agree. When the classes change, set `ZPP_REGENERATE_SCHEMA` to `1`, and run the test `ProjectFileSchemaTests.Regenerate`.
 
 ## A plan that a program can write

@@ -12,14 +12,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Accept the frequencies `DAILY`, `WEEKLY`, `MONTHLY` and `YEARLY` only, and no part for hours, minutes or seconds. Give the number of the holidays a limit. Report a bad rule as a problem of the plan, and as a problem of its cell for a workbook.
 
-- [ ] **Keep the default of a member that a project file gives as null** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  The models of a project file give each list and each part a default, for example `Dependencies = []`. `ProjectFileOpen` reads the file with the default settings of Newtonsoft.Json. With these settings, a `null` in the file replaces the default. The steps of the upgrade then read the member with no check, for example `[.. project.Nodes]` in the converter of version 0.6.2.
-
-  Thus, a file that a program writes with `"Dependencies": null` probably ends with a `NullReferenceException`. `PlanCheck` looks for a null item in some lists, but it runs after the upgrade. [The project file](PROJECT-FILE.md) says only that a program can leave a member out. Nobody ran such a file, and no test has one.
-
-  Read with `NullValueHandling.Ignore`, so that the defaults stay. Add a test with a null for each list of the newest version.
-
 - [ ] **Decide if the projected finish of the earned value chart needs a bound from the plan** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `ResourceSchedulingService` divides the planned value by the slope of a line fit, and the result is the day of the projected finish. A slope near zero gave a day number of many millions. The review reported that the chart with dates then counted to the end of the range of dates and threw.
