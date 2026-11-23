@@ -883,6 +883,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     }));
                     break;
                 case ProjectNotReadableException:
+                    LogIfNotFromAReader(m_Logger, context, exception);
                     exitCode = await JobConsoleHelper.WriteFailureAsync(console, exception);
                     kind = ProblemKind.ProjectNotReadable;
                     detail = part == c_ImportPart
@@ -937,6 +938,31 @@ namespace Zametek.ProjectPlan.CommandLine
                     includeConsole ? ToConsoleResponse(console, exitCode) : null),
                 exitCode);
         }
+
+        // The engine takes each exception of a read for a file that it cannot read (JobRunner.IsUnreadable), also one that is
+        // a defect and not a bad file, for example a NullReferenceException in a mapper. The answer is then 422, and nothing
+        // was logged. An exception that is not of a reader now goes to the log as a warning, with the path of the request.
+        internal static void LogIfNotFromAReader(
+            ILogger logger,
+            HttpContext context,
+            Exception exception)
+        {
+            if (exception.InnerException is Exception inner
+                && !IsFromAReader(inner))
+            {
+                logger.LogWarning(inner, "{Path}: the project was not readable, because of an exception that is not of a reader", context.Request.Path);
+            }
+        }
+
+        // The exceptions with which a reader says that a file is not what it reads: JSON, a ZIP package, XML, a workbook, or text.
+        private static bool IsFromAReader(Exception exception) =>
+            exception is Newtonsoft.Json.JsonException
+                or JsonException
+                or InvalidDataException
+                or System.Xml.XmlException
+                or ScenarioImportException
+                or DecoderFallbackException
+                or EndOfStreamException;
 
         // Where in the request a simulation that cannot be done comes from, and its code. The settings of a run are the project's, and
         // thus what the caller can change is whether to run it (runSimulation): the project that has too many iterations is run
