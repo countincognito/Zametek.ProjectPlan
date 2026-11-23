@@ -92,7 +92,7 @@ namespace Zametek.Graphs.Avalonia
                             width = @"4.0",
                             x = @"13.0",
                             y = @"13.0",
-                            Text = diagramNode.Text,
+                            Text = XmlCharacters.RemoveNotPermitted(diagramNode.Text),
                             LabelModel = new ShapeNodeNodeLabelLabelModel
                             {
                                 SmartNodeLabelModel = new ShapeNodeNodeLabelLabelModelSmartNodeLabelModel
@@ -192,7 +192,7 @@ namespace Zametek.Graphs.Avalonia
                             sideReference = @"relative_to_edge_flow"
                         },
                         hasText = @"true",
-                        Text = diagramEdge.Label
+                        Text = XmlCharacters.RemoveNotPermitted(diagramEdge.Label)
                     },
                     BendStyle = new PolyLineEdgeBendStyle
                     {
@@ -203,14 +203,16 @@ namespace Zametek.Graphs.Avalonia
             return outputEdge;
         }
 
+        // The ids are the same in each culture too: some cultures write a minus sign that is not '-', and an id can be
+        // negative.
         private static string FormatGraphNodeId(int id)
         {
-            return $@"n{id}";
+            return string.Create(CultureInfo.InvariantCulture, $@"n{id}");
         }
 
         private static string FormatGraphEdgeId(int id)
         {
-            return $@"e{id}";
+            return string.Create(CultureInfo.InvariantCulture, $@"e{id}");
         }
 
         // GraphML is a file for other programs to read, so its numbers are written the same whatever the culture:

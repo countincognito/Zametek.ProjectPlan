@@ -10,7 +10,8 @@ namespace Zametek.Graphs.Avalonia
     internal class MsaglSvgGraphWriter
         : SvgGraphWriter
     {
-        private readonly static Func<string, string> s_NodeSanitizer = (unescaped) => new System.Xml.Linq.XText(unescaped).ToString();
+        // The characters that XML does not permit go first: XText refused them with an exception (XmlCharacters).
+        private readonly static Func<string, string> s_NodeSanitizer = (unescaped) => new System.Xml.Linq.XText(XmlCharacters.RemoveNotPermitted(unescaped)).ToString();
 
         private readonly Graph? m_Graph;
 

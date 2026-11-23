@@ -22,15 +22,26 @@ namespace Zametek.Graphs.Avalonia
         // Label fonts resolved from GraphAppearance, cached by (family, size, weight) for the process
         // lifetime. Caching (rather than per-render create/dispose) keeps each SKTypeface alive for as long
         // as any recorded SKPicture might replay its text, and avoids rebuilding the font on every export.
-        // SKFont is not thread-safe, but Render runs solely on the UI thread (invoked via Dispatcher
-        // .UIThread), so the shared cache is safe. Antialias edging + subpixel positioning keep the exported
-        // labels smooth (text rendering no longer reads SKPaint.IsAntialias).
+        // The application renders on the UI thread only, but a host with no UI thread (a server, say) can render
+        // two graphs at the same time, and so the cache takes a lock. A render only reads its fonts, and changes
+        // none of them. Antialias edging + subpixel positioning keep
+        // the exported labels smooth (text rendering no longer reads SKPaint.IsAntialias).
         private static readonly Dictionary<(string Family, float Size, int Weight), SKFont> s_FontCache = [];
+        private static readonly Lock s_FontCacheLock = new();
 
         // Internal so that the tests can check which typeface a label gets.
         internal static SKFont GetLabelFont(FontFamily fontFamily, double fontSize, FontWeight fontWeight)
         {
             (string, float, int) key = (fontFamily.Name, (float)fontSize, (int)fontWeight);
+
+            lock (s_FontCacheLock)
+            {
+                return GetLabelFont(key);
+            }
+        }
+
+        private static SKFont GetLabelFont((string, float, int) key)
+        {
             if (!s_FontCache.TryGetValue(key, out SKFont? font))
             {
                 // The bundled label font comes from the library's own files, the same ones the on-screen

@@ -36,7 +36,9 @@ namespace Zametek.Graphs.Avalonia
             string? height = doc.DocumentElement?.GetAttribute("height");
             string? width = doc.DocumentElement?.GetAttribute("width");
 
-            var rect = doc.CreateElement(@"rect");
+            // In the namespace of the document: an element with no namespace is not an element of SVG, and a browser does not
+            // draw it (it was <rect ... xmlns="" />).
+            var rect = doc.CreateElement(@"rect", doc.DocumentElement?.NamespaceURI);
             rect.SetAttribute(@"height", height);
             rect.SetAttribute(@"width", width);
 
