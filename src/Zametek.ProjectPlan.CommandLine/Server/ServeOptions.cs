@@ -79,7 +79,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option(c_MaxQueueLongName, HelpText = "Jobs that may wait for one to finish before more are turned away (defaults to twice --" + c_MaxJobsLongName + ")")]
         public int? MaxQueue { get; set; } = default;
 
-        [Option(c_MaxConnectionsLongName, HelpText = "Connections that the server keeps open at once (defaults to 100) - it closes a connection above the limit with no answer")]
+        [Option(c_MaxConnectionsLongName, HelpText = "Connections that the server keeps open at once (defaults to 100, or more for many jobs; must be more than --max-jobs and --max-queue together) - it closes a connection above the limit with no answer")]
         public int? MaxConnections { get; set; } = default;
 
         [Option(c_MaxUploadLongName, HelpText = "Largest request, in megabytes (defaults to 50)")]

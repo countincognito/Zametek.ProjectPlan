@@ -365,7 +365,7 @@ When the server cannot answer a request, it sends a problem in `application/prob
 | ----- | ------- | ------ | ------- |
 | Jobs at once | The number of processors | `--max-jobs` | `MaxJobs` |
 | Jobs that wait for another job to finish | Twice the jobs at once | `--max-queue` | `MaxQueue` |
-| Connections at once | 100 | `--max-connections` | `MaxConnections` |
+| Connections at once | 100, or more for many jobs (see below) | `--max-connections` | `MaxConnections` |
 | Largest request, in MB | 50 | `--max-upload` | `MaxUploadMegabytes` |
 | Largest chart, in pixels | 5000 x 5000 | `--max-chart-size <width>:<height>` | `MaxChartWidth`, `MaxChartHeight` |
 | Iterations of the simulation of a project that the server runs | 100000 (the maximum is 1000000) | `--max-simulation-iterations` | `MaxSimulationIterations` |
@@ -389,7 +389,9 @@ Each way overrides the one before it. The server reads the file one time, when i
 
 The file holds limits only. If it has a name that is not the setting of a limit, the server does not start. The message gives the name and the settings. Thus, a setting with a wrong letter cannot leave the default in place without a message. The letter case of a name is not important.
 
-The server closes a connection above `MaxConnections` at once, and the client gets no answer. The limit counts each connection. This includes a connection that waits for a free place of a job, and a connection to a path that needs no API key. Thus, give it more than the jobs at once and the jobs that wait together.
+The server closes a connection above `MaxConnections` at once, and the client gets no answer. The limit counts each connection. This includes a connection that waits for a free place of a job, and a connection to a path that needs no API key. Thus, a limit that you give must be more than the jobs at once and the jobs that wait together. If it is not, the server does not start, and the message gives the three values. Without this, a client that waits for a free place got no answer, and no `503` with `Retry-After`.
+
+If you do not give `MaxConnections`, the limit is 100, or more on a computer with many processors: twice `MaxJobs`, plus `MaxQueue`, plus 10. Each job that runs gets two connections: one for the job and one for a request of its status. Each job that waits gets one connection. The probes and the description of the API get 10. With the defaults of `MaxJobs` and `MaxQueue`, the limit is more than 100 on a computer with 23 processors or more.
 
 `GET /v1/info` gives the limits that a server uses. It gives times as ISO 8601 durations (`"jobTimeout": "PT2M"`). The time of a job starts when the server starts to read the request, and so it includes the upload.
 

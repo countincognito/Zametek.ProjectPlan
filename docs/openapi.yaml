@@ -2049,7 +2049,7 @@ components:
         maxConnections:
           type: integer
           minimum: 1
-          description: The connections that the server keeps open at one time. It closes a connection above the limit at once, with no answer.
+          description: The connections that the server keeps open at one time. It closes a connection above the limit at once, with no answer. It is more than `maxJobs` and `maxQueue` together.
     ProblemError:
       type: object
       required: [detail]

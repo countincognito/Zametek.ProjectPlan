@@ -462,6 +462,13 @@ namespace Zametek.ProjectPlan.CommandLine
                 limits = limits with { MaxQueue = 2 * limits.MaxJobs };
             }
 
+            bool hasConnections = configuration[nameof(ServeLimits.MaxConnections)] is not null;
+
+            if (!hasConnections)
+            {
+                limits = limits with { MaxConnections = ServeLimits.DefaultMaxConnections(limits.MaxJobs, limits.MaxQueue) };
+            }
+
             RequireAtLeast(limits.MaxJobs, 1, nameof(ServeLimits.MaxJobs), nameof(ServeOptions.MaxJobs));
             RequireAtLeast(limits.MaxQueue, 0, nameof(ServeLimits.MaxQueue), nameof(ServeOptions.MaxQueue));
             RequireAtLeast(limits.MaxConnections, 1, nameof(ServeLimits.MaxConnections), nameof(ServeOptions.MaxConnections));
@@ -473,6 +480,21 @@ namespace Zametek.ProjectPlan.CommandLine
             RequireAtLeast(limits.JobTimeoutSeconds, 1, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
             RequireAtMost(limits.JobTimeoutSeconds, ServeLimits.MaximumJobTimeoutSeconds, nameof(ServeLimits.JobTimeoutSeconds), nameof(ServeOptions.JobTimeoutSeconds));
             RequireAtLeast(limits.MaxCompileTimeoutMilliseconds, 1, nameof(ServeLimits.MaxCompileTimeoutMilliseconds), nameof(ServeOptions.MaxCompileTimeoutMilliseconds));
+
+            // The web server closes a connection above MaxConnections with no answer. With no more connections than jobs that run
+            // and wait, a request that waits for a place has its connection closed, and no client gets the 503 with Retry-After of
+            // a full queue (from the review of the branch).
+            if (hasConnections
+                && limits.MaxConnections <= (long)limits.MaxJobs + limits.MaxQueue)
+            {
+                throw new UsageException(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeConnectionsNotAboveJobs,
+                    nameof(ServeLimits.MaxConnections),
+                    OptionLongName(nameof(ServeOptions.MaxConnections)),
+                    limits.MaxConnections,
+                    limits.MaxJobs,
+                    limits.MaxQueue));
+            }
 
             return limits;
         }

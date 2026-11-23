@@ -531,6 +531,9 @@
   <data name="Message_ServeLimitTooLow" xml:space="preserve">
     <value>{0} ({1}) must be at least {2}.</value>
   </data>
+  <data name="Message_ServeConnectionsNotAboveJobs" xml:space="preserve">
+    <value>{0} ({1}) is {2}, and it must be more than MaxJobs ({3}) and MaxQueue ({4}) together. The server closes a connection above {0} with no answer, and a request that waits for a job then gets no 503 with Retry-After.</value>
+  </data>
   <data name="Message_ServeCannotImport" xml:space="preserve">
     <value>zpp serve imports .xlsx files only: import {0} with zpp itself.</value>
   </data>

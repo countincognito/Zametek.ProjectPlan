@@ -1155,6 +1155,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}) is {2}, and it must be more than MaxJobs ({3}) and MaxQueue ({4}) together. The server closes a connection above {0} with no answer, and a request that waits for a job then gets no 503 with Retry-After..
+        /// </summary>
+        public static string Message_ServeConnectionsNotAboveJobs {
+            get {
+                return ResourceManager.GetString("Message_ServeConnectionsNotAboveJobs", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The server has no API key, and so it takes only a request for localhost or a loopback address, or for a name that {0} gives: the Host of the request is a different name..
         /// </summary>
         public static string Message_ServeHostNotAllowed {

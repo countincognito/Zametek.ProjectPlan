@@ -416,7 +416,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 - `maxJobs` jobs can run at one time, and `maxQueue` more jobs can wait for a free place. The server turns away more requests (`503 busy`).
 
-- The server keeps `maxConnections` connections open at one time. It closes a connection above the limit at once, with no answer. The limit counts each connection, also one to a path that needs no API key.
+- The server keeps `maxConnections` connections open at one time. It closes a connection above the limit at once, with no answer. The limit counts each connection, also one to a path that needs no API key. It is more than `maxJobs` and `maxQueue` together, so that a request that waits for a free place gets its `503`. By default, it is 100, or more for many jobs (refer to [Limits](COMMAND-LINE.md#limits)).
 
 - A request with its files has a maximum of `maxUploadMegabytes` megabytes. A client that sends a larger request gets status `413` at once only when it sends the header `Expect: 100-continue`, as curl does. Without this header, the server closes the connection while the client sends the request, and the client gets no answer. Thus, compare the size of a request with `maxUploadMegabytes` before you send it. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
 
@@ -909,5 +909,5 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The import of a workbook refuses a holiday rule that repeats more often than each day (`notAllowed` at its cell).
 - The import of a workbook does the checks of the dates that a project file gets (`outOfRange` at its cell). A project start must be from 1900-01-01 to 2999-12-31, and a constraint date within 100,000 days of the start. Before, a workbook with the project start 9999-12-31 gave `500`.
 - A scenario and an import can have 1,000 holidays at most (`P0080`).
-- The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time.
+- The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time. It is more than `maxJobs` and `maxQueue` together. Its default is 100, or twice `maxJobs`, plus `maxQueue`, plus 10 if that is more.
 - Each encoding of a response with an `ETag` has its own strong `ETag`, and a response with status `304` has no `Content-Encoding`. Before, the three encodings of the description, of the schema and of `GET /v1/info` had one `ETag`.

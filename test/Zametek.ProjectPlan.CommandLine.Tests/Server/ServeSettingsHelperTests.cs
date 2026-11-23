@@ -63,6 +63,7 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             settings.Limits.ShouldBe(new ServeLimits());
             settings.Limits.MaxJobs.ShouldBe(Environment.ProcessorCount);
             settings.Limits.MaxQueue.ShouldBe(2 * Environment.ProcessorCount);
+            settings.Limits.MaxConnections.ShouldBe(Math.Max(100, (4 * Environment.ProcessorCount) + 10));
             settings.Limits.MaxUploadMegabytes.ShouldBe(50);
             settings.Limits.MaxChartWidth.ShouldBe(5000);
             settings.Limits.MaxChartHeight.ShouldBe(5000);
@@ -189,6 +190,61 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             ServeSettings settings = Resolve(new ServeOptions { MaxJobs = 3 });
 
             settings.Limits.MaxQueue.ShouldBe(6);
+        }
+
+        // The web server closes a connection above MaxConnections with no answer. With more jobs that run and wait than
+        // connections, a client that waits for a place got its connection closed, and never the 503 with Retry-After of a full
+        // queue. The default of 100 was below MaxJobs and MaxQueue together on a computer with 34 processors or more (from the
+        // review of the branch).
+        [Theory]
+        [InlineData(4, null, 100)]
+        [InlineData(22, null, 100)]
+        [InlineData(23, null, 102)]
+        [InlineData(34, null, 146)]
+        [InlineData(4, 200, 218)]
+        public void Resolve_Given_NoLimitOfTheConnections_Then_100OrMoreThanTheJobsThatRunAndWait(int maxJobs, int? maxQueue, int expected)
+        {
+            ServeLimits limits = Resolve(new ServeOptions { MaxJobs = maxJobs, MaxQueue = maxQueue }).Limits;
+
+            limits.MaxConnections.ShouldBe(expected);
+            limits.MaxConnections.ShouldBeGreaterThan(limits.MaxJobs + limits.MaxQueue);
+        }
+
+        [Fact]
+        public void DefaultMaxConnections_Then_100OrTheJobsThatRunTwiceAndWaitAndTenMore()
+        {
+            ServeLimits.DefaultMaxConnections(1, 2).ShouldBe(100);
+            ServeLimits.DefaultMaxConnections(Environment.ProcessorCount, 2 * Environment.ProcessorCount)
+                .ShouldBe(Math.Max(100, (4 * Environment.ProcessorCount) + 10));
+            ServeLimits.DefaultMaxConnections(int.MaxValue, int.MaxValue).ShouldBe(int.MaxValue);
+            new ServeLimits().MaxConnections.ShouldBe(ServeLimits.DefaultMaxConnections(Environment.ProcessorCount, 2 * Environment.ProcessorCount));
+        }
+
+        [Theory]
+        [InlineData(@"{ ""MaxJobs"": 4, ""MaxConnections"": 12 }", 12, 4, 8)]
+        [InlineData(@"{ ""MaxJobs"": 4, ""MaxQueue"": 200, ""MaxConnections"": 100 }", 100, 4, 200)]
+        [InlineData(@"{ ""MaxJobs"": 1, ""MaxQueue"": 0, ""MaxConnections"": 1 }", 1, 1, 0)]
+        public void Resolve_Given_ConnectionsNotAboveTheJobsThatRunAndWait_Then_UsageExceptionNamingTheThree(
+            string settingsJson,
+            int connections,
+            int jobs,
+            int queue)
+        {
+            Should.Throw<UsageException>(() => Resolve(settingsJson: settingsJson))
+                .Message.ShouldBe(string.Format(
+                    Resource.ProjectPlan.Messages.Message_ServeConnectionsNotAboveJobs,
+                    nameof(ServeLimits.MaxConnections),
+                    Option(nameof(ServeOptions.MaxConnections)),
+                    connections,
+                    jobs,
+                    queue));
+        }
+
+        [Fact]
+        public void Resolve_Given_ConnectionsAboveTheJobsThatRunAndWait_Then_ThatLimit()
+        {
+            Resolve(new ServeOptions { MaxJobs = 4, MaxConnections = 13 }).Limits.MaxConnections.ShouldBe(13);
+            Resolve(new ServeOptions { MaxJobs = 1, MaxQueue = 0, MaxConnections = 2 }).Limits.MaxConnections.ShouldBe(2);
         }
 
         [Fact]
