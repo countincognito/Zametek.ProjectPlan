@@ -30,14 +30,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   If the limit must not end the job, catch the exception in the loop, and record it as the error of that scenario. If it must, name the scenario in the message, and say so in the documentation.
 
-- [ ] **Send the intermediate certificates of the server** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `ServeSettingsHelper` loads the certificate of the server with `X509Certificate2.CreateFromPemFile` or with `X509CertificateLoader.LoadPkcs12FromFile`. Each of them gives one certificate. `JobServer` sets `ServerCertificate` only, and nothing sets `ServerCertificateChain`. Thus, the server loses the intermediate certificates of a `fullchain.pem` file, or of a `.pfx` file with its chain.
-
-  The server then sends its own certificate alone, unless the system has the intermediate certificates or can get them. On a computer that has neither, for example a container with no network, a client probably refuses the certificate. The tests use certificates that sign themselves. Nobody tried a certificate from a certificate authority.
-
-  Load the collection of the file, and give the other certificates to `ServerCertificateChain`. Also say in the documentation that the server reads the certificate one time, at its start. A new certificate needs a new start.
-
 - [ ] **Write the output of `zpp` as UTF-8 on each system** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `Program.Main` uses `Console.Out` and `Console.Error` as they are, and nothing in the project sets `Console.OutputEncoding`. On Windows, the encoding is then the code page of the console, for example 850. The JSON of the metrics does not escape a letter that is not ASCII. Thus, after `zpp ... > metrics.json`, a name with such a letter gives a file that is not UTF-8. A letter that the code page does not have becomes `?`.

@@ -71,13 +71,15 @@ namespace Zametek.ProjectPlan.CommandLine
             }
 
             ValidatePlainHttp(options, listen);
+            (X509Certificate2? certificate, X509Certificate2Collection certificateChain) = ResolveCertificate(options, listen, environment);
 
             return new ServeSettings
             {
                 Listen = listen,
                 UnixSockets = sockets,
                 ApiKey = apiKey,
-                Certificate = ResolveCertificate(options, listen, environment),
+                Certificate = certificate,
+                CertificateChain = certificateChain,
                 Culture = ResolveCulture(options),
                 Verbose = options.Verbose,
                 LogFormat = options.LogFormat,
@@ -227,6 +229,47 @@ namespace Zametek.ProjectPlan.CommandLine
             return X509CertificateLoader.LoadPkcs12FromFile(certificateFile, password);
         }
 
+        // The other certificates of the file of a certificate, as LoadCertificate reads it: each certificate of a .pem file, or
+        // of a .pfx or .p12 file, except the certificate itself. X509Certificate2.CreateFromPemFile and LoadPkcs12FromFile each
+        // give one certificate, and so the intermediate certificates of a fullchain.pem file, or of a .pfx file with its
+        // chain, were lost: the server sent its own certificate alone.
+        public static X509Certificate2Collection LoadCertificateChain(
+            string certificateFile,
+            string? keyFile,
+            string? password,
+            X509Certificate2 certificate)
+        {
+            ArgumentNullException.ThrowIfNull(certificateFile);
+            ArgumentNullException.ThrowIfNull(certificate);
+            X509Certificate2Collection all = [];
+
+            if (keyFile is not null
+                || s_PemExtensions.Contains(Path.GetExtension(certificateFile), StringComparer.OrdinalIgnoreCase))
+            {
+                all.ImportFromPemFile(certificateFile);
+            }
+            else
+            {
+                all = X509CertificateLoader.LoadPkcs12CollectionFromFile(certificateFile, password);
+            }
+
+            X509Certificate2Collection chain = [];
+
+            foreach (X509Certificate2 other in all)
+            {
+                if (string.Equals(other.Thumbprint, certificate.Thumbprint, StringComparison.OrdinalIgnoreCase))
+                {
+                    other.Dispose();
+                }
+                else
+                {
+                    chain.Add(other);
+                }
+            }
+
+            return chain;
+        }
+
         // What it listens on, as --listen gives it - or else only this machine, on the port zpp serve has - told apart:
         // the addresses on the network, and the Unix domain sockets, each by its path in full.
         private static (IReadOnlyList<ListenAddress> Addresses, IReadOnlyList<string> Sockets) ResolveListen(ServeOptions options)
@@ -311,7 +354,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 : null;
         }
 
-        private static X509Certificate2? ResolveCertificate(
+        private static (X509Certificate2? Certificate, X509Certificate2Collection Chain) ResolveCertificate(
             ServeOptions options,
             IReadOnlyList<ListenAddress> listen,
             IReadOnlyDictionary<string, string> environment)
@@ -332,7 +375,7 @@ namespace Zametek.ProjectPlan.CommandLine
             if (https is null)
             {
                 return options.Certificate is null
-                    ? null
+                    ? (null, [])
                     : throw new UsageException(string.Format(Resource.ProjectPlan.Messages.Message_ServeCertificateNeedsHttps, certificate));
             }
 
@@ -342,7 +385,8 @@ namespace Zametek.ProjectPlan.CommandLine
             }
 
             environment.TryGetValue(CertificatePasswordVariable, out string? password);
-            return LoadCertificate(certificateFile, options.CertificateKey, password);
+            X509Certificate2 loaded = LoadCertificate(certificateFile, options.CertificateKey, password);
+            return (loaded, LoadCertificateChain(certificateFile, options.CertificateKey, password, loaded));
         }
 
         private static CultureInfo? ResolveCulture(ServeOptions options)

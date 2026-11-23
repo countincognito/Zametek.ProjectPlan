@@ -18,6 +18,11 @@ namespace Zametek.ProjectPlan.CommandLine
         // The certificate for its https addresses, if it has any.
         public X509Certificate2? Certificate { get; init; }
 
+        // The other certificates of the file of the certificate, for example the intermediate certificates of a fullchain.pem
+        // file or of a .pfx file with its chain. The server sends them with its own, so that a client that does not have them
+        // can build the chain to its root.
+        public X509Certificate2Collection CertificateChain { get; init; } = [];
+
         // The culture its jobs write numbers and dates in, when it is not the machine's.
         public CultureInfo? Culture { get; init; }
 

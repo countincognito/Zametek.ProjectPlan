@@ -436,14 +436,19 @@ namespace Zametek.ProjectPlan.CommandLine
             return configuration.CreateLogger();
         }
 
-        // How an https address is served: with the certificate, over the protocols TlsProtocols names.
-        internal static HttpsConnectionAdapterOptions CreateHttpsOptions(X509Certificate2 certificate)
+        // How an https address is served: with the certificate and the other certificates of its chain, over the protocols
+        // TlsProtocols names. Without the chain, the server sent its own certificate alone, and a client that does not have
+        // the intermediate certificates cannot build the chain to a root that it trusts.
+        internal static HttpsConnectionAdapterOptions CreateHttpsOptions(
+            X509Certificate2 certificate,
+            X509Certificate2Collection? chain = null)
         {
             ArgumentNullException.ThrowIfNull(certificate);
 
             return new HttpsConnectionAdapterOptions
             {
                 ServerCertificate = certificate,
+                ServerCertificateChain = chain is { Count: > 0 } ? chain : null,
                 SslProtocols = TlsProtocols,
             };
         }
@@ -462,7 +467,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 {
                     if (address.IsHttps)
                     {
-                        listen.UseHttps(CreateHttpsOptions(settings.Certificate ?? throw new InvalidOperationException()));
+                        listen.UseHttps(CreateHttpsOptions(settings.Certificate ?? throw new InvalidOperationException(), settings.CertificateChain));
                     }
                 }
 
