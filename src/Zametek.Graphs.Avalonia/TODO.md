@@ -14,8 +14,6 @@ This file lists the items for the library only. It stays with the folder when th
   2. **A diagram with a fault.** `MsaglGraphLayoutEngine` does no check of the diagram. An edge to a node that does not exist gives a `KeyNotFoundException`, and two nodes with one id give an `ArgumentException`. `NodeLabelFontSize` divides by the length of the text, and thus an empty text gives a font size with no limit. Do one check at the start of the layout, with clear messages.
   3. **Long work on the UI thread.** For a High Fidelity export, `InteractiveGraphRasterRenderer` encodes the bitmap as PNG and decodes it again on the UI thread. The bitmap can have 67 megapixels. `ResetLayout` of `InteractiveGraphViewModel` runs the MSAGL layout on the UI thread, and `Refresh` runs the same layout on a different thread. Nobody measured the two.
 
-  Since 0.11.0-beta.3, the export throws `InvalidOperationException` when it writes nothing, as the README says. The README gives the format of a color as `#RRGGBB` or `#RRGGBBAA`. The library uses the fallback brush for a text that it cannot read.
-
 - [ ] **Report the 32-bit byte count of a bitmap to Avalonia** *(2026-11-04)*
 
   Avalonia 12.1.3 sizes the buffer of a `RenderTargetBitmap` with `SKImageInfo.BytesSize` of SkiaSharp, in `WriteableBitmapImpl`. That value is an `int` (width × height × 4), and it wraps above 2 GiB. A negative value causes an `ArgumentException`. A positive value gives a buffer that is too small, and `SKBitmap.Erase` then writes past its end. The result is an access violation, which the debugger of Visual Studio shows as `ExecutionEngineException`.

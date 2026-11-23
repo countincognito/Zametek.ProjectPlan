@@ -2,6 +2,15 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
+- [ ] **Do four checks for the release of 0.11.0-beta.3** *(2026-11-23, do with the release of 0.11.0-beta.3)*
+
+  0.11.0-beta.3 has changes that the tests and the hook cannot show. Do the first three checks before the tag, and the last check after it. Then delete this entry.
+
+  1. **The reports about security.** `SECURITY.md` sends a person to the button "Report a vulnerability" on the page "Advisories". GitHub shows that button only when the private vulnerability reporting of the repository is on. Turn it on in the settings of the repository before `SECURITY.md` is on `master`. Nobody looked at the page.
+  2. **A lost pointer capture.** A test covers the drag of a node only (`GraphNodeDragBehaviorTests`). Nobody did a drag in the built application. Start the drag that changes a duration in the Gantt chart, and press Alt+Tab. The bar must go back, and the plan must not change. Do the same for a drag of a node and for a pan of a graph.
+  3. **Two texts of the desktop.** Nobody saw two texts in the built application. The first is the message for a file with a holiday rule that the application refuses. The second is the line about the notices in the dialog "About".
+  4. **The release workflow.** The tag is the first run of the new `release.yml`. After the run, make sure that the release is public and a pre-release. Make sure that it has each archive and `SHA256SUMS.txt`, and that the checksum of one download agrees. For a run that fails, refer to the entry "Let the release workflow check CI, and decide on provenance and signatures".
+
 - [ ] **Read a project file one time** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `ProjectFileOpen` reads the stream into a string, and it parses the string into a `JObject`. Then it writes the tree to a second string, with indents, and it reads that string into the model of its version. Each step of the upgrade makes one more model. `PlanCheck` runs after all of this. `SettingServiceBase` reads the settings in the same way.
@@ -12,9 +21,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Find the status code of a body that arrives too slowly** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  The review reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent such a request. The review also reported that an `options` field of more than 4 MB gets 400. On 2026-11-23, an `options` field of 5 MB got 413 with the code `tooLarge`, as the API says.
-
-  Since 0.11.0-beta.3, `zpp` reads an answer of 1 GB at most (`ClientSettings.MaxAnswerBytes`). The server keeps 100 connections open at one time by default (`MaxConnections`). The server compresses the description of the API and the schema one time.
+  The review reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent such a request. Send one on a socket, as the test of an upload in chunks does. If the answer is 400, decide if the server must answer 408, or if [the reference](API.md) must give 400 for this case.
 
 - [ ] **Let one reader read the holiday rules** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -25,6 +32,8 @@ This file lists the maintainer-internal engineering intents that must version wi
   3. **The edit dialog.** The review reported that the dialog keeps only the first value of `BYMONTHDAY`, `BYMONTH` and `BYSETPOS`.
 
   A program, the zpp skill or a workbook can give such a rule. Nobody ran a file with one.
+
+  *(2026-11-23)* Since 0.11.0-beta.3, `HolidayRuleCheck` reads the text of a rule too. It looks for a frequency below one day and for a part of a day, with a split of the text that is its own. Thus, three readers now read one text. When one reader reads the rules, let the check use the result of that reader.
 
   Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there. Catch a rule that the reader cannot read, and report it.
 
@@ -72,10 +81,11 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Let the release workflow check CI, and decide on provenance and signatures** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  Since 0.11.0-beta.3, `release.yml` gives `contents: write` only to the job `create-release`. A first job checks the name of the tag against SemVer, and each script gets the name through the environment. The release is a draft until each file is there, and `SHA256SUMS.txt` has the SHA-256 checksum of each file. The tag of beta.3 is the first run of these changes. Two things remain:
+  Since 0.11.0-beta.3, `release.yml` gives `contents: write` only to the job `create-release`. A first job checks the name of the tag against SemVer, and each script gets the name through the environment. The release is a draft until each file is there, and `SHA256SUMS.txt` has the SHA-256 checksum of each file. The tag of beta.3 is the first run of these changes. Three things remain:
 
   1. **No test.** The workflow runs no test, and it does not make sure that CI passed for the commit of the tag. A tag on any commit makes a release.
   2. **Provenance and signatures.** A release has no attestation of the build. The programs for Windows and the MSI have no signature. The programs for macOS have only the signature that the SDK makes. An attestation needs a new pinned action and the permissions `id-token` and `attestations`. A signature costs money, and the maintainer decides.
+  3. **A run that fails.** A run that fails after it makes the draft leaves the draft in the list of the releases. A second run for the same tag then probably makes a second draft. Delete the first draft before a second run. Nobody ran the workflow after these changes.
 
 - [ ] **Make sure that the MSI does not repair itself for a second user** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -87,20 +97,19 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Keep the notices of the other parties current** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  Since 0.11.0-beta.3, `THIRD-PARTY-NOTICES.txt` at the root of the repository gives the license and the copyright of each package that the two programs ship. It also has the texts of the licenses and the notices of the packages. The build copies it next to each program, and the MSI installs it. The dialog "About" names it. A script that is not in the repository made it from the packages of the build (the `deps.json` files of the two programs and the `.nuspec` files in the cache of NuGet). Three things remain:
+  Since 0.11.0-beta.3, `THIRD-PARTY-NOTICES.txt` at the root of the repository gives the license and the copyright of each package that the two programs ship. It also has the texts of the licenses and the notices of the packages. The build copies it next to each program, and the MSI installs it. The dialog "About" names it. A script that is not in the repository made it from the packages of the build (the `deps.json` files of the two programs and the `.nuspec` files in the cache of NuGet). Four things remain:
 
-  1. **A new package.** Nothing makes sure that the file has each package. Make the file again when a package changes, or add a test that compares it with the `deps.json` files.
+  1. **A new package or a new version.** The file gives the version of each package. Nothing makes sure that the file has each package of a build, with its version. Thus, each bump of a package makes the file wrong. [Build from source](BUILDING.md) does not name the file. Put the script into the repository, and say in that document when to run it. A test can then compare the file with the `deps.json` files.
   2. **The texts that are not from a file.** The text of the MS-PL (Svg.Custom) is the published text, written into the script, because no file on the computer had it. The copyright of MSAGL and of Inter is from their projects, because the packages do not give it. Read these against the projects.
   3. **The LGPL of MPXJ.** The license of MPXJ.Net is the LGPL 2.1 or later. A release puts it into one file with the program (`PublishSingleFile`). The LGPL asks that a user can change the library and use the program with the changed library. The review did not decide if a single file permits this, and this entry is not legal advice.
+  4. **The version of the application.** The head of the file says `version 0.11.0-beta.3`. `AppVersionTests` does not read this file, and [The version of a release](BUILDING.md#the-version-of-a-release) does not list it. Thus, the file of the next release keeps this version, unless a person makes the file again. Add the file to the test, or remove the version from the file. The section ".NET" of the file also gives the version of the runtime on the day of the script (10.0.15). A release from `release.yml` can have a later runtime.
 
 - [ ] **Do four smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The MSIX manifests.** Both manifests name the device family `Windows.Universal`, which is not correct for a desktop application with full trust. `MaxVersionTested` is 10.0.14393.0, and the packaging projects give 10.0.19041.0 as the minimum. The `.wapproj` files also keep configurations for 32-bit ARM, which .NET 10 does not have, and package references in a comment.
-  2. **`build-msix.ps1`.** With `-Sign`, the script does not make sure that the bundle has a signature. Since 0.11.0-beta.3, the script calls `vswhere` without `-prerelease`, and thus a preview of Visual Studio cannot build a release package.
-  3. **The dependencies of Spectral.** The step for Spectral in `ci.yml` pins the tool, but `npx` gets the newest dependencies of the tool at each run. Since 0.11.0-beta.3, `ci.yml` has a `concurrency` group: a new push to a pull request stops the run of the push before it.
+  2. **`build-msix.ps1`.** With `-Sign`, the script does not make sure that the bundle has a signature.
+  3. **The dependencies of Spectral.** The step for Spectral in `ci.yml` pins the tool, but `npx` gets the newest dependencies of the tool at each run.
   4. **The line endings.** `.gitattributes` asks for LF in the repository, and `.editorconfig` asks for CRLF. On 2026-11-21, 143 files were CRLF in the index, and 1,161 were LF. A tool that follows `.gitattributes` changes each line of a CRLF file. Decide the rule. Then make all the files agree in one commit, and name that commit in `.git-blame-ignore-revs`. *(2026-11-23)* The maintainer decided on LF, in the repository and in `.editorconfig`. Make the change in one commit on `develop` after the merge of beta.3, when no other branch is open.
-
-  Since 0.11.0-beta.3, `SECURITY.md` asks for a report through the private vulnerability reporting of GitHub.
 
 - [ ] **Read only the kept result of a formula in the import of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
 
@@ -129,6 +138,8 @@ This file lists the maintainer-internal engineering intents that must version wi
   Nobody tried the server with such a workbook. Nobody tried a date that makes the calendar count for a long time.
 
   The desktop application does not call `PlanCheck`. `SimulationTargetHelper.FinishTimeByEndOf` adds one day to the target date, and the getter of `TargetFinishTime` calculates the target at each read. Thus, a target date at the end of the range of dates throws in the getter and in each save. The setter reads the getter first, so the user cannot change the target. Only a program writes a target date today, and thus the risk is low. Nobody ran this.
+
+  *(2026-11-23)* Since 0.11.0-beta.3, the desktop does one check before the load of a file and of a recovery copy (`HolidayRuleCheck.FindProblem`). The check reads the holiday rules and the number of the holidays. It still does none of the checks of `PlanCheck`.
 
   Give the dates of an import the checks that the dates of a project file get. Decide if the application does these checks at the load of a file too.
 
@@ -253,6 +264,8 @@ This file lists the maintainer-internal engineering intents that must version wi
   - Svg.Controls.Skia.Avalonia 12.0.0.13 (12.0.0.17).
 
   *(2026-11-23)* This list had Markdown.Avalonia.SyntaxHigh 11.0.3 (12.0.2). Nothing used that package, and 0.11.0-beta.3 removes the reference.
+
+  *(2026-11-23)* Since 0.11.0-beta.3, `nuget.config` sends each package to nuget.org. `THIRD-PARTY-NOTICES.txt` gives the version of each package, and thus a bump also changes that file. Refer to the entry "Keep the notices of the other parties current".
 
 - [ ] **Build and test on Windows in CI, and collect the coverage** *(2026-11-14, from the review of `src`)*
 
@@ -736,7 +749,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   A switch needs two changes. First, the interactive render must stop its run inside `Dispatcher.UIThread.Invoke`. This is the same hazard as the `Refresh` call that leaks a parked thread for each job, where there is no user interface. Second, a node without a saved position still needs a deterministic fallback, and the same MSAGL layout gives it.
 
-  *(2026-11-23, from the review of `src`, `test` and `pkg`)* The first change is complete. `InteractiveGraphViewModel` now calls the render through `IGraphDispatcher`, and a host with no user interface gives `InlineGraphDispatcher`, which calls it directly. One thing remains. The font cache of `InteractiveGraphRenderer` is a static dictionary for one thread, and two jobs can then use it at the same time. [The TODO file of the library](../src/Zametek.Graphs.Avalonia/TODO.md) has this item.
+  *(2026-11-23, from the review of `src`, `test` and `pkg`)* The first change is complete. `InteractiveGraphViewModel` now calls the render through `IGraphDispatcher`, and a host with no user interface gives `InlineGraphDispatcher`, which calls it directly. Since 0.11.0-beta.3, the font cache of `InteractiveGraphRenderer` takes a lock, because two jobs can then render at the same time. The jobs share the `SKFont` objects of the cache, and a render only reads them. Nobody ran two such renders at the same time.
 
   A third need is already met. It is to draw with the bundled font through the own font cache of `InteractiveGraphRenderer`, which does not use the typeface providers of Svg.Skia. It came with the bundled fonts on 2026-09-25. A run of the CLI already computes the interactive layout, because the `Refresh` subscription fires. Then the run discards the layout.
 
@@ -763,7 +776,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   1. **The shutdown timeout.** A stopped server gives the jobs in progress up to the job time limit to finish. The default limit is 120 s. Docker gives a container only 10 s. systemd gives a unit 90 s by default (`TimeoutStopSec`). Raise each timeout to at least the job limit, or the shutdown kills jobs part way.
   2. **The culture and the time zone.** The image must set them explicitly (`--culture`, `TZ`) and must not inherit them. The default is the culture and zone of the host. The decision of 2026-10-01 made this default, so that a local `zpp serve` agrees with `zpp`.
   3. **The integrations for hosting.** The integrations for systemd and Windows services do nothing in a process that neither of them started. Thus, one binary can carry both.
-  4. **The probes.** `/health/live` is for liveness. `/health/ready` is for readiness, and it comes a few seconds after the start-up, when the warm-up is complete.
+  4. **The probes.** `/health/live` is for liveness. `/health/ready` is for readiness, and it comes a few seconds after the start-up, when the warm-up is complete. *(2026-11-23)* Since 0.11.0-beta.3, the server closes each connection above `MaxConnections` with no answer (100 by default). A probe needs a connection, and a connection that a client or a proxy keeps open counts too. Thus, a server with 100 open connections does not answer a probe, and the host can then stop it. Set the limit above the number of connections that the proxy of the deployment keeps. Nobody ran this.
   5. **The garbage collector.** `zpp` runs the workstation GC. Measure the server GC (`DOTNET_gcServer=1` in the image or in the environment of the service) with a long test of 1,000 jobs before you choose.
   6. **The size of the image.** It carries MPXJ and the Java runtime image of IKVM, although the server refuses MS Project imports. `Zametek.ViewModel.ProjectPlan` references MPXJ.Net. If the importer moves to an assembly of its own, the image can leave them out.
 
