@@ -28,7 +28,11 @@ namespace Zametek.Data.ProjectPlan.Tests
             m_LocalNow = TimeProvider.System.GetLocalNow();
         }
 
-        private static void CompareModelsPreV0_6_0(ProjectModel model1, ProjectModel model2)
+        // daysOnly is true for the step from 0.2.1 to 0.3.0. A file before 0.3.0 has no offset, and the test reads it in UTC
+        // (s_LocalTimeZone). The fixture of 0.3.0 has the same moment, written on a computer at +01:00: 09:00+01:00 for
+        // 08:00. Thus, only the day of each date can agree. Converter_Given_v0_2_1_InputAndATimeZone_Then_ItsTimesAreReadThere
+        // compares the date and the offset of that step.
+        private static void CompareModelsPreV0_6_0(ProjectModel model1, ProjectModel model2, bool daysOnly = false)
         {
             model1.Version.ShouldBe(model2.Version);
             model1.Nodes.Count.ShouldBe(model2.Nodes.Count);
@@ -37,8 +41,8 @@ namespace Zametek.Data.ProjectPlan.Tests
             {
                 model1.Nodes[i].NodeType.ShouldBe(model2.Nodes[i].NodeType);
                 model1.Nodes[i].Name.ShouldBe(model2.Nodes[i].Name);
-                model1.Nodes[i].CreatedOn.ShouldBe(model2.Nodes[i].CreatedOn);
-                model1.Nodes[i].ModifiedOn.ShouldBe(model2.Nodes[i].ModifiedOn);
+                DayAndOffset(model1.Nodes[i].CreatedOn).ShouldBe(DayAndOffset(model2.Nodes[i].CreatedOn));
+                DayAndOffset(model1.Nodes[i].ModifiedOn).ShouldBe(DayAndOffset(model2.Nodes[i].ModifiedOn));
             }
 
             model1.Files.Count.ShouldBe(model2.Files.Count);
@@ -46,6 +50,15 @@ namespace Zametek.Data.ProjectPlan.Tests
             for (int i = 0; i < model1.Files.Count; i++)
             {
                 model1.Files[i].Scenario.ShouldBeEquivalentTo(model2.Files[i].Scenario);
+            }
+
+            if (daysOnly)
+            {
+                DatesOf(model1).Select(x => (x.Place, x.DateTime.Date)).ShouldBe(DatesOf(model2).Select(x => (x.Place, x.DateTime.Date)));
+            }
+            else
+            {
+                DatesOf(model1).ShouldBe(DatesOf(model2));
             }
 
             model1.Tags.Count.ShouldBe(model2.Tags.Count);
@@ -56,7 +69,9 @@ namespace Zametek.Data.ProjectPlan.Tests
             }
         }
 
-        private static void CompareModels(ProjectModel model1, ProjectModel model2)
+        // nodesAreFromTheFile is false for a file older than 0.6.0: it has no nodes, and the step to 0.6.0 makes them, with
+        // the time of the upgrade.
+        private static void CompareModels(ProjectModel model1, ProjectModel model2, bool nodesAreFromTheFile = true)
         {
             model1.Version.ShouldBe(model2.Version);
             model1.Nodes.Count.ShouldBe(model2.Nodes.Count);
@@ -66,8 +81,11 @@ namespace Zametek.Data.ProjectPlan.Tests
                 model1.Nodes[i].NodeType.ShouldBe(model2.Nodes[i].NodeType);
                 model1.Nodes[i].Name.ShouldBe(model2.Nodes[i].Name);
 
-                //model1.Nodes[i].CreatedOn.ShouldBe(model2.Nodes[i].CreatedOn);
-                //model1.Nodes[i].ModifiedOn.ShouldBe(model2.Nodes[i].ModifiedOn);
+                if (nodesAreFromTheFile)
+                {
+                    DayAndOffset(model1.Nodes[i].CreatedOn).ShouldBe(DayAndOffset(model2.Nodes[i].CreatedOn));
+                    DayAndOffset(model1.Nodes[i].ModifiedOn).ShouldBe(DayAndOffset(model2.Nodes[i].ModifiedOn));
+                }
             }
 
             model1.Files.Count.ShouldBe(model2.Files.Count);
@@ -77,11 +95,57 @@ namespace Zametek.Data.ProjectPlan.Tests
                 model1.Files[i].Scenario.ShouldBeEquivalentTo(model2.Files[i].Scenario);
             }
 
+            DatesOf(model1).ShouldBe(DatesOf(model2));
+
             model1.Tags.Count.ShouldBe(model2.Tags.Count);
 
             for (int i = 0; i < model1.Tags.Count; i++)
             {
                 model1.Tags[i].Label.ShouldBeEquivalentTo(model2.Tags[i].Label);
+            }
+        }
+
+        // A comparison of two DateTimeOffset values compares moments. A date of a plan is the day that it shows, in its own
+        // offset (since 0.11.0-beta.1), and so a step of the upgrade that changed the offset or the day of a date passed
+        // (from the review of src, test and pkg). These compare the date and the time as the file shows them, and the offset.
+        private static (DateTime DateTime, TimeSpan Offset) DayAndOffset(DateTimeOffset value) => (value.DateTime, value.Offset);
+
+        // Each date of each scenario, at its place, as the file shows it, and its offset. Each scenario has a ProjectStart.
+        private static List<(string Place, DateTime DateTime, TimeSpan Offset)> DatesOf(ProjectModel model)
+        {
+            var dates = new List<(string Place, DateTime DateTime, TimeSpan Offset)>();
+
+            for (int index = 0; index < model.Files.Count; index++)
+            {
+                ProjectScenarioModel scenario = model.Files[index].Scenario;
+                string root = $@"Files/{index}/Scenario";
+                Add($@"{root}/ProjectStart", scenario.ProjectStart);
+                Add($@"{root}/EffectiveProjectStart", scenario.EffectiveProjectStart);
+                Add($@"{root}/Today", scenario.Today);
+                Add($@"{root}/SimulationSettings/TargetFinishDateTime", scenario.SimulationSettings?.TargetFinishDateTime);
+
+                foreach (DependentActivityModel dependentActivity in scenario.DependentActivities)
+                {
+                    ActivityModel activity = dependentActivity.Activity;
+                    Add($@"{root}/Activity {activity.Id}/MinimumEarliestStartDateTime", activity.MinimumEarliestStartDateTime);
+                    Add($@"{root}/Activity {activity.Id}/MaximumLatestFinishDateTime", activity.MaximumLatestFinishDateTime);
+                }
+
+                foreach (HolidayModel holiday in scenario.HolidaySettings?.Holidays ?? [])
+                {
+                    Add($@"{root}/Holiday {holiday.Id}/StartDateTime", holiday.StartDateTime);
+                }
+            }
+
+            dates.ShouldNotBeEmpty();
+            return dates;
+
+            void Add(string place, DateTimeOffset? value)
+            {
+                if (value is DateTimeOffset date)
+                {
+                    dates.Add((place, date.DateTime, date.Offset));
+                }
             }
         }
 
@@ -123,7 +187,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             ProjectModel model1 = Converter.Upgrade(m_LocalNow, s_LocalTimeZone, project_v0_2_1!);
             ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_3_0!);
-            CompareModelsPreV0_6_0(model1, model2);
+            CompareModelsPreV0_6_0(model1, model2, daysOnly: true);
         }
 
         [Fact]
@@ -339,12 +403,17 @@ namespace Zametek.Data.ProjectPlan.Tests
             v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0a_JsonString);
             v0_6_0.ProjectModel? project_v0_6_0 = JsonConvert.DeserializeObject<v0_6_0.ProjectModel>(m_Fixture.V0_6_0_JsonString);
             var mapper = new VersionMapper();
-            //v0_6_0.ProjectModel project_v0_5_0_upgraded = v0_6_0.Converter.Upgrade(mapper, m_LocalNow, project_v0_5_0!);
-            //project_v0_5_0_upgraded.ShouldBeEquivalentTo(project_v0_6_0);
+            v0_6_0.ProjectModel project_v0_5_0_upgraded = v0_6_0.Converter.Upgrade(mapper, m_LocalNow, project_v0_5_0!);
+
+            // The step makes the nodes, with new ids and the time of the upgrade. The rest is as the file of 0.6.0 has it.
+            project_v0_5_0_upgraded.Files.Select(x => x.Scenario).ShouldBeEquivalentTo(project_v0_6_0!.Files.Select(x => x.Scenario));
+            project_v0_5_0_upgraded.Nodes.Select(x => (x.NodeType, x.Name)).ShouldBe(project_v0_6_0.Nodes.Select(x => (x.NodeType, x.Name)));
+            project_v0_5_0_upgraded.Nodes.ShouldAllBe(x => x.CreatedOn == m_LocalNow && x.ModifiedOn == m_LocalNow);
 
             ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_5_0!);
             ProjectModel model2 = Converter.Upgrade(project_v0_6_0!);
-            CompareModels(model1, model2);
+            CompareModels(model1, model2, nodesAreFromTheFile: false);
+            model1.Nodes.Select(x => DayAndOffset(x.CreatedOn)).Distinct().ShouldBe([DayAndOffset(m_LocalNow)]);
         }
 
         [Fact]

@@ -57,14 +57,6 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   The review read these sites. Nobody saw one of these tests fail.
 
-- [ ] **Compare the date and the offset in the converter tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  The fixtures have dates with an offset, for example `2015-01-05T09:00:00+01:00`. The assertions of `ConverterTests` compare moments. Thus, a step of the upgrade that changes the offset or the day of a date passes. Since 0.11.0-beta.1, a date of a plan is the day that it shows, in its own offset.
-
-  Since 0.11.0-beta.3, `ConverterFixture` gives the converters the text of each file as it is, as `ProjectFileOpen` does. Before, it read each fixture with `JObject.Parse`. That reads a text that looks like a date as a moment in the time zone of the computer.
-
-  For each version, compare the date and the offset of one date or more. `ConverterTests` also has assertions in comments, for the times of the creation and for the step from 0.5.0 to 0.6.0. Put them back, or remove them.
-
 - [ ] **Throw at each step of a load in the tests of a load that fails** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   ARCHITECTURE section 7 rule 16 says that a load that fails changes nothing, and that a load can fail at each of its steps. This rule protects against a loss of data. The tests throw at three places: at two changes of `ArrowGraphEdgeRoutingMode` (`RoutingModeFault`), and at a null list of the dependent activities. For "nothing changed", they compare three values of each scenario: the number of the activities, the number of the resources and the routing mode (`ProjectScenarioManagerLoadFailureTests`).
