@@ -450,38 +450,78 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             // Each other test of the answer 413 sends a body with Content-Length. A body in chunks has no length, and the web
             // server finds that it is too large only while it reads it (from the review of src, test and pkg).
             //
-            // The test writes the request on a socket, and it stops a little after the limit. Then it reads the answer. Before,
-            // HttpClient sent all of the body, and the server answered and closed the connection while the client still sent.
-            // On a busy computer the client then got a reset of the connection and no answer (the hook of 2026-11-23, with
-            // other tests in WSL at the same time). HttpClient reads the answer only after it has sent the body.
+            // The test writes the request on a socket, it reads the answer while it writes, and it stops a little after the
+            // limit. Before, HttpClient sent all of the body, and it reads the answer only after the body. The server answered
+            // and closed the connection while the client still sent, and on a busy computer the client then got a reset of the
+            // connection and no answer (the hook of 2026-11-23). The server can still reset the connection after its answer,
+            // when data that it did not read is left. A reset can then lose the answer before the client reads it. Thus, the
+            // test tries again when a try gets no answer, and it asserts the first answer that it gets.
             await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxUploadMegabytes = 1 } });
             using MultipartFormDataContent form = RunningServer.CompileContent(new byte[2 * 1024 * 1024], @"large.zpp");
             byte[] body = await form.ReadAsByteArrayAsync();
             var address = new Uri(server.Address);
+            string? answer = null;
 
-            using var tcp = new TcpClient();
-            await tcp.ConnectAsync(address.Host, address.Port);
-            await using NetworkStream network = tcp.GetStream();
-            string head = $"POST /v1/projects/compile HTTP/1.1\r\nHost: {address.Authority}\r\nContent-Type: {form.Headers.ContentType}\r\nTransfer-Encoding: chunked\r\n\r\n";
-            await network.WriteAsync(Encoding.ASCII.GetBytes(head));
-
-            const int chunk = 64 * 1024;
-
-            for (int sent = 0; sent < (1024 * 1024) + chunk; sent += chunk)
+            for (int attempt = 0; attempt < 5 && answer is null; attempt++)
             {
-                await network.WriteAsync(Encoding.ASCII.GetBytes($"{chunk:X}\r\n"));
-                await network.WriteAsync(body.AsMemory(sent, chunk));
-                await network.WriteAsync(Encoding.ASCII.GetBytes("\r\n"));
+                answer = await SendInChunksAsync(address, form.Headers.ContentType!.ToString(), body, (1024 * 1024) + (64 * 1024));
             }
 
-            await network.FlushAsync();
-
-            // The server closes the connection after the answer.
-            using var reader = new StreamReader(network, Encoding.UTF8);
-            string answer = await reader.ReadToEndAsync().WaitAsync(TimeSpan.FromMinutes(1));
-
+            answer.ShouldNotBeNull(@"no try got an answer");
             answer.ShouldStartWith(@"HTTP/1.1 413 ");
             answer.ShouldContain(JsonSerializer.Serialize(string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1), ProjectEndpoints.JsonOptions));
+        }
+
+        // A POST of a body in chunks of 64 KB, up to the given size, on a socket. The answer is what the server sent before it
+        // closed the connection, or null when nothing arrived.
+        private static async Task<string?> SendInChunksAsync(Uri address, string contentType, byte[] body, int size)
+        {
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(address.Host, address.Port);
+            NetworkStream network = tcp.GetStream();
+            var received = new MemoryStream();
+
+            async Task ReadAsync()
+            {
+                byte[] buffer = new byte[16 * 1024];
+
+                try
+                {
+                    int count;
+
+                    while ((count = await network.ReadAsync(buffer)) > 0)
+                    {
+                        received.Write(buffer, 0, count);
+                    }
+                }
+                catch (IOException)
+                {
+                    // A reset after the answer, or in place of it.
+                }
+            }
+
+            Task reading = ReadAsync();
+
+            try
+            {
+                await network.WriteAsync(Encoding.ASCII.GetBytes($"POST /v1/projects/compile HTTP/1.1\r\nHost: {address.Authority}\r\nContent-Type: {contentType}\r\nTransfer-Encoding: chunked\r\n\r\n"));
+                const int chunk = 64 * 1024;
+
+                for (int sent = 0; sent < size && !reading.IsCompleted; sent += chunk)
+                {
+                    await network.WriteAsync(Encoding.ASCII.GetBytes($"{chunk:X}\r\n"));
+                    await network.WriteAsync(body.AsMemory(sent, chunk));
+                    await network.WriteAsync(Encoding.ASCII.GetBytes("\r\n"));
+                }
+            }
+            catch (IOException)
+            {
+                // The server closed the connection while the test still sent.
+            }
+
+            // The server closes the connection after the answer.
+            await reading.WaitAsync(TimeSpan.FromMinutes(1));
+            return received.Length == 0 ? null : Encoding.UTF8.GetString(received.ToArray());
         }
 
         [Theory]
