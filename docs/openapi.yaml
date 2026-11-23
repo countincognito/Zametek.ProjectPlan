@@ -1506,7 +1506,7 @@ components:
       properties:
         code:
           type: string
-          description: The code of the compiler, for example `P0010`, or a code of the check of the project before the load, for example `notAllowed`.
+          description: The code of the compiler, for example `P0010`, a code of the check of the project before the load, for example `notAllowed`, or `compilationTimedOut` when the compilation used more time than the limit.
         detail:
           type: string
     ScenarioChart:

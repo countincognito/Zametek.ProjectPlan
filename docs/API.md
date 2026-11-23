@@ -208,7 +208,7 @@ The status is `200 OK` when the project compiled and the job produced each outpu
 - `metrics` has the [metrics](#metrics) of the project.
 - `outputs` lists each output, in the order in which the job produced them. This is the order of the table above. The list is `[]` when the request asked for no output. `kind` shows which output it is. `fileName` is the name that `zpp` gives to its file. `contentType` is its media type. `content` is the file, in base64.
 - `simulation` has the [statistics](#simulation) of the simulation. It is in the answer when the request ran the simulation, or the project holds a result.
-- `trackedScenarios` lists each tracked scenario of the project, in the order of the project. It is in the answer when the request has `compileTracked`. An item has the `path` and the `id` of the scenario, `isCurrent`, and its `metrics`. `isCurrent` is `true` for the scenario that the job loaded, and its metrics are then the same as `metrics`. `metrics` is `null` for a scenario that does not compile.
+- `trackedScenarios` lists each tracked scenario of the project, in the order of the project. It is in the answer when the request has `compileTracked`. An item has the `path` and the `id` of the scenario, `isCurrent`, and its `metrics`. `isCurrent` is `true` for the scenario that the job loaded, and its metrics are then the same as `metrics`. `metrics` is `null` for a scenario that does not compile. `errors` tells why: the errors of the compiler, or the problems of the check of the project. A scenario whose compilation used more time than the limit has the code `compilationTimedOut`. Such a scenario does not end the job.
 - `scenarioChart` has the [data of the scenario chart](#scenario-chart). It is in the answer when the job compiled the tracked scenarios, and the chart of the project has axes.
 - With `?include=console`, the answer also has `console` (refer to [console](#console)).
 
@@ -894,7 +894,7 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The operation `GET /v1/schemas/project` gives the JSON Schema of the project file. It needs no API key.
 - The member `warnings` of the answer and of the problems `compilation-failed` and `output-failed`: the warnings of the check of the project.
 - The status `403` of a server with no API key: the request has an `Origin` header, or its `Host` is not this computer.
-- The member `errors` of each item of `trackedScenarios`: why the scenario did not compile.
+- The member `errors` of each item of `trackedScenarios`: why the scenario did not compile. A tracked scenario whose compilation uses more time than the limit has the code `compilationTimedOut`. The job then goes on.
 - The data of the scenario chart: the member `scenarioChart` of the answer and of the problem `output-failed`. The output `scenarioChart` also makes two CSV files, which the answer lists as `scenarioChartPoints` and `scenarioChartFits`.
 - The metric `projectStartDate`: the first working day on the start of the project or after it, which is day 0 of the schedule.
 - The dates of a project do not depend on the time zone of the server. Each date is the day that it shows, in its own offset.

@@ -240,6 +240,38 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             tracked.Single(x => x.Path == @"Alpha").Errors.ShouldBeEmpty();
         }
 
+        [Fact]
+        public async Task Compile_Given_ATrackedScenarioThatRunsOutOfTime_Then_ItsItemSaysWhyAndTheJobSucceeds()
+        {
+            // The first compilation of the job is that of Beta, the other tracked scenario, and it runs out of time. Before, the
+            // timeout ended the job with 422 compilation-timed-out, with no outputs and no name of the scenario (from the review
+            // of src, test and pkg). The file holds metrics for Beta, so that the test can see that the project gets the empty
+            // metrics of a plan that does not compile for it, as for a scenario with errors. The metrics of the answer are not
+            // checked: the metric manager does not get the metrics of a core behind the proxy of FailingEngine, also when the
+            // proxy fails nothing.
+            await using FailingEngine engine = FailingEngine.WithAFirstCompilationThatRunsOutOfTime();
+            await using RunningServer server = await RunningServer.StartAsync(engine.JobRunner);
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Assets", @"stale-tracked.zpp")));
+            plan[@"Files"]![1]![@"Scenario"]![@"Metrics"]![@"Network"]![@"Duration"] = 77;
+            using var content = RunningServer.CompileContent(
+                Encoding.UTF8.GetBytes(plan.ToString()),
+                @"stale-tracked.zpp",
+                new CompileOptions { CompileTracked = true, Outputs = new OutputsOptions { Project = new ProjectOptions() } });
+
+            using HttpResponseMessage response = await server.Client.PostAsync(@"/v1/projects/compile", content);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            CompileResponse compiled = await RunningServer.ReadAsync<CompileResponse>(response);
+            IReadOnlyList<TrackedScenarioResponse> tracked = compiled.TrackedScenarios.ShouldNotBeNull();
+            TrackedScenarioResponse beta = tracked.Single(x => x.Path == @"Beta");
+            beta.Metrics.ShouldBeNull();
+            beta.Errors.Select(x => x.Code).ShouldBe([JobCompilationError.CompilationTimedOutCode]);
+            tracked.Single(x => x.Path == @"Alpha").Errors.ShouldBeEmpty();
+
+            Newtonsoft.Json.Linq.JObject project = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(compiled.Outputs.Single(x => x.Kind == JobOutput.Project).Content.ShouldNotBeNull()));
+            project[@"Files"]![1]![@"Scenario"]![@"Metrics"]![@"Network"]![@"Duration"].ShouldBeNull();
+        }
+
         // A client can send a path as the name of its file, and a path of Windows has separators that Linux does not take
         // as separators. The name is what follows the last of them, on each system.
         [Theory]

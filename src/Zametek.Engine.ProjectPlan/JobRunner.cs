@@ -707,7 +707,27 @@ namespace Zametek.Engine.ProjectPlan
 
                 // A load keeps the metrics that the file holds (see CoreViewModel.ProcessProjectScenario), and so the job
                 // compiles again and builds them, as for its own scenario.
-                core.RunCompile();
+                try
+                {
+                    core.RunCompile();
+                }
+                catch (GraphCompilationTimeoutException ex)
+                {
+                    // A tracked scenario that passes the limit of a compile does not compile, as one with errors does not, and
+                    // the job goes on (COMMAND-LINE.md, exit codes). Before, the exception left the loop and ended the job with
+                    // exit code 4, with no outputs and no name of the scenario (from the review of src, test and pkg). The
+                    // compile published nothing, and so the project gets the empty metrics of a plan that does not compile
+                    // for the scenario: the chart of the scenarios then has no stale point for it.
+                    compiled[scenarioId] = (null, [new JobCompilationError(JobCompilationError.CompilationTimedOutCode, ex.Message)]);
+                    projectModel = projectModel with
+                    {
+                        Files = [.. projectModel.Files.Select((file, i) => i == index
+                            ? file with { Scenario = file.Scenario with { Metrics = new(), ResourceMetrics = [] } }
+                            : file)],
+                    };
+                    continue;
+                }
+
                 core.BuildResourceSeriesSet();
                 core.BuildNetworkMetrics();
                 core.BuildRiskMetrics();

@@ -49,6 +49,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                     : null)));
         }
 
+        // An engine whose first compilation runs out of its time, and whose other compilations do not. With compileTracked, the
+        // first compilation of a job is that of a tracked scenario that the job does not load, and the last is that of the
+        // scenario that it loads.
+        public static FailingEngine WithAFirstCompilationThatRunsOutOfTime()
+        {
+            int compilations = 0;
+
+            return Build(services => services.AddScoped<ICoreViewModel>(provider => Faulting<ICoreViewModel>.Wrap(
+                ActivatorUtilities.CreateInstance<CoreViewModel>(provider),
+                method => method.Name == nameof(ICoreViewModel.RunCompile) && Interlocked.Increment(ref compilations) == 1
+                    ? CompilationTimeoutHelper.TimedOut(2_500, new OperationCanceledException())
+                    : null)));
+        }
+
         // An engine that fails with something nobody expected, before it has read the plan.
         public static FailingEngine ThatFailsUnexpectedly()
         {

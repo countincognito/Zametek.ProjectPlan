@@ -14,14 +14,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   2. **The desktop.** The desktop opens a project file with no check before the load. Decide if the calendar ignores such a rule, or if the open refuses the file.
   3. **The number of the holidays.** Each rule costs a read for each range of days. Give the number of the holidays a limit, and decide the number.
 
-- [ ] **Decide if a tracked scenario that passes the limit of a compile ends the job** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `JobRunner` loads and compiles each other tracked scenario for `compileTracked` and for the scenario chart. A tracked scenario with compilation errors gets its errors in the answer, and the job goes on. But a tracked scenario that passes the limit of a compile throws `GraphCompilationTimeoutException` out of the loop. The job then ends with exit code 4 (`compilation-timed-out`), with no metrics and no outputs. The message does not name the scenario.
-
-  [The command line tool](COMMAND-LINE.md#exit-codes) says that a tracked scenario that does not compile does not change the exit code. No test has a tracked scenario that passes the limit.
-
-  If the limit must not end the job, catch the exception in the loop, and record it as the error of that scenario. If it must, name the scenario in the message, and say so in the documentation.
-
 - [ ] **Write the output of `zpp` as UTF-8 on each system** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `Program.Main` uses `Console.Out` and `Console.Error` as they are, and nothing in the project sets `Console.OutputEncoding`. On Windows, the encoding is then the code page of the console, for example 850. The JSON of the metrics does not escape a letter that is not ASCII. Thus, after `zpp ... > metrics.json`, a name with such a letter gives a file that is not UTF-8. A letter that the code page does not have becomes `?`.
