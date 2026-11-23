@@ -110,6 +110,15 @@ A value comes after its option, or after `=`. This is the same for the long and 
 
 `zpp` writes text in these places: the standard output (not the `--help` text), the saved plan files, and the GraphML and Dot exports. In all of them, each line ends with `\n` on every platform. Thus, the line endings are the same on all operating systems. The desktop application saves plan files and exports GraphML and Dot in the same way.
 
+`zpp` writes the standard output and the standard error stream in the encoding of the console. The saved plan files and the exports are always UTF-8.
+
+On Linux and macOS, the encoding of the terminal is usually UTF-8. On Windows, the encoding is the code page of the console, for example 850. A shell then reads the text in that code page. Thus, a name with a letter that the code page does not have shows as `?`, also in a file that `> file` writes. To get UTF-8, set the console to UTF-8 before you start `zpp`:
+
+- In the command prompt, enter `chcp 65001`.
+- In PowerShell, enter `[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()`.
+
+On 2026-11-23, with the console at code page 65001, `zpp` gave each name correctly in the command prompt and in PowerShell 5.1. `zpp` does not set UTF-8 itself. PowerShell reads the output of a program in the code page of the console. With UTF-8 from `zpp`, PowerShell then shows each letter that is not ASCII incorrectly.
+
 A watchdog controls each compilation. The option `--compile-timeout` gives the watchdog a budget in milliseconds. The default is 5000. If a compilation uses more time than the budget, the watchdog cancels it, and `zpp` exits with code 4.
 
 Large plans can need more time. For a batch run that you must not interrupt, increase the budget, or use `--compile-timeout 0` to disable the limit. The desktop application uses the same budget. It reads the value from `CompilationTimeoutMilliseconds` in its settings file.

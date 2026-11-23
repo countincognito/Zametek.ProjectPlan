@@ -3,9 +3,10 @@ using Zametek.ViewModel.ProjectPlan;
 namespace Zametek.ProjectPlan.CommandLine
 {
     // zpp's own console, on the writers it is given - stdout and stderr. Lines on stdout end with NewLineHelper.NewLine
-    // on every platform, so that a run prints the same bytes on Windows as on Linux, and text that arrives with the
+    // on every platform, so that a run prints the same line ends on Windows as on Linux, and text that arrives with the
     // platform's line ends - the metrics tables and the compilation output are built that way - is converted on the way
-    // through. stderr is left alone, as is CommandLineParser's help text, which zpp prints as the parser writes it. On a
+    // through. The bytes of a letter that is not ASCII are those of the encoding of the console, which is a code page on
+    // Windows: zpp keeps it, because PowerShell reads the output of a program in that code page (COMMAND-LINE.md). stderr is left alone, as is CommandLineParser's help text, which zpp prints as the parser writes it. On a
     // terminal, a displayed block shows in green, or in red when it reports errors.
     internal class StandardConsole
         : IJobConsole

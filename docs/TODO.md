@@ -2,14 +2,6 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Write the output of `zpp` as UTF-8 on each system** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `Program.Main` uses `Console.Out` and `Console.Error` as they are, and nothing in the project sets `Console.OutputEncoding`. On Windows, the encoding is then the code page of the console, for example 850. The JSON of the metrics does not escape a letter that is not ASCII. Thus, after `zpp ... > metrics.json`, a name with such a letter gives a file that is not UTF-8. A letter that the code page does not have becomes `?`.
-
-  The same applies to the list of the scenarios, to the tables, and to the text that `zpp --server` shows again. The comment in `StandardConsole` says that the bytes are the same on Windows and on Linux. The tests read the output through writers, and thus they cannot see the encoding. Nobody looked at the bytes of such a file on Windows.
-
-  At the start of `Main`, set the encoding of the two streams to UTF-8 with no byte order mark.
-
 - [ ] **Read a project file one time** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `ProjectFileOpen` reads the stream into a string, and it parses the string into a `JObject`. Then it writes the tree to a second string, with indents, and it reads that string into the model of its version. Each step of the upgrade makes one more model. `PlanCheck` runs after all of this. `SettingServiceBase` reads the settings in the same way.
