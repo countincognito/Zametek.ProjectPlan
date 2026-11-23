@@ -443,6 +443,26 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             (await ProblemDetailAsync(response)).ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1));
         }
 
+        [Fact]
+        public async Task RunJob_Given_ARequestInChunksLargerThanTheLimit_Then_PayloadTooLarge()
+        {
+            // Each other test of the answer 413 sends a body with Content-Length. A body in chunks has no length, and the web
+            // server finds that it is too large only while it reads it (from the review of src, test and pkg).
+            await using RunningServer server = await StartAsync(new ServeSettings { Limits = new ServeLimits { MaxUploadMegabytes = 1 } });
+
+            using MultipartFormDataContent form = RunningServer.CompileContent(new byte[2 * 1024 * 1024], @"large.zpp");
+            byte[] body = await form.ReadAsByteArrayAsync();
+            using var chunked = new StreamContent(new MemoryStream(body));
+            chunked.Headers.ContentType = form.Headers.ContentType;
+            using var request = new HttpRequestMessage(HttpMethod.Post, @"/v1/projects/compile") { Content = chunked };
+            request.Headers.TransferEncodingChunked = true;
+
+            using HttpResponseMessage response = await server.Client.SendAsync(request);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
+            (await ProblemDetailAsync(response)).ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeRequestTooLarge, 1));
+        }
+
         [Theory]
         [InlineData(1)]
         [InlineData(50)]

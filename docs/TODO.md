@@ -50,7 +50,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   1. **The answer in the memory of the client.** `JobClient` reads each answer into memory, and its `HttpClient` has no `MaxResponseContentBufferSize`. A wrong address that sends a body with no end makes `zpp` hold as much as 2 GB. Set the largest size from the limits of the server.
   2. **The limits of the connections.** `JobServer` sets `MaxRequestBodySize` and no other limit of Kestrel. Thus, the number of the connections has no limit. The paths that have no key (`/v1/openapi`, `/v1/schemas/project` and `/health/*`) are outside the limiter of the jobs, and the server compresses the description for each request. Set `MaxConcurrentConnections`, and keep the compressed description.
-  3. **Two status codes of the read of a form.** The review reported that an `options` field of more than 4 MB gets 400 and not 413. The limit of ASP.NET Core for a value comes first. It also reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent these requests.
+  3. **A status code of the read of a form.** The review reported that a body below the minimum data rate of Kestrel gets 400 and not 408. Nobody sent such a request. The review also reported that an `options` field of more than 4 MB gets 400. On 2026-11-23, an `options` field of 5 MB got 413 with the code `tooLarge`, as the API says.
 
 - [ ] **Let one reader read the holiday rules** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -109,11 +109,10 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   On Linux, the variable `TZ` changes `TimeZoneInfo.Local`. Run the test project two more times in CI. Use a zone far to the east for one run, for example `Pacific/Kiritimati`. Use a zone far to the west for the other run, for example `America/Los_Angeles`.
 
-- [ ] **Do three smaller things for the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do two smaller things for the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **A server that stops.** `JobServer` gives a stopped server the time limit of a job to complete its jobs (`HostOptions.ShutdownTimeout`). No test stops a server that has a job in progress.
-  2. **An upload with no length.** Each test of the answer 413 sends a body with `Content-Length`. No test sends a body in chunks that is too large. The review reported that such a body possibly gets 400.
-  3. **Copies of the harness.** The review counted 22 private `Harness` classes. Seven files construct `MainViewModel` with its 11 arguments, and three files make a certificate that signs itself. The copies are no longer the same: the harness of `MainViewModelStartTests` does not dispose the main view model. Make one harness for the main view model and one set of helpers for the server tests, in small steps.
+  2. **Copies of the harness.** The review counted 22 private `Harness` classes. Seven files construct `MainViewModel` with its 11 arguments, and three files make a certificate that signs itself. The copies are no longer the same: the harness of `MainViewModelStartTests` does not dispose the main view model. Make one harness for the main view model and one set of helpers for the server tests, in small steps.
 
 - [ ] **Give the release workflow fewer permissions, a draft release and checksums** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
