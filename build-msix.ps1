@@ -35,6 +35,13 @@ $ErrorActionPreference = 'Stop'
 
 # This script lives in the repository root, alongside the makefile, so the root is simply where it sits.
 $repoRoot = $PSScriptRoot
+
+# With this file, the build uses the source code of Zametek.Maths.Graphs from the folder next to the repository, and not
+# the released package (Directory.Build.targets). A package must hold the released library.
+$localLibraryTargets = Join-Path $repoRoot 'Zametek.Maths.Graphs.local.targets'
+if (Test-Path $localLibraryTargets) {
+    throw "$localLibraryTargets is there, and so the build would use the library from its source code, not the released package. Delete the file, and run 'dotnet restore'."
+}
 $wapprojs = @{
     'Desktop'     = Join-Path $repoRoot 'pkg\Zametek.ProjectPlan.Desktop.WapPackager\Zametek.ProjectPlan.Desktop.WapPackager.wapproj'
     'CommandLine' = Join-Path $repoRoot 'pkg\Zametek.ProjectPlan.CommandLine.WapPackager\Zametek.ProjectPlan.CommandLine.WapPackager.wapproj'
@@ -78,7 +85,8 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer
 if (-not (Test-Path $vswhere)) {
     throw "vswhere.exe not found at $vswhere. Install Visual Studio 2022 or newer."
 }
-$msbuild = & $vswhere -latest -prerelease -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\amd64\MSBuild.exe' | Select-Object -First 1
+# No -prerelease: a preview of Visual Studio must not build a package for a release.
+$msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\amd64\MSBuild.exe' | Select-Object -First 1
 if (-not $msbuild -or -not (Test-Path $msbuild)) {
     throw 'Could not locate MSBuild.exe via vswhere.'
 }

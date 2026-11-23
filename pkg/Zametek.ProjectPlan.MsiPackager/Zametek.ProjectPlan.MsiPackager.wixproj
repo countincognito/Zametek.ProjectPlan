@@ -36,6 +36,13 @@
   <Target Name="CheckTheInstallerInputs" BeforeTargets="CoreCompile">
     <Error Condition=" '$(Platform)' != 'x64' or '$(InstallerPlatform)' != 'x64' "
            Text="The installer holds the x64 publish only, and so its platform must be x64. The platform is '$(Platform)', and the installer platform is '$(InstallerPlatform)'." />
+    <!-- With this file, the build uses the source code of Zametek.Maths.Graphs from the folder next to the repository, and
+         not the released package (Directory.Build.targets). An installer must hold the released library. -->
+    <PropertyGroup>
+      <_InstallerLocalLibraryTargets>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', 'Zametek.Maths.Graphs.local.targets'))</_InstallerLocalLibraryTargets>
+    </PropertyGroup>
+    <Error Condition=" Exists('$(_InstallerLocalLibraryTargets)') "
+           Text="Zametek.Maths.Graphs.local.targets is in the root of the repository, and so the publish has the library from its source code, not the released package. Delete the file, run 'dotnet restore', publish again, and then build the installer." />
     <ItemGroup>
       <_InstallerCommandLineOutput Include="@(_WixReferencedProjectOutputs)" Condition=" '%(Filename)' == 'zpp' " />
       <_InstallerDesktopOutput Include="@(_WixReferencedProjectOutputs)" Condition=" '%(Filename)' == 'projectplandotnet' " />

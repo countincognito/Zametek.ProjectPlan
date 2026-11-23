@@ -49,6 +49,8 @@ The file `Directory.Build.targets` imports the local file only when the file exi
 
 This is only a way to develop. Before a change that needs a new library version can merge, the maintainer must publish the packages and change the two `PackageReference` versions.
 
+A package must hold the released library. Thus, `build-msix.ps1` and the build of the MSI stop with a message when the local file is there.
+
 ## Git hooks (Husky.Net)
 
 This repository uses [Husky.Net](https://alirezanet.github.io/Husky.Net/) to operate a pre-commit hook. The file `.config/dotnet-tools.json` sets the version of the tool. The installation is automatic: before each restore, `Directory.Build.targets` starts `dotnet tool restore` and `dotnet husky install`. Thus, a standard `dotnet restore` or `dotnet build` installs the hooks. To install the hooks manually, enter these commands:

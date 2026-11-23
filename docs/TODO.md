@@ -156,13 +156,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Set `Version` one time in `Directory.Build.props`. Let the application read it from the assembly (`AssemblyInformationalVersionAttribute`), and give it to WiX as a constant. A test can then compare the manifests and the documents with it. The numeric fields of the MSIX and the MSI stay `X.Y.Z.0`.
 
-- [ ] **Fix the package sources of a build, and refuse a package build that has the local library** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Fix the package sources of a build** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   The repository has no `nuget.config` file. Thus, a restore uses each package source of the computer. On 2026-11-21, a restore on the computer of the maintainer used a local folder as a source, together with nuget.org. The MSI and the MSIX packages come from that computer. A package in a local source that has the name of a real package can thus go into a release.
 
   Add a `nuget.config` file that clears the sources, names nuget.org, and maps each package to it (`packageSourceMapping`).
 
-  `Directory.Build.targets` imports `Zametek.Maths.Graphs.local.targets` when the file exists. The build then uses the source code of the library from the folder next to the repository ([Build from source](BUILDING.md)). `build-msix.ps1` and the check of the inputs of the installer (`CheckTheInstallerInputs`) do not look for this file. Thus, a package can contain a library that is not the released one. Stop the two package builds when the file exists.
+  Since 0.11.0-beta.3, `build-msix.ps1` and the build of the MSI stop when the file `Zametek.Maths.Graphs.local.targets` is there. With that file, the build uses the source code of the library and not the released package.
 
 - [ ] **Make sure that the MSI does not repair itself for a second user** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -181,7 +181,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 - [ ] **Do five smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The MSIX manifests.** Both manifests name the device family `Windows.Universal`, which is not correct for a desktop application with full trust. `MaxVersionTested` is 10.0.14393.0, and the packaging projects give 10.0.19041.0 as the minimum. The `.wapproj` files also keep configurations for 32-bit ARM, which .NET 10 does not have, and package references in a comment.
-  2. **`build-msix.ps1`.** The script calls `vswhere` with `-prerelease`, and thus a preview of Visual Studio can build a release package. With `-Sign`, the script does not make sure that the bundle has a signature.
+  2. **`build-msix.ps1`.** With `-Sign`, the script does not make sure that the bundle has a signature. Since 0.11.0-beta.3, the script calls `vswhere` without `-prerelease`, and thus a preview of Visual Studio cannot build a release package.
   3. **The dependencies of Spectral.** The step for Spectral in `ci.yml` pins the tool, but `npx` gets the newest dependencies of the tool at each run. Since 0.11.0-beta.3, `ci.yml` has a `concurrency` group: a new push to a pull request stops the run of the push before it.
   4. **Reports about security.** The repository has no `SECURITY.md` file, and `zpp serve` is a server.
   5. **The line endings.** `.gitattributes` asks for LF in the repository, and `.editorconfig` asks for CRLF. On 2026-11-21, 143 files were CRLF in the index, and 1,161 were LF. A tool that follows `.gitattributes` changes each line of a CRLF file. Decide the rule. Then make all the files agree in one commit, and name that commit in `.git-blame-ignore-revs`.
