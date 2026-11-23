@@ -59,7 +59,8 @@ namespace Zametek.Engine.ProjectPlan
 
         /// <summary>
         /// Lists the scenarios of a project file, without processing any of them. A file the engine cannot read is
-        /// <see cref="ProjectNotReadableException"/>.
+        /// <see cref="ProjectNotReadableException"/>, and so is a file whose nodes have a problem: two nodes with one id, or
+        /// a node that is a parent of itself.
         /// </summary>
         public async Task<IReadOnlyList<ScenarioSummary>> ListScenariosAsync(
             Stream input,
@@ -71,6 +72,15 @@ namespace Zametek.Engine.ProjectPlan
             await using AsyncServiceScope scope = m_ScopeFactory.CreateAsyncScope();
             IProjectFileOpen projectFileOpen = scope.ServiceProvider.GetRequiredService<IProjectFileOpen>();
             ProjectModel projectModel = await OpenProjectAsync(projectFileOpen, input);
+
+            // The list needs the nodes only. A problem of a scenario does not stop it, because the list loads no scenario.
+            List<PlanProblem> problems = PlanCheck.FindNodeProblems(projectModel);
+
+            if (problems.Count > 0)
+            {
+                throw new ProjectNotReadableException(PlanProblemText.BuildHeader(problems.Count), problems);
+            }
+
             return ScenarioSelector.ListScenarios(projectModel);
         }
 

@@ -274,6 +274,53 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_ATrackedNodeThatIsItsOwnParent_Then_ProjectNotReadableAndNoWaitForEver()
+        {
+            // The path of a tracked node went from parent to parent with no end, under the lock of the scenario manager (from
+            // the review of src, test and pkg).
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Nodes"]![0]![@"ParentId"] = s_AlphaId.ToString();
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            Task<JobResult> run = services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input, CompileTracked = true }, new MemoryJobSink());
+            (await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(60)))).ShouldBe(run, @"the job did not end");
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(() => run);
+            ex.PlanProblems.ShouldNotBeNull().Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Nodes/0/ParentId", @"notAllowed")]);
+        }
+
+        [Fact]
+        public async Task ListScenariosAsync_Given_TwoNodesWithOneId_Then_ProjectNotReadableAtTheSecond()
+        {
+            // The list made a dictionary of the nodes by id, and it threw ArgumentException: the server answered 500, and zpp
+            // gave exit code 1 with the text of .NET (from the review of src, test and pkg).
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Nodes"]![1]![@"Id"] = s_AlphaId.ToString();
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            ProjectNotReadableException ex = await Should.ThrowAsync<ProjectNotReadableException>(
+                () => services.GetRequiredService<JobRunner>().ListScenariosAsync(input));
+
+            ex.PlanProblems.ShouldNotBeNull().Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Nodes/1/Id", @"duplicateId")]);
+        }
+
+        [Fact]
+        public async Task ListScenariosAsync_Given_AProblemOfAScenarioOnly_Then_ListsTheScenarios()
+        {
+            // The list loads no scenario, and so only a problem of the nodes stops it.
+            await using ServiceProvider services = BuildServices();
+            JObject plan = JObject.Parse(File.ReadAllText(AssetPath(@"two-scenarios.zpp")));
+            plan[@"Files"]![0]![@"Scenario"]![@"DisplaySettings"]![@"NonWorkingDayMode"] = 7;
+            await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+
+            IReadOnlyList<ScenarioSummary> scenarios = await services.GetRequiredService<JobRunner>().ListScenariosAsync(input);
+
+            scenarios.Select(x => x.Id).ShouldBe([s_AlphaId, s_BetaId]);
+        }
+
+        [Fact]
         public async Task RunAsync_Given_ATrackedScenarioThatTheCheckRefuses_Then_ItHasNoMetricsAndTheJobGoesOn()
         {
             // The job loaded each tracked scenario, and a tracked scenario that the load could not get past stopped the job.

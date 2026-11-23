@@ -2,28 +2,6 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Refuse a project file whose scenario nodes make a cycle** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `ProjectScenarioManagerViewModel.GetNodePath` goes from a node to its parent until it finds no parent. It keeps no record of the nodes that it saw. `AddManagedNodes` accepts each `ParentId` that the file gives, also the id of the node itself. `PlanCheck` does no check of `ParentId`.
-
-  Thus, a file of some hundred bytes can stop a job. Its tracked node is its own parent, or two nodes are the parent of each other. `BuildTrackedMetrics` calls `GetNodePath` for each tracked node. The loop then adds a name to a list with no end, under the lock of the scenario manager.
-
-  A job of the server does this for `compileTracked` and for the scenario chart. The time limit of a job does not end a step that is in progress. The desktop does it after the open of the file. Nobody ran such a file.
-
-  `ScenarioSelector` and `ProjectScenarioNodeHelper` already stop at a node that they saw. The review also reported that `ManagedNodeViewModel.Dispose` calls itself for a node that is its own child, because it sets `m_Disposed` only at its end.
-
-  Add a problem for a cycle to `PlanCheck.FindProjectProblems`. Let `AddManagedNodes` put a node of a cycle below the root, and give `GetNodePath` the same stop.
-
-- [ ] **Refuse a project file with two nodes that have the same id** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `ScenarioSelector.ListScenarios` makes a dictionary of the nodes by `Id` (`ToDictionary`). Two nodes with one id make it throw an `ArgumentException`. `JobRunner.ListScenariosAsync` calls it directly after the open. Each job on a project file calls it after `ProcessProject`.
-
-  The endpoint does not know this exception. Thus, both POST operations answer 500 (`unexpected-error`). `zpp --list-scenarios` ends with exit code 1 and the text of .NET.
-
-  `PlanCheck.FindProjectProblems` does a check of the choices and of `hasNoData` only. `PlanCheckTests` has a test of two equal ids for the activities, the resources and the work streams, and none for the nodes. Nobody ran such a file.
-
-  Add the problem `duplicateId` for `/Nodes/{i}/Id`. Do the checks of the project in `ListScenariosAsync` too.
-
 - [ ] **Do a check of each holiday rule before the calendar reads it** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `DateTimeCalculator` gives the text of a holiday rule to Ical.Net (`new RecurrencePattern(...)`). Then it reads each occurrence in its range of days into a list. No path does a check of the text: not the load of a file, not the import of a workbook, and not `PlanCheck`.

@@ -747,6 +747,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (m_ManagedNodeLookup.TryGetValue(projectScenarioNode.Id, out IManagedNodeViewModel? managedNode))
                         {
+                            // A node of a cycle (a node that is its own parent, or two nodes that are the parent of each
+                            // other) would be in no tree under the root, and a walk to the root would have no end. Such a
+                            // node goes to the top level, as an orphan does.
+                            if (IsInCycle(managedNode))
+                            {
+                                managedNode.ParentId = Root.Id;
+                            }
+
                             // Top-level node.
                             if (managedNode.ParentId == Root.Id)
                             {
@@ -773,6 +781,23 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 EndBusy();
             }
+        }
+
+        // Whether the walk from the node, from parent to parent, comes back to the node. The walk stops at the root, at an id
+        // that is not a node, and at a node that it saw.
+        private bool IsInCycle(IManagedNodeViewModel managedNode)
+        {
+            var visited = new HashSet<Guid> { managedNode.Id };
+            Guid parentId = managedNode.ParentId;
+
+            while (parentId != Root.Id
+                && m_ManagedNodeLookup.TryGetValue(parentId, out IManagedNodeViewModel? parentNode)
+                && visited.Add(parentId))
+            {
+                parentId = parentNode.ParentId;
+            }
+
+            return parentId == managedNode.Id;
         }
 
         private void RemoveManagedNodes(IEnumerable<IManagedNodeViewModel> managedNodes)
@@ -1899,8 +1924,13 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 List<string> pathSegments = [];
+                var visited = new HashSet<Guid>();
                 IManagedNodeViewModel? currentNode = GetNode(id);
-                while (currentNode is not null)
+
+                // The walk stops at a node that it saw, as ScenarioSelector.BuildNodePath does, so that a cycle of parents
+                // cannot give it no end.
+                while (currentNode is not null
+                    && visited.Add(currentNode.Id))
                 {
                     pathSegments.Add(currentNode.Name);
                     currentNode = GetNode(currentNode.ParentId);

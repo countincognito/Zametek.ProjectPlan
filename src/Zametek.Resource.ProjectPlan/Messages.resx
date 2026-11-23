@@ -246,6 +246,9 @@
   <data name="Message_PlanLimitsExceeded" xml:space="preserve">
     <value>Values or counts outside the supported limits:</value>
   </data>
+  <data name="Message_PlanNodeCycle" xml:space="preserve">
+    <value>makes the node a parent of itself</value>
+  </data>
   <data name="Message_PlanProblemsFound" xml:space="preserve">
     <value>The plan was not loaded. Problems found in the file: {0}.</value>
   </data>

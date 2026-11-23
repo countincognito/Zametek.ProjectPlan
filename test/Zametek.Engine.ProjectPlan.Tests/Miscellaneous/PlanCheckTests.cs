@@ -351,6 +351,77 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public void FindProjectProblems_Given_TwoNodesWithOneId_Then_DuplicateIdAtTheSecond()
+        {
+            ProjectModel project = Project(Scenario());
+            project = project with
+            {
+                Nodes =
+                [
+                    project.Nodes[0],
+                    new ProjectScenarioNodeModel { Id = s_Beta, ParentId = s_Root, NodeType = ProjectScenarioNodeType.File, Name = @"Beta" },
+                    new ProjectScenarioNodeModel { Id = s_Alpha, ParentId = s_Root, NodeType = ProjectScenarioNodeType.File, Name = @"Alpha again" },
+                ],
+            };
+
+            List<PlanProblem> problems = PlanCheck.FindProjectProblems(project);
+
+            problems.Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Nodes/2/Id", PlanCheck.DuplicateId)]);
+            problems[0].Detail.ShouldBe(@"is also the Id of item 0 of this list");
+        }
+
+        [Fact]
+        public void FindProjectProblems_Given_ANodeThatIsItsOwnParent_Then_NotAllowedAtItsParentId()
+        {
+            ProjectModel project = Project(Scenario());
+            project = project with { Nodes = [project.Nodes[0] with { ParentId = s_Alpha }] };
+
+            List<PlanProblem> problems = PlanCheck.FindProjectProblems(project);
+
+            problems.Select(x => (x.Pointer, x.Code)).ShouldBe([(@"/Nodes/0/ParentId", PlanCheck.NotAllowed)]);
+            problems[0].Detail.ShouldBe(@"makes the node a parent of itself");
+        }
+
+        [Fact]
+        public void FindNodeProblems_Given_TwoNodesThatAreTheParentOfEachOtherAndAChildOfThem_Then_EachNodeOfTheCycleOnly()
+        {
+            // Gamma is below the cycle, and its walk ends at a node that it saw, which is not Gamma.
+            ProjectModel project = Project(Scenario()) with
+            {
+                Nodes =
+                [
+                    new ProjectScenarioNodeModel { Id = s_Gamma, ParentId = s_Alpha, NodeType = ProjectScenarioNodeType.File, Name = @"Gamma" },
+                    new ProjectScenarioNodeModel { Id = s_Alpha, ParentId = s_Beta, NodeType = ProjectScenarioNodeType.File, Name = @"Alpha" },
+                    new ProjectScenarioNodeModel { Id = s_Beta, ParentId = s_Alpha, NodeType = ProjectScenarioNodeType.Folder, Name = @"Beta" },
+                ],
+            };
+
+            PlanCheck.FindNodeProblems(project).Select(x => (x.Pointer, x.Code)).ShouldBe(
+            [
+                (@"/Nodes/1/ParentId", PlanCheck.NotAllowed),
+                (@"/Nodes/2/ParentId", PlanCheck.NotAllowed),
+            ]);
+        }
+
+        [Fact]
+        public void FindNodeProblems_Given_ATreeOfFoldersAndAnOrphan_Then_None()
+        {
+            // A node whose parent is not a node goes to the top of the tree in the load, and it is not a problem.
+            ProjectModel project = Project(Scenario()) with
+            {
+                Nodes =
+                [
+                    new ProjectScenarioNodeModel { Id = s_Beta, ParentId = s_Root, NodeType = ProjectScenarioNodeType.Folder, Name = @"Beta" },
+                    new ProjectScenarioNodeModel { Id = s_Gamma, ParentId = s_Beta, NodeType = ProjectScenarioNodeType.Folder, Name = @"Gamma" },
+                    new ProjectScenarioNodeModel { Id = s_Alpha, ParentId = s_Gamma, NodeType = ProjectScenarioNodeType.File, Name = @"Alpha" },
+                    new ProjectScenarioNodeModel { Id = Guid.NewGuid(), ParentId = Guid.NewGuid(), NodeType = ProjectScenarioNodeType.Folder, Name = @"Orphan" },
+                ],
+            };
+
+            PlanCheck.FindNodeProblems(project).ShouldBeEmpty();
+        }
+
+        [Fact]
         public void FindLimitViolations_Given_MoreActivitiesThanTheCompilerTakes_Then_TheCountInTheWordsOfTheCompiler()
         {
             ProjectScenarioModel scenario = Scenario() with

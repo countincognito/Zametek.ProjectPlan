@@ -66,13 +66,13 @@ namespace Zametek.Engine.ProjectPlan
         }
 
         /// <summary>
-        /// The problems of the project around its scenarios: a choice of its nodes or of its display settings that does not
-        /// exist, and no data for the scenario that the load loads.
+        /// The problems of the project around its scenarios: the problems of its nodes, a choice of its nodes or of its display
+        /// settings that does not exist, and no data for the scenario that the load loads.
         /// </summary>
         public static List<PlanProblem> FindProjectProblems(ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            var problems = new List<PlanProblem>();
+            List<PlanProblem> problems = FindNodeProblems(project);
 
             FindChoices(project.Nodes, $@"/{nameof(ProjectModel.Nodes)}", problems, 0);
             FindChoices(project.Tags, $@"/{nameof(ProjectModel.Tags)}", problems, 0);
@@ -86,6 +86,68 @@ namespace Zametek.Engine.ProjectPlan
                     $@"/{nameof(ProjectModel.Files)}",
                     HasNoData,
                     Say(Resource.ProjectPlan.Messages.Message_PlanHasNoData, node?.Name ?? string.Empty)));
+            }
+
+            return problems;
+        }
+
+        /// <summary>
+        /// The problems of the tree of the nodes: two nodes with one id, and a node that is a parent of itself, or of a node
+        /// that is its parent. The list of the scenarios makes a dictionary of the nodes by id, and it threw for two nodes with
+        /// one id. The path of a node goes from parent to parent, and a cycle gave it no end.
+        /// </summary>
+        public static List<PlanProblem> FindNodeProblems(ProjectModel project)
+        {
+            ArgumentNullException.ThrowIfNull(project);
+            string root = $@"/{nameof(ProjectModel.Nodes)}";
+            var problems = new List<PlanProblem>();
+            List<ProjectScenarioNodeModel> nodes = project.Nodes;
+            var ids = new Dictionary<Guid, int>();
+
+            for (int index = 0; index < nodes.Count; index++)
+            {
+                if (nodes[index] is ProjectScenarioNodeModel node)
+                {
+                    if (ids.TryGetValue(node.Id, out int first))
+                    {
+                        problems.Add(new PlanProblem(
+                            $@"{root}/{index}/{nameof(ProjectScenarioNodeModel.Id)}",
+                            DuplicateId,
+                            Say(Resource.ProjectPlan.Messages.Message_PlanDuplicateId, first)));
+                    }
+                    else
+                    {
+                        ids[node.Id] = index;
+                    }
+                }
+            }
+
+            // A walk from each node, from parent to parent, ends at the root, at an id that is not a node, or at a node that it
+            // saw. When that node is the node of the start, the node is in a cycle.
+            for (int index = 0; index < nodes.Count; index++)
+            {
+                if (nodes[index] is not ProjectScenarioNodeModel node)
+                {
+                    continue;
+                }
+
+                var visited = new HashSet<Guid> { node.Id };
+                Guid parentId = node.ParentId;
+
+                while (parentId != project.Root
+                    && ids.TryGetValue(parentId, out int parentIndex)
+                    && visited.Add(parentId))
+                {
+                    parentId = nodes[parentIndex].ParentId;
+                }
+
+                if (parentId == node.Id)
+                {
+                    problems.Add(new PlanProblem(
+                        $@"{root}/{index}/{nameof(ProjectScenarioNodeModel.ParentId)}",
+                        NotAllowed,
+                        Resource.ProjectPlan.Messages.Message_PlanNodeCycle));
+                }
             }
 
             return problems;

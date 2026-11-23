@@ -481,6 +481,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 return;
             }
 
+            // Set first: a node that is a child of itself, or of a child of its own, comes back here from ClearChildren.
+            m_Disposed = true;
+
             if (disposing)
             {
                 KillSubscriptions();
@@ -490,8 +493,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Children.Dispose();
                 m_DisplayName?.Dispose();
             }
-
-            m_Disposed = true;
         }
 
         public void Dispose()

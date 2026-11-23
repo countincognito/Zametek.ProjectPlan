@@ -123,13 +123,15 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`. The same limit is for the target date of the simulation.
 
-- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7.
+- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7. A node that is a parent of itself gets this code at its `ParentId` too. Examples are a node whose `ParentId` is its own `Id`, and two nodes that are the parent of each other.
 
-- `duplicateId`: two activities, two resources or two work streams of the scenario have the same `Id`.
+- `duplicateId`: two activities, two resources or two work streams of the scenario have the same `Id`, or two nodes have the same `Id`.
 
 - `hasNoData`: the plan has nodes, but `Files` has no item for the scenario that the plan loads (refer to [The tree of scenarios](#the-tree-of-scenarios)).
 
-The check looks at the scenario that the plan loads, and at the nodes and the display settings of the project. A tracked scenario that the check refuses does not compile, and it has no metrics.
+The check looks at the scenario that the plan loads, and at the nodes and the display settings of the project. A tracked scenario that the check refuses does not compile, and it has no metrics. The list of the scenarios (`zpp --list-scenarios`, and `POST /v1/projects/scenarios` of `zpp serve`) loads no scenario. Thus, only a problem of the nodes stops it.
+
+The application opens a plan whose nodes make a cycle. It puts the first node of the cycle in the file at the top of the tree. A node whose parent is not a node goes there too.
 
 The check also finds the ids that match nothing. These are a target resource that no resource has, and a target work stream or a phase that no work stream has. The load ignores such an id. Thus, an activity with a target resource that does not exist can go to any resource. The plan loads, and `zpp` writes a warning for each id on its standard error stream. `zpp serve` gives them in `warnings`, with the code `notFound`.
 

@@ -948,6 +948,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to makes the node a parent of itself.
+        /// </summary>
+        public static string Message_PlanNodeCycle {
+            get {
+                return ResourceManager.GetString("Message_PlanNodeCycle", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The plan was not loaded. Problems found in the file: {0}..
         /// </summary>
         public static string Message_PlanProblemsFound {
