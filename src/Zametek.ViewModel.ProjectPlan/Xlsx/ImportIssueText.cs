@@ -36,6 +36,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         internal static string NotAColor(string value) => Say(Resource.ProjectPlan.Messages.Message_ImportNotAColor, value);
 
+        internal static string HolidayRuleNotAllowed(string value) => Say(Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotAllowed, value);
+
         internal static string ExcelError(string value) => Say(Resource.ProjectPlan.Messages.Message_ImportExcelError, value);
 
         internal static string MissingValue() => Resource.ProjectPlan.Messages.Message_ImportMissingValue;

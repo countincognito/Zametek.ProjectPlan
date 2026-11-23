@@ -5,6 +5,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Xunit;
@@ -116,6 +117,66 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Main.OpenAboutCommand.ShouldBeAssignableTo<ReactiveCommand<RxVoid, RxVoid>>();
         }
 
+        [Theory]
+        [InlineData(@"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=26", false)]
+        [InlineData(@"FREQ=MINUTELY", true)]
+        public async Task OpenProjectFileAsync_Given_AHolidayRule_Then_TheDesktopRefusesOneThatRepeatsMoreOftenThanEachDay(string rule, bool refused)
+        {
+            // The desktop opens a project file with no check before the load, and the load of such a rule took minutes (from
+            // the review of src, test and pkg). It now refuses the file with the message of HolidayRuleCheck, and loads nothing.
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            var opener = new ProjectFileOpen(new DateTimeCalculator(TimeProvider.System));
+            using Harness harness = Harness.Make(opener);
+            Drain(main, pool);
+
+            Newtonsoft.Json.Linq.JObject plan = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"TestFiles", @"sample_v0_6_1.zpp")));
+            var holidays = (Newtonsoft.Json.Linq.JArray)plan[@"Files"]![0]![@"Scenario"]![@"HolidaySettings"]![@"Holidays"]!;
+            holidays.Add(new Newtonsoft.Json.Linq.JObject { [@"Id"] = 99, [@"Name"] = @"Added", [@"Notes"] = @"", [@"RecurrencePattern"] = rule });
+            string path = Path.Combine(Path.GetTempPath(), $@"zpp-holiday-{Guid.NewGuid():N}.zpp");
+
+            try
+            {
+                await File.WriteAllTextAsync(path, plan.ToString(), new UTF8Encoding(false));
+                string? expected = HolidayRuleCheck.FindProblem(await OpenAsync(opener, path));
+
+                Task open = harness.Main.OpenProjectFileAsync(path);
+
+                while (!open.IsCompleted)
+                {
+                    Drain(main, pool);
+                    await Task.Delay(10);
+                }
+
+                await open;
+                Drain(main, pool);
+
+                if (refused)
+                {
+                    expected.ShouldNotBeNull();
+                    harness.Dialogs.Errors.ShouldHaveSingleItem().Message.ShouldBe(expected);
+                    harness.Core.RawActivities.ShouldBeEmpty();
+                }
+                else
+                {
+                    expected.ShouldBeNull();
+                    harness.Dialogs.Errors.ShouldBeEmpty();
+                    harness.Core.RawActivities.ShouldNotBeEmpty();
+                }
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        private static async Task<Zametek.Common.ProjectPlan.ProjectModel> OpenAsync(ProjectFileOpen opener, string path)
+        {
+            await using FileStream stream = File.OpenRead(path);
+            return await opener.OpenProjectFileAsync(stream);
+        }
+
         // A main view model over a core and a project manager, with dialogs that a test can hold open.
         private sealed class Harness
             : IDisposable
@@ -136,7 +197,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             public MainViewModel Main { get; }
 
-            public static Harness Make()
+            public static Harness Make(IProjectFileOpen? projectFileOpen = null)
             {
                 (CoreViewModel core, ISettingService settings) = CoreViewModelFixture.CreateWithSettingService();
                 var dialogs = new ScriptedDialogService();
@@ -153,7 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                     DoNothingProxy.Of<IDataGridLayoutManager>(),
                     project,
                     core,
-                    DoNothingProxy.Of<IProjectFileOpen>(),
+                    projectFileOpen ?? DoNothingProxy.Of<IProjectFileOpen>(),
                     DoNothingProxy.Of<IProjectFileSave>(),
                     settings,
                     dialogs,

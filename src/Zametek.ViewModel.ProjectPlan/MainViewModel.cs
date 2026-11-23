@@ -704,6 +704,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(stream);
                 }
 
+                ThrowIfHolidaysNotAllowed(projectModel);
+
                 // First process the project. The load cascade (reset, scenario
                 // processing, compile, output builds) must not run on the UI
                 // thread, which the await above would otherwise resume on.
@@ -719,6 +721,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     "Opened project {ProjectFile} in {ElapsedMilliseconds}ms",
                     filename,
                     (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
+            }
+        }
+
+        // The desktop does no check before the load, as zpp does (PlanCheck). A holiday rule that repeats more often than each
+        // day, or too many holidays, held the open for minutes, on a pool thread that nothing can stop (from the review of
+        // src, test and pkg). The open then fails with the message, as for a file that cannot be read.
+        private static void ThrowIfHolidaysNotAllowed(ProjectModel projectModel)
+        {
+            if (HolidayRuleCheck.FindProblem(projectModel) is string problem)
+            {
+                throw new InvalidDataException(problem);
             }
         }
 
@@ -1294,6 +1307,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(stream);
                 }
+
+                ThrowIfHolidaysNotAllowed(projectModel);
 
                 // Off the UI thread, as each load is.
                 await Task.Run(() => m_ProjectScenarioManagerViewModel.ProcessProject(projectModel));

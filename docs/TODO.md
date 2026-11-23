@@ -2,18 +2,6 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Do a check of each holiday rule in the import of a workbook and in the desktop** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `DateTimeCalculator` gives the text of a holiday rule to Ical.Net (`new RecurrencePattern(...)`). Then it reads each occurrence in its range of days into a list, under its lock. This work is in the load and in the build cascade, and thus the limit of a compile does not end it.
-
-  On 2026-11-23, a count of 30 days took 5.5 s with `FREQ=HOURLY`. With `FREQ=MINUTELY` and `FREQ=SECONDLY` it was not done after 2 minutes, and the heap was 0.9 GB and 1.6 GB (Ical.Net 5.2.3).
-
-  Since 0.11.0-beta.3, the check before the load refuses a rule that repeats more often than each day (`HolidayRuleCheck`, code `notAllowed`). It also refuses `BYHOUR`, `BYMINUTE` and `BYSECOND`. Three things remain:
-
-  1. **The import of a workbook.** The import does no check of a rule, and the load of the import then does the long work. Report such a rule as a problem of its cell.
-  2. **The desktop.** The desktop opens a project file with no check before the load. Decide if the calendar ignores such a rule, or if the open refuses the file.
-  3. **The number of the holidays.** Each rule costs a read for each range of days. Give the number of the holidays a limit, and decide the number.
-
 - [ ] **Write the output of `zpp` as UTF-8 on each system** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   `Program.Main` uses `Console.Out` and `Console.Error` as they are, and nothing in the project sets `Console.OutputEncoding`. On Windows, the encoding is then the code page of the console, for example 850. The JSON of the metrics does not escape a letter that is not ASCII. Thus, after `zpp ... > metrics.json`, a name with such a letter gives a file that is not UTF-8. A letter that the code page does not have becomes `?`.

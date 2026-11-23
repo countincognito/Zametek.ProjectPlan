@@ -155,6 +155,10 @@ A holiday has a `RecurrencePattern`, which is a recurrence rule of iCalendar (RF
 
 The smallest unit of a plan is a day. Thus, a rule must have the frequency `DAILY`, `WEEKLY`, `MONTHLY` or `YEARLY`, and no `BYHOUR`, `BYMINUTE` or `BYSECOND`. The calendar reads each occurrence of a rule. A rule that repeats each second has millions of occurrences in a month. The load of a plan with such a rule did not end in minutes. `zpp` and `zpp serve` refuse such a rule before the load.
 
+The import of a workbook refuses such a rule at its cell (`notAllowed`). The desktop application does not open a file with such a rule.
+
+Each rule costs time in each count of the calendar. Thus, a scenario can have 1,000 holidays at most. `zpp` and `zpp serve` refuse more holidays before the load (`P0080`), for a project file and for an import. The desktop application does not open a file with more holidays.
+
 The compile gives `P0080` when the calendar cannot give the dates of the plan:
 
 - The calendar has no working day in the 366 days from `ProjectStart`. For example, a holiday with the rule `FREQ=DAILY` and no `COUNT` or `UNTIL` makes each day a day off.

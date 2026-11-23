@@ -945,4 +945,16 @@
   <data name="Message_UnhandledErrorNoChanges" xml:space="preserve">
     <value>The open project had no changes that were not saved.</value>
   </data>
+  <data name="Message_PlanHolidays" xml:space="preserve">
+    <value>holidays</value>
+  </data>
+  <data name="Message_ImportHolidayRuleNotAllowed" xml:space="preserve">
+    <value>"{0}" is not a holiday rule that the calendar takes. A rule must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND.</value>
+  </data>
+  <data name="Message_ProjectHolidayRuleNotAllowed" xml:space="preserve">
+    <value>The file cannot be opened. The holiday "{0}" of the scenario "{1}" has the rule "{2}". A rule must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND.</value>
+  </data>
+  <data name="Message_ProjectTooManyHolidays" xml:space="preserve">
+    <value>The file cannot be opened. The scenario "{0}" has {1} holidays, and the calendar takes {2} at most.</value>
+  </data>
 </root>

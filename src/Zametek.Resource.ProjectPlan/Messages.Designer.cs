@@ -484,6 +484,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a holiday rule that the calendar takes. A rule must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND..
+        /// </summary>
+        public static string Message_ImportHolidayRuleNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_ImportHolidayRuleNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The sheet has no column with the title "{0}"..
         /// </summary>
         public static string Message_ImportMissingColumn {
@@ -966,6 +975,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to holidays.
+        /// </summary>
+        public static string Message_PlanHolidays {
+            get {
+                return ResourceManager.GetString("Message_PlanHolidays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Values or counts outside the supported limits:.
         /// </summary>
         public static string Message_PlanLimitsExceeded {
@@ -1046,6 +1064,24 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
 
+        /// <summary>
+        ///   Looks up a localized string similar to The file cannot be opened. The holiday "{0}" of the scenario "{1}" has the rule "{2}". A rule must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND..
+        /// </summary>
+        public static string Message_ProjectHolidayRuleNotAllowed {
+            get {
+                return ResourceManager.GetString("Message_ProjectHolidayRuleNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file cannot be opened. The scenario "{0}" has {1} holidays, and the calendar takes {2} at most..
+        /// </summary>
+        public static string Message_ProjectTooManyHolidays {
+            get {
+                return ResourceManager.GetString("Message_ProjectTooManyHolidays", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to The application ended before it saved the changes to {0}, and it kept a copy from {1}. Open the copy to go on with it: no file changes until you save. "{2}" keeps the copy, and the application asks again at its next start..
         /// </summary>

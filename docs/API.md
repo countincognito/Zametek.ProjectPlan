@@ -418,7 +418,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 - A request with its files has a maximum of `maxUploadMegabytes` megabytes. A client that sends a larger request gets status `413` at once only when it sends the header `Expect: 100-continue`, as curl does. Without this header, the server closes the connection while the client sends the request, and the client gets no answer. Thus, compare the size of a request with `maxUploadMegabytes` before you send it. A chart has a maximum of `maxChartWidth` by `maxChartHeight` pixels.
 
-- A project has limits of its own, which `/v1/info` does not give. These are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. A project that is out of these limits does not compile (`P0080`, refer to [Codes of the compiler](#codes-of-the-compiler)).
+- A project has limits of its own, which `/v1/info` does not give. These are 2,000 activities, 1,000 resources, 100 work streams, 1,000 holidays, and 100,000 days for each duration and each time. A project that is out of these limits does not compile (`P0080`, refer to [Codes of the compiler](#codes-of-the-compiler)).
 
 - A project can have a maximum of `maxSimulationIterations` iterations for the server to run its simulation. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
 
@@ -518,7 +518,7 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `workbookTooLarge`, `tooManyRows`, `tooManyCells` | The size of a workbook to import: its parts hold more than 100 MB when they are unpacked, a sheet has more than 10000 rows that hold a value, or the workbook has more than 10 million cells to read. |
 | `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn` | The shape of a workbook to import: it has none of the sheets that the import reads, a sheet has no row of titles, a sheet that has rows has no column `Id`, or two columns have a title that the import reads. |
 | `missingValue`, `duplicateId`, `unknownActivity` | The rows of a workbook to import: an `Id` is blank, an `Id` is the `Id` of an earlier row of the sheet, or a row of a tracker sheet is for an activity that the workbook does not have. |
-| `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. |
+| `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. A holiday rule of a workbook that repeats more often than each day gets `notAllowed` at its cell. |
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
 
@@ -537,7 +537,7 @@ A project that does not compile gets the code of the compiler (`compilation-fail
 | `P0050` | The compiler cannot remove the dependencies that are not necessary. | This is an error of the compiler. Report it. |
 | `P0060` | An activity can use only its explicit target resources, and some of them are not available, for example because they are not active. | Make the resources active, or change the targets. |
 | `P0070` | The data of an activity or a resource does not agree with itself. | This is an error of the application. Report it. |
-| `P0080` | A value or a count is out of the limits: a duration or a time above 100,000 days, more than 2,000 activities, more than 1,000 resources, or more than 100 work streams. `zpp` changes a value below 0 to 0 before the compile. The calendar can also be out of the limits. It has no working day in the 366 days from `ProjectStart`, or the schedule meets more than 366 days off in a row. | Correct the value, make the plan smaller, or give the calendar more working days. |
+| `P0080` | A value or a count is out of the limits. Examples are a duration or a time above 100,000 days, more than 2,000 activities, or more than 1,000 resources. Others are more than 100 work streams, or more than 1,000 holidays. `zpp` changes a value below 0 to 0 before the compile. The calendar can also be out of the limits. It has no working day in the 366 days from `ProjectStart`, or the schedule meets more than 366 days off in a row. | Correct the value, make the plan smaller, or give the calendar more working days. |
 | `C0010` | The calculated times break a constraint, for example a maximum latest finish that an activity cannot meet. The detail names the activities whose times are not valid. These can be the activities before the activity that has the constraint, and not that activity. | Move the constraint, or make the activities before it shorter. |
 | `C0020` | The scheduler cannot put each activity on the resources, or the schedule goes past 100,000 days. | Check the targets of the activities, and the resources. |
 
@@ -904,4 +904,6 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - A project can give the target of its simulation as a date: `TargetFinishDateTime` in its `SimulationSettings`. The project is done by the end of that date. The answer does not change.
 - The check of a project refuses two nodes with the same `Id` (`duplicateId`), and a node that is a parent of itself (`notAllowed` at its `ParentId`). `POST /v1/projects/scenarios` does this check of the nodes too, and it then gives `422` `project-not-readable`. Before, two nodes with one `Id` gave `500`.
 - The check of a project refuses a holiday rule that repeats more often than each day (`notAllowed` at its `RecurrencePattern`). The load of a plan with such a rule did not end in the time of a job.
+- The import of a workbook refuses a holiday rule that repeats more often than each day (`notAllowed` at its cell).
+- A scenario and an import can have 1,000 holidays at most (`P0080`).
 - The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time.

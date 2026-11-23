@@ -362,18 +362,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             int idIndex = table.IndexOf(nameof(HolidayModel.Id)).GetValueOrDefault();
+            int? ruleIndex = table.IndexOf(nameof(HolidayModel.RecurrencePattern));
             Dictionary<int, int> firstRowOfId = [];
 
             foreach (ImportRow row in table.Rows)
             {
                 int? id = row.RequiredId(nameof(HolidayModel.Id));
+                string rule = row.Text(nameof(HolidayModel.RecurrencePattern)) ?? string.Empty;
+
+                // A rule that repeats more often than each day holds the load of the import for minutes (HolidayRuleCheck). The
+                // check before the load of a project file refuses it, and the import did no check of a rule.
+                if (ruleIndex is int index
+                    && !HolidayRuleCheck.IsAllowed(rule))
+                {
+                    row.Report(index, ImportIssueCodes.NotAllowed, ImportIssueText.HolidayRuleNotAllowed(rule), rule);
+                }
 
                 var holiday = new HolidayModel
                 {
                     Id = id.GetValueOrDefault(),
                     Name = row.Text(nameof(HolidayModel.Name)) ?? string.Empty,
                     StartDateTime = ToOffset(row.Date(nameof(HolidayModel.StartDateTime))),
-                    RecurrencePattern = row.Text(nameof(HolidayModel.RecurrencePattern)) ?? string.Empty,
+                    RecurrencePattern = rule,
                     Notes = row.Text(nameof(HolidayModel.Notes)) ?? string.Empty,
                 };
 

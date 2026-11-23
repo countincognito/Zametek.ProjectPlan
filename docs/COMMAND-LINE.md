@@ -221,7 +221,7 @@ The exit codes are a contract for scripts and CI gates. The test suite `Zametek.
 
 A tracked scenario that does not compile does not change the exit code. `zpp --compile-tracked` writes its errors on the standard error stream, and its metrics are empty. This also applies to a tracked scenario whose compilation uses more time than `--compile-timeout` gives: its error has the code `compilationTimedOut`. Only the scenario that `zpp` loads gives exit code 4.
 
-A plan that is out of the limits of the compiler also gives exit code 3 (`P0080`). The limits are 2,000 activities, 1,000 resources, 100 work streams, and 100,000 days for each duration and each time. `zpp` counts the activities, the active resources and the work streams before it loads the plan, for a project file and for an import. A calendar with no working day in 366 days in a row also gives `P0080` (refer to [The calendar](PROJECT-FILE.md#the-calendar)).
+A plan that is out of the limits of the compiler also gives exit code 3 (`P0080`). The limits are 2,000 activities, 1,000 resources, 100 work streams, 1,000 holidays, and 100,000 days for each duration and each time. `zpp` counts these items before it loads the plan, for a project file and for an import. It counts only the active resources. A calendar with no working day in 366 days in a row also gives `P0080` (refer to [The calendar](PROJECT-FILE.md#the-calendar)).
 
 A chart, a graph or a file of the simulation can be impossible to write, for example because another program has the file open. This does not stop the run. `zpp` writes the error to the standard error stream, and it still makes the other outputs and prints the metrics. Then the run exits with code 1.
 

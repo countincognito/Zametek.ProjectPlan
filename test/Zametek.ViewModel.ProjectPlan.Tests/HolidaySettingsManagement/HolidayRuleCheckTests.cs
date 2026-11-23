@@ -1,5 +1,9 @@
 using Shouldly;
+using System;
+using System.Globalization;
+using System.Linq;
 using Xunit;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
@@ -36,6 +40,56 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void IsAllowed_Given_ARuleThatRepeatsMoreOftenThanEachDay_Then_False(string rule)
         {
             HolidayRuleCheck.IsAllowed(rule).ShouldBeFalse();
+        }
+
+        // The desktop opens a project file with no check before the load. It refuses a file with such a rule, or with more
+        // holidays than the calendar takes, with the message of FindProblem.
+        [Fact]
+        public void FindProblem_Given_ARuleThatIsNotAllowed_Then_TheHolidayTheScenarioAndTheRule()
+        {
+            ProjectModel project = Project(
+                new HolidayModel { Id = 1, Name = @"Christmas Day", RecurrencePattern = @"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25" },
+                new HolidayModel { Id = 2, Name = @"Each minute", RecurrencePattern = @"FREQ=MINUTELY" });
+
+            HolidayRuleCheck.FindProblem(project).ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ProjectHolidayRuleNotAllowed,
+                @"Each minute",
+                @"Base",
+                @"FREQ=MINUTELY"));
+        }
+
+        [Fact]
+        public void FindProblem_Given_MoreHolidaysThanTheCalendarTakes_Then_TheScenarioAndTheCount()
+        {
+            ProjectModel project = Project([.. Enumerable.Range(1, HolidayRuleCheck.MaximumHolidayCount + 1).Select(x => new HolidayModel { Id = x, RecurrencePattern = @"FREQ=YEARLY" })]);
+
+            HolidayRuleCheck.FindProblem(project).ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ProjectTooManyHolidays,
+                @"Base",
+                HolidayRuleCheck.MaximumHolidayCount + 1,
+                HolidayRuleCheck.MaximumHolidayCount));
+        }
+
+        [Fact]
+        public void FindProblem_Given_HolidaysThatTheCalendarTakes_Then_Null()
+        {
+            HolidayRuleCheck.FindProblem(Project([.. Enumerable.Range(1, HolidayRuleCheck.MaximumHolidayCount).Select(x => new HolidayModel { Id = x, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=SA,SU" })]))
+                .ShouldBeNull();
+            HolidayRuleCheck.FindProblem(Project()).ShouldBeNull();
+            HolidayRuleCheck.FindProblem(new ProjectModel()).ShouldBeNull();
+        }
+
+        private static ProjectModel Project(params HolidayModel[] holidays)
+        {
+            Guid id = Guid.NewGuid();
+
+            return new ProjectModel
+            {
+                Nodes = [new ProjectScenarioNodeModel { Id = id, Name = @"Base" }],
+                Files = [new ProjectScenarioFileModel { NodeId = id, Scenario = new ProjectScenarioModel { HolidaySettings = new HolidaySettingsModel { Holidays = [.. holidays] } } }],
+            };
         }
     }
 }

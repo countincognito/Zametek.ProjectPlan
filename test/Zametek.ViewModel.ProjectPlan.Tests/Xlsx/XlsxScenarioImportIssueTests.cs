@@ -1,5 +1,6 @@
 using Shouldly;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -129,6 +130,30 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 (ImportIssueCodes.NotADate, s_Holidays, @"B2"),
             ]);
             failure.TotalCount.ShouldBe(5);
+        }
+
+        [Fact]
+        public void Import_Given_AHolidayRuleThatRepeatsMoreOftenThanEachDay_Then_AProblemOfItsCell()
+        {
+            // The load of such a rule took minutes (HolidayRuleCheck), and the check before the load of a project file refuses it.
+            // The import did no check of a rule (from the review of src, test and pkg).
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_Holidays, s => s
+                    .Row(1, ("A", TitleOf(nameof(HolidayModel.Id))), ("B", TitleOf(nameof(HolidayModel.RecurrencePattern))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", TextOf(@"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25")))
+                    .Row(3, ("A", NumberOf(2.0)), ("B", TextOf(@"FREQ=MINUTELY"))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0))))
+                .Build();
+
+            ImportIssue issue = ImportFailure(workbook).Issues.ShouldHaveSingleItem();
+
+            issue.Code.ShouldBe(ImportIssueCodes.NotAllowed);
+            issue.Sheet.ShouldBe(s_Holidays);
+            issue.Cell.ShouldBe(@"B3");
+            issue.Value.ShouldBe(@"FREQ=MINUTELY");
+            issue.Message.ShouldBe(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotAllowed, @"FREQ=MINUTELY"));
         }
 
         [Fact]

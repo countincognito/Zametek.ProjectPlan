@@ -4,6 +4,7 @@ using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.Engine.ProjectPlan.Tests
 {
@@ -471,6 +472,22 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 .ShouldBe([@"The number of resources is 1001, which exceeds the maximum supported count of 1000"]);
             PlanCheck.FindLimitViolations(scenario with { ResourceSettings = scenario.ResourceSettings with { Resources = [.. resources.Select(x => x with { IsInactive = false })], AreDisabled = true } })
                 .ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void FindLimitViolations_Given_MoreHolidaysThanTheCalendarTakes_Then_TheCount()
+        {
+            // Each holiday rule costs a read for each range of days that the calendar counts, in the load, where the limit of a
+            // compile does not end it. The maintainer decided the limit on 2026-11-23, after a measurement.
+            HolidayRuleCheck.MaximumHolidayCount.ShouldBe(1_000);
+            List<HolidayModel> holidays = [.. Enumerable.Range(1, HolidayRuleCheck.MaximumHolidayCount + 1).Select(x => new HolidayModel { Id = x, RecurrencePattern = @"FREQ=YEARLY" })];
+            ProjectScenarioModel scenario = Scenario();
+            string violation = @"The number of holidays is 1001, which exceeds the maximum supported count of 1000";
+
+            PlanCheck.FindLimitViolations(scenario with { HolidaySettings = new HolidaySettingsModel { Holidays = holidays } }).ShouldBe([violation]);
+            PlanCheck.FindLimitViolations(scenario with { HolidaySettings = new HolidaySettingsModel { Holidays = [.. holidays.Skip(1)] } }).ShouldBeEmpty();
+            PlanCheck.FindLimitViolations(new ProjectScenarioImportModel { Holidays = holidays }).ShouldBe([violation]);
+            PlanCheck.FindLimitViolations(new ProjectScenarioImportModel { Holidays = [.. holidays.Skip(1)] }).ShouldBeEmpty();
         }
 
         // An import has the same counts as a scenario, and the check gives the same words for them.

@@ -334,7 +334,8 @@ namespace Zametek.Engine.ProjectPlan
             return FindLimitViolations(
                 scenario.DependentActivities?.Count ?? 0,
                 scenario.ResourceSettings,
-                scenario.WorkStreamSettings?.WorkStreams?.Count ?? 0);
+                scenario.WorkStreamSettings?.WorkStreams?.Count ?? 0,
+                scenario.HolidaySettings?.Holidays?.Count ?? 0);
         }
 
         /// <summary>
@@ -348,7 +349,8 @@ namespace Zametek.Engine.ProjectPlan
             return FindLimitViolations(
                 import.DependentActivities?.Count ?? 0,
                 import.ResourceSettings,
-                import.WorkStreams?.Count ?? 0);
+                import.WorkStreams?.Count ?? 0,
+                import.Holidays?.Count ?? 0);
         }
 
         /// <summary>
@@ -490,7 +492,8 @@ namespace Zametek.Engine.ProjectPlan
         private static List<string> FindLimitViolations(
             int activityCount,
             ResourceSettingsModel? resources,
-            int workStreamCount)
+            int workStreamCount,
+            int holidayCount)
         {
             var violations = new List<string>();
             int resourceCount = resources is null || resources.AreDisabled
@@ -500,6 +503,10 @@ namespace Zametek.Engine.ProjectPlan
             AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanActivities, activityCount, GraphLimits.MaximumActivityCount);
             AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanResources, resourceCount, GraphLimits.MaximumResourceCount);
             AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanWorkStreams, workStreamCount, GraphLimits.MaximumWorkStreamCount);
+
+            // Each holiday rule costs a read for each range of days that the calendar counts, and that work is in the load,
+            // where the limit of a compile does not end it (HolidayRuleCheck.MaximumHolidayCount).
+            AddCount(violations, Resource.ProjectPlan.Messages.Message_PlanHolidays, holidayCount, HolidayRuleCheck.MaximumHolidayCount);
 
             return violations;
         }

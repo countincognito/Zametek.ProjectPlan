@@ -584,6 +584,10 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
                 // workbook at all is not one of them: that file has the code unreadable, as a file that is not a project has.
                 .. typeof(ImportIssueCodes).GetFields(BindingFlags.Public | BindingFlags.Static).Where(x => x.IsLiteral && x.Name != nameof(ImportIssueCodes.UnreadableWorkbook)).Select(x => (string)x.GetRawConstantValue()!),
             ];
+
+            // A code of a cell can also be a code of the check of a project (notAllowed, for a holiday rule), and the lists name
+            // it one time.
+            codes = [.. codes.Distinct()];
             codes.ShouldNotBeEmpty();
 
             JsonArray anyOf = Schema(@"ProblemError")[@"properties"]![@"code"]![@"anyOf"]!.AsArray();

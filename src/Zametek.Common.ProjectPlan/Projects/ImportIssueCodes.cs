@@ -59,5 +59,8 @@ namespace Zametek.Common.ProjectPlan
 
         /// <summary>A cell does not hold a colour in the form #RRGGBB or #RRGGBBAA.</summary>
         public const string NotAColor = @"notAColor";
+
+        /// <summary>A cell holds a value that the import does not take: a holiday rule that repeats more often than each day.</summary>
+        public const string NotAllowed = @"notAllowed";
     }
 }

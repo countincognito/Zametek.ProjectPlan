@@ -1,3 +1,6 @@
+using System.Globalization;
+using Zametek.Common.ProjectPlan;
+
 namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
@@ -9,6 +12,13 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </summary>
     public static class HolidayRuleCheck
     {
+        /// <summary>
+        /// The most holidays that a scenario can have. Each rule costs a read for each range of days that the calendar counts. On
+        /// 2026-11-23, a plan of 46 activities over one year with the custom calendar took 0.9 s with 2 holidays, 1.35 s with
+        /// 1,000 and 3.2 s with 10,000 yearly holidays (zpp, Release). An upload of 50 MB can hold about 500,000 holidays.
+        /// </summary>
+        public const int MaximumHolidayCount = 1_000;
+
         private const string c_RulePrefix = @"RRULE:";
         private const string c_FrequencyToken = @"FREQ";
 
@@ -64,6 +74,52 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// The first problem of the holidays of a project, as a message for a person: a scenario with more holidays than
+        /// <see cref="MaximumHolidayCount"/>, or a holiday whose rule is not allowed (<see cref="IsAllowed"/>). Null when it has
+        /// none. The desktop opens a project file with no check before the load, and so it refuses such a file with this message:
+        /// the load would otherwise hold it for minutes.
+        /// </summary>
+        public static string? FindProblem(ProjectModel project)
+        {
+            ArgumentNullException.ThrowIfNull(project);
+
+            foreach (ProjectScenarioFileModel? file in project.Files)
+            {
+                List<HolidayModel>? holidays = file?.Scenario?.HolidaySettings?.Holidays;
+
+                if (file is null
+                    || holidays is null)
+                {
+                    continue;
+                }
+
+                string scenarioName = project.Nodes?.FirstOrDefault(x => x?.Id == file.NodeId)?.Name ?? string.Empty;
+
+                if (holidays.Count > MaximumHolidayCount)
+                {
+                    return string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.ProjectPlan.Messages.Message_ProjectTooManyHolidays,
+                        scenarioName,
+                        holidays.Count,
+                        MaximumHolidayCount);
+                }
+
+                if (holidays.FirstOrDefault(x => x is not null && !IsAllowed(x.RecurrencePattern)) is HolidayModel holiday)
+                {
+                    return string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.ProjectPlan.Messages.Message_ProjectHolidayRuleNotAllowed,
+                        holiday.Name,
+                        scenarioName,
+                        holiday.RecurrencePattern);
+                }
+            }
+
+            return null;
         }
     }
 }
