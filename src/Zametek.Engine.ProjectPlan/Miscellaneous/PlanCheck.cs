@@ -27,11 +27,6 @@ namespace Zametek.Engine.ProjectPlan
         public const string HasNoData = @"hasNoData";
         public const string NotFound = @"notFound";
 
-        // The dates on which a project can start. The calendar counts the days of a schedule from its start, up to the limit
-        // of a time, and these dates leave room for them inside the dates of .NET.
-        public static readonly DateTime FirstProjectStart = new(1900, 1, 1);
-        public static readonly DateTime LastProjectStart = new(2999, 12, 31);
-
         private const string c_Id = @"Id";
 
         // How deep the search for choices goes. The models of a plan are trees of a few levels.
@@ -178,13 +173,12 @@ namespace Zametek.Engine.ProjectPlan
             {
                 problems.Add(new PlanProblem(startPlace, Required, Resource.ProjectPlan.Messages.Message_ServeErrorRequired));
             }
-            else if (scenario.ProjectStart.Date < FirstProjectStart
-                || scenario.ProjectStart.Date > LastProjectStart)
+            else if (!PlanDateCheck.IsProjectStartInRange(scenario.ProjectStart))
             {
                 problems.Add(new PlanProblem(
                     startPlace,
                     OutOfRange,
-                    Say(Resource.ProjectPlan.Messages.Message_ServeErrorDurationOutOfRange, Date(FirstProjectStart), Date(LastProjectStart))));
+                    Say(Resource.ProjectPlan.Messages.Message_ServeErrorDurationOutOfRange, Date(PlanDateCheck.FirstProjectStart), Date(PlanDateCheck.LastProjectStart))));
             }
             else
             {
@@ -456,10 +450,8 @@ namespace Zametek.Engine.ProjectPlan
             string place,
             List<PlanProblem> problems)
         {
-            // A date further from the start than the limit of a time cannot be a time of the plan, and the calendar would
-            // count to it day by day, or past the end of the dates of .NET.
             if (date is DateTimeOffset value
-                && Math.Abs((value.Date - start.Date).TotalDays) > GraphLimits.MaximumTimeValue)
+                && PlanDateCheck.IsFarFromStart(start, value))
             {
                 problems.Add(new PlanProblem(
                     place,

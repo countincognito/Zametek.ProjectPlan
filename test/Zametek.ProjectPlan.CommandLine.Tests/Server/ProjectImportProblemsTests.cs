@@ -96,6 +96,60 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             console.Transcript.ShouldAllBe(x => x.Kind == JobTranscriptKind.ErrorLine);
         }
 
+        // The dates of an import get the checks that the dates of a project file get (PlanDateCheck). A workbook with the project
+        // start 9999-12-31 ended zpp with exit code 1 and the text of a .NET exception (from the review of 0.11.0-beta.2).
+        [Fact]
+        public async Task Compile_Given_AProjectStartThatTheCalendarCannotCountFrom_Then_UnprocessableWithAnErrorAtItsCell()
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", DateOf(new DateTime(9999, 12, 31)))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0))))
+                .Build();
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(workbook);
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.ProjectNotReadable));
+            problem.Detail.ShouldBe(ImportIssueText.BuildHeader(1));
+            ProblemError error = problem.Errors.ShouldNotBeNull().ShouldHaveSingleItem();
+            error.Pointer.ShouldBe(@"#/import");
+            error.Code.ShouldBe(ImportIssueCodes.OutOfRange);
+            error.Detail.ShouldStartWith(@"General!A2 (ProjectStart): ");
+            error.Detail.ShouldContain(@"1900-01-01");
+            error.Detail.ShouldContain(@"2999-12-31");
+
+            ConsoleResponse console = problem.Console.ShouldNotBeNull();
+            console.ExitCode.ShouldBe((int)ExitCode.Failure);
+            console.StandardError.TrimEnd().Split('\n').ShouldBe([ImportIssueText.BuildHeader(1), error.Detail]);
+        }
+
+        [Fact]
+        public async Task Compile_Given_AConstraintDateTooFarFromTheStart_Then_UnprocessableWithAnErrorAtItsCell()
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", DateOf(new DateTime(2026, 1, 5)))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Name))), ("C", TitleOf(nameof(ActivityModel.Duration))), ("D", TitleOf(nameof(ActivityModel.MinimumEarliestStartDateTime))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", TextOf(@"Task 1")), ("C", NumberOf(3.0)), ("D", DateOf(new DateTime(9999, 12, 31)))))
+                .Build();
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(workbook);
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+            ProblemError error = problem.Errors.ShouldNotBeNull().ShouldHaveSingleItem();
+            error.Code.ShouldBe(ImportIssueCodes.OutOfRange);
+            error.Detail.ShouldStartWith(@"Activities!D2 (MinimumEarliestStartDateTime, Task 1): ");
+            problem.Console.ShouldNotBeNull().ExitCode.ShouldBe((int)ExitCode.Failure);
+        }
+
         // A workbook can have thousands of problems, and a response lists the first of them and says how many there are.
         [Fact]
         public async Task Compile_Given_ManyProblems_Then_TheErrorsAreTheFirstHundredAndTheDetailSaysSo()

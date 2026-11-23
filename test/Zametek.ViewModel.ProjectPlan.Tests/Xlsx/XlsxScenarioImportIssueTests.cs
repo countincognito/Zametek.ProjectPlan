@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 using static Zametek.ViewModel.ProjectPlan.Tests.XlsxCellSpec;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
@@ -154,6 +155,85 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             issue.Cell.ShouldBe(@"B3");
             issue.Value.ShouldBe(@"FREQ=MINUTELY");
             issue.Message.ShouldBe(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotAllowed, @"FREQ=MINUTELY"));
+        }
+
+        // The dates of an import get the checks that the dates of a project file get (PlanDateCheck). A workbook with the project
+        // start 9999-12-31 ended zpp with the text of a .NET exception, and the server answered 500 (from the review of
+        // 0.11.0-beta.2).
+        [Theory]
+        [InlineData(1899, 12, 31, true)]
+        [InlineData(1900, 1, 1, false)]
+        [InlineData(2999, 12, 31, false)]
+        [InlineData(3000, 1, 1, true)]
+        [InlineData(9999, 12, 31, true)]
+        public void Import_Given_AProjectStart_Then_AProblemOfItsCellWhenTheCalendarCannotCountFromIt(int year, int month, int day, bool isProblem)
+        {
+            var start = new DateTime(year, month, day);
+            string value = start.ToString(@"yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            // Excel has no date before 1900, and its days in 1900 before March are one day off (it counts 1900 as a leap year).
+            // Thus, such a start is text in the cell.
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_General, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.Today))), ("B", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", DateOf(new DateTime(2026, 1, 5))), ("B", year <= 1900 ? TextOf(value) : DateOf(start))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0))))
+                .Build();
+
+            if (!isProblem)
+            {
+                Import(workbook).ProjectStart.Date.ShouldBe(start);
+                return;
+            }
+
+            ImportIssue issue = ImportFailure(workbook).Issues.ShouldHaveSingleItem();
+
+            issue.Code.ShouldBe(ImportIssueCodes.OutOfRange);
+            issue.Sheet.ShouldBe(s_General);
+            issue.Cell.ShouldBe(@"B2");
+            issue.Value.ShouldBe(value);
+            issue.Message.ShouldBe(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportProjectStartOutOfRange, value, @"1900-01-01", @"2999-12-31"));
+        }
+
+        // A start out of its range is the one problem: the constraint dates have no start to be far from, as in a project file.
+        [Fact]
+        public void Import_Given_AProjectStartOutOfItsRange_Then_NoProblemForTheConstraintDates()
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_General, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", DateOf(new DateTime(9999, 12, 31)))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))), ("C", TitleOf(nameof(ActivityModel.MinimumEarliestStartDateTime))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0)), ("C", DateOf(new DateTime(2026, 1, 5)))))
+                .Build();
+
+            ImportFailure(workbook).Issues.ShouldHaveSingleItem().Sheet.ShouldBe(s_General);
+        }
+
+        [Fact]
+        public void Import_Given_ConstraintDates_Then_AProblemOfEachCellTooFarFromTheStart()
+        {
+            // A start late in its range, so that a date far before it is still a date of Excel (after 1900).
+            var start = new DateTime(2900, 1, 5);
+            DateTime farthest = start.AddDays(GraphLimits.MaximumTimeValue);
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_General, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", DateOf(start))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))), ("C", TitleOf(nameof(ActivityModel.MinimumEarliestStartDateTime))), ("D", TitleOf(nameof(ActivityModel.MaximumLatestFinishDateTime))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0)), ("C", DateOf(farthest)), ("D", DateOf(farthest.AddDays(1))))
+                    .Row(3, ("A", NumberOf(2.0)), ("B", NumberOf(3.0)), ("C", DateOf(start.AddDays(-GraphLimits.MaximumTimeValue - 1))), ("D", DateOf(start))))
+                .Build();
+
+            ImportFailure(workbook).Issues.Select(x => (x.Code, x.Sheet, x.Cell, x.Message)).ShouldBe(
+            [
+                (ImportIssueCodes.OutOfRange, s_Activities, @"D2", string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportDateTooFarFromStart, farthest.AddDays(1).ToString(@"yyyy-MM-dd", CultureInfo.InvariantCulture), GraphLimits.MaximumTimeValue)),
+                (ImportIssueCodes.OutOfRange, s_Activities, @"C3", string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportDateTooFarFromStart, start.AddDays(-GraphLimits.MaximumTimeValue - 1).ToString(@"yyyy-MM-dd", CultureInfo.InvariantCulture), GraphLimits.MaximumTimeValue)),
+            ]);
         }
 
         [Fact]

@@ -168,7 +168,8 @@ namespace Zametek.ViewModel.ProjectPlan
         // not have, and not one that could not be read.
         private static (Dictionary<int, DependentActivityModel> Activities, bool IsComplete) ImportWorksheetActivities(
             XlsxWorkbookReader reader,
-            ImportIssueCollector issues)
+            ImportIssueCollector issues,
+            DateTimeOffset? projectStart)
         {
             Dictionary<int, DependentActivityModel> dependentActivities = [];
             int issueCount = issues.Count;
@@ -219,6 +220,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     Notes = row.Text(nameof(ActivityModel.Notes)) ?? string.Empty,
                 };
 
+                if (projectStart is DateTimeOffset start)
+                {
+                    ReportIfFarFromStart(row, start, activity.MinimumEarliestStartDateTime, nameof(ActivityModel.MinimumEarliestStartDateTime));
+                    ReportIfFarFromStart(row, start, activity.MaximumLatestFinishDateTime, nameof(ActivityModel.MaximumLatestFinishDateTime));
+                }
+
                 List<int> dependencies = row.Ids(nameof(DependentActivityModel.Dependencies));
                 List<int> planningDependencies = row.Ids(nameof(DependentActivityModel.PlanningDependencies));
 
@@ -235,6 +242,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return (dependentActivities, issues.Count == issueCount);
+        }
+
+        // A constraint date further from the start than the limit of a time, as the check before the load of a project file finds
+        // it (PlanCheck). The calendar would count to it day by day, or past the end of the dates of .NET.
+        private static void ReportIfFarFromStart(ImportRow row, DateTimeOffset start, DateTimeOffset? date, string title)
+        {
+            if (date is DateTimeOffset value
+                && PlanDateCheck.IsFarFromStart(start, value)
+                && row.Table.IndexOf(title) is int index)
+            {
+                row.Report(index, ImportIssueCodes.OutOfRange, ImportIssueText.DateTooFarFromStart(row.CellAt(index).Display));
+            }
         }
 
         private static DateTimeOffset? ToOffset(DateTime? date) =>
@@ -559,7 +578,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ImportRow row in table?.Rows ?? [])
                 {
-                    projectStart = row.DateOffset(nameof(ProjectScenarioImportModel.ProjectStart)) ?? projectStart;
+                    if (row.DateOffset(nameof(ProjectScenarioImportModel.ProjectStart)) is DateTimeOffset start)
+                    {
+                        projectStart = start;
+
+                        // A project file gets this check before the load (PlanCheck), and an import got none of the checks of
+                        // the dates: the load of a start that the calendar cannot count from ended with an exception.
+                        if (!PlanDateCheck.IsProjectStartInRange(start)
+                            && row.Table.IndexOf(nameof(ProjectScenarioImportModel.ProjectStart)) is int index)
+                        {
+                            row.Report(index, ImportIssueCodes.OutOfRange, ImportIssueText.ProjectStartOutOfRange(row.CellAt(index).Display));
+                        }
+                    }
+
                     today = row.DateOffset(nameof(ProjectScenarioImportModel.Today)) ?? today;
                 }
             }
@@ -598,7 +629,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            (Dictionary<int, DependentActivityModel> dependentActivities, bool areActivitiesComplete) = ImportWorksheetActivities(reader, issues);
+            // The constraint dates are checked against a start that the calendar can count from, as for a project file.
+            (Dictionary<int, DependentActivityModel> dependentActivities, bool areActivitiesComplete) = ImportWorksheetActivities(
+                reader,
+                issues,
+                PlanDateCheck.IsProjectStartInRange(projectStart) ? projectStart : null);
             Dictionary<int, ResourceModel> resources = ImportWorksheetResources(reader);
             List<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(reader);
             Dictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(reader);

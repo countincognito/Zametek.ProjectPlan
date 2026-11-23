@@ -132,17 +132,15 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Free the place when the job ends, before the write of the answer. A second choice is a time limit for the write.
 
-- [ ] **Do the checks of the dates for an import, and for the target date in the application** *(2026-11-20, from the review of 0.11.0-beta.2)*
+- [ ] **Do the checks of the dates in the application** *(2026-11-20, from the review of 0.11.0-beta.2)*
 
-  `PlanCheck` refuses a project file whose start is outside its range of dates. It also refuses a constraint date or a target date that is too far from the start. Since 0.11.0-beta.2, an import gets the check of the limits before the load (`PlanCheck.FindLimitViolations`). It gets none of the checks of the dates. A run showed one result. A workbook with the project start 9999-12-31 ends `zpp` with exit code 1 and the text of a .NET exception.
-
-  Nobody tried the server with such a workbook. Nobody tried a date that makes the calendar count for a long time.
+  `PlanCheck` refuses a project file whose start is outside its range of dates. It also refuses a constraint date or a target date that is too far from the start. Since 0.11.0-beta.3, the import of a workbook does the same checks of the dates at its cells (`PlanDateCheck`). This is true for `zpp`, the server and the application. Nobody tried a date that makes the calendar count for a long time.
 
   The desktop application does not call `PlanCheck`. `SimulationTargetHelper.FinishTimeByEndOf` adds one day to the target date, and the getter of `TargetFinishTime` calculates the target at each read. Thus, a target date at the end of the range of dates throws in the getter and in each save. The setter reads the getter first, so the user cannot change the target. Only a program writes a target date today, and thus the risk is low. Nobody ran this.
 
   *(2026-11-23)* Since 0.11.0-beta.3, the desktop does one check before the load of a file and of a recovery copy (`HolidayRuleCheck.FindProblem`). The check reads the holiday rules and the number of the holidays. It also refuses a rule that the dock of the holidays cannot read, for an import too. It still does none of the checks of `PlanCheck`.
 
-  Give the dates of an import the checks that the dates of a project file get. Decide if the application does these checks at the load of a file too.
+  Decide if the application does the checks of the dates of `PlanCheck` at the load of a file too.
 
 - [ ] **Do three smaller things from the review of 0.11.0-beta.2** *(2026-11-20, from the review of 0.11.0-beta.2, changed 2026-11-22)*
 

@@ -966,4 +966,10 @@
   <data name="Message_ImportHolidayRuleNotReadable" xml:space="preserve">
     <value>The file cannot be imported. The holiday "{0}" has the rule "{1}", which the application cannot read: {2}</value>
   </data>
+  <data name="Message_ImportProjectStartOutOfRange" xml:space="preserve">
+    <value>"{0}" is not a project start that the calendar takes. A project must start from {1} to {2}.</value>
+  </data>
+  <data name="Message_ImportDateTooFarFromStart" xml:space="preserve">
+    <value>"{0}" is too far from the project start. A date must be within {1:N0} days of ProjectStart.</value>
+  </data>
 </root>

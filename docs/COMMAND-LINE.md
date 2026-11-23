@@ -82,7 +82,9 @@ Activities!C2 (Duration, Design the wall): "soon" is not a whole number.
 Activities!C3 (Duration, Build the wall): "later" is not a whole number.
 ```
 
-A blank cell is not a problem. It gives the default of its column. A cell is a problem when it holds a value that is not of the kind of its column. Examples are text in a column of numbers, a number in a column of true and false values, and an error of Excel such as `#N/A`. A row is also a problem when its `Id` is blank or is the `Id` of an earlier row, and when a row of a tracker sheet is for an activity that the workbook does not have. A column or a sheet that `zpp` does not know is not a problem: `zpp` does not read it. Thus, you can add columns and sheets to a workbook that `zpp` exported, and import it again. `zpp` keeps the first 10000 problems and counts the others. The last line says how many there are.
+A blank cell is not a problem. It gives the default of its column. A cell is a problem when it holds a value that is not of the kind of its column. Examples are text in a column of numbers, a number in a column of true and false values, and an error of Excel such as `#N/A`. A row is also a problem when its `Id` is blank or is the `Id` of an earlier row, and when a row of a tracker sheet is for an activity that the workbook does not have. A date is a problem when the calendar cannot count to it, as in a project file (refer to [What zpp checks before the load](PROJECT-FILE.md#what-zpp-checks-before-the-load)).
+
+A column or a sheet that `zpp` does not know is not a problem: `zpp` does not read it. Thus, you can add columns and sheets to a workbook that `zpp` exported, and import it again. `zpp` keeps the first 10000 problems and counts the others. The last line says how many there are.
 
 The import reads a workbook up to three limits. They stop a small file that says that it holds a very large sheet. A workbook above a limit is one problem, and the import stops at once:
 

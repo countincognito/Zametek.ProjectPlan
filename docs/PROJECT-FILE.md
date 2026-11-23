@@ -141,6 +141,8 @@ The plan loads, and `zpp` writes a warning that names the date and the activity.
 
 The check also counts the activities, the active resources and the work streams of the scenario. A plan that is out of the limits of the compiler gets `P0080` at once, without the load. Before, the load of a large plan took seconds before the compile refused it. An import gets the same count, after `zpp` reads the workbook or the file of Microsoft Project.
 
+The import of a workbook does the checks of `outOfRange` at its cells. These are `ProjectStart` on the sheet "General" and the constraint dates on the sheet "Activities". The application does these checks for an import too. A file of Microsoft Project cannot hold such a date, because Microsoft Project uses dates from 1984 to 2149 only.
+
 ## The calendar
 
 `NonWorkingDayMode` in the `DisplaySettings` of a scenario selects the days that are not working days:

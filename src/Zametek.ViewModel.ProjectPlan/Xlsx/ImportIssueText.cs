@@ -38,6 +38,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         internal static string HolidayRuleNotAllowed(string value) => Say(Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotAllowed, value);
 
+        internal static string ProjectStartOutOfRange(string value) =>
+            Say(
+                Resource.ProjectPlan.Messages.Message_ImportProjectStartOutOfRange,
+                value,
+                PlanDateCheck.FirstProjectStart.ToString(@"yyyy-MM-dd", CultureInfo.InvariantCulture),
+                PlanDateCheck.LastProjectStart.ToString(@"yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+        internal static string DateTooFarFromStart(string value) =>
+            Say(Resource.ProjectPlan.Messages.Message_ImportDateTooFarFromStart, value, Maths.Graphs.GraphLimits.MaximumTimeValue);
+
         internal static string ExcelError(string value) => Say(Resource.ProjectPlan.Messages.Message_ImportExcelError, value);
 
         internal static string MissingValue() => Resource.ProjectPlan.Messages.Message_ImportMissingValue;

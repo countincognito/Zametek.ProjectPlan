@@ -518,7 +518,7 @@ The `code` of an error is one of the codes below, and a program can rely on them
 | `workbookTooLarge`, `tooManyRows`, `tooManyCells` | The size of a workbook to import: its parts hold more than 100 MB when they are unpacked, a sheet has more than 10000 rows that hold a value, or the workbook has more than 10 million cells to read. |
 | `noKnownSheet`, `missingHeader`, `missingColumn`, `duplicateColumn` | The shape of a workbook to import: it has none of the sheets that the import reads, a sheet has no row of titles, a sheet that has rows has no column `Id`, or two columns have a title that the import reads. |
 | `missingValue`, `duplicateId`, `unknownActivity` | The rows of a workbook to import: an `Id` is blank, an `Id` is the `Id` of an earlier row of the sheet, or a row of a tracker sheet is for an activity that the workbook does not have. |
-| `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. A holiday rule of a workbook that repeats more often than each day gets `notAllowed` at its cell. |
+| `excelError`, `notAWholeNumber`, `notANumber`, `notTrueOrFalse`, `notADate`, `notAChoice`, `notAColor` | A cell of a workbook to import: it holds an error of Excel (for example `#N/A`), or it holds a value that is not of the kind of its column. A holiday rule of a workbook that repeats more often than each day gets `notAllowed` at its cell. A date that the calendar cannot count to gets `outOfRange` at its cell, as in a project file. |
 | `notFound`, `ambiguous`, `hasNoData` | The scenario does not exist, the name matches more than one scenario, or the scenario holds no data. |
 | `failed` | The job cannot produce an output. |
 
@@ -905,5 +905,6 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - The check of a project refuses two nodes with the same `Id` (`duplicateId`), and a node that is a parent of itself (`notAllowed` at its `ParentId`). `POST /v1/projects/scenarios` does this check of the nodes too, and it then gives `422` `project-not-readable`. Before, two nodes with one `Id` gave `500`.
 - The check of a project refuses a holiday rule that repeats more often than each day (`notAllowed` at its `RecurrencePattern`). The load of a plan with such a rule did not end in the time of a job.
 - The import of a workbook refuses a holiday rule that repeats more often than each day (`notAllowed` at its cell).
+- The import of a workbook does the checks of the dates that a project file gets (`outOfRange` at its cell). A project start must be from 1900-01-01 to 2999-12-31, and a constraint date within 100,000 days of the start. Before, a workbook with the project start 9999-12-31 gave `500`.
 - A scenario and an import can have 1,000 holidays at most (`P0080`).
 - The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time.

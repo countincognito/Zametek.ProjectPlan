@@ -448,6 +448,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to "{0}" is too far from the project start. A date must be within {1:N0} days of ProjectStart..
+        /// </summary>
+        public static string Message_ImportDateTooFarFromStart {
+            get {
+                return ResourceManager.GetString("Message_ImportDateTooFarFromStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The title "{0}" is also the title of column {1}..
         /// </summary>
         public static string Message_ImportDuplicateColumn {
@@ -606,6 +615,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ImportProblemsFound {
             get {
                 return ResourceManager.GetString("Message_ImportProblemsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a project start that the calendar takes. A project must start from {1} to {2}..
+        /// </summary>
+        public static string Message_ImportProjectStartOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_ImportProjectStartOutOfRange", resourceCulture);
             }
         }
         

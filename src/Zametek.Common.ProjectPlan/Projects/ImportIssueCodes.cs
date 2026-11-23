@@ -62,5 +62,11 @@ namespace Zametek.Common.ProjectPlan
 
         /// <summary>A cell holds a value that the import does not take: a holiday rule that repeats more often than each day.</summary>
         public const string NotAllowed = @"notAllowed";
+
+        /// <summary>
+        /// A cell holds a date that the calendar cannot count to: a project start outside its range, or a date too far from the
+        /// project start. A project file gets the same checks (the code outOfRange of the check before the load).
+        /// </summary>
+        public const string OutOfRange = @"outOfRange";
     }
 }
