@@ -109,6 +109,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public MainThreadSequencerScope()
         {
+            // First: an initialisation after this line would replace the scheduler of the scope, and the scope would then
+            // put back the scheduler from before the initialisation, for the rest of the process.
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
             m_Previous = RxSchedulers.MainThreadScheduler;
             Pump = new ManualSequencer();
             RxSchedulers.MainThreadScheduler = Pump;
@@ -134,6 +137,8 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public TaskpoolSequencerScope()
         {
+            // First, as MainThreadSequencerScope does.
+            CoreViewModelFixture.EnsureReactiveUIInitialized();
             m_Previous = RxSchedulers.TaskpoolScheduler;
             Pump = new ManualSequencer();
             RxSchedulers.TaskpoolScheduler = Pump;

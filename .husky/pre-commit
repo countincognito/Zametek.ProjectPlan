@@ -24,8 +24,10 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "-> Running ViewModel tests..."
-dotnet test --no-build --configuration Debug --verbosity quiet Zametek.ProjectPlan.slnf
+# A test that waits for ever (a deadlock that comes back, say) ends the run after 10 minutes, and the output names the test.
+# The slowest tests take about 3 minutes.
+echo "-> Running all tests..."
+dotnet test --no-build --configuration Debug --verbosity quiet --blame-hang-timeout 10m --blame-hang-dump-type none Zametek.ProjectPlan.slnf
 if [ $? -ne 0 ]; then
   echo "Tests failed. Fix failing tests before committing."
   exit 1

@@ -63,7 +63,7 @@ At each commit, the hook (`.husky/pre-commit`) does these checks on `Zametek.Pro
 1. `dotnet format style --verify-no-changes` checks the style of the source code.
 2. `dotnet format analyzers --verify-no-changes` checks the analyzer rules.
 3. `dotnet build --no-restore --configuration Debug` builds the source code.
-4. `dotnet test --no-build --configuration Debug` starts the test suites.
+4. `dotnet test --no-build --configuration Debug --blame-hang-timeout 10m --blame-hang-dump-type none` starts the test suites. A test that waits for more than 10 minutes ends the run, and the output names that test.
 
 If the style check or the analyzer check produces errors, enter `dotnet format style` or `dotnet format analyzers`. These commands correct the errors for you. Then stage the changes again and commit.
 

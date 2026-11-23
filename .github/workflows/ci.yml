@@ -9,11 +9,18 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request stops the run of the push before it. A push to develop or master keeps each run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build-and-test:
     name: Build, Lint, Format & Test
     # Pinned rather than ubuntu-latest, so that the image changes only when this line does.
     runs-on: ubuntu-24.04
+    # A run takes 12 to 19 minutes. The default of GitHub is 6 hours, which a test that waits for ever would use.
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -97,9 +104,11 @@ jobs:
       - name: Run tests
         # No --results-directory: each test project then writes its results file into its own TestResults folder.
         # With one shared folder the projects overwrote each other's file, and only the last to finish was uploaded.
+        # A test that waits for ever ends the run after 10 minutes, and the log names it. The slowest tests take about 3 minutes.
         run: |
           dotnet test --no-build --configuration Release --verbosity normal \
             --logger "trx;LogFileName=test-results.trx" \
+            --blame-hang-timeout 10m --blame-hang-dump-type none \
             Zametek.ProjectPlan.slnf
 
       - name: Upload test results

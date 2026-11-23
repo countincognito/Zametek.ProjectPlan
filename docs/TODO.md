@@ -98,24 +98,6 @@ This file lists the maintainer-internal engineering intents that must version wi
   5. **Save Image with no size.** The review reported that the save of a chart image writes no file and shows no message when `ImageBounds` has no value (`GanttChartManagerViewModel`, `EarnedValueChartManagerViewModel`).
   6. **The row of a sorted grid.** The review reported that `DataGridPersistScrollBehavior` counts the rows of `ItemsSource` to find the first row on the screen. With a sort in the grid, the order is different, and a change of the tab then shows a different row. The behavior does this count at each layout pass.
 
-- [ ] **Give a test that waits for ever a time limit and a name** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  No test has a time limit, and no test project has an `xunit.runner.json` file or a `.runsettings` file. The `dotnet test` command of the hook and of CI has no `--blame-hang-timeout`. The job of `ci.yml` has no `timeout-minutes`, and the default of GitHub is 6 hours.
-
-  The tests of the locks exist to find a deadlock. A deadlock that comes back makes the hook wait with no output, and it makes CI wait for 6 hours. Neither says which test waits. Some tests wait with no limit, for example `RunCompile_Given_APoisonedTargetSet_Then_DoesNotHang` and the tests of `UnhandledErrorHandlerTests` that await `handler.Completion`.
-
-  Add `--blame-hang-timeout` to the two commands, and `timeout-minutes` to the job. The time must be longer than the slowest test. The server tests of the huge graph exports have a limit of 3 minutes.
-
-- [ ] **Initialise ReactiveUI in the scope that installs the scheduler of a test** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
-
-  `CoreViewModelFixture.EnsureReactiveUIInitialized` sets the schedulers one time for each process. Its comment says that a test that installs a scheduler of its own must call it first. The review counted 134 sites of `new MainThreadSequencerScope()`, and 128 of them do so.
-
-  Six tests do not: three in `CoreViewModelSubscriptionFaultTests` and three in `WorkStreamSettingsDeliveryTests`. They make the scope first, and the fixture then initialises ReactiveUI. These tests pass because a different class ran first.
-
-  If one of them is the first test of a run, for example with a filter, the initialisation replaces the scheduler of the test. The scope then puts back the scheduler from before the initialisation, for the rest of the process. Nobody ran one of these classes alone.
-
-  Call `EnsureReactiveUIInitialized` in the constructors of `MainThreadSequencerScope` and `TaskpoolSequencerScope`. Then the 128 calls before a scope are not necessary.
-
 - [ ] **Wait for a signal, and not for a time, in the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   Some tests wait for a fixed time and then make an assertion. On a slow computer, such a test fails with no defect, or it passes with no check. The harness of the server says that a test can stop for more than one minute (`RunningServer`). This occurs when the other test projects run at the same time. Six groups:
@@ -216,14 +198,13 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Read the license of each library. Make a file `THIRD-PARTY-NOTICES`, put it into each archive and each installer, and show it from the dialog "About".
 
-- [ ] **Do six smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
+- [ ] **Do five smaller things for the build and the packages** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The MSIX manifests.** Both manifests name the device family `Windows.Universal`, which is not correct for a desktop application with full trust. `MaxVersionTested` is 10.0.14393.0, and the packaging projects give 10.0.19041.0 as the minimum. The `.wapproj` files also keep configurations for 32-bit ARM, which .NET 10 does not have, and package references in a comment.
   2. **`build-msix.ps1`.** The script calls `vswhere` with `-prerelease`, and thus a preview of Visual Studio can build a release package. With `-Sign`, the script does not make sure that the bundle has a signature.
-  3. **The runs of CI.** `ci.yml` has no `concurrency` group, and thus a new push does not stop the run of the push before it. The step for Spectral pins the tool, but `npx` gets the newest dependencies of the tool at each run.
+  3. **The dependencies of Spectral.** The step for Spectral in `ci.yml` pins the tool, but `npx` gets the newest dependencies of the tool at each run. Since 0.11.0-beta.3, `ci.yml` has a `concurrency` group: a new push to a pull request stops the run of the push before it.
   4. **Reports about security.** The repository has no `SECURITY.md` file, and `zpp serve` is a server.
   5. **The line endings.** `.gitattributes` asks for LF in the repository, and `.editorconfig` asks for CRLF. On 2026-11-21, 143 files were CRLF in the index, and 1,161 were LF. A tool that follows `.gitattributes` changes each line of a CRLF file. Decide the rule. Then make all the files agree in one commit, and name that commit in `.git-blame-ignore-revs`.
-  6. **The task runner of the hook.** `.husky/task-runner.json` has the same four commands as `.husky/pre-commit`, and nothing uses it. The hook also says "Running ViewModel tests" before it runs all the tests. Remove the file, or let the hook use it.
 
 - [ ] **Read only the kept result of a formula in the import of a workbook** *(2026-11-20, from the review of 0.11.0-beta.2)*
 
