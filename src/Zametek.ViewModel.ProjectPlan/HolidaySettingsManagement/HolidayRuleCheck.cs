@@ -1,3 +1,4 @@
+using Ical.Net.DataTypes;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 
@@ -77,6 +78,32 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
+        /// The cause when the calendar cannot read the rule, or null when it can. The calendar (<see cref="DateTimeCalculator"/>)
+        /// reads a rule with Ical.Net, only with the custom calendar, in the load. It takes less than <see cref="IsAllowed"/>
+        /// and the reader of the desktop: no prefix RRULE:, no space before a name or around =, no part that RFC 5545 does not
+        /// have, and no value out of its range. zpp passed such a rule, and the load ended with the exception of Ical.Net (from
+        /// the review of the branch). Thus, the check refuses it in each mode of the calendar, as it refuses a rule that is not
+        /// allowed, and the import refuses it at its cell.
+        /// </summary>
+        public static string? FindCalendarProblem(string? rule)
+        {
+            if (rule is null)
+            {
+                return null;
+            }
+
+            try
+            {
+                _ = new RecurrencePattern(rule);
+                return null;
+            }
+            catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException)
+            {
+                return ex.Message;
+            }
+        }
+
+        /// <summary>
         /// The cause when the reader of the desktop (<see cref="RecurrencePatternHelper"/>) cannot read the rule, or null when
         /// it can. The dock of the holidays reads each rule with that reader on the main thread, with no catch, and a rule that
         /// it cannot read ended the application (from the review of src, test and pkg). The calendar (Ical.Net) reads more of
@@ -98,7 +125,8 @@ namespace Zametek.ViewModel.ProjectPlan
         /// <summary>
         /// The first problem of the holidays of a project, as a message for a person: a scenario with more holidays than
         /// <see cref="MaximumHolidayCount"/>, a holiday whose rule is not allowed (<see cref="IsAllowed"/>), or a holiday whose
-        /// rule the desktop cannot read (<see cref="FindReadProblem"/>). Null when it has none. The desktop opens a project file
+        /// rule the calendar (<see cref="FindCalendarProblem"/>) or the desktop (<see cref="FindReadProblem"/>) cannot read.
+        /// Null when it has none. The desktop opens a project file
         /// with no check before the load, and so it refuses such a file with this message: the load would otherwise hold it for
         /// minutes, or end the application.
         /// </summary>
@@ -141,7 +169,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 foreach (HolidayModel? candidate in holidays)
                 {
                     if (candidate is not null
-                        && FindReadProblem(candidate.RecurrencePattern) is string cause)
+                        && (FindCalendarProblem(candidate.RecurrencePattern) ?? FindReadProblem(candidate.RecurrencePattern)) is string cause)
                     {
                         return string.Format(
                             CultureInfo.CurrentCulture,

@@ -157,6 +157,36 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             issue.Message.ShouldBe(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotAllowed, @"FREQ=MINUTELY"));
         }
 
+        // The calendar (Ical.Net) refuses a rule with the prefix RRULE:, a space before a name, or a value out of its range, and
+        // the import took such a rule (from the review of the branch).
+        [Theory]
+        [InlineData(@"RRULE:FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25")]
+        [InlineData(@"FREQ=YEARLY; BYMONTH=12;BYMONTHDAY=25")]
+        [InlineData(@"FREQ=YEARLY;BYMONTH=13")]
+        public void Import_Given_AHolidayRuleThatTheCalendarCannotRead_Then_AProblemOfItsCellWithTheCause(string rule)
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_Holidays, s => s
+                    .Row(1, ("A", TitleOf(nameof(HolidayModel.Id))), ("B", TitleOf(nameof(HolidayModel.RecurrencePattern))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", TextOf(rule))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0))))
+                .Build();
+
+            ImportIssue issue = ImportFailure(workbook).Issues.ShouldHaveSingleItem();
+
+            issue.Code.ShouldBe(ImportIssueCodes.NotAllowed);
+            issue.Sheet.ShouldBe(s_Holidays);
+            issue.Cell.ShouldBe(@"B2");
+            issue.Value.ShouldBe(rule);
+            issue.Message.ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ImportHolidayRuleUnreadable,
+                rule,
+                HolidayRuleCheck.FindCalendarProblem(rule)));
+        }
+
         // The dates of an import get the checks that the dates of a project file get (PlanDateCheck). A workbook with the project
         // start 9999-12-31 ended zpp with the text of a .NET exception, and the server answered 500 (from the review of
         // 0.11.0-beta.2).

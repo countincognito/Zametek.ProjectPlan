@@ -249,6 +249,9 @@
   <data name="Message_PlanHolidayRuleNotAllowed" xml:space="preserve">
     <value>must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND</value>
   </data>
+  <data name="Message_PlanHolidayRuleUnreadable" xml:space="preserve">
+    <value>is not a rule that the calendar can read: {0}</value>
+  </data>
   <data name="Message_PlanLimitsExceeded" xml:space="preserve">
     <value>Values or counts outside the supported limits:</value>
   </data>
@@ -953,6 +956,9 @@
   </data>
   <data name="Message_ImportHolidayRuleNotAllowed" xml:space="preserve">
     <value>"{0}" is not a holiday rule that the calendar takes. A rule must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND.</value>
+  </data>
+  <data name="Message_ImportHolidayRuleUnreadable" xml:space="preserve">
+    <value>"{0}" is not a holiday rule that the calendar can read: {1}</value>
   </data>
   <data name="Message_ProjectHolidayRuleNotAllowed" xml:space="preserve">
     <value>The file cannot be opened. The holiday "{0}" of the scenario "{1}" has the rule "{2}". A rule must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND.</value>

@@ -509,6 +509,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_ImportHolidayRuleNotAllowed", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a holiday rule that the calendar can read: {1}.
+        /// </summary>
+        public static string Message_ImportHolidayRuleUnreadable {
+            get {
+                return ResourceManager.GetString("Message_ImportHolidayRuleUnreadable", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to The file cannot be imported. The holiday "{0}" has the rule "{1}", which the application cannot read: {2}.
@@ -1007,6 +1016,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_PlanHolidayRuleNotAllowed {
             get {
                 return ResourceManager.GetString("Message_PlanHolidayRuleNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to is not a rule that the calendar can read: {0}.
+        /// </summary>
+        public static string Message_PlanHolidayRuleUnreadable {
+            get {
+                return ResourceManager.GetString("Message_PlanHolidayRuleUnreadable", resourceCulture);
             }
         }
 

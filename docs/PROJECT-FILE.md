@@ -123,7 +123,7 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 - `outOfRange`: `ProjectStart` is not from 1900-01-01 to 2999-12-31, or a constraint date is more than 100,000 days from `ProjectStart`. The same limit is for the target date of the simulation.
 
-- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7. A node that is a parent of itself gets this code at its `ParentId` too. Examples are a node whose `ParentId` is its own `Id`, and two nodes that are the parent of each other. A holiday rule gets this code at its `RecurrencePattern` when it repeats more often than each day (refer to [The calendar](#the-calendar)).
+- `notAllowed`: a choice is not one of the numbers that the schema gives, for example a `NonWorkingDayMode` of 7. A node that is a parent of itself gets this code at its `ParentId` too. Examples are a node whose `ParentId` is its own `Id`, and two nodes that are the parent of each other. A holiday rule gets this code at its `RecurrencePattern` when it repeats more often than each day, or when the calendar cannot read it (refer to [The calendar](#the-calendar)).
 
 - `duplicateId`: two activities, two resources or two work streams of the scenario have the same `Id`, or two nodes have the same `Id`.
 
@@ -159,7 +159,9 @@ A holiday has a `RecurrencePattern`, which is a recurrence rule of iCalendar (RF
 
 The smallest unit of a plan is a day. Thus, a rule must have the frequency `DAILY`, `WEEKLY`, `MONTHLY` or `YEARLY`, and no `BYHOUR`, `BYMINUTE` or `BYSECOND`. The calendar reads each occurrence of a rule. A rule that repeats each second has millions of occurrences in a month. The load of a plan with such a rule did not end in minutes. `zpp` and `zpp serve` refuse such a rule before the load.
 
-The import of a workbook refuses such a rule at its cell (`notAllowed`). The desktop application does not open a file with such a rule.
+The calendar reads a rule with Ical.Net, which takes less than RFC 5545 permits. `zpp` and `zpp serve` also refuse a rule that Ical.Net cannot read, and the problem gives the cause from Ical.Net. Examples are the prefix `RRULE:` and a space before a name or around `=`. A part that RFC 5545 does not have is another example, and so is a value out of its range (`BYMONTH=13`, `INTERVAL=0`). They refuse it in each mode of the calendar, because a change of the mode makes the calendar read it. Before, such a rule ended the load of a scenario with the custom calendar with the exception of Ical.Net.
+
+The import of a workbook refuses each of these rules at its cell (`notAllowed`). The desktop application does not open a file with such a rule.
 
 The desktop application also reads each rule with a reader of its own, for the dock of the holidays. That reader knows less of RFC 5545 than the calendar. Thus, the desktop application does not open or import a file with a rule that this reader cannot read, for example `FREQ=YEARLY;UNTIL=2027-12-31`. `zpp` and `zpp serve` do not do this check.
 

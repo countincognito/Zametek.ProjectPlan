@@ -1,3 +1,4 @@
+using Ical.Net.DataTypes;
 using Shouldly;
 using System;
 using System.Globalization;
@@ -85,6 +86,58 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void FindReadProblem_Given_ARuleThatTheDesktopCanRead_Then_Null(string? rule)
         {
             HolidayRuleCheck.FindReadProblem(rule).ShouldBeNull();
+        }
+
+        // The calendar (Ical.Net, in DateTimeCalculator) reads a rule only with the custom calendar, in the load. It takes less than
+        // the check and the reader of the desktop: no prefix RRULE:, no space before a name or around =, no part that RFC 5545
+        // does not have, and no value out of its range. zpp passed such a rule, and the load ended with the exception of
+        // Ical.Net (from the review of the branch).
+        [Theory]
+        [InlineData(@"RRULE:FREQ=DAILY;UNTIL=20271231T000000Z")]
+        [InlineData(@"rrule:FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25")]
+        [InlineData(@" FREQ=YEARLY")]
+        [InlineData(@"FREQ=WEEKLY; BYDAY=SA,SU")]
+        [InlineData(@"FREQ = WEEKLY")]
+        [InlineData(@"FREQ=YEARLY;FOO=1")]
+        [InlineData(@"FREQ=YEARLY;BYMONTH=13")]
+        [InlineData(@"FREQ=YEARLY;INTERVAL=0")]
+        [InlineData(@"FREQ=YEARLY;COUNT=2;UNTIL=20271231")]
+        [InlineData(@"FREQ=YEARLY;COUNT=99999999999")]
+        public void FindCalendarProblem_Given_ARuleThatTheCalendarCannotRead_Then_TheCauseFromTheCalendar(string rule)
+        {
+            Exception? thrown = Record.Exception(() => new RecurrencePattern(rule));
+
+            thrown.ShouldNotBeNull();
+            HolidayRuleCheck.FindCalendarProblem(rule).ShouldBe(thrown.Message);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData(@"")]
+        [InlineData(@"FREQ=DAILY;COUNT=1")]
+        [InlineData(@"freq=yearly;bymonth=1;bymonthday=1")]
+        [InlineData(@"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25 ")]
+        [InlineData(@"FREQ=YEARLY;UNTIL=2027-12-31")]
+        [InlineData(@"FREQ=MONTHLY;BYDAY=-1FR")]
+        public void FindCalendarProblem_Given_ARuleThatTheCalendarReads_Then_Null(string? rule)
+        {
+            HolidayRuleCheck.FindCalendarProblem(rule).ShouldBeNull();
+        }
+
+        [Fact]
+        public void FindProblem_Given_ARuleThatTheCalendarCannotRead_Then_TheHolidayTheScenarioTheRuleAndTheCause()
+        {
+            ProjectModel project = Project(
+                new HolidayModel { Id = 1, Name = @"Christmas Day", RecurrencePattern = @"FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25" },
+                new HolidayModel { Id = 2, Name = @"New Year", RecurrencePattern = @"RRULE:FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=1" });
+
+            HolidayRuleCheck.FindProblem(project).ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_ProjectHolidayRuleNotReadable,
+                @"New Year",
+                @"Base",
+                @"RRULE:FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=1",
+                HolidayRuleCheck.FindCalendarProblem(@"RRULE:FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=1")));
         }
 
         [Fact]

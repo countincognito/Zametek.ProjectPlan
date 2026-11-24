@@ -38,6 +38,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         internal static string HolidayRuleNotAllowed(string value) => Say(Resource.ProjectPlan.Messages.Message_ImportHolidayRuleNotAllowed, value);
 
+        internal static string HolidayRuleUnreadable(string value, string cause) => Say(Resource.ProjectPlan.Messages.Message_ImportHolidayRuleUnreadable, value, cause);
+
         internal static string ProjectStartOutOfRange(string value) =>
             Say(
                 Resource.ProjectPlan.Messages.Message_ImportProjectStartOutOfRange,

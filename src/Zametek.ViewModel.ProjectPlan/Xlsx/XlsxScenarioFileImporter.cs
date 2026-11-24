@@ -386,10 +386,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // A rule that repeats more often than each day holds the load of the import for minutes (HolidayRuleCheck). The
                 // check before the load of a project file refuses it, and the import did no check of a rule.
-                if (ruleIndex is int index
-                    && !HolidayRuleCheck.IsAllowed(rule))
+                if (ruleIndex is int index)
                 {
-                    row.Report(index, ImportIssueCodes.NotAllowed, ImportIssueText.HolidayRuleNotAllowed(rule), rule);
+                    if (!HolidayRuleCheck.IsAllowed(rule))
+                    {
+                        row.Report(index, ImportIssueCodes.NotAllowed, ImportIssueText.HolidayRuleNotAllowed(rule), rule);
+                    }
+                    else if (HolidayRuleCheck.FindCalendarProblem(rule) is string cause)
+                    {
+                        // The calendar (Ical.Net) refuses a rule that the check takes, and the load then ended with its
+                        // exception (from the review of the branch).
+                        row.Report(index, ImportIssueCodes.NotAllowed, ImportIssueText.HolidayRuleUnreadable(rule, cause), rule);
+                    }
                 }
 
                 var holiday = new HolidayModel

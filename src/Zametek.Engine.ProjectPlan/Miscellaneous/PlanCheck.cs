@@ -235,20 +235,29 @@ namespace Zametek.Engine.ProjectPlan
                 $@"{root}/{nameof(ProjectScenarioModel.WorkStreamSettings)}/{nameof(WorkStreamSettingsModel.WorkStreams)}",
                 problems);
 
-            // The holiday rules: a rule that repeats more often than each day can hold the load for minutes (HolidayRuleCheck).
+            // The holiday rules: a rule that repeats more often than each day can hold the load for minutes, and a rule that the
+            // calendar cannot read ends the load with the exception of Ical.Net (HolidayRuleCheck). Both in each mode of the
+            // calendar, because a change of the mode makes the calendar read them.
             List<HolidayModel>? holidays = scenario.HolidaySettings?.Holidays;
 
             if (holidays is not null)
             {
                 for (int index = 0; index < holidays.Count; index++)
                 {
-                    if (holidays[index] is HolidayModel holiday
-                        && !HolidayRuleCheck.IsAllowed(holiday.RecurrencePattern))
+                    if (holidays[index] is not HolidayModel holiday)
                     {
-                        problems.Add(new PlanProblem(
-                            $@"{root}/{nameof(ProjectScenarioModel.HolidaySettings)}/{nameof(HolidaySettingsModel.Holidays)}/{index}/{nameof(HolidayModel.RecurrencePattern)}",
-                            NotAllowed,
-                            Resource.ProjectPlan.Messages.Message_PlanHolidayRuleNotAllowed));
+                        continue;
+                    }
+
+                    string pointer = $@"{root}/{nameof(ProjectScenarioModel.HolidaySettings)}/{nameof(HolidaySettingsModel.Holidays)}/{index}/{nameof(HolidayModel.RecurrencePattern)}";
+
+                    if (!HolidayRuleCheck.IsAllowed(holiday.RecurrencePattern))
+                    {
+                        problems.Add(new PlanProblem(pointer, NotAllowed, Resource.ProjectPlan.Messages.Message_PlanHolidayRuleNotAllowed));
+                    }
+                    else if (HolidayRuleCheck.FindCalendarProblem(holiday.RecurrencePattern) is string cause)
+                    {
+                        problems.Add(new PlanProblem(pointer, NotAllowed, Say(Resource.ProjectPlan.Messages.Message_PlanHolidayRuleUnreadable, cause)));
                     }
                 }
             }

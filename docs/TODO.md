@@ -34,6 +34,8 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   *(2026-11-23)* Since 0.11.0-beta.3, `HolidayRuleCheck` reads the text of a rule too. It looks for a frequency below one day and for a part of a day, with a split of the text that is its own. Thus, three readers now read one text. When one reader reads the rules, let the check use the result of that reader.
 
+  *(2026-11-24)* The reader of the calendar (Ical.Net) takes less than the other two. It takes no prefix `RRULE:` and no space before a name or around `=`. It also takes no part that RFC 5545 does not have, and no value out of its range. The other two took such a rule, and the load of a scenario with the custom calendar then ended with the exception of Ical.Net. Since 0.11.0-beta.3, the check, the import and the desktop also read each rule with Ical.Net (`HolidayRuleCheck.FindCalendarProblem`). They refuse a rule that it cannot read, in each mode of the calendar.
+
   *(2026-11-23)* Since 0.11.0-beta.3, the desktop refuses a file, a recovery copy or an import with a rule that `RecurrencePatternHelper` cannot read (`HolidayRuleCheck.FindReadProblem`). Before, the dock of the holidays threw on the main thread with no catch, and the application ended. `zpp` does not do this check. When the dock can show each rule that the calendar reads, remove this refusal.
 
   Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there.

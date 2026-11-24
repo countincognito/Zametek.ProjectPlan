@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.Globalization;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -376,6 +377,35 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 ($@"{c_Scenario}/HolidaySettings/Holidays/2/RecurrencePattern", PlanCheck.NotAllowed),
             ]);
             problems[0].Detail.ShouldBe(@"must repeat each day or less often (FREQ=DAILY, WEEKLY, MONTHLY or YEARLY), with no BYHOUR, BYMINUTE or BYSECOND");
+        }
+
+        // The calendar (Ical.Net) reads the rules only with the custom calendar, in the load, and a rule that it cannot read
+        // ended the load with its exception. The check refuses such a rule in each mode of the calendar, as it refuses a rule
+        // that repeats more often than each day (from the review of the branch).
+        [Theory]
+        [InlineData(@"RRULE:FREQ=YEARLY", NonWorkingDayMode.CustomCalendar)]
+        [InlineData(@"RRULE:FREQ=YEARLY", NonWorkingDayMode.Weekends)]
+        [InlineData(@"FREQ=WEEKLY; BYDAY=SA,SU", NonWorkingDayMode.None)]
+        [InlineData(@"FREQ=YEARLY;BYMONTH=13", NonWorkingDayMode.CustomCalendar)]
+        public void FindScenarioProblems_Given_AHolidayRuleThatTheCalendarCannotRead_Then_NotAllowedAtItsRuleWithTheCause(string rule, NonWorkingDayMode mode)
+        {
+            ProjectScenarioModel scenario = Scenario() with
+            {
+                HolidaySettings = new HolidaySettingsModel
+                {
+                    Holidays = [new HolidayModel { Id = 1, RecurrencePattern = @"FREQ=WEEKLY;BYDAY=SA,SU" }, new HolidayModel { Id = 2, RecurrencePattern = rule }],
+                },
+                DisplaySettings = new ProjectScenarioDisplaySettingsModel { NonWorkingDayMode = mode },
+            };
+
+            PlanProblem problem = PlanCheck.FindScenarioProblems(Project(scenario), 0).ShouldHaveSingleItem();
+
+            problem.Pointer.ShouldBe($@"{c_Scenario}/HolidaySettings/Holidays/1/RecurrencePattern");
+            problem.Code.ShouldBe(PlanCheck.NotAllowed);
+            problem.Detail.ShouldBe(string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.ProjectPlan.Messages.Message_PlanHolidayRuleUnreadable,
+                HolidayRuleCheck.FindCalendarProblem(rule)));
         }
 
         [Fact]
