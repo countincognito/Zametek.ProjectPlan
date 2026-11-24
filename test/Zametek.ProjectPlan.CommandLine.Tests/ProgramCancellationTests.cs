@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using Shouldly;
 using System.Diagnostics;
 using Xunit;
@@ -54,6 +55,56 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             string plan = Path.Combine(m_TempDirectory, @"long.zpp");
             await File.WriteAllBytesAsync(plan, sink.Outputs.Single(x => x.Output == JobOutput.Project).Content);
             return plan;
+        }
+
+        // A plan with a custom calendar of 1,000 holidays FREQ=DAILY with no end: its load takes hours, because the calendar
+        // counts the finish of the metrics in the file with no working day (DateTimeCalculator.WorkCancellation).
+        private string LongLoad()
+        {
+            JObject plan = JObject.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, @"Assets", @"two-scenarios.zpp")));
+
+            foreach (JToken file in (JArray)plan[@"Files"]!)
+            {
+                JToken scenario = file[@"Scenario"]!;
+                scenario[@"Metrics"] ??= new JObject();
+                scenario[@"Metrics"]![@"Network"] = new JObject { [@"Duration"] = 100 };
+                scenario[@"DisplaySettings"] ??= new JObject();
+                scenario[@"DisplaySettings"]![@"NonWorkingDayMode"] = 2;
+                scenario[@"HolidaySettings"] = new JObject
+                {
+                    [@"Holidays"] = new JArray(Enumerable.Range(1, 1000).Select(id => new JObject
+                    {
+                        [@"Id"] = id,
+                        [@"Name"] = $@"Day {id}",
+                        [@"RecurrencePattern"] = @"FREQ=DAILY",
+                    })),
+                };
+            }
+
+            string path = Path.Combine(m_TempDirectory, @"long-load.zpp");
+            File.WriteAllText(path, plan.ToString());
+            return path;
+        }
+
+        // The load of a plan did not stop at a cancel: the calendar of the load read each holiday rule until the load ended
+        // (from the review of the branch). The calendar now stops at the cancel, and the run stops after the read of the plan.
+        [Fact]
+        public async Task Main_Given_ATokenThatIsCancelledWhileTheCalendarOfTheLoadCounts_Then_StopsEarlyWithTheCodeOfAStop()
+        {
+            string plan = LongLoad();
+            using var cancellation = new CancellationTokenSource();
+            cancellation.CancelAfter(TimeSpan.FromSeconds(2));
+
+            var stopwatch = Stopwatch.StartNew();
+            (int exitCode, string standardOutput, string standardError) = await ZppMain.RunCapturedAsync(
+                [@"-i", plan],
+                cancellationToken: cancellation.Token).WaitAsync(TimeSpan.FromMinutes(1));
+            stopwatch.Stop();
+
+            exitCode.ShouldBe((int)ExitCode.Cancelled);
+            standardError.ShouldContain(Resource.ProjectPlan.Messages.Message_RunCancelled);
+            standardOutput.ShouldBeEmpty();
+            stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(30));
         }
 
         [Fact]

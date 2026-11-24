@@ -9,7 +9,8 @@ namespace Zametek.ViewModel.ProjectPlan
     /// occurrence of each rule in its range of days into a list, under its lock, and a day is the smallest unit of a plan. A
     /// rule that repeats more often than each day has thousands or millions of occurrences in a day: on 2026-11-23, a count of
     /// 30 days took 5.5 s with FREQ=HOURLY, and it was not done after 2 minutes with FREQ=MINUTELY or FREQ=SECONDLY (heap
-    /// 0.9 GB and 1.6 GB). The limit of a compile does not end this work, because it is in the load.
+    /// 0.9 GB and 1.6 GB). The limit of a compile does not end this work, because it is in the load. Since 0.11.0-beta.3, the
+    /// time limit of a job and a cancel of zpp stop it (DateTimeCalculator.WorkCancellation), and the desktop has no such limit.
     /// </summary>
     public static class HolidayRuleCheck
     {
@@ -17,6 +18,10 @@ namespace Zametek.ViewModel.ProjectPlan
         /// The most holidays that a scenario can have. Each rule costs a read for each range of days that the calendar counts. On
         /// 2026-11-23, a plan of 46 activities over one year with the custom calendar took 0.9 s with 2 holidays, 1.35 s with
         /// 1,000 and 3.2 s with 10,000 yearly holidays (zpp, Release). An upload of 50 MB can hold about 500,000 holidays.
+        /// On 2026-11-24, the same plan took 1.3 s with 1,000 yearly holidays from 1900, and 6.9 s with 1,000 holidays FREQ=DAILY
+        /// from 1900 to 1999. A rule with no end that leaves no working day costs much more: one holiday FREQ=DAILY took 9.2 s
+        /// (17.1 s from 1900), and 1,000 of them did not end in 3 minutes, because the load counts the finish of the plan to the
+        /// end of each run of days off. The time limit of a job stops this work (DateTimeCalculator.WorkCancellation).
         /// </summary>
         public const int MaximumHolidayCount = 1_000;
 

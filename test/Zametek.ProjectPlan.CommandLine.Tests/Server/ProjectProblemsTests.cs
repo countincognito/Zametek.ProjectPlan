@@ -496,6 +496,54 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
             }
         }
 
+        // A custom calendar with 1,000 holidays FREQ=DAILY and no end held a job for minutes in its load. The calendar reads
+        // each rule for each range of 30 days that it counts, from the start of the rule, and with no working day it counts on
+        // to the end of each run of days off. The time limit of a job did not stop the load (from the review of the branch:
+        // more than 3 minutes on 2026-11-24). The calendar now stops at the time limit of the job, and so does the load.
+        [Fact]
+        public async Task Compile_Given_ALoadThatRunsOutOfTime_Then_ServiceUnavailableInTheTimeOfTheJob()
+        {
+            await using RunningServer server = await RunningServer.StartAsync(
+                m_Engine.JobRunner,
+                new ServeSettings { Limits = s_Limits with { JobTimeoutSeconds = 2 } });
+            byte[] plan = TwoScenarios(x =>
+            {
+                foreach (JToken file in (JArray)x[@"Files"]!)
+                {
+                    JToken scenario = file[@"Scenario"]!;
+
+                    // The load counts the finish of the metrics in the file, and so their duration makes the count long.
+                    foreach (JToken activity in (JArray)scenario[@"DependentActivities"]!)
+                    {
+                        activity[@"Activity"]![@"Duration"] = 100;
+                    }
+
+                    scenario[@"Metrics"] ??= new JObject();
+                    scenario[@"Metrics"]![@"Network"] = new JObject { [@"Duration"] = 100 };
+                    scenario[@"DisplaySettings"] ??= new JObject();
+                    scenario[@"DisplaySettings"]![@"NonWorkingDayMode"] = 2;
+                    scenario[@"HolidaySettings"] = new JObject
+                    {
+                        [@"Holidays"] = new JArray(Enumerable.Range(1, HolidayRuleCheck.MaximumHolidayCount).Select(id => new JObject
+                        {
+                            [@"Id"] = id,
+                            [@"Name"] = $@"Day {id}",
+                            [@"RecurrencePattern"] = @"FREQ=DAILY",
+                        })),
+                    };
+                }
+            });
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            (HttpResponseMessage response, ProblemResponse problem) = await CompileAsync(plan, server: server).WaitAsync(TimeSpan.FromMinutes(1));
+            using HttpResponseMessage _ = response;
+
+            response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+            problem.Type.ShouldBe(ProblemHelper.GetType(ProblemKind.JobTimeout));
+            problem.Detail.ShouldBe(string.Format(Resource.ProjectPlan.Messages.Message_ServeJobTimedOut, 2));
+            watch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(30));
+        }
+
         // The longest time limit of a job is one that the server can start its timers for: the one of each job, and the
         // one of its stop, which lets the jobs that run finish in that time.
         [Fact]

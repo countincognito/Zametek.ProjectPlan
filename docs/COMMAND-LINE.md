@@ -241,7 +241,7 @@ A chart, a graph or a file of the simulation can be impossible to write, for exa
 Press Ctrl+C to stop a run of `zpp`. A `SIGTERM` has the same effect. `zpp` then does this:
 
 1. `zpp` writes `Stopping after the step that is in progress. Press Ctrl+C again to stop at once.` to the standard error stream. It does not stop in the middle of a step. A step is the read of the plan, the compilation, the simulation, or the write of one output.
-2. The run stops before the next step. A simulation is the exception, because it stops between two chunks of its iterations. This takes a fraction of a second, also for a simulation of a million iterations.
+2. The run stops before the next step. A simulation is the exception, because it stops between two chunks of its iterations. This takes a fraction of a second, also for a simulation of a million iterations. The read of a plan with a custom calendar is another exception. Its calendar stops the count of the holidays, and the run stops after the read.
 3. `zpp` writes `The run was cancelled.` to the standard error stream. It does not print the metrics, and it exits with code 130.
 
 A file that `zpp` wrote before the stop stays where it is. Each of these files is complete, because `zpp` writes one output at a time and does not stop in the middle of one. `zpp` writes each file to a temporary file first (`<name>.tmp`, in the same folder). That file then takes the place of the old one. Thus, a write that fails leaves the old file as it was. The project (`-o`) and the workbook (`-x`) come after the simulation, and thus a run that you stop in the simulation does not write them.

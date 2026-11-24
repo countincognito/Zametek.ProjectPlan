@@ -1,6 +1,7 @@
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
@@ -109,6 +110,34 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             calc.SetNonWorkingDayCalendarEvents([weekendHoliday]);
             calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
             // Should behave like weekends mode
+            calc.AddDays(s_Monday, 5).Date.ShouldBe(new DateTime(2025, 6, 16));
+        }
+
+        // A job that is cancelled or runs out of time stops the work of its calendar (WorkCancellation). The calendar then reads
+        // no more rules, and it takes each day that it has not read as a working day, so that each count ends at once. A custom
+        // calendar with 1,000 rules and no working day held the load of a job for minutes, past its time limit (from the review
+        // of the branch).
+        [Fact]
+        public void AddDays_CustomCalendar_StoppedWork_TakesEachDayThatItHasNotReadAsAWorkingDay()
+        {
+            var calc = CreateCalc();
+            calc.SetNonWorkingDayCalendarEvents([new HolidayModel { Id = 1, RecurrencePattern = "FREQ=DAILY" }]);
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+            calc.WorkCancellation = new CancellationToken(canceled: true);
+
+            calc.AddDays(s_Monday, 5).Date.ShouldBe(new DateTime(2025, 6, 14));
+            calc.CountDays(s_Monday, s_Monday.AddDays(5)).ShouldBe(5);
+        }
+
+        [Fact]
+        public void AddDays_CustomCalendar_WorkThatIsNotStopped_ReadsEachRule()
+        {
+            var calc = CreateCalc();
+            calc.SetNonWorkingDayCalendarEvents([new HolidayModel { Id = 1, RecurrencePattern = "FREQ=WEEKLY;BYDAY=SA,SU" }]);
+            calc.NonWorkingDayMode = NonWorkingDayMode.CustomCalendar;
+            using var source = new CancellationTokenSource();
+            calc.WorkCancellation = source.Token;
+
             calc.AddDays(s_Monday, 5).Date.ShouldBe(new DateTime(2025, 6, 16));
         }
 

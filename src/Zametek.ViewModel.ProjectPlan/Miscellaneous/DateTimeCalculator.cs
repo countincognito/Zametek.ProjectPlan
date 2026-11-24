@@ -166,6 +166,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_LastCountMetLongRun = false;
                 while (count < unsignedDays)
                 {
+                    // A stopped calendar takes each day that is left as a working day (see WorkCancellation).
+                    if (WorkCancellation.IsCancellationRequested)
+                    {
+                        return current.AddDays(sign * (unsignedDays - count));
+                    }
+
                     current = current.AddDays(sign);
 
                     // If we have moved out of the range of already calculated non-working days,
@@ -270,11 +276,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (HolidayModel nonWorkingDayCalendarEvent in nonWorkingDayCalendarEvents)
                 {
+                    // A stopped calendar reads no more rules (see WorkCancellation).
+                    if (WorkCancellation.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDaysFromCalendarEvents(
                         bufferedStartDateTime,
                         bufferedFinishDateTime,
                         ProjectStart,
-                        nonWorkingDayCalendarEvent);
+                        nonWorkingDayCalendarEvent,
+                        WorkCancellation);
 
                     m_NonWorkingDays.UnionWith(newNonWorkingDays);
                 }
@@ -310,7 +323,8 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTime searchStartDateTime,
             DateTime searchFinishDateTime,
             DateTimeOffset projectStart,
-            HolidayModel nonWorkingDayCalendarEvent)
+            HolidayModel nonWorkingDayCalendarEvent,
+            CancellationToken workCancellation)
         {
             if (searchStartDateTime.IsAfterOrOn(searchFinishDateTime))
             {
@@ -340,9 +354,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 RecurrenceRule = new RecurrencePattern(nonWorkingDayCalendarEvent.RecurrencePattern),
             };
 
+            // A stopped calendar reads no more occurrences (see WorkCancellation).
             List<Occurrence> occurrences = [.. nonWorkingDaysEvent
                 .GetOccurrences(searchStartCalDateTime)
-                .TakeWhileBefore(searchEndCalDateTime)];
+                .TakeWhileBefore(searchEndCalDateTime)
+                .TakeWhile(_ => !workCancellation.IsCancellationRequested)];
 
             HashSet<DateOnly> nonWorkingDays = [.. occurrences.Select(x => x.Period.StartTime.Date)];
             return nonWorkingDays;
@@ -662,6 +678,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
+
+        /// <summary>
+        /// Stops the work of the calendar when a job runs out of time or is cancelled. The calendar reads each holiday rule for
+        /// each range of days that it counts, from the start of the rule, and a calendar with no working day makes a count go
+        /// on to the end of each run of days off (<see cref="MaximumNonWorkingRun"/>). Thus, a plan with many rules held the
+        /// load of a job for minutes, and the time limit of the job did not stop it: 1,000 holidays FREQ=DAILY with no end, in
+        /// a plan of 46 activities, ran for more than 3 minutes (from the review of the branch, 2026-11-24).
+        /// The counts run in the pipelines of the view models, where an exception ends the pipeline, and so a stopped calendar
+        /// does not throw. It reads no more rules, and it takes each day that it has not read as a working day, so that each
+        /// count ends at once. Its dates are then wrong, and the job stops after the step (JobRunner). Each job has a calendar
+        /// of its own. The desktop does not set it.
+        /// </summary>
+        public CancellationToken WorkCancellation { get; set; }
 
         public void SetNonWorkingDayCalendarEvents(List<HolidayModel> nonWorkingDayCalendarEvents)
         {

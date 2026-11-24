@@ -117,6 +117,13 @@ namespace Zametek.Engine.ProjectPlan
             dialogService.Sink = sink;
             services.GetRequiredService<JobClock>().Now = request.Now;
 
+            // The calendar of the job stops when the job is cancelled or runs out of time. Its work in the load held a job for
+            // minutes, past its time limit (see DateTimeCalculator.WorkCancellation).
+            if (services.GetRequiredService<IDateTimeCalculator>() is DateTimeCalculator calendar)
+            {
+                calendar.WorkCancellation = cancellationToken;
+            }
+
             return await RunAsync(request, sink, dialogService, services, m_ProcessorShare, cancellationToken);
         }
 
@@ -252,6 +259,9 @@ namespace Zametek.Engine.ProjectPlan
                 }
 
                 core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
+
+                // A calendar that stopped in the load gave wrong dates (see DateTimeCalculator.WorkCancellation).
+                cancellationToken.ThrowIfCancellationRequested();
             }
             else
             {
@@ -279,6 +289,9 @@ namespace Zametek.Engine.ProjectPlan
                 }
 
                 project.ProcessProject(projectModel);
+
+                // A calendar that stopped in the load gave wrong dates (see DateTimeCalculator.WorkCancellation).
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // The other tracked scenarios, compiled before the job's own, when the request asks or the scenario chart
                 // plots them.
