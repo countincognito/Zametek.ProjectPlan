@@ -448,6 +448,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a date that the application takes. A date must be from {1} to {2}..
+        /// </summary>
+        public static string Message_ImportDateOutOfRange {
+            get {
+                return ResourceManager.GetString("Message_ImportDateOutOfRange", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to "{0}" is too far from the project start. A date must be within {1:N0} days of ProjectStart..
         /// </summary>
         public static string Message_ImportDateTooFarFromStart {

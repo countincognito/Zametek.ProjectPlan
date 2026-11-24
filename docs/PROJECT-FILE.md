@@ -143,6 +143,8 @@ The check also counts the activities, the active resources and the work streams 
 
 The import of a workbook does the checks of `outOfRange` at its cells. These are `ProjectStart` on the sheet "General" and the constraint dates on the sheet "Activities". The application does these checks for an import too. A file of Microsoft Project cannot hold such a date, because Microsoft Project uses dates from 1984 to 2149 only.
 
+A date of any cell of a workbook must also be from 0001-01-02 to 9999-12-30. A date gets the offset of the computer, and the first and the last day of the dates of .NET cannot have each offset. The import gives `outOfRange` at the cell of such a date, in each time zone.
+
 ## The calendar
 
 `NonWorkingDayMode` in the `DisplaySettings` of a scenario selects the days that are not working days:

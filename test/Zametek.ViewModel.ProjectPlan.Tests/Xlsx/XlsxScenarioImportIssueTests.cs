@@ -236,6 +236,62 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ]);
         }
 
+        // A date of a cell gets the offset of the computer, from UTC-12 to UTC+14, and the first and the last day of the dates of
+        // .NET cannot have each offset. A text cell with 0001-01-01 east of UTC, or with 9999-12-31 23:00 west of UTC, threw
+        // before the checks of the dates, and the import ended with the text of the .NET exception and no cell (from the review
+        // of the branch). The result must be the same in each time zone: run these tests with TZ set to UTC, Pacific/Kiritimati
+        // and America/Los_Angeles.
+        [Theory]
+        [InlineData(@"0001-01-01")]
+        [InlineData(@"9999-12-31 23:00")]
+        public void Import_Given_AnEdgeDateInATextCell_Then_AProblemOfItsCellInEachTimeZone(string value)
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_General, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.Today))), ("B", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", TextOf(value)), ("B", DateOf(new DateTime(2026, 1, 5)))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))), ("C", TitleOf(nameof(ActivityModel.MinimumEarliestStartDateTime))), ("D", TitleOf(nameof(ActivityModel.MaximumLatestFinishDateTime))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0)), ("C", TextOf(value)), ("D", TextOf(value))))
+                .Sheet(s_Holidays, s => s
+                    .Row(1, ("A", TitleOf(nameof(HolidayModel.Id))), ("B", TitleOf(nameof(HolidayModel.StartDateTime))), ("C", TitleOf(nameof(HolidayModel.RecurrencePattern))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", TextOf(value)), ("C", TextOf(@"FREQ=DAILY;COUNT=1"))))
+                .Build();
+            string expected = string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportDateOutOfRange, value, @"0001-01-02", @"9999-12-30");
+
+            ImportFailure(workbook).Issues.Select(x => (x.Code, x.Sheet, x.Cell, x.Message)).ShouldBe(
+                [
+                    (ImportIssueCodes.OutOfRange, s_General, @"A2", expected),
+                    (ImportIssueCodes.OutOfRange, s_Activities, @"C2", expected),
+                    (ImportIssueCodes.OutOfRange, s_Activities, @"D2", expected),
+                    (ImportIssueCodes.OutOfRange, s_Holidays, @"B2", expected),
+                ],
+                ignoreOrder: true);
+        }
+
+        // A start on such a day gets the problem of a start out of its range, as a start in 1800 does, in each time zone.
+        [Theory]
+        [InlineData(@"0001-01-01")]
+        [InlineData(@"9999-12-31 23:00")]
+        public void Import_Given_AnEdgeProjectStartInATextCell_Then_TheProblemOfAStartOutOfItsRangeInEachTimeZone(string value)
+        {
+            byte[] workbook = new XlsxPackageBuilder()
+                .Sheet(s_General, s => s
+                    .Row(1, ("A", TitleOf(nameof(ProjectScenarioImportModel.ProjectStart))))
+                    .Row(2, ("A", TextOf(value))))
+                .Sheet(s_Activities, s => s
+                    .Row(1, ("A", TitleOf(nameof(ActivityModel.Id))), ("B", TitleOf(nameof(ActivityModel.Duration))), ("C", TitleOf(nameof(ActivityModel.MinimumEarliestStartDateTime))))
+                    .Row(2, ("A", NumberOf(1.0)), ("B", NumberOf(3.0)), ("C", DateOf(new DateTime(2026, 1, 5)))))
+                .Build();
+
+            ImportIssue issue = ImportFailure(workbook).Issues.ShouldHaveSingleItem();
+
+            issue.Code.ShouldBe(ImportIssueCodes.OutOfRange);
+            issue.Sheet.ShouldBe(s_General);
+            issue.Cell.ShouldBe(@"A2");
+            issue.Message.ShouldBe(string.Format(CultureInfo.CurrentCulture, Resource.ProjectPlan.Messages.Message_ImportProjectStartOutOfRange, value, @"1900-01-01", @"2999-12-31"));
+        }
+
         [Fact]
         public void Import_Given_AProblem_Then_ItTellsTheSheetTheRowTheColumnTheTitleTheNameOfTheRowAndTheValue()
         {

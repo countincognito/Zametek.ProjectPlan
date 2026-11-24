@@ -212,9 +212,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     PessimisticDuration = row.Int(nameof(ActivityModel.PessimisticDuration)),
                     MinimumFreeSlack = row.Int(nameof(ActivityModel.MinimumFreeSlack)),
                     MinimumEarliestStartTime = row.Int(nameof(ActivityModel.MinimumEarliestStartTime)),
-                    MinimumEarliestStartDateTime = ToOffset(row.Date(nameof(ActivityModel.MinimumEarliestStartDateTime))),
+                    MinimumEarliestStartDateTime = row.LocalDateOffset(nameof(ActivityModel.MinimumEarliestStartDateTime)),
                     MaximumLatestFinishTime = row.Int(nameof(ActivityModel.MaximumLatestFinishTime)),
-                    MaximumLatestFinishDateTime = ToOffset(row.Date(nameof(ActivityModel.MaximumLatestFinishDateTime))),
+                    MaximumLatestFinishDateTime = row.LocalDateOffset(nameof(ActivityModel.MaximumLatestFinishDateTime)),
                     OverrideColor = row.Bool(nameof(ActivityModel.OverrideColor)) ?? false,
                     ColorFormat = row.Color(nameof(ActivityModel.ColorFormat)) ?? ColorHelper.None(),
                     Notes = row.Text(nameof(ActivityModel.Notes)) ?? string.Empty,
@@ -255,11 +255,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 row.Report(index, ImportIssueCodes.OutOfRange, ImportIssueText.DateTooFarFromStart(row.CellAt(index).Display));
             }
         }
-
-        private static DateTimeOffset? ToOffset(DateTime? date) =>
-            date is DateTime value
-                ? new DateTimeOffset(value)
-                : null;
 
         private static Dictionary<int, ResourceModel> ImportWorksheetResources(XlsxWorkbookReader reader)
         {
@@ -401,7 +396,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Id = id.GetValueOrDefault(),
                     Name = row.Text(nameof(HolidayModel.Name)) ?? string.Empty,
-                    StartDateTime = ToOffset(row.Date(nameof(HolidayModel.StartDateTime))),
+                    StartDateTime = row.LocalDateOffset(nameof(HolidayModel.StartDateTime)),
                     RecurrencePattern = rule,
                     Notes = row.Text(nameof(HolidayModel.Notes)) ?? string.Empty,
                 };
@@ -573,12 +568,21 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTimeOffset projectStart = m_DateTimeCalculator.GetLocalToday();
             DateTimeOffset today = projectStart;
 
+            // A start whose cell is a problem: the constraint dates then have no start to be far from.
+            bool isStartRejected = false;
+
             {
                 ImportTable? table = reader.Table(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral, s_GeneralColumnTitles);
 
                 foreach (ImportRow row in table?.Rows ?? [])
                 {
-                    if (row.DateOffset(nameof(ProjectScenarioImportModel.ProjectStart)) is DateTimeOffset start)
+                    int issueCount = issues.Count;
+
+                    if (row.DateOffset(nameof(ProjectScenarioImportModel.ProjectStart), ImportIssueText.ProjectStartOutOfRange) is not DateTimeOffset start)
+                    {
+                        isStartRejected |= issues.Count > issueCount;
+                    }
+                    else
                     {
                         projectStart = start;
 
@@ -633,7 +637,7 @@ namespace Zametek.ViewModel.ProjectPlan
             (Dictionary<int, DependentActivityModel> dependentActivities, bool areActivitiesComplete) = ImportWorksheetActivities(
                 reader,
                 issues,
-                PlanDateCheck.IsProjectStartInRange(projectStart) ? projectStart : null);
+                !isStartRejected && PlanDateCheck.IsProjectStartInRange(projectStart) ? projectStart : null);
             Dictionary<int, ResourceModel> resources = ImportWorksheetResources(reader);
             List<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(reader);
             Dictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(reader);

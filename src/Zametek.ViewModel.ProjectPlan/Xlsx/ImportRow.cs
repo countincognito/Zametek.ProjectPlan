@@ -372,9 +372,25 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// A date with the offset of the machine, which is what a day without an offset means to the application.
+        /// The first day of a date that the import takes. A date without an offset gets the offset of the machine, which can be
+        /// from UTC-12 to UTC+14, and the first and the last day of the dates of .NET cannot have each offset. A text cell with
+        /// 0001-01-01 east of UTC, or with 9999-12-31 23:00 west of UTC, threw before the checks of the dates, and the import
+        /// ended with the text of the exception and no cell (from the review of the branch). Thus, these two days are out of
+        /// range in each time zone.
         /// </summary>
-        public DateTimeOffset? DateOffset(string title)
+        internal static readonly DateTime FirstDay = DateTime.MinValue.Date.AddDays(1);
+
+        /// <summary>
+        /// The last day of a date that the import takes (see <see cref="FirstDay"/>).
+        /// </summary>
+        internal static readonly DateTime LastDay = DateTime.MaxValue.Date.AddDays(-1);
+
+        /// <summary>
+        /// A date with the offset of the machine, which is what a day without an offset means to the application, or the offset
+        /// that the text of the cell gives. A day before <see cref="FirstDay"/> or after <see cref="LastDay"/> is a problem of
+        /// the cell (outOfRange), with the text that <paramref name="outOfRangeText"/> gives for the value of the cell.
+        /// </summary>
+        public DateTimeOffset? DateOffset(string title, Func<string, string>? outOfRangeText = null)
         {
             if (m_Table.IndexOf(title) is not int index)
             {
@@ -387,12 +403,39 @@ namespace Zametek.ViewModel.ProjectPlan
                 && !cell.IsEmpty
                 && DateTimeOffset.TryParse(cell.Text.Trim(), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTimeOffset value))
             {
-                return value;
+                return IsInRange(index, value.DateTime, outOfRangeText) ? value : null;
             }
 
             return DateAt(index) is DateTime date
+                ? AtLocalOffset(index, date, outOfRangeText)
+                : null;
+        }
+
+        /// <summary>
+        /// A date (as <see cref="Date"/> reads it) with the offset of the machine. A day before <see cref="FirstDay"/> or after
+        /// <see cref="LastDay"/> is a problem of the cell (outOfRange).
+        /// </summary>
+        public DateTimeOffset? LocalDateOffset(string title) =>
+            m_Table.IndexOf(title) is int index
+            && DateAt(index) is DateTime date
+                ? AtLocalOffset(index, date, null)
+                : null;
+
+        private DateTimeOffset? AtLocalOffset(int index, DateTime date, Func<string, string>? outOfRangeText) =>
+            IsInRange(index, date, outOfRangeText)
                 ? new DateTimeOffset(date)
                 : null;
+
+        private bool IsInRange(int index, DateTime date, Func<string, string>? outOfRangeText)
+        {
+            if (date.Date >= FirstDay
+                && date.Date <= LastDay)
+            {
+                return true;
+            }
+
+            Report(index, ImportIssueCodes.OutOfRange, (outOfRangeText ?? ImportIssueText.DateOutOfRange)(CellAt(index).Display));
+            return false;
         }
 
         #endregion
