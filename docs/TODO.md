@@ -46,7 +46,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
 - [ ] **Wait for a signal, and not for a time, in the tests** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
-  Some tests wait for a fixed time and then make an assertion. On a slow computer, such a test fails with no defect, or it passes with no check. The harness of the server says that a test can stop for more than one minute (`RunningServer`). This occurs when the other test projects run at the same time. Six groups:
+  Some tests wait for a fixed time and then make an assertion. On a slow computer, such a test fails with no defect, or it passes with no check. The harness of the server says that a test can stop for more than one minute (`RunningServer`). This occurs when the other test projects run at the same time. Seven groups:
 
   1. **The server is full.** Ten sites wait 250 ms after a request starts, and then they expect 503 (`s_Settle` in `JobServerTests`, `JobClientTests` and `OpenApiContractTests`, and a delay in `ProjectEndpointsJobStatusTests`). `RunningServer.ApiRequests` already counts the requests that are past the limiter. Wait for that number.
   2. **A command.** Nine sites poll for the result of a command, for as long as 60 s. Two tests wait 200 ms or 300 ms and then say that nothing happened (`ScenarioChartManagerViewModelTests`, `SimulationChartManagerViewModelTests`). Each command is a `ReactiveCommand`, and `ProjectScenarioManagerLoadFailureTests` already awaits one. Await the command.
@@ -55,7 +55,9 @@ This file lists the maintainer-internal engineering intents that must version wi
   5. **The UI tests.** `ApplicationDriver.SettleAsync` waits until `IsBusy` is false for 150 ms. `IsBusy` is a signal for the UI only ([ARCHITECTURE](ARCHITECTURE.md#8-isbusy-versus-isbulkupdating)). Use the settled signal of section 9.
   6. **A free port.** `JobServerStartTests.FreePort` finds a free port and closes it, and the server binds the port later. A different process can take the port between the two. Let the server bind port 0, and read the port from its log.
 
-  The review read these sites. Nobody saw one of these tests fail.
+  7. **The answer before the body.** Two tests give the server a job time limit of 0 s: `ProjectProblemsTests.Compile_Given_AJobThatRunsOutOfTime_Then_ServiceUnavailableAndToldToWait` and `OpenApiContractTests.Responses_Given_EverySituationTheDescriptionHasAResponseFor_Then_EachIsAsDescribedAndNoneIsLeftOut`. The server answers 503 and closes the connection while the client still sends the body. On Linux, the client can then get "Broken pipe" before it reads the answer. *(2026-11-23)* Both failed one time in WSL, while the tests of Windows ran on the same computer. They passed in the next 10 runs. CI runs on Linux, and the release starts from a tag there. Let the client wait for the answer before it sends the body (`Expect: 100-continue`), or let it read the answer after a send that failed.
+
+  The review read the sites of groups 1 to 6. Nobody saw one of them fail.
 
 - [ ] **Throw at each step of a load in the tests of a load that fails** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
@@ -759,7 +761,7 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   These outputs are byte-identical only on the same operating system, the same CPU architecture and the same Skia build. The spike of phase 0 found a difference between Windows and Linux. The same bundled font has a measurement that differs by a fraction of a pixel. The anti-aliasing of the glyphs also differs.
 
-  The packaging must get these six points right:
+  The packaging must get these seven points right:
 
   1. **The shutdown timeout.** A stopped server gives the jobs in progress up to the job time limit to finish. The default limit is 120 s. Docker gives a container only 10 s. systemd gives a unit 90 s by default (`TimeoutStopSec`). Raise each timeout to at least the job limit, or the shutdown kills jobs part way.
   2. **The culture and the time zone.** The image must set them explicitly (`--culture`, `TZ`) and must not inherit them. The default is the culture and zone of the host. The decision of 2026-10-01 made this default, so that a local `zpp serve` agrees with `zpp`.
@@ -767,6 +769,7 @@ This file lists the maintainer-internal engineering intents that must version wi
   4. **The probes.** `/health/live` is for liveness. `/health/ready` is for readiness, and it comes a few seconds after the start-up, when the warm-up is complete. *(2026-11-23)* Since 0.11.0-beta.3, the server closes each connection above `MaxConnections` with no answer (100 by default, or twice `MaxJobs`, plus `MaxQueue`, plus 10 if that is more). A probe needs a connection, and a connection that a client or a proxy keeps open counts too. Thus, a server with all its connections open does not answer a probe, and the host can then stop it. Set the limit above the number of connections that the proxy of the deployment keeps. Nobody ran this.
   5. **The garbage collector.** `zpp` runs the workstation GC. Measure the server GC (`DOTNET_gcServer=1` in the image or in the environment of the service) with a long test of 1,000 jobs before you choose.
   6. **The size of the image.** It carries MPXJ and the Java runtime image of IKVM, although the server refuses MS Project imports. `Zametek.ViewModel.ProjectPlan` references MPXJ.Net. If the importer moves to an assembly of its own, the image can leave them out.
+  7. **The library libfontconfig.** On Linux, `zpp` needs `libfontconfig.so.1`. The `libSkiaSharp.so` that it ships comes from `SkiaSharp.NativeAssets.Linux`, and it names that library as one that it needs. *(2026-11-23)* A linux-x64 publish as `release.yml` makes it showed this before 93e6aadb (SkiaSharp 3.119.3-preview.1.1) and after it (3.119.4). Thus, the image must have the package `libfontconfig1` (Debian and Ubuntu). Zametek.Graphs.Avalonia and Zametek.ViewModel.ProjectPlan reference `SkiaSharp.NativeAssets.Linux.NoDependencies`, whose file needs no libfontconfig. But the build keeps the file of `SkiaSharp.NativeAssets.Linux`, which has the same name, and so these two references do nothing. Nobody ran `zpp` on a computer with no libfontconfig.
 
   The packaging must also give the single file a folder. At its first start, the single file unpacks approximately 250 MB into `~/.net/zpp/<hash>`. A service without a home folder cannot write there, for example a systemd unit with `ProtectHome` or `DynamicUser`. Then `zpp` stops with the exit code 159. Set `DOTNET_BUNDLE_EXTRACT_BASE_DIR` in the image and in each unit (refer to [The single file](COMMAND-LINE.md#the-single-file)).
 
