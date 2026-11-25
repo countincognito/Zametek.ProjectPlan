@@ -40,6 +40,18 @@ This file lists the maintainer-internal engineering intents that must version wi
 
   Keep the text of the rule as the model. Show a rule that the dialog cannot make as text that the user cannot change there.
 
+- [ ] **Stop the work of the calendar in each program, and check the outputs of a stopped job** *(2026-11-25, from the review of the branch)*
+
+  Since 0.11.0-beta.3, a job gives its token to its calendar (`DateTimeCalculator.WorkCancellation`). Thus, the time limit of a job on the server and a cancel of `zpp` (Ctrl+C) stop the work of the calendar in the load. With the custom calendar, 1,000 holidays `FREQ=DAILY` with no end held a run of `zpp` for more than 180 s. Three things remain:
+
+  1. **`zpp` with no server.** Only Ctrl+C stops the load (exit code 130), because `--compile-timeout` stops only the compile. Thus, nothing ends a run with such a plan. This needs a design, for example a time limit of the load that cancels the token of the calendar.
+  2. **The desktop application.** The desktop does not set `WorkCancellation`. `HolidayRuleCheck.FindProblem` lets such a file pass, because it has no more than 1,000 holidays (`MaximumHolidayCount`) and `IsAllowed` accepts each rule. Thus, the load of such a file probably holds the desktop for minutes. Nobody ran this in the desktop. This needs a design too.
+  3. **The outputs of a stopped job.** A stopped calendar does not throw. It counts each day that remains as a working day, and it reads no more rules. `JobRunner` checks the token after the load and before each step after it, but not in a step. Thus, a cancel while a step makes an output can give that output wrong dates.
+
+     `zpp` writes each output to its file when the job makes it (`FileJobSink`). The file then stays on the disk after the next check ends the job with exit code 130. The server keeps the outputs in memory, and its answer 503 has none of them. No check comes after the last step, and thus a cancel in that step gives no 130 and no 503. `zpp` and the server then give the outputs as for a job that ran to its end. Before 0.11.0-beta.3, such an output had the correct dates, because the calendar did not stop.
+
+     This is from a read of the code, and nobody ran it. Cancel a job while it writes an export, and see if a file with wrong dates stays on the disk. If one stays, delete it, or write each output only after a check of the token. Also check the token after the last step.
+
 - [ ] **Do three smaller things for the desktop application** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 
   1. **The build of a chart that fails.** Five subscriptions build a chart or the output with `Subscribe(async _ => await ...)`. Each build catches its exception and shows a dialog. Thus, a plan whose chart fails shows one dialog after each compilation, and the log has no line. Write the exception to the log, and show the state in the panel.
