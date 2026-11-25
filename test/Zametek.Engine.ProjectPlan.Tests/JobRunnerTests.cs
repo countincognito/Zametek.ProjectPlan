@@ -579,6 +579,36 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
+        public async Task RunAsync_Given_AnActivityThatIsHiddenFromTheCharts_Then_TheImageOfTheGanttChartHasNoBarOfIt()
+        {
+            // The images of a job come from the view models of the application, and so they follow the switches that hide
+            // parts of the plan with no more work: zpp, and the server, which runs the same jobs.
+            await using ServiceProvider services = BuildServices();
+
+            async Task<string> GanttChartAsync(bool hide)
+            {
+                JObject plan = JObject.Parse(await File.ReadAllTextAsync(AssetPath(@"estimated.zpp")));
+                string current = (string)plan[@"Current"]!;
+                JToken docs = plan[@"Files"]!
+                    .Single(x => (string)x[@"NodeId"]! == current)[@"Scenario"]![@"DependentActivities"]!
+                    .Single(x => (string)x[@"Activity"]![@"Name"]! == @"Docs")[@"Activity"]!;
+                docs[@"IsHiddenFromCharts"] = hide;
+                await using var input = new MemoryStream(Encoding.UTF8.GetBytes(plan.ToString()));
+                var sink = new MemoryJobSink();
+
+                JobResult result = await services.GetRequiredService<JobRunner>().RunAsync(
+                    new JobRequest { Input = input, GanttChart = new ChartOutputRequest(ChartImageFormat.Svg, 800, 600) },
+                    sink);
+
+                result.Status.ShouldBe(JobStatus.Succeeded);
+                return Encoding.UTF8.GetString(sink[JobOutput.GanttChart]);
+            }
+
+            (await GanttChartAsync(hide: false)).ShouldContain(@"Docs (");
+            (await GanttChartAsync(hide: true)).ShouldNotContain(@"Docs (");
+        }
+
+        [Fact]
         public async Task RunAsync_Given_BrokenPlan_Then_ReportsCompilationErrorsAndProducesNothing()
         {
             await using ServiceProvider services = BuildServices();

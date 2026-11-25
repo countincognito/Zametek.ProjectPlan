@@ -30,6 +30,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowNonWorkingDays { get; set; }
 
+        bool ShowHidden { get; set; }
+
         bool ShowDates { get; }
 
         DateTimeOffset ProjectStart { get; }

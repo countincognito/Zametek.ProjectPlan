@@ -185,6 +185,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowSlack)
                 .ToProperty(this, rcm => rcm.ShowSlack);
 
+            m_ShowHidden = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowHidden)
+                .ToProperty(this, rcm => rcm.ShowHidden);
+
             m_ShowNonWorkingDays = this
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowNonWorkingDays)
                 .ToProperty(this, rcm => rcm.ShowNonWorkingDays);
@@ -218,7 +222,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.ShowSlack,
                     rcm => rcm.ShowNonWorkingDays,
-                    (x, _, _, _, _, _, _, _, _) =>
+                    rcm => rcm.ShowHidden,
+                    (x, _, _, _, _, _, _, _, _, _) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
@@ -313,6 +318,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showProjectFinish,
             bool showTracking,
             IEnumerable<int> highlightActivityConnections,
+            HiddenFromCharts hidden,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -321,6 +327,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphSettings);
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             ArgumentNullException.ThrowIfNull(graphCompilation);
+            ArgumentNullException.ThrowIfNull(hidden);
+
+            // A hidden activity has no bar, and no connection arrow to it or from it: its selection shows nothing.
+            highlightActivityConnections = [.. highlightActivityConnections.Where(x => !hidden.IsActivityHidden(x))];
 
             var plotModel = new Plot();
 
@@ -382,7 +392,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
                             .DependentActivities
-                            .Where(x => !x.IsDummy)
+                            .Where(x => !x.IsDummy && !hidden.IsActivityHidden(x.Id))
                             .OrderByDescending(x => x.EarliestStartTime)
                             .ThenByDescending(x => x.TotalSlack);
 
@@ -479,12 +489,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case GroupByMode.Resource:
                     {
-                        // Find all the resource series with at least 1 scheduled activity.
+                        // Find all the resource series with at least 1 scheduled activity, but those of the hidden resources.
 
                         IEnumerable<ResourceSeriesModel> scheduledResourceSeriesSet = resourceSeriesSet.Combined
-                            .Where(x => x.ResourceSchedule.ScheduledActivities.Count != 0);
+                            .Where(x => x.ResourceSchedule.ScheduledActivities.Count != 0
+                                && !hidden.IsResourceHidden(x.ResourceSchedule.Resource.Id));
 
-                        // Record the resource name, and the scheduled activities (in order).
+                        // Record the resource name, and the scheduled activities (in order). A hidden activity is in no
+                        // group, and a group with no activity that the chart shows is not in the chart.
 
                         var scheduledResourceActivitiesSet =
                             new List<(string ResourceName, ColorFormatModel ColorFormat, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
@@ -493,7 +505,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             IList<ScheduledActivityModel> orderedScheduledActivities = [.. resourceSeries
                                     .ResourceSchedule.ScheduledActivities
+                                    .Where(x => !hidden.IsActivityHidden(x.Id))
                                     .OrderByDescending(x => x.StartTime)];
+
+                            if (orderedScheduledActivities.Count == 0)
+                            {
+                                continue;
+                            }
+
                             scheduledResourceActivitiesSet.Add(
                                 (resourceSeries.Title, resourceSeries.ColorFormat, resourceSeries.DisplayOrder, orderedScheduledActivities));
                         }
@@ -662,7 +681,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         foreach (IDependentActivity activity in orderedActivities)
                         {
-                            if (!scheduledActivityLookup.ContainsKey(activity.Id))
+                            if (!scheduledActivityLookup.ContainsKey(activity.Id)
+                                || hidden.IsActivityHidden(activity.Id))
                             {
                                 continue;
                             }
@@ -677,10 +697,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                 ? s_DefaultWorkStream
                                 : activity.TargetWorkStreams;
 
-                            // Cycle through each work stream and add the scheduled activity where required.
+                            // Cycle through each work stream and add the scheduled activity where required. A hidden work
+                            // stream has no group. An activity that is not hidden has a work stream that is not hidden.
 
                             foreach (int workStreamId in targetWorkStreams)
                             {
+                                if (hidden.IsWorkStreamHidden(workStreamId))
+                                {
+                                    continue;
+                                }
+
                                 if (!activitiesByWorkStream.TryGetValue(workStreamId, out IList<ScheduledActivityModel>? scheduledActivities))
                                 {
                                     scheduledActivities = [];
@@ -922,7 +948,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 List<IDependentActivity> milestones = [.. graphCompilation
                     .DependentActivities
                     .OrderBy(x => x.EarliestStartTime)
-                    .Where(x => x.Duration == 0)];
+                    .Where(x => x.Duration == 0 && !hidden.IsActivityHidden(x.Id))];
 
                 var milestoneArrows = new List<AnnotatedArrow>();
 
@@ -1596,6 +1622,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The chart shows the activities, resources and work streams that are hidden from the charts too.
+        private readonly ObservableAsPropertyHelper<bool> m_ShowHidden;
+        public bool ShowHidden
+        {
+            get => m_ShowHidden.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowHidden = value;
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
 
@@ -1679,6 +1716,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowProjectFinish,
                     ShowTracking,
                     ActivitySelector.SelectedActivityIds,
+                    ShowHidden ? HiddenFromCharts.None : HiddenFromCharts.Find(m_CoreViewModel),
                     m_CoreViewModel.BaseTheme);
             }
 
@@ -1742,6 +1780,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // compilation output (resource series, metrics, project
                     // finish) is in place - so one compile means one rebuild.
                     rcm => rcm.m_CoreViewModel.CompilationOutputRevision,
+                    rcm => rcm.m_CoreViewModel.ChartVisibilityRevision,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.GraphSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
@@ -1751,7 +1790,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
-                    (x, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (x, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
@@ -1798,6 +1837,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowMilestones?.Dispose();
                 m_ShowSlack?.Dispose();
                 m_ShowNonWorkingDays?.Dispose();
+                m_ShowHidden?.Dispose();
                 m_ShowDates?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();

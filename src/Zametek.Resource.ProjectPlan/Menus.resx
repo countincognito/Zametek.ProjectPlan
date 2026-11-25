@@ -387,6 +387,9 @@
   <data name="Menu_ShowGroupLabels" xml:space="preserve">
     <value>Show Group Labels</value>
   </data>
+  <data name="Menu_ShowHidden" xml:space="preserve">
+    <value>Show Hidden</value>
+  </data>
   <data name="Menu_ShowMilestones" xml:space="preserve">
     <value>Show Milestones</value>
   </data>

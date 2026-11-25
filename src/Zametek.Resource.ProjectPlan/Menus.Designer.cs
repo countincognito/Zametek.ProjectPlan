@@ -925,6 +925,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Show Hidden.
+        /// </summary>
+        public static string Menu_ShowHidden {
+            get {
+                return ResourceManager.GetString("Menu_ShowHidden", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Show Milestones.
         /// </summary>
         public static string Menu_ShowMilestones {

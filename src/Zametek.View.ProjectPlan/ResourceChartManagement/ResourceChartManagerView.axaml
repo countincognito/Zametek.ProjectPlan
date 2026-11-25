@@ -30,6 +30,10 @@
 								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowHidden}"
+								  IsChecked="{Binding Path=ShowHidden, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
 						<Separator />
 
 						<MenuItem Header="{x:Static resources:Menus.Menu_AllocationMode}">

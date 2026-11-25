@@ -161,6 +161,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowMilestones)
                 .ToProperty(this, rcm => rcm.ShowMilestones);
 
+            m_ShowHidden = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowHidden)
+                .ToProperty(this, rcm => rcm.ShowHidden);
+
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;
             Title = Resource.ProjectPlan.Titles.Title_ResourceChartView;
         }
@@ -226,11 +230,13 @@ namespace Zametek.ViewModel.ProjectPlan
             DisplayStyle displayStyle,
             bool showToday,
             bool showMilestones,
+            HiddenFromCharts hidden,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             ArgumentNullException.ThrowIfNull(graphCompilation);
+            ArgumentNullException.ThrowIfNull(hidden);
             var plotModel = new Plot();
             plotModel.HideGrid();
 
@@ -267,7 +273,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 return plotModel.SetBaseTheme(baseTheme);
             }
 
-            IEnumerable<ResourceSeriesModel> resourceSeries = scheduleFunction(resourceSeriesSet).OrderBy(x => x.DisplayOrder);
+            // A hidden resource has no series. The time axis keeps the whole project.
+            IEnumerable<ResourceSeriesModel> resourceSeries = scheduleFunction(resourceSeriesSet)
+                .Where(x => !hidden.IsResourceHidden(x.ResourceSchedule.Resource.Id))
+                .OrderBy(x => x.DisplayOrder);
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
             BuildResourceChartXAxis(plotModel, dateTimeCalculator, finishTime, showDates, projectStart);
@@ -293,6 +302,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         var color = ColorHelper.ColorFormatToScottPlotColor(series.ColorFormat);
 
+                        // A copy, with no day of a hidden activity: the lists of the series are those of the Gantt chart,
+                        // the metrics and the exports too.
+                        List<bool> allocation = hidden.VisibleAllocation(series, allocationMode, allocationFunction(series.ResourceSchedule));
+
                         IList<double> xs = [];
                         IList<double> ys = [];
 
@@ -300,15 +313,15 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             case DisplayStyle.Slanted:
                                 {
-                                    if (allocationFunction(series.ResourceSchedule).Count != 0)
+                                    if (allocation.Count != 0)
                                     {
                                         // Mark the start of the plot.
                                         xs.Add(ChartHelper.CalculateChartStartTimeXValue(0, showDates, projectStart, dateTimeCalculator));
                                         ys.Add(0.0);
 
-                                        for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
+                                        for (int i = 0; i < allocation.Count; i++)
                                         {
-                                            bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
+                                            bool allocationExists = allocation[i];
 
                                             if (i >= total1.Count)
                                             {
@@ -326,11 +339,11 @@ namespace Zametek.ViewModel.ProjectPlan
                                 break;
                             case DisplayStyle.Block:
                                 {
-                                    if (allocationFunction(series.ResourceSchedule).Count != 0)
+                                    if (allocation.Count != 0)
                                     {
-                                        for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
+                                        for (int i = 0; i < allocation.Count; i++)
                                         {
-                                            bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
+                                            bool allocationExists = allocation[i];
 
                                             // First point.
                                             int dayNumber = i;
@@ -414,7 +427,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 List<IDependentActivity> milestones = [.. graphCompilation
                     .DependentActivities
                     .OrderBy(x => x.EarliestStartTime)
-                    .Where(x => x.Duration == 0)];
+                    .Where(x => x.Duration == 0 && !hidden.IsActivityHidden(x.Id))];
 
                 var milestoneLines = new List<AnnotatedVerticalLine>();
 
@@ -655,6 +668,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The chart shows the activities, resources and work streams that are hidden from the charts too.
+        private readonly ObservableAsPropertyHelper<bool> m_ShowHidden;
+        public bool ShowHidden
+        {
+            get => m_ShowHidden.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowHidden = value;
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<bool> m_ShowMilestones;
         public bool ShowMilestones
         {
@@ -705,6 +729,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         DisplayStyle,
                         ShowToday,
                         ShowMilestones,
+                        ShowHidden ? HiddenFromCharts.None : HiddenFromCharts.Find(m_CoreViewModel),
                         m_CoreViewModel.BaseTheme);
                 }
             }
@@ -771,7 +796,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowToday,
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (x, _, _, _, _, _, _, _, _, _, _, _) => Unit.Default) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                // WhenAnyValue takes 12 inputs at most: the switches that hide parts of the plan come in a second stream.
+                .Merge(this.WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.ChartVisibilityRevision,
+                    rcm => rcm.ShowHidden,
+                    (_, _) => Unit.Default))
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
@@ -813,6 +843,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_DisplayStyle?.Dispose();
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
+                m_ShowHidden?.Dispose();
             }
 
             m_Disposed = true;

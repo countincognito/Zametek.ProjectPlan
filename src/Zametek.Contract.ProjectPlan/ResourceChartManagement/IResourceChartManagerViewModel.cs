@@ -22,6 +22,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowMilestones { get; set; }
 
+        bool ShowHidden { get; set; }
+
         ICommand ResetResourceChartCommand { get; }
 
         ICommand SaveResourceChartImageFileCommand { get; }
