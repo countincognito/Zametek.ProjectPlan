@@ -859,8 +859,10 @@ namespace Zametek.Engine.ProjectPlan.Tests
         [Fact]
         public async Task RunAsync_Given_CancellationWhileThePlanIsRead_Then_ItIsReadAndNotCompiled()
         {
-            // A job that asks only for the metrics would have them once it compiled, so throwing shows it never did.
-            await using ServiceProvider services = BuildServices();
+            // The check after the load stops the job, and so the compile never starts.
+            CompileRecordingOutputManagerViewModel? outputs = null;
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IOutputManagerViewModel>(provider =>
+                outputs = new CompileRecordingOutputManagerViewModel(ActivatorUtilities.CreateInstance<OutputManagerViewModel>(provider))));
             using var cancellation = new CancellationTokenSource();
             using var input = new CancellingStream(await File.ReadAllBytesAsync(AssetPath(@"two-scenarios.zpp")), cancellation);
 
@@ -868,6 +870,7 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 () => services.GetRequiredService<JobRunner>().RunAsync(new JobRequest { Input = input }, new MemoryJobSink(), cancellation.Token));
 
             input.Position.ShouldBe(input.Length);
+            outputs.ShouldNotBeNull().HasCompiled.ShouldBeFalse();
         }
 
         [Fact]
@@ -929,9 +932,11 @@ namespace Zametek.Engine.ProjectPlan.Tests
         }
 
         [Fact]
-        public async Task RunAsync_Given_CancellationWhileTheLastOutputIsProduced_Then_TheJobCompletes()
+        public async Task RunAsync_Given_CancellationWhileTheLastOutputIsProduced_Then_ItIsProducedAndTheJobStops()
         {
-            // Once the last output is under way there is no step left to stop before.
+            // The last output under way is finished and handed over, and then the job stops with no result. A calendar that
+            // the cancel stopped counts each day that remains as a working day (DateTimeCalculator.WorkCancellation), and so
+            // the dates of that output and of the metrics can be wrong. Before, the job completed with them.
             await using ServiceProvider services = BuildServices();
             using var cancellation = new CancellationTokenSource();
             JobOutput last = Enum.GetValues<JobOutput>().Last();
@@ -946,10 +951,40 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 },
             };
 
-            (JobResult result, _) = await RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput, sink, cancellation.Token);
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", EveryOutput, sink, cancellation.Token));
 
-            result.Status.ShouldBe(JobStatus.Succeeded);
             sink.Outputs.Select(x => x.Output).ShouldBe(Enum.GetValues<JobOutput>());
+            sink.Messages.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_CancellationWhileAJobWithNoOutputIsCompiled_Then_TheJobStopsWithNoResult()
+        {
+            // A job that asks only for the metrics has no step after its compile. It stops before it gives its metrics,
+            // because a calendar that the cancel stopped can give them wrong dates.
+            using var cancellation = new CancellationTokenSource();
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IOutputManagerViewModel>(provider =>
+                new CancellingOutputManagerViewModel(ActivatorUtilities.CreateInstance<OutputManagerViewModel>(provider), cancellation, new CompileTail())));
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(services.GetRequiredService<JobRunner>(), @"two-scenarios.zpp", input => new JobRequest { Input = input }, cancellationToken: cancellation.Token));
+        }
+
+        [Fact]
+        public async Task RunAsync_Given_CancellationWhileAPlanWithErrorsIsCompiled_Then_TheJobStopsWithNoResult()
+        {
+            // The errors of a compile come from a calendar too: a calendar that the cancel stopped finds no run of days
+            // off, and so a plan with no working day gets no P0080.
+            using var cancellation = new CancellationTokenSource();
+            await using ServiceProvider services = BuildServices(x => x.AddScoped<IOutputManagerViewModel>(provider =>
+                new CancellingOutputManagerViewModel(ActivatorUtilities.CreateInstance<OutputManagerViewModel>(provider), cancellation, new CompileTail())));
+            var sink = new MemoryJobSink();
+
+            await Should.ThrowAsync<OperationCanceledException>(
+                () => RunAsync(services.GetRequiredService<JobRunner>(), @"broken-dependency.zpp", EveryOutput, sink, cancellation.Token));
+
+            sink.Outputs.ShouldBeEmpty();
         }
 
         [Fact]
@@ -1156,6 +1191,34 @@ namespace Zametek.Engine.ProjectPlan.Tests
                 outputs.BuildCompilationOutput();
                 cancellation.Cancel();
                 tail.Start();
+            }
+
+            public void StartSubscriptions() => outputs.StartSubscriptions();
+
+            public void KillSubscriptions() => outputs.KillSubscriptions();
+
+            public void Dispose() => outputs.Dispose();
+        }
+
+        // The output manager as the job sees it, which records that the job compiled: the job builds the compilation output
+        // itself, once, right after it compiles (see CancellingOutputManagerViewModel).
+        private sealed class CompileRecordingOutputManagerViewModel(IOutputManagerViewModel outputs)
+            : IOutputManagerViewModel
+        {
+            public bool HasCompiled { get; private set; }
+
+            public bool IsBusy => outputs.IsBusy;
+
+            public bool HasStaleOutputs => outputs.HasStaleOutputs;
+
+            public bool HasCompilationErrors => outputs.HasCompilationErrors;
+
+            public string CompilationOutput => outputs.CompilationOutput;
+
+            public void BuildCompilationOutput()
+            {
+                outputs.BuildCompilationOutput();
+                HasCompiled = true;
             }
 
             public void StartSubscriptions() => outputs.StartSubscriptions();

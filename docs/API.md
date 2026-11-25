@@ -424,7 +424,7 @@ The server answers a request to compile a project when the job ends. A simulatio
 
 - A project can have a maximum of `maxSimulationIterations` iterations for the server to run its simulation. Each iteration schedules the resources again, which costs about as much as a compilation, and thus `jobTimeout` also stops a simulation that is too slow.
 
-- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). This time starts when the server starts to read the body of the request. Thus, it includes the upload, and a request that does not arrive in this time gets the same problem. A simulation stops between two groups of iterations. The count of the holidays of a custom calendar in the load stops too, and the job stops after the load. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
+- The server stops a job that uses more time than `jobTimeout` (`503 job-timeout`). This time starts when the server starts to read the body of the request. Thus, it includes the upload, and a request that does not arrive in this time gets the same problem. A simulation stops between two groups of iterations. The count of the holidays of a custom calendar stops too, and the job stops after that step, also after its last step. The `compileTimeout` of a request has a maximum of `maxCompileTimeout`.
 
 - The information cannot change while the server operates. Thus, the response has a strong `ETag`, and a client can keep it for one minute (`Cache-Control: private, max-age=60`). A request with `If-None-Match` and the `ETag` gets status `304`. `HEAD` gets the headers only.
 
@@ -911,5 +911,5 @@ This is the first version of the API. Version 0.11.0-alpha is the first release 
 - A scenario and an import can have 1,000 holidays at most (`P0080`).
 - The limit `maxConnections` of `GET /v1/info`: the connections that the server keeps open at one time. It is more than `maxJobs` and `maxQueue` together. Its default is 100, or twice `maxJobs`, plus `maxQueue`, plus 10 if that is more.
 - The check of a project and the import of a workbook refuse a holiday rule that the calendar cannot read (`notAllowed`, with the cause). They refuse it in each mode of the calendar. Examples are the prefix `RRULE:`, a space before a name, and `BYMONTH=13`. Before, such a rule ended the load of a scenario with the custom calendar with an exception.
-- The time limit of a job stops the calendar in the load. Before, a plan with a custom calendar of 1,000 holidays `FREQ=DAILY` held a job for more than 3 minutes, past `jobTimeout`.
+- The time limit of a job stops the calendar, and the job then gives `503 job-timeout`, also in its last step. Before, a plan with a custom calendar of 1,000 holidays `FREQ=DAILY` held a job for more than 3 minutes, past `jobTimeout`.
 - Each encoding of a response with an `ETag` has its own strong `ETag`, and a response with status `304` has no `Content-Encoding`. Before, the three encodings of the description, of the schema and of `GET /v1/info` had one `ETag`.

@@ -93,9 +93,10 @@ namespace Zametek.Engine.ProjectPlan
         /// (<see cref="GraphCompilationTimeoutException"/>), or a project or scenario export the sink cannot store -
         /// and whatever the sink stored before that stays where it is. Cancelling the token stops the job before the
         /// next step it would take, with an <see cref="OperationCanceledException"/>: a step already under way - reading
-        /// the plan, compiling it, producing an output - runs to its end first, and a job that has produced its last
-        /// output completes. A simulation is the exception: it stops between two chunks of its iterations, and the job stops
-        /// with it. The settings of a simulation are the scenario's, and so a request that asks of it what the scenario
+        /// the plan, compiling it, producing an output - runs to its end first. A job that is cancelled in its last step
+        /// stops after it too, and it gives no result, because its calendar stopped and gave wrong dates (see
+        /// DateTimeCalculator.WorkCancellation). A simulation is the exception: it stops between two chunks of its
+        /// iterations, and the job stops with it. The settings of a simulation are the scenario's, and so a request that asks of it what the scenario
         /// cannot give (its outputs without a result, or a run with more iterations than it may have) is found out only
         /// after the plan is in, and it is a <see cref="SimulationException"/>.
         /// </summary>
@@ -340,6 +341,10 @@ namespace Zametek.Engine.ProjectPlan
 
                 if (core.HasCompilationErrors)
                 {
+                    // The errors come from the calendar too (P0080 for a run of days off), and a calendar that stopped in the
+                    // compile gave wrong ones (see DateTimeCalculator.WorkCancellation).
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     return new JobResult
                     {
                         Status = JobStatus.CompilationErrors,
@@ -649,6 +654,10 @@ namespace Zametek.Engine.ProjectPlan
             // reports the failure through the dialog service, as the desktop does. The
             // remaining outputs have still been produced, but the job as a whole has failed.
             JobMetrics jobMetrics = JobMetrics.From(metrics);
+
+            // No step comes after the last one to stop before, and a calendar that stopped in it gave wrong dates to its output
+            // and to the metrics (see DateTimeCalculator.WorkCancellation).
+            cancellationToken.ThrowIfCancellationRequested();
 
             return new JobResult
             {
