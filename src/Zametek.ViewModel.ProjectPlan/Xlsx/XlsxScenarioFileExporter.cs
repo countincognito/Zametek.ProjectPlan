@@ -75,6 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(ActivityModel.HasNoBilling),
                 nameof(ActivityModel.HasNoEffort),
                 nameof(ActivityModel.HasNoRisk),
+                nameof(ActivityModel.IsHiddenFromCharts),
                 nameof(ActivityModel.Duration),
                 nameof(ActivityModel.MostLikelyDuration),
                 nameof(ActivityModel.OptimisticDuration),
@@ -112,6 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(ResourceModel.Notes),
                 nameof(ResourceModel.IsExplicitTarget),
                 nameof(ResourceModel.IsInactive),
+                nameof(ResourceModel.IsHiddenFromCharts),
                 nameof(ResourceModel.ActivityAllocationType),
                 nameof(ResourceModel.InterActivityAllocationType),
                 nameof(ResourceModel.InterActivityPhases),
@@ -137,6 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(WorkStreamModel.Id),
                 nameof(WorkStreamModel.Name),
                 nameof(WorkStreamModel.IsPhase),
+                nameof(WorkStreamModel.IsHiddenFromCharts),
                 nameof(WorkStreamModel.DisplayOrder),
                 nameof(WorkStreamModel.ColorFormat)
             ];

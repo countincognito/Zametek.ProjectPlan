@@ -186,17 +186,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void IsHiddenFromCharts_Given_AResourceAndAWorkStreamThatTheUserSwitches_Then_TheCoreHasThemAndTheGridsStay()
         {
-            using var scope = new MainThreadSequencerScope();
+            // Both pumps, before the harness starts its subscriptions: the outputs that the load builds come through the
+            // thread pool, and their metrics mark the scenario. On the real thread pool, they came at any moment, also
+            // after the check below (a hook of 2026-11-25 failed so).
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
             using CoreViewModelFixture.SubscribedHarness harness = CoreViewModelFixture.CreateWithSubscriptions();
             harness.Core.ProcessProjectScenario(PlanWithSwitches(), Guid.NewGuid(), @"Plan");
-            scope.Pump.Drain();
-            harness.Core.IsProjectScenarioUpdated.ShouldBeFalse("precondition: a load is not an edit");
+            SequencerScopes.Drain(main, pool);
+
+            // As a save does.
+            harness.Core.IsProjectScenarioUpdated = false;
+            harness.Core.HasStaleOutputs.ShouldBeFalse("precondition: the load compiled the plan");
             IManagedResourceViewModel resource = harness.ResourceSettingsManager.RawResources.Single(x => x.Id == 2);
             IManagedWorkStreamViewModel workStream = harness.WorkStreamSettingsManager.RawWorkStreams.Single(x => x.Id == 1);
 
             resource.IsHiddenFromCharts = true;
             workStream.IsHiddenFromCharts = true;
-            scope.Pump.Drain();
+            SequencerScopes.Drain(main, pool);
 
             harness.Core.ResourceSettings.Resources.Single(x => x.Id == 2).IsHiddenFromCharts.ShouldBeTrue();
             harness.Core.WorkStreamSettings.WorkStreams.Single(x => x.Id == 1).IsHiddenFromCharts.ShouldBeTrue();

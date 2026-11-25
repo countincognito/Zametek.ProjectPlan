@@ -80,7 +80,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             Sheet(book, Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities).Header().ShouldBe(
             [
                 "Id", "DisplayOrder", "Name", "TargetWorkStreams", "TargetResources", "TargetResourceOperator", "AllocatedToResources",
-                "HasNoCost", "HasNoBilling", "HasNoEffort", "HasNoRisk", "Duration", "MostLikelyDuration", "OptimisticDuration",
+                "HasNoCost", "HasNoBilling", "HasNoEffort", "HasNoRisk", "IsHiddenFromCharts", "Duration", "MostLikelyDuration", "OptimisticDuration",
                 "PessimisticDuration", "ExpectedDuration", "StandardDeviation", "FreeSlack", "TotalSlack", "EarliestStartTime",
                 "LatestStartTime", "EarliestFinishTime", "LatestFinishTime", "MinimumFreeSlack", "MinimumEarliestStartTime",
                 "MinimumEarliestStartDateTime", "MaximumLatestFinishTime", "MaximumLatestFinishDateTime", "OverrideColor", "ColorFormat",
@@ -97,6 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData("TargetResourceOperator", XlsxCellKind.Text)]
         [InlineData("HasNoCost", XlsxCellKind.Boolean)]
         [InlineData("HasNoEffort", XlsxCellKind.Boolean)]
+        [InlineData("IsHiddenFromCharts", XlsxCellKind.Boolean)]
         [InlineData("Duration", XlsxCellKind.Number)]
         [InlineData("ExpectedDuration", XlsxCellKind.Number)]
         [InlineData("StandardDeviation", XlsxCellKind.Number)]

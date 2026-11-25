@@ -61,6 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.HasNoBilling),
             nameof(ActivityModel.HasNoEffort),
             nameof(ActivityModel.HasNoRisk),
+            nameof(ActivityModel.IsHiddenFromCharts),
             nameof(ActivityModel.Duration),
             nameof(ActivityModel.MostLikelyDuration),
             nameof(ActivityModel.OptimisticDuration),
@@ -84,6 +85,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.Notes),
             nameof(ResourceModel.IsExplicitTarget),
             nameof(ResourceModel.IsInactive),
+            nameof(ResourceModel.IsHiddenFromCharts),
             nameof(ResourceModel.ActivityAllocationType),
             nameof(ResourceModel.InterActivityAllocationType),
             nameof(ResourceModel.InterActivityPhases),
@@ -109,6 +111,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(WorkStreamModel.Id),
             nameof(WorkStreamModel.Name),
             nameof(WorkStreamModel.IsPhase),
+            nameof(WorkStreamModel.IsHiddenFromCharts),
             nameof(WorkStreamModel.DisplayOrder),
             nameof(WorkStreamModel.ColorFormat)
         ];
@@ -206,6 +209,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     HasNoBilling = row.Bool(nameof(ActivityModel.HasNoBilling)) ?? false,
                     HasNoEffort = row.Bool(nameof(ActivityModel.HasNoEffort)) ?? false,
                     HasNoRisk = row.Bool(nameof(ActivityModel.HasNoRisk)) ?? false,
+                    // A workbook from before 0.11.0-beta.3 has no such column, and the activity is then shown.
+                    IsHiddenFromCharts = row.Bool(nameof(ActivityModel.IsHiddenFromCharts)) ?? false,
                     Duration = row.Int(nameof(ActivityModel.Duration)) ?? 0,
                     MostLikelyDuration = row.Int(nameof(ActivityModel.MostLikelyDuration)),
                     OptimisticDuration = row.Int(nameof(ActivityModel.OptimisticDuration)),
@@ -281,6 +286,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Notes = row.Text(nameof(ResourceModel.Notes)) ?? string.Empty,
                     IsExplicitTarget = row.Bool(nameof(ResourceModel.IsExplicitTarget)) ?? false,
                     IsInactive = row.Bool(nameof(ResourceModel.IsInactive)) ?? false,
+                    IsHiddenFromCharts = row.Bool(nameof(ResourceModel.IsHiddenFromCharts)) ?? false,
                     ActivityAllocationType = row.Option<ActivityAllocationType>(nameof(ResourceModel.ActivityAllocationType)) ?? ActivityAllocationType.Direct,
                     InterActivityAllocationType = row.Option<InterActivityAllocationType>(nameof(ResourceModel.InterActivityAllocationType)) ?? InterActivityAllocationType.None,
                     InterActivityPhases = row.Ids(nameof(ResourceModel.InterActivityPhases)),
@@ -350,6 +356,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Id = id.GetValueOrDefault(),
                     Name = row.Text(nameof(WorkStreamModel.Name)) ?? string.Empty,
                     IsPhase = row.Bool(nameof(WorkStreamModel.IsPhase)) ?? false,
+                    IsHiddenFromCharts = row.Bool(nameof(WorkStreamModel.IsHiddenFromCharts)) ?? false,
                     DisplayOrder = row.Int(nameof(WorkStreamModel.DisplayOrder)) ?? 0,
                     ColorFormat = row.Color(nameof(WorkStreamModel.ColorFormat)) ?? ColorHelper.None(),
                 };
