@@ -33,6 +33,7 @@ namespace Zametek.Contract.ProjectPlan
         bool GanttChartShowMilestones { get; set; }
         bool GanttChartShowSlack { get; set; }
         bool GanttChartShowNonWorkingDays { get; set; }
+        bool GanttChartShowHidden { get; set; }
 
         /// <summary>
         /// The filter of connections. It is replaced as a whole and it never changes in place, and so a reader on any thread
@@ -58,6 +59,7 @@ namespace Zametek.Contract.ProjectPlan
         DisplayStyle ResourceChartDisplayStyle { get; set; }
         bool ResourceChartShowToday { get; set; }
         bool ResourceChartShowMilestones { get; set; }
+        bool ResourceChartShowHidden { get; set; }
 
 
         bool EarnedValueShowProjections { get; set; }

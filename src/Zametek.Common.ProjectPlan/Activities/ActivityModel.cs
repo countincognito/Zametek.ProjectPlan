@@ -31,6 +31,9 @@ namespace Zametek.Common.ProjectPlan
 
         public bool HasNoRisk { get; init; }
 
+        // The Gantt chart and the resource chart do not show the activity. It changes nothing else.
+        public bool IsHiddenFromCharts { get; init; }
+
         // The duration that the compiler schedules. When an activity has estimates, this is
         // the PERT expected duration of them, rounded to a whole day. Everything that reads
         // a compiled activity reads this member, and thus it keeps its meaning.

@@ -38,6 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Notes = resource.Notes;
             m_IsExplicitTarget = resource.IsExplicitTarget;
             m_IsInactive = resource.IsInactive;
+            m_IsHiddenFromCharts = resource.IsHiddenFromCharts;
             m_ActivityAllocationType = resource.ActivityAllocationType;
             m_InterActivityAllocationType = resource.InterActivityAllocationType;
             m_UnitCost = resource.UnitCost;
@@ -179,6 +180,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_IsHiddenFromCharts;
+        public bool IsHiddenFromCharts
+        {
+            get => m_IsHiddenFromCharts;
+            set => this.RaiseAndSetIfChanged(ref m_IsHiddenFromCharts, value);
+        }
+
         private ActivityAllocationType m_ActivityAllocationType;
         public ActivityAllocationType ActivityAllocationType
         {
@@ -307,6 +315,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Notes = Notes,
                 IsExplicitTarget = IsExplicitTarget,
                 IsInactive = IsInactive,
+                IsHiddenFromCharts = IsHiddenFromCharts,
                 ActivityAllocationType = ActivityAllocationType,
                 InterActivityAllocationType = InterActivityAllocationType,
                 InterActivityPhases = [.. InterActivityPhases],

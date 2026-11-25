@@ -806,6 +806,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool IsHiddenFromCharts
+        {
+            get => DependentActivity.IsHiddenFromCharts;
+            set
+            {
+                lock (m_DataLock)
+                {
+                    DependentActivity.IsHiddenFromCharts = value;
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         /// <summary>
         /// The duration that the compiler schedules: the PERT expected duration of the estimates,
         /// rounded to a whole day. For an activity that has no estimates of its own it is the most

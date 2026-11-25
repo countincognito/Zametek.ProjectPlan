@@ -10,6 +10,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasNoRisk { get; set; }
 
+        // The Gantt chart and the resource chart do not show the activity. No compile reads it, and a copy of an activity
+        // for a compile keeps the value that it had: the charts read the value of the live activity.
+        bool IsHiddenFromCharts { get; set; }
+
         // The three estimates of the duration. Duration (from IActivity) stays what it was: the
         // duration that the compiler schedules. For an activity with estimates it is their PERT
         // expected duration, rounded to a whole day, and the managed activity keeps it so.

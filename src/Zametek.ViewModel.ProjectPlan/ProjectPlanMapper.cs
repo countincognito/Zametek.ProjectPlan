@@ -153,7 +153,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     trackers: src.Activity.Trackers,
                     mostLikelyDuration: MostLikelyOrDuration(src.Activity),
                     ownOptimisticDuration: src.Activity.OptimisticDuration,
-                    ownPessimisticDuration: src.Activity.PessimisticDuration
+                    ownPessimisticDuration: src.Activity.PessimisticDuration,
+                    isHiddenFromCharts: src.Activity.IsHiddenFromCharts
                 );
 
         // A model with no most likely duration is an activity with no estimates, and its most likely

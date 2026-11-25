@@ -81,6 +81,17 @@ namespace Zametek.Data.ProjectPlan.Tests
             @"$.EffectiveProjectStart",
         ];
 
+        // The switches that hide parts of the plan from the Gantt chart and the resource chart arrived in v0.6.2, so no
+        // earlier version holds them. A scenario that comes back from an earlier version shows each part.
+        private static readonly string[] s_HiddenFromCharts =
+        [
+            @"$.DependentActivities[].Activity.IsHiddenFromCharts",
+            @"$.ResourceSettings.Resources[].IsHiddenFromCharts",
+            @"$.WorkStreamSettings.WorkStreams[].IsHiddenFromCharts",
+            @"$.DisplaySettings.GanttChartShowHidden",
+            @"$.DisplaySettings.ResourceChartShowHidden",
+        ];
+
         // A resource's activity trackers record which activity was worked on by id; the
         // name shown beside it is looked up when the plan is loaded rather than stored.
         private const string c_TrackedActivityName =
@@ -199,7 +210,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             // Everything else came across: the only differences are the estimates, which
             // the scenario was never holding in v0.6.1, and the values no version stores.
             ModelReflection
-                .Differences(original, upgraded, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart]))
+                .Differences(original, upgraded, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart, .. s_HiddenFromCharts]))
                 .ShouldBeEmpty();
         }
 
@@ -207,6 +218,64 @@ namespace Zametek.Data.ProjectPlan.Tests
         /// Upgrading from v0.6.1. The simulation is new, so a scenario comes back from v0.6.1 as a new scenario has
         /// it: the settings are the defaults, and there is no result.
         /// </summary>
+        [Fact]
+        public void ProjectScenario_UpgradedFromV0_6_1_Then_NothingIsHiddenFromTheCharts()
+        {
+            var mapper = new VersionMapper();
+            ProjectScenarioModel original = ModelReflection.Fill<ProjectScenarioModel>();
+
+            ProjectScenarioModel upgraded =
+                mapper.FromV0_6_2ToCurrent(mapper.FromV0_6_1ToV0_6_2(mapper.FromCurrentToV0_6_1(original)));
+
+            // The scenario had each switch on, or losing them would prove nothing.
+            original.DependentActivities.ShouldAllBe(x => x.Activity.IsHiddenFromCharts);
+            original.ResourceSettings.Resources.ShouldAllBe(x => x.IsHiddenFromCharts);
+            original.WorkStreamSettings.WorkStreams.ShouldAllBe(x => x.IsHiddenFromCharts);
+            original.DisplaySettings.GanttChartShowHidden.ShouldBeTrue();
+            original.DisplaySettings.ResourceChartShowHidden.ShouldBeTrue();
+
+            upgraded.DependentActivities.ShouldNotBeEmpty();
+            upgraded.DependentActivities.ShouldAllBe(x => !x.Activity.IsHiddenFromCharts);
+            upgraded.ResourceSettings.Resources.ShouldNotBeEmpty();
+            upgraded.ResourceSettings.Resources.ShouldAllBe(x => !x.IsHiddenFromCharts);
+            upgraded.WorkStreamSettings.WorkStreams.ShouldNotBeEmpty();
+            upgraded.WorkStreamSettings.WorkStreams.ShouldAllBe(x => !x.IsHiddenFromCharts);
+            upgraded.DisplaySettings.GanttChartShowHidden.ShouldBeFalse();
+            upgraded.DisplaySettings.ResourceChartShowHidden.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void ProjectScenario_RoundTrippedThroughV0_6_2_Then_TheSwitchesThatHideFromTheChartsSurvive()
+        {
+            var mapper = new VersionMapper();
+            var original = new ProjectScenarioModel
+            {
+                DependentActivities =
+                [
+                    new DependentActivityModel { Activity = new ActivityModel { Id = 1, IsHiddenFromCharts = true } },
+                    new DependentActivityModel { Activity = new ActivityModel { Id = 2 } },
+                ],
+                ResourceSettings = new ResourceSettingsModel
+                {
+                    Resources = [new ResourceModel { Id = 1, IsHiddenFromCharts = true }, new ResourceModel { Id = 2 }],
+                },
+                WorkStreamSettings = new WorkStreamSettingsModel
+                {
+                    WorkStreams = [new WorkStreamModel { Id = 1, IsHiddenFromCharts = true }, new WorkStreamModel { Id = 2 }],
+                },
+                DisplaySettings = new ProjectScenarioDisplaySettingsModel { GanttChartShowHidden = true, ResourceChartShowHidden = false },
+            };
+
+            ProjectScenarioModel roundTripped =
+                mapper.FromV0_6_2ToCurrent(mapper.FromCurrentToV0_6_2(original));
+
+            roundTripped.DependentActivities.Select(x => x.Activity.IsHiddenFromCharts).ShouldBe([true, false]);
+            roundTripped.ResourceSettings.Resources.Select(x => x.IsHiddenFromCharts).ShouldBe([true, false]);
+            roundTripped.WorkStreamSettings.WorkStreams.Select(x => x.IsHiddenFromCharts).ShouldBe([true, false]);
+            roundTripped.DisplaySettings.GanttChartShowHidden.ShouldBeTrue();
+            roundTripped.DisplaySettings.ResourceChartShowHidden.ShouldBeFalse();
+        }
+
         [Fact]
         public void ProjectScenario_UpgradedFromV0_6_1_Then_SimulationHasTheDefaultsAndNoResult()
         {
@@ -287,7 +356,7 @@ namespace Zametek.Data.ProjectPlan.Tests
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
             ModelReflection
-                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart]))])
+                .Differences(original, roundTripped, [c_VersionStamp, .. ForFilesIn(original, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart, .. s_HiddenFromCharts]))])
                 .ShouldBeEmpty();
 
             roundTripped.Version.ShouldBe(@"v0.6.1");
@@ -302,7 +371,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectScenarioModel roundTripped =
                 mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(original));
 
-            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart])).ShouldBeEmpty();
+            ModelReflection.Differences(original, roundTripped, StoredScenarioLosses([.. s_ActivityEstimates, .. s_Simulation, .. s_Headcount, .. s_EffectiveStart, .. s_HiddenFromCharts])).ShouldBeEmpty();
 
             // The graph layouts and the per-resource metrics are what v0.6.1 added, so
             // this is the pair that has to carry them.
@@ -448,6 +517,8 @@ namespace Zametek.Data.ProjectPlan.Tests
                     .. s_Headcount,
                     // The effective start arrived in v0.6.2.
                     .. s_EffectiveStart,
+                    // The switches that hide parts of the plan from the charts arrived in v0.6.2.
+                    .. s_HiddenFromCharts,
                     // The three estimates of a duration arrived in v0.6.2.
                     @"$.DependentActivities[].Activity.MostLikelyDuration",
                     @"$.DependentActivities[].Activity.OptimisticDuration",

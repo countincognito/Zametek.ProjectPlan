@@ -173,6 +173,10 @@
                         "HasNoRisk": {
                           "type": "boolean"
                         },
+                        "IsHiddenFromCharts": {
+                          "type": "boolean",
+                          "description": "The Gantt chart and the resource chart do not show the activity. It changes no schedule, metric or other output."
+                        },
                         "Duration": {
                           "type": "integer",
                           "minimum": 0,
@@ -483,6 +487,10 @@
                         "IsInactive": {
                           "type": "boolean"
                         },
+                        "IsHiddenFromCharts": {
+                          "type": "boolean",
+                          "description": "The Gantt chart and the resource chart do not show the resource. It changes no schedule, metric or other output."
+                        },
                         "ActivityAllocationType": {
                           "type": "integer",
                           "enum": [
@@ -614,6 +622,10 @@
                         },
                         "IsPhase": {
                           "type": "boolean"
+                        },
+                        "IsHiddenFromCharts": {
+                          "type": "boolean",
+                          "description": "The Gantt chart and the resource chart do not show the work stream. It changes no schedule, metric or other output."
                         },
                         "DisplayOrder": {
                           "type": "integer"
@@ -1437,6 +1449,10 @@
                       "type": "integer"
                     }
                   },
+                  "GanttChartShowHidden": {
+                    "type": "boolean",
+                    "description": "The Gantt chart shows each activity, resource and work stream, also those that are hidden from the charts."
+                  },
                   "ResourceChartAllocationMode": {
                     "type": "integer",
                     "enum": [
@@ -1470,6 +1486,10 @@
                   },
                   "ResourceChartShowMilestones": {
                     "type": "boolean"
+                  },
+                  "ResourceChartShowHidden": {
+                    "type": "boolean",
+                    "description": "The resource chart shows each activity, resource and work stream, also those that are hidden from the charts."
                   },
                   "EarnedValueShowProjections": {
                     "type": "boolean"

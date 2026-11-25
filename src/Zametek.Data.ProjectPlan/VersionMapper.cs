@@ -821,10 +821,12 @@ namespace Zametek.Data.ProjectPlan
         // Target-required mapping to flag any future drift. The v0.4.4<->v0.6.1 pair (used by the
         // v0.6.0<->v0.6.1 scenario chain, where resources are still stored as v0.4.4 models) stays at the
         // class default None: v0.4.4 has no ActivityAllocationType, so that target is intentionally left
-        // at its default on the way up and dropped on the way down.
+        // at its default on the way up and dropped on the way down. IsHiddenFromCharts is new in v0.6.2: a v0.6.1 resource
+        // has no such switch, and so the resource is shown.
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_1.ResourceModel FromCurrentToV0_6_1(ResourceModel src);
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapperIgnoreTarget(nameof(ResourceModel.IsHiddenFromCharts))]
         public partial ResourceModel FromV0_6_1ToCurrent(v0_6_1.ResourceModel src);
 
         public partial v0_6_1.ResourceModel FromV0_4_4ToV0_6_1(v0_4_4.ResourceModel src);
@@ -902,11 +904,14 @@ namespace Zametek.Data.ProjectPlan
         // v0.6.2 <-> Current and v0.6.1
         // ---------------------------------------------------------------------
 
-        // v0.6.2 changes only the activities: it adds the three estimates of a duration. Its project,
-        // scenario, scenario file, dependent activity and activity models mirror the Current models
-        // 1:1, so the Current<->v0.6.2 pairs opt into Target-required mapping to flag any future drift.
-        // Everything else a scenario holds is still the model of the version that last changed it,
-        // and the mappings for those are the ones above.
+        // v0.6.2 adds the three estimates of a duration to the activities, and the switches that hide
+        // parts of the plan from the Gantt chart and the resource chart: IsHiddenFromCharts of an
+        // activity, a resource and a work stream, and GanttChartShowHidden and ResourceChartShowHidden
+        // of the display settings. Its project, scenario, scenario file, dependent activity, activity,
+        // resource, work stream and display settings models mirror the Current models 1:1, so the
+        // Current<->v0.6.2 pairs opt into Target-required mapping to flag any future drift. Everything
+        // else a scenario holds is still the model of the version that last changed it, and the
+        // mappings for those are the ones above.
         //
         // The activity pair is required in one direction only. The Current activity also holds three
         // values that no stored version holds (the total slack, the latest start time and the earliest
@@ -946,6 +951,31 @@ namespace Zametek.Data.ProjectPlan
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial HeadcountModel FromV0_6_2ToCurrent(v0_6_2.HeadcountModel src);
 
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ResourceModel FromCurrentToV0_6_2(ResourceModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ResourceModel FromV0_6_2ToCurrent(v0_6_2.ResourceModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ResourceSettingsModel FromCurrentToV0_6_2(ResourceSettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ResourceSettingsModel FromV0_6_2ToCurrent(v0_6_2.ResourceSettingsModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.WorkStreamModel FromCurrentToV0_6_2(WorkStreamModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial WorkStreamModel FromV0_6_2ToCurrent(v0_6_2.WorkStreamModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.WorkStreamSettingsModel FromCurrentToV0_6_2(WorkStreamSettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial WorkStreamSettingsModel FromV0_6_2ToCurrent(v0_6_2.WorkStreamSettingsModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_2.ProjectScenarioDisplaySettingsModel FromCurrentToV0_6_2(ProjectScenarioDisplaySettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectScenarioDisplaySettingsModel FromV0_6_2ToCurrent(v0_6_2.ProjectScenarioDisplaySettingsModel src);
+
         // Upgrading from v0.6.1: the estimates are new in v0.6.2, so they are intentionally left
         // null, and an activity follows its Duration. Going the other way drops them, and the
         // Duration that stays is the one the compiler scheduled. The scenario gains the settings of the
@@ -961,6 +991,24 @@ namespace Zametek.Data.ProjectPlan
 
         public partial v0_6_2.ProjectScenarioFileModel FromV0_6_1ToV0_6_2(v0_6_1.ProjectScenarioFileModel src);
         public partial v0_6_1.ProjectScenarioFileModel FromV0_6_2ToV0_6_1(v0_6_2.ProjectScenarioFileModel src);
+
+        // Upgrading from v0.6.1 (and from v0.3.2 for the work streams): the switches that hide parts of the plan from the
+        // charts are new in v0.6.2, so they are intentionally left false, and the charts show each part. Going the other way
+        // drops them.
+        public partial v0_6_2.ResourceModel FromV0_6_1ToV0_6_2(v0_6_1.ResourceModel src);
+        public partial v0_6_1.ResourceModel FromV0_6_2ToV0_6_1(v0_6_2.ResourceModel src);
+
+        public partial v0_6_2.ResourceSettingsModel FromV0_6_1ToV0_6_2(v0_6_1.ResourceSettingsModel src);
+        public partial v0_6_1.ResourceSettingsModel FromV0_6_2ToV0_6_1(v0_6_2.ResourceSettingsModel src);
+
+        public partial v0_6_2.WorkStreamModel FromV0_3_2ToV0_6_2(v0_3_2.WorkStreamModel src);
+        public partial v0_3_2.WorkStreamModel FromV0_6_2ToV0_3_2(v0_6_2.WorkStreamModel src);
+
+        public partial v0_6_2.WorkStreamSettingsModel FromV0_3_2ToV0_6_2(v0_3_2.WorkStreamSettingsModel src);
+        public partial v0_3_2.WorkStreamSettingsModel FromV0_6_2ToV0_3_2(v0_6_2.WorkStreamSettingsModel src);
+
+        public partial v0_6_2.ProjectScenarioDisplaySettingsModel FromV0_6_1ToV0_6_2(v0_6_1.ProjectScenarioDisplaySettingsModel src);
+        public partial v0_6_1.ProjectScenarioDisplaySettingsModel FromV0_6_2ToV0_6_1(v0_6_2.ProjectScenarioDisplaySettingsModel src);
 
         // The metrics of v0.6.1 are those of v0.5.0. An upgrade leaves the headcount empty, and the first compile works it
         // out. Going the other way drops it.

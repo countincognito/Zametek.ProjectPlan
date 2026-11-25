@@ -378,6 +378,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Id = x.Id,
                         Name = x.Name,
                         IsPhase = x.IsPhase,
+                        IsHiddenFromCharts = x.IsHiddenFromCharts,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat
                     })]

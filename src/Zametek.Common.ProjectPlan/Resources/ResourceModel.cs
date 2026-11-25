@@ -17,6 +17,9 @@ namespace Zametek.Common.ProjectPlan
 
         public bool IsInactive { get; init; }
 
+        // The Gantt chart and the resource chart do not show the resource. It changes nothing else.
+        public bool IsHiddenFromCharts { get; init; }
+
         public ActivityAllocationType ActivityAllocationType { get; init; }
 
         public InterActivityAllocationType InterActivityAllocationType { get; init; }

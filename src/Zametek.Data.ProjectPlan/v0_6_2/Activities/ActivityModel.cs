@@ -31,6 +31,9 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
 
         public bool HasNoRisk { get; init; }
 
+        // The Gantt chart and the resource chart do not show the activity. It is new in v0.6.2.
+        public bool IsHiddenFromCharts { get; init; }
+
         // The duration that the compiler schedules: the PERT expected duration of the estimates,
         // rounded to a whole day.
         public int Duration { get; init; }

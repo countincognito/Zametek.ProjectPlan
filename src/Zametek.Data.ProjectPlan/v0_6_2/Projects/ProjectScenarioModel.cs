@@ -1,7 +1,8 @@
 namespace Zametek.Data.ProjectPlan.v0_6_2
 {
-    // v0.6.2 changes the activities, and adds the settings of the simulation and its last result. Everything
-    // else in a scenario is the model of the version that last changed it.
+    // v0.6.2 changes the activities, the resources, the work streams and the display settings (the switches that hide
+    // parts of the plan from the Gantt chart and the resource chart), and adds the settings of the simulation and its last
+    // result. Everything else in a scenario is the model of the version that last changed it.
     [Serializable]
     public record ProjectScenarioModel
     {
@@ -16,9 +17,9 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
 
         public v0_5_0.GraphSettingsModel GraphSettings { get; init; } = new();
 
-        public v0_6_1.ResourceSettingsModel ResourceSettings { get; init; } = new();
+        public ResourceSettingsModel ResourceSettings { get; init; } = new();
 
-        public v0_3_2.WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
+        public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
 
         public v0_6_0.HolidaySettingsModel HolidaySettings { get; init; } = new();
 
@@ -30,7 +31,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_2
 
         public SimulationSummaryModel? SimulationSummary { get; init; }
 
-        public v0_6_1.ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
+        public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
 
         public v0_6_1.GraphLayoutModel ArrowGraphLayout { get; init; } = new();
 

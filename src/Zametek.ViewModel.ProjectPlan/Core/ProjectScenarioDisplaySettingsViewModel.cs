@@ -351,6 +351,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_GanttChartShowHidden;
+        public bool GanttChartShowHidden
+        {
+            get => m_GanttChartShowHidden;
+            set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowHidden, value);
+                }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+            }
+        }
+
         // Replaced as a whole and never changed in place: a handler on the UI thread reads this while a load replaces
         // it on another thread (ARCHITECTURE section 7 rule 9).
         private int[] m_GanttChartShowConnections;
@@ -431,6 +445,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     this.RaiseAndSetIfChanged(ref m_ResourceChartShowMilestones, value);
+                }
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+            }
+        }
+
+        private bool m_ResourceChartShowHidden;
+        public bool ResourceChartShowHidden
+        {
+            get => m_ResourceChartShowHidden;
+            set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_ResourceChartShowHidden, value);
                 }
                 SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
             }
@@ -613,6 +641,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     GanttChartShowNonWorkingDays = model.GanttChartShowNonWorkingDays;
                 }
+                if (GanttChartShowHidden != model.GanttChartShowHidden)
+                {
+                    GanttChartShowHidden = model.GanttChartShowHidden;
+                }
 
                 SetGanttChartShowConnections(model.GanttChartShowConnections);
                 Interlocked.Increment(ref m_GanttChartShowConnectionsRevision);
@@ -638,6 +670,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (ResourceChartShowMilestones != model.ResourceChartShowMilestones)
                 {
                     ResourceChartShowMilestones = model.ResourceChartShowMilestones;
+                }
+                if (ResourceChartShowHidden != model.ResourceChartShowHidden)
+                {
+                    ResourceChartShowHidden = model.ResourceChartShowHidden;
                 }
 
 
@@ -697,12 +733,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowSlack = GanttChartShowSlack,
                     GanttChartShowNonWorkingDays = GanttChartShowNonWorkingDays,
                     GanttChartShowConnections = [.. GanttChartShowConnections],
+                    GanttChartShowHidden = GanttChartShowHidden,
 
                     ResourceChartAllocationMode = ResourceChartAllocationMode,
                     ResourceChartScheduleMode = ResourceChartScheduleMode,
                     ResourceChartDisplayStyle = ResourceChartDisplayStyle,
                     ResourceChartShowToday = ResourceChartShowToday,
                     ResourceChartShowMilestones = ResourceChartShowMilestones,
+                    ResourceChartShowHidden = ResourceChartShowHidden,
 
                     EarnedValueShowProjections = EarnedValueShowProjections,
                     EarnedValueShowToday = EarnedValueShowToday,

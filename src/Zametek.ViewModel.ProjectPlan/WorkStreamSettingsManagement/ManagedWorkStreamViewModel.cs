@@ -26,6 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = workStream.Id;
             m_Name = workStream.Name;
             m_IsPhase = workStream.IsPhase;
+            m_IsHiddenFromCharts = workStream.IsHiddenFromCharts;
             m_DisplayOrder = workStream.DisplayOrder;
             m_ColorFormat = workStream.ColorFormat;
             m_IsEditMuted = false;
@@ -60,6 +61,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_IsHiddenFromCharts;
+        public bool IsHiddenFromCharts
+        {
+            get => m_IsHiddenFromCharts;
+            set => this.RaiseAndSetIfChanged(ref m_IsHiddenFromCharts, value);
+        }
+
         private int m_DisplayOrder;
         public int DisplayOrder
         {
@@ -90,6 +98,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Id = Id,
                 Name = Name,
                 IsPhase = IsPhase,
+                IsHiddenFromCharts = IsHiddenFromCharts,
                 DisplayOrder = DisplayOrder,
                 ColorFormat = ColorFormat,
             };

@@ -34,8 +34,8 @@ namespace Zametek.Data.ProjectPlan.Tests
             [@"v0_6_2.ProjectScenarioFileModel"] = [@"NodeId", @"Scenario"],
             [@"v0_6_2.DependentActivityModel"] = [@"Activity"],
             [@"v0_6_2.ActivityModel"] = [@"Id"],
-            [@"v0_6_1.ResourceModel"] = [@"Id"],
-            [@"v0_3_2.WorkStreamModel"] = [@"Id"],
+            [@"v0_6_2.ResourceModel"] = [@"Id"],
+            [@"v0_6_2.WorkStreamModel"] = [@"Id"],
         };
 
         // What a member means, where its name does not say enough, by the class that has it and its name.
@@ -75,6 +75,11 @@ namespace Zametek.Data.ProjectPlan.Tests
             [@"v0_6_2.ActivityModel.MinimumEarliestStartDateTime"] = @"The earliest day on which the activity can start, as a date. It takes the place of MinimumEarliestStartTime.",
             [@"v0_6_2.ActivityModel.MaximumLatestFinishTime"] = @"The latest day by which the activity must finish, in working days from ProjectStart. MaximumLatestFinishDateTime takes its place when the file has both.",
             [@"v0_6_2.ActivityModel.MaximumLatestFinishDateTime"] = @"The latest day by which the activity must finish, as a date. It takes the place of MaximumLatestFinishTime.",
+            [@"v0_6_2.ActivityModel.IsHiddenFromCharts"] = @"The Gantt chart and the resource chart do not show the activity. It changes no schedule, metric or other output.",
+            [@"v0_6_2.ResourceModel.IsHiddenFromCharts"] = @"The Gantt chart and the resource chart do not show the resource. It changes no schedule, metric or other output.",
+            [@"v0_6_2.WorkStreamModel.IsHiddenFromCharts"] = @"The Gantt chart and the resource chart do not show the work stream. It changes no schedule, metric or other output.",
+            [@"v0_6_2.ProjectScenarioDisplaySettingsModel.GanttChartShowHidden"] = @"The Gantt chart shows each activity, resource and work stream, also those that are hidden from the charts.",
+            [@"v0_6_2.ProjectScenarioDisplaySettingsModel.ResourceChartShowHidden"] = @"The resource chart shows each activity, resource and work stream, also those that are hidden from the charts.",
         };
 
         // The members that have a minimum, by the class that has them and their name. zpp counts a duration or a time of an

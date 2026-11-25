@@ -47,6 +47,9 @@ namespace Zametek.Common.ProjectPlan
 
         public List<int> GanttChartShowConnections { get; init; } = [];
 
+        // The chart shows each activity, resource and work stream, also those that are hidden from the charts.
+        public bool GanttChartShowHidden { get; init; } = default;
+
 
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;
 
@@ -57,6 +60,9 @@ namespace Zametek.Common.ProjectPlan
         public bool ResourceChartShowToday { get; init; } = default;
 
         public bool ResourceChartShowMilestones { get; init; } = default;
+
+        // The chart shows each activity, resource and work stream, also those that are hidden from the charts.
+        public bool ResourceChartShowHidden { get; init; } = default;
 
 
         public bool EarnedValueShowProjections { get; init; } = default;
