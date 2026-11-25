@@ -18,6 +18,7 @@ namespace Zametek.View.ProjectPlan
         [
             (Resource.ProjectPlan.Labels.Label_Id, static x => x.Id),
             (Resource.ProjectPlan.Labels.Label_IsPhase, static x => x.IsPhase),
+            (Resource.ProjectPlan.Labels.Label_IsHiddenFromCharts, static x => x.IsHiddenFromCharts),
             (Resource.ProjectPlan.Labels.Label_ColorFormat, static x => x.ColorFormat),
             (Resource.ProjectPlan.Labels.Label_WorkStreamName, static x => x.Name),
         ];

@@ -8,6 +8,9 @@ namespace Zametek.Common.ProjectPlan
         public bool IsPhase { get; init; }
         public bool IsIsPhaseEdited { get; init; } = false;
 
+        public bool IsHiddenFromCharts { get; init; }
+        public bool IsIsHiddenFromChartsEdited { get; init; } = false;
+
         public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
         public bool IsColorFormatActive { get; init; } = false;
     }

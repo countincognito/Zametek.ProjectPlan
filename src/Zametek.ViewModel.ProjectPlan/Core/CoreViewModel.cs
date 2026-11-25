@@ -699,6 +699,80 @@ namespace Zametek.ViewModel.ProjectPlan
         private int m_CompilationOutputRevision;
         public int CompilationOutputRevision => Volatile.Read(ref m_CompilationOutputRevision);
 
+        // A revision counter (ARCHITECTURE section 9).
+        private int m_ChartVisibilityRevision;
+        public int ChartVisibilityRevision => Volatile.Read(ref m_ChartVisibilityRevision);
+
+        public void NoteChartVisibilityChanged()
+        {
+            lock (m_Lock)
+            {
+                MarkChartVisibilityChanged();
+            }
+        }
+
+        public ResourceSettingsModel SetResourceChartVisibility(IReadOnlyDictionary<int, bool> isHiddenByResourceId)
+        {
+            ArgumentNullException.ThrowIfNull(isHiddenByResourceId);
+
+            lock (m_Lock)
+            {
+                ResourceSettingsModel current = m_ResourceSettings;
+
+                if (!current.Resources.Any(x => isHiddenByResourceId.TryGetValue(x.Id, out bool isHidden) && x.IsHiddenFromCharts != isHidden))
+                {
+                    return current;
+                }
+
+                // Only the switches change, and so the activities need not hear of it, as they do from the setter of
+                // ResourceSettings: their targets are the same.
+                m_ResourceSettings = current with
+                {
+                    Resources = [.. current.Resources.Select(x => isHiddenByResourceId.TryGetValue(x.Id, out bool isHidden)
+                        ? x with { IsHiddenFromCharts = isHidden }
+                        : x)],
+                };
+                this.RaisePropertyChanged(nameof(ResourceSettings));
+                MarkChartVisibilityChanged();
+                return m_ResourceSettings;
+            }
+        }
+
+        public WorkStreamSettingsModel SetWorkStreamChartVisibility(IReadOnlyDictionary<int, bool> isHiddenByWorkStreamId)
+        {
+            ArgumentNullException.ThrowIfNull(isHiddenByWorkStreamId);
+
+            lock (m_Lock)
+            {
+                WorkStreamSettingsModel current = m_WorkStreamSettings;
+
+                if (!current.WorkStreams.Any(x => isHiddenByWorkStreamId.TryGetValue(x.Id, out bool isHidden) && x.IsHiddenFromCharts != isHidden))
+                {
+                    return current;
+                }
+
+                // Only the switches change, as for the resources.
+                m_WorkStreamSettings = current with
+                {
+                    WorkStreams = [.. current.WorkStreams.Select(x => isHiddenByWorkStreamId.TryGetValue(x.Id, out bool isHidden)
+                        ? x with { IsHiddenFromCharts = isHidden }
+                        : x)],
+                };
+                this.RaisePropertyChanged(nameof(WorkStreamSettings));
+                MarkChartVisibilityChanged();
+                return m_WorkStreamSettings;
+            }
+        }
+
+        // A switch that hides a part of the plan from the two charts changed. No compile reads the switches, and so the
+        // scenario is marked as changed and the outputs are not marked as stale. Call it with m_Lock held.
+        private void MarkChartVisibilityChanged()
+        {
+            SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+            Interlocked.Increment(ref m_ChartVisibilityRevision);
+            this.RaisePropertyChanged(nameof(ChartVisibilityRevision));
+        }
+
         private DateTimeOffset m_RequestedProjectStart;
         public DateTimeOffset RequestedProjectStart
         {
@@ -1912,20 +1986,36 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void UpdateManagedActivities(IEnumerable<UpdateDependentActivityModel> updateModels)
         {
+            ArgumentNullException.ThrowIfNull(updateModels);
+            List<UpdateDependentActivityModel> updates = [.. updateModels];
+
+            // An edit of the switch that hides an activity from the charts, and of nothing else, changes no input of a
+            // compile (see ChartVisibilityEdit).
+            bool changesChartVisibility = updates.Any(x => x.IsIsHiddenFromChartsEdited);
+            bool changesOnlyChartVisibility = updates.Count > 0 && updates.All(ChartVisibilityEdit.IsOnly);
+
             try
             {
                 lock (m_Lock)
                 {
                     BeginBusy();
-                    m_PlanGraph.UpdateActivities(updateModels);
+                    m_PlanGraph.UpdateActivities(updates);
 
-                    NoteInputsChanged();
-                    IsProjectScenarioUpdated = true;
-
-                    if (AutoCompile)
+                    if (!changesOnlyChartVisibility)
                     {
-                        ReviseTrackers();
-                        RequestCompilation();
+                        NoteInputsChanged();
+                        IsProjectScenarioUpdated = true;
+
+                        if (AutoCompile)
+                        {
+                            ReviseTrackers();
+                            RequestCompilation();
+                        }
+                    }
+
+                    if (changesChartVisibility)
+                    {
+                        MarkChartVisibilityChanged();
                     }
                 }
             }

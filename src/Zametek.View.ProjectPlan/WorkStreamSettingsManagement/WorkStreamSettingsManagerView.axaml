@@ -19,6 +19,7 @@
 
 		<local:ManagedWorkStreamSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedWorkStreamSortComparer x:Key="isPhaseSortComparer" SortMemberPath="IsPhase"/>
+		<local:ManagedWorkStreamSortComparer x:Key="isHiddenFromChartsSortComparer" SortMemberPath="IsHiddenFromCharts"/>
 		<local:ManagedWorkStreamSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedWorkStreamSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 	</UserControl.Resources>
@@ -224,6 +225,37 @@
 											  OffContent="{x:Static resources:Labels.Label_No}"
 											  OnContent="{x:Static resources:Labels.Label_Yes}"
 											  IsChecked="{Binding Path=IsPhase, Mode=TwoWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource isHiddenFromChartsSortComparer}"
+										Width="85">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IsHiddenFromCharts}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsHiddenFromCharts}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<ToggleSwitch VerticalAlignment="Center"
+											  HorizontalAlignment="Center"
+											  Margin="0"
+											  Padding="3"
+											  OffContent="{x:Static resources:Labels.Label_No}"
+											  OnContent="{x:Static resources:Labels.Label_Yes}"
+											  IsChecked="{Binding Path=IsHiddenFromCharts, Mode=TwoWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

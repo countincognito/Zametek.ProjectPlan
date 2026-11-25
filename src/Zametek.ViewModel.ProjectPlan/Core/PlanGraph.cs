@@ -224,7 +224,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
                     {
-                        if (activity is IEditableObject editable)
+                        if (ChartVisibilityEdit.IsOnly(updateModel))
+                        {
+                            // The switch alone, with no edit: the commit of an edit marks the outputs as stale, and no
+                            // compile reads the switch. The core tells the charts.
+                            activity.IsEditMuted = true;
+                            activity.IsHiddenFromCharts = updateModel.IsHiddenFromCharts;
+                            activity.IsEditMuted = false;
+                        }
+                        else if (activity is IEditableObject editable)
                         {
                             activity.IsEditMuted = true;
                             editable.BeginEdit();
@@ -264,6 +272,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (updateModel.IsHasNoRiskEdited)
                             {
                                 activity.HasNoRisk = updateModel.HasNoRisk;
+                            }
+                            if (updateModel.IsIsHiddenFromChartsEdited)
+                            {
+                                activity.IsHiddenFromCharts = updateModel.IsHiddenFromCharts;
                             }
                             if (updateModel.IsOverrideColorEdited)
                             {

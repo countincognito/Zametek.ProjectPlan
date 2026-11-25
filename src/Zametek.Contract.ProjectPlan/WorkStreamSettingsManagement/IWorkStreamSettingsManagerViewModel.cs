@@ -36,6 +36,10 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand RenumberWorkStreamsCommand { get; }
 
+        // Gives the core the switch IsHiddenFromCharts of each work stream, and nothing else. It starts no compile (see
+        // ICoreViewModel.SetWorkStreamChartVisibility). A managed work stream calls it when its switch changes.
+        void UpdateChartVisibilityToCore();
+
         Task ReportErrorAsync(string message);
     }
 }

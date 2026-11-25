@@ -180,6 +180,9 @@
   <data name="ToolTip_IsExplicitTarget" xml:space="preserve">
     <value>Explicit Target</value>
   </data>
+  <data name="ToolTip_IsHiddenFromCharts" xml:space="preserve">
+    <value>Hide from the Gantt chart and the resource chart</value>
+  </data>
   <data name="ToolTip_IsInactive" xml:space="preserve">
     <value>Disabled</value>
   </data>

@@ -78,6 +78,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_IsHiddenFromCharts;
+        public bool IsHiddenFromCharts
+        {
+            get => m_IsHiddenFromCharts;
+            set
+            {
+                m_IsHiddenFromCharts = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsIsHiddenFromChartsActive;
+        public bool IsIsHiddenFromChartsActive
+        {
+            get => m_IsIsHiddenFromChartsActive;
+            set
+            {
+                m_IsIsHiddenFromChartsActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private ActivityAllocationType m_ActivityAllocationType;
         public ActivityAllocationType ActivityAllocationType
         {
@@ -257,6 +279,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 IsInactive = IsInactive,
                 IsIsInactiveEdited = IsIsInactiveActive,
+
+                IsHiddenFromCharts = IsHiddenFromCharts,
+                IsIsHiddenFromChartsEdited = IsIsHiddenFromChartsActive,
 
                 ActivityAllocationType = ActivityAllocationType,
                 IsActivityAllocationTypeEdited = IsActivityAllocationTypeActive,

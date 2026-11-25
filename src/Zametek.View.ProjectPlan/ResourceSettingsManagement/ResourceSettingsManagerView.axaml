@@ -23,6 +23,7 @@
     <local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
     <local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
     <local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
+    <local:ManagedResourceSortComparer x:Key="isHiddenFromChartsSortComparer" SortMemberPath="IsHiddenFromCharts"/>
     <local:ManagedResourceSortComparer x:Key="allocationOrderSortComparer" SortMemberPath="AllocationOrder"/>
     <local:ManagedResourceSortComparer x:Key="activityAllocationTypeSortComparer" SortMemberPath="ActivityAllocationType"/>
     <local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
@@ -365,6 +366,37 @@
 											  OffContent="{x:Static resources:Labels.Label_No}"
 											  OnContent="{x:Static resources:Labels.Label_Yes}"
 											  IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"/>
+              </Grid>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+
+        <DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource isHiddenFromChartsSortComparer}"
+										Width="90">
+          <DataGridTemplateColumn.HeaderTemplate>
+            <DataTemplate>
+              <TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IsHiddenFromCharts}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsHiddenFromCharts}"/>
+            </DataTemplate>
+          </DataGridTemplateColumn.HeaderTemplate>
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+                <ToggleSwitch VerticalAlignment="Center"
+											  HorizontalAlignment="Center"
+											  Margin="0"
+											  Padding="3"
+											  OffContent="{x:Static resources:Labels.Label_No}"
+											  OnContent="{x:Static resources:Labels.Label_Yes}"
+											  IsChecked="{Binding Path=IsHiddenFromCharts, Mode=TwoWay}"/>
               </Grid>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

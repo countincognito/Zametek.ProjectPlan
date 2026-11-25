@@ -133,6 +133,13 @@ namespace Zametek.Contract.ProjectPlan
         /// </summary>
         int CompilationOutputRevision { get; }
 
+        /// <summary>
+        /// How many times a switch that hides a part of the plan from the Gantt chart and the resource chart has changed
+        /// (IsHiddenFromCharts of an activity, a resource or a work stream), so that the two charts build again. No compile
+        /// reads the switches, and so a change of one does not compile. Observe changes only.
+        /// </summary>
+        int ChartVisibilityRevision { get; }
+
         ArrowGraphModel ArrowGraph { get; }
 
         VertexGraphModel VertexGraph { get; }
@@ -219,6 +226,18 @@ namespace Zametek.Contract.ProjectPlan
         // it publishes them: the core marks the outputs as stale and, when auto compilation is on, compiles again.
         // Call it before anything announces the edit.
         void NoteInputsChanged();
+
+        // Tells the core that the switch IsHiddenFromCharts of an activity has changed. It marks the scenario as changed,
+        // moves ChartVisibilityRevision, and starts no compile: the outputs are not stale.
+        void NoteChartVisibilityChanged();
+
+        // Sets the switch IsHiddenFromCharts of the resources that the map names, and keeps each other value of the resource
+        // settings. A change marks the scenario as changed, raises ResourceSettings, moves ChartVisibilityRevision, and
+        // starts no compile. Returns the resource settings that the core then has.
+        ResourceSettingsModel SetResourceChartVisibility(IReadOnlyDictionary<int, bool> isHiddenByResourceId);
+
+        // As SetResourceChartVisibility, for the work streams.
+        WorkStreamSettingsModel SetWorkStreamChartVisibility(IReadOnlyDictionary<int, bool> isHiddenByWorkStreamId);
 
         void RunCompile();
 

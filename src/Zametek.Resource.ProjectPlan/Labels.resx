@@ -330,6 +330,9 @@
   <data name="Label_IsExplicitTarget" xml:space="preserve">
     <value>Explicit Target</value>
   </data>
+  <data name="Label_IsHiddenFromCharts" xml:space="preserve">
+    <value>Hide</value>
+  </data>
   <data name="Label_IsInactive" xml:space="preserve">
     <value>Disabled</value>
   </data>

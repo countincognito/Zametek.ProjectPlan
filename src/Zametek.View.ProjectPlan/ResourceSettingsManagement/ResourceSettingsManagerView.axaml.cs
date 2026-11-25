@@ -21,6 +21,7 @@ namespace Zametek.View.ProjectPlan
             (Resource.ProjectPlan.Labels.Label_ResourceName, static x => x.Name),
             (Resource.ProjectPlan.Labels.Label_IsExplicitTarget, static x => x.IsExplicitTarget),
             (Resource.ProjectPlan.Labels.Label_IsInactive, static x => x.IsInactive),
+            (Resource.ProjectPlan.Labels.Label_IsHiddenFromCharts, static x => x.IsHiddenFromCharts),
             (Resource.ProjectPlan.Labels.Label_AllocationOrder, static x => x.AllocationOrder),
             (Resource.ProjectPlan.Labels.Label_ActivityAllocationType, static x => x.ActivityAllocationType),
             (Resource.ProjectPlan.Labels.Label_InterActivityAllocationType, static x => x.InterActivityAllocationType),

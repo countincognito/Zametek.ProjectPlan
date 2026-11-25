@@ -50,6 +50,10 @@ namespace Zametek.Contract.ProjectPlan
         // activities. Never observed from here - see the note on the call site.
         void SetWorkStreamSettings(WorkStreamSettingsModel workStreamSettings);
 
+        // Gives the core the switch IsHiddenFromCharts of each resource, and nothing else. It starts no compile (see
+        // ICoreViewModel.SetResourceChartVisibility). A managed resource calls it when its switch changes.
+        void UpdateChartVisibilityToCore();
+
         Task ReportErrorAsync(string message);
     }
 }

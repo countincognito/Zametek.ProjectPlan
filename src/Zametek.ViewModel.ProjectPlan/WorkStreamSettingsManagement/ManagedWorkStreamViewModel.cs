@@ -61,11 +61,25 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // Not an edit (BeginEdit and EndEdit): an edit gives the core each setting, which compiles, and no compile reads the
+        // switch. A muted change (the dialog of the work streams) leaves the push to the manager.
         private bool m_IsHiddenFromCharts;
         public bool IsHiddenFromCharts
         {
             get => m_IsHiddenFromCharts;
-            set => this.RaiseAndSetIfChanged(ref m_IsHiddenFromCharts, value);
+            set
+            {
+                if (m_IsHiddenFromCharts == value)
+                {
+                    return;
+                }
+                this.RaiseAndSetIfChanged(ref m_IsHiddenFromCharts, value);
+
+                if (!IsEditMuted)
+                {
+                    m_WorkStreamSettingsManagerViewModel.UpdateChartVisibilityToCore();
+                }
+            }
         }
 
         private int m_DisplayOrder;

@@ -300,6 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 var editViewModel = new ResourceEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
+                bool isOnlyChartVisibility = false;
 
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Titles.Title_EditResources,
@@ -326,8 +327,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     IEnumerable<UpdateResourceModel> updateModels = [.. resourceIds.Select(x => updateModel with { Id = x })];
 
                     UpdateManagedResources(updateModels);
+                    isOnlyChartVisibility = ChartVisibilityEdit.IsOnly(updateModel);
                 }
-                UpdateResourceSettingsToCore();
+
+                // The switch that hides a resource from the charts, and nothing else, needs no compile.
+                if (isOnlyChartVisibility)
+                {
+                    UpdateChartVisibilityToCore();
+                }
+                else
+                {
+                    UpdateResourceSettingsToCore();
+                }
             }
             catch (Exception ex)
             {
@@ -409,6 +420,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (updateModel.IsIsInactiveEdited)
                             {
                                 resource.IsInactive = updateModel.IsInactive;
+                            }
+                            if (updateModel.IsIsHiddenFromChartsEdited)
+                            {
+                                resource.IsHiddenFromCharts = updateModel.IsHiddenFromCharts;
                             }
                             if (updateModel.IsActivityAllocationTypeEdited)
                             {
@@ -695,6 +710,18 @@ namespace Zametek.ViewModel.ProjectPlan
             foreach (IManagedResourceViewModel resource in resources)
             {
                 resource.SetWorkStreamSettings(workStreamSettings);
+            }
+        }
+
+        public void UpdateChartVisibilityToCore()
+        {
+            lock (m_Lock)
+            {
+                Dictionary<int, bool> isHiddenByResourceId = RawResources.ToDictionary(x => x.Id, x => x.IsHiddenFromCharts);
+
+                // The settings that the core then has. Its raise of ResourceSettings comes back to this manager, and the
+                // guard there sees its own settings and does not build the grid again (see StartSubscriptions).
+                m_Current = m_CoreViewModel.SetResourceChartVisibility(isHiddenByResourceId);
             }
         }
 

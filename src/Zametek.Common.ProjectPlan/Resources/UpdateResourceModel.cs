@@ -19,6 +19,9 @@ namespace Zametek.Common.ProjectPlan
         public bool IsInactive { get; init; }
         public bool IsIsInactiveEdited { get; init; } = false;
 
+        public bool IsHiddenFromCharts { get; init; }
+        public bool IsIsHiddenFromChartsEdited { get; init; } = false;
+
         public ActivityAllocationType ActivityAllocationType { get; init; }
         public bool IsActivityAllocationTypeEdited { get; init; } = false;
 

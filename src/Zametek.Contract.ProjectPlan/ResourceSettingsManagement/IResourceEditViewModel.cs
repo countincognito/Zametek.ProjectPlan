@@ -12,6 +12,9 @@ namespace Zametek.Contract.ProjectPlan
         bool IsInactive { get; set; }
         bool IsIsInactiveActive { get; set; }
 
+        bool IsHiddenFromCharts { get; set; }
+        bool IsIsHiddenFromChartsActive { get; set; }
+
         ActivityAllocationType ActivityAllocationType { get; set; }
         bool IsActivityAllocationTypeActive { get; set; }
 

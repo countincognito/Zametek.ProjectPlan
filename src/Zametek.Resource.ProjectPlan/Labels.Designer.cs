@@ -1141,6 +1141,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hide.
+        /// </summary>
+        public static string Label_IsHiddenFromCharts {
+            get {
+                return ResourceManager.GetString("Label_IsHiddenFromCharts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disabled.
         /// </summary>
         public static string Label_IsInactive {

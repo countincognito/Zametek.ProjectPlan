@@ -42,6 +42,7 @@
       <RowDefinition Height="36"/>
       <RowDefinition Height="36"/>
       <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
     </Grid.RowDefinitions>
 
     <Label Grid.Row="0" Grid.Column="0"
@@ -239,7 +240,7 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_TargetResourceOperator}"/>
+			   Content="{x:Static resources:Labels.Label_IsHiddenFromCharts}"/>
 
     <ToggleSwitch Grid.Row="6" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -248,9 +249,37 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsIsHiddenFromChartsActive, Mode=TwoWay}"/>
+
+    <ToggleSwitch Grid.Row="6" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsHiddenFromCharts, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsIsHiddenFromChartsActive, Mode=OneWay}"/>
+
+
+
+    <Label Grid.Row="7" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_TargetResourceOperator}"/>
+
+    <ToggleSwitch Grid.Row="7" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsTargetResourceOperatorActive, Mode=TwoWay}"/>
 
-    <ComboBox Grid.Row="6" Grid.Column="2"
+    <ComboBox Grid.Row="7" Grid.Column="2"
 				  Margin="3"
 				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 				  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
@@ -273,14 +302,14 @@
 
 
 
-    <Label Grid.Row="7" Grid.Column="0"
+    <Label Grid.Row="8" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_OverrideColor}"/>
 
-    <ToggleSwitch Grid.Row="7" Grid.Column="1"
+    <ToggleSwitch Grid.Row="8" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -289,7 +318,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsOverrideColorActive, Mode=TwoWay}"/>
 
-    <ToggleSwitch Grid.Row="7" Grid.Column="2"
+    <ToggleSwitch Grid.Row="8" Grid.Column="2"
 					  Margin="3"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
@@ -301,14 +330,14 @@
 
 
 
-    <Label Grid.Row="8" Grid.Column="0"
+    <Label Grid.Row="9" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_ColorFormat}"/>
 
-    <ToggleSwitch Grid.Row="8" Grid.Column="1"
+    <ToggleSwitch Grid.Row="9" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -317,7 +346,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsColorFormatActive, Mode=TwoWay}"/>
 
-    <ColorPicker Grid.Row="8" Grid.Column="2"
+    <ColorPicker Grid.Row="9" Grid.Column="2"
 				 Cursor="Hand"
 				 IsEnabled="{Binding Path=IsColorFormatActive, Mode=OneWay}"
 				 Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}, UpdateSourceTrigger=LostFocus}"

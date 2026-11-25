@@ -50,6 +50,7 @@ namespace Zametek.View.ProjectPlan
             (Resource.ProjectPlan.Labels.Label_HasNoBilling, static x => x.HasNoBilling),
             (Resource.ProjectPlan.Labels.Label_HasNoEffort, static x => x.HasNoEffort),
             (Resource.ProjectPlan.Labels.Label_HasNoRisk, static x => x.HasNoRisk),
+            (Resource.ProjectPlan.Labels.Label_IsHiddenFromCharts, static x => x.IsHiddenFromCharts),
             (Resource.ProjectPlan.Labels.Label_OverrideColor, static x => x.OverrideColor),
             (Resource.ProjectPlan.Labels.Label_ColorFormat, static x => x.ColorFormat),
             (Resource.ProjectPlan.Labels.Label_TargetResourceOperator, static x => x.TargetResourceOperator),

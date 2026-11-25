@@ -208,6 +208,7 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 var editViewModel = new WorkStreamEditViewModel();
+                bool isOnlyChartVisibility = false;
 
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Titles.Title_EditWorkStreams,
@@ -234,9 +235,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     IEnumerable<UpdateWorkStreamModel> updateModels = [.. workStreamIds.Select(x => updateModel with { Id = x })];
 
                     UpdateManagedWorkStreams(updateModels);
+                    isOnlyChartVisibility = ChartVisibilityEdit.IsOnly(updateModel);
                 }
 
-                UpdateWorkStreamSettingsToCore();
+                // The switch that hides a work stream from the charts, and nothing else, needs no compile.
+                if (isOnlyChartVisibility)
+                {
+                    UpdateChartVisibilityToCore();
+                }
+                else
+                {
+                    UpdateWorkStreamSettingsToCore();
+                }
             }
             catch (Exception ex)
             {
@@ -349,6 +359,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (updateModel.IsIsPhaseEdited)
                             {
                                 workStream.IsPhase = updateModel.IsPhase;
+                            }
+                            if (updateModel.IsIsHiddenFromChartsEdited)
+                            {
+                                workStream.IsHiddenFromCharts = updateModel.IsHiddenFromCharts;
                             }
                             if (updateModel.IsColorFormatActive)
                             {
@@ -536,6 +550,19 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand EditManagedWorkStreamsCommand { get; }
 
         public ICommand RenumberWorkStreamsCommand { get; }
+
+        public void UpdateChartVisibilityToCore()
+        {
+            lock (m_Lock)
+            {
+                Dictionary<int, bool> isHiddenByWorkStreamId = RawWorkStreams.ToDictionary(x => x.Id, x => x.IsHiddenFromCharts);
+
+                // The settings that the core then has. Its raise of WorkStreamSettings comes back to this manager, and the
+                // guard there sees its own settings and does not build the grid again (see StartSubscriptions). The
+                // resources need not hear of it: the work streams that they can have as phases are the same.
+                m_Current = m_CoreViewModel.SetWorkStreamChartVisibility(isHiddenByWorkStreamId);
+            }
+        }
 
         public Task ReportErrorAsync(string message)
         {

@@ -806,16 +806,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // Not an edit (BeginEdit and EndEdit): the commit of an edit marks the outputs as stale and compiles, and no compile
+        // reads the switch. The core marks the scenario as changed and tells the two charts. A muted change (the dialog of
+        // the activities) leaves that to the core.
         public bool IsHiddenFromCharts
         {
             get => DependentActivity.IsHiddenFromCharts;
             set
             {
+                if (DependentActivity.IsHiddenFromCharts == value)
+                {
+                    return;
+                }
                 lock (m_DataLock)
                 {
                     DependentActivity.IsHiddenFromCharts = value;
                 }
                 this.RaisePropertyChanged();
+
+                if (!IsEditMuted)
+                {
+                    m_CoreViewModel.NoteChartVisibilityChanged();
+                }
             }
         }
 

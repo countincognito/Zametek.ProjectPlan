@@ -160,6 +160,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_IsHiddenFromCharts;
+        public bool IsHiddenFromCharts
+        {
+            get => m_IsHiddenFromCharts;
+            set
+            {
+                m_IsHiddenFromCharts = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsIsHiddenFromChartsActive;
+        public bool IsIsHiddenFromChartsActive
+        {
+            get => m_IsIsHiddenFromChartsActive;
+            set
+            {
+                m_IsIsHiddenFromChartsActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private LogicalOperator m_TargetResourceOperator;
         public LogicalOperator TargetResourceOperator
         {
@@ -251,6 +273,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 HasNoRisk = HasNoRisk,
                 IsHasNoRiskEdited = IsHasNoRiskActive,
+
+                IsHiddenFromCharts = IsHiddenFromCharts,
+                IsIsHiddenFromChartsEdited = IsIsHiddenFromChartsActive,
 
                 TargetResourceOperator = TargetResourceOperator,
                 IsTargetResourceOperatorEdited = IsTargetResourceOperatorActive,

@@ -34,6 +34,9 @@ namespace Zametek.Common.ProjectPlan
         public bool HasNoRisk { get; init; } = default;
         public bool IsHasNoRiskEdited { get; init; } = false;
 
+        public bool IsHiddenFromCharts { get; init; } = default;
+        public bool IsIsHiddenFromChartsEdited { get; init; } = false;
+
         public bool OverrideColor { get; init; } = default;
         public bool IsOverrideColorEdited { get; init; } = false;
 

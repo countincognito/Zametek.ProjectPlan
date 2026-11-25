@@ -44,6 +44,7 @@
       <RowDefinition Height="36"/>
       <RowDefinition Height="36"/>
       <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
     </Grid.RowDefinitions>
 
     <Label Grid.Row="0" Grid.Column="0"
@@ -107,7 +108,7 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_ActivityAllocationType}"/>
+			   Content="{x:Static resources:Labels.Label_IsHiddenFromCharts}"/>
 
     <ToggleSwitch Grid.Row="2" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -116,9 +117,37 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsIsHiddenFromChartsActive, Mode=TwoWay}"/>
+
+    <ToggleSwitch Grid.Row="2" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsHiddenFromCharts, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsIsHiddenFromChartsActive, Mode=OneWay}"/>
+
+    
+
+    <Label Grid.Row="3" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_ActivityAllocationType}"/>
+
+    <ToggleSwitch Grid.Row="3" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsActivityAllocationTypeActive, Mode=TwoWay}"/>
 
-    <ComboBox Grid.Row="2" Grid.Column="2"
+    <ComboBox Grid.Row="3" Grid.Column="2"
 				  Margin="3"
 				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ActivityAllocationType}}}"
 				  SelectedItem="{Binding Path=ActivityAllocationType, Mode=TwoWay}"
@@ -141,14 +170,14 @@
 
 
 
-    <Label Grid.Row="3" Grid.Column="0"
+    <Label Grid.Row="4" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_InterActivityAllocationType}"/>
 
-    <ToggleSwitch Grid.Row="3" Grid.Column="1"
+    <ToggleSwitch Grid.Row="4" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -157,7 +186,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsInterActivityAllocationTypeActive, Mode=TwoWay}"/>
 
-    <ComboBox Grid.Row="3" Grid.Column="2"
+    <ComboBox Grid.Row="4" Grid.Column="2"
 				  Margin="3"
 				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
 				  SelectedItem="{Binding Path=InterActivityAllocationType, Mode=TwoWay}"
@@ -180,14 +209,14 @@
 
 
 
-    <Label Grid.Row="4" Grid.Column="0"
+    <Label Grid.Row="5" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_InterActivityPhases}"/>
 
-    <ToggleSwitch Grid.Row="4" Grid.Column="1"
+    <ToggleSwitch Grid.Row="5" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -196,7 +225,7 @@
 					  OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsWorkStreamSelectorActive, Mode=TwoWay}"/>
 
-    <u:MultiComboBox Grid.Row="4" Grid.Column="2"
+    <u:MultiComboBox Grid.Row="5" Grid.Column="2"
 						 Margin="3"
 						 MaxHeight="200"
 						 Width="{x:Static sys:Double.NaN}"
@@ -219,40 +248,12 @@
 
 
 
-    <Label Grid.Row="5" Grid.Column="0"
-			   VerticalAlignment="Center"
-			   HorizontalAlignment="Right"
-			   Margin="0"
-			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_UnitCost}"/>
-
-    <ToggleSwitch Grid.Row="5" Grid.Column="1"
-					  VerticalAlignment="Center"
-					  HorizontalAlignment="Center"
-					  Margin="0"
-				      Padding="3"
-				      OffContent="{x:Static resources:Labels.Label_Off}"
-				      OnContent="{x:Static resources:Labels.Label_On}"
-					  IsChecked="{Binding Path=IsUnitCostActive, Mode=TwoWay}"/>
-
-    <u:NumericDoubleUpDown Grid.Row="5" Grid.Column="2"
-							   IsEnabled="{Binding Path=IsUnitCostActive, Mode=OneWay}"
-							   Value="{Binding Path=UnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-							   VerticalAlignment="Center"
-							   ShowButtonSpinner="False"
-							   Focusable="True"
-							   Margin="3"
-							   Padding="0"
-							   Minimum="0"/>
-
-
-
     <Label Grid.Row="6" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_UnitBilling}"/>
+			   Content="{x:Static resources:Labels.Label_UnitCost}"/>
 
     <ToggleSwitch Grid.Row="6" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -261,11 +262,11 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
-					  IsChecked="{Binding Path=IsUnitBillingActive, Mode=TwoWay}"/>
+					  IsChecked="{Binding Path=IsUnitCostActive, Mode=TwoWay}"/>
 
     <u:NumericDoubleUpDown Grid.Row="6" Grid.Column="2"
-							   IsEnabled="{Binding Path=IsUnitBillingActive, Mode=OneWay}"
-							   Value="{Binding Path=UnitBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							   IsEnabled="{Binding Path=IsUnitCostActive, Mode=OneWay}"
+							   Value="{Binding Path=UnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 							   VerticalAlignment="Center"
 							   ShowButtonSpinner="False"
 							   Focusable="True"
@@ -280,7 +281,7 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_FixedCost}"/>
+			   Content="{x:Static resources:Labels.Label_UnitBilling}"/>
 
     <ToggleSwitch Grid.Row="7" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -289,11 +290,11 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
-					  IsChecked="{Binding Path=IsFixedCostActive, Mode=TwoWay}"/>
+					  IsChecked="{Binding Path=IsUnitBillingActive, Mode=TwoWay}"/>
 
     <u:NumericDoubleUpDown Grid.Row="7" Grid.Column="2"
-							   IsEnabled="{Binding Path=IsFixedCostActive, Mode=OneWay}"
-							   Value="{Binding Path=FixedCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							   IsEnabled="{Binding Path=IsUnitBillingActive, Mode=OneWay}"
+							   Value="{Binding Path=UnitBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 							   VerticalAlignment="Center"
 							   ShowButtonSpinner="False"
 							   Focusable="True"
@@ -308,7 +309,7 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_FixedBilling}"/>
+			   Content="{x:Static resources:Labels.Label_FixedCost}"/>
 
     <ToggleSwitch Grid.Row="8" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -317,11 +318,11 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
-					  IsChecked="{Binding Path=IsFixedBillingActive, Mode=TwoWay}"/>
+					  IsChecked="{Binding Path=IsFixedCostActive, Mode=TwoWay}"/>
 
     <u:NumericDoubleUpDown Grid.Row="8" Grid.Column="2"
-							   IsEnabled="{Binding Path=IsFixedBillingActive, Mode=OneWay}"
-							   Value="{Binding Path=FixedBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							   IsEnabled="{Binding Path=IsFixedCostActive, Mode=OneWay}"
+							   Value="{Binding Path=FixedCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 							   VerticalAlignment="Center"
 							   ShowButtonSpinner="False"
 							   Focusable="True"
@@ -336,7 +337,7 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_ColorFormat}"/>
+			   Content="{x:Static resources:Labels.Label_FixedBilling}"/>
 
     <ToggleSwitch Grid.Row="9" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -345,9 +346,37 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsFixedBillingActive, Mode=TwoWay}"/>
+
+    <u:NumericDoubleUpDown Grid.Row="9" Grid.Column="2"
+							   IsEnabled="{Binding Path=IsFixedBillingActive, Mode=OneWay}"
+							   Value="{Binding Path=FixedBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							   VerticalAlignment="Center"
+							   ShowButtonSpinner="False"
+							   Focusable="True"
+							   Margin="3"
+							   Padding="0"
+							   Minimum="0"/>
+
+
+
+    <Label Grid.Row="10" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_ColorFormat}"/>
+
+    <ToggleSwitch Grid.Row="10" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsColorFormatActive, Mode=TwoWay}"/>
 
-    <ColorPicker Grid.Row="9" Grid.Column="2"
+    <ColorPicker Grid.Row="10" Grid.Column="2"
 					 Cursor="Hand"
 					 IsEnabled="{Binding Path=IsColorFormatActive, Mode=OneWay}"
 					 Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}, UpdateSourceTrigger=LostFocus}"

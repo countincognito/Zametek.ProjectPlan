@@ -40,6 +40,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_IsHiddenFromCharts;
+        public bool IsHiddenFromCharts
+        {
+            get => m_IsHiddenFromCharts;
+            set
+            {
+                m_IsHiddenFromCharts = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsIsHiddenFromChartsActive;
+        public bool IsIsHiddenFromChartsActive
+        {
+            get => m_IsIsHiddenFromChartsActive;
+            set
+            {
+                m_IsIsHiddenFromChartsActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private ColorFormatModel m_ColorFormat;
         public ColorFormatModel ColorFormat
         {
@@ -68,6 +90,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 IsPhase = IsPhase,
                 IsIsPhaseEdited = IsIsPhaseActive,
+
+                IsHiddenFromCharts = IsHiddenFromCharts,
+                IsIsHiddenFromChartsEdited = IsIsHiddenFromChartsActive,
 
                 ColorFormat = ColorFormat,
                 IsColorFormatActive = IsColorFormatActive,
