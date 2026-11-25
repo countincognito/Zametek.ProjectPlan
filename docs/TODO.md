@@ -2,14 +2,21 @@
 
 This file lists the maintainer-internal engineering intents that must version with the source code. GitHub issues take the bugs and the feature requests of users. Items that stay valid after the spin-out of Zametek.Graphs.Avalonia belong in [src/Zametek.Graphs.Avalonia/TODO.md](../src/Zametek.Graphs.Avalonia/TODO.md). Put a date on each entry when you add it. Delete the entry when you complete the work.
 
-- [ ] **Do four checks for the release of 0.11.0-beta.3** *(2026-11-23, do with the release of 0.11.0-beta.3)*
+- [ ] **Do five checks for the release of 0.11.0-beta.3** *(2026-11-23, do with the release of 0.11.0-beta.3, changed 2026-11-25)*
 
-  0.11.0-beta.3 has changes that the tests and the hook cannot show. Do the first three checks before the tag, and the last check after it. Then delete this entry.
+  0.11.0-beta.3 has changes that the tests and the hook cannot show. Do the first four checks before the tag, and the last check after it. Then delete this entry.
 
   1. **The reports about security.** `SECURITY.md` sends a person to the button "Report a vulnerability" on the page "Advisories". GitHub shows that button only when the private vulnerability reporting of the repository is on. Turn it on in the settings of the repository before `SECURITY.md` is on `master`. Nobody looked at the page.
   2. **A lost pointer capture.** A test covers the drag of a node only (`GraphNodeDragBehaviorTests`). Nobody did a drag in the built application. Start the drag that changes a duration in the Gantt chart, and press Alt+Tab. The bar must go back, and the plan must not change. Do the same for a drag of a node and for a pan of a graph.
   3. **Two texts of the desktop.** Nobody saw two texts in the built application. The first is the message for a file with a holiday rule that the application refuses. The second is the line about the notices in the dialog "About".
-  4. **The release workflow.** The tag is the first run of the new `release.yml`. After the run, make sure that the release is public and a pre-release. Make sure that it has each archive and `SHA256SUMS.txt`, and that the checksum of one download agrees. For a run that fails, refer to the entry "Let the release workflow check CI, and decide on provenance and signatures".
+  4. **The switches that hide parts of the plan.** Nobody used them in the built application. Set "Hide" in the grids of the activities, the resources and the work streams, and in each edit dialog. The Gantt chart and the resource chart must then show no hidden part, and nothing must compile or become stale. Then set "Show Hidden" in the menu of each chart.
+  5. **The release workflow.** The tag is the first run of the new `release.yml`. After the run, make sure that the release is public and a pre-release. Make sure that it has each archive and `SHA256SUMS.txt`, and that the checksum of one download agrees. For a run that fails, refer to the entry "Let the release workflow check CI, and decide on provenance and signatures".
+
+- [ ] **Say on a chart that it does not show hidden parts** *(2026-11-25, from the review of the branch)*
+
+  Since 0.11.0-beta.3, a plan can hide an activity, a resource or a work stream from the Gantt chart and the resource chart (`IsHiddenFromCharts`). A chart that does not show a part does not say so. Thus, the resource chart can then give a smaller headcount than the metrics, and an exported or copied image does not tell its reader. The user decided to add a note "filtered" after 0.11.0-beta.3.
+
+  Show the note on the chart and in its image when the chart does not show a part. Show no note when the chart shows all the parts, or when "Show Hidden" is on.
 
 - [ ] **Read a project file one time** *(2026-11-23, from the review of `src`, `test` and `pkg`)*
 

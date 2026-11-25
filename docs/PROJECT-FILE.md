@@ -85,6 +85,22 @@ The file holds the result of the last compile. `zpp` calculates these values aga
 
 `zpp` compiles only the scenario that it loads, and the tracked scenarios when you ask it to. The scenario chart shows the metrics that the file holds for each other tracked scenario. Thus, a program that changes a scenario and does not compile it leaves its metrics stale. `zpp --compile-tracked` and `compileTracked` in the API compile each tracked scenario again.
 
+## The parts that the charts do not show
+
+An activity, a resource and a work stream can each have `IsHiddenFromCharts`. When it is `true`, the Gantt chart and the resource chart do not show that part. The switch changes no schedule, no metric and no other output, and a compile does not read it. Its default is `false`, and a file of a version before `v0.6.2` has no such member.
+
+The two charts hide an activity when one of these is true:
+
+- Its own `IsHiddenFromCharts` is `true`.
+- It has one or more `TargetWorkStreams`, and `IsHiddenFromCharts` is `true` for each of these work streams.
+- The schedule put it on one or more resources, and `IsHiddenFromCharts` is `true` for each of these resources. These are the resources of the schedule of the compile, and not the `TargetResources`.
+
+A work stream never hides an activity with no work stream. A resource never hides an activity on a spare resource with no id. The schedule uses spare resources when the plan has no resources, and the resource chart names them "Resource 1", "Resource 2" and so on.
+
+`GanttChartShowHidden` and `ResourceChartShowHidden` in the `DisplaySettings` of a scenario make each chart show all the parts. `zpp` has no option for them, as for the other settings of a chart. The file gives them, and the images of `zpp` and `zpp serve` follow them.
+
+The export of a workbook has the column `IsHiddenFromCharts` on the sheets "Activities", "Resources" and "Work Streams". An import of a workbook with no such column hides nothing. The workbook has no column for `GanttChartShowHidden` and `ResourceChartShowHidden`, because it holds no other setting of a chart.
+
 ## Times and constraints
 
 - A time of an activity is a number of working days from the effective start. The effective start is the first working day on `ProjectStart` or after it. Day 0 is the effective start, and day n is the nth working day after it. The calendar of the scenario gives the working days (refer to [The calendar](#the-calendar)).

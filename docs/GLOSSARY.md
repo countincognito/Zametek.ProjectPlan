@@ -45,6 +45,7 @@ The documentation follows the writing rules of [ASD-STE100 Simplified Technical 
 | simulation result | The statistics, the percentiles, the histogram, the critical paths and the criticalities of the last run of a simulation. The project file holds it, but it does not hold the iterations. |
 | critical path (of an iteration) | A chain of critical activities in which each activity starts when the one before it finishes. The chain has only the activities that take time. A link is a dependency of the plan, or a resource link. When several chains have the same length, the iteration has several critical paths. |
 | chart | A plot of data, for example the Gantt chart, the earned value chart, the resource chart or the scenario chart. |
+| hidden part | An activity, a resource or a work stream that the Gantt chart and the resource chart do not show (`IsHiddenFromCharts`). It changes no schedule, no metric and no other output. The switch "Show Hidden" of a chart shows the hidden parts again. |
 | graph | A diagram of the activities and their dependencies. The arrow graph is activity-on-arrow. The vertex graph is activity-on-vertex. |
 
 ## Terms for the software
