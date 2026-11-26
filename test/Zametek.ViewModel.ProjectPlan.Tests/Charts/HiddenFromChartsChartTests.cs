@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -193,6 +194,117 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             harness.Core.CompilationOutputRevision.ShouldBe(compilations, "no switch compiles");
         }
 
+        [Fact]
+        public void Charts_Given_TheSwitchOfAResourceAndAnotherFieldInTheEditDialog_Then_EachChartBuildsAgainWithNoCompile()
+        {
+            // The dialog sets the switch of resource 1 and its unit cost, an input of a compile. Auto compile is off, as in
+            // each harness. Activities 1, 3 and 6 are on resource 1 and on no shown resource, and so no bar stays. Resources
+            // 2 and 3 are hidden already, and so only resource 4 stays in the resource chart.
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = new();
+            var dialogs = new EditDialogService(context =>
+            {
+                var edit = (ResourceEditViewModel)context;
+                edit.IsHiddenFromCharts = true;
+                edit.IsIsHiddenFromChartsActive = true;
+                edit.UnitCost = 5.0;
+                edit.IsUnitCostActive = true;
+            });
+            using ResourceSettingsManagerViewModel resources = harness.MakeResourceSettingsManager(dialogs);
+            harness.Gantt.StartSubscriptions();
+            harness.ResourceChart.StartSubscriptions();
+            SequencerScopes.Drain(main, pool);
+            BarIds(harness.Gantt.GanttChartPlotModel).ShouldBe(s_Shown, "precondition");
+            Legend(harness.ResourceChart.ResourceChartPlotModel).ShouldBe([@"Resource 1", @"Resource 4"], "precondition");
+            int compilations = harness.Core.CompilationOutputRevision;
+
+            Select(resources.SetSelectedManagedResourcesCommand, resources.RawResources.Single(x => x.Id == 1));
+            resources.EditManagedResourcesCommand.Execute(null);
+            SequencerScopes.Drain(main, pool);
+
+            dialogs.Errors.ShouldBeEmpty();
+            harness.Core.ResourceSettings.Resources.Single(x => x.Id == 1).IsHiddenFromCharts.ShouldBeTrue();
+            harness.Core.ResourceSettings.Resources.Single(x => x.Id == 1).UnitCost.ShouldBe(5.0);
+            BarIds(harness.Gantt.GanttChartPlotModel).ShouldBeEmpty();
+            Legend(harness.ResourceChart.ResourceChartPlotModel).ShouldBe([@"Resource 4"]);
+            harness.Core.HasStaleOutputs.ShouldBeTrue("the unit cost is an input of a compile");
+            harness.Core.CompilationOutputRevision.ShouldBe(compilations, "auto compile is off");
+        }
+
+        [Fact]
+        public void Charts_Given_TheSwitchOfAWorkStreamAndAnotherFieldInTheEditDialog_Then_EachChartBuildsAgainWithNoCompile()
+        {
+            // The dialog sets the switch of work stream AA and makes it a phase, an input of a compile. Auto compile is off,
+            // as in each harness. Activity 1 is in AA and BB, and BB is hidden already, and so activity 1 goes: its bar, and
+            // its 2 days in the series of resource 1. In the style Block, a series has two points of 1 for each day.
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = new();
+            var dialogs = new EditDialogService(context =>
+            {
+                var edit = (WorkStreamEditViewModel)context;
+                edit.IsHiddenFromCharts = true;
+                edit.IsIsHiddenFromChartsActive = true;
+                edit.IsPhase = true;
+                edit.IsIsPhaseActive = true;
+            });
+            using ResourceSettingsManagerViewModel resources = harness.MakeResourceSettingsManager(dialogs);
+            using WorkStreamSettingsManagerViewModel workStreams = harness.MakeWorkStreamSettingsManager(resources, dialogs);
+            harness.Core.DisplaySettingsViewModel.ResourceChartDisplayStyle = DisplayStyle.Block;
+            harness.Core.DisplaySettingsViewModel.ResourceChartScheduleMode = ScheduleMode.Scheduled;
+            harness.Gantt.StartSubscriptions();
+            harness.ResourceChart.StartSubscriptions();
+            SequencerScopes.Drain(main, pool);
+            BarIds(harness.Gantt.GanttChartPlotModel).ShouldBe(s_Shown, "precondition");
+            double before = DaysOf(harness.ResourceChart.ResourceChartPlotModel, @"Resource 1");
+            int compilations = harness.Core.CompilationOutputRevision;
+
+            Select(workStreams.SetSelectedManagedWorkStreamsCommand, workStreams.RawWorkStreams.Single(x => x.Id == c_AA));
+            workStreams.EditManagedWorkStreamsCommand.Execute(null);
+            SequencerScopes.Drain(main, pool);
+
+            dialogs.Errors.ShouldBeEmpty();
+            harness.Core.WorkStreamSettings.WorkStreams.Single(x => x.Id == c_AA).IsHiddenFromCharts.ShouldBeTrue();
+            harness.Core.WorkStreamSettings.WorkStreams.Single(x => x.Id == c_AA).IsPhase.ShouldBeTrue();
+            BarIds(harness.Gantt.GanttChartPlotModel).ShouldBe([3, 6]);
+            (before - DaysOf(harness.ResourceChart.ResourceChartPlotModel, @"Resource 1")).ShouldBe(2.0 * 2);
+            harness.Core.HasStaleOutputs.ShouldBeTrue("a phase is an input of a compile");
+            harness.Core.CompilationOutputRevision.ShouldBe(compilations, "auto compile is off");
+        }
+
+        [Fact]
+        public void ResourceChart_Given_ItsSubscriptionsStart_Then_ItBuildsOnce()
+        {
+            // The switches come in a second stream, merged with the first, and each stream gives a first value.
+            using var main = new MainThreadSequencerScope();
+            using var pool = new TaskpoolSequencerScope();
+            using Harness harness = new();
+            int builds = 0;
+            harness.ResourceChart.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ResourceChartManagerViewModel.ResourceChartPlotModel))
+                {
+                    builds++;
+                }
+            };
+
+            harness.ResourceChart.StartSubscriptions();
+            SequencerScopes.Drain(main, pool);
+
+            builds.ShouldBe(1);
+        }
+
+        // As the grid does, when the user selects the item.
+        private static void Select(System.Windows.Input.ICommand setSelected, object item) =>
+            setSelected.Execute(new Avalonia.Controls.SelectionChangedEventArgs(
+                Avalonia.Controls.Primitives.SelectingItemsControl.SelectionChangedEvent,
+                Array.Empty<object>(),
+                new[] { item }));
+
+        private static double DaysOf(Plot plot, string resourceName) =>
+            plot.GetPlottables<Scatter>().Single(x => x.LegendText == resourceName).Data.GetScatterPoints().Sum(x => x.Y);
+
         private static int[] BarIds(Plot plot) =>
             [.. plot.GetPlottables<BarPlot>().SelectMany(x => x.Bars).OfType<AnnotatedBar>().Select(x => x.ActivityId).Distinct().Order()];
 
@@ -208,6 +320,54 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 x.ResourceSchedule.EffortAllocation,
                 x.ResourceSchedule.ActivityAllocation,
             }).Select(x => x.ToList())];
+
+        // An edit dialog that the user fills and closes with OK. An error that a manager shows is kept for the test.
+        private sealed class EditDialogService(Action<object> fill)
+            : IDialogService
+        {
+            public List<string> Errors { get; } = [];
+
+            public object Parent { set { } }
+
+            public Task<bool> ShowContextAsync(string title, string header, string message, object context)
+            {
+                fill(context);
+                return Task.FromResult(true);
+            }
+
+            public Task<bool> ShowContextAsync(string title, string header, string message, object context, double height, double width) =>
+                ShowContextAsync(title, header, message, context);
+
+            public Task ShowErrorAsync(string title, string header, string message)
+            {
+                Errors.Add(message);
+                return Task.CompletedTask;
+            }
+
+            public Task ShowNotificationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowWarningAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowInfoAsync(string title, string header, string message, bool showMainPageLink = false) =>
+                throw new NotSupportedException(message);
+
+            public Task ShowInfoAsync(string title, string header, string message, double height, double width, bool showMainPageLink = false) =>
+                throw new NotSupportedException(message);
+
+            public Task<bool> ShowConfirmationAsync(string title, string header, string message) =>
+                throw new NotSupportedException(message);
+
+            public Task<int> ShowChoiceAsync(string title, string header, string message, IReadOnlyList<string> choices) =>
+                throw new NotSupportedException(message);
+
+            public Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters) =>
+                throw new NotSupportedException();
+
+            public Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters) =>
+                throw new NotSupportedException();
+        }
 
         private sealed class Harness
             : IDisposable
@@ -241,6 +401,24 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             public GanttChartManagerViewModel Gantt { get; }
 
             public ResourceChartManagerViewModel ResourceChart { get; }
+
+            // The manager of the resources, started, as the application makes it.
+            public ResourceSettingsManagerViewModel MakeResourceSettingsManager(IDialogService dialogService)
+            {
+                var manager = new ResourceSettingsManagerViewModel(Core, CoreViewModelFixture.CreateSettingService(), dialogService);
+                manager.StartSubscriptions();
+                return manager;
+            }
+
+            // The manager of the work streams, started, as the application makes it.
+            public WorkStreamSettingsManagerViewModel MakeWorkStreamSettingsManager(
+                ResourceSettingsManagerViewModel resourceSettingsManager,
+                IDialogService dialogService)
+            {
+                var manager = new WorkStreamSettingsManagerViewModel(Core, resourceSettingsManager, CoreViewModelFixture.CreateSettingService(), dialogService);
+                manager.StartSubscriptions();
+                return manager;
+            }
 
             public int FinishOf(int activityId) =>
                 Core.GraphCompilation.DependentActivities.Single(x => x.Id == activityId).EarliestFinishTime.GetValueOrDefault();

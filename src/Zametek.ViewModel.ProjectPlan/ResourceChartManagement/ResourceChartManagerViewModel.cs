@@ -798,10 +798,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (x, _, _, _, _, _, _, _, _, _, _, _) => Unit.Default) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 // WhenAnyValue takes 12 inputs at most: the switches that hide parts of the plan come in a second stream.
+                // Its first value is skipped: the first value of the first stream starts the first build, which reads the
+                // switches as they are. Without the skip, the chart built twice when its subscriptions started.
                 .Merge(this.WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ChartVisibilityRevision,
                     rcm => rcm.ShowHidden,
-                    (_, _) => Unit.Default))
+                    (_, _) => Unit.Default).Skip(1))
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());

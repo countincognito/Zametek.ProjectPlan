@@ -136,7 +136,9 @@ namespace Zametek.Contract.ProjectPlan
         /// <summary>
         /// How many times a switch that hides a part of the plan from the Gantt chart and the resource chart has changed
         /// (IsHiddenFromCharts of an activity, a resource or a work stream), so that the two charts build again. No compile
-        /// reads the switches, and so a change of one does not compile. Observe changes only.
+        /// reads the switches, and so a change of one does not compile. The settings of the resources or the work streams
+        /// that are set with other hidden parts also move it: an edit of the switch together with another field (which
+        /// compiles), or a hidden part that is added or removed. Observe changes only.
         /// </summary>
         int ChartVisibilityRevision { get; }
 

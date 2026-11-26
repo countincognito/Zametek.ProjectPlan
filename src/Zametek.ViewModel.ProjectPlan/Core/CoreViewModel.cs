@@ -769,6 +769,22 @@ namespace Zametek.ViewModel.ProjectPlan
         private void MarkChartVisibilityChanged()
         {
             SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+            MoveChartVisibilityRevision();
+        }
+
+        // The setters of ResourceSettings and WorkStreamSettings take all the settings: an edit of a switch together with
+        // another field, or the addition or the removal of a hidden part. When the ids of the hidden parts change, the
+        // charts must build again, also with no compile. The setter marks the scenario itself. Call it with m_Lock held.
+        private void MoveChartVisibilityRevisionIfTheHiddenIdsChange(IEnumerable<int> hiddenIdsBefore, IEnumerable<int> hiddenIdsAfter)
+        {
+            if (!new HashSet<int>(hiddenIdsBefore).SetEquals(hiddenIdsAfter))
+            {
+                MoveChartVisibilityRevision();
+            }
+        }
+
+        private void MoveChartVisibilityRevision()
+        {
             Interlocked.Increment(ref m_ChartVisibilityRevision);
             this.RaisePropertyChanged(nameof(ChartVisibilityRevision));
         }
@@ -1004,6 +1020,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
+                    ResourceSettingsModel previous = m_ResourceSettings;
                     m_ResourceSettings = value;
 
                     // Push the new settings into every activity synchronously, so
@@ -1020,6 +1037,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
+                    MoveChartVisibilityRevisionIfTheHiddenIdsChange(
+                        previous.Resources.Where(x => x.IsHiddenFromCharts).Select(x => x.Id),
+                        value.Resources.Where(x => x.IsHiddenFromCharts).Select(x => x.Id));
                     RequestCompilation();
                 }
             }
@@ -1033,6 +1053,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
+                    WorkStreamSettingsModel previous = m_WorkStreamSettings;
                     m_WorkStreamSettings = value;
 
                     // Synchronous for the same reason as ResourceSettings above.
@@ -1040,6 +1061,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
+                    MoveChartVisibilityRevisionIfTheHiddenIdsChange(
+                        previous.WorkStreams.Where(x => x.IsHiddenFromCharts).Select(x => x.Id),
+                        value.WorkStreams.Where(x => x.IsHiddenFromCharts).Select(x => x.Id));
                     RequestCompilation();
                 }
             }

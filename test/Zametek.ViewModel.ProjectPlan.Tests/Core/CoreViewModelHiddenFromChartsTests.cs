@@ -184,6 +184,53 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void ResourceSettings_Given_TheSwitchAndAnotherField_Then_TheChartsBuildAgainAndTheOutputsAreStale()
+        {
+            // As the dialog of the resources pushes an edit of the switch and of the unit cost.
+            using CoreViewModel core = LoadSaved(PlanWithSwitches());
+            int revision = core.ChartVisibilityRevision;
+
+            core.ResourceSettings = core.ResourceSettings with
+            {
+                Resources = [.. core.ResourceSettings.Resources.Select(x => x.Id == 2 ? x with { IsHiddenFromCharts = true, UnitCost = 5.0 } : x)],
+            };
+
+            core.ChartVisibilityRevision.ShouldBe(revision + 1);
+            core.HasStaleOutputs.ShouldBeTrue("the unit cost is an input of a compile");
+        }
+
+        [Fact]
+        public void ResourceSettings_Given_TheSameHiddenResources_Then_TheCounterStays()
+        {
+            // An edit of another field only. Each part has new settings, but the same parts are hidden.
+            using CoreViewModel core = LoadSaved(PlanWithSwitches());
+            int revision = core.ChartVisibilityRevision;
+
+            core.ResourceSettings = core.ResourceSettings with
+            {
+                Resources = [.. core.ResourceSettings.Resources.Select(x => x with { UnitCost = 5.0 })],
+            };
+
+            core.ChartVisibilityRevision.ShouldBe(revision);
+            core.HasStaleOutputs.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void WorkStreamSettings_Given_TheRemovalOfAHiddenWorkStream_Then_TheChartsBuildAgain()
+        {
+            // As the grid of the work streams pushes the removal of work stream 2, which is hidden.
+            using CoreViewModel core = LoadSaved(PlanWithSwitches());
+            int revision = core.ChartVisibilityRevision;
+
+            core.WorkStreamSettings = core.WorkStreamSettings with
+            {
+                WorkStreams = [.. core.WorkStreamSettings.WorkStreams.Where(x => x.Id != 2)],
+            };
+
+            core.ChartVisibilityRevision.ShouldBe(revision + 1);
+        }
+
+        [Fact]
         public void IsHiddenFromCharts_Given_AResourceAndAWorkStreamThatTheUserSwitches_Then_TheCoreHasThemAndTheGridsStay()
         {
             // Both pumps, before the harness starts its subscriptions: the outputs that the load builds come through the
