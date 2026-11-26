@@ -385,7 +385,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hide from the Gantt chart and the resource chart.
+        ///   Looks up a localized string similar to Hidden from the Gantt chart and the resource chart.
         /// </summary>
         public static string ToolTip_IsHiddenFromCharts {
             get {

@@ -1141,7 +1141,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hide.
+        ///   Looks up a localized string similar to Hidden.
         /// </summary>
         public static string Label_IsHiddenFromCharts {
             get {
