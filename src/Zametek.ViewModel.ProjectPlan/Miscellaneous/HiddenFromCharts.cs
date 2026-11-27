@@ -15,8 +15,9 @@ namespace Zametek.ViewModel.ProjectPlan
     /// </list>
     /// An activity with no target work stream is never hidden by a work stream. An activity on a spare resource (one with no
     /// id, which the series "Resource 1" shows) is never hidden by a resource. The resources of an activity are those that
-    /// the schedule put it on, and not its target resources. The filter changes nothing but the two charts: no schedule, no
-    /// metric and no other output.
+    /// the schedule put it on, and not its target resources. The resource chart has no series for a hidden resource, and also
+    /// none for a resource whose activities are all hidden (see IsSeriesHidden). The filter changes nothing but the two
+    /// charts: no schedule, no metric and no other output.
     /// </summary>
     public sealed class HiddenFromCharts
     {
@@ -128,6 +129,32 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
+        /// True when the resource chart shows no series, and no entry in the legend, for a series. This is so when its
+        /// resource is hidden. It is also so when the schedule put one or more activities on the resource, each of them is a
+        /// hidden activity, and the chart removes the days of a hidden activity from the series (see VisibleAllocation).
+        /// Else the series would show only the days between two activities that nobody can see, and the Gantt chart has no
+        /// group for the resource. A series with one or more activities that are not hidden keeps the days between its
+        /// activities.
+        /// </summary>
+        public bool IsSeriesHidden(
+            ResourceSeriesModel series,
+            AllocationMode allocationMode)
+        {
+            ArgumentNullException.ThrowIfNull(series);
+
+            if (IsResourceHidden(series.ResourceSchedule.Resource.Id))
+            {
+                return true;
+            }
+
+            List<ScheduledActivityModel> scheduledActivities = series.ResourceSchedule.ScheduledActivities;
+
+            return scheduledActivities.Count > 0
+                && RemovesTheDaysOfHiddenActivities(series, allocationMode)
+                && scheduledActivities.All(x => ActivityIds.Contains(x.Id));
+        }
+
+        /// <summary>
         /// A copy of an allocation of a series of the resource chart, with no day of a hidden activity. The days of an
         /// activity are from its start (0 for a start before 0) to its finish - 1. For a resource of the type None or Direct,
         /// and for a spare resource, they go in each allocation mode: this is how the library removes the days of an
@@ -146,8 +173,7 @@ namespace Zametek.ViewModel.ProjectPlan
             List<bool> visible = [.. allocation];
 
             if (ActivityIds.Count == 0
-                || (series.InterActivityAllocationType == InterActivityAllocationType.Indirect
-                    && allocationMode != AllocationMode.Activity))
+                || !RemovesTheDaysOfHiddenActivities(series, allocationMode))
             {
                 return visible;
             }
@@ -170,5 +196,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             return visible;
         }
+
+        // The series where the days of a hidden activity go: each one but an Indirect resource outside the mode Activity.
+        private static bool RemovesTheDaysOfHiddenActivities(
+            ResourceSeriesModel series,
+            AllocationMode allocationMode) =>
+            series.InterActivityAllocationType != InterActivityAllocationType.Indirect
+            || allocationMode == AllocationMode.Activity;
     }
 }

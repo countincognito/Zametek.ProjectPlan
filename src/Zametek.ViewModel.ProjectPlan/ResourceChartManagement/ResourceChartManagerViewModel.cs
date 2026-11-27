@@ -273,9 +273,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 return plotModel.SetBaseTheme(baseTheme);
             }
 
-            // A hidden resource has no series. The time axis keeps the whole project.
+            // A hidden resource has no series, and nor has a resource whose activities are all hidden (see IsSeriesHidden).
+            // The time axis keeps the whole project.
             IEnumerable<ResourceSeriesModel> resourceSeries = scheduleFunction(resourceSeriesSet)
-                .Where(x => !hidden.IsResourceHidden(x.ResourceSchedule.Resource.Id))
+                .Where(x => !hidden.IsSeriesHidden(x, allocationMode))
                 .OrderBy(x => x.DisplayOrder);
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 

@@ -97,6 +97,8 @@ The two charts hide an activity when one of these is true:
 
 A work stream never hides an activity with no work stream. A resource never hides an activity on a spare resource with no id. The schedule uses spare resources when the plan has no resources, and the resource chart names them "Resource 1", "Resource 2" and so on.
 
+The resource chart shows no series for a hidden resource. On the series of another resource, it removes the days of each hidden activity, and it keeps the days between two activities. When the schedule put one or more activities on a resource and each of them is hidden, the chart shows no series for that resource. An `Indirect` resource works on each day of its range. Thus, the chart removes no day of an `Indirect` resource and keeps its series, except in the allocation mode "Activity".
+
 `GanttChartShowHidden` and `ResourceChartShowHidden` in the `DisplaySettings` of a scenario make each chart show all the parts. `zpp` has no option for them, as for the other settings of a chart. The file gives them, and the images of `zpp` and `zpp serve` follow them.
 
 The export of a workbook has the column `IsHiddenFromCharts` on the sheets "Activities", "Resources" and "Work Streams". An import of a workbook with no such column hides nothing. The workbook has no column for `GanttChartShowHidden` and `ResourceChartShowHidden`, because it holds no other setting of a chart.

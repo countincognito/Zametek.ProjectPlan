@@ -1,4 +1,5 @@
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -216,6 +217,91 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             visible.ShouldNotBeSameAs(allocation);
         }
 
+        [Theory]
+        [InlineData(InterActivityAllocationType.None, AllocationMode.Resource)]
+        [InlineData(InterActivityAllocationType.None, AllocationMode.Cost)]
+        [InlineData(InterActivityAllocationType.None, AllocationMode.Billing)]
+        [InlineData(InterActivityAllocationType.None, AllocationMode.Effort)]
+        [InlineData(InterActivityAllocationType.None, AllocationMode.Activity)]
+        [InlineData(InterActivityAllocationType.Direct, AllocationMode.Resource)]
+        [InlineData(InterActivityAllocationType.Direct, AllocationMode.Cost)]
+        [InlineData(InterActivityAllocationType.Direct, AllocationMode.Billing)]
+        [InlineData(InterActivityAllocationType.Direct, AllocationMode.Effort)]
+        [InlineData(InterActivityAllocationType.Direct, AllocationMode.Activity)]
+        [InlineData(InterActivityAllocationType.Indirect, AllocationMode.Activity)]
+        public void IsSeriesHidden_Given_AResourceWhoseActivitiesAreAllHidden_Then_True(InterActivityAllocationType type, AllocationMode mode)
+        {
+            HiddenFromCharts hidden = Find([1, 2], [Activity(1), Activity(2)], []);
+
+            hidden.IsSeriesHidden(Series(type, (1, 0, 2), (2, 5, 7)), mode).ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(AllocationMode.Resource)]
+        [InlineData(AllocationMode.Cost)]
+        [InlineData(AllocationMode.Billing)]
+        [InlineData(AllocationMode.Effort)]
+        public void IsSeriesHidden_Given_AnIndirectResourceWhoseActivitiesAreAllHidden_Then_FalseOutsideTheModeActivity(AllocationMode mode)
+        {
+            // The chart keeps each day of an Indirect resource in these modes, and so the series shows them.
+            HiddenFromCharts hidden = Find([1], [Activity(1)], []);
+
+            hidden.IsSeriesHidden(Series(InterActivityAllocationType.Indirect, (1, 0, 2)), mode).ShouldBeFalse();
+        }
+
+        [Theory]
+        [InlineData(InterActivityAllocationType.None)]
+        [InlineData(InterActivityAllocationType.Direct)]
+        [InlineData(InterActivityAllocationType.Indirect)]
+        public void IsSeriesHidden_Given_OneActivityThatIsNotHidden_Then_False(InterActivityAllocationType type)
+        {
+            HiddenFromCharts hidden = Find([1], [Activity(1), Activity(2)], []);
+
+            hidden.IsSeriesHidden(Series(type, (1, 0, 2), (2, 5, 7)), AllocationMode.Activity).ShouldBeFalse();
+        }
+
+        [Theory]
+        [InlineData(InterActivityAllocationType.None)]
+        [InlineData(InterActivityAllocationType.Direct)]
+        [InlineData(InterActivityAllocationType.Indirect)]
+        public void IsSeriesHidden_Given_NoScheduledActivity_Then_False(InterActivityAllocationType type)
+        {
+            HiddenFromCharts hidden = Find([1], [Activity(1)], []);
+
+            hidden.IsSeriesHidden(Series(type), AllocationMode.Activity).ShouldBeFalse();
+        }
+
+        [Theory]
+        [InlineData(InterActivityAllocationType.None)]
+        [InlineData(InterActivityAllocationType.Direct)]
+        [InlineData(InterActivityAllocationType.Indirect)]
+        public void IsSeriesHidden_Given_AHiddenResource_Then_TrueInEachMode(InterActivityAllocationType type)
+        {
+            HiddenFromCharts hidden = Find([], [Activity(1)], []);
+
+            foreach (AllocationMode mode in Enum.GetValues<AllocationMode>())
+            {
+                hidden.IsSeriesHidden(SeriesOf(c_HiddenResource, type, (1, 0, 2)), mode).ShouldBeTrue();
+                hidden.IsSeriesHidden(SeriesOf(c_HiddenResource, type), mode).ShouldBeTrue("a hidden resource with no activity");
+            }
+        }
+
+        [Fact]
+        public void IsSeriesHidden_Given_ASpareResourceWhoseActivitiesAreAllHidden_Then_True()
+        {
+            // No resource hides a spare resource, but its activities can be hidden in another way.
+            HiddenFromCharts hidden = Find([1], [Activity(1)], []);
+
+            hidden.IsSeriesHidden(SeriesOf(default, InterActivityAllocationType.None, (1, 0, 2)), AllocationMode.Resource).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void IsSeriesHidden_Given_NothingHidden_Then_False()
+        {
+            // What a chart uses when it shows the hidden parts.
+            HiddenFromCharts.None.IsSeriesHidden(Series(InterActivityAllocationType.Direct, (1, 0, 2)), AllocationMode.Resource).ShouldBeFalse();
+        }
+
         private static HiddenFromCharts Find(
             IEnumerable<int> switchedActivityIds,
             IEnumerable<IDependentActivity> activities,
@@ -235,12 +321,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             ScheduledActivities = [.. activityIds.Select(x => new ScheduledActivityModel { Id = x, StartTime = 0, FinishTime = 1 })],
         };
 
-        private static ResourceSeriesModel Series(InterActivityAllocationType type, params (int Id, int Start, int Finish)[] activities) => new()
+        private static ResourceSeriesModel Series(InterActivityAllocationType type, params (int Id, int Start, int Finish)[] activities) =>
+            SeriesOf(c_Resource, type, activities);
+
+        private static ResourceSeriesModel SeriesOf(int resourceId, InterActivityAllocationType type, params (int Id, int Start, int Finish)[] activities) => new()
         {
             InterActivityAllocationType = type,
             ResourceSchedule = new ResourceScheduleModel
             {
-                Resource = new ResourceModel { Id = c_Resource },
+                Resource = new ResourceModel { Id = resourceId },
                 ScheduledActivities = [.. activities.Select(x => new ScheduledActivityModel { Id = x.Id, StartTime = x.Start, FinishTime = x.Finish })],
             },
         };

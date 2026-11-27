@@ -32,6 +32,13 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private const int c_AA = 1;
         private const int c_BB = 2;
 
+        // The resources of IdlePlan, by their names.
+        private const string c_Direct = @"Direct";
+        private const string c_TypeNone = @"Type None";
+        private const string c_Indirect = @"Indirect";
+        private const string c_Long = @"Long";
+        private const string c_Stream = @"Stream";
+
         private static readonly int[] s_Shown = [1, 3, 6];
 
         private static readonly int[] s_Hidden = [2, 4, 5, 7];
@@ -295,6 +302,111 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             builds.ShouldBe(1);
         }
 
+        [Theory]
+        [InlineData(ScheduleMode.Combined, AllocationMode.Resource)]
+        [InlineData(ScheduleMode.Combined, AllocationMode.Cost)]
+        [InlineData(ScheduleMode.Combined, AllocationMode.Billing)]
+        [InlineData(ScheduleMode.Combined, AllocationMode.Effort)]
+        [InlineData(ScheduleMode.Combined, AllocationMode.Activity)]
+        [InlineData(ScheduleMode.Scheduled, AllocationMode.Resource)]
+        public void ResourceChart_Given_ADirectResourceWhoseActivitiesAreAllHidden_Then_ItHasNoSeriesAndAddsNothingToTheTotal(
+            ScheduleMode scheduleMode,
+            AllocationMode allocationMode)
+        {
+            // Activities 1 and 3 of the Direct resource are hidden. Its days 2 to 4 between them stay in its allocation, but
+            // nobody can see what they are between, and the Gantt chart has no group for the resource.
+            using Harness harness = new(IdlePlan(hiddenActivities: [1, 3]));
+            harness.Core.DisplaySettingsViewModel.ResourceChartDisplayStyle = DisplayStyle.Block;
+            harness.Core.DisplaySettingsViewModel.ResourceChartScheduleMode = scheduleMode;
+            harness.Core.DisplaySettingsViewModel.ResourceChartAllocationMode = allocationMode;
+
+            Dictionary<string, Scatter> series = harness.BuildResourceChart();
+
+            series.Keys.ShouldNotContain(c_Direct);
+            harness.BuildGantt(GroupByMode.Resource).Groups.Keys.ShouldNotContain(c_Direct);
+
+            // The next series is the first of the stack now: its points are its own 5 days, and no day of the Direct resource.
+            FirstSeriesDays(series[c_Long]).ShouldBe([1, 1, 1, 1, 1, 0, 0]);
+
+            harness.Core.DisplaySettingsViewModel.ResourceChartShowHidden = true;
+            harness.BuildResourceChart().Keys.ShouldContain(c_Direct);
+        }
+
+        [Fact]
+        public void ResourceChart_Given_ADirectResourceWithOneShownActivity_Then_ItKeepsTheDaysBetweenItsActivities()
+        {
+            // Activity 1 (days 0 and 1) is shown, and activity 3 (days 5 and 6) is hidden. Days 2 to 4 stay, as for an
+            // activity with no cost. The Direct resource is the first series of the stack.
+            using Harness harness = new(IdlePlan(hiddenActivities: [3]));
+            harness.Core.DisplaySettingsViewModel.ResourceChartDisplayStyle = DisplayStyle.Block;
+            harness.Core.DisplaySettingsViewModel.ResourceChartScheduleMode = ScheduleMode.Scheduled;
+
+            FirstSeriesDays(harness.BuildResourceChart()[c_Direct]).ShouldBe([1, 1, 1, 1, 1, 0, 0]);
+
+            harness.Core.DisplaySettingsViewModel.ResourceChartShowHidden = true;
+            FirstSeriesDays(harness.BuildResourceChart()[c_Direct]).ShouldBe([1, 1, 1, 1, 1, 1, 1]);
+        }
+
+        [Fact]
+        public void ResourceChart_Given_AResourceOfTheTypeNoneWhoseActivitiesAreAllHidden_Then_ItHasNoSeries()
+        {
+            using Harness harness = new(IdlePlan(hiddenActivities: [4]));
+
+            // Before, the series had no day, and so no height, but it kept its entry in the legend.
+            harness.BuildResourceChart().Keys.ShouldNotContain(c_TypeNone);
+
+            harness.Core.DisplaySettingsViewModel.ResourceChartShowHidden = true;
+            harness.BuildResourceChart().Keys.ShouldContain(c_TypeNone);
+        }
+
+        [Theory]
+        [InlineData(AllocationMode.Resource)]
+        [InlineData(AllocationMode.Cost)]
+        [InlineData(AllocationMode.Billing)]
+        [InlineData(AllocationMode.Effort)]
+        public void ResourceChart_Given_AnIndirectResourceWhoseActivitiesAreAllHidden_Then_OutsideTheModeActivityItsSeriesDoesNotChange(
+            AllocationMode allocationMode)
+        {
+            // An Indirect resource works on each day of its range, with an activity or with none.
+            using Harness harness = new(IdlePlan(hiddenActivities: [5]));
+            harness.Core.DisplaySettingsViewModel.ResourceChartAllocationMode = allocationMode;
+
+            (double X, double Y)[] hidden = [.. harness.BuildResourceChart()[c_Indirect].Data.GetScatterPoints().Select(p => (p.X, p.Y))];
+            harness.Core.DisplaySettingsViewModel.ResourceChartShowHidden = true;
+            (double X, double Y)[] shown = [.. harness.BuildResourceChart()[c_Indirect].Data.GetScatterPoints().Select(p => (p.X, p.Y))];
+
+            hidden.ShouldNotBeEmpty();
+            hidden.ShouldBe(shown);
+        }
+
+        [Theory]
+        [InlineData(ScheduleMode.Combined)]
+        [InlineData(ScheduleMode.Unscheduled)]
+        public void ResourceChart_Given_AnIndirectResourceWhoseActivitiesAreAllHidden_Then_InTheModeActivityItHasNoSeries(ScheduleMode scheduleMode)
+        {
+            using Harness harness = new(IdlePlan(hiddenActivities: [5]));
+            harness.Core.DisplaySettingsViewModel.ResourceChartScheduleMode = scheduleMode;
+            harness.Core.DisplaySettingsViewModel.ResourceChartAllocationMode = AllocationMode.Activity;
+
+            harness.BuildResourceChart().Keys.ShouldNotContain(c_Indirect);
+
+            harness.Core.DisplaySettingsViewModel.ResourceChartShowHidden = true;
+            harness.BuildResourceChart().Keys.ShouldContain(c_Indirect);
+        }
+
+        [Fact]
+        public void ResourceChart_Given_AHiddenWorkStreamThatIsAllTheWorkOfAResource_Then_ItHasNoSeries()
+        {
+            // The Stream resource is Direct, and works only on activities 6 and 7 of the work stream, with days between them.
+            using Harness harness = new(IdlePlan(hiddenActivities: [], hideWorkStream: true));
+
+            harness.BuildResourceChart().Keys.ShouldNotContain(c_Stream);
+            harness.BuildGantt(GroupByMode.Resource).Groups.Keys.ShouldNotContain(c_Stream);
+
+            harness.Core.DisplaySettingsViewModel.ResourceChartShowHidden = true;
+            harness.BuildResourceChart().Keys.ShouldContain(c_Stream);
+        }
+
         // As the grid does, when the user selects the item.
         private static void Select(System.Windows.Input.ICommand setSelected, object item) =>
             setSelected.Execute(new Avalonia.Controls.SelectionChangedEventArgs(
@@ -304,6 +416,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         private static double DaysOf(Plot plot, string resourceName) =>
             plot.GetPlottables<Scatter>().Single(x => x.LegendText == resourceName).Data.GetScatterPoints().Sum(x => x.Y);
+
+        // The allocation of the first series of the stack, in the style Block: two points for each day, of the same value.
+        private static int[] FirstSeriesDays(Scatter series) =>
+            [.. series.Data.GetScatterPoints().Where((_, i) => i % 2 == 0).Select(x => (int)x.Y)];
 
         private static int[] BarIds(Plot plot) =>
             [.. plot.GetPlottables<BarPlot>().SelectMany(x => x.Bars).OfType<AnnotatedBar>().Select(x => x.ActivityId).Distinct().Order()];
@@ -320,6 +436,72 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
                 x.ResourceSchedule.EffortAllocation,
                 x.ResourceSchedule.ActivityAllocation,
             }).Select(x => x.ToList())];
+
+        // A plan for the series that show nothing. Each resource is a series, in this order of the stack:
+        // - Direct (Direct): activity 1 (days 0 and 1) and activity 3 (days 5 and 6), and so days 2 to 4 between them.
+        // - Long (None): activity 2 (days 0 to 4), which activity 3 and activity 7 follow. Never hidden.
+        // - Type None (None): activity 4 (days 0 to 2).
+        // - Indirect (Indirect): activity 5 (days 0 and 1).
+        // - Stream (Direct): activity 6 (days 0 and 1) and activity 7 (days 5 and 6), each in the work stream WS only.
+        // An activity in hiddenActivities has its own switch on.
+        private static ProjectScenarioModel IdlePlan(int[] hiddenActivities, bool hideWorkStream = false)
+        {
+            const int workStream = 1;
+            ProjectScenarioModel scenario = CoreViewModelFixture.CreateProjectScenario(0);
+
+            DependentActivityModel Activity(int id, int duration, int resource, int[]? dependencies = null, bool inWorkStream = false) => new()
+            {
+                Dependencies = [.. dependencies ?? []],
+                Activity = new ActivityModel
+                {
+                    Id = id,
+                    DisplayOrder = id,
+                    Name = $@"Activity {id}",
+                    Duration = duration,
+                    TargetResources = [resource],
+                    TargetWorkStreams = inWorkStream ? [workStream] : [],
+                    IsHiddenFromCharts = hiddenActivities.Contains(id),
+                },
+            };
+
+            static ResourceModel Resource(int id, string name, InterActivityAllocationType type) => new()
+            {
+                Id = id,
+                Name = name,
+                DisplayOrder = id,
+                ColorFormat = ColorHelper.Random(),
+                InterActivityAllocationType = type,
+            };
+
+            return scenario with
+            {
+                DependentActivities =
+                [
+                    Activity(1, 2, 1),
+                    Activity(2, 5, 2),
+                    Activity(3, 2, 1, dependencies: [2]),
+                    Activity(4, 3, 3),
+                    Activity(5, 2, 4),
+                    Activity(6, 2, 5, inWorkStream: true),
+                    Activity(7, 2, 5, dependencies: [2], inWorkStream: true),
+                ],
+                ResourceSettings = scenario.ResourceSettings with
+                {
+                    Resources =
+                    [
+                        Resource(1, c_Direct, InterActivityAllocationType.Direct),
+                        Resource(2, c_Long, InterActivityAllocationType.None),
+                        Resource(3, c_TypeNone, InterActivityAllocationType.None),
+                        Resource(4, c_Indirect, InterActivityAllocationType.Indirect),
+                        Resource(5, c_Stream, InterActivityAllocationType.Direct),
+                    ],
+                },
+                WorkStreamSettings = new WorkStreamSettingsModel
+                {
+                    WorkStreams = [new WorkStreamModel { Id = workStream, Name = @"WS", DisplayOrder = 1, IsHiddenFromCharts = hideWorkStream }],
+                },
+            };
+        }
 
         // An edit dialog that the user fills and closes with OK. An error that a manager shows is kept for the test.
         private sealed class EditDialogService(Action<object> fill)
@@ -373,9 +555,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             : IDisposable
         {
             public Harness(bool withSwitches = true)
+                : this(Plan(withSwitches))
+            {
+            }
+
+            public Harness(ProjectScenarioModel plan)
             {
                 Core = CoreViewModelFixture.Create();
-                Core.ProcessProjectScenario(Plan(withSwitches), Guid.NewGuid(), @"Plan");
+                Core.ProcessProjectScenario(plan, Guid.NewGuid(), @"Plan");
                 Core.BuildResourceSeriesSet();
                 Core.DisplaySettingsViewModel.GanttChartAnnotationStyle = AnnotationStyle.Plain;
 
